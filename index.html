@@ -1,75 +1,219 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gente de Vuelo</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gente de Vuelo</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: #eef4f8;
+      color: #17324d;
+    }
+
+    header {
+      background: #ffffff;
+      padding: 20px;
+      text-align: center;
+      border-bottom: 4px solid #2c75a0;
+    }
+
+    .logo {
+      width: 180px;
+      max-width: 80%;
+      margin-bottom: 10px;
+    }
+
+    header h1 {
+      font-size: 34px;
+      margin-bottom: 8px;
+    }
+
+    header p {
+      color: #567086;
+    }
+
+    nav {
+      background: #17324d;
+      padding: 14px 10px;
+      text-align: center;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      margin: 6px 10px;
+      display: inline-block;
+      font-weight: bold;
+    }
+
+    .hero {
+      padding: 55px 20px;
+      text-align: center;
+      background: linear-gradient(135deg, #dcecf5, #ffffff);
+    }
+
+    .hero h2 {
+      font-size: 36px;
+      margin-bottom: 15px;
+    }
+
+    .hero p {
+      max-width: 750px;
+      margin: auto;
+      font-size: 18px;
+      line-height: 1.6;
+    }
+
+    .contenedor {
+      max-width: 1100px;
+      margin: 35px auto;
+      padding: 0 20px;
+    }
+
+    .contenedor h2 {
+      text-align: center;
+      margin-bottom: 25px;
+    }
+
+    .tarjetas {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 20px;
+    }
+
+    .tarjeta {
+      background: white;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 3px 12px rgba(0,0,0,0.10);
+      transition: transform 0.2s;
+    }
+
+    .tarjeta:hover {
+      transform: translateY(-5px);
+    }
+
+    .tarjeta h3 {
+      margin-bottom: 12px;
+      color: #205b7d;
+    }
+
+    .tarjeta p {
+      line-height: 1.5;
+      color: #536779;
+    }
+
+    footer {
+      margin-top: 50px;
+      background: #17324d;
+      color: white;
+      text-align: center;
+      padding: 25px 15px;
+    }
+  </style>
 </head>
 
 <body>
 
-    <header>
-        <img src="gente de vuelo logo.png" alt="Logo Gente de Vuelo">
-        <h1>Gente de Vuelo</h1>
-        <p>Comunidad aeronáutica</p>
-    </header>
+  <header>
+    <img src="gente_de_vuelo_logo.png" alt="Logo Gente de Vuelo" class="logo">
+    <h1>Gente de Vuelo</h1>
+    <p>Comunidad aeronáutica</p>
+  </header>
 
-    <main>
+  <nav>
+    <a href="#">Inicio</a>
+    <a href="#">METAR</a>
+    <a href="#">ANAC y RAC</a>
+    <a href="#">NOTAMs</a>
+    <a href="#">Trivia</a>
+    <a href="#">Comunidad</a>
+    <a href="#">Travesías</a>
+    <a href="#">Mercado</a>
+    <a href="#">Museo</a>
+  </nav>
 
-        <section>
-            <h2>Bienvenidos a Gente de Vuelo</h2>
-            <p>
-                Un punto de encuentro para pilotos, estudiantes,
-                instructores y apasionados por la aviación.
-            </p>
-        </section>
+  <section class="hero">
+    <h2>Un punto de encuentro para la gente que vuela</h2>
 
-        <section>
-            <h2>Información Aeronáutica</h2>
-            <p>METAR, actualizaciones de ANAC, RAC y NOTAMs.</p>
-        </section>
+    <p>
+      Un espacio abierto para pilotos, estudiantes, instructores y
+      apasionados por la aviación. Información aeronáutica, comunidad,
+      historia, desafíos y experiencias para compartir.
+    </p>
+  </section>
 
-        <section>
-            <h2>Trivia diaria</h2>
-            <p>Poné a prueba tus conocimientos aeronáuticos.</p>
-        </section>
+  <main class="contenedor">
 
-        <section>
-            <h2>Comunidad</h2>
-            <p>
-                Compartí experiencias, conocé otros aviadores
-                y formá parte de nuestra comunidad.
-            </p>
-        </section>
+    <h2>Explorá Gente de Vuelo</h2>
 
-        <section>
-            <h2>Travesías</h2>
-            <p>Compartí y registrá tus experiencias de vuelo.</p>
-        </section>
+    <div class="tarjetas">
 
-        <section>
-            <h2>Mercado Aeronáutico</h2>
-            <p>
-                Clasificados, necesidades de pilotos y oportunidades
-                dentro de la comunidad.
-            </p>
-        </section>
+      <div class="tarjeta">
+        <h3>✈ Información aeronáutica</h3>
+        <p>Acceso a METAR, novedades de ANAC, RAC y herramientas útiles para volar.</p>
+      </div>
 
-        <section>
-            <h2>Historia de la Aeronáutica</h2>
-            <p>
-                Historias, curiosidades y protagonistas
-                que hicieron grande a la aviación.
-            </p>
-        </section>
+      <div class="tarjeta">
+        <h3>⚠ NOTAMs colaborativos</h3>
+        <p>Información compartida por la comunidad y moderada antes de su publicación.</p>
+      </div>
 
-    </main>
+      <div class="tarjeta">
+        <h3>🧠 Trivia diaria</h3>
+        <p>Preguntas, desafíos y curiosidades para poner a prueba tus conocimientos aeronáuticos.</p>
+      </div>
 
-    <footer>
-        <p>Gente de Vuelo - Comunidad Aeronáutica Argentina</p>
-    </footer>
+      <div class="tarjeta">
+        <h3>👨‍✈️ Hangar Virtual</h3>
+        <p>Cada miembro podrá tener su perfil, credenciales, licencias, travesías y logros.</p>
+      </div>
+
+      <div class="tarjeta">
+        <h3>🌎 Travesías</h3>
+        <p>Compartí vuelos, experiencias, destinos y aventuras con otros miembros.</p>
+      </div>
+
+      <div class="tarjeta">
+        <h3>🤝 Comunidad</h3>
+        <p>Conectate con otros pilotos y aficionados, organizá vuelos compartidos y aeroasados.</p>
+      </div>
+
+      <div class="tarjeta">
+        <h3>🛩 Mercado aeronáutico</h3>
+        <p>Clasificados, accesorios y un mercado inverso donde los pilotos publican lo que necesitan.</p>
+      </div>
+
+      <div class="tarjeta">
+        <h3>🏛 Museo Nacional de Aeronáutica</h3>
+        <p>Historia, actividades, novedades y curiosidades del Museo Nacional de Aeronáutica de Morón.</p>
+      </div>
+
+      <div class="tarjeta">
+        <h3>🏆 Desafíos y ranking</h3>
+        <p>Misiones, desafíos diarios, participación comunitaria y logros para los miembros.</p>
+      </div>
+
+      <div class="tarjeta">
+        <h3>📚 Historia de la aeronáutica</h3>
+        <p>Historias, protagonistas y curiosidades aeronáuticas investigadas y verificadas.</p>
+      </div>
+
+    </div>
+
+  </main>
+
+  <footer>
+    <p>Gente de Vuelo — Comunidad aeronáutica</p>
+  </footer>
 
 </body>
-
 </html>
