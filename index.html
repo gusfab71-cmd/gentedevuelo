@@ -59,11 +59,6 @@
       margin-left: 18px;
     }
 
-    nav .boton-ingresar:hover {
-      background: #9fd7f5;
-      color: #17324d;
-    }
-
     .hero {
       text-align: center;
       padding: 65px 20px;
@@ -90,6 +85,8 @@
       margin: 6px;
       border-radius: 7px;
       font-weight: bold;
+      border: none;
+      cursor: pointer;
     }
 
     .boton.secundario {
@@ -116,16 +113,20 @@
       transition: 0.2s;
     }
 
-    .acceso:hover {
+    .acceso:hover,
+    .tarjeta:hover {
       transform: translateY(-4px);
     }
 
-    .acceso h3 {
-      margin-bottom: 10px;
+    .acceso h3,
+    .tarjeta h3,
+    .novedades h3 {
       color: #205b7d;
+      margin-bottom: 10px;
     }
 
-    .acceso p {
+    .acceso p,
+    .tarjeta p {
       color: #536779;
       line-height: 1.5;
     }
@@ -168,20 +169,6 @@
       transition: 0.2s;
     }
 
-    .tarjeta:hover {
-      transform: translateY(-4px);
-    }
-
-    .tarjeta h3 {
-      color: #205b7d;
-      margin-bottom: 12px;
-    }
-
-    .tarjeta p {
-      line-height: 1.5;
-      color: #536779;
-    }
-
     .mision {
       background: #17324d;
       color: white;
@@ -201,16 +188,60 @@
       font-size: 17px;
     }
 
+    .acceso-usuarios {
+      background: white;
+      max-width: 600px;
+      margin: 45px auto;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 3px 12px rgba(0,0,0,0.10);
+    }
+
+    .acceso-usuarios h2 {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    .acceso-usuarios .descripcion {
+      text-align: center;
+      color: #5b6f7f;
+      margin-bottom: 25px;
+    }
+
+    .campo {
+      margin-bottom: 15px;
+    }
+
+    .campo label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 6px;
+    }
+
+    .campo input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #bccbd5;
+      border-radius: 7px;
+      font-size: 16px;
+    }
+
+    .acciones-usuario {
+      text-align: center;
+    }
+
+    #mensajeUsuario {
+      text-align: center;
+      margin-top: 15px;
+      line-height: 1.5;
+      font-weight: bold;
+    }
+
     .novedades {
       background: white;
       padding: 25px;
       border-radius: 12px;
       box-shadow: 0 3px 12px rgba(0,0,0,0.08);
-    }
-
-    .novedades h3 {
-      color: #205b7d;
-      margin-bottom: 10px;
     }
 
     footer {
@@ -223,12 +254,6 @@
 
     footer p {
       margin: 6px;
-    }
-
-    @media (max-width: 800px) {
-      nav .boton-ingresar {
-        margin-left: 8px;
-      }
     }
 
     @media (max-width: 600px) {
@@ -244,11 +269,6 @@
         margin: 5px 6px;
         font-size: 13px;
       }
-
-      nav .boton-ingresar {
-        display: inline-block;
-        margin: 8px;
-      }
     }
   </style>
 </head>
@@ -256,10 +276,9 @@
 <body>
 
   <header>
-    <img
-      src="gente_de_vuelo_logo.png"
-      alt="Gente de Vuelo - Comunidad Aeronáutica"
-      class="logo">
+    <img src="gente_de_vuelo_logo.png"
+         alt="Gente de Vuelo - Comunidad Aeronáutica"
+         class="logo">
   </header>
 
   <nav>
@@ -271,18 +290,15 @@
     <a href="#travesias">Travesías</a>
     <a href="#historia">Historia de la Aviación</a>
     <a href="#tienda">Tienda Aeronáutica</a>
-    <a href="#" class="boton-ingresar">INGRESAR</a>
+    <a href="#ingresar" class="boton-ingresar">INGRESAR</a>
   </nav>
 
   <section class="hero" id="inicio">
     <h1>La comunidad que vive la aviación</h1>
-
-    <p class="frase">
-      Un lugar para encontrarnos, compartir y seguir volando.
-    </p>
+    <p class="frase">Un lugar para encontrarnos, compartir y seguir volando.</p>
 
     <a href="#explorar" class="boton">Explorar Gente de Vuelo</a>
-    <a href="#" class="boton secundario">Crear mi usuario</a>
+    <a href="#ingresar" class="boton secundario">Crear mi usuario</a>
   </section>
 
   <section class="accesos-principales">
@@ -299,50 +315,33 @@
 
     <div class="acceso destacado">
       <h3>Actualizaciones Normativas</h3>
-      <p>
-        Novedades, modificaciones y actualizaciones
-        de la normativa aeronáutica.
-      </p>
+      <p>Novedades, modificaciones y actualizaciones de la normativa aeronáutica.</p>
     </div>
 
     <div class="acceso destacado" id="aeromodelismo">
       <h3>Aeromodelismo</h3>
-      <p>
-        Noticias, actividades, proyectos y contenidos
-        dedicados al mundo del aeromodelismo.
-      </p>
+      <p>Noticias, actividades, proyectos y contenidos dedicados al mundo del aeromodelismo.</p>
     </div>
 
     <div class="acceso destacado" id="experimental">
       <h3>Experimentales</h3>
-      <p>
-        Construcción, proyectos, experiencias y conocimientos
-        relacionados con aeronaves experimentales.
-      </p>
+      <p>Construcción, proyectos, experiencias y conocimientos relacionados con aeronaves experimentales.</p>
     </div>
 
-    <div class="acceso destacado" id="shimoda">
+    <div class="acceso destacado">
       <h3>Robert Shimoda</h3>
-      <p>
-        Un espacio propio dentro de Gente de Vuelo,
-        con su particular mirada sobre el mundo de la aviación.
-      </p>
+      <p>Un espacio propio dentro de Gente de Vuelo, con su particular mirada sobre el mundo de la aviación.</p>
     </div>
 
-    <div class="acceso destacado" id="agenda">
+    <div class="acceso destacado">
       <h3>Agenda Aeronáutica</h3>
-      <p>
-        Encuentros, festivales, jornadas y actividades aeronáuticas
-        de interés para la comunidad. Su difusión en Gente de Vuelo
-        es gratuita y sin fines comerciales.
-      </p>
+      <p>Encuentros, festivales, jornadas y actividades aeronáuticas de interés para la comunidad. Su difusión en Gente de Vuelo es gratuita y sin fines comerciales.</p>
     </div>
 
   </section>
 
   <section class="mision">
     <h2>Quiénes somos</h2>
-
     <p>
       Gente de Vuelo es un punto de encuentro con pilotos, estudiantes,
       instructores, aeromodelistas, constructores de aeronaves experimentales
@@ -371,87 +370,84 @@
 
       <div class="tarjeta" id="foro">
         <h3>Foro Aeronáutico</h3>
-        <p>
-          Un espacio para conversar, hacer preguntas, intercambiar
-          conocimientos y compartir experiencias. La participación
-          estará moderada para mantener un espacio útil, respetuoso
-          y enfocado en la aviación.
-        </p>
+        <p>Un espacio para conversar, hacer preguntas, intercambiar conocimientos y compartir experiencias dentro de un espacio moderado.</p>
       </div>
 
       <div class="tarjeta" id="instituciones">
         <h3>Instituciones Aeronáuticas</h3>
-        <p>
-          Un espacio para conocer aeroclubes, escuelas de vuelo,
-          asociaciones, clubes de aeromodelismo y otras instituciones
-          vinculadas con la actividad aeronáutica.
-        </p>
+        <p>Un espacio para conocer aeroclubes, escuelas de vuelo, asociaciones, clubes de aeromodelismo y otras instituciones vinculadas con la actividad aeronáutica.</p>
       </div>
 
       <div class="tarjeta" id="travesias">
         <h3>Travesías</h3>
-        <p>
-          Vuelos, recorridos y experiencias para descubrir y compartir
-          diferentes maneras de vivir la aviación.
-        </p>
+        <p>Vuelos, recorridos y experiencias para descubrir y compartir diferentes maneras de vivir la aviación.</p>
       </div>
 
       <div class="tarjeta" id="historia">
         <h3>Historia de la Aviación</h3>
-        <p>
-          Historias, personajes, acontecimientos y episodios poco conocidos
-          para descubrir y comprender diferentes momentos de la historia
-          de la aviación.
-        </p>
+        <p>Historias, personajes, acontecimientos y episodios poco conocidos de la historia de la aviación.</p>
       </div>
 
       <div class="tarjeta" id="tienda">
         <h3>Tienda Aeronáutica</h3>
-        <p>
-          Un espacio para encontrar productos, accesorios,
-          equipamiento y servicios relacionados con la aviación.
-        </p>
+        <p>Un espacio para encontrar productos, accesorios, equipamiento y servicios relacionados con la aviación.</p>
       </div>
 
     </div>
   </main>
 
+  <section class="acceso-usuarios" id="ingresar">
+    <h2>Ingresar a Gente de Vuelo</h2>
+
+    <p class="descripcion">
+      Ingresá con tu correo electrónico o creá tu usuario para formar parte de la comunidad.
+    </p>
+
+    <div class="campo">
+      <label for="email">Correo electrónico</label>
+      <input type="email" id="email" placeholder="tuemail@ejemplo.com">
+    </div>
+
+    <div class="campo">
+      <label for="password">Contraseña</label>
+      <input type="password" id="password" placeholder="Tu contraseña">
+    </div>
+
+    <div class="acciones-usuario">
+      <button class="boton" onclick="ingresarUsuario()">Ingresar</button>
+      <button class="boton secundario" onclick="crearUsuario()">Crear usuario</button>
+    </div>
+
+    <p id="mensajeUsuario"></p>
+  </section>
+
   <section class="contenedor">
-
     <h2 class="titulo-seccion">Nuestra comunidad en imágenes</h2>
-
     <p class="subtitulo">
       Imágenes que cuentan historias. Vuelos, aeronaves, encuentros
       y momentos compartidos por quienes forman parte de Gente de Vuelo.
     </p>
-
   </section>
 
   <section class="contenedor">
-
     <h2 class="titulo-seccion">Novedades</h2>
 
     <div class="novedades">
       <h3>Gente de Vuelo está comenzando a despegar</h3>
-
       <p>
         Estamos construyendo este espacio paso a paso.
         Nuevas secciones, contenidos y herramientas se irán incorporando
         a medida que Gente de Vuelo crezca.
       </p>
     </div>
-
   </section>
 
   <section class="contenedor">
-
     <h2 class="titulo-seccion">Colaboradores</h2>
-
     <p class="subtitulo">
       Espacio destinado a escuelas de vuelo, instituciones,
       proyectos y personas que colaboran con Gente de Vuelo.
     </p>
-
   </section>
 
   <footer>
@@ -460,26 +456,80 @@
     <p>Proyecto comunitario sin fines de lucro</p>
   </footer>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <script>
+    const SUPABASE_URL = "https://lmoifzyhqmccvmgitlcp.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_YfQ3GwlhGecJyW1ZKcq8iQ_PbYp6THX";
+
+    const supabaseClient = supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_KEY
+    );
+
     function actualizarHoraZulu() {
       const ahora = new Date();
 
-      const zulu = ahora.toLocaleTimeString(
-        "es-AR",
-        {
-          timeZone: "UTC",
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-          hour12: false
-        }
-      );
+      const zulu = ahora.toLocaleTimeString("es-AR", {
+        timeZone: "UTC",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false
+      });
 
       document.getElementById("horaZulu").textContent = zulu + " Z";
     }
 
     actualizarHoraZulu();
     setInterval(actualizarHoraZulu, 1000);
+
+    async function crearUsuario() {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+      const mensaje = document.getElementById("mensajeUsuario");
+
+      if (!email || !password) {
+        mensaje.textContent = "Completá el correo electrónico y la contraseña.";
+        return;
+      }
+
+      const { data, error } = await supabaseClient.auth.signUp({
+        email: email,
+        password: password
+      });
+
+      if (error) {
+        mensaje.textContent = "No se pudo crear el usuario: " + error.message;
+        return;
+      }
+
+      mensaje.textContent = "Usuario creado. Revisá tu correo electrónico si Supabase solicita confirmar la cuenta.";
+    }
+
+    async function ingresarUsuario() {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+      const mensaje = document.getElementById("mensajeUsuario");
+
+      if (!email || !password) {
+        mensaje.textContent = "Completá el correo electrónico y la contraseña.";
+        return;
+      }
+
+      const { data, error } =
+        await supabaseClient.auth.signInWithPassword({
+          email: email,
+          password: password
+        });
+
+      if (error) {
+        mensaje.textContent = "No se pudo ingresar: " + error.message;
+        return;
+      }
+
+      mensaje.textContent = "Ingresaste correctamente a Gente de Vuelo.";
+    }
   </script>
 
 </body>
