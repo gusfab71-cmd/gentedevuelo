@@ -88,26 +88,40 @@
       border: 2px solid #205b7d;
     }
 
-    .datos-vuelo {
-      max-width: 1100px;
-      margin: -20px auto 35px;
+    .accesos-principales {
+      max-width: 1200px;
+      margin: -20px auto 40px;
       padding: 0 20px;
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 15px;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 16px;
     }
 
-    .dato {
+    .acceso {
       background: white;
-      padding: 20px;
+      padding: 22px;
       text-align: center;
       border-radius: 12px;
       box-shadow: 0 3px 12px rgba(0,0,0,0.10);
+      transition: 0.2s;
     }
 
-    .dato h3 {
-      margin-bottom: 8px;
+    .acceso:hover {
+      transform: translateY(-4px);
+    }
+
+    .acceso h3 {
+      margin-bottom: 10px;
       color: #205b7d;
+    }
+
+    .acceso p {
+      color: #536779;
+      line-height: 1.5;
+    }
+
+    .destacado {
+      border-top: 4px solid #205b7d;
     }
 
     .contenedor {
@@ -222,6 +236,7 @@
 
 </head>
 
+
 <body>
 
 
@@ -238,7 +253,7 @@
   </header>
 
 
-  <!-- MENU PRINCIPAL -->
+  <!-- MENU -->
 
   <nav>
 
@@ -248,28 +263,24 @@
 
     <a href="#foro">Foro de la Comunidad</a>
 
-    <a href="#eventos">Eventos</a>
-
     <a href="#aeromodelismo">Aeromodelismo</a>
 
-    <a href="#experimental">Construcción experimental</a>
+    <a href="#experimental">Construcción Experimental</a>
 
     <a href="#instituciones">Instituciones Aeronáuticas</a>
 
-    <a href="#viajes">Viajes y Experiencias</a>
+    <a href="#travesias">Travesías</a>
 
     <a href="#tienda">Tienda Aeronáutica</a>
 
-    <a href="#shimoda">Robert Shimoda</a>
-
-    <a href="#curiosidades">Secretos y curiosidades</a>
+    <a href="#curiosidades">Secretos y Curiosidades</a>
 
     <a href="#ingresar">Ingresar</a>
 
   </nav>
 
 
-  <!-- PRESENTACION -->
+  <!-- PORTADA -->
 
   <section class="hero" id="inicio">
 
@@ -290,63 +301,110 @@
   </section>
 
 
-  <!-- INFORMACION RAPIDA -->
+  <!-- PRIMERA PARTE -->
 
-  <section class="datos-vuelo">
-
-    <div class="dato">
-
-      <h3>Hora Argentina</h3>
-
-      <p id="horaArgentina">
-        Próximamente
-      </p>
-
-    </div>
+  <section class="accesos-principales">
 
 
-    <div class="dato">
+    <!-- HORA ZULU -->
+
+    <div class="acceso destacado">
 
       <h3>Hora Zulu</h3>
 
       <p id="horaZulu">
-        Próximamente
+        --:--:-- Z
       </p>
 
     </div>
 
 
-    <div class="dato">
+    <!-- METEOROLOGIA -->
 
-      <h3>Meteorología aeronáutica</h3>
+    <div class="acceso destacado">
+
+      <h3>Meteorología Aeronáutica</h3>
 
       <p>
-        METAR e información útil para el vuelo.
+        METAR e información meteorológica útil para el vuelo.
       </p>
 
     </div>
 
 
-    <div class="dato">
+    <!-- NORMATIVA -->
 
-      <h3>RACC</h3>
+    <div class="acceso destacado">
+
+      <h3>Actualizaciones Normativas</h3>
 
       <p>
-        Acceso a reglamentación aeronáutica actualizada.
+        Novedades, modificaciones y actualizaciones
+        de la normativa aeronáutica.
       </p>
 
     </div>
 
 
-    <div class="dato">
+    <!-- AEROMODELISMO -->
 
-      <h3>Próximo evento</h3>
+    <div class="acceso destacado" id="aeromodelismo">
+
+      <h3>Aeromodelismo</h3>
 
       <p>
-        Próximamente.
+        Noticias, actividades, proyectos y contenidos
+        dedicados al mundo del aeromodelismo.
       </p>
 
     </div>
+
+
+    <!-- CONSTRUCCION EXPERIMENTAL -->
+
+    <div class="acceso destacado" id="experimental">
+
+      <h3>Construcción Experimental</h3>
+
+      <p>
+        Proyectos, experiencias y conocimientos
+        relacionados con la construcción experimental
+        de aeronaves.
+      </p>
+
+    </div>
+
+
+    <!-- ROBERT SHIMODA -->
+
+    <div class="acceso destacado" id="shimoda">
+
+      <h3>Robert Shimoda</h3>
+
+      <p>
+        Un espacio propio dentro de Gente de Vuelo,
+        con su particular mirada sobre el mundo
+        de la aviación.
+      </p>
+
+    </div>
+
+
+    <!-- AGENDA -->
+
+    <div class="acceso destacado" id="agenda">
+
+      <h3>Agenda Aeronáutica</h3>
+
+      <p>
+        Encuentros, festivales, jornadas y actividades
+        aeronáuticas de interés para la comunidad.
+        Su difusión en Gente de Vuelo es gratuita
+        y sin fines comerciales.
+      </p>
+
+    </div>
+
 
   </section>
 
@@ -363,14 +421,14 @@
       profesionales y apasionados por la aviación.
 
       Un proyecto comunitario sin fines de lucro pensado para compartir
-      conocimiento, experiencias e historias y para acercar a todas las
-      personas que sienten pasión por volar.
+      conocimiento, experiencias e historias y para acercar a todas
+      las personas que sienten pasión por volar.
     </p>
 
   </section>
 
 
-  <!-- SECCIONES PRINCIPALES -->
+  <!-- COMUNIDAD -->
 
   <main class="contenedor">
 
@@ -410,53 +468,11 @@
 
         <p>
           Un espacio para conversar, hacer preguntas,
-          intercambiar conocimientos, compartir experiencias
-          y participar en conversaciones sobre aviación.
-          El contenido será moderado para mantener una comunidad
-          útil y respetuosa.
-        </p>
+          intercambiar conocimientos y compartir experiencias.
 
-      </div>
-
-
-      <!-- EVENTOS -->
-
-      <div class="tarjeta" id="eventos">
-
-        <h3>Eventos</h3>
-
-        <p>
-          Encuentros, jornadas, festivales, actividades aeronáuticas
-          y propuestas para reunir a la comunidad.
-        </p>
-
-      </div>
-
-
-      <!-- AEROMODELISMO -->
-
-      <div class="tarjeta" id="aeromodelismo">
-
-        <h3>Aeromodelismo</h3>
-
-        <p>
-          Un espacio dedicado a quienes construyen, vuelan
-          y disfrutan del aeromodelismo en todas sus formas.
-        </p>
-
-      </div>
-
-
-      <!-- CONSTRUCCION EXPERIMENTAL -->
-
-      <div class="tarjeta" id="experimental">
-
-        <h3>Construcción experimental</h3>
-
-        <p>
-          Proyectos, constructores, experiencias y conocimientos
-          relacionados con la construcción amateur y experimental
-          de aeronaves.
+          La participación estará moderada para mantener
+          una comunidad útil, respetuosa y enfocada
+          en la aviación.
         </p>
 
       </div>
@@ -470,21 +486,21 @@
 
         <p>
           Un espacio para conocer aeroclubes, escuelas de vuelo,
-          asociaciones, clubes de aeromodelismo y otras instituciones
-          vinculadas con la actividad aeronáutica.
+          asociaciones, clubes de aeromodelismo y otras
+          instituciones vinculadas con la actividad aeronáutica.
         </p>
 
       </div>
 
 
-      <!-- VIAJES -->
+      <!-- TRAVESIAS -->
 
-      <div class="tarjeta" id="viajes">
+      <div class="tarjeta" id="travesias">
 
-        <h3>Viajes y Experiencias</h3>
+        <h3>Travesías</h3>
 
         <p>
-          Vuelos, travesías, destinos, visitas y experiencias
+          Vuelos, destinos, recorridos y experiencias
           para descubrir y compartir diferentes maneras
           de vivir la aviación.
         </p>
@@ -506,26 +522,11 @@
       </div>
 
 
-      <!-- ROBERT SHIMODA -->
-
-      <div class="tarjeta" id="shimoda">
-
-        <h3>Robert Shimoda</h3>
-
-        <p>
-          Nuestro personaje estrella tendrá su propio espacio
-          dentro de Gente de Vuelo, acompañando a la comunidad
-          con su particular mirada sobre el mundo de la aviación.
-        </p>
-
-      </div>
-
-
       <!-- CURIOSIDADES -->
 
       <div class="tarjeta" id="curiosidades">
 
-        <h3>Secretos y curiosidades</h3>
+        <h3>Secretos y Curiosidades</h3>
 
         <p>
           Historias poco conocidas, personajes, aeronaves,
@@ -543,8 +544,9 @@
         <h3>Tu espacio en Gente de Vuelo</h3>
 
         <p>
-          Los miembros podrán crear su perfil y formar parte
-          de la comunidad, interactuando y compartiendo contenido
+          Los miembros podrán crear su perfil,
+          formar parte de la comunidad,
+          interactuar y compartir contenido
           dentro de un espacio moderado.
         </p>
 
@@ -556,7 +558,7 @@
   </main>
 
 
-  <!-- FOTOS -->
+  <!-- IMAGENES -->
 
   <section class="contenedor">
 
@@ -565,8 +567,8 @@
     </h2>
 
     <p class="subtitulo">
-      Próximamente incorporaremos fotografías y experiencias
-      compartidas por la comunidad.
+      Fotografías, vuelos, encuentros, aeronaves
+      y experiencias compartidas por nuestra comunidad.
     </p>
 
   </section>
@@ -586,8 +588,8 @@
 
       <p>
         Estamos construyendo este espacio paso a paso.
-        Nuevas secciones, contenidos y herramientas se irán
-        incorporando a medida que la comunidad crezca.
+        Nuevas secciones, contenidos y herramientas
+        se irán incorporando a medida que la comunidad crezca.
       </p>
 
     </div>
@@ -604,8 +606,8 @@
     </h2>
 
     <p class="subtitulo">
-      Este espacio estará destinado a escuelas, instituciones,
-      proyectos y personas que colaboren con Gente de Vuelo.
+      Espacio destinado a escuelas, instituciones,
+      proyectos y personas que colaboran con Gente de Vuelo.
     </p>
 
   </section>
@@ -630,24 +632,13 @@
   </footer>
 
 
-  <!-- RELOJES -->
+  <!-- RELOJ ZULU -->
 
   <script>
 
-    function actualizarRelojes() {
+    function actualizarHoraZulu() {
 
       const ahora = new Date();
-
-      const argentina =
-        ahora.toLocaleTimeString(
-          "es-AR",
-          {
-            timeZone: "America/Argentina/Buenos_Aires",
-            hour: "2-digit",
-            minute: "2-digit",
-            second: "2-digit"
-          }
-        );
 
       const zulu =
         ahora.toLocaleTimeString(
@@ -661,16 +652,13 @@
           }
         );
 
-      document.getElementById("horaArgentina").textContent =
-        argentina;
-
       document.getElementById("horaZulu").textContent =
         zulu + " Z";
     }
 
-    actualizarRelojes();
+    actualizarHoraZulu();
 
-    setInterval(actualizarRelojes, 1000);
+    setInterval(actualizarHoraZulu, 1000);
 
   </script>
 
