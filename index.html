@@ -1,14 +1,11 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
   <title>Gente de Vuelo</title>
 
   <style>
-
     * {
       box-sizing: border-box;
       margin: 0;
@@ -34,7 +31,7 @@
 
     nav {
       background: #17324d;
-      padding: 14px 10px;
+      padding: 12px 15px;
       text-align: center;
       position: sticky;
       top: 0;
@@ -45,13 +42,26 @@
       color: white;
       text-decoration: none;
       display: inline-block;
-      margin: 7px 9px;
+      margin: 7px 8px;
       font-weight: bold;
       font-size: 14px;
     }
 
     nav a:hover {
       color: #9fd7f5;
+    }
+
+    nav .boton-ingresar {
+      background: white;
+      color: #17324d;
+      padding: 9px 17px;
+      border-radius: 7px;
+      margin-left: 18px;
+    }
+
+    nav .boton-ingresar:hover {
+      background: #9fd7f5;
+      color: #17324d;
     }
 
     .hero {
@@ -138,9 +148,9 @@
 
     .subtitulo {
       text-align: center;
-      max-width: 800px;
+      max-width: 900px;
       margin: 0 auto 30px;
-      line-height: 1.6;
+      line-height: 1.7;
       color: #5b6f7f;
     }
 
@@ -215,8 +225,13 @@
       margin: 6px;
     }
 
-    @media (max-width: 600px) {
+    @media (max-width: 800px) {
+      nav .boton-ingresar {
+        margin-left: 8px;
+      }
+    }
 
+    @media (max-width: 600px) {
       .hero h1 {
         font-size: 32px;
       }
@@ -230,439 +245,249 @@
         font-size: 13px;
       }
 
+      nav .boton-ingresar {
+        display: inline-block;
+        margin: 8px;
+      }
     }
-
   </style>
-
 </head>
-
 
 <body>
 
-
-  <!-- CABECERA -->
-
   <header>
-
     <img
       src="gente_de_vuelo_logo.png"
       alt="Gente de Vuelo - Comunidad Aeronáutica"
-      class="logo"
-    >
-
+      class="logo">
   </header>
 
-
-  <!-- MENU -->
-
   <nav>
-
     <a href="#inicio">Inicio</a>
-
-    <a href="#comunidad">Comunidad</a>
-
-    <a href="#foro">Foro de la Comunidad</a>
-
+    <a href="#foro">Foro Aeronáutico</a>
+    <a href="#experimental">Experimentales</a>
     <a href="#aeromodelismo">Aeromodelismo</a>
-
-    <a href="#experimental">Construcción Experimental</a>
-
     <a href="#instituciones">Instituciones Aeronáuticas</a>
-
     <a href="#travesias">Travesías</a>
-
+    <a href="#historia">Historia de la Aviación</a>
     <a href="#tienda">Tienda Aeronáutica</a>
-
-    <a href="#curiosidades">Secretos y Curiosidades</a>
-
-    <a href="#ingresar">Ingresar</a>
-
+    <a href="#ingresar" class="boton-ingresar">INGRESAR</a>
   </nav>
 
-
-  <!-- PORTADA -->
-
   <section class="hero" id="inicio">
-
     <h1>La comunidad que vive la aviación</h1>
 
     <p class="frase">
       Un lugar para encontrarnos, compartir y seguir volando.
     </p>
 
-    <a href="#comunidad" class="boton">
-      Explorar la comunidad
-    </a>
-
-    <a href="#ingresar" class="boton secundario">
-      Crear mi perfil
-    </a>
-
+    <a href="#foro" class="boton">Explorar Gente de Vuelo</a>
+    <a href="#ingresar" class="boton secundario">Crear mi perfil</a>
   </section>
-
-
-  <!-- PRIMERA PARTE -->
 
   <section class="accesos-principales">
 
-
-    <!-- HORA ZULU -->
-
     <div class="acceso destacado">
-
       <h3>Hora Zulu</h3>
-
-      <p id="horaZulu">
-        --:--:-- Z
-      </p>
-
+      <p id="horaZulu">--:--:-- Z</p>
     </div>
 
-
-    <!-- METEOROLOGIA -->
-
     <div class="acceso destacado">
-
       <h3>Meteorología Aeronáutica</h3>
-
-      <p>
-        METAR e información meteorológica útil para el vuelo.
-      </p>
-
+      <p>METAR e información meteorológica útil para el vuelo.</p>
     </div>
 
-
-    <!-- NORMATIVA -->
-
     <div class="acceso destacado">
-
       <h3>Actualizaciones Normativas</h3>
-
       <p>
         Novedades, modificaciones y actualizaciones
         de la normativa aeronáutica.
       </p>
-
     </div>
 
-
-    <!-- AEROMODELISMO -->
-
     <div class="acceso destacado" id="aeromodelismo">
-
       <h3>Aeromodelismo</h3>
-
       <p>
         Noticias, actividades, proyectos y contenidos
         dedicados al mundo del aeromodelismo.
       </p>
-
     </div>
-
-
-    <!-- CONSTRUCCION EXPERIMENTAL -->
 
     <div class="acceso destacado" id="experimental">
-
-      <h3>Construcción Experimental</h3>
-
+      <h3>Experimentales</h3>
       <p>
-        Proyectos, experiencias y conocimientos
-        relacionados con la construcción experimental
-        de aeronaves.
+        Construcción, proyectos, experiencias y conocimientos
+        relacionados con aeronaves experimentales.
       </p>
-
     </div>
-
-
-    <!-- ROBERT SHIMODA -->
 
     <div class="acceso destacado" id="shimoda">
-
       <h3>Robert Shimoda</h3>
-
       <p>
         Un espacio propio dentro de Gente de Vuelo,
-        con su particular mirada sobre el mundo
-        de la aviación.
+        con su particular mirada sobre el mundo de la aviación.
       </p>
-
     </div>
-
-
-    <!-- AGENDA -->
 
     <div class="acceso destacado" id="agenda">
-
       <h3>Agenda Aeronáutica</h3>
-
       <p>
-        Encuentros, festivales, jornadas y actividades
-        aeronáuticas de interés para la comunidad.
-        Su difusión en Gente de Vuelo es gratuita
-        y sin fines comerciales.
+        Encuentros, festivales, jornadas y actividades aeronáuticas
+        de interés para la comunidad. Su difusión en Gente de Vuelo
+        es gratuita y sin fines comerciales.
       </p>
-
     </div>
-
 
   </section>
 
-
-  <!-- QUIENES SOMOS -->
-
   <section class="mision">
-
     <h2>Quiénes somos</h2>
 
     <p>
       Gente de Vuelo nace como un punto de encuentro para pilotos,
       estudiantes, instructores, aeromodelistas, constructores,
       profesionales y apasionados por la aviación.
-
       Un proyecto comunitario sin fines de lucro pensado para compartir
       conocimiento, experiencias e historias y para acercar a todas
       las personas que sienten pasión por volar.
     </p>
-
   </section>
-
-
-  <!-- COMUNIDAD -->
 
   <main class="contenedor">
 
-    <h2 class="titulo-seccion">
-      Explorá Gente de Vuelo
-    </h2>
+    <h2 class="titulo-seccion">Explorá Gente de Vuelo</h2>
 
     <p class="subtitulo">
-      Diferentes maneras de vivir, aprender y compartir la aviación.
+      Un punto de encuentro para descubrir nuevas historias y diferentes
+      formas de vivir la aviación; aprender de experiencias vividas,
+      conocimientos y contenidos aeronáuticos; compartir travesías,
+      proyectos e historias; intercambiar ideas y experiencias; y conectar
+      con pilotos, estudiantes, instructores, aeromodelistas, constructores
+      y apasionados por el mundo de la aviación.
     </p>
-
 
     <div class="tarjetas">
 
-
-      <!-- COMUNIDAD -->
-
-      <div class="tarjeta" id="comunidad">
-
-        <h3>Comunidad</h3>
-
-        <p>
-          El lugar de encuentro de pilotos, estudiantes,
-          instructores y apasionados por la aviación.
-          Compartí experiencias y conectate con otras personas
-          que viven el mundo aeronáutico.
-        </p>
-
-      </div>
-
-
-      <!-- FORO -->
-
       <div class="tarjeta" id="foro">
-
-        <h3>Foro de la Comunidad</h3>
-
+        <h3>Foro Aeronáutico</h3>
         <p>
-          Un espacio para conversar, hacer preguntas,
-          intercambiar conocimientos y compartir experiencias.
-
-          La participación estará moderada para mantener
-          una comunidad útil, respetuosa y enfocada
-          en la aviación.
+          Un espacio para conversar, hacer preguntas, intercambiar
+          conocimientos y compartir experiencias. La participación
+          estará moderada para mantener un espacio útil, respetuoso
+          y enfocado en la aviación.
         </p>
-
       </div>
-
-
-      <!-- INSTITUCIONES -->
 
       <div class="tarjeta" id="instituciones">
-
         <h3>Instituciones Aeronáuticas</h3>
-
         <p>
           Un espacio para conocer aeroclubes, escuelas de vuelo,
-          asociaciones, clubes de aeromodelismo y otras
-          instituciones vinculadas con la actividad aeronáutica.
+          asociaciones, clubes de aeromodelismo y otras instituciones
+          vinculadas con la actividad aeronáutica.
         </p>
-
       </div>
-
-
-      <!-- TRAVESIAS -->
 
       <div class="tarjeta" id="travesias">
-
         <h3>Travesías</h3>
-
         <p>
-          Vuelos, destinos, recorridos y experiencias
-          para descubrir y compartir diferentes maneras
-          de vivir la aviación.
+          Vuelos, recorridos y experiencias para descubrir y compartir
+          diferentes maneras de vivir la aviación.
         </p>
-
       </div>
 
-
-      <!-- TIENDA -->
+      <div class="tarjeta" id="historia">
+        <h3>Historia de la Aviación</h3>
+        <p>
+          Historias, personajes, acontecimientos y episodios poco conocidos
+          para descubrir y comprender diferentes momentos de la historia
+          de la aviación.
+        </p>
+      </div>
 
       <div class="tarjeta" id="tienda">
-
         <h3>Tienda Aeronáutica</h3>
-
         <p>
           Un espacio para encontrar productos, accesorios,
           equipamiento y servicios relacionados con la aviación.
         </p>
-
       </div>
-
-
-      <!-- CURIOSIDADES -->
-
-      <div class="tarjeta" id="curiosidades">
-
-        <h3>Secretos y Curiosidades</h3>
-
-        <p>
-          Historias poco conocidas, personajes, aeronaves,
-          acontecimientos y curiosidades para descubrir
-          otra cara de la aviación.
-        </p>
-
-      </div>
-
-
-      <!-- PERFIL -->
 
       <div class="tarjeta" id="ingresar">
-
         <h3>Tu espacio en Gente de Vuelo</h3>
-
         <p>
-          Los miembros podrán crear su perfil,
-          formar parte de la comunidad,
-          interactuar y compartir contenido
-          dentro de un espacio moderado.
+          Los miembros podrán crear su perfil, formar parte de Gente de Vuelo,
+          interactuar y compartir contenido dentro de un espacio moderado.
         </p>
-
       </div>
 
-
     </div>
-
   </main>
-
-
-  <!-- IMAGENES -->
 
   <section class="contenedor">
 
-    <h2 class="titulo-seccion">
-      Nuestra comunidad en imágenes
-    </h2>
+    <h2 class="titulo-seccion">Nuestra comunidad en imágenes</h2>
 
     <p class="subtitulo">
-      Fotografías, vuelos, encuentros, aeronaves
-      y experiencias compartidas por nuestra comunidad.
+      Imágenes que cuentan historias. Vuelos, aeronaves, encuentros
+      y momentos compartidos por quienes forman parte de Gente de Vuelo.
     </p>
 
   </section>
 
-
-  <!-- NOVEDADES -->
-
   <section class="contenedor">
 
-    <h2 class="titulo-seccion">
-      Novedades
-    </h2>
+    <h2 class="titulo-seccion">Novedades</h2>
 
     <div class="novedades">
-
       <h3>Gente de Vuelo está comenzando a despegar</h3>
 
       <p>
         Estamos construyendo este espacio paso a paso.
-        Nuevas secciones, contenidos y herramientas
-        se irán incorporando a medida que la comunidad crezca.
+        Nuevas secciones, contenidos y herramientas se irán incorporando
+        a medida que Gente de Vuelo crezca.
       </p>
-
     </div>
 
   </section>
 
-
-  <!-- COLABORADORES -->
-
   <section class="contenedor">
 
-    <h2 class="titulo-seccion">
-      Colaboradores
-    </h2>
+    <h2 class="titulo-seccion">Colaboradores</h2>
 
     <p class="subtitulo">
-      Espacio destinado a escuelas, instituciones,
+      Espacio destinado a escuelas de vuelo, instituciones,
       proyectos y personas que colaboran con Gente de Vuelo.
     </p>
 
   </section>
 
-
-  <!-- PIE -->
-
   <footer>
-
-    <p>
-      <strong>Gente de Vuelo</strong>
-    </p>
-
-    <p>
-      Comunidad Aeronáutica
-    </p>
-
-    <p>
-      Proyecto comunitario sin fines de lucro
-    </p>
-
+    <p><strong>Gente de Vuelo</strong></p>
+    <p>Comunidad Aeronáutica</p>
+    <p>Proyecto comunitario sin fines de lucro</p>
   </footer>
 
-
-  <!-- RELOJ ZULU -->
-
   <script>
-
     function actualizarHoraZulu() {
-
       const ahora = new Date();
 
-      const zulu =
-        ahora.toLocaleTimeString(
-          "es-AR",
-          {
-            timeZone: "UTC",
-            hour: "2-digit",
-            minute: "2-digit",
-            second: "2-digit",
-            hour12: false
-          }
-        );
+      const zulu = ahora.toLocaleTimeString(
+        "es-AR",
+        {
+          timeZone: "UTC",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: false
+        }
+      );
 
-      document.getElementById("horaZulu").textContent =
-        zulu + " Z";
+      document.getElementById("horaZulu").textContent = zulu + " Z";
     }
 
     actualizarHoraZulu();
-
     setInterval(actualizarHoraZulu, 1000);
-
   </script>
 
-
 </body>
-
 </html>
