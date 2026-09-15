@@ -1,11 +1,14 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>Gente de Vuelo</title>
 
   <style>
+
     * {
       box-sizing: border-box;
       margin: 0;
@@ -13,79 +16,124 @@
     }
 
     body {
-      font-family: Arial, sans-serif;
-      background: #eef4f8;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #eef4f7;
       color: #17324d;
     }
 
     header {
-      background: #ffffff;
-      padding: 20px;
+      background: white;
       text-align: center;
-      border-bottom: 4px solid #2c75a0;
+      padding: 20px;
     }
 
     .logo {
-      width: 180px;
+      width: 190px;
       max-width: 80%;
-      margin-bottom: 10px;
-    }
-
-    header h1 {
-      font-size: 34px;
-      margin-bottom: 8px;
-    }
-
-    header p {
-      color: #567086;
     }
 
     nav {
       background: #17324d;
       padding: 14px 10px;
       text-align: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
 
     nav a {
       color: white;
       text-decoration: none;
-      margin: 6px 10px;
       display: inline-block;
+      margin: 7px 10px;
       font-weight: bold;
+      font-size: 14px;
+    }
+
+    nav a:hover {
+      color: #9fd7f5;
     }
 
     .hero {
-      padding: 55px 20px;
       text-align: center;
-      background: linear-gradient(135deg, #dcecf5, #ffffff);
+      padding: 65px 20px;
+      background: linear-gradient(135deg, #d8eaf4, #ffffff);
     }
 
-    .hero h2 {
-      font-size: 36px;
+    .hero h1 {
+      font-size: 42px;
       margin-bottom: 15px;
     }
 
-    .hero p {
-      max-width: 750px;
-      margin: auto;
-      font-size: 18px;
-      line-height: 1.6;
+    .hero .frase {
+      font-size: 21px;
+      color: #506a7d;
+      margin-bottom: 30px;
+    }
+
+    .boton {
+      display: inline-block;
+      background: #205b7d;
+      color: white;
+      text-decoration: none;
+      padding: 13px 22px;
+      margin: 6px;
+      border-radius: 7px;
+      font-weight: bold;
+    }
+
+    .boton.secundario {
+      background: white;
+      color: #205b7d;
+      border: 2px solid #205b7d;
+    }
+
+    .datos-vuelo {
+      max-width: 1100px;
+      margin: -20px auto 35px;
+      padding: 0 20px;
+
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 15px;
+    }
+
+    .dato {
+      background: white;
+      padding: 20px;
+      text-align: center;
+      border-radius: 12px;
+      box-shadow: 0 3px 12px rgba(0,0,0,0.10);
+    }
+
+    .dato h3 {
+      margin-bottom: 8px;
+      color: #205b7d;
     }
 
     .contenedor {
       max-width: 1100px;
-      margin: 35px auto;
+      margin: 45px auto;
       padding: 0 20px;
     }
 
-    .contenedor h2 {
+    .titulo-seccion {
       text-align: center;
-      margin-bottom: 25px;
+      font-size: 30px;
+      margin-bottom: 15px;
+    }
+
+    .subtitulo {
+      text-align: center;
+      max-width: 800px;
+      margin: 0 auto 30px;
+      line-height: 1.6;
+      color: #5b6f7f;
     }
 
     .tarjetas {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
       gap: 20px;
     }
 
@@ -93,17 +141,17 @@
       background: white;
       padding: 25px;
       border-radius: 12px;
-      box-shadow: 0 3px 12px rgba(0,0,0,0.10);
-      transition: transform 0.2s;
+      box-shadow: 0 3px 12px rgba(0,0,0,0.09);
+      transition: 0.2s;
     }
 
     .tarjeta:hover {
-      transform: translateY(-5px);
+      transform: translateY(-4px);
     }
 
     .tarjeta h3 {
-      margin-bottom: 12px;
       color: #205b7d;
+      margin-bottom: 12px;
     }
 
     .tarjeta p {
@@ -111,109 +159,458 @@
       color: #536779;
     }
 
+    .mision {
+      background: #17324d;
+      color: white;
+      padding: 45px 25px;
+      text-align: center;
+    }
+
+    .mision h2 {
+      margin-bottom: 18px;
+      font-size: 30px;
+    }
+
+    .mision p {
+      max-width: 850px;
+      margin: auto;
+      line-height: 1.7;
+      font-size: 17px;
+    }
+
+    .novedades {
+      background: white;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+    }
+
+    .novedades h3 {
+      color: #205b7d;
+      margin-bottom: 10px;
+    }
+
+    .proximamente {
+      color: #718394;
+      font-style: italic;
+    }
+
     footer {
-      margin-top: 50px;
       background: #17324d;
       color: white;
       text-align: center;
-      padding: 25px 15px;
+      padding: 30px 15px;
+      margin-top: 50px;
     }
+
+    footer p {
+      margin: 6px;
+    }
+
+    @media (max-width: 600px) {
+
+      .hero h1 {
+        font-size: 32px;
+      }
+
+      .hero .frase {
+        font-size: 18px;
+      }
+
+      nav a {
+        margin: 5px 6px;
+        font-size: 13px;
+      }
+
+    }
+
   </style>
+
 </head>
 
 <body>
 
+  <!-- CABECERA -->
+
   <header>
-    <img src="gente_de_vuelo_logo.png" alt="Logo Gente de Vuelo" class="logo">
-    <h1>Gente de Vuelo</h1>
-    <p>Comunidad aeronáutica</p>
+
+    <img
+      src="gente_de_vuelo_logo.png"
+      alt="Gente de Vuelo - Comunidad Aeronáutica"
+      class="logo"
+    >
+
   </header>
 
+
+  <!-- MENU PRINCIPAL -->
+
   <nav>
-    <a href="#">Inicio</a>
-    <a href="#">METAR</a>
-    <a href="#">ANAC y RAC</a>
-    <a href="#">NOTAMs</a>
-    <a href="#">Trivia</a>
-    <a href="#">Comunidad</a>
-    <a href="#">Travesías</a>
-    <a href="#">Mercado</a>
-    <a href="#">Museo</a>
+
+    <a href="#inicio">Inicio</a>
+
+    <a href="#comunidad">Comunidad</a>
+
+    <a href="#eventos">Eventos</a>
+
+    <a href="#aeromodelismo">Aeromodelismo</a>
+
+    <a href="#experimental">Construcción experimental</a>
+
+    <a href="#voces">Voces de la aviación</a>
+
+    <a href="#shimoda">Robert Shimoda</a>
+
+    <a href="#curiosidades">Secretos y curiosidades</a>
+
+    <a href="#ingresar">Ingresar</a>
+
   </nav>
 
-  <section class="hero">
-    <h2>Un punto de encuentro para la gente que vuela</h2>
+
+  <!-- PRESENTACION -->
+
+  <section class="hero" id="inicio">
+
+    <h1>La comunidad que vive la aviación</h1>
+
+    <p class="frase">
+      Un lugar para encontrarnos, compartir y seguir volando.
+    </p>
+
+    <a href="#comunidad" class="boton">
+      Explorar la comunidad
+    </a>
+
+    <a href="#ingresar" class="boton secundario">
+      Crear mi perfil
+    </a>
+
+  </section>
+
+
+  <!-- INFORMACION RAPIDA -->
+
+  <section class="datos-vuelo">
+
+    <div class="dato">
+
+      <h3>Hora Argentina</h3>
+
+      <p id="horaArgentina">
+        Próximamente
+      </p>
+
+    </div>
+
+
+    <div class="dato">
+
+      <h3>Hora Zulu</h3>
+
+      <p id="horaZulu">
+        Próximamente
+      </p>
+
+    </div>
+
+
+    <div class="dato">
+
+      <h3>Meteorología aeronáutica</h3>
+
+      <p>
+        METAR e información útil para el vuelo.
+      </p>
+
+    </div>
+
+
+    <div class="dato">
+
+      <h3>RACC</h3>
+
+      <p>
+        Acceso a reglamentación aeronáutica actualizada.
+      </p>
+
+    </div>
+
+
+    <div class="dato">
+
+      <h3>Próximo evento</h3>
+
+      <p>
+        Próximamente.
+      </p>
+
+    </div>
+
+  </section>
+
+
+  <!-- NUESTRA MISION -->
+
+  <section class="mision">
+
+    <h2>Quiénes somos</h2>
 
     <p>
-      Un espacio abierto para pilotos, estudiantes, instructores y
-      apasionados por la aviación. Información aeronáutica, comunidad,
-      historia, desafíos y experiencias para compartir.
+      Gente de Vuelo nace como un punto de encuentro para pilotos,
+      estudiantes, instructores, aeromodelistas, constructores,
+      profesionales y apasionados por la aviación.
+
+      Un proyecto comunitario sin fines de lucro pensado para compartir
+      conocimiento, experiencias e historias y para acercar a todas las
+      personas que sienten pasión por volar.
     </p>
+
   </section>
+
+
+  <!-- SECCIONES -->
 
   <main class="contenedor">
 
-    <h2>Explorá Gente de Vuelo</h2>
+    <h2 class="titulo-seccion">
+      Explorá Gente de Vuelo
+    </h2>
+
+    <p class="subtitulo">
+      Diferentes maneras de vivir, aprender y compartir la aviación.
+    </p>
+
 
     <div class="tarjetas">
 
-      <div class="tarjeta">
-        <h3>✈ Información aeronáutica</h3>
-        <p>Acceso a METAR, novedades de ANAC, RAC y herramientas útiles para volar.</p>
+
+      <div class="tarjeta" id="comunidad">
+
+        <h3>Comunidad</h3>
+
+        <p>
+          El lugar de encuentro de pilotos, estudiantes,
+          instructores y apasionados por la aviación.
+          Compartí experiencias y conectate con otras personas
+          que viven el mundo aeronáutico.
+        </p>
+
       </div>
 
-      <div class="tarjeta">
-        <h3>⚠ NOTAMs colaborativos</h3>
-        <p>Información compartida por la comunidad y moderada antes de su publicación.</p>
+
+      <div class="tarjeta" id="eventos">
+
+        <h3>Eventos</h3>
+
+        <p>
+          Encuentros, jornadas, festivales, actividades aeronáuticas
+          y propuestas para reunir a la comunidad.
+        </p>
+
       </div>
 
-      <div class="tarjeta">
-        <h3>🧠 Trivia diaria</h3>
-        <p>Preguntas, desafíos y curiosidades para poner a prueba tus conocimientos aeronáuticos.</p>
+
+      <div class="tarjeta" id="aeromodelismo">
+
+        <h3>Aeromodelismo</h3>
+
+        <p>
+          Un espacio dedicado a quienes construyen, vuelan y disfrutan
+          del aeromodelismo en todas sus formas.
+        </p>
+
       </div>
 
-      <div class="tarjeta">
-        <h3>👨‍✈️ Hangar Virtual</h3>
-        <p>Cada miembro podrá tener su perfil, credenciales, licencias, travesías y logros.</p>
+
+      <div class="tarjeta" id="experimental">
+
+        <h3>Construcción experimental</h3>
+
+        <p>
+          Proyectos, constructores, experiencias y conocimientos
+          relacionados con la construcción amateur y experimental
+          de aeronaves.
+        </p>
+
       </div>
 
-      <div class="tarjeta">
-        <h3>🌎 Travesías</h3>
-        <p>Compartí vuelos, experiencias, destinos y aventuras con otros miembros.</p>
+
+      <div class="tarjeta" id="voces">
+
+        <h3>Voces de la aviación</h3>
+
+        <p>
+          Historias y conversaciones con pilotos, instructores,
+          mecánicos, constructores y protagonistas de nuestra aviación.
+        </p>
+
       </div>
 
-      <div class="tarjeta">
-        <h3>🤝 Comunidad</h3>
-        <p>Conectate con otros pilotos y aficionados, organizá vuelos compartidos y aeroasados.</p>
+
+      <div class="tarjeta" id="shimoda">
+
+        <h3>Robert Shimoda</h3>
+
+        <p>
+          Nuestro personaje estrella tendrá su propio espacio
+          dentro de Gente de Vuelo, acompañando a la comunidad
+          con su particular mirada sobre el mundo de la aviación.
+        </p>
+
       </div>
 
-      <div class="tarjeta">
-        <h3>🛩 Mercado aeronáutico</h3>
-        <p>Clasificados, accesorios y un mercado inverso donde los pilotos publican lo que necesitan.</p>
+
+      <div class="tarjeta" id="curiosidades">
+
+        <h3>Secretos y curiosidades</h3>
+
+        <p>
+          Historias poco conocidas, personajes, aeronaves,
+          acontecimientos y curiosidades para descubrir
+          otra cara de la aviación.
+        </p>
+
       </div>
 
-      <div class="tarjeta">
-        <h3>🏛 Museo Nacional de Aeronáutica</h3>
-        <p>Historia, actividades, novedades y curiosidades del Museo Nacional de Aeronáutica de Morón.</p>
+
+      <div class="tarjeta" id="ingresar">
+
+        <h3>Tu espacio en Gente de Vuelo</h3>
+
+        <p>
+          Los miembros podrán crear su perfil y formar parte
+          de la comunidad, interactuando y compartiendo contenido
+          dentro de un espacio moderado.
+        </p>
+
       </div>
 
-      <div class="tarjeta">
-        <h3>🏆 Desafíos y ranking</h3>
-        <p>Misiones, desafíos diarios, participación comunitaria y logros para los miembros.</p>
-      </div>
-
-      <div class="tarjeta">
-        <h3>📚 Historia de la aeronáutica</h3>
-        <p>Historias, protagonistas y curiosidades aeronáuticas investigadas y verificadas.</p>
-      </div>
 
     </div>
 
   </main>
 
+
+  <!-- FOTOS -->
+
+  <section class="contenedor">
+
+    <h2 class="titulo-seccion">
+      Nuestra comunidad en imágenes
+    </h2>
+
+    <p class="subtitulo">
+      Próximamente incorporaremos fotografías y experiencias
+      compartidas por la comunidad.
+    </p>
+
+  </section>
+
+
+  <!-- NOVEDADES -->
+
+  <section class="contenedor">
+
+    <h2 class="titulo-seccion">
+      Novedades
+    </h2>
+
+    <div class="novedades">
+
+      <h3>Gente de Vuelo está comenzando a despegar</h3>
+
+      <p>
+        Estamos construyendo este espacio paso a paso.
+        Nuevas secciones, contenidos y herramientas se irán
+        incorporando a medida que la comunidad crezca.
+      </p>
+
+    </div>
+
+  </section>
+
+
+  <!-- COLABORADORES -->
+
+  <section class="contenedor">
+
+    <h2 class="titulo-seccion">
+      Colaboradores
+    </h2>
+
+    <p class="subtitulo">
+      Este espacio estará destinado a escuelas, instituciones,
+      proyectos y personas que colaboren con Gente de Vuelo.
+    </p>
+
+  </section>
+
+
+  <!-- PIE -->
+
   <footer>
-    <p>Gente de Vuelo — Comunidad aeronáutica</p>
+
+    <p>
+      <strong>Gente de Vuelo</strong>
+    </p>
+
+    <p>
+      Comunidad Aeronáutica
+    </p>
+
+    <p>
+      Proyecto comunitario sin fines de lucro
+    </p>
+
   </footer>
 
+
+  <!-- RELOJES -->
+
+  <script>
+
+    function actualizarRelojes() {
+
+      const ahora = new Date();
+
+      const argentina =
+        ahora.toLocaleTimeString(
+          "es-AR",
+          {
+            timeZone: "America/Argentina/Buenos_Aires",
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit"
+          }
+        );
+
+      const zulu =
+        ahora.toLocaleTimeString(
+          "es-AR",
+          {
+            timeZone: "UTC",
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+            hour12: false
+          }
+        );
+
+      document.getElementById("horaArgentina").textContent =
+        argentina;
+
+      document.getElementById("horaZulu").textContent =
+        zulu + " Z";
+    }
+
+    actualizarRelojes();
+
+    setInterval(actualizarRelojes, 1000);
+
+  </script>
+
+
 </body>
+
 </html>
