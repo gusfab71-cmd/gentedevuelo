@@ -642,7 +642,7 @@ document.getElementById("contenidoPublicacion").value = "";
   titulo.textContent = publicacion.titulo;
    const contenido = document.createElement("p");
    const fecha = document.createElement("small");
-fecha.textContent = new Date(publicacion.created_at).toLocaleString("es-AR");
+fecha.textContent = new Date(publicacion.created_at).toLocaleString("es-AR", { hour12: false });
      
    contenido.textContent = publicacion.contenido;
   tarjeta.appendChild(titulo);
