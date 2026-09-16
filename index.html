@@ -598,6 +598,11 @@
   <script>
   const botonEnviar = document.getElementById("enviar-publicacion");
     botonEnviar.addEventListener("click", async () => {
+      const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) {  
+  alert("Debes iniciar sesión para publicar."); 
+    return;
+  }  
  const titulo = document.getElementById("tituloPublicacion").value;
 const contenido = document.getElementById("contenidoPublicacion").value; 
 if (!titulo || !contenido) {
@@ -609,7 +614,10 @@ const { data, error } = await supabaseClient
   .insert([
     {
       titulo: titulo,
-      contenido: contenido
+      contenido: contenido,
+    aprobado: false, 
+   autor_id: user.id,
+   autor_nombre: user.user_metadata.full_name || user.email   
     }
   ]);      
 
@@ -626,7 +634,7 @@ document.getElementById("contenidoPublicacion").value = "";
    async function cargarPublicaciones() { 
  const { data, error } = await supabaseClient 
    .from("publicaciones")
-.select("titulo, contenido, created_at") 
+.select("titulo, contenido, created_at, autor_nombre") 
   .eq("aprobado", true) 
   .order("created_at", { ascending: false });
  if (error) { 
@@ -641,11 +649,14 @@ document.getElementById("contenidoPublicacion").value = "";
  const titulo = document.createElement("h3"); 
   titulo.textContent = publicacion.titulo;
    const contenido = document.createElement("p");
+ const autor = document.createElement("small");  
+   autor.textContent = "Publicado por: " + (publicacion.autor_nombre || "Usuario");
    const fecha = document.createElement("small");
 fecha.textContent = new Date(publicacion.created_at).toLocaleString("es-AR", { hour12: false });
      
    contenido.textContent = publicacion.contenido;
   tarjeta.appendChild(titulo);
+   tarjeta.appendChild(autor);
 tarjeta.appendChild(contenido);
    tarjeta.appendChild(fecha);
 contenedor.appendChild(tarjeta); 
