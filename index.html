@@ -290,7 +290,7 @@
     <a href="#travesias">Travesías</a>
     <a href="#historia">Historia de la Aviación</a>
     <a href="#tienda">Tienda Aeronáutica</a>
-    <a href="#ingresar" class="boton-ingresar">INGRESAR</a>
+   <a href="#ingresar" class="boton-ingresar" id="botonIngresar">INGRESAR</a>
   </nav>
 
   <section class="hero" id="inicio">
@@ -604,6 +604,25 @@ function mostrarPassword() {
 
       mensaje.textContent = "Ingresaste correctamente a Gente de Vuelo.";
     }
+async function actualizarBotonIngreso() {
+  const boton = document.getElementById("botonIngresar");
+  const { data: { user } } = await supabaseClient.auth.getUser();
+
+  if (user) {
+    boton.textContent = "MI PERFIL";
+    boton.href = "#ingresar";
+  } else {
+    boton.textContent = "INGRESAR";
+    boton.href = "#ingresar";
+  }
+}
+
+supabaseClient.auth.onAuthStateChange(() => {
+  actualizarBotonIngreso();
+});
+
+actualizarBotonIngreso();
+    
   </script>
 </script>
   <script>
