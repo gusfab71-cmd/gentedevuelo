@@ -423,6 +423,7 @@
     <div class="tarjeta">
       <h3>Publicaciones de la comunidad</h3>
       <p>
+        <div id="lista-publicaciones"></div>
         Aquí podrás leer y participar en conversaciones creadas por los
         miembros de Gente de Vuelo.
       </p>
@@ -621,5 +622,32 @@ const { data, error } = await supabaseClient
 document.getElementById("contenidoPublicacion").value = "";
   });    
 </script>
+  <script>
+   async function cargarPublicaciones() { 
+ const { data, error } = await supabaseClient 
+   .from("publicaciones")
+.select("titulo, contenido, created_at") 
+  .eq("aprobado", true) 
+  .order("created_at", { ascending: false });
+ if (error) { 
+ console.error("Error al cargar publicaciones:", error); 
+   return;
+ } 
+  const contenedor = document.getElementById("lista-publicaciones"); 
+   contenedor.innerHTML = "";
+ data.forEach((publicacion) => { 
+ const tarjeta = document.createElement("div");  
+  tarjeta.className = "tarjeta"; 
+ const titulo = document.createElement("h3"); 
+  titulo.textContent = publicacion.titulo;
+   const contenido = document.createElement("p");
+   contenido.textContent = publicacion.contenido;
+  tarjeta.appendChild(titulo);
+tarjeta.appendChild(contenido);
+contenedor.appendChild(tarjeta); 
+ });  
+}  
+cargarPublicaciones(); 
+ </script>   
 </body>
 </html>
