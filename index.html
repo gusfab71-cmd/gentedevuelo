@@ -558,10 +558,17 @@
         return;
       }
 
-      const { data, error } = await supabaseClient.auth.signUp({
-        email: email,
-        password: password
-      });
+     const { data, error } = await supabaseClient.auth.signUp({
+  email: email,
+  password: password,
+  options: {
+    data: {
+      username: email.split("@")[0],
+      full_name: email.split("@")[0],
+      bio: ""
+    }
+  }
+});
 
       if (error) {
         mensaje.textContent = "No se pudo crear el usuario: " + error.message;
