@@ -641,9 +641,13 @@ document.getElementById("contenidoPublicacion").value = "";
  const titulo = document.createElement("h3"); 
   titulo.textContent = publicacion.titulo;
    const contenido = document.createElement("p");
+   const fecha = document.createElement("small");
+fecha.textContent = new Date(publicacion.created_at).toLocaleString("es-AR");
+     
    contenido.textContent = publicacion.contenido;
   tarjeta.appendChild(titulo);
 tarjeta.appendChild(contenido);
+   tarjeta.appendChild(fecha);
 contenedor.appendChild(tarjeta); 
  });  
 }  
