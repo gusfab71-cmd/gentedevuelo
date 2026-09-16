@@ -448,8 +448,7 @@
     ></textarea>
   </div>
 
-  <button class="boton">Enviar publicación</button>
-
+  <button class="boton" id="enviar-publicacion">Enviar publicación</button>
   <p>
     Las publicaciones estarán sujetas a moderación antes de ser visibles
     para la comunidad.
@@ -594,6 +593,33 @@
       mensaje.textContent = "Ingresaste correctamente a Gente de Vuelo.";
     }
   </script>
+</script>
+  <script>
+  const botonEnviar = document.getElementById("enviar-publicacion");
+    botonEnviar.addEventListener("click", async () => {
+ const titulo = document.getElementById("tituloPublicacion").value;
+const contenido = document.getElementById("contenidoPublicacion").value; 
+if (!titulo || !contenido) {
+  alert("Por favor completá el título y el contenido.");
+  return;
+} 
+const { data, error } = await supabaseClient
+  .from("publicaciones")
+  .insert([
+    {
+      titulo: titulo,
+      contenido: contenido
+    }
+  ]);      
 
+  if (error) {
+  alert("Error al enviar la publicación: " + error.message);
+  return;
+} 
+ alert("Publicación enviada correctamente. Quedará pendiente de moderación.");
+ document.getElementById("tituloPublicacion").value = "";
+document.getElementById("contenidoPublicacion").value = "";
+  });    
+</script>
 </body>
 </html>
