@@ -458,7 +458,23 @@
     
   </div>
 </section>
-  
+
+  <section id="mi-perfil">
+  <div class="contenedor">
+    <h2>Mi Hangar Virtual</h2>
+
+    <div class="tarjeta">
+      <h3>Mi perfil</h3>
+      <p id="perfilNombre">Usuario de Gente de Vuelo</p>
+      <p id="perfilEmail"></p>
+      <p>
+        Este será tu espacio personal dentro de Gente de Vuelo.
+        Aquí podrás completar tu perfil, registrar tus travesías,
+        credenciales, licencias y logros.
+      </p>
+    </div>
+  </div>
+</section>
   <section class="acceso-usuarios" id="ingresar">
     <h2>Ingresar a Gente de Vuelo</h2>
 
@@ -610,7 +626,7 @@ async function actualizarBotonIngreso() {
 
   if (user) {
     boton.textContent = "MI PERFIL";
-    boton.href = "#ingresar";
+   boton.href = "#mi-perfil";
   } else {
     boton.textContent = "INGRESAR";
     boton.href = "#ingresar";
