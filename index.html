@@ -623,6 +623,11 @@ function mostrarPassword() {
 async function actualizarBotonIngreso() {
   const boton = document.getElementById("botonIngresar");
   const { data: { user } } = await supabaseClient.auth.getUser();
+  const perfilEmail = document.getElementById("perfilEmail");
+
+if (user && perfilEmail) {
+  perfilEmail.textContent = user.email;
+}
 
   if (user) {
     boton.textContent = "MI PERFIL";
