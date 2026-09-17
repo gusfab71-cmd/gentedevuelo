@@ -595,6 +595,17 @@
 <div id="lista-comunidad"></div>
   
 </section>
+<section id="hangar-publico" style="display: none;">
+  <h2 id="hangar-publico-titulo">Hangar</h2>
+
+  <div class="tarjeta">
+    <h3>Perfil del aviador</h3>
+    <p id="hangar-publico-bio"></p>
+  </div>
+
+  <button class="boton" onclick="cerrarHangarPublico()">Volver a la Comunidad</button>
+</section>
+  
   
   <footer>
     <p><strong>Gente de Vuelo</strong></p>
@@ -1022,12 +1033,27 @@ async function verHangar(id) {
     return;
   }
 
-  alert(
-    "Hangar de " +
-    (perfil.username || perfil.full_name || "Miembro de Gente de Vuelo")
-  );
+const nombre = perfil.username || perfil.full_name || "Miembro de Gente de Vuelo";
+
+document.getElementById("hangar-publico-titulo").textContent = "Hangar de " + nombre;
+document.getElementById("hangar-publico-bio").textContent =
+  perfil.bio || "Miembro de la comunidad aeronáutica.";
+
+document.getElementById("hangar-comunidad").style.display = "none";
+document.getElementById("hangar-publico").style.display = "block";
+
+document.getElementById("hangar-publico").scrollIntoView({
+  behavior: "smooth"
+});
 }
-    
+   function cerrarHangarPublico() {
+  document.getElementById("hangar-publico").style.display = "none";
+  document.getElementById("hangar-comunidad").style.display = "block";
+
+  document.getElementById("hangar-comunidad").scrollIntoView({
+    behavior: "smooth"
+  });
+} 
 cargarComunidad();
     
  </script> 
