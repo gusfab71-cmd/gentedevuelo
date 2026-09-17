@@ -794,8 +794,62 @@ supabaseClient.auth.onAuthStateChange(() => {
 
 actualizarBotonIngreso();
     cargarLicencias();
-  document.getElementById("guardarLicencia").addEventListener("click", guardarLicencia);  
-    
+  document.getElementById("guardarLicencia").addEventListener("click", guardarLicencia); 
+   document.getElementById("editarInfoAeronautica").addEventListener("click", () => {
+  const formulario = document.getElementById("formInfoAeronautica");
+
+  document.getElementById("editarAviationRole").value =
+    document.getElementById("hangarAviationRole").textContent === "Sin completar"
+      ? ""
+      : document.getElementById("hangarAviationRole").textContent;
+
+  document.getElementById("editarAircraft").value =
+    document.getElementById("hangarAircraft").textContent === "Sin completar"
+      ? ""
+      : document.getElementById("hangarAircraft").textContent;
+
+  document.getElementById("editarSimulators").value =
+    document.getElementById("hangarSimulators").textContent === "Sin completar"
+      ? ""
+      : document.getElementById("hangarSimulators").textContent;
+
+  formulario.style.display = "block";
+}); 
+    document.getElementById("guardarInfoAeronautica").addEventListener("click", async () => {
+  const mensaje = document.getElementById("mensajeInfoAeronautica");
+
+  const { data: { user } } = await supabaseClient.auth.getUser();
+
+  if (!user) {
+    mensaje.textContent = "Tenés que iniciar sesión.";
+    return;
+  }
+
+  const aviation_role = document.getElementById("editarAviationRole").value.trim();
+  const aircraft_flown = document.getElementById("editarAircraft").value.trim();
+  const flight_simulators = document.getElementById("editarSimulators").value.trim();
+
+  const { error } = await supabaseClient
+    .from("profiles")
+    .update({
+      aviation_role,
+      aircraft_flown,
+      flight_simulators
+    })
+    .eq("id", user.id);
+
+  if (error) {
+    mensaje.textContent = "No se pudieron guardar los cambios: " + error.message;
+    return;
+  }
+
+  document.getElementById("hangarAviationRole").textContent = aviation_role || "Sin completar";
+  document.getElementById("hangarAircraft").textContent = aircraft_flown || "Sin completar";
+  document.getElementById("hangarSimulators").textContent = flight_simulators || "Sin completar";
+
+  mensaje.textContent = "Cambios guardados correctamente.";
+  document.getElementById("formInfoAeronautica").style.display = "none";
+});
   </script>
 </script>
   <script>
