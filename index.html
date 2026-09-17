@@ -466,7 +466,7 @@
     <h2>Mi Hangar Virtual</h2>
 
     <div class="tarjeta">
-      <h3>Mi perfil</h3>
+      <h3 id="perfilNombre">Mi perfil</h3>
       <p id="perfilNombre">Usuario de Gente de Vuelo</p>
       <p id="perfilEmail"></p>
       <p>
@@ -632,9 +632,10 @@ const seccionIngresar = document.getElementById("ingresar");
   
   const { data: { user } } = await supabaseClient.auth.getUser();
   const perfilEmail = document.getElementById("perfilEmail");
-
+const perfilNombre = document.getElementById("perfilNombre");
 if (user && perfilEmail) {
   perfilEmail.textContent = user.email;
+  perfilNombre.textContent = user.user_metadata?.full_name || user.user_metadata?.username || "Mi perfil";
 }
 
   if (user) {
