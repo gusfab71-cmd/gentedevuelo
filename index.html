@@ -601,6 +601,9 @@
   <div class="tarjeta">
     <h3>Perfil del aviador</h3>
     <p id="hangar-publico-bio"></p>
+<h3>Información aeronáutica</h3>
+<div id="hangar-publico-info"></div>
+    
   </div>
 
   <button class="boton" onclick="cerrarHangarPublico()">Volver a la Comunidad</button>
@@ -1024,7 +1027,7 @@ async function cargarComunidad() {
 async function verHangar(id) {
   const { data: perfil, error } = await supabaseClient
     .from("profiles")
-    .select("id, username, full_name, avatar_url, bio")
+  .select("*")
     .eq("id", id)
     .single();
 
@@ -1034,7 +1037,20 @@ async function verHangar(id) {
   }
 
 const nombre = perfil.username || perfil.full_name || "Miembro de Gente de Vuelo";
+const infoHangar = document.getElementById("hangar-publico-info");
 
+infoHangar.innerHTML = `
+  <p><strong>Actividad:</strong> ${perfil.aviation_activity || "Sin completar"}</p>
+  <p><strong>Organización:</strong> ${perfil.aviation_organization || "Sin completar"}</p>
+  <p><strong>Rol:</strong> ${perfil.aviation_role || "Sin completar"}</p>
+  <p><strong>Licencia:</strong> ${perfil.aviation_license || "Sin completar"}</p>
+  <p><strong>Aeronave propia:</strong> ${perfil.aircraft_owned || "Sin completar"}</p>
+  <p><strong>Aeronave que vuela:</strong> ${perfil.aircraft_activity || "Sin completar"}</p>
+  <p><strong>Simulador:</strong> ${perfil.flight_simulator || "Sin completar"}</p>
+  <p><strong>Usuario de simulador:</strong> ${perfil.flight_simulator_username || "Sin completar"}</p>
+`;
+  
+ 
 document.getElementById("hangar-publico-titulo").textContent = "Hangar de " + nombre;
 document.getElementById("hangar-publico-bio").textContent =
   perfil.bio || "Miembro de la comunidad aeronáutica.";
