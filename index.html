@@ -637,7 +637,12 @@ if (user && perfilEmail) {
     boton.href = "#ingresar";
   }
 }
-
+async function cerrarSesion() {
+  await supabaseClient.auth.signOut();
+  window.location.href = "#inicio";
+  actualizarBotonIngreso();
+}
+    
 supabaseClient.auth.onAuthStateChange(() => {
   actualizarBotonIngreso();
 });
