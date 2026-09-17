@@ -672,13 +672,16 @@ if (user && perfilEmail) {
   perfilEmail.textContent = user.email;
   const { data: perfil } = await supabaseClient
   .from("profiles")
- .select("username, full_name, bio")
+ .select("username, full_name, bio, aviation_role, aircraft_flown, flight_simulators")
   .eq("id", user.id)
   .single();
 
 perfilNombre.textContent = perfil?.full_name || perfil?.username || "Mi perfil";
   perfilUsername.textContent = perfil?.username ? "@" + perfil.username : "";
   perfilBio.textContent = perfil?.bio || "Todavía no has agregado una biografía.";
+  document.getElementById("hangarAviationRole").textContent = perfil?.aviation_role || "Sin completar";
+document.getElementById("hangarAircraft").textContent = perfil?.aircraft_flown || "Sin completar";
+document.getElementById("hangarSimulators").textContent = perfil?.flight_simulators || "Sin completar";
 }
 
   if (user) {
