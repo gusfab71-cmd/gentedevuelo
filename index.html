@@ -592,6 +592,8 @@
     Un espacio para descubrir a otros miembros de Gente de Vuelo
     y conocer el material aeronáutico que comparten.
   </p>
+<div id="lista-comunidad"></div>
+  
 </section>
   
   <footer>
@@ -980,6 +982,35 @@ contenedor.appendChild(tarjeta);
  });  
 }  
 cargarPublicaciones(); 
+async function cargarComunidad() {
+  const contenedor = document.getElementById("lista-comunidad");
+
+  const { data, error } = await supabaseClient
+    .from("profiles")
+    .select("id, username, full_name, avatar_url, bio");
+
+  if (error) {
+    console.error("Error al cargar la comunidad:", error);
+    return;
+  }
+
+  contenedor.innerHTML = "";
+
+  data.forEach((perfil) => {
+    const tarjeta = document.createElement("div");
+    tarjeta.className = "tarjeta";
+
+    tarjeta.innerHTML = `
+      <h3>${perfil.username || perfil.full_name || "Miembro de Gente de Vuelo"}</h3>
+      <p>${perfil.bio || "Miembro de la comunidad aeronáutica."}</p>
+    `;
+
+    contenedor.appendChild(tarjeta);
+  });
+}
+
+cargarComunidad();
+    
  </script> 
 
 </body>
