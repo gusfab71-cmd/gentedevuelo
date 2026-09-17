@@ -1010,8 +1010,22 @@ async function cargarComunidad() {
     contenedor.appendChild(tarjeta);
   });
 }
-function verHangar(id) {
-  window.location.hash = "hangar-" + id;
+async function verHangar(id) {
+  const { data: perfil, error } = await supabaseClient
+    .from("profiles")
+    .select("id, username, full_name, avatar_url, bio")
+    .eq("id", id)
+    .single();
+
+  if (error) {
+    console.error("Error al abrir el hangar:", error);
+    return;
+  }
+
+  alert(
+    "Hangar de " +
+    (perfil.username || perfil.full_name || "Miembro de Gente de Vuelo")
+  );
 }
     
 cargarComunidad();
