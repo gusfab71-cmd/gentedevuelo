@@ -628,6 +628,8 @@ async function actualizarBotonIngreso() {
   
   const boton = document.getElementById("botonIngresar");
   const botonCerrar = document.getElementById("botonCerrarSesion");
+const seccionIngresar = document.getElementById("ingresar");
+  
   const { data: { user } } = await supabaseClient.auth.getUser();
   const perfilEmail = document.getElementById("perfilEmail");
 
@@ -636,11 +638,13 @@ if (user && perfilEmail) {
 }
 
   if (user) {
+   seccionIngresar.style.display = "none"; 
    botonCerrar.style.display = "inline-block"; 
     boton.textContent = "MI PERFIL";
    boton.href = "#mi-perfil";
     
   } else {
+   seccionIngresar.style.display = "block"; 
    botonCerrar.style.display = "none"; 
     boton.textContent = "INGRESAR";
     boton.href = "#ingresar";
