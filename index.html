@@ -467,6 +467,7 @@
 
     <div class="tarjeta">
       <h3 id="perfilNombre">Mi perfil</h3>
+      <p id="perfilUsername">Nombre de usuario</p>
       <p id="perfilNombre">Usuario de Gente de Vuelo</p>
       <p id="perfilEmail"></p>
       <p>
@@ -633,6 +634,7 @@ const seccionIngresar = document.getElementById("ingresar");
   const { data: { user } } = await supabaseClient.auth.getUser();
   const perfilEmail = document.getElementById("perfilEmail");
 const perfilNombre = document.getElementById("perfilNombre");
+  const perfilUsername = document.getElementById("perfilUsername");
 if (user && perfilEmail) {
   perfilEmail.textContent = user.email;
   const { data: perfil } = await supabaseClient
@@ -642,6 +644,7 @@ if (user && perfilEmail) {
   .single();
 
 perfilNombre.textContent = perfil?.full_name || perfil?.username || "Mi perfil";
+  perfilUsername.textContent = perfil?.username ? "@" + perfil.username : "";
 }
 
   if (user) {
