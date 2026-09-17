@@ -1003,12 +1003,17 @@ async function cargarComunidad() {
     tarjeta.innerHTML = `
       <h3>${perfil.username || perfil.full_name || "Miembro de Gente de Vuelo"}</h3>
       <p>${perfil.bio || "Miembro de la comunidad aeronáutica."}</p>
+<button class="boton" onclick="verHangar('${perfil.id}')">Ver Hangar</button>
+      
     `;
 
     contenedor.appendChild(tarjeta);
   });
 }
-
+function verHangar(id) {
+  window.location.hash = "hangar-" + id;
+}
+    
 cargarComunidad();
     
  </script> 
