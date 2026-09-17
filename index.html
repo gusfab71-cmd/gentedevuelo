@@ -502,7 +502,21 @@
     
   <button class="boton" id="guardarInfoAeronautica">Guardar cambios</button>
   <p id="mensajeInfoAeronautica"></p>
-</div>    
+</div>  
+<div class="tarjeta">
+  <h3>Fotos de mi Hangar</h3>
+  <p>Compartí fotos de tus vuelos, aeronaves y experiencias aeronáuticas.</p>
+
+  <input type="file" id="fotoHangar" accept="image/*">
+
+  <button class="boton" id="subirFotoHangar">
+    Subir foto
+  </button>
+
+  <p id="mensajeFotoHangar"></p>
+  <div id="misFotosHangar"></div>
+</div>
+      
     </div>
   </div>
     </div>  
@@ -1062,6 +1076,38 @@ document.getElementById("hangar-publico").scrollIntoView({
   behavior: "smooth"
 });
 }
+async function subirFotoHangar() {
+  const archivo = document.getElementById("fotoHangar").files[0];
+  const mensaje = document.getElementById("mensajeFotoHangar");
+
+  if (!archivo) {
+    mensaje.textContent = "Seleccioná una foto.";
+    return;
+  }
+
+  const { data: { user } } = await supabaseClient.auth.getUser();
+
+  if (!user) {
+    mensaje.textContent = "Debés iniciar sesión para subir una foto.";
+    return;
+  }
+
+  const nombreArchivo = `${user.id}/${Date.now()}-${archivo.name}`;
+
+  const { error } = await supabaseClient.storage
+    .from("hangar-fotos")
+    .upload(nombreArchivo, archivo);
+
+  if (error) {
+    console.error("Error al subir la foto:", error);
+    mensaje.textContent = "No se pudo subir la foto.";
+    return;
+  }
+
+  mensaje.textContent = "Foto subida correctamente.";
+  document.getElementById("fotoHangar").value = "";
+}
+    
    function cerrarHangarPublico() {
   document.getElementById("hangar-publico").style.display = "none";
   document.getElementById("hangar-comunidad").style.display = "block";
@@ -1070,6 +1116,8 @@ document.getElementById("hangar-publico").scrollIntoView({
     behavior: "smooth"
   });
 } 
+document.getElementById("subirFotoHangar").addEventListener("click", subirFotoHangar);
+    
 cargarComunidad();
     
  </script> 
