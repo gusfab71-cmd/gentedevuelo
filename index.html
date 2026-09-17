@@ -291,6 +291,7 @@
     <a href="#historia">Historia de la Aviación</a>
     <a href="#tienda">Tienda Aeronáutica</a>
    <a href="#ingresar" class="boton-ingresar" id="botonIngresar">INGRESAR</a>
+    <a href="#" id="botonCerrarSesion" class="boton-ingresar" style="display:none;">CERRAR SESIÓN</a>
   </nav>
 
   <section class="hero" id="inicio">
@@ -621,7 +622,9 @@ function mostrarPassword() {
       mensaje.textContent = "Ingresaste correctamente a Gente de Vuelo.";
     }
 async function actualizarBotonIngreso() {
+  
   const boton = document.getElementById("botonIngresar");
+  const botonCerrar = document.getElementById("botonCerrarSesion");
   const { data: { user } } = await supabaseClient.auth.getUser();
   const perfilEmail = document.getElementById("perfilEmail");
 
@@ -630,10 +633,12 @@ if (user && perfilEmail) {
 }
 
   if (user) {
+   botonCerrar.style.display = "inline-block"; 
     boton.textContent = "MI PERFIL";
    boton.href = "#mi-perfil";
     
   } else {
+   botonCerrar.style.display = "none"; 
     boton.textContent = "INGRESAR";
     boton.href = "#ingresar";
  
@@ -644,6 +649,10 @@ async function cerrarSesion() {
   window.location.href = "#inicio";
   actualizarBotonIngreso();
 }
+ document.getElementById("botonCerrarSesion").addEventListener("click", function(event) {
+  event.preventDefault();
+  cerrarSesion();
+});   
     
 supabaseClient.auth.onAuthStateChange(() => {
   actualizarBotonIngreso();
