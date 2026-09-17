@@ -687,6 +687,78 @@ perfilNombre.textContent = perfil?.full_name || perfil?.username || "Mi perfil";
  
   }
 }
+async function guardarLicencia() {
+  const { data: { user } } = await supabaseClient.auth.getUser();
+
+  if (!user) {
+    alert("Debes iniciar sesión para guardar una licencia.");
+    return;
+  }
+
+  const nombre = document.getElementById("licenciaNombre").value.trim();
+  const tipo = document.getElementById("licenciaTipo").value.trim();
+  const numero = document.getElementById("licenciaNumero").value.trim();
+  const fecha_vencimiento = document.getElementById("licenciaVencimiento").value || null;
+
+  if (!nombre || !tipo || !numero) {
+    alert("Completa nombre, tipo y número de la licencia.");
+    return;
+  }
+
+  const { error } = await supabaseClient
+    .from("Licencias")
+    .insert({
+      user_id: user.id,
+      nombre: nombre,
+      tipo: tipo,
+      numero: numero,
+      fecha_vencimiento: fecha_vencimiento
+    });
+
+  if (error) {
+    console.error("Error al guardar licencia:", error);
+    alert("No se pudo guardar la licencia.");
+    return;
+  }
+
+  document.getElementById("licenciaNombre").value = "";
+  document.getElementById("licenciaTipo").value = "";
+  document.getElementById("licenciaNumero").value = "";
+  document.getElementById("licenciaVencimiento").value = "";
+
+  await cargarLicencias();
+}
+    
+async function cargarLicencias() {
+  const { data: { user } } = await supabaseClient.auth.getUser();
+
+  const listaLicencias = document.getElementById("listaLicencias");
+
+  if (!user || !listaLicencias) return;
+
+  const { data: licencias, error } = await supabaseClient
+    .from("Licencias")
+    .select("*")
+    .eq("user_id", user.id);
+
+  if (error) {
+    console.error("Error al cargar licencias:", error);
+    return;
+  }
+
+  if (!licencias || licencias.length === 0) {
+    listaLicencias.innerHTML = "<p>No hay licencias registradas todavía.</p>";
+    return;
+  }
+
+  listaLicencias.innerHTML = licencias.map(licencia => `
+    <p>
+      <strong>${licencia.nombre}</strong> - ${licencia.tipo} - ${licencia.numero}
+      ${licencia.fecha_vencimiento ? ` - Vence: ${licencia.fecha_vencimiento}` : ""}
+    </p>
+  `).join("");
+}
+    
 async function cerrarSesion() {
   await supabaseClient.auth.signOut();
   window.location.href = "#inicio";
@@ -702,6 +774,8 @@ supabaseClient.auth.onAuthStateChange(() => {
 });
 
 actualizarBotonIngreso();
+    cargarLicencias();
+  document.getElementById("guardarLicencia").addEventListener("click", guardarLicencia);  
     
   </script>
 </script>
