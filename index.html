@@ -686,7 +686,7 @@ if (user && perfilEmail) {
   perfilEmail.textContent = user.email;
   const { data: perfil } = await supabaseClient
   .from("profiles")
- .select("username, full_name, bio, aviation_role, aircraft_flown, flight_simulators")
+ .select("username, full_name, bio, aviation_role, aircraft_flown, flight_simulators, aviation_experience, home_airfield, flight_hours, aviation_organization, aviation_license")
   .eq("id", user.id)
   .single();
 
@@ -696,6 +696,14 @@ perfilNombre.textContent = perfil?.full_name || perfil?.username || "Mi perfil";
   document.getElementById("hangarAviationRole").textContent = perfil?.aviation_role || "Sin completar";
 document.getElementById("hangarAircraft").textContent = perfil?.aircraft_flown || "Sin completar";
 document.getElementById("hangarSimulators").textContent = perfil?.flight_simulators || "Sin completar";
+  
+document.getElementById("hangarExperience").textContent = perfil?.aviation_experience || "Sin completar";
+
+  document.getElementById("hangarHomeBase").textContent = perfil?.home_airfield || "Sin completar";
+document.getElementById("hangarFlightHours").textContent = perfil?.flight_hours || "Sin completar";
+document.getElementById("hangarAeroclub").textContent = perfil?.aviation_organization || "Sin completar";
+document.getElementById("hangarLicense").textContent = perfil?.aviation_license || "Sin completar";
+  
 }
 
   if (user) {
