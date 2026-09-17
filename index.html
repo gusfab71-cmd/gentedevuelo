@@ -494,6 +494,12 @@
   <input id="editarAviationRole" type="text" placeholder="Actividad aeronáutica">
   <input id="editarAircraft" type="text" placeholder="Aeronaves que volás o volaste">
   <input id="editarSimulators" type="text" placeholder="Simuladores de vuelo">
+<input id="editarExperience" type="text" placeholder="Experiencia aeronáutica">
+    <input id="editarHomeBase" type="text" placeholder="Aeropuerto base">
+    <input id="editarFlightHours" type="number" placeholder="Horas de vuelo">
+    <input id="editarAeroclub" type="text" placeholder="Aeroclub / Escuela">
+    <input id="editarLicense" type="text" placeholder="Licencia / Habilitación">
+    
   <button class="boton" id="guardarInfoAeronautica">Guardar cambios</button>
   <p id="mensajeInfoAeronautica"></p>
 </div>    
@@ -823,10 +829,31 @@ actualizarBotonIngreso();
       : document.getElementById("hangarAircraft").textContent;
 
   document.getElementById("editarSimulators").value =
+    
     document.getElementById("hangarSimulators").textContent === "Sin completar"
       ? ""
-      : document.getElementById("hangarSimulators").textContent;
-
+          : document.getElementById("hangarSimulators").textContent;
+     document.getElementById("editarExperience").value =
+  document.getElementById("hangarExperience").textContent === "Sin completar"
+    ? ""
+    : document.getElementById("hangarExperience").textContent;
+   document.getElementById("editarHomeBase").value =
+  document.getElementById("hangarHomeBase").textContent === "Sin completar"
+    ? ""
+    : document.getElementById("hangarHomeBase").textContent; 
+    document.getElementById("editarFlightHours").value =
+  document.getElementById("hangarFlightHours").textContent === "Sin completar"
+    ? ""
+    : document.getElementById("hangarFlightHours").textContent; 
+    document.getElementById("editarAeroclub").value =
+  document.getElementById("hangarAeroclub").textContent === "Sin completar"
+    ? ""
+    : document.getElementById("hangarAeroclub").textContent; 
+  document.getElementById("editarLicense").value =
+  document.getElementById("hangarLicense").textContent === "Sin completar"
+    ? ""
+    : document.getElementById("hangarLicense").textContent; 
+     
   formulario.style.display = "block";
 }); 
     document.getElementById("guardarInfoAeronautica").addEventListener("click", async () => {
