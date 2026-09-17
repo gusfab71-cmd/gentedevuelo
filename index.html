@@ -869,13 +869,25 @@ actualizarBotonIngreso();
   const aviation_role = document.getElementById("editarAviationRole").value.trim();
   const aircraft_flown = document.getElementById("editarAircraft").value.trim();
   const flight_simulators = document.getElementById("editarSimulators").value.trim();
+   const aviation_experience = document.getElementById("editarExperience").value.trim();
+const home_airfield = document.getElementById("editarHomeBase").value.trim();
+const flight_hours = document.getElementById("editarFlightHours").value.trim();
+const aviation_organization = document.getElementById("editarAeroclub").value.trim();
+const aviation_license = document.getElementById("editarLicense").value.trim();   
 
+      
   const { error } = await supabaseClient
     .from("profiles")
     .update({
       aviation_role,
       aircraft_flown,
       flight_simulators
+  aviation_experience,
+  home_airfield,
+  flight_hours,
+  aviation_organization,
+  aviation_license
+      
     })
     .eq("id", user.id);
 
