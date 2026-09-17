@@ -1106,6 +1106,8 @@ async function subirFotoHangar() {
 
   mensaje.textContent = "Foto subida correctamente.";
   document.getElementById("fotoHangar").value = "";
+await cargarMisFotosHangar();
+  
 }
 async function cargarMisFotosHangar() {
   const contenedor = document.getElementById("misFotosHangar");
