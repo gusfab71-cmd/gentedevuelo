@@ -635,7 +635,13 @@ const seccionIngresar = document.getElementById("ingresar");
 const perfilNombre = document.getElementById("perfilNombre");
 if (user && perfilEmail) {
   perfilEmail.textContent = user.email;
-  perfilNombre.textContent = user.user_metadata?.full_name || user.user_metadata?.username || "Mi perfil";
+  const { data: perfil } = await supabaseClient
+  .from("profiles")
+  .select("username, full_name")
+  .eq("id", user.id)
+  .single();
+
+perfilNombre.textContent = perfil?.full_name || perfil?.username || "Mi perfil";
 }
 
   if (user) {
