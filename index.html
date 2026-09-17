@@ -871,7 +871,7 @@ actualizarBotonIngreso();
   const flight_simulators = document.getElementById("editarSimulators").value.trim();
    const aviation_experience = document.getElementById("editarExperience").value.trim();
 const home_airfield = document.getElementById("editarHomeBase").value.trim();
-const flight_hours = document.getElementById("editarFlightHours").value.trim();
+const flight_hours = document.getElementById("editarFlightHours").value.trim() === "" ? null : Number(document.getElementById("editarFlightHours").value);
 const aviation_organization = document.getElementById("editarAeroclub").value.trim();
 const aviation_license = document.getElementById("editarLicense").value.trim();   
 
