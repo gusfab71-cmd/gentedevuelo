@@ -470,6 +470,7 @@
       <p id="perfilUsername">Nombre de usuario</p>
       <p id="perfilNombre">Usuario de Gente de Vuelo</p>
       <p id="perfilEmail"></p>
+      <p id="perfilBio"></p>
       <p>
         Este será tu espacio personal dentro de Gente de Vuelo.
         Aquí podrás completar tu perfil, registrar tus travesías,
@@ -633,6 +634,7 @@ const seccionIngresar = document.getElementById("ingresar");
   
   const { data: { user } } = await supabaseClient.auth.getUser();
   const perfilEmail = document.getElementById("perfilEmail");
+  const perfilBio = document.getElementById("perfilBio");
 const perfilNombre = document.getElementById("perfilNombre");
   const perfilUsername = document.getElementById("perfilUsername");
 if (user && perfilEmail) {
@@ -645,6 +647,7 @@ if (user && perfilEmail) {
 
 perfilNombre.textContent = perfil?.full_name || perfil?.username || "Mi perfil";
   perfilUsername.textContent = perfil?.username ? "@" + perfil.username : "";
+  perfilBio.textContent = perfil?.bio || "Todavía no has agregado una biografía.";
 }
 
   if (user) {
