@@ -1107,6 +1107,38 @@ async function subirFotoHangar() {
   mensaje.textContent = "Foto subida correctamente.";
   document.getElementById("fotoHangar").value = "";
 }
+async function cargarMisFotosHangar() {
+  const contenedor = document.getElementById("misFotosHangar");
+
+  const { data: { user } } = await supabaseClient.auth.getUser();
+
+  if (!user) return;
+
+  const { data: archivos, error } = await supabaseClient.storage
+    .from("hangar-fotos")
+    .list(user.id);
+
+  if (error) {
+    console.error("Error al cargar las fotos:", error);
+    return;
+  }
+
+  contenedor.innerHTML = "";
+
+  archivos.forEach((archivo) => {
+    const { data } = supabaseClient.storage
+      .from("hangar-fotos")
+      .getPublicUrl(`${user.id}/${archivo.name}`);
+
+    const imagen = document.createElement("img");
+    imagen.src = data.publicUrl;
+    imagen.alt = "Foto del Hangar";
+    imagen.style.maxWidth = "250px";
+    imagen.style.margin = "10px";
+
+    contenedor.appendChild(imagen);
+  });
+}
     
    function cerrarHangarPublico() {
   document.getElementById("hangar-publico").style.display = "none";
@@ -1117,6 +1149,7 @@ async function subirFotoHangar() {
   });
 } 
 document.getElementById("subirFotoHangar").addEventListener("click", subirFotoHangar);
+  cargarMisFotosHangar();  
     
 cargarComunidad();
     
