@@ -632,9 +632,12 @@ if (user && perfilEmail) {
   if (user) {
     boton.textContent = "MI PERFIL";
    boton.href = "#mi-perfil";
+boton.onclick = cerrarSesion;
+    
   } else {
     boton.textContent = "INGRESAR";
     boton.href = "#ingresar";
+  boton.onclick = null;  
   }
 }
 async function cerrarSesion() {
