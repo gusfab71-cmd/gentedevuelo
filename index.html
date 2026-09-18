@@ -351,7 +351,60 @@ h1, h2, h3 {
 .boton:hover {
   background: #ff7848;
 }
-    
+/* NUEVO DISEÑO GENTE DE VUELO */
+
+header {
+  display: none;
+}
+
+.hero {
+  position: relative;
+}
+
+.logo {
+  position: absolute;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 125px;
+  height: 125px;
+  object-fit: contain;
+  z-index: 10;
+}
+.hero-titulo {
+  position: absolute;
+  top: 155px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  text-align: center;
+  z-index: 9;
+}
+
+.hero-titulo h1 {
+  margin: 0;
+  color: #e7b94f;
+  font-size: 54px;
+  font-weight: 800;
+  letter-spacing: 3px;
+  text-shadow: 0 3px 8px rgba(0, 0, 0, 0.55);
+}
+
+.hero-titulo p {
+  margin: 4px 0 0;
+  color: white;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: 7px;
+}
+
+.hero-lema {
+  margin-top: 14px;
+  color: white;
+  font-size: 27px;
+  font-style: italic;
+}
+  
   </style>
 </head>
 
@@ -378,8 +431,14 @@ h1, h2, h3 {
 <div class="portada-completa">
   <section class="hero" id="inicio">
     
-        
-    
+   <img src="logo circular recortado gente de vuelo.png"
+     alt="Gente de Vuelo"
+     class="logo">     
+    <div class="hero-titulo">
+  <h1>GENTE DE VUELO</h1>
+  <p>COMUNIDAD AERONÁUTICA</p>
+  <div class="hero-lema">Pasión que nos une</div>
+</div>
   </section>
 
   <section class="accesos-principales">
