@@ -116,8 +116,8 @@
       margin: -20px auto 40px;
       padding: 0 20px;
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-      gap: 16px;
+     grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
     }
 
     .acceso {
@@ -129,7 +129,7 @@
     rgba(0, 0, 0, 0.12) 100%
   );
   border: 3px solid #ff7a00;
-  padding: 12px 16px;
+  padding: 20px 22px;
   text-align: center;
   border-radius: 22px;
   box-shadow: 0 0 10px rgba(255, 122, 0, 0.65);
@@ -137,10 +137,14 @@
 }
 .acceso h3 {
   color: white;
+  font-size: 20px;
+font-weight: 700;
 }
 
 .acceso p {
   color: #d8d8d8;
+  font-size: 16px;
+line-height: 1.4;
 }
     .acceso:hover,
     .tarjeta:hover {
@@ -441,11 +445,7 @@ header {
 
   <section class="accesos-principales">
 
-    <div class="acceso destacado">
-      <h3>Hora Zulu</h3>
-      <p id="horaZulu">--:--:-- Z</p>
-    </div>
-
+    
     <div class="acceso destacado">
       <h3>Meteorología Aeronáutica</h3>
       <p>METAR e información meteorológica útil para el vuelo.</p>
