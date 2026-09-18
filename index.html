@@ -1092,7 +1092,8 @@ async function subirFotoHangar() {
     return;
   }
 
-  const nombreArchivo = `${user.id}/${Date.now()}-${archivo.name}`;
+ const nombreSeguro = archivo.name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9._-]/g, "_");
+const nombreArchivo = `${user.id}/${Date.now()}-${nombreSeguro}`;
 
   const { error } = await supabaseClient.storage
     .from("hangar-fotos")
