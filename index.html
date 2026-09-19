@@ -1631,6 +1631,34 @@ document.getElementById("subirFotoHangar").addEventListener("click", subirFotoHa
   cargarMisFotosHangar();  
     
 cargarComunidad();
+   let galeriaIndice = 0;
+
+function moverGaleria(direccion) {
+  const pista = document.getElementById("galeriaPista");
+  const elementos = pista.children;
+
+  if (elementos.length === 0) return;
+
+  galeriaIndice += direccion;
+
+  if (galeriaIndice < 0) {
+    galeriaIndice = elementos.length - 1;
+  }
+
+  if (galeriaIndice >= elementos.length) {
+    galeriaIndice = 0;
+  }
+
+  pista.style.transform = `translateX(-${galeriaIndice * 100}%)`;
+}
+
+document.querySelector(".galeria-anterior").addEventListener("click", () => {
+  moverGaleria(-1);
+});
+
+document.querySelector(".galeria-siguiente").addEventListener("click", () => {
+  moverGaleria(1);
+}); 
     
  </script> 
 
