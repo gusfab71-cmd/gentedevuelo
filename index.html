@@ -687,6 +687,68 @@ header {
   color: #e1e5e8;
   font-size: 16px;
   line-height: 1.6;
+} 
+  /* ===== GALERÍA - CARRUSEL PRINCIPAL ===== */
+
+.galeria-carrusel {
+  position: relative;
+  max-width: 1200px;
+  margin: 35px auto 20px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.galeria-ventana {
+  width: 100%;
+  overflow: hidden;
+  border-radius: 22px;
+  background: #172126;
+  border: 2px solid #ff642e;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+}
+
+.galeria-pista {
+  display: flex;
+  align-items: center;
+  min-height: 360px;
+  transition: transform 0.5s ease;
+}
+
+.galeria-flecha {
+  flex: 0 0 48px;
+  width: 48px;
+  height: 48px;
+  border: 2px solid #ff642e;
+  border-radius: 50%;
+  background: #1d2225;
+  color: #ffffff;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.galeria-flecha:hover {
+  background: #ff642e;
+  transform: scale(1.08);
+}
+
+@media (max-width: 700px) {
+  .galeria-carrusel {
+    gap: 8px;
+  }
+
+  .galeria-pista {
+    min-height: 240px;
+  }
+
+  .galeria-flecha {
+    flex-basis: 38px;
+    width: 38px;
+    height: 38px;
+    font-size: 22px;
+  }
 }  
   </style>
 </head>
