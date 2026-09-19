@@ -1618,6 +1618,47 @@ async function cargarMisFotosHangar() {
     contenedor.appendChild(imagen);
   });
 }
+   async function cargarGaleria() {
+  const pista = document.getElementById("galeriaPista");
+
+  if (!pista) return;
+
+  const { data: carpetas, error } = await supabaseClient.storage
+    .from("hangar-fotos")
+    .list("", { limit: 100 });
+
+  if (error) {
+    console.error("Error al cargar la galería:", error);
+    return;
+  }
+
+  pista.innerHTML = "";
+
+  for (const carpeta of carpetas) {
+    const { data: archivos } = await supabaseClient.storage
+      .from("hangar-fotos")
+      .list(carpeta.name);
+
+    if (!archivos) continue;
+
+    archivos.forEach((archivo) => {
+      const { data } = supabaseClient.storage
+        .from("hangar-fotos")
+        .getPublicUrl(`${carpeta.name}/${archivo.name}`);
+
+      const imagen = document.createElement("img");
+      imagen.src = data.publicUrl;
+      imagen.alt = "Foto de la comunidad";
+
+      imagen.style.width = "100%";
+      imagen.style.minWidth = "100%";
+      imagen.style.height = "360px";
+      imagen.style.objectFit = "contain";
+
+      pista.appendChild(imagen);
+    });
+  }
+} 
     
    function cerrarHangarPublico() {
   document.getElementById("hangar-publico").style.display = "none";
@@ -1631,7 +1672,12 @@ document.getElementById("subirFotoHangar").addEventListener("click", subirFotoHa
   cargarMisFotosHangar();  
     
 cargarComunidad();
-   let galeriaIndice = 0;
+
+cargarGaleria();
+
+let galeriaIndice = 0;
+    
+ 
 
 function moverGaleria(direccion) {
   const pista = document.getElementById("galeriaPista");
