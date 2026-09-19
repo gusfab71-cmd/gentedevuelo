@@ -1235,7 +1235,16 @@ async function verHangar(id) {
 
 const nombre = perfil.username || perfil.full_name || "Miembro de Gente de Vuelo";
 const infoHangar = document.getElementById("hangar-publico-info");
-
+infoHangar.innerHTML = `
+  <p><strong>Actividad:</strong> ${perfil.aviation_role || "Sin completar"}</p>
+  <p><strong>Aeronaves:</strong> ${perfil.aircraft_flown || "Sin completar"}</p>
+  <p><strong>Simulador de vuelo:</strong> ${perfil.flight_simulators || "Sin completar"}</p>
+  <p><strong>Experiencia aeronáutica:</strong> ${perfil.aviation_experience || "Sin completar"}</p>
+  <p><strong>Aeropuerto base:</strong> ${perfil.home_airfield || "Sin completar"}</p>
+  <p><strong>Horas de vuelo:</strong> ${perfil.flight_hours || "Sin completar"}</p>
+  <p><strong>Aeroclub / Escuela:</strong> ${perfil.aviation_organization || "Sin completar"}</p>
+  <p><strong>Licencia / Habilitación:</strong> ${perfil.aviation_license || "Sin completar"}</p>
+`;
 
   
  
