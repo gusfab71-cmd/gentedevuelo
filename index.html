@@ -63,6 +63,7 @@
   background-size: cover;
   background-position: center 60%;
   background-repeat: no-repeat;
+  }
     .hero {
       text-align: center;
       padding: 65px 20px;
@@ -169,8 +170,7 @@ line-height: 1.4;
       border-top: 4px solid #205b7d;
     }
 
-    .contenedor {
-#explorar {
+ #explorar {
   background: linear-gradient(180deg, #eef7fc 0%, #ffffff 100%);
   border-top: 3px solid #ff9f1c;
   border-radius: 0 0 24px 24px;
@@ -544,7 +544,7 @@ header {
       instructores, aeromodelistas, constructores de aeronaves experimentales
       y apasionados por la aviación. Un espacio sin fines de lucro para
   
-    </p>    compartir conocimientos, experiencias e historias, conocer gente y
+      compartir conocimientos, experiencias e historias, conocer gente y
       disfrutar juntos el mundo de la aviación, teniendo la posibilidad de
       crear su propio usuario, participar, interactuar y compartir contenido
       dentro de un espacio moderado.
@@ -651,7 +651,7 @@ header {
     <div class="tarjeta">
       <h3 id="perfilNombre">Mi perfil</h3>
       <p id="perfilUsername">Nombre de usuario</p>
-      <p id="perfilNombre">Usuario de Gente de Vuelo</p>
+     
       <p id="perfilEmail"></p>
       <p id="perfilBio"></p>
       <p>
@@ -714,7 +714,7 @@ header {
 <div style="margin-top:20px;">
   <h4>Agregar licencia</h4>
   
-  <p><strong>Privacidad:</strong> Registrar tus licencias y datos aeronáuticos es totalmente opcional.</p>esta información.</p>
+  <p><strong>Privacidad:</strong> Registrar tus licencias y datos aeronáuticos es totalmente opcional.</p>
   <input id="licenciaNombre" type="text" placeholder="Nombre de la licencia">
 
   <input id="licenciaTipo" type="text" placeholder="Tipo">
@@ -838,8 +838,8 @@ header {
       document.getElementById("horaZulu").textContent = zulu + " Z";
     }
 
-    actualizarHoraZulu();
-    setInterval(actualizarHoraZulu, 1000);
+    
+      
 
     async function crearUsuario() {
       const email = document.getElementById("email").value.trim();
@@ -1124,7 +1124,7 @@ const aviation_license = document.getElementById("editarLicense").value.trim();
   document.getElementById("formInfoAeronautica").style.display = "none";
 });
   </script>
-</script>
+
   <script>
   const botonEnviar = document.getElementById("enviar-publicacion");
     botonEnviar.addEventListener("click", async () => {
@@ -1236,16 +1236,7 @@ async function verHangar(id) {
 const nombre = perfil.username || perfil.full_name || "Miembro de Gente de Vuelo";
 const infoHangar = document.getElementById("hangar-publico-info");
 
-infoHangar.innerHTML = `
-  <p><strong>Actividad:</strong> ${perfil.aviation_activity || "Sin completar"}</p>
-  <p><strong>Organización:</strong> ${perfil.aviation_organization || "Sin completar"}</p>
-  <p><strong>Rol:</strong> ${perfil.aviation_role || "Sin completar"}</p>
-  <p><strong>Licencia:</strong> ${perfil.aviation_license || "Sin completar"}</p>
-  <p><strong>Aeronave propia:</strong> ${perfil.aircraft_owned || "Sin completar"}</p>
-  <p><strong>Aeronave que vuela:</strong> ${perfil.aircraft_activity || "Sin completar"}</p>
-  <p><strong>Simulador:</strong> ${perfil.flight_simulator || "Sin completar"}</p>
-  <p><strong>Usuario de simulador:</strong> ${perfil.flight_simulator_username || "Sin completar"}</p>
-`;
+
   
  
 document.getElementById("hangar-publico-titulo").textContent = "Hangar de " + nombre;
