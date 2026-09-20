@@ -770,12 +770,80 @@ header {
     font-size: 22px;
   }
 }  
+   /* ===== MENÚ VERTICAL DESPLEGABLE ===== */
+
+.menu-principal {
+  position: fixed;
+  top: 18px;
+  left: 18px;
+  z-index: 1000;
+  background: transparent;
+  padding: 0;
+  text-align: left;
+}
+
+.menu-boton {
+  background: rgba(23, 27, 29, 0.88);
+  color: white;
+  border: 2px solid #ff642e;
+  border-radius: 10px;
+  padding: 11px 17px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.menu-boton:hover {
+  background: #ff642e;
+}
+
+.menu-desplegable {
+  display: none;
+  flex-direction: column;
+  width: 270px;
+  margin-top: 8px;
+  padding: 10px;
+  background: rgba(23, 27, 29, 0.96);
+  border: 1px solid #ff642e;
+  border-radius: 12px;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.45);
+}
+
+.menu-desplegable.abierto {
+  display: flex;
+}
+
+.menu-desplegable a {
+  display: block;
+  color: white;
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 7px;
+}
+
+.menu-desplegable a:hover {
+  background: #ff642e;
+  color: white;
+}
+
+.menu-desplegable .boton-ingresar {
+  margin: 5px 0 0;
+  text-align: center;
+} 
   </style>
 </head>
 
 <body>
 
-  <nav>
+ <nav class="menu-principal">
+  <button class="menu-boton" id="menuBoton" type="button">
+    ☰ MENÚ
+  </button>
+
+  <div class="menu-desplegable" id="menuDesplegable">
     <a href="#inicio">Inicio</a>
     <a href="#foro">Foro Aeronáutico</a>
     <a href="#experimental">Experimentales</a>
@@ -784,9 +852,10 @@ header {
     <a href="#travesias">Travesías</a>
     <a href="#historia">Historia de la Aviación</a>
     <a href="#tienda">Tienda Aeronáutica</a>
-   <a href="#ingresar" class="boton-ingresar" id="botonIngresar">INGRESAR</a>
+    <a href="#ingresar" class="boton-ingresar" id="botonIngresar">INGRESAR</a>
     <a href="#" id="botonCerrarSesion" class="boton-ingresar" style="display:none;">CERRAR SESIÓN</a>
-  </nav>
+  </div>
+</nav>
 <div class="portada-completa">
   <section class="hero" id="inicio">
     
@@ -1787,6 +1856,19 @@ document.querySelector(".galeria-siguiente").addEventListener("click", () => {
 }); 
     
  </script> 
+<script>
+  const menuBoton = document.getElementById("menuBoton");
+  const menuDesplegable = document.getElementById("menuDesplegable");
 
+  menuBoton.addEventListener("click", function () {
+    menuDesplegable.classList.toggle("abierto");
+  });
+
+  menuDesplegable.querySelectorAll("a").forEach(function (enlace) {
+    enlace.addEventListener("click", function () {
+      menuDesplegable.classList.remove("abierto");
+    });
+  });
+</script>
 </body>
 </html>
