@@ -1491,7 +1491,7 @@ async function cargarComunidad() {
 
   const { data, error } = await supabaseClient
     .from("profiles")
-    .select("id, username, full_name, avatar_url, bio");
+   .select("id, username, full_name, avatar_url, bio, aviation_role, aircraft_flown, flight_simulators, aviation_experience, home_airfield, flight_hours, aviation_organization, aviation_license");
 
   if (error) {
     console.error("Error al cargar la comunidad:", error);
@@ -1504,12 +1504,15 @@ async function cargarComunidad() {
     const tarjeta = document.createElement("div");
     tarjeta.className = "tarjeta";
 
-    tarjeta.innerHTML = `
-      <h3>${perfil.username || perfil.full_name || "Miembro de Gente de Vuelo"}</h3>
-      <p>${perfil.bio || "Miembro de la comunidad aeronáutica."}</p>
-<button class="boton" onclick="verHangar('${perfil.id}')">Ver Hangar</button>
-      
-    `;
+   tarjeta.innerHTML = `
+  <h3>${perfil.username || perfil.full_name || "Miembro de Gente de Vuelo"}</h3>
+  <p>${perfil.bio || "Miembro de la comunidad aeronáutica."}</p>
+  ${perfil.aviation_role ? `<p><strong>Actividad:</strong> ${perfil.aviation_role}</p>` : ""}
+  ${perfil.home_airfield ? `<p><strong>Aeropuerto base:</strong> ${perfil.home_airfield}</p>` : ""}
+  ${perfil.aircraft_flown ? `<p><strong>Aeronave / experiencia:</strong> ${perfil.aircraft_flown}</p>` : ""}
+  ${perfil.flight_hours ? `<p><strong>Horas de vuelo:</strong> ${perfil.flight_hours}</p>` : ""}
+  <button class="boton" onclick="verHangar('${perfil.id}')">Ver Hangar</button>
+`;
 
     contenedor.appendChild(tarjeta);
   });
