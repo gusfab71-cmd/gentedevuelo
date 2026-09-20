@@ -946,6 +946,14 @@ header {
     <h2>Mi Hangar Virtual</h2>
 
     <div class="tarjeta">
+<img id="perfilAvatar" class="avatar-comunidad" alt="Foto de perfil" style="display:none;">
+
+<div>
+  <input type="file" id="avatarArchivo" accept="image/*">
+  <button class="boton" id="subirAvatar" type="button">Subir foto de perfil</button>
+  <p id="avatarMensaje"></p>
+</div>
+      
       <h3 id="perfilNombre">Mi perfil</h3>
       <p id="perfilUsername">Nombre de usuario</p>
      
@@ -1221,16 +1229,21 @@ const seccionIngresar = document.getElementById("ingresar");
   const perfilBio = document.getElementById("perfilBio");
 const perfilNombre = document.getElementById("perfilNombre");
   const perfilUsername = document.getElementById("perfilUsername");
+  const perfilAvatar = document.getElementById("perfilAvatar");
 if (user && perfilEmail) {
   perfilEmail.textContent = user.email;
   const { data: perfil } = await supabaseClient
   .from("profiles")
- .select("username, full_name, bio, aviation_role, aircraft_flown, flight_simulators, aviation_experience, home_airfield, flight_hours, aviation_organization, aviation_license")
+ .select("username, full_name, bio, avatar_url, aviation_role, aircraft_flown, flight_simulators, aviation_experience, home_airfield, flight_hours, aviation_organization, aviation_license")
   .eq("id", user.id)
   .single();
 
 perfilNombre.textContent = perfil?.full_name || perfil?.username || "Mi perfil";
   perfilUsername.textContent = perfil?.username ? "@" + perfil.username : "";
+  if (perfilAvatar && perfil?.avatar_url) {
+  perfilAvatar.src = perfil.avatar_url;
+  perfilAvatar.style.display = "block";
+}
   perfilBio.textContent = perfil?.bio || "Todavía no has agregado una biografía.";
   document.getElementById("hangarAviationRole").textContent = perfil?.aviation_role || "Sin completar";
 document.getElementById("hangarAircraft").textContent = perfil?.aircraft_flown || "Sin completar";
@@ -1610,6 +1623,47 @@ const nombreArchivo = `${user.id}/${Date.now()}-${nombreSeguro}`;
 await cargarMisFotosHangar();
   
 }
+async function subirAvatar() {
+  const archivo = document.getElementById("avatarArchivo").files[0];
+  const mensaje = document.getElementById("avatarMensaje");
+  if (!archivo) {
+  mensaje.textContent = "Seleccioná una foto de perfil.";
+  return;
+}
+  const { data: { user } } = await supabaseClient.auth.getUser();
+const nombreArchivo = `${user.id}/avatar-${Date.now()}-${archivo.name}`;
+
+const { error: errorUpload } = await supabaseClient.storage
+  .from("hangar-fotos")
+  
+  .upload(nombreArchivo, archivo);
+ if (errorUpload) {
+  mensaje.textContent = "Error al subir la foto: " + errorUpload.message;
+  return;
+}
+const { data: urlData } = supabaseClient.storage
+  .from("hangar-fotos")
+  .getPublicUrl(nombreArchivo);
+
+const avatarUrl = urlData.publicUrl;
+  const { error: errorPerfil } = await supabaseClient
+  .from("profiles")
+  .update({ avatar_url: avatarUrl })
+  .eq("id", user.id);
+if (errorPerfil) {
+  mensaje.textContent = "Error al guardar la foto de perfil: " + errorPerfil.message;
+  return;
+}
+
+ mensaje.textContent = "Foto de perfil actualizada correctamente.";
+
+const perfilAvatar = document.getElementById("perfilAvatar");
+if (perfilAvatar) {
+  perfilAvatar.src = avatarUrl;
+  perfilAvatar.style.display = "block";
+} 
+}
+    
 async function cargarMisFotosHangar() {
   const contenedor = document.getElementById("misFotosHangar");
 
@@ -1693,6 +1747,8 @@ async function cargarMisFotosHangar() {
   });
 } 
 document.getElementById("subirFotoHangar").addEventListener("click", subirFotoHangar);
+document.getElementById("subirAvatar").addEventListener("click", subirAvatar);
+    
   cargarMisFotosHangar();  
     
 cargarComunidad();
