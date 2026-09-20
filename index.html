@@ -833,6 +833,35 @@ header {
   margin: 5px 0 0;
   text-align: center;
 } 
+/* ===== CONTROLES DE USUARIO ===== */
+
+.controles-usuario {
+  position: absolute;
+  top: 18px;
+  right: 22px;
+  z-index: 1001;
+  display: flex;
+  gap: 10px;
+}
+
+.controles-usuario .boton-ingresar {
+  display: inline-block;
+  background: rgba(23, 27, 29, 0.88);
+  color: white;
+  border: 2px solid #ff642e;
+  border-radius: 10px;
+  padding: 11px 17px;
+  margin: 0;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.controles-usuario .boton-ingresar:hover {
+  background: #ff642e;
+  color: white;
+}
+    
   </style>
 </head>
 
@@ -856,6 +885,10 @@ header {
     <a href="#" id="botonCerrarSesion" class="boton-ingresar" style="display:none;">CERRAR SESIÓN</a>
   </div>
 </nav>
+  <div class="controles-usuario">
+  <a href="#ingresar" class="boton-ingresar" id="botonIngresar">INGRESAR</a>
+  <a href="#" id="botonCerrarSesion" class="boton-ingresar" style="display:none;">CERRAR SESIÓN</a>
+</div>
 <div class="portada-completa">
   <section class="hero" id="inicio">
     
