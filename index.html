@@ -251,6 +251,14 @@ line-height: 1.4;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 16px;
 }  
+  .avatar-comunidad {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #ff6a00;
+  margin-bottom: 12px;
+}  
 .tarjeta h3 {
   color: white;
 }
@@ -1517,6 +1525,7 @@ async function cargarComunidad() {
     tarjeta.className = "tarjeta";
 
    tarjeta.innerHTML = `
+   ${perfil.avatar_url ? `<img src="${perfil.avatar_url}" alt="Foto de perfil" class="avatar-comunidad">` : ""}
   <h3>${perfil.username || perfil.full_name || "Miembro de Gente de Vuelo"}</h3>
   <p>${perfil.bio || "Miembro de la comunidad aeronáutica."}</p>
   ${perfil.aviation_role ? `<p><strong>Actividad:</strong> ${perfil.aviation_role}</p>` : ""}
