@@ -1896,6 +1896,18 @@ const nombreArchivo = `${user.id}/${Date.now()}-${nombreSeguro}`;
     return;
   }
 
+  const { error: errorGaleria } = await supabaseClient
+  .from("galeria")
+  .insert({
+    user_id: user.id,
+    archivo: nombreArchivo,
+    visible: false
+  });
+  if (errorGaleria) {
+  console.error("Error al registrar la foto en galeria:", errorGaleria);
+  mensaje.textContent = "La foto se subió, pero hubo un error al registrarla.";
+  return;
+}
   mensaje.textContent = "Foto subida correctamente.";
   document.getElementById("fotoHangar").value = "";
 await cargarMisFotosHangar();
