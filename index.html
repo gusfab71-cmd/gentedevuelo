@@ -1994,14 +1994,15 @@ if (archivo.name.startsWith("avatar-")) return;
     contenedor.appendChild(imagen);
   });
 }
-   async function cargarGaleria() {
+  async function cargarGaleria() {
   const pista = document.getElementById("galeriaPista");
-
   if (!pista) return;
 
-  const { data: carpetas, error } = await supabaseClient.storage
-    .from("hangar-fotos")
-    .list("", { limit: 100 });
+  const { data: fotos, error } = await supabaseClient
+    .from("galeria")
+    .select("archivo, nombre_usuario, created_at")
+    .eq("visible", true)
+    .order("created_at", { ascending: false });
 
   if (error) {
     console.error("Error al cargar la galería:", error);
@@ -2010,32 +2011,37 @@ if (archivo.name.startsWith("avatar-")) return;
 
   pista.innerHTML = "";
 
-  for (const carpeta of carpetas) {
-    const { data: archivos } = await supabaseClient.storage
+  fotos.forEach(foto => {
+    const { data } = supabaseClient.storage
       .from("hangar-fotos")
-      .list(carpeta.name);
+      .getPublicUrl(foto.archivo);
 
-    if (!archivos) continue;
+    const contenedor = document.createElement("div");
+    contenedor.style.width = "100%";
+    contenedor.style.minWidth = "100%";
+    contenedor.style.textAlign = "center";
 
-    archivos.forEach((archivo) => {
-      if (archivo.name.startsWith("avatar-")) return;
-      const { data } = supabaseClient.storage
-        .from("hangar-fotos")
-        .getPublicUrl(`${carpeta.name}/${archivo.name}`);
+    const imagen = document.createElement("img");
+    imagen.src = data.publicUrl;
+    imagen.alt = "Foto de la comunidad";
+    imagen.style.width = "100%";
+    imagen.style.height = "360px";
+    imagen.style.objectFit = "contain";
 
-      const imagen = document.createElement("img");
-      imagen.src = data.publicUrl;
-      imagen.alt = "Foto de la comunidad";
+    const referencia = document.createElement("div");
+    referencia.style.marginTop = "8px";
+    referencia.style.fontSize = "14px";
 
-      imagen.style.width = "100%";
-      imagen.style.minWidth = "100%";
-      imagen.style.height = "360px";
-      imagen.style.objectFit = "contain";
+    const fecha = new Date(foto.created_at).toLocaleDateString("es-AR");
 
-      pista.appendChild(imagen);
-    });
-  }
-} 
+    referencia.textContent =
+      `Compartida por ${foto.nombre_usuario || "Usuario"} · ${fecha}`;
+
+    contenedor.appendChild(imagen);
+    contenedor.appendChild(referencia);
+    pista.appendChild(contenedor);
+  });
+}
     
    function cerrarHangarPublico() {
   document.getElementById("hangar-publico").style.display = "none";
