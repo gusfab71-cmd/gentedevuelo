@@ -325,7 +325,11 @@ min-height: 260px;
       border-radius: 7px;
       font-size: 16px;
     }
-
+.publicacion-foro {
+  margin-bottom: 18px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid rgba(255, 100, 46, 0.45);
+}
     .acciones-usuario {
       text-align: center;
     }
@@ -1661,7 +1665,7 @@ document.getElementById("contenidoPublicacion").value = "";
    contenedor.innerHTML = "";
  data.forEach((publicacion) => { 
  const tarjeta = document.createElement("div");  
-  tarjeta.className = "tarjeta"; 
+ tarjeta.className = "tarjeta publicacion-foro";
  const titulo = document.createElement("h3"); 
   titulo.textContent = publicacion.titulo;
    const contenido = document.createElement("p");
