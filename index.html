@@ -1883,6 +1883,8 @@ async function cargarMisFotosHangar() {
   contenedor.innerHTML = "";
 
   archivos.forEach((archivo) => {
+if (archivo.name.startsWith("avatar-")) return;
+    
     const { data } = supabaseClient.storage
       .from("hangar-fotos")
       .getPublicUrl(`${user.id}/${archivo.name}`);
@@ -1920,6 +1922,7 @@ async function cargarMisFotosHangar() {
     if (!archivos) continue;
 
     archivos.forEach((archivo) => {
+      if (archivo.name.startsWith("avatar-")) return;
       const { data } = supabaseClient.storage
         .from("hangar-fotos")
         .getPublicUrl(`${carpeta.name}/${archivo.name}`);
