@@ -1884,7 +1884,7 @@ async function subirFotoHangar() {
   }
   const { data: perfil } = await supabaseClient
   .from("profiles")
-  .select("username")
+  .select("full_name")
   .eq("id", user.id)
   .maybeSingle();
 
@@ -1906,7 +1906,7 @@ const nombreArchivo = `${user.id}/${Date.now()}-${nombreSeguro}`;
   .insert({
     user_id: user.id,
     archivo: nombreArchivo,
-    nombre_usuario: perfil?.username || user.email,
+   nombre_usuario: perfil?.full_name || user.email,
     visible: false
   });
   if (errorGaleria) {
