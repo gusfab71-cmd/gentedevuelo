@@ -978,7 +978,7 @@ header {
     <a href="#travesias">Travesías</a>
    
     <a href="#tienda">Tienda Aeronáutica</a>
-  <a href="#reglamento">Reglamento</a>
+  <a href="#reglamento" id="enlaceReglamento">Reglamento</a>
   </div>
 </nav>
   <div class="controles-usuario">
@@ -1165,7 +1165,7 @@ header {
     
   </div>
 </section>
-  <section class="contenedor seccion" id="reglamento">
+<section class="contenedor seccion" id="reglamento" style="display: none;">
   <h2 class="titulo-seccion">Reglamento de Gente de Vuelo</h2>
 
   <p class="subtitulo">
@@ -2105,6 +2105,21 @@ document.querySelector(".galeria-siguiente").addEventListener("click", () => {
       menuDesplegable.classList.remove("abierto");
     });
   });
+
+  const enlaceReglamento = document.getElementById("enlaceReglamento");
+const seccionReglamento = document.getElementById("reglamento");
+
+enlaceReglamento.addEventListener("click", function () {
+  seccionReglamento.style.display = "block";
+});
+
+document.querySelectorAll(".menu-desplegable a").forEach(enlace => {
+  if (enlace.id !== "enlaceReglamento") {
+    enlace.addEventListener("click", function () {
+      seccionReglamento.style.display = "none";
+    });
+  }
+});
 </script>
 </body>
 </html>
