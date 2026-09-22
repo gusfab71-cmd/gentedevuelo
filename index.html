@@ -1128,6 +1128,27 @@ header {
   </p>
 
   <button class="boton" id="botonCompartirTravesia">Compartir una travesía</button>
+  <div id="formularioTravesia" style="display: none; margin-top: 20px;">
+
+  <input type="text" id="travesiaTitulo" placeholder="Título de la travesía">
+
+  <input type="date" id="travesiaFecha">
+
+  <input type="text" id="travesiaSalida" placeholder="Aeropuerto de salida">
+
+  <input type="text" id="travesiaDestino" placeholder="Destino">
+
+  <input type="text" id="travesiaEscalas" placeholder="Escalas (opcional)">
+
+  <input type="text" id="travesiaAeronave" placeholder="Aeronave">
+
+  <textarea id="travesiaRelato" placeholder="Contanos la experiencia de la travesía"></textarea>
+
+  <input type="file" id="travesiaFotos" accept="image/*" multiple>
+
+  <button class="boton" id="botonEnviarTravesia">Enviar travesía</button>
+
+</div>
 </section>
 <section class="contenedor seccion-foro foro-principal" id="foro-comunidad">
   <h2 class="titulo-seccion">Foro Aeronáutico</h2>
@@ -2188,5 +2209,14 @@ document.querySelectorAll(".menu-desplegable a").forEach(enlace => {
   }
 });
 </script>
+<script>
+  const botonCompartirTravesia = document.getElementById("botonCompartirTravesia");
+  const formularioTravesia = document.getElementById("formularioTravesia");
+
+  botonCompartirTravesia.addEventListener("click", function () {
+    formularioTravesia.style.display = "block";
+  });
+</script>
+  
 </body>
 </html>
