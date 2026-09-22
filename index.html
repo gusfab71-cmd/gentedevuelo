@@ -2027,7 +2027,7 @@ bloqueFoto.appendChild(botonEliminar);
     .from("galeria")
     .delete()
     .eq("user_id", user.id)
-    .eq("archivo", rutaArchivo);
+   .eq("archivo", rutaArchivo.split("/").pop());
 
   if (errorGaleria) {
     console.error("Error al eliminar de galería:", errorGaleria);
