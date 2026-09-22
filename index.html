@@ -2294,6 +2294,53 @@ document.querySelectorAll(".menu-desplegable a").forEach(enlace => {
     formularioTravesia.style.display = "grid";
   });
 </script>
-  
+ <script>
+  const botonEnviarTravesia = document.getElementById("botonEnviarTravesia");
+
+  botonEnviarTravesia.addEventListener("click", async function () {
+
+    const { data: { user } } = await supabaseClient.auth.getUser();
+
+    if (!user) {
+      alert("Debes iniciar sesión para compartir una travesía.");
+      return;
+    }
+
+    const titulo = document.getElementById("travesiaTitulo").value.trim();
+    const fecha = document.getElementById("travesiaFecha").value || null;
+    const salida = document.getElementById("travesiaSalida").value.trim();
+    const destino = document.getElementById("travesiaDestino").value.trim();
+    const escalas = document.getElementById("travesiaEscalas").value.trim();
+    const aeronave = document.getElementById("travesiaAeronave").value.trim();
+    const relato = document.getElementById("travesiaRelato").value.trim();
+
+    if (!titulo || !salida || !destino) {
+      alert("Completá el título, el aeropuerto de salida y el destino.");
+      return;
+    }
+
+    const { error } = await supabaseClient
+      .from("travesias")
+      .insert({
+        user_id: user.id,
+        titulo: titulo,
+        fecha: fecha,
+        salida: salida,
+        destino: destino,
+        escalas: escalas || null,
+        aeronave: aeronave || null,
+        relato: relato || null,
+        visible: false
+      });
+
+    if (error) {
+      console.error("Error al enviar travesía:", error);
+      alert("No se pudo enviar la travesía: " + error.message);
+      return;
+    }
+
+    alert("Travesía enviada correctamente. Quedará pendiente de moderación.");
+  });
+</script> 
 </body>
 </html>
