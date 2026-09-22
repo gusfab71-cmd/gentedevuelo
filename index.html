@@ -1992,7 +1992,57 @@ if (archivo.name.startsWith("avatar-")) return;
     imagen.style.margin = "10px";
 
     contenedor.appendChild(imagen);
+const botonEliminar = document.createElement("button");
+botonEliminar.textContent = "Eliminar foto";
+botonEliminar.className = "boton";
+botonEliminar.style.margin = "0 10px 16px 0";
+
+botonEliminar.addEventListener("click", async () => {
+  await eliminarFotoHangar(`${user.id}/${archivo.name}`);
+});
+
+contenedor.appendChild(botonEliminar);
+    
   });
+}
+    async function eliminarFotoHangar(rutaArchivo) {
+  const confirmar = confirm("¿Querés eliminar esta foto?");
+
+  if (!confirmar) return;
+
+  const { data: { user } } = await supabaseClient.auth.getUser();
+
+  if (!user || !rutaArchivo.startsWith(user.id + "/")) {
+    alert("No tenés permiso para eliminar esta foto.");
+    return;
+  }
+
+  const { error: errorGaleria } = await supabaseClient
+    .from("galeria")
+    .delete()
+    .eq("user_id", user.id)
+    .eq("archivo", rutaArchivo);
+
+  if (errorGaleria) {
+    console.error("Error al eliminar de galería:", errorGaleria);
+    alert("No se pudo eliminar la foto.");
+    return;
+  }
+
+  const { error: errorStorage } = await supabaseClient.storage
+    .from("hangar-fotos")
+    .remove([rutaArchivo]);
+
+  if (errorStorage) {
+    console.error("Error al eliminar el archivo:", errorStorage);
+    alert("La foto se quitó de la galería, pero hubo un problema al eliminar el archivo.");
+    return;
+  }
+
+  await cargarMisFotosHangar();
+  await cargarGaleria();
+
+  alert("Foto eliminada correctamente.");
 }
   async function cargarGaleria() {
   const pista = document.getElementById("galeriaPista");
