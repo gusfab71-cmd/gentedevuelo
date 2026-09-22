@@ -2012,6 +2012,7 @@ bloqueFoto.appendChild(botonEliminar);
   });
 }
     async function eliminarFotoHangar(rutaArchivo) {
+     console.log("RUTA QUE INTENTA BORRAR:", rutaArchivo); 
   const confirmar = confirm("¿Querés eliminar esta foto?");
 
   if (!confirmar) return;
