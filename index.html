@@ -372,6 +372,83 @@ min-height: 260px;
         font-size: 13px;
       }
     }
+/* ===== DISEÑO TRAVESÍAS ===== */
+
+#travesias {
+  max-width: 1200px;
+  margin: 55px auto;
+  padding: 35px;
+}
+
+#travesias .titulo-seccion {
+  font-size: 38px;
+  font-weight: 800;
+  color: #ffffff;
+  margin-bottom: 12px;
+}
+
+#travesias .subtitulo {
+  color: #8fa6b5;
+  font-size: 18px;
+  line-height: 1.6;
+  margin-bottom: 25px;
+}
+
+#formularioTravesia {
+  background: linear-gradient(135deg, #182126, #11191d);
+  border: 1px solid #ff642e;
+  border-radius: 22px;
+  padding: 30px;
+  margin-top: 25px !important;
+
+  display: none;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+}
+
+#formularioTravesia input,
+#formularioTravesia textarea {
+  width: 100%;
+  padding: 14px 16px;
+  background: #1d2a31;
+  color: #ffffff;
+  border: 1px solid #607d8b;
+  border-radius: 10px;
+  font-size: 16px;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+#formularioTravesia input::placeholder,
+#formularioTravesia textarea::placeholder {
+  color: #91a5b2;
+}
+
+#formularioTravesia textarea {
+  min-height: 100px;
+  resize: vertical;
+  grid-column: span 2;
+}
+
+#travesiaFotos {
+  grid-column: span 2;
+}
+
+#botonEnviarTravesia {
+  font-size: 16px;
+  padding: 14px 25px;
+}
+
+@media (max-width: 800px) {
+  #formularioTravesia {
+    grid-template-columns: 1fr;
+  }
+
+  #formularioTravesia textarea,
+  #travesiaFotos {
+    grid-column: span 1;
+  }
+}
+    
 /* ===== NUEVA APARIENCIA GENTE DE VUELO ===== */
 
 body {
