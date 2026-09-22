@@ -1995,7 +1995,9 @@ if (archivo.name.startsWith("avatar-")) return;
 const botonEliminar = document.createElement("button");
 botonEliminar.textContent = "Eliminar foto";
 botonEliminar.className = "boton";
-botonEliminar.style.margin = "0 10px 16px 0";
+botonEliminar.style.display = "block";
+botonEliminar.style.margin = "8px auto 16px auto";
+botonEliminar.style.width = "fit-content";
 
 botonEliminar.addEventListener("click", async () => {
   await eliminarFotoHangar(`${user.id}/${archivo.name}`);
