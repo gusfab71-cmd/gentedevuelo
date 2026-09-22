@@ -1984,14 +1984,18 @@ if (archivo.name.startsWith("avatar-")) return;
     const { data } = supabaseClient.storage
       .from("hangar-fotos")
       .getPublicUrl(`${user.id}/${archivo.name}`);
-
+const bloqueFoto = document.createElement("div");
+bloqueFoto.style.display = "inline-flex";
+bloqueFoto.style.flexDirection = "column";
+bloqueFoto.style.alignItems = "center";
     const imagen = document.createElement("img");
     imagen.src = data.publicUrl;
     imagen.alt = "Foto del Hangar";
     imagen.style.maxWidth = "250px";
     imagen.style.margin = "10px";
 
-    contenedor.appendChild(imagen);
+    bloqueFoto.appendChild(imagen);
+contenedor.appendChild(bloqueFoto);
 const botonEliminar = document.createElement("button");
 botonEliminar.textContent = "Eliminar foto";
 botonEliminar.className = "boton";
@@ -2003,7 +2007,7 @@ botonEliminar.addEventListener("click", async () => {
   await eliminarFotoHangar(`${user.id}/${archivo.name}`);
 });
 
-contenedor.appendChild(botonEliminar);
+bloqueFoto.appendChild(botonEliminar);
     
   });
 }
