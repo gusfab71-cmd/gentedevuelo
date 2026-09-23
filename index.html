@@ -2314,10 +2314,31 @@ document.querySelectorAll(".menu-desplegable a").forEach(enlace => {
     const escalas = document.getElementById("travesiaEscalas").value.trim();
     const aeronave = document.getElementById("travesiaAeronave").value.trim();
     const relato = document.getElementById("travesiaRelato").value.trim();
-
+const archivosFotos = document.getElementById("travesiaFotos").files;
     if (!titulo || !salida || !destino) {
       alert("Completá el título, el aeropuerto de salida y el destino.");
       return;
+    }
+        const urlsFotos = [];
+
+    for (const archivo of archivosFotos) {
+      const nombreArchivo = `${user.id}/${Date.now()}-${archivo.name}`;
+
+      const { error: errorSubida } = await supabaseClient.storage
+        .from("travesias-fotos")
+        .upload(nombreArchivo, archivo);
+
+      if (errorSubida) {
+        console.error("Error al subir foto:", errorSubida);
+        alert("No se pudo subir una de las fotos: " + errorSubida.message);
+        return;
+      }
+
+      const { data: datosUrl } = supabaseClient.storage
+        .from("travesias-fotos")
+        .getPublicUrl(nombreArchivo);
+
+      urlsFotos.push(datosUrl.publicUrl);
     }
 
     const { error } = await supabaseClient
@@ -2331,6 +2352,7 @@ document.querySelectorAll(".menu-desplegable a").forEach(enlace => {
         escalas: escalas || null,
         aeronave: aeronave || null,
         relato: relato || null,
+        fotos: urlsFotos,
         visible: false
       });
 
