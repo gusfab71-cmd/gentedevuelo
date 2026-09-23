@@ -1880,7 +1880,7 @@ document.getElementById("contenidoPublicacion").value = "";
    async function cargarPublicaciones() { 
  const { data, error } = await supabaseClient 
    .from("publicaciones")
-.select("titulo, contenido, created_at, autor_nombre") 
+.select("id, titulo, contenido, created_at, autor_nombre")
   .eq("aprobado", true) 
   .order("created_at", { ascending: false });
  if (error) { 
@@ -1905,6 +1905,16 @@ fecha.textContent = new Date(publicacion.created_at).toLocaleString("es-AR", { h
    tarjeta.appendChild(autor);
 tarjeta.appendChild(contenido);
    tarjeta.appendChild(fecha);
+   const respuestas = document.createElement("div");
+respuestas.id = "respuestas-" + publicacion.id;
+respuestas.style.marginTop = "15px";
+
+tarjeta.appendChild(respuestas);
+  const botonResponder = document.createElement("button");
+botonResponder.textContent = "Responder";
+botonResponder.className = "boton";
+
+tarjeta.appendChild(botonResponder); 
 contenedor.appendChild(tarjeta); 
  });  
 }  
