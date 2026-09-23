@@ -2394,6 +2394,12 @@ async function cargarTravesias() {
       ${travesia.escalas ? `<p><strong>Escalas:</strong> ${travesia.escalas}</p>` : ""}
       ${travesia.aeronave ? `<p><strong>Aeronave:</strong> ${travesia.aeronave}</p>` : ""}
       ${travesia.relato ? `<p>${travesia.relato}</p>` : ""}
+      ${travesia.fotos && travesia.fotos.length
+  ? travesia.fotos.map(foto => `
+      <img src="${foto}" alt="Foto de la travesía"
+           style="width:100%; max-height:350px; object-fit:cover; border-radius:12px; margin-top:12px;">
+    `).join("")
+  : ""}
     `;
 
     lista.appendChild(tarjeta);
