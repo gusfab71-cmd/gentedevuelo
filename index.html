@@ -1889,7 +1889,7 @@ document.getElementById("contenidoPublicacion").value = "";
  } 
   const contenedor = document.getElementById("lista-publicaciones"); 
    contenedor.innerHTML = "";
- data.forEach((publicacion) => { 
+data.forEach(async function(publicacion) {
  const tarjeta = document.createElement("div");  
  tarjeta.className = "tarjeta publicacion-foro";
  const titulo = document.createElement("h3"); 
