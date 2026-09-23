@@ -1203,6 +1203,7 @@ header {
   <p class="subtitulo">
     Un espacio para compartir vuelos y travesías ya realizadas, sus recorridos, experiencias y momentos vividos.
   </p>
+  <div id="listaTravesias"></div>
 
   <button class="boton" id="botonCompartirTravesia">Compartir una travesía</button>
   <div id="formularioTravesia" style="display: none; margin-top: 20px;">
@@ -2341,6 +2342,43 @@ document.querySelectorAll(".menu-desplegable a").forEach(enlace => {
 
     alert("Travesía enviada correctamente. Quedará pendiente de moderación.");
   });
+</script> 
+ <script>
+async function cargarTravesias() {
+  const lista = document.getElementById("listaTravesias");
+
+  const { data, error } = await supabaseClient
+    .from("travesias")
+    .select("*")
+    .eq("visible", true)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Error al cargar travesías:", error);
+    return;
+  }
+
+  lista.innerHTML = "";
+
+  data.forEach(function (travesia) {
+    const tarjeta = document.createElement("div");
+    tarjeta.className = "tarjeta";
+
+    tarjeta.innerHTML = `
+      <h3>${travesia.titulo}</h3>
+      <p><strong>Fecha:</strong> ${travesia.fecha || "Sin especificar"}</p>
+      <p><strong>Salida:</strong> ${travesia.salida}</p>
+      <p><strong>Destino:</strong> ${travesia.destino}</p>
+      ${travesia.escalas ? `<p><strong>Escalas:</strong> ${travesia.escalas}</p>` : ""}
+      ${travesia.aeronave ? `<p><strong>Aeronave:</strong> ${travesia.aeronave}</p>` : ""}
+      ${travesia.relato ? `<p>${travesia.relato}</p>` : ""}
+    `;
+
+    lista.appendChild(tarjeta);
+  });
+}
+
+cargarTravesias();
 </script> 
 </body>
 </html>
