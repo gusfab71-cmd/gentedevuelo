@@ -2371,7 +2371,8 @@ async function cargarTravesias() {
 
   const { data, error } = await supabaseClient
     .from("travesias")
-    .select("*")
+    
+   .select("*, profiles:user_id(full_name, username)")
     .eq("visible", true)
     .order("created_at", { ascending: false });
 
@@ -2388,6 +2389,7 @@ async function cargarTravesias() {
 
     tarjeta.innerHTML = `
       <h3>${travesia.titulo}</h3>
+      <p><strong>Compartida por:</strong> ${travesia.profiles?.full_name || travesia.profiles?.username || "Usuario de Gente de Vuelo"}</p>
       <p><strong>Fecha:</strong> ${travesia.fecha || "Sin especificar"}</p>
       <p><strong>Salida:</strong> ${travesia.salida}</p>
       <p><strong>Destino:</strong> ${travesia.destino}</p>
