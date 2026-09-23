@@ -1922,6 +1922,41 @@ botonResponder.addEventListener("click", function() {
   `;
 
   respuestas.appendChild(formulario);
+  const textarea = formulario.querySelector("textarea");
+const botonEnviar = formulario.querySelector("button");
+
+botonEnviar.addEventListener("click", async function() {
+  const contenidoRespuesta = textarea.value.trim();
+
+  if (!contenidoRespuesta) {
+    alert("Escribí una respuesta antes de enviarla.");
+    return;
+  }
+
+ const { data: { user } } = await supabaseClient.auth.getUser();
+
+if (!user) {
+  alert("Tenés que iniciar sesión para responder.");
+  return;
+} 
+ const { error: errorRespuesta } = await supabaseClient
+  .from("forum_respuestas")
+  .insert({
+    publicacion_id: publicacion.id,
+    user_id: user.id,
+    autor_nombre: user.email,
+    contenido: contenidoRespuesta
+  });
+
+if (errorRespuesta) {
+  console.error("Error al enviar respuesta:", errorRespuesta);
+  alert("No se pudo enviar la respuesta.");
+  return;
+}
+
+alert("Respuesta enviada correctamente.");
+textarea.value = ""; 
+});
   botonResponder.style.display = "none";
 });
 tarjeta.appendChild(botonResponder); 
