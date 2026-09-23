@@ -2372,7 +2372,7 @@ async function cargarTravesias() {
   const { data, error } = await supabaseClient
     .from("travesias")
     
-   .select("*, profiles:user_id(full_name, username)")
+   .select("*")
     .eq("visible", true)
     .order("created_at", { ascending: false });
 
