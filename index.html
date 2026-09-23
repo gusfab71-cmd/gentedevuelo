@@ -1910,6 +1910,28 @@ respuestas.id = "respuestas-" + publicacion.id;
 respuestas.style.marginTop = "15px";
 
 tarjeta.appendChild(respuestas);
+
+  const { data: respuestasGuardadas, error: errorCargarRespuestas } = await supabaseClient
+  .from("forum_respuestas")
+  .select("autor_nombre, contenido, created_at")
+  .eq("publicacion_id", publicacion.id)
+  .order("created_at", { ascending: true });
+
+if (!errorCargarRespuestas && respuestasGuardadas) {
+  respuestasGuardadas.forEach(respuesta => {
+    const respuestaDiv = document.createElement("div");
+    respuestaDiv.style.marginTop = "10px";
+    respuestaDiv.style.padding = "10px";
+    respuestaDiv.style.borderTop = "1px solid #555";
+
+    respuestaDiv.innerHTML = `
+      <strong>${respuesta.autor_nombre || "Usuario"}</strong>
+      <p>${respuesta.contenido}</p>
+    `;
+
+    respuestas.appendChild(respuestaDiv);
+  });
+} 
   const botonResponder = document.createElement("button");
 botonResponder.textContent = "Responder";
 botonResponder.className = "boton";
