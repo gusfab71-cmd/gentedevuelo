@@ -2383,13 +2383,20 @@ async function cargarTravesias() {
 
   lista.innerHTML = "";
 
-  data.forEach(function (travesia) {
+  data.forEach(async function(travesia) {
+    const { data: autor } = await supabaseClient
+  .from("profiles")
+  .select("full_name, username")
+  .eq("id", travesia.user_id)
+  .maybeSingle();
+
+travesia.autor = autor;
     const tarjeta = document.createElement("div");
     tarjeta.className = "tarjeta";
 
     tarjeta.innerHTML = `
       <h3>${travesia.titulo}</h3>
-      <p><strong>Compartida por:</strong> ${travesia.profiles?.full_name || travesia.profiles?.username || "Usuario de Gente de Vuelo"}</p>
+     <p><strong>Compartida por:</strong> ${travesia.autor?.full_name || travesia.autor?.username || "Usuario de Gente de Vuelo"}</p>
       <p><strong>Fecha:</strong> ${travesia.fecha || "Sin especificar"}</p>
       <p><strong>Salida:</strong> ${travesia.salida}</p>
       <p><strong>Destino:</strong> ${travesia.destino}</p>
