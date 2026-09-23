@@ -1913,7 +1913,17 @@ tarjeta.appendChild(respuestas);
   const botonResponder = document.createElement("button");
 botonResponder.textContent = "Responder";
 botonResponder.className = "boton";
+botonResponder.addEventListener("click", function() {
+  const formulario = document.createElement("div");
 
+  formulario.innerHTML = `
+    <textarea placeholder="Escribí tu respuesta..." rows="3" style="width:100%; margin-top:12px;"></textarea>
+    <button class="boton" style="margin-top:8px;">Enviar respuesta</button>
+  `;
+
+  respuestas.appendChild(formulario);
+  botonResponder.style.display = "none";
+});
 tarjeta.appendChild(botonResponder); 
 contenedor.appendChild(tarjeta); 
  });  
