@@ -1961,12 +1961,22 @@ if (!user) {
   alert("Tenés que iniciar sesión para responder.");
   return;
 } 
+  const { data: perfilRespuesta } = await supabaseClient
+  .from("profiles")
+  .select("full_name, username")
+  .eq("id", user.id)
+  .single();
+
+const nombreAutorRespuesta =
+  perfilRespuesta?.full_name ||
+  perfilRespuesta?.username ||
+  "Usuario";
  const { error: errorRespuesta } = await supabaseClient
   .from("forum_respuestas")
   .insert({
     publicacion_id: publicacion.id,
     user_id: user.id,
-    autor_nombre: user.email,
+    autor_nombre: nombreAutorRespuesta,
     contenido: contenidoRespuesta
   });
 
