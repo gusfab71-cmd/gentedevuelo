@@ -1476,9 +1476,39 @@ header {
   </p>
     <div class="tarjetas">
     <div class="tarjeta">
-      <h3>Envío de actividades</h3>
-      <p>Próximamente podrás enviar desde aquí una actividad aeronáutica para su revisión y posterior publicación en Gente de Vuelo.</p>
-    </div>
+  <h3>Enviar una actividad</h3>
+  <p>Completá los datos de la actividad. El envío será revisado antes de su publicación.</p>
+
+  <form id="formularioActividad" onsubmit="enviarActividad(event)">
+    <input type="text" id="actividadTitulo" placeholder="Título de la actividad" required>
+
+    <textarea id="actividadDescripcion" placeholder="Descripción de la actividad" required></textarea>
+
+    <input type="date" id="actividadFecha" required>
+
+    <input type="time" id="actividadHora">
+
+    <input type="text" id="actividadLugar" placeholder="Lugar">
+
+    <input type="text" id="actividadLocalidad" placeholder="Localidad">
+
+    <input type="text" id="actividadProvincia" placeholder="Provincia">
+
+    <input type="text" id="actividadOrganizador" placeholder="Organizador">
+
+    <select id="actividadCategoria" required>
+      <option value="">Tipo de actividad</option>
+      <option value="evento">Evento</option>
+      <option value="jornada">Jornada o encuentro</option>
+    </select>
+
+    <input type="url" id="actividadEnlace" placeholder="Enlace o sitio web (opcional)">
+
+    <input type="text" id="actividadContacto" placeholder="Contacto">
+
+    <button type="submit">Enviar actividad</button>
+  </form>
+</div>
   </div>  
 </section>
   <section class="contenedor" id="historia-seccion">
@@ -2123,6 +2153,48 @@ header {
 
       mensaje.textContent = "Usuario creado. Revisá tu correo electrónico si Supabase solicita confirmar la cuenta.";
     }
+async function enviarActividad(event) {
+  event.preventDefault();
+
+  const { data: { user } } = await supabaseClient.auth.getUser();
+
+  if (!user) {
+    alert("Para enviar una actividad primero tenés que ingresar a tu cuenta.");
+    return;
+  }
+
+  const actividad = {
+    titulo: document.getElementById("actividadTitulo").value.trim(),
+    descripcion: document.getElementById("actividadDescripcion").value.trim(),
+    fecha_evento: document.getElementById("actividadFecha").value,
+    hora_evento: document.getElementById("actividadHora").value || null,
+    lugar: document.getElementById("actividadLugar").value.trim(),
+    localidad: document.getElementById("actividadLocalidad").value.trim(),
+    provincia: document.getElementById("actividadProvincia").value.trim(),
+    organizador: document.getElementById("actividadOrganizador").value.trim(),
+    categoria: document.getElementById("actividadCategoria").value,
+    enlace: document.getElementById("actividadEnlace").value.trim() || null,
+    contacto: document.getElementById("actividadContacto").value.trim(),
+    user_id: user.id,
+    estado: "pendiente",
+    visible: false
+  };
+
+  const { error } = await supabaseClient
+    .from("actividades")
+    .insert([actividad]);
+
+  if (error) {
+    alert("No se pudo enviar la actividad: " + error.message);
+    return;
+  }
+
+  document.getElementById("formularioActividad").reset();
+
+  alert("Actividad enviada correctamente. Quedará pendiente de revisión antes de publicarse.");
+}
+
+    
 function mostrarPassword() {
   const campo = document.getElementById("password");
   campo.type = campo.type === "password" ? "text" : "password";
