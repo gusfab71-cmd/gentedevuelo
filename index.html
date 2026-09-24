@@ -2658,7 +2658,15 @@ document.querySelector(".galeria-siguiente").addEventListener("click", () => {
       menuDesplegable.classList.remove("abierto");
     });
   });
-
+document.addEventListener("click", function (event) {
+  if (
+    !menuDesplegable.contains(event.target) &&
+    !menuBoton.contains(event.target)
+  ) {
+    menuDesplegable.classList.remove("abierto");
+  }
+});
+  
   const enlaceReglamento = document.getElementById("enlaceReglamento");
 const seccionReglamento = document.getElementById("reglamento");
 
