@@ -2699,6 +2699,18 @@ document.querySelectorAll(".menu-desplegable a").forEach(enlace => {
     });
   }
 });
+const accesoShimoda = document.querySelector(".acceso-shimoda");
+const seccionShimoda = document.getElementById("shimoda");
+
+accesoShimoda.addEventListener("click", function (event) {
+  event.preventDefault();
+
+  seccionShimoda.scrollIntoView({
+    behavior: "smooth",
+    block: "start"
+  });
+});
+  
 </script>
 <script>
   const botonCompartirTravesia = document.getElementById("botonCompartirTravesia");
