@@ -2862,7 +2862,40 @@ accesoShimoda.addEventListener("click", function (event) {
     block: "start"
   });
 });
-  
+  async function cargarPublicacionShimoda() {
+  const { data, error } = await supabase
+    .from("shimoda_publicaciones")
+    .select("*")
+    .eq("publicado", true)
+    .order("fecha_publicacion", { ascending: false })
+    .limit(1);
+
+  if (error) {
+    console.error("Error al cargar publicación de Shimoda:", error);
+    return;
+  }
+
+  if (!data || data.length === 0) {
+    return;
+  }
+
+  const publicacion = data[0];
+
+  document.getElementById("shimodaTitulo").textContent =
+    publicacion.titulo;
+
+  document.getElementById("shimodaContenido").textContent =
+    publicacion.contenido;
+
+  if (publicacion.fecha_publicacion) {
+    const partes = publicacion.fecha_publicacion.split("-");
+
+    document.getElementById("shimodaFecha").textContent =
+      `${partes[2]}/${partes[1]}/${partes[0]} · ${publicacion.categoria || ""}`;
+  }
+}
+
+cargarPublicacionShimoda();
 </script>
 <script>
   const botonCompartirTravesia = document.getElementById("botonCompartirTravesia");
