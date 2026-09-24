@@ -1498,7 +1498,7 @@ header {
     Encuentros, festivales, exhibiciones y actividades aeronáuticas próximas de interés para la comunidad.
   </p>
 
-  <div class="tarjetas">
+  <div class="tarjetas" id="listaProximosEventos">
     <div class="tarjeta">
       <h3>Agenda en preparación</h3>
       <p>Próximamente iremos incorporando aquí eventos aeronáuticos confirmados junto con la información y las fuentes correspondientes.</p>
@@ -1512,7 +1512,7 @@ header {
     Jornadas, reuniones, charlas y encuentros organizados por instituciones y comunidades vinculadas a la aviación.
   </p>
 
-  <div class="tarjetas">
+ <div class="tarjetas" id="listaJornadasEncuentros">
     <div class="tarjeta">
       <h3>Actividades en preparación</h3>
       <p>Próximamente iremos incorporando aquí jornadas y encuentros confirmados junto con la información y las fuentes correspondientes.</p>
@@ -2246,7 +2246,50 @@ async function enviarActividad(event) {
   alert("Actividad enviada correctamente. Quedará pendiente de revisión antes de publicarse.");
 }
 
-    
+async function cargarActividadesPublicadas() {
+  const hoy = new Date().toISOString().split("T")[0];
+
+  const { data: actividades, error } = await supabaseClient
+    .from("actividades")
+    .select("id,titulo,descripcion,fecha_evento,hora_evento,lugar,localidad,provincia,organizador,enlace,categoria")
+    .gte("fecha_evento", hoy)
+    .order("fecha_evento", { ascending: true });
+
+  if (error) {
+    console.error("Error al cargar actividades:", error);
+    return;
+  }
+
+  const eventos = actividades.filter(a => a.categoria === "evento");
+  const jornadas = actividades.filter(a => a.categoria === "jornada");
+
+  mostrarActividades(eventos, "listaProximosEventos");
+  mostrarActividades(jornadas, "listaJornadasEncuentros");
+}
+
+function mostrarActividades(actividades, contenedorId) {
+  const contenedor = document.getElementById(contenedorId);
+
+  if (!contenedor || actividades.length === 0) return;
+
+  contenedor.innerHTML = actividades.map(actividad => {
+    const partesFecha = actividad.fecha_evento.split("-");
+    const fecha = `${partesFecha[2]}/${partesFecha[1]}/${partesFecha[0]}`;
+
+    return `
+      <div class="tarjeta">
+        <h3>${actividad.titulo}</h3>
+        <p>${actividad.descripcion}</p>
+        <p><strong>Fecha:</strong> ${fecha}${actividad.hora_evento ? " - " + actividad.hora_evento.slice(0, 5) + " hs" : ""}</p>
+        ${actividad.lugar ? `<p><strong>Lugar:</strong> ${actividad.lugar}</p>` : ""}
+        ${actividad.localidad ? `<p><strong>Localidad:</strong> ${actividad.localidad}${actividad.provincia ? ", " + actividad.provincia : ""}</p>` : ""}
+        ${actividad.organizador ? `<p><strong>Organiza:</strong> ${actividad.organizador}</p>` : ""}
+        ${actividad.enlace ? `<p><a href="${actividad.enlace}" target="_blank" rel="noopener noreferrer">Más información</a></p>` : ""}
+      </div>
+    `;
+  }).join("");
+}   
+    cargarActividadesPublicadas();
 function mostrarPassword() {
   const campo = document.getElementById("password");
   campo.type = campo.type === "password" ? "text" : "password";
