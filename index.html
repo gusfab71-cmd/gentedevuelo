@@ -809,69 +809,205 @@ header {
   transform: translateY(-5px);
   box-shadow: 0 10px 24px rgba(255, 100, 46, 0.22);
 }
-    /* ===== MEJORA VISUAL - FORO AERONÁUTICO ===== */
+    /* ===== FORO AERONÁUTICO - PANEL COMUNIDAD ===== */
 
 #foro-comunidad {
-  background: linear-gradient(180deg, #f4f9fc 0%, #ffffff 100%) !important;
-  border-top: 3px solid #ff642e;
+  max-width: 1180px !important;
+  margin: 34px auto !important;
+  padding: 0 !important;
+  background: linear-gradient(145deg, #151c20 0%, #111719 100%) !important;
+  border: 1px solid rgba(255, 100, 46, 0.72);
+  border-top: 4px solid #ff642e;
   border-radius: 22px !important;
-  padding: 40px !important;
+  overflow: hidden;
+  box-shadow: 0 18px 45px rgba(0,0,0,0.28);
 }
 
-#foro-comunidad .titulo-seccion {
-  color: #17324d;
-  font-size: 40px;
-  font-weight: 800;
-  margin-bottom: 16px;
-}
-
-#foro-comunidad > .subtitulo {
-  color: #405b70;
-  font-size: 18px !important;
-  line-height: 1.7 !important;
-  max-width: 850px;
-  margin: 0 auto 30px;
-}
-
-#foro-comunidad > .tarjetas {
+.foro-cabecera {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
   gap: 24px;
+  padding: 28px 30px 24px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  background: linear-gradient(90deg, rgba(255,100,46,0.08), transparent 48%);
 }
 
-#foro-comunidad > .tarjetas > .tarjeta {
-  background: #1d2225;
-  border: 2px solid #ff642e;
-  border-radius: 18px;
-  padding: 28px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.16);
-}
-
-#foro-comunidad > .tarjetas > .tarjeta h3 {
-  color: #ffffff;
-  font-size: 22px;
+.foro-kicker,
+.foro-panel-kicker {
+  display: block;
+  margin-bottom: 7px;
+  color: #ff9f1c;
+  font-size: 11px;
   font-weight: 800;
-  margin-bottom: 16px;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
 }
 
-#foro-comunidad > .tarjetas > .tarjeta p {
-  color: #e1e5e8;
-  font-size: 17px;
-  line-height: 1.6;
+#foro-comunidad .foro-cabecera h2 {
+  margin: 0 0 7px;
+  color: #ffffff;
+  font-size: 32px;
+  line-height: 1.1;
 }
-  /* ===== PUBLICACIONES INTERNAS DEL FORO ===== */
 
-#lista-publicaciones .tarjeta {
-  border: none;
-  border-bottom: 1px solid #4a555b;
-  border-radius: 0;
-  background: transparent;
-  padding: 18px 4px;
+#foro-comunidad .foro-cabecera p {
+  max-width: 780px;
+  margin: 0;
+  color: #aebbc2;
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.foro-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.75fr) minmax(300px, 0.85fr);
+  gap: 18px;
+  padding: 22px;
+}
+
+.foro-panel {
+  min-width: 0;
+  padding: 22px;
+  background: #1a2327;
+  border: 1px solid #36444b;
+  border-radius: 16px;
+}
+
+.foro-panel-nueva {
+  align-self: start;
+  border-color: rgba(255,100,46,0.58);
+  background: linear-gradient(155deg, #1d272b 0%, #182024 100%);
+}
+
+.foro-panel-cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+  padding-bottom: 13px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.foro-panel h3,
+.foro-panel-cabecera h3 {
+  margin: 0;
+  color: #ffffff;
+  font-size: 19px;
+  font-weight: 800;
+}
+
+#foro-comunidad .campo {
+  margin: 16px 0 0;
+}
+
+#foro-comunidad .campo label {
+  color: #cfd7db;
+  font-size: 12px;
+  letter-spacing: .2px;
+}
+
+#foro-comunidad .campo input,
+#foro-comunidad .campo textarea {
+  width: 100%;
+  padding: 12px 13px;
+  background: #f5f6f6;
+  color: #1d2529;
+  border: 1px solid #7a888f;
+  border-radius: 9px;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 14px;
+  outline: none;
+}
+
+#foro-comunidad .campo input:focus,
+#foro-comunidad .campo textarea:focus {
+  border-color: #ff642e;
+  box-shadow: 0 0 0 3px rgba(255,100,46,0.14);
+}
+
+#foro-comunidad #enviar-publicacion {
+  width: 100%;
+  margin: 16px 0 0;
+  padding: 11px 16px;
+}
+
+.foro-nota {
+  margin: 12px 0 0;
+  padding: 11px 12px;
+  color: #aebbc2;
+  background: rgba(255,255,255,0.035);
+  border-left: 3px solid #ff642e;
+  border-radius: 7px;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+/* ===== PUBLICACIONES INTERNAS DEL FORO ===== */
+#lista-publicaciones {
+  display: grid;
+  gap: 10px;
+}
+
+#lista-publicaciones .tarjeta.publicacion-foro {
+  margin: 0;
+  padding: 17px 18px;
+  background: #151d21;
+  border: 1px solid #303d43;
+  border-left: 3px solid #ff642e;
+  border-radius: 12px;
   box-shadow: none;
 }
 
-#lista-publicaciones .tarjeta:hover {
+#lista-publicaciones .tarjeta.publicacion-foro:hover {
   transform: none;
-  box-shadow: none;
-}  
+  border-color: #4b5a61;
+  border-left-color: #ff9f1c;
+  box-shadow: 0 7px 18px rgba(0,0,0,0.16);
+}
+
+#lista-publicaciones .publicacion-foro h3 {
+  margin: 0 0 7px;
+  color: #ffffff;
+  font-size: 18px;
+}
+
+#lista-publicaciones .publicacion-foro p {
+  margin: 8px 0;
+  color: #d6dde0;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+#lista-publicaciones .publicacion-foro small {
+  display: inline-block;
+  margin-right: 10px;
+  color: #85969e;
+  font-size: 11px;
+}
+
+#lista-publicaciones .publicacion-foro .boton {
+  margin: 10px 0 0;
+  padding: 8px 14px;
+  font-size: 12px;
+}
+
+@media (max-width: 820px) {
+  .foro-cabecera {
+    padding: 23px 20px 20px;
+  }
+  #foro-comunidad .foro-cabecera h2 {
+    font-size: 27px;
+  }
+  .foro-layout {
+    grid-template-columns: 1fr;
+    padding: 14px;
+  }
+  .foro-panel {
+    padding: 18px;
+  }
+}
  /* ===== MEJORA VISUAL - CONTENIDO MI HANGAR ===== */
 
 #mi-perfil > div > .contenedor > .tarjeta {
@@ -3600,47 +3736,42 @@ body:not(.modo-seccion-unica):not(.modo-anexo) > .solo-seccion {
 </section>
   
 <section class="contenedor seccion-foro foro-principal solo-seccion" id="foro-comunidad">
-  <h2 class="titulo-seccion">Foro Aeronáutico</h2>
-
-  <p class="subtitulo">
-    Compartí preguntas, experiencias, conocimientos e historias con la comunidad.
-    Las publicaciones estarán moderadas para mantener un espacio útil,
-    respetuoso y dedicado a la aviación.
-  </p>
-
-  <div class="tarjetas">
-    <div class="tarjeta">
-      <h3>Publicaciones de la comunidad</h3>
-    <div id="lista-publicaciones"></div>
+  <div class="foro-cabecera">
+    <div>
+      <span class="foro-kicker">COMUNIDAD · GENTE DE VUELO</span>
+      <h2>Foro Aeronáutico</h2>
+      <p>Conversaciones, consultas y experiencias entre miembros de la comunidad. Un espacio moderado, ordenado y dedicado exclusivamente a la aviación.</p>
     </div>
-<div class="tarjeta">
-  <h3>Crear una publicación</h3>
-
-  <div class="campo">
-    <label for="tituloPublicacion">Título</label>
-    <input
-      type="text"
-      id="tituloPublicacion"
-      placeholder="Escribí el título de tu publicación"
-    >
   </div>
 
-  <div class="campo">
-    <label for="contenidoPublicacion">Publicación</label>
-    <textarea
-      id="contenidoPublicacion"
-      rows="6"
-      placeholder="Compartí tu pregunta, experiencia o información aeronáutica"
-    ></textarea>
-  </div>
+  <div class="foro-layout">
+    <div class="foro-panel foro-panel-publicaciones">
+      <div class="foro-panel-cabecera">
+        <div>
+          <span class="foro-panel-kicker">BITÁCORA</span>
+          <h3>Conversaciones de la comunidad</h3>
+        </div>
+      </div>
+      <div id="lista-publicaciones"></div>
+    </div>
 
-  <button class="boton" id="enviar-publicacion">Enviar publicación</button>
-  <p>
-    Las publicaciones estarán sujetas a moderación antes de ser visibles
-    para la comunidad.
-  </p>
-</div>
-    
+    <div class="foro-panel foro-panel-nueva">
+      <span class="foro-panel-kicker">NUEVA ENTRADA</span>
+      <h3>Compartir en el foro</h3>
+
+      <div class="campo">
+        <label for="tituloPublicacion">Título</label>
+        <input type="text" id="tituloPublicacion" placeholder="Título de la conversación">
+      </div>
+
+      <div class="campo">
+        <label for="contenidoPublicacion">Mensaje</label>
+        <textarea id="contenidoPublicacion" rows="6" placeholder="Compartí tu consulta, experiencia o información aeronáutica"></textarea>
+      </div>
+
+      <button class="boton" id="enviar-publicacion">Enviar para moderación</button>
+      <p class="foro-nota">Las publicaciones se revisan antes de hacerse visibles para mantener un espacio útil y ordenado.</p>
+    </div>
   </div>
 </section>
 <section class="contenedor seccion solo-seccion" id="reglamento" style="display: none;">
