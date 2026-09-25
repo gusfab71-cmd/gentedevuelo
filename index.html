@@ -1882,6 +1882,54 @@ body.modo-anexo-clasificados #clasificados-seccion {
   cursor: not-allowed;
 }
 
+.contacto-aviso-nota {
+  margin-top: -4px !important;
+  padding: 10px 12px;
+  border: 1px solid rgba(189, 161, 95, 0.55);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.22);
+  color: #33250f;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.clasificados-contacto-boton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 11px 14px;
+  border: 0;
+  border-radius: 9px;
+  background: #ff642e;
+  color: #ffffff;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 800;
+  text-align: center;
+  transition: transform 0.18s ease, background 0.18s ease, opacity 0.18s ease;
+}
+
+.clasificados-contacto-boton:hover {
+  background: #ff7848;
+  transform: translateY(-1px);
+}
+
+.clasificados-contacto-boton.secundario {
+  background: #353b3d;
+  border: 1px solid #bda15f;
+}
+
+.clasificados-contacto-boton.secundario:hover {
+  background: #41494c;
+}
+
+.clasificados-contacto-boton.deshabilitado {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
 .clasificados-consulta-nota {
   margin: 12px 0 0;
   color: #bfc6ca;
@@ -4013,16 +4061,17 @@ body:not(.modo-seccion-unica):not(.modo-anexo) > .solo-seccion {
       <p class="clasificados-consulta-dato" id="consultaClasificadoPrecio"></p>
 
       <div class="clasificados-consulta-anunciante">
-        <span class="clasificados-consulta-kicker">ANUNCIANTE</span>
+        <span class="clasificados-consulta-kicker">CONTACTO DEL ANUNCIANTE</span>
         <strong id="consultaClasificadoAnunciante">Miembro de Gente de Vuelo</strong>
-        <p class="clasificados-consulta-dato" id="consultaClasificadoPerfil"></p>
-        <p class="clasificados-consulta-dato" id="consultaClasificadoBase"></p>
+        <p class="clasificados-consulta-dato" id="consultaClasificadoWhatsapp"></p>
+        <p class="clasificados-consulta-dato" id="consultaClasificadoEmail"></p>
       </div>
 
       <div class="clasificados-consulta-acciones">
-        <button type="button" id="consultaClasificadoVerHangar">Ver Hangar del anunciante</button>
+        <a id="consultaClasificadoWhatsappAccion" class="clasificados-contacto-boton" href="#" target="_blank" rel="noopener">WhatsApp</a>
+        <a id="consultaClasificadoEmailAccion" class="clasificados-contacto-boton secundario" href="#">Correo</a>
       </div>
-      <p class="clasificados-consulta-nota">El aviso permanece visible mientras consultás los datos del anunciante.</p>
+      <p class="clasificados-consulta-nota">Los datos de contacto corresponden al aviso publicado por el anunciante.</p>
     </aside>
 
     <div class="clasificados-requeridos">
@@ -4095,6 +4144,20 @@ body:not(.modo-seccion-unica):not(.modo-anexo) > .solo-seccion {
         </select>
       </div>
 
+      <div class="campo">
+        <label for="clasificadoWhatsapp">WhatsApp de contacto</label>
+        <input type="tel" id="clasificadoWhatsapp" maxlength="30" placeholder="Ej.: +54 9 11 1234 5678" autocomplete="tel" required>
+      </div>
+
+      <div class="campo">
+        <label for="clasificadoEmail">Correo de contacto</label>
+        <input type="email" id="clasificadoEmail" maxlength="160" placeholder="Ej.: nombre@correo.com" autocomplete="email" required>
+      </div>
+
+      <div class="campo campo-ancho contacto-aviso-nota">
+        Estos datos se mostrarán únicamente al abrir <strong>Consultar</strong> en tu aviso.
+      </div>
+
       <div class="campo campo-ancho">
         <label for="clasificadoFotos">Fotografías — hasta 5, JPG, PNG o WEBP</label>
         <input type="file" id="clasificadoFotos" accept="image/jpeg,image/png,image/webp" multiple>
@@ -4136,6 +4199,20 @@ body:not(.modo-seccion-unica):not(.modo-anexo) > .solo-seccion {
       <div class="campo campo-ancho">
         <label for="busquedaUbicacion">Ubicación</label>
         <input type="text" id="busquedaUbicacion" maxlength="120" required>
+      </div>
+
+      <div class="campo">
+        <label for="busquedaWhatsapp">WhatsApp de contacto</label>
+        <input type="tel" id="busquedaWhatsapp" maxlength="30" placeholder="Ej.: +54 9 11 1234 5678" autocomplete="tel" required>
+      </div>
+
+      <div class="campo">
+        <label for="busquedaEmail">Correo de contacto</label>
+        <input type="email" id="busquedaEmail" maxlength="160" placeholder="Ej.: nombre@correo.com" autocomplete="email" required>
+      </div>
+
+      <div class="campo campo-ancho contacto-aviso-nota">
+        Estos datos quedarán asociados al requerimiento para facilitar el contacto entre miembros.
       </div>
 
       <div class="campo campo-ancho">
@@ -5665,7 +5742,8 @@ const volverClasificados = document.querySelectorAll("[data-volver-clasificados]
 const panelListaClasificados = document.getElementById("panelClasificadosLista");
 const panelConsultaClasificado = document.getElementById("clasificadosConsultaPanel");
 const cerrarConsultaClasificadoBtn = document.getElementById("cerrarConsultaClasificado");
-const consultaClasificadoVerHangar = document.getElementById("consultaClasificadoVerHangar");
+const consultaClasificadoWhatsappAccion = document.getElementById("consultaClasificadoWhatsappAccion");
+const consultaClasificadoEmailAccion = document.getElementById("consultaClasificadoEmailAccion");
 let clasificadoEnConsulta = null;
 
 function mostrarPanelClasificados(panelId) {
@@ -5779,8 +5857,8 @@ async function abrirConsultaClasificado(publicacion) {
   const datos = document.getElementById("consultaClasificadoDatos");
   const precio = document.getElementById("consultaClasificadoPrecio");
   const anunciante = document.getElementById("consultaClasificadoAnunciante");
-  const perfilDato = document.getElementById("consultaClasificadoPerfil");
-  const baseDato = document.getElementById("consultaClasificadoBase");
+  const whatsappDato = document.getElementById("consultaClasificadoWhatsapp");
+  const emailDato = document.getElementById("consultaClasificadoEmail");
 
   titulo.textContent = publicacion.titulo || "Artículo disponible";
   descripcion.textContent = publicacion.descripcion || "Sin descripción.";
@@ -5808,28 +5886,51 @@ async function abrirConsultaClasificado(publicacion) {
     imagenContenedor.style.display = "none";
   }
 
-  anunciante.textContent = "Cargando anunciante...";
-  perfilDato.textContent = "";
-  baseDato.textContent = "";
-  consultaClasificadoVerHangar.disabled = !publicacion.user_id;
+  anunciante.textContent = "Miembro de Gente de Vuelo";
 
   if (publicacion.user_id) {
     const { data: perfil, error } = await supabaseClient
       .from("profiles")
-      .select("full_name, username, aviation_role, home_airfield")
+      .select("full_name, username")
       .eq("id", publicacion.user_id)
       .maybeSingle();
 
     if (error) {
       console.error("Error al cargar el anunciante del clasificado:", error);
-      anunciante.textContent = "Miembro de Gente de Vuelo";
     } else {
       anunciante.textContent = perfil?.full_name || perfil?.username || "Miembro de Gente de Vuelo";
-      perfilDato.textContent = perfil?.aviation_role ? `Actividad: ${perfil.aviation_role}` : "";
-      baseDato.textContent = perfil?.home_airfield ? `Base: ${perfil.home_airfield}` : "";
     }
-  } else {
-    anunciante.textContent = "Anunciante sin perfil público disponible";
+  }
+
+  const whatsapp = (publicacion.contacto_whatsapp || "").trim();
+  const email = (publicacion.contacto_email || "").trim();
+  const whatsappNormalizado = whatsapp.replace(/\D/g, "");
+
+  whatsappDato.textContent = whatsapp ? `WhatsApp: ${whatsapp}` : "WhatsApp: no informado en este aviso";
+  emailDato.textContent = email ? `Correo: ${email}` : "Correo: no informado en este aviso";
+
+  if (consultaClasificadoWhatsappAccion) {
+    if (whatsappNormalizado) {
+      consultaClasificadoWhatsappAccion.href = `https://wa.me/${whatsappNormalizado}?text=${encodeURIComponent(`Hola, te consulto por tu aviso en Gente de Vuelo: ${publicacion.titulo || "clasificado"}`)}`;
+      consultaClasificadoWhatsappAccion.classList.remove("deshabilitado");
+      consultaClasificadoWhatsappAccion.setAttribute("aria-disabled", "false");
+    } else {
+      consultaClasificadoWhatsappAccion.href = "#";
+      consultaClasificadoWhatsappAccion.classList.add("deshabilitado");
+      consultaClasificadoWhatsappAccion.setAttribute("aria-disabled", "true");
+    }
+  }
+
+  if (consultaClasificadoEmailAccion) {
+    if (email) {
+      consultaClasificadoEmailAccion.href = `mailto:${email}?subject=${encodeURIComponent(`Consulta por ${publicacion.titulo || "clasificado"} - Gente de Vuelo`)}`;
+      consultaClasificadoEmailAccion.classList.remove("deshabilitado");
+      consultaClasificadoEmailAccion.setAttribute("aria-disabled", "false");
+    } else {
+      consultaClasificadoEmailAccion.href = "#";
+      consultaClasificadoEmailAccion.classList.add("deshabilitado");
+      consultaClasificadoEmailAccion.setAttribute("aria-disabled", "true");
+    }
   }
 
   panelConsultaClasificado.scrollIntoView({ behavior: "smooth", block: "nearest" });
@@ -5839,31 +5940,15 @@ if (cerrarConsultaClasificadoBtn) {
   cerrarConsultaClasificadoBtn.addEventListener("click", cerrarConsultaClasificado);
 }
 
-if (consultaClasificadoVerHangar) {
-  consultaClasificadoVerHangar.addEventListener("click", async function () {
-    const userId = clasificadoEnConsulta?.user_id;
-    if (!userId) return;
+if (consultaClasificadoWhatsappAccion) {
+  consultaClasificadoWhatsappAccion.addEventListener("click", function (event) {
+    if (this.getAttribute("aria-disabled") === "true") event.preventDefault();
+  });
+}
 
-    if (typeof cerrarAnexos === "function") cerrarAnexos();
-
-    document.querySelectorAll(".seccion-enfoque").forEach(function (elemento) {
-      elemento.classList.remove("seccion-enfoque");
-    });
-
-    const hangarPublico = document.getElementById("hangar-publico");
-    if (!hangarPublico) return;
-
-    hangarPublico.classList.add("seccion-enfoque");
-    document.body.classList.add("modo-seccion-unica");
-    history.pushState(null, "", "#hangar-publico");
-
-    try {
-      await verHangar(userId);
-      window.scrollTo({ top: 0, behavior: "auto" });
-    } catch (error) {
-      console.error("Error al abrir el hangar del anunciante:", error);
-      alert("No se pudo abrir el perfil del anunciante.");
-    }
+if (consultaClasificadoEmailAccion) {
+  consultaClasificadoEmailAccion.addEventListener("click", function (event) {
+    if (this.getAttribute("aria-disabled") === "true") event.preventDefault();
   });
 }
 
@@ -5877,7 +5962,7 @@ async function cargarClasificados() {
 
   const { data, error } = await supabaseClient
     .from("clasificados")
-    .select("id, user_id, tipo, titulo, descripcion, precio, moneda, ubicacion, categoria, estado_articulo, fotos, estado_operacion, created_at")
+    .select("id, user_id, tipo, titulo, descripcion, precio, moneda, ubicacion, categoria, estado_articulo, fotos, estado_operacion, contacto_whatsapp, contacto_email, created_at")
     .eq("estado_publicacion", "aprobado")
     .order("created_at", { ascending: false });
 
@@ -5978,6 +6063,8 @@ document.getElementById("formularioClasificado").addEventListener("submit", asyn
       ubicacion: document.getElementById("clasificadoUbicacion").value.trim(),
       categoria: document.getElementById("clasificadoCategoria").value,
       estado_articulo: document.getElementById("clasificadoEstado").value,
+      contacto_whatsapp: document.getElementById("clasificadoWhatsapp").value.trim(),
+      contacto_email: document.getElementById("clasificadoEmail").value.trim(),
       fotos: fotosSubidas.urls
     });
 
@@ -6011,6 +6098,8 @@ document.getElementById("formularioBusquedaClasificado").addEventListener("submi
     descripcion: document.getElementById("busquedaDescripcion").value.trim(),
     ubicacion: document.getElementById("busquedaUbicacion").value.trim(),
     categoria: document.getElementById("busquedaCategoria").value,
+    contacto_whatsapp: document.getElementById("busquedaWhatsapp").value.trim(),
+    contacto_email: document.getElementById("busquedaEmail").value.trim(),
     fotos: []
   });
 
