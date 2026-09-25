@@ -1162,12 +1162,12 @@ body.modo-anexo-shimoda #shimoda {
 }
 
 body.modo-anexo-clasificados {
-  background: #d8c887;
+  background: #171b1d;
 }
 
 body.modo-anexo-clasificados #clasificados-seccion {
   background: linear-gradient(145deg, #fff8dc 0%, #f3e2a3 60%, #ead28a 100%);
-  border: 2px solid #d98316;
+  border: 3px solid #59646a;
   border-radius: 20px;
   color: #2b2a22;
 }
@@ -1220,6 +1220,27 @@ body.modo-anexo-clasificados #clasificados-seccion {
   padding: 24px;
 }
 
+.clasificados-opcion {
+  width: 100%;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+
+.clasificados-opcion:hover,
+.clasificados-opcion.activa {
+  transform: translateY(-3px);
+  background: #273035 !important;
+  border-color: #59646a !important;
+  color: #ffffff !important;
+}
+
+#clasificados-seccion .clasificados-opcion:hover h3,
+#clasificados-seccion .clasificados-opcion.activa h3 {
+  color: #ff9f1c;
+}
+
 .clasificados-opcion h3,
 .clasificados-listado h3 {
   color: #ff9f1c;
@@ -1254,6 +1275,97 @@ body.modo-anexo-clasificados #clasificados-seccion {
 #clasificados-seccion .clasificados-opcion h3,
 #clasificados-seccion .clasificados-listado h3 {
   color: #9a5700;
+}
+
+.clasificados-panel {
+  display: none;
+}
+
+.clasificados-panel.activo {
+  display: block;
+}
+
+.clasificados-formulario {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.clasificados-formulario .campo {
+  margin: 0;
+}
+
+.clasificados-formulario .campo-ancho {
+  grid-column: 1 / -1;
+}
+
+.clasificados-formulario label {
+  display: block;
+  margin-bottom: 6px;
+  color: #2b2a22;
+  font-weight: bold;
+}
+
+.clasificados-formulario input,
+.clasificados-formulario select,
+.clasificados-formulario textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 11px 12px;
+  border: 1px solid #59646a;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #202426;
+  font: inherit;
+}
+
+.clasificados-formulario textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.clasificados-publicaciones {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 18px;
+}
+
+.clasificado-item {
+  overflow: hidden;
+  border: 2px solid #59646a;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.86);
+  color: #2b2a22;
+}
+
+.clasificado-item img {
+  width: 100%;
+  height: 190px;
+  object-fit: cover;
+  display: block;
+}
+
+.clasificado-item-contenido {
+  padding: 18px;
+}
+
+.clasificado-item-contenido h4 {
+  margin: 0 0 10px;
+  color: #9a5700;
+  font-size: 20px;
+}
+
+.mensaje-clasificados {
+  display: none;
+  margin: 18px 0 0;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: #273035;
+  color: #ffffff;
+}
+
+.mensaje-clasificados.visible {
+  display: block;
 }
 
 .footer-enlaces {
@@ -1469,6 +1581,14 @@ body.modo-anexo-clasificados #clasificados-seccion {
 
   .clasificados-opciones {
     grid-template-columns: 1fr;
+  }
+
+  .clasificados-formulario {
+    grid-template-columns: 1fr;
+  }
+
+  .clasificados-formulario .campo-ancho {
+    grid-column: auto;
   }
 
   .anexo-cerrar {
@@ -2153,25 +2273,132 @@ body.modo-anexo-clasificados #clasificados-seccion {
   </p>
 
   <div class="clasificados-opciones">
-    <article class="clasificados-opcion">
+    <button type="button" class="clasificados-opcion activa" data-panel-clasificados="panelClasificadosLista">
       <h3>Artículos publicados</h3>
       <p>Explorá equipamiento, accesorios, indumentaria y otros artículos aeronáuticos ofrecidos por la comunidad.</p>
-    </article>
+    </button>
 
-    <article class="clasificados-opcion">
+    <button type="button" class="clasificados-opcion" data-panel-clasificados="panelClasificadosPublicar">
       <h3>Publicar un artículo</h3>
       <p>Los usuarios registrados podrán publicar fotografías, descripción, precio, ubicación y estado del producto.</p>
-    </article>
+    </button>
 
-    <article class="clasificados-opcion">
+    <button type="button" class="clasificados-opcion" data-panel-clasificados="panelClasificadosBusqueda">
       <h3>Mercado inverso</h3>
       <p>Publicá qué artículo estás buscando para que otros miembros puedan comunicarse con vos.</p>
-    </article>
+    </button>
   </div>
 
-  <div class="clasificados-listado" id="listaClasificados">
+  <p class="mensaje-clasificados" id="mensajeClasificados" aria-live="polite"></p>
+
+  <div class="clasificados-listado clasificados-panel activo" id="panelClasificadosLista">
     <h3>Publicaciones de la comunidad</h3>
-    <p>Los primeros artículos aprobados aparecerán en este espacio.</p>
+    <div class="clasificados-publicaciones" id="listaClasificados">
+      <p>Cargando publicaciones...</p>
+    </div>
+  </div>
+
+  <div class="clasificados-listado clasificados-panel" id="panelClasificadosPublicar">
+    <h3>Publicar un artículo</h3>
+    <form class="clasificados-formulario" id="formularioClasificado">
+      <div class="campo">
+        <label for="clasificadoTitulo">Título</label>
+        <input type="text" id="clasificadoTitulo" maxlength="100" required>
+      </div>
+
+      <div class="campo">
+        <label for="clasificadoCategoria">Categoría</label>
+        <select id="clasificadoCategoria" required>
+          <option value="">Seleccionar</option>
+          <option value="Indumentaria">Indumentaria</option>
+          <option value="Equipamiento">Equipamiento</option>
+          <option value="Instrumentos">Instrumentos</option>
+          <option value="Repuestos">Repuestos</option>
+          <option value="Aeromodelismo">Aeromodelismo</option>
+          <option value="Otros">Otros</option>
+        </select>
+      </div>
+
+      <div class="campo campo-ancho">
+        <label for="clasificadoDescripcion">Descripción</label>
+        <textarea id="clasificadoDescripcion" maxlength="2000" required></textarea>
+      </div>
+
+      <div class="campo">
+        <label for="clasificadoPrecio">Precio</label>
+        <input type="number" id="clasificadoPrecio" min="0" step="0.01" required>
+      </div>
+
+      <div class="campo">
+        <label for="clasificadoMoneda">Moneda</label>
+        <select id="clasificadoMoneda" required>
+          <option value="ARS">Pesos argentinos</option>
+          <option value="USD">Dólares</option>
+        </select>
+      </div>
+
+      <div class="campo">
+        <label for="clasificadoUbicacion">Ubicación</label>
+        <input type="text" id="clasificadoUbicacion" maxlength="120" required>
+      </div>
+
+      <div class="campo">
+        <label for="clasificadoEstado">Estado del artículo</label>
+        <select id="clasificadoEstado" required>
+          <option value="">Seleccionar</option>
+          <option value="nuevo">Nuevo</option>
+          <option value="usado_excelente">Usado, excelente estado</option>
+          <option value="usado_bueno">Usado, buen estado</option>
+          <option value="usado_regular">Usado, estado regular</option>
+        </select>
+      </div>
+
+      <div class="campo campo-ancho">
+        <label for="clasificadoFotos">Fotografías — hasta 5, JPG, PNG o WEBP</label>
+        <input type="file" id="clasificadoFotos" accept="image/jpeg,image/png,image/webp" multiple>
+      </div>
+
+      <div class="campo campo-ancho">
+        <button type="submit" class="boton">Enviar para revisión</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="clasificados-listado clasificados-panel" id="panelClasificadosBusqueda">
+    <h3>Publicar una búsqueda</h3>
+    <form class="clasificados-formulario" id="formularioBusquedaClasificado">
+      <div class="campo">
+        <label for="busquedaTitulo">Qué necesitás</label>
+        <input type="text" id="busquedaTitulo" maxlength="100" required>
+      </div>
+
+      <div class="campo">
+        <label for="busquedaCategoria">Categoría</label>
+        <select id="busquedaCategoria" required>
+          <option value="">Seleccionar</option>
+          <option value="Indumentaria">Indumentaria</option>
+          <option value="Equipamiento">Equipamiento</option>
+          <option value="Instrumentos">Instrumentos</option>
+          <option value="Repuestos">Repuestos</option>
+          <option value="Aeromodelismo">Aeromodelismo</option>
+          <option value="Otros">Otros</option>
+        </select>
+      </div>
+
+      <div class="campo campo-ancho">
+        <label for="busquedaDescripcion">Descripción</label>
+        <textarea id="busquedaDescripcion" maxlength="2000" required></textarea>
+      </div>
+
+      <div class="campo campo-ancho">
+        <label for="busquedaUbicacion">Ubicación</label>
+        <input type="text" id="busquedaUbicacion" maxlength="120" required>
+      </div>
+
+      <div class="campo campo-ancho">
+        <button type="submit" class="boton">Enviar búsqueda para revisión</button>
+      </div>
+    </form>
   </div>
 
   <div class="clasificados-aviso">
@@ -3584,6 +3811,10 @@ function abrirAnexo(anexoId) {
   anexo.setAttribute("aria-hidden", "false");
 
   window.scrollTo(0, 0);
+
+  if (anexoId === "clasificados-seccion") {
+    mostrarPanelClasificados("panelClasificadosLista");
+  }
 }
 
 accesoShimoda.addEventListener("click", function (event) {
@@ -3609,6 +3840,218 @@ document.addEventListener("click", function (event) {
   if (!clickEnAnexo && !clickEnAcceso) {
     cerrarAnexos();
   }
+});
+
+const botonesClasificados = document.querySelectorAll("[data-panel-clasificados]");
+const panelesClasificados = document.querySelectorAll(".clasificados-panel");
+const mensajeClasificados = document.getElementById("mensajeClasificados");
+
+function mostrarPanelClasificados(panelId) {
+  panelesClasificados.forEach(function (panel) {
+    panel.classList.toggle("activo", panel.id === panelId);
+  });
+
+  botonesClasificados.forEach(function (boton) {
+    boton.classList.toggle(
+      "activa",
+      boton.dataset.panelClasificados === panelId
+    );
+  });
+
+  if (panelId === "panelClasificadosLista") {
+    cargarClasificados();
+  }
+}
+
+function mostrarMensajeClasificados(texto, esError = false) {
+  mensajeClasificados.textContent = texto;
+  mensajeClasificados.classList.add("visible");
+  mensajeClasificados.style.background = esError ? "#8b2d2d" : "#273035";
+}
+
+botonesClasificados.forEach(function (boton) {
+  boton.addEventListener("click", function () {
+    mostrarPanelClasificados(boton.dataset.panelClasificados);
+  });
+});
+
+async function cargarClasificados() {
+  const lista = document.getElementById("listaClasificados");
+  if (!lista) return;
+
+  lista.innerHTML = "<p>Cargando publicaciones...</p>";
+
+  const { data, error } = await supabaseClient
+    .from("clasificados")
+    .select("id, tipo, titulo, descripcion, precio, moneda, ubicacion, categoria, estado_articulo, fotos, estado_operacion, created_at")
+    .eq("estado_publicacion", "aprobado")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Error al cargar clasificados:", error);
+    lista.innerHTML = "<p>No se pudieron cargar los clasificados.</p>";
+    return;
+  }
+
+  lista.innerHTML = "";
+
+  if (!data || data.length === 0) {
+    lista.innerHTML = "<p>No hay publicaciones aprobadas por el momento.</p>";
+    return;
+  }
+
+  data.forEach(function (publicacion) {
+    const articulo = document.createElement("article");
+    articulo.className = "clasificado-item";
+
+    if (Array.isArray(publicacion.fotos) && publicacion.fotos[0]) {
+      const imagen = document.createElement("img");
+      imagen.src = publicacion.fotos[0];
+      imagen.alt = publicacion.titulo;
+      imagen.loading = "lazy";
+      articulo.appendChild(imagen);
+    }
+
+    const contenido = document.createElement("div");
+    contenido.className = "clasificado-item-contenido";
+
+    const tipo = document.createElement("strong");
+    tipo.textContent = publicacion.tipo === "busqueda" ? "BUSCO" : "VENTA";
+
+    const titulo = document.createElement("h4");
+    titulo.textContent = publicacion.titulo;
+
+    const descripcion = document.createElement("p");
+    descripcion.textContent = publicacion.descripcion;
+
+    const datos = document.createElement("p");
+    datos.textContent = `${publicacion.categoria} · ${publicacion.ubicacion}`;
+
+    contenido.append(tipo, titulo, descripcion, datos);
+
+    if (publicacion.tipo === "venta" && publicacion.precio !== null) {
+      const precio = document.createElement("p");
+      precio.style.fontWeight = "bold";
+      precio.textContent = new Intl.NumberFormat("es-AR", {
+        style: "currency",
+        currency: publicacion.moneda || "ARS"
+      }).format(Number(publicacion.precio));
+      contenido.appendChild(precio);
+    }
+
+    articulo.appendChild(contenido);
+    lista.appendChild(articulo);
+  });
+}
+
+async function subirFotosClasificado(archivos, userId) {
+  if (archivos.length > 5) {
+    throw new Error("Podés subir hasta 5 fotografías.");
+  }
+
+  const tiposPermitidos = ["image/jpeg", "image/png", "image/webp"];
+  const urls = [];
+  const rutas = [];
+
+  for (const archivo of archivos) {
+    if (!tiposPermitidos.includes(archivo.type)) {
+      throw new Error("Las fotografías deben ser JPG, PNG o WEBP.");
+    }
+
+    if (archivo.size > 5 * 1024 * 1024) {
+      throw new Error("Cada fotografía debe pesar menos de 5 MB.");
+    }
+
+    const extension = archivo.name.split(".").pop().toLowerCase();
+    const ruta = `${userId}/${crypto.randomUUID()}.${extension}`;
+
+    const { error } = await supabaseClient.storage
+      .from("clasificados-fotos")
+      .upload(ruta, archivo, { upsert: false, contentType: archivo.type });
+
+    if (error) throw error;
+
+    const { data } = supabaseClient.storage
+      .from("clasificados-fotos")
+      .getPublicUrl(ruta);
+
+    rutas.push(ruta);
+    urls.push(data.publicUrl);
+  }
+
+  return { urls, rutas };
+}
+
+document.getElementById("formularioClasificado").addEventListener("submit", async function (event) {
+  event.preventDefault();
+
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) {
+    mostrarMensajeClasificados("Debés iniciar sesión para publicar un artículo.", true);
+    return;
+  }
+
+  const archivos = Array.from(document.getElementById("clasificadoFotos").files || []);
+  let fotosSubidas = { urls: [], rutas: [] };
+
+  try {
+    fotosSubidas = await subirFotosClasificado(archivos, user.id);
+
+    const { error } = await supabaseClient.from("clasificados").insert({
+      user_id: user.id,
+      tipo: "venta",
+      titulo: document.getElementById("clasificadoTitulo").value.trim(),
+      descripcion: document.getElementById("clasificadoDescripcion").value.trim(),
+      precio: Number(document.getElementById("clasificadoPrecio").value),
+      moneda: document.getElementById("clasificadoMoneda").value,
+      ubicacion: document.getElementById("clasificadoUbicacion").value.trim(),
+      categoria: document.getElementById("clasificadoCategoria").value,
+      estado_articulo: document.getElementById("clasificadoEstado").value,
+      fotos: fotosSubidas.urls
+    });
+
+    if (error) throw error;
+
+    event.target.reset();
+    mostrarPanelClasificados("panelClasificadosLista");
+    mostrarMensajeClasificados("Artículo enviado correctamente. Quedó pendiente de aprobación.");
+  } catch (error) {
+    if (fotosSubidas.rutas.length) {
+      await supabaseClient.storage.from("clasificados-fotos").remove(fotosSubidas.rutas);
+    }
+    console.error("Error al enviar clasificado:", error);
+    mostrarMensajeClasificados(error.message || "No se pudo enviar el artículo.", true);
+  }
+});
+
+document.getElementById("formularioBusquedaClasificado").addEventListener("submit", async function (event) {
+  event.preventDefault();
+
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) {
+    mostrarMensajeClasificados("Debés iniciar sesión para publicar una búsqueda.", true);
+    return;
+  }
+
+  const { error } = await supabaseClient.from("clasificados").insert({
+    user_id: user.id,
+    tipo: "busqueda",
+    titulo: document.getElementById("busquedaTitulo").value.trim(),
+    descripcion: document.getElementById("busquedaDescripcion").value.trim(),
+    ubicacion: document.getElementById("busquedaUbicacion").value.trim(),
+    categoria: document.getElementById("busquedaCategoria").value,
+    fotos: []
+  });
+
+  if (error) {
+    console.error("Error al enviar búsqueda:", error);
+    mostrarMensajeClasificados("No se pudo enviar la búsqueda: " + error.message, true);
+    return;
+  }
+
+  event.target.reset();
+  mostrarPanelClasificados("panelClasificadosLista");
+  mostrarMensajeClasificados("Búsqueda enviada correctamente. Quedó pendiente de aprobación.");
 });
   async function cargarPublicacionShimoda() {
   const { data, error } = await supabaseClient
