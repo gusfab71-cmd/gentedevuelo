@@ -424,12 +424,12 @@ min-height: 260px;
       border-radius: 12px;
       box-shadow: 0 3px 12px rgba(0,0,0,0.08);
     }
-
     footer {
+      position: relative;
       background: #17324d;
       color: white;
       text-align: center;
-      padding: 30px 15px;
+      padding: 30px 230px 30px 15px;
       margin-top: 50px;
     }
 
@@ -1409,21 +1409,50 @@ body.modo-anexo-clasificados #clasificados-seccion {
 }
 
 .footer-enlaces {
+  position: absolute;
+  right: 24px;
+  bottom: 24px;
   display: flex;
-  justify-content: center;
-  gap: 18px;
-  margin-bottom: 18px;
+  justify-content: flex-end;
+  gap: 10px;
+  margin: 0;
 }
 
 .footer-enlaces a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 92px;
+  min-height: 38px;
+  padding: 9px 16px;
+  background: #ff642e;
+  border: 1px solid #ff642e;
+  border-radius: 10px;
   color: #ffffff;
   text-decoration: none;
-  font-weight: bold;
+  font-size: 13px;
+  font-weight: 800;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.20);
+  transition: transform .18s ease, background .18s ease;
 }
 
 .footer-enlaces a:hover {
-  color: #ff9f1c;
+  background: #ff7848;
+  color: #ffffff;
+  transform: translateY(-1px);
 }
+@media (max-width: 700px) {
+  footer {
+    padding: 28px 15px;
+  }
+
+  .footer-enlaces {
+    position: static;
+    justify-content: center;
+    margin-top: 18px;
+  }
+}
+
  .shimoda-cabecera {
   display: flex;
   align-items: center;
@@ -3744,7 +3773,7 @@ body:not(.modo-seccion-unica):not(.modo-anexo) > .solo-seccion {
     </div>
 
     <div class="modulo-portada-acciones">
-      <a href="#mi-perfil" class="boton-modulo secundario">Mi Hangar</a>
+      <a href="#mi-perfil" class="boton-modulo">Mi Hangar</a>
       <button class="boton-modulo" id="explorarHangares" type="button">Explorar hangares</button>
     </div>
   </div>
