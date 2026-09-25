@@ -1742,6 +1742,170 @@ body.modo-anexo-clasificados #clasificados-seccion {
   transform: translateY(-1px);
 }
 
+
+/* ===== CLASIFICADOS: CONSULTA LATERAL DENTRO DE LA SECCIÓN ===== */
+#panelClasificadosLista.consulta-abierta {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 330px;
+  gap: 20px;
+  align-items: start;
+}
+
+#panelClasificadosLista.consulta-abierta .clasificados-listado-cabecera {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+#panelClasificadosLista.consulta-abierta #listaClasificadosDisponibles {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+#panelClasificadosLista.consulta-abierta .clasificados-requeridos {
+  grid-column: 1;
+  grid-row: 3;
+}
+
+.clasificados-consulta-panel {
+  display: none;
+  position: relative;
+  padding: 18px;
+  border: 2px solid #b87920;
+  border-radius: 16px;
+  background: #282d30;
+  color: #f7f4ec;
+  box-shadow: 0 12px 28px rgba(66, 43, 8, 0.18);
+}
+
+#panelClasificadosLista.consulta-abierta .clasificados-consulta-panel {
+  display: block;
+  grid-column: 2;
+  grid-row: 1 / span 3;
+  position: sticky;
+  top: 18px;
+}
+
+.clasificados-consulta-cerrar {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 32px;
+  height: 32px;
+  border: 1px solid #bda15f;
+  border-radius: 8px;
+  background: #353b3d;
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.clasificados-consulta-kicker {
+  display: block;
+  margin: 0 42px 8px 0;
+  color: #f4d887;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+}
+
+.clasificados-consulta-imagen {
+  overflow: hidden;
+  margin-bottom: 14px;
+  border: 1px solid #59646a;
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.clasificados-consulta-imagen img {
+  display: block;
+  width: 100%;
+  height: 170px;
+  object-fit: contain;
+  padding: 8px;
+  background: #ffffff;
+}
+
+.clasificados-consulta-panel h3 {
+  margin: 0 0 7px;
+  color: #f4d887;
+  font-size: 20px;
+}
+
+.clasificados-consulta-descripcion,
+.clasificados-consulta-dato,
+.clasificados-consulta-nota {
+  margin: 0 0 10px;
+  color: #e7e1d3;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.clasificados-consulta-anunciante {
+  margin: 16px 0 12px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(244, 216, 135, 0.22);
+}
+
+.clasificados-consulta-anunciante strong {
+  display: block;
+  margin-bottom: 5px;
+  color: #ffffff;
+  font-size: 15px;
+}
+
+.clasificados-consulta-acciones {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.clasificados-consulta-acciones button {
+  width: 100%;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 9px;
+  background: #ff642e;
+  color: #ffffff;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.clasificados-consulta-acciones button:hover {
+  background: #ff7848;
+}
+
+.clasificados-consulta-acciones button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.clasificados-consulta-nota {
+  margin: 12px 0 0;
+  color: #bfc6ca;
+  font-size: 11px;
+}
+
+@media (max-width: 950px) {
+  #panelClasificadosLista.consulta-abierta {
+    grid-template-columns: 1fr;
+  }
+
+  #panelClasificadosLista.consulta-abierta .clasificados-listado-cabecera,
+  #panelClasificadosLista.consulta-abierta #listaClasificadosDisponibles,
+  #panelClasificadosLista.consulta-abierta .clasificados-requeridos,
+  #panelClasificadosLista.consulta-abierta .clasificados-consulta-panel {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  #panelClasificadosLista.consulta-abierta .clasificados-consulta-panel {
+    position: static;
+  }
+}
+
 .mensaje-clasificados {
   display: none;
   margin: 18px 0 0;
@@ -3839,6 +4003,28 @@ body:not(.modo-seccion-unica):not(.modo-anexo) > .solo-seccion {
       <p>Cargando disponibles...</p>
     </div>
 
+    <aside class="clasificados-consulta-panel" id="clasificadosConsultaPanel" aria-hidden="true">
+      <button type="button" class="clasificados-consulta-cerrar" id="cerrarConsultaClasificado" aria-label="Cerrar consulta">×</button>
+      <span class="clasificados-consulta-kicker">CONSULTA DEL AVISO</span>
+      <div class="clasificados-consulta-imagen" id="consultaClasificadoImagen"></div>
+      <h3 id="consultaClasificadoTitulo">Artículo seleccionado</h3>
+      <p class="clasificados-consulta-descripcion" id="consultaClasificadoDescripcion"></p>
+      <p class="clasificados-consulta-dato" id="consultaClasificadoDatos"></p>
+      <p class="clasificados-consulta-dato" id="consultaClasificadoPrecio"></p>
+
+      <div class="clasificados-consulta-anunciante">
+        <span class="clasificados-consulta-kicker">ANUNCIANTE</span>
+        <strong id="consultaClasificadoAnunciante">Miembro de Gente de Vuelo</strong>
+        <p class="clasificados-consulta-dato" id="consultaClasificadoPerfil"></p>
+        <p class="clasificados-consulta-dato" id="consultaClasificadoBase"></p>
+      </div>
+
+      <div class="clasificados-consulta-acciones">
+        <button type="button" id="consultaClasificadoVerHangar">Ver Hangar del anunciante</button>
+      </div>
+      <p class="clasificados-consulta-nota">El aviso permanece visible mientras consultás los datos del anunciante.</p>
+    </aside>
+
     <div class="clasificados-requeridos">
       <div class="clasificados-requeridos-cabecera">
         <div>
@@ -5476,8 +5662,15 @@ const botonesClasificados = document.querySelectorAll("[data-panel-clasificados]
 const panelesClasificados = document.querySelectorAll(".clasificados-panel");
 const mensajeClasificados = document.getElementById("mensajeClasificados");
 const volverClasificados = document.querySelectorAll("[data-volver-clasificados]");
+const panelListaClasificados = document.getElementById("panelClasificadosLista");
+const panelConsultaClasificado = document.getElementById("clasificadosConsultaPanel");
+const cerrarConsultaClasificadoBtn = document.getElementById("cerrarConsultaClasificado");
+const consultaClasificadoVerHangar = document.getElementById("consultaClasificadoVerHangar");
+let clasificadoEnConsulta = null;
 
 function mostrarPanelClasificados(panelId) {
+  if (panelId !== "panelClasificadosLista") cerrarConsultaClasificado();
+
   panelesClasificados.forEach(function (panel) {
     panel.classList.toggle("activo", panel.id === panelId);
   });
@@ -5558,7 +5751,7 @@ function crearTarjetaClasificado(publicacion, compacto = false) {
     consultar.className = "clasificado-consultar";
     consultar.textContent = "Consultar";
     consultar.addEventListener("click", function () {
-      abrirConsultaClasificado(publicacion.user_id, publicacion.titulo);
+      abrirConsultaClasificado(publicacion);
     });
     contenido.appendChild(consultar);
   }
@@ -5567,33 +5760,111 @@ function crearTarjetaClasificado(publicacion, compacto = false) {
   return articulo;
 }
 
-async function abrirConsultaClasificado(userId, titulo) {
-  if (!userId) {
-    mostrarMensajeClasificados("No hay información del anunciante disponible para este aviso.", true);
-    return;
+function cerrarConsultaClasificado() {
+  clasificadoEnConsulta = null;
+  if (panelListaClasificados) panelListaClasificados.classList.remove("consulta-abierta");
+  if (panelConsultaClasificado) panelConsultaClasificado.setAttribute("aria-hidden", "true");
+}
+
+async function abrirConsultaClasificado(publicacion) {
+  if (!publicacion || !panelListaClasificados || !panelConsultaClasificado) return;
+
+  clasificadoEnConsulta = publicacion;
+  panelListaClasificados.classList.add("consulta-abierta");
+  panelConsultaClasificado.setAttribute("aria-hidden", "false");
+
+  const imagenContenedor = document.getElementById("consultaClasificadoImagen");
+  const titulo = document.getElementById("consultaClasificadoTitulo");
+  const descripcion = document.getElementById("consultaClasificadoDescripcion");
+  const datos = document.getElementById("consultaClasificadoDatos");
+  const precio = document.getElementById("consultaClasificadoPrecio");
+  const anunciante = document.getElementById("consultaClasificadoAnunciante");
+  const perfilDato = document.getElementById("consultaClasificadoPerfil");
+  const baseDato = document.getElementById("consultaClasificadoBase");
+
+  titulo.textContent = publicacion.titulo || "Artículo disponible";
+  descripcion.textContent = publicacion.descripcion || "Sin descripción.";
+  datos.textContent = [publicacion.categoria, publicacion.ubicacion].filter(Boolean).join(" · ");
+
+  if (publicacion.precio !== null && publicacion.precio !== undefined) {
+    precio.textContent = new Intl.NumberFormat("es-AR", {
+      style: "currency",
+      currency: publicacion.moneda || "ARS"
+    }).format(Number(publicacion.precio));
+    precio.style.fontWeight = "800";
+  } else {
+    precio.textContent = "";
   }
 
-  // Salimos de Clasificados y abrimos el Hangar público del anunciante.
-  if (typeof cerrarAnexos === "function") cerrarAnexos();
+  imagenContenedor.innerHTML = "";
+  if (Array.isArray(publicacion.fotos) && publicacion.fotos[0]) {
+    const imagen = document.createElement("img");
+    imagen.src = publicacion.fotos[0];
+    imagen.alt = publicacion.titulo || "Artículo disponible";
+    imagen.loading = "lazy";
+    imagenContenedor.appendChild(imagen);
+    imagenContenedor.style.display = "block";
+  } else {
+    imagenContenedor.style.display = "none";
+  }
 
-  document.querySelectorAll(".seccion-enfoque").forEach(function (elemento) {
-    elemento.classList.remove("seccion-enfoque");
+  anunciante.textContent = "Cargando anunciante...";
+  perfilDato.textContent = "";
+  baseDato.textContent = "";
+  consultaClasificadoVerHangar.disabled = !publicacion.user_id;
+
+  if (publicacion.user_id) {
+    const { data: perfil, error } = await supabaseClient
+      .from("profiles")
+      .select("full_name, username, aviation_role, home_airfield")
+      .eq("id", publicacion.user_id)
+      .maybeSingle();
+
+    if (error) {
+      console.error("Error al cargar el anunciante del clasificado:", error);
+      anunciante.textContent = "Miembro de Gente de Vuelo";
+    } else {
+      anunciante.textContent = perfil?.full_name || perfil?.username || "Miembro de Gente de Vuelo";
+      perfilDato.textContent = perfil?.aviation_role ? `Actividad: ${perfil.aviation_role}` : "";
+      baseDato.textContent = perfil?.home_airfield ? `Base: ${perfil.home_airfield}` : "";
+    }
+  } else {
+    anunciante.textContent = "Anunciante sin perfil público disponible";
+  }
+
+  panelConsultaClasificado.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+if (cerrarConsultaClasificadoBtn) {
+  cerrarConsultaClasificadoBtn.addEventListener("click", cerrarConsultaClasificado);
+}
+
+if (consultaClasificadoVerHangar) {
+  consultaClasificadoVerHangar.addEventListener("click", async function () {
+    const userId = clasificadoEnConsulta?.user_id;
+    if (!userId) return;
+
+    if (typeof cerrarAnexos === "function") cerrarAnexos();
+
+    document.querySelectorAll(".seccion-enfoque").forEach(function (elemento) {
+      elemento.classList.remove("seccion-enfoque");
+    });
+
+    const hangarPublico = document.getElementById("hangar-publico");
+    if (!hangarPublico) return;
+
+    hangarPublico.classList.add("seccion-enfoque");
+    document.body.classList.add("modo-seccion-unica");
+    history.pushState(null, "", "#hangar-publico");
+
+    try {
+      await verHangar(userId);
+      window.scrollTo({ top: 0, behavior: "auto" });
+    } catch (error) {
+      console.error("Error al abrir el hangar del anunciante:", error);
+      alert("No se pudo abrir el perfil del anunciante.");
+    }
   });
-
-  const hangarPublico = document.getElementById("hangar-publico");
-  if (!hangarPublico) return;
-
-  hangarPublico.classList.add("seccion-enfoque");
-  document.body.classList.add("modo-seccion-unica");
-  history.pushState(null, "", "#hangar-publico");
-
-  try {
-    await verHangar(userId);
-    window.scrollTo({ top: 0, behavior: "auto" });
-  } catch (error) {
-    console.error("Error al abrir la consulta del clasificado:", error);
-    alert("No se pudo abrir el perfil del anunciante.");
-  }
 }
 
 async function cargarClasificados() {
