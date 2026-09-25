@@ -286,23 +286,32 @@ min-height: 260px;
     }
 
     .acceso-usuarios {
-      background: white;
-      max-width: 600px;
-      margin: 45px auto;
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 3px 12px rgba(0,0,0,0.10);
+      position: fixed;
+      top: 18px;
+      right: 22px;
+      z-index: 1100;
+      width: min(340px, calc(100vw - 36px));
+      margin: 0;
+      padding: 18px;
+      background: rgba(23, 27, 29, 0.94);
+      border: 2px solid #ff642e;
+      border-radius: 16px;
+      box-shadow: 0 8px 28px rgba(0,0,0,0.38);
+      color: white;
     }
 
     .acceso-usuarios h2 {
       text-align: center;
-      margin-bottom: 10px;
+      margin-bottom: 6px;
+      color: white;
+      font-size: 22px;
     }
 
     .acceso-usuarios .descripcion {
       text-align: center;
-      color: #5b6f7f;
-      margin-bottom: 25px;
+      color: #d8d8d8;
+      margin-bottom: 14px;
+      font-size: 13px;
     }
 
     .campo {
@@ -313,15 +322,17 @@ min-height: 260px;
       display: block;
       font-weight: bold;
       margin-bottom: 6px;
+      color: white;
+      font-size: 13px;
     }
 
     .campo input,
 .campo textarea {
       width: 100%;
-      padding: 12px;
-      border: 1px solid #bccbd5;
-      border-radius: 7px;
-      font-size: 16px;
+      padding: 10px 11px;
+      border: 1px solid rgba(255,255,255,0.35);
+      border-radius: 8px;
+      font-size: 14px;
     }
 .publicacion-foro {
   margin-bottom: 18px;
@@ -330,6 +341,69 @@ min-height: 260px;
 }
     .acciones-usuario {
       text-align: center;
+    }
+
+    .boton-google {
+      width: 100%;
+      padding: 11px 14px;
+      margin-bottom: 12px;
+      background: white;
+      color: #25313a;
+      border: 1px solid #d6dbe0;
+      border-radius: 9px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .separador-acceso {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 0 0 12px;
+      color: #cdd3d7;
+      font-size: 12px;
+    }
+
+    .separador-acceso::before,
+    .separador-acceso::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: rgba(255,255,255,0.25);
+    }
+
+    .acciones-usuario .boton {
+      width: 100%;
+      margin: 2px 0 8px;
+      padding: 10px 14px;
+    }
+
+    .enlaces-acceso {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 6px 14px;
+    }
+
+    .enlace-acceso {
+      padding: 0;
+      background: transparent;
+      color: #ffad72;
+      border: 0;
+      font-size: 12px;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    .mostrar-password {
+      margin-top: 6px;
+      padding: 0;
+      background: transparent;
+      border: 0;
+      color: #ffad72;
+      font-size: 12px;
+      cursor: pointer;
     }
 
     #mensajeUsuario {
@@ -972,7 +1046,7 @@ header {
   top: 18px;
   right: 22px;
   z-index: 1001;
-  display: flex;
+  display: none;
   gap: 10px;
 }
 
@@ -994,22 +1068,54 @@ header {
   color: white;
 }
     
-/* ===== ACCESO ROBERT SHIMODA ===== */
-.acceso-shimoda {
- position: absolute;
-  top: 75px;
-  right: 22px;
+/* ===== ACCESOS LATERALES DE PORTADA ===== */
+.portada-accesos {
+  position: fixed;
+  top: 78px;
+  left: 18px;
   z-index: 1000;
   width: 260px;
-  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: top 0.25s ease;
+}
+
+.portada-accesos.menu-abierto {
+  top: 470px;
+}
+
+.acceso-shimoda,
+.acceso-clasificados {
+  display: block;
+  padding: 12px;
   background: rgba(23, 27, 29, 0.82);
   border: 2px solid #ff642e;
-  border-radius: 18px;
+  border-radius: 14px;
   text-decoration: none;
   color: white;
-  text-align: center;
+  text-align: left;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
   transition: transform 0.25s ease;
+}
+
+.acceso-shimoda {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.acceso-clasificados h3 {
+  margin: 0 0 5px;
+  color: #ff9f1c;
+  font-size: 17px;
+}
+
+.acceso-clasificados p {
+  margin: 0;
+  color: white;
+  font-size: 12px;
+  line-height: 1.35;
 }
  .shimoda-cabecera {
   display: flex;
@@ -1149,40 +1255,62 @@ header {
   display: block;
 }
 .acceso-shimoda img {
-  width: 130px;
-  height: 130px;
+  width: 72px;
+  height: 72px;
   object-fit: cover;
   display: block;
-  margin: 0 auto 10px;
+  margin: 0;
   border-radius: 50%;
+  flex: 0 0 72px;
 }
 .acceso-shimoda .shimoda-titulo {
-  font-size: 18px;
+  font-size: 15px;
   font-weight: bold;
   color: #ff9f1c;
   margin: 4px 0 3px;
-  text-align: center;
+  text-align: left;
 }
 
 .acceso-shimoda .shimoda-subtitulo {
-  font-size: 13px;
+  font-size: 11px;
   font-weight: bold;
   color: white;
   margin: 0 0 8px;
-  text-align: center;
+  text-align: left;
 }
 
 .acceso-shimoda .shimoda-texto {
-  font-size: 12px;
+  font-size: 11px;
   line-height: 1.4;
   color: white;
   margin: 0;
-  text-align: center;
+  text-align: left;
 }    
 
-.acceso-shimoda:hover {
+.acceso-shimoda:hover,
+.acceso-clasificados:hover {
   transform: scale(1.06);
 }  
+
+@media (max-width: 850px) {
+  .acceso-usuarios {
+    position: absolute;
+    top: 76px;
+    right: 12px;
+    width: min(320px, calc(100vw - 24px));
+  }
+
+  .portada-accesos {
+    position: absolute;
+    top: 430px;
+    left: 12px;
+    width: min(260px, calc(100vw - 24px));
+  }
+
+  .portada-accesos.menu-abierto {
+    top: 760px;
+  }
+}
 
  /* ===== HANGAR PÚBLICO ===== */
 
@@ -1246,18 +1374,26 @@ header {
   <a href="#reglamento" id="enlaceReglamento">Código de Convivencia</a>
   </div>
 </nav>
-  <div class="controles-usuario">
+  <div class="controles-usuario" id="controlesUsuario">
   <a href="#ingresar" class="boton-ingresar" id="botonIngresar">INGRESAR</a>
   <a href="#" id="botonCerrarSesion" class="boton-ingresar" style="display:none;">CERRAR SESIÓN</a>
 </div>
 
- <a href="#shimoda" class="acceso-shimoda" title="Robert Shimoda - Consejos de Aviación">
-  <img src="LOGO SE ROBERT SHIMODA MEJORADO.png" alt="Robert Shimoda - Consejos de Aviación">
-  <div class="shimoda-info">
-   
-   <p>Consejos, experiencias e historias para aprender y disfrutar de la aviación.</p>
-  </div>
-</a> 
+<div class="portada-accesos" id="portadaAccesos">
+  <a href="#shimoda" class="acceso-shimoda" title="Robert Shimoda - Consejos de Aviación">
+    <img src="LOGO SE ROBERT SHIMODA MEJORADO.png" alt="Robert Shimoda - Consejos de Aviación">
+    <div class="shimoda-info">
+      <p class="shimoda-titulo" id="shimodaPortadaTitulo">Robert Shimoda</p>
+      <p class="shimoda-subtitulo" id="shimodaPortadaFecha">Última publicación</p>
+      <p class="shimoda-texto" id="shimodaPortadaTexto">Consejos, experiencias e historias para aprender y disfrutar de la aviación.</p>
+    </div>
+  </a>
+
+  <a href="#tienda-seccion" class="acceso-clasificados" title="Clasificados de la comunidad">
+    <h3>Clasificados</h3>
+    <p>Compra, venta y búsquedas entre miembros de la comunidad.</p>
+  </a>
+</div>
 <div class="portada-completa">
   <section class="hero" id="inicio">
     
@@ -2069,26 +2205,34 @@ header {
     
 </section>
   <section class="acceso-usuarios" id="ingresar">
-    <h2>Ingresar a Gente de Vuelo</h2>
+    <h2 id="tituloAcceso">Ingresar</h2>
 
-    <p class="descripcion">
-      Ingresá con tu correo electrónico o creá tu usuario para formar parte de la comunidad.
-    </p>
+    <p class="descripcion" id="descripcionAcceso">Ingresá a Gente de Vuelo.</p>
+
+    <button class="boton-google" id="botonGoogle" type="button" onclick="ingresarConGoogle()">
+      Continuar con Google
+    </button>
+
+    <div class="separador-acceso" id="separadorAcceso">o ingresá con tu correo</div>
 
     <div class="campo">
       <label for="email">Correo electrónico</label>
       <input type="email" id="email" placeholder="tuemail@ejemplo.com">
     </div>
 
-    <div class="campo">
+    <div class="campo" id="campoPassword">
       <label for="password">Contraseña</label>
       <input type="password" id="password" placeholder="Tu contraseña">
-      <button type="button" onclick="mostrarPassword()">Mostrar contraseña</button>
+      <button class="mostrar-password" type="button" onclick="mostrarPassword()">Mostrar contraseña</button>
     </div>
 
     <div class="acciones-usuario">
-      <button class="boton" onclick="ingresarUsuario()">Ingresar</button>
-      <button class="boton secundario" onclick="crearUsuario()">Crear usuario</button>
+      <button class="boton" id="botonAccesoPrincipal" onclick="procesarAcceso()">Ingresar</button>
+      <div class="enlaces-acceso">
+        <button class="enlace-acceso" id="botonCambiarModo" type="button" onclick="mostrarModoAcceso('registro')">¿No tenés cuenta? Registrate</button>
+        <button class="enlace-acceso" id="botonRecuperar" type="button" onclick="mostrarModoAcceso('recuperar')">¿Olvidaste tu contraseña?</button>
+        <button class="enlace-acceso" id="botonVolverIngreso" type="button" onclick="mostrarModoAcceso('ingresar')" style="display:none;">Volver a ingresar</button>
+      </div>
     </div>
 
     <p id="mensajeUsuario"></p>
@@ -2292,6 +2436,92 @@ function mostrarPassword() {
   const campo = document.getElementById("password");
   campo.type = campo.type === "password" ? "text" : "password";
   }
+
+let modoAcceso = "ingresar";
+
+function mostrarModoAcceso(modo) {
+  modoAcceso = modo;
+
+  const titulo = document.getElementById("tituloAcceso");
+  const descripcion = document.getElementById("descripcionAcceso");
+  const campoPassword = document.getElementById("campoPassword");
+  const botonPrincipal = document.getElementById("botonAccesoPrincipal");
+  const botonGoogle = document.getElementById("botonGoogle");
+  const separador = document.getElementById("separadorAcceso");
+  const botonCambiar = document.getElementById("botonCambiarModo");
+  const botonRecuperar = document.getElementById("botonRecuperar");
+  const botonVolver = document.getElementById("botonVolverIngreso");
+  const mensaje = document.getElementById("mensajeUsuario");
+
+  mensaje.textContent = "";
+  campoPassword.style.display = modo === "recuperar" ? "none" : "block";
+  botonGoogle.style.display = modo === "ingresar" ? "block" : "none";
+  separador.style.display = modo === "ingresar" ? "flex" : "none";
+  botonCambiar.style.display = modo === "ingresar" ? "inline" : "none";
+  botonRecuperar.style.display = modo === "ingresar" ? "inline" : "none";
+  botonVolver.style.display = modo === "ingresar" ? "none" : "inline";
+
+  if (modo === "registro") {
+    titulo.textContent = "Crear cuenta";
+    descripcion.textContent = "Registrate con tu correo electrónico.";
+    botonPrincipal.textContent = "Registrarme";
+  } else if (modo === "recuperar") {
+    titulo.textContent = "Recuperar contraseña";
+    descripcion.textContent = "Escribí tu correo y te enviaremos un enlace.";
+    botonPrincipal.textContent = "Enviar enlace";
+  } else {
+    titulo.textContent = "Ingresar";
+    descripcion.textContent = "Ingresá a Gente de Vuelo.";
+    botonPrincipal.textContent = "Ingresar";
+  }
+}
+
+async function procesarAcceso() {
+  if (modoAcceso === "registro") {
+    await crearUsuario();
+  } else if (modoAcceso === "recuperar") {
+    await recuperarPassword();
+  } else {
+    await ingresarUsuario();
+  }
+}
+
+async function ingresarConGoogle() {
+  const mensaje = document.getElementById("mensajeUsuario");
+  mensaje.textContent = "Abriendo el acceso con Google...";
+
+  const { error } = await supabaseClient.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      redirectTo: window.location.origin + window.location.pathname
+    }
+  });
+
+  if (error) {
+    mensaje.textContent = "No se pudo iniciar con Google: " + error.message;
+  }
+}
+
+async function recuperarPassword() {
+  const email = document.getElementById("email").value.trim();
+  const mensaje = document.getElementById("mensajeUsuario");
+
+  if (!email) {
+    mensaje.textContent = "Escribí tu correo electrónico.";
+    return;
+  }
+
+  const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin + window.location.pathname
+  });
+
+  if (error) {
+    mensaje.textContent = "No se pudo enviar el enlace: " + error.message;
+    return;
+  }
+
+  mensaje.textContent = "Revisá tu correo para recuperar la contraseña.";
+}
     async function ingresarUsuario() {
       const email = document.getElementById("email").value.trim();
       const password = document.getElementById("password").value;
@@ -2320,6 +2550,7 @@ async function actualizarBotonIngreso() {
   const boton = document.getElementById("botonIngresar");
   const botonCerrar = document.getElementById("botonCerrarSesion");
 const seccionIngresar = document.getElementById("ingresar");
+  const controlesUsuario = document.getElementById("controlesUsuario");
   
   const { data: { user } } = await supabaseClient.auth.getUser();
   const perfilEmail = document.getElementById("perfilEmail");
@@ -2357,12 +2588,14 @@ document.getElementById("hangarLicense").textContent = perfil?.aviation_license 
 
   if (user) {
    seccionIngresar.style.display = "none"; 
+   controlesUsuario.style.display = "flex";
    botonCerrar.style.display = "inline-block"; 
     boton.textContent = "MI PERFIL";
    boton.href = "#mi-perfil";
     
   } else {
    seccionIngresar.style.display = "block"; 
+   controlesUsuario.style.display = "none";
    botonCerrar.style.display = "none"; 
     boton.textContent = "INGRESAR";
     boton.href = "#ingresar";
@@ -3063,11 +3296,15 @@ document.querySelector(".galeria-siguiente").addEventListener("click", () => {
 
   menuBoton.addEventListener("click", function () {
     menuDesplegable.classList.toggle("abierto");
+    portadaAccesos.classList.toggle("menu-abierto", menuDesplegable.classList.contains("abierto"));
   });
+
+  const portadaAccesos = document.getElementById("portadaAccesos");
 
   menuDesplegable.querySelectorAll("a").forEach(function (enlace) {
     enlace.addEventListener("click", function () {
       menuDesplegable.classList.remove("abierto");
+      portadaAccesos.classList.remove("menu-abierto");
     });
   });
 document.addEventListener("click", function (event) {
@@ -3076,6 +3313,7 @@ document.addEventListener("click", function (event) {
     !menuBoton.contains(event.target)
   ) {
     menuDesplegable.classList.remove("abierto");
+    portadaAccesos.classList.remove("menu-abierto");
   }
 });
   
@@ -3122,6 +3360,26 @@ accesoShimoda.addEventListener("click", function (event) {
   }
 
   const publicacion = data[0];
+
+  const portadaTitulo = document.getElementById("shimodaPortadaTitulo");
+  const portadaFecha = document.getElementById("shimodaPortadaFecha");
+  const portadaTexto = document.getElementById("shimodaPortadaTexto");
+
+  if (portadaTitulo) {
+    portadaTitulo.textContent = publicacion.titulo || "Robert Shimoda";
+  }
+
+  if (portadaFecha && publicacion.fecha_publicacion) {
+    const fechaPortada = publicacion.fecha_publicacion.split("T")[0].split("-");
+    portadaFecha.textContent = fechaPortada.length === 3
+      ? `${fechaPortada[2]}/${fechaPortada[1]}/${fechaPortada[0]}`
+      : publicacion.fecha_publicacion;
+  }
+
+  if (portadaTexto && publicacion.contenido) {
+    const resumen = publicacion.contenido.replace(/<[^>]*>/g, "").trim();
+    portadaTexto.textContent = resumen.length > 105 ? resumen.slice(0, 105) + "…" : resumen;
+  }
 
   document.getElementById("shimodaTitulo").textContent =
     publicacion.titulo;
