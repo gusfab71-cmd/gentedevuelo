@@ -1721,6 +1721,27 @@ body.modo-anexo-clasificados #clasificados-seccion {
   font-size: 20px;
 }
 
+.clasificado-consultar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 14px;
+  padding: 10px 18px;
+  border: 0;
+  border-radius: 9px;
+  background: #ff642e;
+  color: #ffffff;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.clasificado-consultar:hover {
+  background: #ff7848;
+  transform: translateY(-1px);
+}
+
 .mensaje-clasificados {
   display: none;
   margin: 18px 0 0;
@@ -5531,8 +5552,48 @@ function crearTarjetaClasificado(publicacion, compacto = false) {
     contenido.appendChild(precio);
   }
 
+  if (publicacion.tipo === "venta") {
+    const consultar = document.createElement("button");
+    consultar.type = "button";
+    consultar.className = "clasificado-consultar";
+    consultar.textContent = "Consultar";
+    consultar.addEventListener("click", function () {
+      abrirConsultaClasificado(publicacion.user_id, publicacion.titulo);
+    });
+    contenido.appendChild(consultar);
+  }
+
   articulo.appendChild(contenido);
   return articulo;
+}
+
+async function abrirConsultaClasificado(userId, titulo) {
+  if (!userId) {
+    mostrarMensajeClasificados("No hay información del anunciante disponible para este aviso.", true);
+    return;
+  }
+
+  // Salimos de Clasificados y abrimos el Hangar público del anunciante.
+  if (typeof cerrarAnexos === "function") cerrarAnexos();
+
+  document.querySelectorAll(".seccion-enfoque").forEach(function (elemento) {
+    elemento.classList.remove("seccion-enfoque");
+  });
+
+  const hangarPublico = document.getElementById("hangar-publico");
+  if (!hangarPublico) return;
+
+  hangarPublico.classList.add("seccion-enfoque");
+  document.body.classList.add("modo-seccion-unica");
+  history.pushState(null, "", "#hangar-publico");
+
+  try {
+    await verHangar(userId);
+    window.scrollTo({ top: 0, behavior: "auto" });
+  } catch (error) {
+    console.error("Error al abrir la consulta del clasificado:", error);
+    alert("No se pudo abrir el perfil del anunciante.");
+  }
 }
 
 async function cargarClasificados() {
@@ -5545,7 +5606,7 @@ async function cargarClasificados() {
 
   const { data, error } = await supabaseClient
     .from("clasificados")
-    .select("id, tipo, titulo, descripcion, precio, moneda, ubicacion, categoria, estado_articulo, fotos, estado_operacion, created_at")
+    .select("id, user_id, tipo, titulo, descripcion, precio, moneda, ubicacion, categoria, estado_articulo, fotos, estado_operacion, created_at")
     .eq("estado_publicacion", "aprobado")
     .order("created_at", { ascending: false });
 
@@ -6144,6 +6205,13 @@ cargarTravesias();
   }
 
   function salirDeSeccionUnica(actualizarUrl = true) {
+    const hangarPublico = document.getElementById("hangar-publico");
+    const hangarComunidad = document.getElementById("hangar-comunidad");
+    if (hangarPublico && hangarPublico.style.display === "block") {
+      hangarPublico.style.display = "none";
+      if (hangarComunidad) hangarComunidad.style.display = "block";
+    }
+
     limpiarSeccionEnfoque();
     document.body.classList.remove("modo-seccion-unica");
 
