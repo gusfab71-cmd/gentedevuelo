@@ -1760,10 +1760,68 @@ main[id] {
 #hangar-publico > .boton {
   margin-top: 18px;
 }   
-  </style>
+  
+
+/* ===== MODO UNA SECCIÓN POR VEZ ===== */
+#volverPortada {
+  display: none;
+  position: fixed;
+  top: 18px;
+  left: 18px;
+  z-index: 5000;
+  padding: 11px 17px;
+  border: 2px solid #ff642e;
+  border-radius: 10px;
+  background: rgba(23, 27, 29, 0.96);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.30);
+}
+
+#volverPortada:hover {
+  background: #ff642e;
+}
+
+body.modo-seccion-unica {
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+body.modo-seccion-unica > *:not(.seccion-enfoque):not(#volverPortada):not(script) {
+  display: none !important;
+}
+
+body.modo-seccion-unica > #volverPortada {
+  display: block;
+}
+
+body.modo-seccion-unica > .seccion-enfoque {
+  width: min(1200px, calc(100% - 32px));
+  max-width: 1200px;
+  margin: 76px auto 30px !important;
+  box-sizing: border-box;
+}
+
+@media (max-width: 700px) {
+  #volverPortada {
+    top: 12px;
+    left: 12px;
+  }
+
+  body.modo-seccion-unica > .seccion-enfoque {
+    width: calc(100% - 20px);
+    margin-top: 68px !important;
+  }
+}
+
+</style>
 </head>
 
 <body>
+<button type="button" id="volverPortada" aria-label="Volver a la portada">← VOLVER A PORTADA</button>
+
 
  <nav class="menu-principal">
   <button class="menu-boton" id="menuBoton" type="button">
@@ -4681,5 +4739,131 @@ travesia.autor = autor;
 
 cargarTravesias();
 </script> 
+
+<script>
+/* ===== NAVEGACIÓN: UNA SECCIÓN POR VEZ ===== */
+(function () {
+  const botonVolverPortada = document.getElementById("volverPortada");
+  const idsAnexos = new Set(["shimoda", "clasificados-seccion"]);
+
+  function limpiarSeccionEnfoque() {
+    document.querySelectorAll(".seccion-enfoque").forEach(function (elemento) {
+      elemento.classList.remove("seccion-enfoque");
+    });
+  }
+
+  function salirDeSeccionUnica(actualizarUrl = true) {
+    limpiarSeccionEnfoque();
+    document.body.classList.remove("modo-seccion-unica");
+
+    if (typeof cambiarVisibilidadDestacadas === "function") {
+      cambiarVisibilidadDestacadas(false);
+    }
+
+    if (actualizarUrl) {
+      history.pushState(null, "", window.location.pathname + window.location.search);
+    }
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function obtenerBloquePrincipal(destino) {
+    let bloque = destino.matches("section, main")
+      ? destino
+      : destino.closest("section, main");
+
+    if (!bloque) bloque = destino;
+
+    while (bloque.parentElement && bloque.parentElement !== document.body) {
+      bloque = bloque.parentElement;
+    }
+
+    return bloque;
+  }
+
+  function mostrarSeccionUnica(destino) {
+    if (!destino || destino.id === "inicio") {
+      salirDeSeccionUnica(false);
+      return;
+    }
+
+    if (destino.closest(".anexo-portada") || idsAnexos.has(destino.id)) return;
+
+    if (typeof cerrarAnexos === "function" && document.body.classList.contains("modo-anexo")) {
+      cerrarAnexos();
+    }
+
+    limpiarSeccionEnfoque();
+
+    const bloque = obtenerBloquePrincipal(destino);
+    bloque.classList.add("seccion-enfoque");
+    document.body.classList.add("modo-seccion-unica");
+
+    if (typeof cambiarVisibilidadDestacadas === "function") {
+      cambiarVisibilidadDestacadas(true);
+    }
+
+    requestAnimationFrame(function () {
+      window.scrollTo({ top: 0, behavior: "auto" });
+    });
+  }
+
+  document.addEventListener("click", function (event) {
+    const enlace = event.target.closest('a[href^="#"]');
+    if (!enlace) return;
+
+    const hash = enlace.getAttribute("href");
+    if (!hash || hash === "#") return;
+
+    const id = decodeURIComponent(hash.slice(1));
+
+    // Shimoda y Clasificados conservan su comportamiento de anexo independiente.
+    if (idsAnexos.has(id) || enlace.matches(".acceso-shimoda, .acceso-clasificados")) return;
+
+    const destino = document.getElementById(id);
+    if (!destino) return;
+
+    event.preventDefault();
+
+    if (id === "inicio") {
+      salirDeSeccionUnica();
+      return;
+    }
+
+    history.pushState(null, "", hash);
+    mostrarSeccionUnica(destino);
+  });
+
+  botonVolverPortada.addEventListener("click", function () {
+    salirDeSeccionUnica();
+  });
+
+  window.addEventListener("popstate", function () {
+    const hash = window.location.hash;
+
+    if (!hash || hash === "#" || hash === "#inicio") {
+      salirDeSeccionUnica(false);
+      return;
+    }
+
+    const id = decodeURIComponent(hash.slice(1));
+    if (idsAnexos.has(id)) return;
+
+    const destino = document.getElementById(id);
+    if (destino) mostrarSeccionUnica(destino);
+  });
+
+  // Si se abre la página directamente con el enlace de una sección,
+  // entra en el mismo modo de vista única.
+  if (window.location.hash && window.location.hash !== "#inicio") {
+    const idInicial = decodeURIComponent(window.location.hash.slice(1));
+    if (!idsAnexos.has(idInicial)) {
+      const destinoInicial = document.getElementById(idInicial);
+      if (destinoInicial) mostrarSeccionUnica(destinoInicial);
+    }
+  }
+})();
+</script>
+
 </body>
 </html>
