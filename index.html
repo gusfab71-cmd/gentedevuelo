@@ -1133,6 +1133,53 @@ header {
   animation: mostrarAnexo 0.25s ease;
 }
 
+body.modo-anexo {
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+body.modo-anexo > *:not(.anexo-portada):not(script) {
+  display: none !important;
+}
+
+body.modo-anexo > .anexo-portada.activo {
+  display: block !important;
+  width: min(1180px, calc(100% - 32px));
+  max-width: 1180px;
+  min-height: calc(100vh - 32px);
+  margin: 16px auto;
+  box-sizing: border-box;
+}
+
+body.modo-anexo-shimoda {
+  background: #0c1d2b;
+}
+
+body.modo-anexo-shimoda #shimoda {
+  background: linear-gradient(145deg, #10283d 0%, #17324d 55%, #0d1d2a 100%);
+  border: 2px solid #d6a84b;
+  border-radius: 20px;
+}
+
+body.modo-anexo-clasificados {
+  background: #111517;
+}
+
+body.modo-anexo-clasificados #clasificados-seccion {
+  background: linear-gradient(145deg, #20272a 0%, #171b1d 65%, #101315 100%);
+  border: 2px solid #ff642e;
+  border-radius: 20px;
+}
+
+#shimoda .anexo-cerrar {
+  border-color: #d6a84b;
+}
+
+#shimoda .anexo-cerrar:hover {
+  background: #d6a84b;
+  color: #10283d;
+}
+
 @keyframes mostrarAnexo {
   from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
@@ -3474,6 +3521,7 @@ document.querySelectorAll(".menu-desplegable a").forEach(enlace => {
 const accesoShimoda = document.querySelector(".acceso-shimoda");
 const accesoClasificados = document.querySelector(".acceso-clasificados");
 const anexosPortada = document.querySelectorAll(".anexo-portada");
+let posicionPortadaAntesDelAnexo = 0;
 
 function cerrarAnexos(exceptoId = "") {
   anexosPortada.forEach(function (anexo) {
@@ -3482,20 +3530,41 @@ function cerrarAnexos(exceptoId = "") {
       anexo.setAttribute("aria-hidden", "true");
     }
   });
+
+  if (!exceptoId) {
+    document.body.classList.remove(
+      "modo-anexo",
+      "modo-anexo-shimoda",
+      "modo-anexo-clasificados"
+    );
+
+    requestAnimationFrame(function () {
+      window.scrollTo({
+        top: posicionPortadaAntesDelAnexo,
+        behavior: "smooth"
+      });
+    });
+  }
 }
 
 function abrirAnexo(anexoId) {
   const anexo = document.getElementById(anexoId);
   if (!anexo) return;
 
+  if (!document.body.classList.contains("modo-anexo")) {
+    posicionPortadaAntesDelAnexo = window.scrollY;
+  }
+
   cerrarAnexos(anexoId);
+  document.body.classList.remove("modo-anexo-shimoda", "modo-anexo-clasificados");
+  document.body.classList.add("modo-anexo");
+  document.body.classList.add(
+    anexoId === "shimoda" ? "modo-anexo-shimoda" : "modo-anexo-clasificados"
+  );
   anexo.classList.add("activo");
   anexo.setAttribute("aria-hidden", "false");
 
-  anexo.scrollIntoView({
-    behavior: "smooth",
-    block: "start"
-  });
+  window.scrollTo(0, 0);
 }
 
 accesoShimoda.addEventListener("click", function (event) {
@@ -3511,10 +3580,6 @@ accesoClasificados.addEventListener("click", function (event) {
 document.querySelectorAll("[data-cerrar-anexo]").forEach(function (boton) {
   boton.addEventListener("click", function () {
     cerrarAnexos();
-    document.getElementById("inicio").scrollIntoView({
-      behavior: "smooth",
-      block: "start"
-    });
   });
 });
 
