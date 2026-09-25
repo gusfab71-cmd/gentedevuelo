@@ -12,6 +12,10 @@
       padding: 0;
     }
 
+    html {
+      scroll-behavior: smooth;
+    }
+
     body {
       font-family: Arial, Helvetica, sans-serif;
       background: #eef4f7;
@@ -1712,6 +1716,12 @@ body.modo-anexo-clasificados #clasificados-seccion {
   }
 }
 
+ /* ===== NAVEGACIÓN INTERNA ===== */
+section[id],
+main[id] {
+  scroll-margin-top: 24px;
+}
+
  /* ===== HANGAR PÚBLICO ===== */
 
 #hangar-publico {
@@ -1761,14 +1771,14 @@ body.modo-anexo-clasificados #clasificados-seccion {
   </button>
 
   <div class="menu-desplegable" id="menuDesplegable">
-    <a href="#experimental">Experimentales y Ultralivianos</a>
+    <a href="#experimental-seccion">Experimentales y Ultralivianos</a>
    
-  <a href="#stol">Aviación STOL</a>
-<a href="#aeromodelismo">Aeromodelismo</a>
+  <a href="#stol-seccion">Aviación STOL</a>
+<a href="#aeromodelismo-seccion">Aeromodelismo</a>
    
     <a href="#travesias">Travesías</a>
    
-    <a href="#tienda">Tienda Aeronáutica</a>
+    <a href="#tienda-seccion">Tienda Aeronáutica</a>
   <a href="#reglamento" id="enlaceReglamento">Código de Convivencia</a>
   </div>
 </nav>
@@ -1821,10 +1831,12 @@ body.modo-anexo-clasificados #clasificados-seccion {
     <p>Novedades, modificaciones y actualizaciones de la normativa aeronáutica.</p>
   </div>
 </a>
+<a href="#foro-comunidad" style="text-decoration:none; color:inherit;">
   <div class="acceso destacado" id="foro">
     <h3>Foro Aeronáutico</h3>
     <p>Un espacio para compartir experiencias, consultas, conocimientos e ideas entre los miembros de la comunidad.</p>
   </div>
+</a>
 <a href="#agenda-seccion" style="text-decoration:none; color:inherit;">
   <div class="acceso destacado">
     <h3>Agenda Aeronáutica</h3>
@@ -1894,6 +1906,12 @@ body.modo-anexo-clasificados #clasificados-seccion {
      <div class="tarjeta" id="experimental">
   <h3>Experimentales y Ultralivianos</h3>
   <p>Proyectos, construcción, aeronaves y experiencias relacionadas con la aviación experimental y ultraliviana.</p>
+</div>
+</a>
+      <a href="#stol-seccion" style="text-decoration:none; color:inherit;">
+     <div class="tarjeta" id="stol">
+  <h3>Aviación STOL</h3>
+  <p>Aeronaves, técnicas, experiencias y contenidos relacionados con las operaciones en pistas cortas y no preparadas.</p>
 </div>
 </a>
       <a href="#aeromodelismo-seccion" style="text-decoration:none; color:inherit;">
@@ -2236,6 +2254,32 @@ body.modo-anexo-clasificados #clasificados-seccion {
     <div class="tarjeta">
       <h3>Ultralivianos</h3>
       <p>Aeronaves ultralivianas, experiencias, información y actividades vinculadas a esta modalidad de vuelo.</p>
+    </div>
+
+  </div>
+</section>
+  <section class="contenedor" id="stol-seccion">
+  <h2 class="titulo-seccion">Aviación STOL</h2>
+
+  <p class="subtitulo">
+    Un espacio dedicado a aeronaves, técnicas, experiencias y contenidos vinculados a las operaciones de despegue y aterrizaje corto.
+  </p>
+
+  <div class="tarjetas">
+
+    <div class="tarjeta">
+      <h3>Aeronaves STOL</h3>
+      <p>Modelos, características y configuraciones pensadas para operar en espacios reducidos y pistas no preparadas.</p>
+    </div>
+
+    <div class="tarjeta">
+      <h3>Técnicas y operación</h3>
+      <p>Contenidos sobre operación, preparación y experiencias relacionadas con este tipo de vuelo.</p>
+    </div>
+
+    <div class="tarjeta">
+      <h3>Experiencias y proyectos</h3>
+      <p>Historias, proyectos y experiencias compartidas por pilotos, constructores y entusiastas de la aviación STOL.</p>
     </div>
 
   </div>
@@ -3954,6 +3998,8 @@ const anexosPortada = document.querySelectorAll(".anexo-portada");
 let posicionPortadaAntesDelAnexo = 0;
 
 function cerrarAnexos(exceptoId = "") {
+  const habiaAnexoAbierto = document.body.classList.contains("modo-anexo");
+
   anexosPortada.forEach(function (anexo) {
     if (anexo.id !== exceptoId) {
       anexo.classList.remove("activo");
@@ -3968,18 +4014,24 @@ function cerrarAnexos(exceptoId = "") {
       "modo-anexo-clasificados"
     );
 
-    requestAnimationFrame(function () {
-      window.scrollTo({
-        top: posicionPortadaAntesDelAnexo,
-        behavior: "smooth"
+    // Solo recupera la posición anterior si realmente se estaba cerrando un anexo.
+    // Así los enlaces internos no vuelven a la parte superior de la página.
+    if (habiaAnexoAbierto) {
+      requestAnimationFrame(function () {
+        window.scrollTo({
+          top: posicionPortadaAntesDelAnexo,
+          behavior: "smooth"
+        });
       });
-    });
+    }
   }
 }
 
 function abrirAnexo(anexoId) {
   const anexo = document.getElementById(anexoId);
   if (!anexo) return;
+
+  cambiarVisibilidadDestacadas(true);
 
   if (!document.body.classList.contains("modo-anexo")) {
     posicionPortadaAntesDelAnexo = window.scrollY;
@@ -4018,6 +4070,8 @@ document.querySelectorAll("[data-cerrar-anexo]").forEach(function (boton) {
 });
 
 document.addEventListener("click", function (event) {
+  if (!document.body.classList.contains("modo-anexo")) return;
+
   const clickEnAnexo = event.target.closest(".anexo-portada");
   const clickEnAcceso = event.target.closest(".acceso-shimoda, .acceso-clasificados");
 
