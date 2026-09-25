@@ -2422,10 +2422,12 @@ body:not(.modo-seccion-unica):not(.modo-anexo) > .solo-seccion {
 }
 
 #mi-perfil #perfilAvatar {
-  width: 82px;
-  height: 82px;
+  width: 118px;
+  height: 78px;
   margin: 0;
   border: 2px solid #ff642e;
+  border-radius: 10px;
+  object-fit: cover;
   box-shadow: 0 5px 15px rgba(0,0,0,0.28);
 }
 
@@ -2561,7 +2563,7 @@ body:not(.modo-seccion-unica):not(.modo-anexo) > .solo-seccion {
 
 #mi-perfil .hangar-paneles-secundarios {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 12px;
   margin-top: 12px;
 }
@@ -2707,7 +2709,7 @@ body:not(.modo-seccion-unica):not(.modo-anexo) > .solo-seccion {
   #mi-perfil h2 { font-size: 25px; }
   #mi-perfil .hangar-perfil-principal { padding: 14px; }
   #mi-perfil .hangar-perfil-cabecera { gap: 12px; }
-  #mi-perfil #perfilAvatar { width: 68px; height: 68px; }
+  #mi-perfil #perfilAvatar { width: 96px; height: 64px; border-radius: 9px; }
   #mi-perfil .hangar-info-grid,
   #mi-perfil .hangar-form-grid,
   #mi-perfil .hangar-licencia-campos {
@@ -3671,25 +3673,7 @@ body:not(.modo-seccion-unica):not(.modo-anexo) > .solo-seccion {
             <div id="misFotosHangar"></div>
           </div>
 
-          <div class="hangar-mini-card">
-            <h3>Mis Licencias</h3>
-            <p>Registro personal y opcional de licencias aeronáuticas.</p>
-            <div id="listaLicencias">
-              <p>No hay licencias registradas todavía.</p>
-            </div>
 
-            <div class="hangar-licencia-form">
-              <h4>Agregar licencia</h4>
-              <p class="privacidad-hangar">Estos datos son opcionales.</p>
-              <div class="hangar-licencia-campos">
-                <input id="licenciaNombre" type="text" placeholder="Nombre">
-                <input id="licenciaTipo" type="text" placeholder="Tipo">
-                <input id="licenciaNumero" type="text" placeholder="Número">
-                <input id="licenciaVencimiento" type="date">
-              </div>
-              <button id="guardarLicencia" class="boton" type="button">Guardar licencia</button>
-            </div>
-          </div>
         </div>
       </div>
     </div>
@@ -4205,7 +4189,8 @@ supabaseClient.auth.onAuthStateChange(() => {
 
 actualizarBotonIngreso();
     cargarLicencias();
-  document.getElementById("guardarLicencia").addEventListener("click", guardarLicencia); 
+  const botonGuardarLicencia = document.getElementById("guardarLicencia");
+  if (botonGuardarLicencia) botonGuardarLicencia.addEventListener("click", guardarLicencia); 
    document.getElementById("editarInfoAeronautica").addEventListener("click", () => {
   const formulario = document.getElementById("formInfoAeronautica");
 
