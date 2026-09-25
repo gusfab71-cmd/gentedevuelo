@@ -2750,6 +2750,47 @@ body:not(.modo-seccion-unica):not(.modo-anexo) > .solo-seccion {
   }
 }
 
+
+/* ===== MENÚ + ACCESOS DE PORTADA EN BLOQUE CONTINUO ===== */
+.menu-principal {
+  width: 532px;
+  max-width: calc(100% - 36px);
+}
+
+.menu-principal .portada-accesos {
+  position: static;
+  top: auto;
+  left: auto;
+  width: 100%;
+  margin-top: 6px;
+  transition: none;
+}
+
+.menu-principal .portada-accesos.menu-abierto {
+  top: auto;
+}
+
+@media (max-width: 850px) {
+  .menu-principal {
+    left: 12px;
+    width: min(260px, calc(100vw - 24px));
+    max-width: calc(100vw - 24px);
+  }
+
+  .menu-principal .menu-desplegable {
+    width: 100%;
+  }
+
+  .menu-principal .portada-accesos,
+  .menu-principal .portada-accesos.menu-abierto {
+    position: static;
+    top: auto;
+    left: auto;
+    width: 100%;
+    margin-top: 6px;
+    flex-direction: column;
+  }
+}
 </style>
 </head>
 
@@ -2776,8 +2817,6 @@ body:not(.modo-seccion-unica):not(.modo-anexo) > .solo-seccion {
     <a href="#tienda-seccion">Tienda Aeronáutica</a>
   <a href="#reglamento" id="enlaceReglamento">Código de Convivencia</a>
   </div>
-</nav>
-  
 
 <div class="portada-accesos" id="portadaAccesos">
   <a href="#shimoda" class="acceso-shimoda" title="Robert Shimoda - Consejos de Aviación">
@@ -2802,6 +2841,7 @@ body:not(.modo-seccion-unica):not(.modo-anexo) > .solo-seccion {
     <span class="acceso-foro-entrar">ENTRAR →</span>
   </a>
 </div>
+</nav>
 
   <section class="hero" id="inicio">
     
