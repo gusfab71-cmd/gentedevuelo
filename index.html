@@ -2042,6 +2042,46 @@ body.modo-seccion-unica > .seccion-enfoque {
     display: none;
   }
 }
+
+
+/* ===== PORTADA LIMPIA: SOLO GALERÍA, TRAVESÍAS Y HANGAR VIRTUAL ===== */
+/*
+   Estas secciones siguen existiendo y funcionan al seleccionarlas desde los menús,
+   pero no ocupan espacio en la página principal.
+*/
+body:not(.modo-seccion-unica):not(.modo-anexo) > .solo-seccion {
+  display: none !important;
+}
+
+#galeria-seccion,
+#travesias,
+#hangar-comunidad {
+  scroll-margin-top: 24px;
+}
+
+#hangar-comunidad {
+  max-width: 1200px;
+  margin: 45px auto;
+  padding: 30px;
+  box-sizing: border-box;
+}
+
+#hangar-comunidad > h2 {
+  margin-bottom: 10px;
+  color: #ffffff;
+  font-size: 34px;
+  text-align: center;
+}
+
+#hangar-comunidad > p {
+  max-width: 850px;
+  margin: 0 auto 24px;
+  color: #aebdc6;
+  font-size: 17px;
+  line-height: 1.6;
+  text-align: center;
+}
+
 </style>
 </head>
 
@@ -2139,7 +2179,7 @@ body.modo-seccion-unica > .seccion-enfoque {
     </div>
   </main>
   
-  <section class="contenedor">
+  <section class="contenedor" id="galeria-seccion">
   <h2 class="titulo-seccion">Galería</h2>
   <p class="subtitulo">
     Vuelos, aeronaves y momentos compartidos por nuestra comunidad.
@@ -2163,7 +2203,7 @@ body.modo-seccion-unica > .seccion-enfoque {
 
   </div>
 </section>
-  <section class="contenedor" id="meteorologia-seccion">
+  <section class="contenedor solo-seccion" id="meteorologia-seccion">
   <h2 class="titulo-seccion">Meteorología Aeronáutica</h2>
 
   <p class="subtitulo">
@@ -2194,7 +2234,7 @@ body.modo-seccion-unica > .seccion-enfoque {
 
   </div>
 </section>
-  <section class="contenedor" id="normativas-seccion">
+  <section class="contenedor solo-seccion" id="normativas-seccion">
   <h2 class="titulo-seccion">Actualizaciones Normativas</h2>
 
   <p class="subtitulo">
@@ -2229,7 +2269,7 @@ body.modo-seccion-unica > .seccion-enfoque {
 
   </div>
 </section>
-  <section class="contenedor" id="agenda-seccion">
+  <section class="contenedor solo-seccion" id="agenda-seccion">
   <h2 class="titulo-seccion">Agenda Aeronáutica</h2>
 
   <p class="subtitulo">
@@ -2255,7 +2295,7 @@ body.modo-seccion-unica > .seccion-enfoque {
 
   </div>
 </section>
-  <section class="contenedor" id="proximos-eventos">
+  <section class="contenedor solo-seccion" id="proximos-eventos">
   <h2 class="titulo-seccion">Próximos eventos aeronáuticos</h2>
 
   <p class="subtitulo">
@@ -2269,7 +2309,7 @@ body.modo-seccion-unica > .seccion-enfoque {
     </div>
   </div>
 </section>
-  <section class="contenedor" id="jornadas-encuentros">
+  <section class="contenedor solo-seccion" id="jornadas-encuentros">
   <h2 class="titulo-seccion">Jornadas y encuentros</h2>
 
   <p class="subtitulo">
@@ -2284,7 +2324,7 @@ body.modo-seccion-unica > .seccion-enfoque {
   </div>
 </section>
  
-  <section class="contenedor" id="difundir-actividad">
+  <section class="contenedor solo-seccion" id="difundir-actividad">
   
 
   
@@ -2325,7 +2365,7 @@ body.modo-seccion-unica > .seccion-enfoque {
 </div>
   </div>  
 </section>
-  <section class="contenedor" id="historia-seccion">
+  <section class="contenedor solo-seccion" id="historia-seccion">
   <h2 class="titulo-seccion">Historia de la Aviación</h2>
 
   <p class="subtitulo">
@@ -2351,7 +2391,7 @@ body.modo-seccion-unica > .seccion-enfoque {
 
   </div>
 </section>
-  <section class="contenedor" id="instituciones-seccion">
+  <section class="contenedor solo-seccion" id="instituciones-seccion">
   <h2 class="titulo-seccion">Entidades y Organizaciones Aeronáuticas</h2>
 
   <p class="subtitulo">
@@ -2377,7 +2417,7 @@ body.modo-seccion-unica > .seccion-enfoque {
 
   </div>
 </section>
-  <section class="contenedor" id="tienda-seccion">
+  <section class="contenedor solo-seccion" id="tienda-seccion">
   <h2 class="titulo-seccion">Tienda Aeronáutica</h2>
 
   <p class="subtitulo">
@@ -2403,7 +2443,7 @@ body.modo-seccion-unica > .seccion-enfoque {
 
   </div>
 </section>
-  <section class="contenedor" id="simuladores-seccion">
+  <section class="contenedor solo-seccion" id="simuladores-seccion">
   <h2 class="titulo-seccion">Simuladores de vuelo</h2>
 
   <p class="subtitulo">
@@ -2429,7 +2469,7 @@ body.modo-seccion-unica > .seccion-enfoque {
 
   </div>
 </section>
-  <section class="contenedor" id="aeromodelismo-seccion">
+  <section class="contenedor solo-seccion" id="aeromodelismo-seccion">
   <h2 class="titulo-seccion">Aeromodelismo</h2>
 
   <p class="subtitulo">
@@ -2455,7 +2495,7 @@ body.modo-seccion-unica > .seccion-enfoque {
 
   </div>
 </section>
-  <section class="contenedor" id="experimental-seccion">
+  <section class="contenedor solo-seccion" id="experimental-seccion">
   <h2 class="titulo-seccion">Experimentales y Ultralivianos</h2>
 
   <p class="subtitulo">
@@ -2481,7 +2521,7 @@ body.modo-seccion-unica > .seccion-enfoque {
 
   </div>
 </section>
-  <section class="contenedor" id="stol-seccion">
+  <section class="contenedor solo-seccion" id="stol-seccion">
   <h2 class="titulo-seccion">Aviación STOL</h2>
 
   <p class="subtitulo">
@@ -2507,7 +2547,7 @@ body.modo-seccion-unica > .seccion-enfoque {
 
   </div>
 </section>
-  <section class="contenedor" id="empresas-seccion">
+  <section class="contenedor solo-seccion" id="empresas-seccion">
   <h2 class="titulo-seccion">Empresas y Servicios Aeronáuticos</h2>
 
   <p class="subtitulo">
@@ -2533,7 +2573,7 @@ body.modo-seccion-unica > .seccion-enfoque {
 
   </div>
 </section>
-<section class="contenedor" id="formacion-seccion">
+<section class="contenedor solo-seccion" id="formacion-seccion">
   <h2 class="titulo-seccion">Formación Aeronáutica</h2>
 
   <p class="subtitulo">
@@ -2813,7 +2853,7 @@ body.modo-seccion-unica > .seccion-enfoque {
   </div>
 </section>
   
-<section class="contenedor seccion-foro foro-principal" id="foro-comunidad">
+<section class="contenedor seccion-foro foro-principal solo-seccion" id="foro-comunidad">
   <h2 class="titulo-seccion">Foro Aeronáutico</h2>
 
   <p class="subtitulo">
@@ -2857,7 +2897,7 @@ body.modo-seccion-unica > .seccion-enfoque {
     
   </div>
 </section>
-<section class="contenedor seccion" id="reglamento" style="display: none;">
+<section class="contenedor seccion solo-seccion" id="reglamento" style="display: none;">
  <h2 class="titulo-seccion">Código de Convivencia de Gente de Vuelo</h2>
 
   <p class="subtitulo">
@@ -2932,7 +2972,7 @@ body.modo-seccion-unica > .seccion-enfoque {
 </div>
 </section>
 
-  <section id="mi-perfil">
+  <section id="mi-perfil" class="solo-seccion">
     <div style="padding-top: 30px; padding-bottom: 30px;">
   <div class="contenedor">
     <h2>Mi Hangar Virtual</h2>
@@ -3075,7 +3115,7 @@ body.modo-seccion-unica > .seccion-enfoque {
     </div>
   </section>
 
-  <section class="contenedor">
+  <section class="contenedor solo-seccion">
     <h2 class="titulo-seccion">Colaboradores</h2>
     <p class="subtitulo">
       Espacio destinado a escuelas de vuelo, instituciones,
@@ -3083,10 +3123,10 @@ body.modo-seccion-unica > .seccion-enfoque {
     </p>
   </section>
 <section id="hangar-comunidad">
-  <h2>Hangar de la Comunidad</h2>
+  <h2>Hangar Virtual</h2>
   <p>
-    Un espacio para descubrir a otros miembros de Gente de Vuelo
-    y conocer el material aeronáutico que comparten.
+    Descubrí los hangares de otros miembros de Gente de Vuelo
+    y el material aeronáutico que comparten con la comunidad.
   </p>
 <div id="lista-comunidad"></div>
   
@@ -3105,7 +3145,7 @@ body.modo-seccion-unica > .seccion-enfoque {
   <button class="boton" onclick="cerrarHangarPublico()">Volver a la Comunidad</button>
 </section>
 
-<section class="mision">
+<section class="mision solo-seccion">
   <h2>Quiénes somos</h2>
   <p>
     Gente de Vuelo es un punto de encuentro para pilotos, estudiantes,
