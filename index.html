@@ -3388,6 +3388,46 @@ body:not(.modo-seccion-unica):not(.modo-anexo) > .solo-seccion {
     flex-direction: column;
   }
 }
+
+/* Aportes moderados en las tarjetas temáticas */
+.tarjeta .aporte-publicar {
+  display: inline-flex; margin: 18px 0 0; padding: 10px 16px;
+  border: 1px solid #ff8a45; border-radius: 999px;
+  background: #ff642e; color: white; font: inherit; font-weight: 700;
+  cursor: pointer;
+}
+.tarjeta .aporte-publicar:hover { background: #d94f20; }
+.aporte-lista { margin-top: 18px; border-top: 1px solid #80523d; padding-top: 12px; }
+.tarjeta .aporte-lista > h4 { margin: 0 0 12px; color: #ffb07b; font-size: 16px; }
+.tarjeta .aporte-vacio, .tarjeta .aporte-error { font-size: 14px; color: #d8d8d8; }
+.tarjeta .aporte-error { color: #ffb0a3; }
+.aporte-item { padding: 12px 0; border-top: 1px solid rgba(255,255,255,.15); overflow-wrap: anywhere; }
+.aporte-item:first-of-type { border-top: 0; }
+.aporte-item h5 { margin: 0 0 6px; color: white; font-size: 17px; }
+.aporte-item time { color: #bac4c8; font-size: 12px; }
+.tarjeta .aporte-item p { margin: 8px 0; white-space: pre-wrap; color: #e6e6e6; }
+.aporte-item a { color: #ffbc93; overflow-wrap: anywhere; }
+.aporte-item details summary { color: #ffbc93; cursor: pointer; }
+.aporte-ver-todos { background: transparent; border: 1px solid #ff8a45;
+  color: #ffbc93; padding: 7px 12px; border-radius: 12px; cursor: pointer; }
+.aviso-aporte { margin: 14px 0; color: #ffbc93; font-weight: 700; }
+#dialogoAporte { position: fixed; inset: 0; margin: auto; width: min(92vw, 600px);
+  max-height: 90vh; overflow-y: auto; padding: 24px; border: 1px solid #ff8a45;
+  border-radius: 18px; background: #20272b; color: white; box-shadow: 0 20px 60px #000b; }
+body.modo-seccion-unica > #dialogoAporte[open] { display: block !important; }
+#dialogoAporte::backdrop { background: rgba(0,0,0,.74); }
+#dialogoAporte h2 { margin-bottom: 8px; font-size: 24px; }
+#dialogoAporte p { margin-bottom: 16px; line-height: 1.5; }
+#formAporte label { display: block; margin: 14px 0 6px; font-weight: 700; }
+#formAporte input, #formAporte textarea { width: 100%; padding: 12px; border: 1px solid #828f92;
+  border-radius: 10px; background: #111819; color: white; font: inherit; }
+#formAporte textarea { min-height: 140px; resize: vertical; }
+#formAporte .acciones-aporte { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+#formAporte button { padding: 10px 18px; border: 0; border-radius: 20px; cursor: pointer;
+  background: #ff642e; color: white; font: inherit; font-weight: 700; }
+#formAporte button[type=button] { background: #4b555a; }
+#formAporte button:disabled { opacity: .6; cursor: wait; }
+#mensajeAporte { min-height: 24px; color: #ffb0a3; }
 </style>
 </head>
 
@@ -4515,6 +4555,25 @@ body:not(.modo-seccion-unica):not(.modo-anexo) > .solo-seccion {
     <a href="#inicio">Inicio</a>
   </div>
 
+
+<dialog id="dialogoAporte" aria-labelledby="tituloDialogoAporte">
+  <h2 id="tituloDialogoAporte">Publicar información</h2>
+  <p id="destinoAporte"></p>
+  <p>Tu aporte será revisado antes de aparecer en esta tarjeta.</p>
+  <form id="formAporte">
+    <label for="aporteTitulo">Título</label>
+    <input id="aporteTitulo" name="titulo" maxlength="120" minlength="5" required>
+    <label for="aporteContenido">Información para compartir</label>
+    <textarea id="aporteContenido" name="contenido" minlength="20" maxlength="3000" required></textarea>
+    <label for="aporteEnlace">Fuente o enlace (opcional)</label>
+    <input id="aporteEnlace" name="enlace" type="url" maxlength="500" placeholder="https://...">
+    <p id="mensajeAporte" role="alert" aria-live="polite"></p>
+    <div class="acciones-aporte">
+      <button type="submit">Enviar para revisión</button>
+      <button type="button" id="cancelarAporte">Cancelar</button>
+    </div>
+  </form>
+</dialog>
   <footer>
     <p><strong>Gente de Vuelo</strong></p>
     <p>Comunidad Aeronáutica</p>
@@ -6686,5 +6745,185 @@ cargarTravesias();
 })();
 </script>
 
+
+<script>
+/* Las categorías habilitadas tienen una tarjeta informativa, no un enlace oficial. */
+(function () {
+  const categoriasAportes = {
+    "empresas-seccion": ["fabricantes-talleres", "repuestos-equipamiento", "servicios-aeronauticos"],
+    "formacion-seccion": ["escuelas-vuelo", "cursos-capacitacion", "orientacion-comenzar"],
+    "experimental-seccion": ["proyectos-construccion", "aeronaves-experimentales", "ultralivianos"],
+    "stol-seccion": ["aeronaves-stol", "tecnicas-operacion", "experiencias-proyectos"],
+    "aeromodelismo-seccion": ["modelos-construccion", "clubes-pistas", "encuentros-experiencias"],
+    "simuladores-seccion": ["plataformas-simuladores", "equipos-configuracion", "experiencias-comunidad"],
+    "historia-seccion": ["historias-acontecimientos", "personajes-aviacion", "historias-poco-conocidas"],
+    "instituciones-seccion": ["asociaciones-federaciones", "aeroclubes", "clubes-aeromodelismo"]
+  };
+  const dialogo = document.getElementById("dialogoAporte");
+  const formulario = document.getElementById("formAporte");
+  const mensaje = document.getElementById("mensajeAporte");
+  let destino = null;
+  const tarjetas = new Map();
+
+  for (const [seccionId, categorias] of Object.entries(categoriasAportes)) {
+    const seccion = document.getElementById(seccionId);
+    const grupo = seccion && seccion.querySelector(":scope > .tarjetas");
+    if (!grupo) continue;
+    const aviso = document.createElement("p");
+    aviso.className = "aviso-aporte";
+    aviso.setAttribute("role", "status");
+    aviso.setAttribute("aria-live", "polite");
+    grupo.before(aviso);
+    const elementos = grupo.querySelectorAll(":scope > .tarjeta");
+    categorias.forEach(function (categoria, indice) {
+      const tarjeta = elementos[indice];
+      if (!tarjeta) return;
+      const nombre = tarjeta.querySelector("h3")?.textContent?.trim() || "esta tarjeta";
+      const clave = seccionId + ":" + categoria;
+      const boton = document.createElement("button");
+      boton.type = "button";
+      boton.className = "aporte-publicar";
+      boton.textContent = "Publicar información aquí";
+      boton.addEventListener("click", function () {
+        destino = { seccionId, categoria, nombre, aviso };
+        formulario.reset();
+        mensaje.textContent = "";
+        document.getElementById("destinoAporte").textContent = nombre;
+        dialogo.showModal();
+      });
+      const lista = document.createElement("div");
+      lista.className = "aporte-lista";
+      lista.setAttribute("aria-label", "Aportes aprobados en " + nombre);
+      tarjeta.append(boton, lista);
+      tarjetas.set(clave, lista);
+    });
+  }
+
+  function texto(tag, contenido, clase) {
+    const nodo = document.createElement(tag);
+    if (clase) nodo.className = clase;
+    nodo.textContent = contenido;
+    return nodo;
+  }
+
+  function pintarAportes(clave, publicaciones) {
+    const lista = tarjetas.get(clave);
+    if (!lista) return;
+    lista.replaceChildren(texto("h4", "Publicaciones de la comunidad"));
+    if (!publicaciones.length) {
+      lista.append(texto("p", "Todavía no hay aportes aprobados.", "aporte-vacio"));
+      return;
+    }
+    publicaciones.forEach(function (aporte, indice) {
+      const articulo = document.createElement("article");
+      articulo.className = "aporte-item";
+      if (indice >= 3) articulo.hidden = true;
+      if (aporte.destacado) articulo.append(texto("small", "★ Información destacada"));
+      articulo.append(texto("h5", aporte.titulo));
+      const fecha = document.createElement("time");
+      fecha.dateTime = aporte.created_at;
+      fecha.textContent = new Date(aporte.created_at).toLocaleDateString("es-AR");
+      articulo.append(fecha);
+      const cuerpo = (aporte.contenido || "").trim();
+      if (cuerpo.length <= 200) {
+        articulo.append(texto("p", cuerpo));
+      } else {
+        articulo.append(texto("p", cuerpo.slice(0, 200) + "…"));
+        const detalle = document.createElement("details");
+        detalle.append(texto("summary", "Leer completo"), texto("p", cuerpo));
+        articulo.append(detalle);
+      }
+      if (aporte.enlace) {
+        try {
+          const url = new URL(aporte.enlace);
+          if (url.protocol === "https:" || url.protocol === "http:") {
+            const enlace = document.createElement("a");
+            enlace.href = url.href;
+            enlace.target = "_blank";
+            enlace.rel = "noopener noreferrer";
+            enlace.textContent = "Ver fuente ↗";
+            articulo.append(enlace);
+          }
+        } catch (_) { /* Una URL incorrecta no se muestra. */ }
+      }
+      lista.append(articulo);
+    });
+    if (publicaciones.length > 3) {
+      const boton = texto("button", "Ver todas (" + publicaciones.length + ")", "aporte-ver-todos");
+      boton.type = "button";
+      boton.addEventListener("click", function () {
+        const abrir = boton.textContent.startsWith("Ver todas");
+        lista.querySelectorAll(".aporte-item:nth-of-type(n+4)").forEach(function (item) {
+          item.hidden = !abrir;
+        });
+        boton.textContent = abrir ? "Mostrar menos" : "Ver todas (" + publicaciones.length + ")";
+      });
+      lista.append(boton);
+    }
+  }
+
+  async function cargarAportes() {
+    if (!tarjetas.size) return;
+    const { data, error } = await supabaseClient.from("aportes_destacados")
+      .select("seccion,categoria,titulo,contenido,enlace,destacado,created_at")
+      .eq("visible", true).eq("estado", "aprobado")
+      .order("destacado", { ascending: false })
+      .order("created_at", { ascending: false }).limit(200);
+    if (error) {
+      console.error("Error al cargar los aportes:", error);
+      tarjetas.forEach(function (lista) {
+        lista.replaceChildren(texto("p", "No se pudieron cargar los aportes.", "aporte-error"));
+      });
+      return;
+    }
+    const grupos = new Map();
+    (data || []).forEach(function (aporte) {
+      const clave = aporte.seccion + ":" + aporte.categoria;
+      if (!grupos.has(clave)) grupos.set(clave, []);
+      grupos.get(clave).push(aporte);
+    });
+    tarjetas.forEach(function (_, clave) { pintarAportes(clave, grupos.get(clave) || []); });
+  }
+
+  document.getElementById("cancelarAporte").addEventListener("click", function () { dialogo.close(); });
+  dialogo.addEventListener("close", function () { destino = null; });
+  formulario.addEventListener("submit", async function (event) {
+    event.preventDefault();
+    if (!destino) return;
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+    if (authError || !user) {
+      mensaje.textContent = "Para publicar, iniciá sesión desde INGRESAR en la portada.";
+      return;
+    }
+    const titulo = formulario.elements.titulo.value.trim();
+    const contenido = formulario.elements.contenido.value.trim();
+    const enlace = formulario.elements.enlace.value.trim();
+    if (titulo.length < 5 || contenido.length < 20) {
+      mensaje.textContent = "Escribí un título de al menos 5 caracteres y una descripción de al menos 20.";
+      return;
+    }
+    if (enlace && !/^https?:\/\//i.test(enlace)) {
+      mensaje.textContent = "El enlace debe comenzar con https:// o http://.";
+      return;
+    }
+    const boton = formulario.querySelector('button[type="submit"]');
+    boton.disabled = true;
+    mensaje.textContent = "Enviando…";
+    const { error } = await supabaseClient.from("aportes_destacados").insert({
+      user_id: user.id, seccion: destino.seccionId, categoria: destino.categoria,
+      titulo, contenido, enlace: enlace || null
+    });
+    boton.disabled = false;
+    if (error) {
+      console.error("Error al enviar el aporte:", error);
+      mensaje.textContent = "No se pudo enviar. Intentá nuevamente.";
+      return;
+    }
+    destino.aviso.textContent = "Tu información fue enviada y quedó pendiente de aprobación.";
+    dialogo.close();
+  });
+  cargarAportes();
+})();
+</script>
 </body>
 </html>
