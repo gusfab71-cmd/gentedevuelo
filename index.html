@@ -2083,6 +2083,313 @@ body:not(.modo-seccion-unica):not(.modo-anexo) > .solo-seccion {
   text-align: center;
 }
 
+
+/* ===== MÓDULOS COMPACTOS: TRAVESÍAS + HANGAR VIRTUAL ===== */
+.modulo-portada {
+  max-width: 1200px !important;
+  margin: 28px auto !important;
+  padding: 24px !important;
+  background: linear-gradient(145deg, rgba(29,34,37,0.98), rgba(20,25,28,0.98));
+  border: 1px solid rgba(255,100,46,0.58);
+  border-radius: 18px;
+  box-shadow: 0 10px 28px rgba(0,0,0,0.22);
+}
+
+.modulo-portada-cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 20px;
+}
+
+.modulo-portada-etiqueta {
+  display: block;
+  margin-bottom: 5px;
+  color: #ff9f1c;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.6px;
+}
+
+.modulo-portada-cabecera h2 {
+  margin: 0 0 6px;
+  color: #ffffff;
+  font-size: 28px;
+  line-height: 1.1;
+}
+
+.modulo-portada-cabecera p {
+  max-width: 680px;
+  margin: 0;
+  color: #aebdc6;
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.modulo-portada-acciones {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex: 0 0 auto;
+}
+
+.boton-modulo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 9px 16px;
+  border: 1px solid #ff642e;
+  border-radius: 10px;
+  background: #ff642e;
+  color: #ffffff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform .18s ease, background .18s ease;
+}
+
+.boton-modulo:hover {
+  background: #ff7848;
+  transform: translateY(-1px);
+}
+
+.boton-modulo.secundario {
+  background: transparent;
+  color: #f0f3f5;
+  border-color: #68747b;
+}
+
+.boton-modulo.secundario:hover {
+  background: #2a3236;
+  border-color: #87939a;
+}
+
+.travesias-resumenes,
+.hangar-resumenes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.travesia-resumen,
+.hangar-resumen {
+  min-width: 0;
+  background: #171d20;
+  border: 1px solid #3f494e;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.travesia-resumen {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr);
+  min-height: 150px;
+}
+
+.travesia-resumen-imagen {
+  min-height: 150px;
+  background: #111719;
+}
+
+.travesia-resumen-imagen img {
+  width: 100%;
+  height: 100%;
+  min-height: 150px;
+  object-fit: cover;
+  display: block;
+}
+
+.travesia-sin-foto {
+  width: 100%;
+  height: 100%;
+  min-height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #76848b;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .8px;
+  text-align: center;
+}
+
+.travesia-resumen-contenido {
+  padding: 14px;
+}
+
+.travesia-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  margin-bottom: 6px;
+  color: #8fa0a8;
+  font-size: 11px;
+}
+
+.travesia-resumen h3 {
+  margin: 0 0 8px;
+  color: #ffffff;
+  font-size: 16px;
+  line-height: 1.25;
+}
+
+.travesia-ruta {
+  margin: 0 0 7px;
+  color: #f0f3f5;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.travesia-ruta span {
+  padding: 0 5px;
+  color: #ff9f1c;
+}
+
+.travesia-autor,
+.travesia-relato {
+  margin: 0;
+  color: #aebdc6;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.travesia-relato {
+  margin-top: 7px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.formulario-modulo {
+  margin-top: 20px;
+  padding: 20px;
+  background: #12181b;
+  border: 1px solid #4b565c;
+  border-radius: 14px;
+}
+
+.hangar-resumen {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 14px;
+  min-height: 110px;
+}
+
+.hangar-avatar,
+.hangar-avatar-placeholder {
+  width: 62px;
+  height: 62px;
+  flex: 0 0 62px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid #6b777d;
+  background: #242c30;
+}
+
+.hangar-avatar-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #f4d887;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.hangar-resumen-info {
+  min-width: 0;
+  flex: 1;
+}
+
+.hangar-resumen h3 {
+  margin: 0 0 5px;
+  color: #ffffff;
+  font-size: 16px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hangar-resumen p {
+  margin: 2px 0;
+  color: #aebdc6;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.hangar-ver {
+  margin-top: 8px;
+  padding: 6px 10px;
+  border: 1px solid #68747b;
+  border-radius: 8px;
+  background: transparent;
+  color: #f4d887;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.hangar-ver:hover {
+  background: #252d31;
+}
+
+.modulo-vacio {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 18px;
+  border: 1px dashed #4b565c;
+  border-radius: 12px;
+  color: #94a3aa;
+  text-align: center;
+  font-size: 13px;
+}
+
+@media (max-width: 950px) {
+  .travesias-resumenes,
+  .hangar-resumenes {
+    grid-template-columns: 1fr;
+  }
+
+  .modulo-portada-cabecera {
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 700px) {
+  .modulo-portada {
+    margin: 20px 12px !important;
+    padding: 18px !important;
+  }
+
+  .modulo-portada-cabecera {
+    flex-direction: column;
+  }
+
+  .modulo-portada-acciones {
+    width: 100%;
+  }
+
+  .boton-modulo {
+    flex: 1 1 0;
+  }
+
+  .travesia-resumen {
+    grid-template-columns: 88px minmax(0, 1fr);
+  }
+
+  .travesia-resumen-imagen,
+  .travesia-resumen-imagen img,
+  .travesia-sin-foto {
+    min-height: 140px;
+  }
+}
+
 </style>
 </head>
 
@@ -2600,36 +2907,33 @@ body:not(.modo-seccion-unica):not(.modo-anexo) > .solo-seccion {
 
   </div>
 </section>
-<section class="contenedor" id="travesias">
-  <h2 class="titulo-seccion">Travesías</h2>
+<section class="contenedor modulo-portada modulo-travesias" id="travesias">
+  <div class="modulo-portada-cabecera">
+    <div>
+      <span class="modulo-portada-etiqueta">VUELOS COMPARTIDOS</span>
+      <h2>Travesías</h2>
+      <p>Recorridos, experiencias y vuelos compartidos por miembros de Gente de Vuelo.</p>
+    </div>
 
-  <p class="subtitulo">
-    Un espacio para compartir vuelos y travesías ya realizadas, sus recorridos, experiencias y momentos vividos.
-  </p>
-  <div id="listaTravesias"></div>
+    <div class="modulo-portada-acciones">
+      <button class="boton-modulo secundario" id="verTodasTravesias" type="button">Ver todas</button>
+      <button class="boton-modulo" id="botonCompartirTravesia" type="button">Compartir travesía</button>
+    </div>
+  </div>
 
-  <button class="boton" id="botonCompartirTravesia">Compartir una travesía</button>
-  <div id="formularioTravesia" style="display: none; margin-top: 20px;">
+  <div id="listaTravesias" class="travesias-resumenes"></div>
 
-  <input type="text" id="travesiaTitulo" placeholder="Título de la travesía">
-
-  <input type="date" id="travesiaFecha">
-
-  <input type="text" id="travesiaSalida" placeholder="Aeropuerto de salida">
-
-  <input type="text" id="travesiaDestino" placeholder="Destino">
-
-  <input type="text" id="travesiaEscalas" placeholder="Escalas (opcional)">
-
-  <input type="text" id="travesiaAeronave" placeholder="Aeronave">
-
-  <textarea id="travesiaRelato" placeholder="Contanos la experiencia de la travesía"></textarea>
-
-  <input type="file" id="travesiaFotos" accept="image/*" multiple>
-
-  <button class="boton" id="botonEnviarTravesia">Enviar travesía</button>
-
-</div>
+  <div id="formularioTravesia" class="formulario-modulo" style="display: none;">
+    <input type="text" id="travesiaTitulo" placeholder="Título de la travesía">
+    <input type="date" id="travesiaFecha">
+    <input type="text" id="travesiaSalida" placeholder="Aeropuerto de salida">
+    <input type="text" id="travesiaDestino" placeholder="Destino">
+    <input type="text" id="travesiaEscalas" placeholder="Escalas (opcional)">
+    <input type="text" id="travesiaAeronave" placeholder="Aeronave">
+    <textarea id="travesiaRelato" placeholder="Contanos la experiencia de la travesía"></textarea>
+    <input type="file" id="travesiaFotos" accept="image/*" multiple>
+    <button class="boton" id="botonEnviarTravesia">Enviar travesía</button>
+  </div>
 </section>
 <section class="contenedor shimoda-espacio anexo-portada" id="shimoda" aria-hidden="true">
 
@@ -3123,14 +3427,21 @@ body:not(.modo-seccion-unica):not(.modo-anexo) > .solo-seccion {
       proyectos y personas que colaboran con Gente de Vuelo.
     </p>
   </section>
-<section id="hangar-comunidad">
-  <h2>Hangar Virtual</h2>
-  <p>
-    Descubrí los hangares de otros miembros de Gente de Vuelo
-    y el material aeronáutico que comparten con la comunidad.
-  </p>
-<div id="lista-comunidad"></div>
-  
+<section id="hangar-comunidad" class="contenedor modulo-portada modulo-hangar">
+  <div class="modulo-portada-cabecera">
+    <div>
+      <span class="modulo-portada-etiqueta">COMUNIDAD</span>
+      <h2>Hangar Virtual</h2>
+      <p>Conocé a otros miembros, sus aeronaves, experiencia y aeropuerto base.</p>
+    </div>
+
+    <div class="modulo-portada-acciones">
+      <a href="#mi-perfil" class="boton-modulo secundario">Mi Hangar</a>
+      <button class="boton-modulo" id="explorarHangares" type="button">Explorar hangares</button>
+    </div>
+  </div>
+
+  <div id="lista-comunidad" class="hangar-resumenes"></div>
 </section>
 <section id="hangar-publico" style="display: none;">
   <h2 id="hangar-publico-titulo">Hangar</h2>
@@ -3816,36 +4127,83 @@ contenedor.appendChild(tarjeta);
  });  
 }  
 cargarPublicaciones(); 
-async function cargarComunidad() {
-  const contenedor = document.getElementById("lista-comunidad");
+let perfilesComunidad = [];
+let mostrarTodosHangares = false;
 
+function escaparHTML(valor) {
+  return String(valor ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function renderizarComunidad() {
+  const contenedor = document.getElementById("lista-comunidad");
+  const botonExplorar = document.getElementById("explorarHangares");
+  if (!contenedor) return;
+
+  contenedor.innerHTML = "";
+
+  if (!perfilesComunidad.length) {
+    contenedor.innerHTML = '<p class="modulo-vacio">Todavía no hay hangares públicos para mostrar.</p>';
+    if (botonExplorar) botonExplorar.style.display = "none";
+    return;
+  }
+
+  const perfilesVisibles = mostrarTodosHangares ? perfilesComunidad : perfilesComunidad.slice(0, 3);
+
+  perfilesVisibles.forEach((perfil) => {
+    const nombre = perfil.username || perfil.full_name || "Miembro de Gente de Vuelo";
+    const inicial = nombre.trim().charAt(0).toUpperCase() || "G";
+    const tarjeta = document.createElement("article");
+    tarjeta.className = "hangar-resumen";
+
+    tarjeta.innerHTML = `
+      ${perfil.avatar_url
+        ? `<img src="${escaparHTML(perfil.avatar_url)}" alt="Foto de ${escaparHTML(nombre)}" class="hangar-avatar">`
+        : `<div class="hangar-avatar-placeholder" aria-hidden="true">${escaparHTML(inicial)}</div>`}
+      <div class="hangar-resumen-info">
+        <h3>${escaparHTML(nombre)}</h3>
+        <p>${escaparHTML(perfil.aviation_role || "Actividad aeronáutica sin completar")}</p>
+        <p><strong>Base:</strong> ${escaparHTML(perfil.home_airfield || "Sin completar")}</p>
+        <button class="hangar-ver" type="button" onclick="verHangar('${perfil.id}')">Ver Hangar</button>
+      </div>
+    `;
+
+    contenedor.appendChild(tarjeta);
+  });
+
+  if (botonExplorar) {
+    if (perfilesComunidad.length <= 3) {
+      botonExplorar.style.display = "none";
+    } else {
+      botonExplorar.style.display = "inline-flex";
+      botonExplorar.textContent = mostrarTodosHangares ? "Mostrar menos" : "Explorar hangares";
+    }
+  }
+}
+
+async function cargarComunidad() {
   const { data, error } = await supabaseClient
     .from("profiles")
-   .select("id, username, full_name, avatar_url, bio, aviation_role, aircraft_flown, flight_simulators, aviation_experience, home_airfield, flight_hours, aviation_organization, aviation_license");
+    .select("id, username, full_name, avatar_url, bio, aviation_role, aircraft_flown, flight_simulators, aviation_experience, home_airfield, flight_hours, aviation_organization, aviation_license");
 
   if (error) {
     console.error("Error al cargar la comunidad:", error);
     return;
   }
 
-  contenedor.innerHTML = "";
+  perfilesComunidad = data || [];
+  renderizarComunidad();
+}
 
-  data.forEach((perfil) => {
-    const tarjeta = document.createElement("div");
-    tarjeta.className = "tarjeta";
-
-   tarjeta.innerHTML = `
-   ${perfil.avatar_url ? `<img src="${perfil.avatar_url}" alt="Foto de perfil" class="avatar-comunidad">` : ""}
-  <h3>${perfil.username || perfil.full_name || "Miembro de Gente de Vuelo"}</h3>
-  <p>${perfil.bio || "Miembro de la comunidad aeronáutica."}</p>
-  ${perfil.aviation_role ? `<p><strong>Actividad:</strong> ${perfil.aviation_role}</p>` : ""}
-  ${perfil.home_airfield ? `<p><strong>Aeropuerto base:</strong> ${perfil.home_airfield}</p>` : ""}
-  ${perfil.aircraft_flown ? `<p><strong>Aeronave / experiencia:</strong> ${perfil.aircraft_flown}</p>` : ""}
-  ${perfil.flight_hours ? `<p><strong>Horas de vuelo:</strong> ${perfil.flight_hours}</p>` : ""}
-  <button class="boton" onclick="verHangar('${perfil.id}')">Ver Hangar</button>
-`;
-
-    contenedor.appendChild(tarjeta);
+const botonExplorarHangares = document.getElementById("explorarHangares");
+if (botonExplorarHangares) {
+  botonExplorarHangares.addEventListener("click", function () {
+    mostrarTodosHangares = !mostrarTodosHangares;
+    renderizarComunidad();
   });
 }
 async function verHangar(id) {
@@ -4811,7 +5169,9 @@ cargarPublicacionShimoda();
   const formularioTravesia = document.getElementById("formularioTravesia");
 
   botonCompartirTravesia.addEventListener("click", function () {
-    formularioTravesia.style.display = "grid";
+    const abierto = formularioTravesia.style.display === "grid";
+    formularioTravesia.style.display = abierto ? "none" : "grid";
+    botonCompartirTravesia.textContent = abierto ? "Compartir travesía" : "Cerrar formulario";
   });
 </script>
  <script>
@@ -4885,13 +5245,71 @@ const archivosFotos = document.getElementById("travesiaFotos").files;
   });
 </script> 
  <script>
-async function cargarTravesias() {
-  const lista = document.getElementById("listaTravesias");
+let travesiasCargadas = [];
+let mostrarTodasTravesias = false;
 
+function formatearFechaTravesia(fecha) {
+  if (!fecha) return "Fecha no indicada";
+  const partes = fecha.split("-");
+  return partes.length === 3 ? `${partes[2]}/${partes[1]}/${partes[0]}` : fecha;
+}
+
+function renderizarTravesias() {
+  const lista = document.getElementById("listaTravesias");
+  const botonVerTodas = document.getElementById("verTodasTravesias");
+  if (!lista) return;
+
+  lista.innerHTML = "";
+
+  if (!travesiasCargadas.length) {
+    lista.innerHTML = '<p class="modulo-vacio">Todavía no hay travesías publicadas.</p>';
+    if (botonVerTodas) botonVerTodas.style.display = "none";
+    return;
+  }
+
+  const visibles = mostrarTodasTravesias ? travesiasCargadas : travesiasCargadas.slice(0, 3);
+
+  visibles.forEach(function (travesia) {
+    const autor = travesia.autor?.full_name || travesia.autor?.username || "Usuario de Gente de Vuelo";
+    const foto = Array.isArray(travesia.fotos) && travesia.fotos.length ? travesia.fotos[0] : "";
+    const tarjeta = document.createElement("article");
+    tarjeta.className = "travesia-resumen";
+
+    tarjeta.innerHTML = `
+      <div class="travesia-resumen-imagen">
+        ${foto
+          ? `<img src="${escaparHTML(foto)}" alt="Foto de la travesía ${escaparHTML(travesia.titulo || "")}">`
+          : '<div class="travesia-sin-foto">SIN FOTO</div>'}
+      </div>
+      <div class="travesia-resumen-contenido">
+        <div class="travesia-meta">
+          <span>${escaparHTML(formatearFechaTravesia(travesia.fecha))}</span>
+          ${travesia.aeronave ? `<span>${escaparHTML(travesia.aeronave)}</span>` : ""}
+        </div>
+        <h3>${escaparHTML(travesia.titulo || "Travesía")}</h3>
+        <p class="travesia-ruta">${escaparHTML(travesia.salida || "Salida")} <span>→</span> ${escaparHTML(travesia.destino || "Destino")}</p>
+        <p class="travesia-autor">Compartida por ${escaparHTML(autor)}</p>
+        ${travesia.relato ? `<p class="travesia-relato">${escaparHTML(travesia.relato)}</p>` : ""}
+      </div>
+    `;
+
+    lista.appendChild(tarjeta);
+  });
+
+  if (botonVerTodas) {
+    if (travesiasCargadas.length <= 3) {
+      botonVerTodas.style.display = "none";
+    } else {
+      botonVerTodas.style.display = "inline-flex";
+      botonVerTodas.textContent = mostrarTodasTravesias ? "Mostrar menos" : "Ver todas";
+    }
+  }
+}
+
+async function cargarTravesias() {
   const { data, error } = await supabaseClient
     .from("travesias")
-    
-   .select("*")
+    .select("*")
     .eq("visible", true)
     .order("created_at", { ascending: false });
 
@@ -4900,37 +5318,25 @@ async function cargarTravesias() {
     return;
   }
 
-  lista.innerHTML = "";
-
-  data.forEach(async function(travesia) {
+  const enriquecidas = await Promise.all((data || []).map(async function (travesia) {
     const { data: autor } = await supabaseClient
-  .from("profiles")
-  .select("full_name, username")
-  .eq("id", travesia.user_id)
-  .maybeSingle();
+      .from("profiles")
+      .select("full_name, username")
+      .eq("id", travesia.user_id)
+      .maybeSingle();
 
-travesia.autor = autor;
-    const tarjeta = document.createElement("div");
-    tarjeta.className = "tarjeta";
+    return { ...travesia, autor };
+  }));
 
-    tarjeta.innerHTML = `
-      <h3>${travesia.titulo}</h3>
-     <p><strong>Compartida por:</strong> ${travesia.autor?.full_name || travesia.autor?.username || "Usuario de Gente de Vuelo"}</p>
-      <p><strong>Fecha:</strong> ${travesia.fecha || "Sin especificar"}</p>
-      <p><strong>Salida:</strong> ${travesia.salida}</p>
-      <p><strong>Destino:</strong> ${travesia.destino}</p>
-      ${travesia.escalas ? `<p><strong>Escalas:</strong> ${travesia.escalas}</p>` : ""}
-      ${travesia.aeronave ? `<p><strong>Aeronave:</strong> ${travesia.aeronave}</p>` : ""}
-      ${travesia.relato ? `<p>${travesia.relato}</p>` : ""}
-      ${travesia.fotos && travesia.fotos.length
-  ? travesia.fotos.map(foto => `
-      <img src="${foto}" alt="Foto de la travesía"
-           style="width:100%; max-height:350px; object-fit:cover; border-radius:12px; margin-top:12px;">
-    `).join("")
-  : ""}
-    `;
+  travesiasCargadas = enriquecidas;
+  renderizarTravesias();
+}
 
-    lista.appendChild(tarjeta);
+const botonVerTodasTravesias = document.getElementById("verTodasTravesias");
+if (botonVerTodasTravesias) {
+  botonVerTodasTravesias.addEventListener("click", function () {
+    mostrarTodasTravesias = !mostrarTodasTravesias;
+    renderizarTravesias();
   });
 }
 
