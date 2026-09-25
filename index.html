@@ -1162,14 +1162,15 @@ body.modo-anexo-shimoda #shimoda {
 }
 
 body.modo-anexo-clasificados {
-  background: #171b1d;
+  background: #fff2c5;
 }
 
 body.modo-anexo-clasificados #clasificados-seccion {
-  background: linear-gradient(145deg, #fff8dc 0%, #f3e2a3 60%, #ead28a 100%);
-  border: 3px solid #59646a;
+  background: linear-gradient(145deg, #fce097 0%, #f5cb62 60%, #efbf49 100%);
+  border: 3px solid #b87920;
   border-radius: 20px;
-  color: #2b2a22;
+  color: #292720;
+  box-shadow: 0 16px 42px rgba(84, 52, 7, 0.17);
 }
 
 #shimoda .anexo-cerrar {
@@ -1204,6 +1205,7 @@ body.modo-anexo-clasificados #clasificados-seccion {
   background: #ff642e;
 }
 
+/* Colores propios de la pantalla de Clasificados */
 .clasificados-opciones {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1211,70 +1213,80 @@ body.modo-anexo-clasificados #clasificados-seccion {
   margin-top: 30px;
 }
 
-.clasificados-opcion,
-.clasificados-listado,
-.clasificados-aviso {
-  background: #1d2225;
-  border: 2px solid #ff642e;
-  border-radius: 16px;
-  padding: 24px;
+#clasificados-seccion .titulo-seccion,
+#clasificados-seccion .subtitulo {
+  color: #292720;
 }
 
-.clasificados-opcion {
+#clasificados-seccion .clasificados-opcion {
   width: 100%;
+  padding: 24px;
+  border: 2px solid #d4842b;
+  border-radius: 16px;
+  background: #282d30;
+  color: #f7f4ec;
   font: inherit;
   text-align: left;
   cursor: pointer;
   transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
 }
 
-.clasificados-opcion:hover,
-.clasificados-opcion.activa {
-  transform: translateY(-3px);
-  background: #273035 !important;
-  border-color: #59646a !important;
-  color: #ffffff !important;
-}
-
-#clasificados-seccion .clasificados-opcion:hover h3,
-#clasificados-seccion .clasificados-opcion.activa h3 {
-  color: #ff9f1c;
-}
-
-.clasificados-opcion h3,
-.clasificados-listado h3 {
-  color: #ff9f1c;
+#clasificados-seccion .clasificados-opcion h3 {
+  color: #ffbb65;
   margin-top: 0;
 }
 
-.clasificados-listado,
-.clasificados-aviso {
-  margin-top: 24px;
+#clasificados-seccion .clasificados-opcion:hover {
+  transform: translateY(-3px);
+  background: #353b3d;
+  border-color: #ffad58;
 }
 
-.clasificados-aviso {
-  border-color: #59646a;
-  color: #d8d8d8;
+#clasificados-seccion .clasificados-opcion.activa,
+#clasificados-seccion .clasificados-opcion.activa:hover {
+  transform: translateY(-3px);
+  background: #e97832;
+  border-color: #a9481b;
+  color: #201e1c;
+}
+
+#clasificados-seccion .clasificados-opcion.activa h3 {
+  color: #201e1c;
+}
+
+#clasificados-seccion .clasificados-listado {
+  margin-top: 24px;
+  padding: 24px;
+  border: 2px solid #b87920;
+  border-radius: 16px;
+  background: #edb944;
+  color: #292720;
+}
+
+#clasificados-seccion .clasificados-listado h3 {
+  color: #33250f;
+  margin-top: 0;
+}
+
+#clasificados-seccion .clasificados-aviso {
+  margin-top: 24px;
+  padding: 24px;
+  border: 2px solid #d4842b;
+  border-radius: 16px;
+  background: #282d30;
+  color: #f7f4ec;
   font-size: 14px;
   line-height: 1.55;
 }
 
-#clasificados-seccion .titulo-seccion,
-#clasificados-seccion .subtitulo {
-  color: #2b2a22;
+#clasificados-seccion .anexo-cerrar {
+  background: #e97832;
+  border-color: #a9481b;
+  color: #201e1c;
 }
 
-#clasificados-seccion .clasificados-opcion,
-#clasificados-seccion .clasificados-listado,
-#clasificados-seccion .clasificados-aviso {
-  background: rgba(255, 255, 255, 0.72);
-  border-color: #d98316;
-  color: #2b2a22;
-}
-
-#clasificados-seccion .clasificados-opcion h3,
-#clasificados-seccion .clasificados-listado h3 {
-  color: #9a5700;
+#clasificados-seccion .anexo-cerrar:hover {
+  background: #ff9c50;
 }
 
 .clasificados-panel {
@@ -1332,10 +1344,10 @@ body.modo-anexo-clasificados #clasificados-seccion {
 
 .clasificado-item {
   overflow: hidden;
-  border: 2px solid #59646a;
+  border: 2px solid #bd7a27;
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.86);
-  color: #2b2a22;
+  background: #ffffff;
+  color: #292720;
 }
 
 .clasificado-item img {
@@ -1346,7 +1358,7 @@ body.modo-anexo-clasificados #clasificados-seccion {
   box-sizing: border-box;
   padding: 10px;
   background: #ffffff;
-  border-bottom: 1px solid #59646a;
+  border-bottom: 1px solid #d3a461;
 }
 
 .clasificado-item-contenido {
@@ -1355,7 +1367,7 @@ body.modo-anexo-clasificados #clasificados-seccion {
 
 .clasificado-item-contenido h4 {
   margin: 0 0 10px;
-  color: #9a5700;
+  color: #82420e;
   font-size: 20px;
 }
 
