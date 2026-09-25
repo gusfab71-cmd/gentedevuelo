@@ -1074,9 +1074,10 @@ header {
   top: 78px;
   left: 18px;
   z-index: 1000;
-  width: 260px;
+  width: 532px;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: stretch;
   gap: 12px;
   transition: top 0.25s ease;
 }
@@ -1097,6 +1098,8 @@ header {
   text-align: left;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
   transition: transform 0.25s ease;
+  flex: 1 1 0;
+  min-width: 0;
 }
 
 .acceso-shimoda {
@@ -1305,6 +1308,7 @@ header {
     top: 430px;
     left: 12px;
     width: min(260px, calc(100vw - 24px));
+    flex-direction: column;
   }
 
   .portada-accesos.menu-abierto {
