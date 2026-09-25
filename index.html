@@ -4069,7 +4069,7 @@ body:not(.modo-seccion-unica):not(.modo-anexo) > .solo-seccion {
 
       <div class="clasificados-consulta-acciones">
         <a id="consultaClasificadoWhatsappAccion" class="clasificados-contacto-boton" href="#" target="_blank" rel="noopener">WhatsApp</a>
-        <a id="consultaClasificadoEmailAccion" class="clasificados-contacto-boton secundario" href="#">Correo</a>
+        <a id="consultaClasificadoEmailAccion" class="clasificados-contacto-boton secundario" href="#" target="_blank" rel="noopener">Correo</a>
       </div>
       <p class="clasificados-consulta-nota">Los datos de contacto corresponden al aviso publicado por el anunciante.</p>
     </aside>
@@ -5923,7 +5923,9 @@ async function abrirConsultaClasificado(publicacion) {
 
   if (consultaClasificadoEmailAccion) {
     if (email) {
-      consultaClasificadoEmailAccion.href = `mailto:${email}?subject=${encodeURIComponent(`Consulta por ${publicacion.titulo || "clasificado"} - Gente de Vuelo`)}`;
+      const asuntoCorreo = `Consulta por ${publicacion.titulo || "clasificado"} - Gente de Vuelo`;
+      const cuerpoCorreo = `Hola, te consulto por tu aviso en Gente de Vuelo: ${publicacion.titulo || "clasificado"}`;
+      consultaClasificadoEmailAccion.href = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}&su=${encodeURIComponent(asuntoCorreo)}&body=${encodeURIComponent(cuerpoCorreo)}`;
       consultaClasificadoEmailAccion.classList.remove("deshabilitado");
       consultaClasificadoEmailAccion.setAttribute("aria-disabled", "false");
     } else {
