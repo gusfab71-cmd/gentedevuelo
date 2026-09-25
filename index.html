@@ -1816,6 +1816,104 @@ body.modo-seccion-unica > .seccion-enfoque {
   }
 }
 
+
+/* ===== SECCIONES DESTACADAS COMO MENÚ DE PORTADA ===== */
+#explorar.menu-destacadas-portada {
+  max-width: 1200px;
+  margin: 24px auto 18px;
+  padding: 18px 20px 20px;
+  background: rgba(23, 27, 29, 0.96);
+  border: 1px solid rgba(255, 100, 46, 0.72);
+  border-radius: 16px;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.22);
+}
+
+#explorar.menu-destacadas-portada .menu-destacadas-encabezado {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 14px;
+}
+
+#explorar.menu-destacadas-portada .titulo-seccion {
+  margin: 0;
+  color: #ffffff;
+  font-size: 24px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+#explorar.menu-destacadas-portada .subtitulo {
+  margin: 0;
+  max-width: none;
+  color: #b8c1c6;
+  font-size: 14px;
+  line-height: 1.4;
+  text-align: right;
+}
+
+#explorar .menu-destacadas {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+#explorar .menu-destacadas a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  padding: 10px 12px;
+  background: #1d2225;
+  border: 1px solid #ff642e;
+  border-radius: 10px;
+  color: #ffffff;
+  text-decoration: none;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.25;
+  transition: transform 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+}
+
+#explorar .menu-destacadas a:hover {
+  background: #ff642e;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(255, 100, 46, 0.20);
+}
+
+@media (max-width: 900px) {
+  #explorar .menu-destacadas {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  #explorar.menu-destacadas-portada .menu-destacadas-encabezado {
+    display: block;
+  }
+
+  #explorar.menu-destacadas-portada .subtitulo {
+    margin-top: 6px;
+    text-align: left;
+  }
+}
+
+@media (max-width: 560px) {
+  #explorar.menu-destacadas-portada {
+    margin: 18px 10px;
+    padding: 16px;
+  }
+
+  #explorar .menu-destacadas {
+    grid-template-columns: 1fr;
+  }
+
+  #explorar.menu-destacadas-portada .titulo-seccion {
+    font-size: 21px;
+    white-space: normal;
+  }
+}
+
 </style>
 </head>
 
@@ -1914,6 +2012,24 @@ body.modo-seccion-unica > .seccion-enfoque {
   </div>
 </a>
 </section>
+
+  <main class="contenedor menu-destacadas-portada" id="explorar">
+    <div class="menu-destacadas-encabezado">
+      <h2 class="titulo-seccion">Secciones destacadas</h2>
+      <p class="subtitulo">Accesos directos a los principales espacios de la comunidad.</p>
+    </div>
+
+    <div class="menu-destacadas" aria-label="Secciones destacadas">
+      <a href="#empresas-seccion">Empresas y Servicios Aeronáuticos</a>
+      <a href="#formacion-seccion">Formación Aeronáutica</a>
+      <a href="#experimental-seccion">Experimentales y Ultralivianos</a>
+      <a href="#stol-seccion">Aviación STOL</a>
+      <a href="#aeromodelismo-seccion">Aeromodelismo</a>
+      <a href="#simuladores-seccion">Simuladores de vuelo</a>
+      <a href="#travesias">Travesías</a>
+      <a href="#tienda-seccion">Tienda Aeronáutica</a>
+    </div>
+  </main>
   
   <section class="contenedor">
   <h2 class="titulo-seccion">Galería</h2>
@@ -1939,65 +2055,6 @@ body.modo-seccion-unica > .seccion-enfoque {
 
   </div>
 </section>
-  <main class="contenedor" id="explorar">
-
-   <h2 class="titulo-seccion">Secciones destacadas</h2>
-
-   <p class="subtitulo">Descubrí contenidos, experiencias y espacios para participar, aprender y compartir nuestra pasión por la aviación.</p>
-
-   <button type="button" class="boton destacadas-mostrar" id="mostrarDestacadas" hidden>Mostrar tarjetas</button>
-
-    <div class="tarjetas">
-<a href="#empresas-seccion" style="text-decoration:none; color:inherit;">
-    <div class="tarjeta" id="empresas">
-  <h3>Empresas y Servicios Aeronáuticos</h3>
-  <p>Fabricantes, talleres, repuestos, equipamiento, servicios especializados y oferta de aeronaves para la comunidad.</p>
-</div>
-  </a>
-<a href="#formacion-seccion" style="text-decoration:none; color:inherit;">
-     <div class="tarjeta" id="formacion">
-  <h3>Formación Aeronáutica</h3>
-  <p>Escuelas de vuelo, cursos, capacitación y contenidos para quienes desean iniciarse o seguir avanzando en la aviación.</p>
-</div>
-</a>
-      <a href="#experimental-seccion" style="text-decoration:none; color:inherit;">
-     <div class="tarjeta" id="experimental">
-  <h3>Experimentales y Ultralivianos</h3>
-  <p>Proyectos, construcción, aeronaves y experiencias relacionadas con la aviación experimental y ultraliviana.</p>
-</div>
-</a>
-      <a href="#stol-seccion" style="text-decoration:none; color:inherit;">
-     <div class="tarjeta" id="stol">
-  <h3>Aviación STOL</h3>
-  <p>Aeronaves, técnicas, experiencias y contenidos relacionados con las operaciones en pistas cortas y no preparadas.</p>
-</div>
-</a>
-      <a href="#aeromodelismo-seccion" style="text-decoration:none; color:inherit;">
-     <div class="tarjeta" id="aeromodelismo">
-  <h3>Aeromodelismo</h3>
-  <p>Modelos, técnicas, clubes, experiencias y actividades para quienes disfrutan del aeromodelismo.</p>
-</div>
-    </a> 
-     <a href="#simuladores-seccion" style="text-decoration:none; color:inherit;"> 
-<div class="tarjeta" id="simuladores">
-  <h3>Simuladores de vuelo</h3>
-  <p>Simulación de vuelo, plataformas, equipos, experiencias y contenidos para quienes disfrutan de la aviación virtual.</p>
-</div>
-    </a>   
-    <a href="#travesias" style="text-decoration:none; color:inherit;">
-  <div class="tarjeta">
-    <h3>Travesías</h3>
-    <p>Vuelos, recorridos y experiencias compartidas por los miembros de Gente de Vuelo.</p>
-  </div>
-</a>  
-      <a href="#tienda-seccion" style="text-decoration:none; color:inherit;">
-      <div class="tarjeta" id="tienda">
-        <h3>Tienda Aeronáutica</h3>
-        <p>Un espacio para encontrar productos, accesorios, equipamiento y servicios relacionados con la aviación.</p>
-      </div>
-</a>
-    </div>
-  </main>
   <section class="contenedor" id="meteorologia-seccion">
   <h2 class="titulo-seccion">Meteorología Aeronáutica</h2>
 
@@ -3971,13 +4028,16 @@ document.querySelector(".galeria-siguiente").addEventListener("click", () => {
   const mostrarDestacadas = document.getElementById("mostrarDestacadas");
 
   function cambiarVisibilidadDestacadas(cerrar) {
+    if (!seccionesDestacadas) return;
     seccionesDestacadas.classList.toggle("destacadas-cerradas", cerrar);
-    mostrarDestacadas.hidden = !cerrar;
+    if (mostrarDestacadas) mostrarDestacadas.hidden = !cerrar;
   }
 
-  mostrarDestacadas.addEventListener("click", function () {
-    cambiarVisibilidadDestacadas(false);
-  });
+  if (mostrarDestacadas) {
+    mostrarDestacadas.addEventListener("click", function () {
+      cambiarVisibilidadDestacadas(false);
+    });
+  }
 
   function actualizarDestacadasPorDestino(hash) {
     if (!hash || hash === "#") return;
@@ -3999,18 +4059,6 @@ document.querySelector(".galeria-siguiente").addEventListener("click", () => {
     actualizarDestacadasPorDestino(window.location.hash);
   });
   actualizarDestacadasPorDestino(window.location.hash);
-
-  // También se cierran cuando se llega a otra sección desplazándose por la página.
-  const siguienteSeccionDestacadas = document.getElementById("meteorologia-seccion");
-  function cerrarDestacadasAlDesplazarse() {
-    if (document.body.classList.contains("modo-anexo") ||
-        seccionesDestacadas.classList.contains("destacadas-cerradas")) return;
-    if (siguienteSeccionDestacadas.getBoundingClientRect().top <= window.innerHeight * 0.5) {
-      cambiarVisibilidadDestacadas(true);
-    }
-  }
-  window.addEventListener("scroll", cerrarDestacadasAlDesplazarse, { passive: true });
-  cerrarDestacadasAlDesplazarse();
 
   menuBoton.addEventListener("click", function () {
     menuDesplegable.classList.toggle("abierto");
