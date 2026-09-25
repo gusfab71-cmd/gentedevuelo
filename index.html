@@ -1914,6 +1914,134 @@ body.modo-seccion-unica > .seccion-enfoque {
   }
 }
 
+
+
+/* ===== PORTADA: ACCESOS PRINCIPALES EN MODO MENÚ ===== */
+.accesos-principales-menu {
+  display: block;
+  max-width: 980px;
+  margin: 42px auto 24px;
+  padding: 0 20px;
+}
+
+.accesos-principales-menu h2 {
+  margin: 0 0 15px;
+  text-align: center;
+  color: #ffffff;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+}
+
+.accesos-principales-botones {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 9px;
+  padding: 10px;
+  background: rgba(22, 27, 30, 0.78);
+  border: 1px solid rgba(255, 159, 28, 0.55);
+  border-radius: 15px;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.18);
+}
+
+.accesos-principales-botones a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  padding: 9px 10px;
+  border: 1px solid rgba(255, 159, 28, 0.52);
+  border-radius: 10px;
+  background: #202629;
+  color: #ffffff;
+  text-decoration: none;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.25;
+  transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+}
+
+.accesos-principales-botones a:hover {
+  transform: translateY(-2px);
+  background: #293034;
+  border-color: #ff9f1c;
+}
+
+/* Foro como tercer acceso independiente de portada */
+.portada-accesos {
+  flex-wrap: wrap;
+}
+
+.acceso-foro {
+  flex: 0 0 100%;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 11px 14px;
+  background: rgba(23, 27, 29, 0.88);
+  border: 2px solid #ff642e;
+  border-radius: 14px;
+  color: #ffffff;
+  text-decoration: none;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  transition: transform 0.22s ease, background 0.22s ease;
+}
+
+.acceso-foro:hover {
+  transform: scale(1.025);
+  background: rgba(30, 35, 38, 0.96);
+}
+
+.acceso-foro h3 {
+  margin: 0 0 3px;
+  color: #ff9f1c;
+  font-size: 17px;
+}
+
+.acceso-foro p {
+  margin: 0;
+  color: #ffffff;
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+.acceso-foro-entrar {
+  flex: 0 0 auto;
+  color: #f4d887;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+}
+
+@media (max-width: 900px) {
+  .accesos-principales-botones {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .accesos-principales-botones a:last-child {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 560px) {
+  .accesos-principales-menu {
+    margin-top: 28px;
+  }
+  .accesos-principales-botones {
+    grid-template-columns: 1fr;
+  }
+  .accesos-principales-botones a:last-child {
+    grid-column: auto;
+  }
+  .acceso-foro {
+    align-items: flex-start;
+  }
+  .acceso-foro-entrar {
+    display: none;
+  }
+}
 </style>
 </head>
 
@@ -1957,6 +2085,14 @@ body.modo-seccion-unica > .seccion-enfoque {
     <h3>Clasificados</h3>
     <p>Compra, venta y búsquedas entre miembros de la comunidad.</p>
   </a>
+
+  <a href="#foro-comunidad" class="acceso-foro" title="Foro Aeronáutico">
+    <div>
+      <h3>Foro Aeronáutico</h3>
+      <p>Consultas, experiencias e ideas compartidas por la comunidad.</p>
+    </div>
+    <span class="acceso-foro-entrar">ENTRAR →</span>
+  </a>
 </div>
 <div class="portada-completa">
   <section class="hero" id="inicio">
@@ -1974,43 +2110,15 @@ body.modo-seccion-unica > .seccion-enfoque {
   
 </div>
 
-<section class="accesos-principales">
-<a href="#meteorologia-seccion" style="text-decoration:none; color:inherit;">
-  <div class="acceso destacado">
-    <h3>Meteorología Aeronáutica</h3>
-    <p>METAR e información meteorológica útil para el vuelo.</p>
+<section class="accesos-principales accesos-principales-menu" aria-labelledby="tituloAccesosPrincipales">
+  <h2 id="tituloAccesosPrincipales">Accesos principales</h2>
+  <div class="accesos-principales-botones">
+    <a href="#meteorologia-seccion">Meteorología Aeronáutica</a>
+    <a href="#normativas-seccion">Actualizaciones Normativas</a>
+    <a href="#agenda-seccion">Agenda Aeronáutica</a>
+    <a href="#instituciones-seccion">Entidades y Organizaciones</a>
+    <a href="#historia-seccion">Historia de la Aviación</a>
   </div>
-  </a>
-<a href="#normativas-seccion" style="text-decoration:none; color:inherit;">
-  <div class="acceso destacado">
-    <h3>Actualizaciones Normativas</h3>
-    <p>Novedades, modificaciones y actualizaciones de la normativa aeronáutica.</p>
-  </div>
-</a>
-<a href="#foro-comunidad" style="text-decoration:none; color:inherit;">
-  <div class="acceso destacado" id="foro">
-    <h3>Foro Aeronáutico</h3>
-    <p>Un espacio para compartir experiencias, consultas, conocimientos e ideas entre los miembros de la comunidad.</p>
-  </div>
-</a>
-<a href="#agenda-seccion" style="text-decoration:none; color:inherit;">
-  <div class="acceso destacado">
-    <h3>Agenda Aeronáutica</h3>
-    <p>Encuentros, festivales, jornadas y actividades aeronáuticas de interés para la comunidad. Su difusión en Gente de Vuelo es gratuita y sin fines comerciales.</p>
-  </div>
-  </a>
-<a href="#instituciones-seccion" style="text-decoration:none; color:inherit;">
-  <div class="acceso destacado" id="instituciones">
-   <h3>Entidades y Organizaciones Aeronáuticas</h3>
-    <p>Asociaciones, federaciones, aeroclubes, clubes de aeromodelismo y otras organizaciones vinculadas a la actividad aeronáutica.</p>
-  </div>
-</a>
-  <a href="#historia-seccion" style="text-decoration:none; color:inherit;">
-  <div class="acceso destacado" id="historia">
-    <h3>Historia de la Aviación</h3>
-    <p>Historias, personajes, acontecimientos y episodios poco conocidos que forman parte del mundo de la aviación.</p>
-  </div>
-</a>
 </section>
 
   <main class="contenedor menu-destacadas-portada" id="explorar">
