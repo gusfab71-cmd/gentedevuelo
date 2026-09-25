@@ -1120,6 +1120,92 @@ header {
   font-size: 12px;
   line-height: 1.35;
 }
+
+/* ===== ANEXOS DE PORTADA ===== */
+.anexo-portada {
+  display: none;
+  position: relative;
+  scroll-margin-top: 24px;
+}
+
+.anexo-portada.activo {
+  display: block;
+  animation: mostrarAnexo 0.25s ease;
+}
+
+@keyframes mostrarAnexo {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.anexo-cerrar {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 5;
+  padding: 9px 14px;
+  border: 2px solid #ff642e;
+  border-radius: 10px;
+  background: #171b1d;
+  color: #ffffff;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.anexo-cerrar:hover {
+  background: #ff642e;
+}
+
+.clasificados-opciones {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  margin-top: 30px;
+}
+
+.clasificados-opcion,
+.clasificados-listado,
+.clasificados-aviso {
+  background: #1d2225;
+  border: 2px solid #ff642e;
+  border-radius: 16px;
+  padding: 24px;
+}
+
+.clasificados-opcion h3,
+.clasificados-listado h3 {
+  color: #ff9f1c;
+  margin-top: 0;
+}
+
+.clasificados-listado,
+.clasificados-aviso {
+  margin-top: 24px;
+}
+
+.clasificados-aviso {
+  border-color: #59646a;
+  color: #d8d8d8;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.footer-enlaces {
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.footer-enlaces a {
+  color: #ffffff;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.footer-enlaces a:hover {
+  color: #ff9f1c;
+}
  .shimoda-cabecera {
   display: flex;
   align-items: center;
@@ -1314,6 +1400,16 @@ header {
   .portada-accesos.menu-abierto {
     top: 760px;
   }
+
+  .clasificados-opciones {
+    grid-template-columns: 1fr;
+  }
+
+  .anexo-cerrar {
+    position: static;
+    display: block;
+    margin: 0 0 22px auto;
+  }
 }
 
  /* ===== HANGAR PÚBLICO ===== */
@@ -1365,8 +1461,6 @@ header {
   </button>
 
   <div class="menu-desplegable" id="menuDesplegable">
-    <a href="#inicio">Inicio</a>
-   
     <a href="#experimental">Experimentales y Ultralivianos</a>
    
   <a href="#stol">Aviación STOL</a>
@@ -1393,7 +1487,7 @@ header {
     </div>
   </a>
 
-  <a href="#tienda-seccion" class="acceso-clasificados" title="Clasificados de la comunidad">
+  <a href="#clasificados-seccion" class="acceso-clasificados" title="Clasificados de la comunidad">
     <h3>Clasificados</h3>
     <p>Compra, venta y búsquedas entre miembros de la comunidad.</p>
   </a>
@@ -1475,19 +1569,6 @@ header {
 
   </div>
 </section>
-  <section class="mision">
-    <h2>Quiénes somos</h2>
-   <p>
-  Gente de Vuelo es un punto de encuentro para pilotos, estudiantes,
-  instructores, aeromodelistas, constructores de aeronaves experimentales
-  y apasionados por la aviación. Un espacio sin fines de lucro para
-  compartir conocimientos, experiencias e historias, conocer gente y
-  disfrutar juntos el mundo de la aviación, teniendo la posibilidad de
-  crear tu propio perfil de usuario, participar, interactuar y compartir
-  contenido dentro de un espacio moderado.
-</p>
-  </section>
-
   <main class="contenedor" id="explorar">
 
    <h2 class="titulo-seccion">Secciones destacadas</h2>
@@ -1940,7 +2021,9 @@ header {
 
 </div>
 </section>
-<section class="contenedor shimoda-espacio" id="shimoda">
+<section class="contenedor shimoda-espacio anexo-portada" id="shimoda" aria-hidden="true">
+
+  <button type="button" class="anexo-cerrar" data-cerrar-anexo="shimoda">Cerrar</button>
 
   <div class="shimoda-cabecera">
 
@@ -1993,6 +2076,41 @@ header {
   </button>
 
 </div>
+</section>
+
+<section class="contenedor anexo-portada" id="clasificados-seccion" aria-hidden="true">
+  <button type="button" class="anexo-cerrar" data-cerrar-anexo="clasificados-seccion">Cerrar</button>
+
+  <h2 class="titulo-seccion">Clasificados Aeronáuticos</h2>
+  <p class="subtitulo">
+    Compra, venta y búsqueda de artículos entre miembros registrados de Gente de Vuelo.
+  </p>
+
+  <div class="clasificados-opciones">
+    <article class="clasificados-opcion">
+      <h3>Artículos publicados</h3>
+      <p>Explorá equipamiento, accesorios, indumentaria y otros artículos aeronáuticos ofrecidos por la comunidad.</p>
+    </article>
+
+    <article class="clasificados-opcion">
+      <h3>Publicar un artículo</h3>
+      <p>Los usuarios registrados podrán publicar fotografías, descripción, precio, ubicación y estado del producto.</p>
+    </article>
+
+    <article class="clasificados-opcion">
+      <h3>Mercado inverso</h3>
+      <p>Publicá qué artículo estás buscando para que otros miembros puedan comunicarse con vos.</p>
+    </article>
+  </div>
+
+  <div class="clasificados-listado" id="listaClasificados">
+    <h3>Publicaciones de la comunidad</h3>
+    <p>Los primeros artículos aprobados aparecerán en este espacio.</p>
+  </div>
+
+  <div class="clasificados-aviso">
+    Gente de Vuelo funciona únicamente como espacio de contacto entre miembros. No interviene en pagos, envíos, garantías ni en el estado de los productos publicados.
+  </div>
 </section>
   
 <section class="contenedor seccion-foro foro-principal" id="foro-comunidad">
@@ -2286,9 +2404,26 @@ header {
 
   <button class="boton" onclick="cerrarHangarPublico()">Volver a la Comunidad</button>
 </section>
+
+<section class="mision">
+  <h2>Quiénes somos</h2>
+  <p>
+    Gente de Vuelo es un punto de encuentro para pilotos, estudiantes,
+    instructores, aeromodelistas, constructores de aeronaves experimentales
+    y apasionados por la aviación. Un espacio sin fines de lucro para
+    compartir conocimientos, experiencias e historias, conocer gente y
+    disfrutar juntos el mundo de la aviación, teniendo la posibilidad de
+    crear tu propio perfil de usuario, participar, interactuar y compartir
+    contenido dentro de un espacio moderado.
+  </p>
+</section>
   
   
   <footer>
+    <div class="footer-enlaces">
+      <a href="#inicio">Inicio</a>
+      <a href="#mi-perfil">Mi perfil</a>
+    </div>
     <p><strong>Gente de Vuelo</strong></p>
     <p>Comunidad Aeronáutica</p>
     <p>Proyecto comunitario sin fines de lucro</p>
@@ -3309,6 +3444,7 @@ document.querySelector(".galeria-siguiente").addEventListener("click", () => {
     enlace.addEventListener("click", function () {
       menuDesplegable.classList.remove("abierto");
       portadaAccesos.classList.remove("menu-abierto");
+      cerrarAnexos();
     });
   });
 document.addEventListener("click", function (event) {
@@ -3336,15 +3472,59 @@ document.querySelectorAll(".menu-desplegable a").forEach(enlace => {
   }
 });
 const accesoShimoda = document.querySelector(".acceso-shimoda");
-const seccionShimoda = document.getElementById("shimoda");
+const accesoClasificados = document.querySelector(".acceso-clasificados");
+const anexosPortada = document.querySelectorAll(".anexo-portada");
 
-accesoShimoda.addEventListener("click", function (event) {
-  event.preventDefault();
+function cerrarAnexos(exceptoId = "") {
+  anexosPortada.forEach(function (anexo) {
+    if (anexo.id !== exceptoId) {
+      anexo.classList.remove("activo");
+      anexo.setAttribute("aria-hidden", "true");
+    }
+  });
+}
 
-  seccionShimoda.scrollIntoView({
+function abrirAnexo(anexoId) {
+  const anexo = document.getElementById(anexoId);
+  if (!anexo) return;
+
+  cerrarAnexos(anexoId);
+  anexo.classList.add("activo");
+  anexo.setAttribute("aria-hidden", "false");
+
+  anexo.scrollIntoView({
     behavior: "smooth",
     block: "start"
   });
+}
+
+accesoShimoda.addEventListener("click", function (event) {
+  event.preventDefault();
+  abrirAnexo("shimoda");
+});
+
+accesoClasificados.addEventListener("click", function (event) {
+  event.preventDefault();
+  abrirAnexo("clasificados-seccion");
+});
+
+document.querySelectorAll("[data-cerrar-anexo]").forEach(function (boton) {
+  boton.addEventListener("click", function () {
+    cerrarAnexos();
+    document.getElementById("inicio").scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+  });
+});
+
+document.addEventListener("click", function (event) {
+  const clickEnAnexo = event.target.closest(".anexo-portada");
+  const clickEnAcceso = event.target.closest(".acceso-shimoda, .acceso-clasificados");
+
+  if (!clickEnAnexo && !clickEnAcceso) {
+    cerrarAnexos();
+  }
 });
   async function cargarPublicacionShimoda() {
   const { data, error } = await supabaseClient
