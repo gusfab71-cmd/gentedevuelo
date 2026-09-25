@@ -1478,7 +1478,82 @@ body.modo-anexo-clasificados #clasificados-seccion {
   font-size: 16px;
   line-height: 1.6;
   color: #ffffff;
-}  
+}
+
+.shimoda-comentarios {
+  margin-top: 26px;
+  padding: 24px 28px;
+  background: rgba(23, 27, 29, 0.88);
+  border: 2px solid #d6a84b;
+  border-radius: 18px;
+  text-align: left;
+}
+
+.shimoda-comentarios h3 {
+  margin: 0 0 18px;
+  color: #d6a84b;
+}
+
+.shimoda-comentario {
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.shimoda-comentario:last-child {
+  border-bottom: 0;
+}
+
+.shimoda-comentario-autor {
+  color: #ff9f1c;
+  font-weight: bold;
+}
+
+.shimoda-comentario-fecha {
+  margin-left: 8px;
+  color: #aeb8bd;
+  font-size: 13px;
+}
+
+.shimoda-comentario p {
+  margin: 7px 0 0;
+  color: #ffffff;
+  line-height: 1.5;
+}
+
+.shimoda-form-comentario {
+  margin-top: 22px;
+}
+
+.shimoda-form-comentario textarea {
+  width: 100%;
+  min-height: 100px;
+  box-sizing: border-box;
+  padding: 12px;
+  border: 1px solid #d6a84b;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #202426;
+  font: inherit;
+  resize: vertical;
+}
+
+.shimoda-form-comentario .boton {
+  margin-top: 12px;
+}
+
+.shimoda-mensaje-comentario {
+  min-height: 20px;
+  margin: 10px 0 0;
+  color: #d6a84b;
+  font-weight: bold;
+}
+
+.shimoda-nota-comentarios {
+  margin: 10px 0 0;
+  color: #c6cdd1;
+  font-size: 13px;
+}
+  
  .shimoda-hangar {
   max-width: 1100px;
   margin: 40px auto 50px auto;
@@ -2248,8 +2323,32 @@ body.modo-anexo-clasificados #clasificados-seccion {
 
   <h4 id="shimodaTitulo">Cargando publicación...</h4>
 
-  <p id="shimodaContenido">
+ <p id="shimodaContenido">
     Estamos cargando la publicación de Robert Shimoda.
+  </p>
+</div>
+
+<div class="shimoda-comentarios">
+  <h3>Comentarios de la comunidad</h3>
+
+  <div id="listaComentariosShimoda">
+    <p>Todavía no hay comentarios aprobados.</p>
+  </div>
+
+  <form id="formComentarioShimoda" class="shimoda-form-comentario">
+    <label for="comentarioShimoda">Dejá tu comentario</label>
+    <textarea
+      id="comentarioShimoda"
+      maxlength="1000"
+      placeholder="Compartí tu opinión sobre esta publicación"
+      required
+    ></textarea>
+    <button type="submit" class="boton">Enviar comentario</button>
+    <p class="shimoda-mensaje-comentario" id="mensajeComentarioShimoda" aria-live="polite"></p>
+  </form>
+
+  <p class="shimoda-nota-comentarios">
+    Para comentar tenés que iniciar sesión. Los comentarios se publican después de ser aprobados.
   </p>
 </div>
 
@@ -4061,7 +4160,72 @@ document.getElementById("formularioBusquedaClasificado").addEventListener("submi
   mostrarPanelClasificados("panelClasificadosLista");
   mostrarMensajeClasificados("Búsqueda enviada correctamente. Quedó pendiente de aprobación.");
 });
-  async function cargarPublicacionShimoda() {
+
+let publicacionShimodaActualId = null;
+
+function mostrarMensajeComentarioShimoda(mensaje, esError = false) {
+  const elemento = document.getElementById("mensajeComentarioShimoda");
+
+  if (!elemento) return;
+
+  elemento.textContent = mensaje;
+  elemento.style.color = esError ? "#ff8a65" : "#d6a84b";
+}
+
+async function cargarComentariosShimoda(publicacionId) {
+  const contenedor = document.getElementById("listaComentariosShimoda");
+
+  if (!contenedor || !publicacionId) return;
+
+  const { data, error } = await supabaseClient
+    .from("shimoda_comentarios")
+    .select("id, contenido, created_at, profiles(full_name, username)")
+    .eq("publicacion_id", publicacionId)
+    .eq("estado", "aprobado")
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    console.error("Error al cargar comentarios de Shimoda:", error);
+    contenedor.textContent = "No se pudieron cargar los comentarios.";
+    return;
+  }
+
+  contenedor.innerHTML = "";
+
+  if (!data || data.length === 0) {
+    const mensajeVacio = document.createElement("p");
+    mensajeVacio.textContent = "Todavía no hay comentarios aprobados.";
+    contenedor.appendChild(mensajeVacio);
+    return;
+  }
+
+  data.forEach(function (comentario) {
+    const articulo = document.createElement("article");
+    articulo.className = "shimoda-comentario";
+
+    const encabezado = document.createElement("div");
+    const autor = document.createElement("span");
+    const fecha = document.createElement("span");
+    const contenido = document.createElement("p");
+    const perfil = comentario.profiles || {};
+
+    autor.className = "shimoda-comentario-autor";
+    autor.textContent = perfil.full_name || perfil.username || "Miembro de Gente de Vuelo";
+
+    fecha.className = "shimoda-comentario-fecha";
+    fecha.textContent = new Date(comentario.created_at).toLocaleDateString("es-AR");
+
+    contenido.textContent = comentario.contenido;
+
+    encabezado.appendChild(autor);
+    encabezado.appendChild(fecha);
+    articulo.appendChild(encabezado);
+    articulo.appendChild(contenido);
+    contenedor.appendChild(articulo);
+  });
+}
+
+async function cargarPublicacionShimoda() {
   const { data, error } = await supabaseClient
     .from("shimoda_publicaciones")
     .select("*")
@@ -4079,6 +4243,7 @@ document.getElementById("formularioBusquedaClasificado").addEventListener("submi
   }
 
   const publicacion = data[0];
+  publicacionShimodaActualId = publicacion.id;
 
   const portadaTitulo = document.getElementById("shimodaPortadaTitulo");
   const portadaFecha = document.getElementById("shimodaPortadaFecha");
@@ -4112,7 +4277,59 @@ document.getElementById("formularioBusquedaClasificado").addEventListener("submi
     document.getElementById("shimodaFecha").textContent =
       `${partes[2]}/${partes[1]}/${partes[0]} · ${publicacion.categoria || ""}`;
   }
+
+  cargarComentariosShimoda(publicacion.id);
 }
+
+document.getElementById("formComentarioShimoda").addEventListener("submit", async function (event) {
+  event.preventDefault();
+  mostrarMensajeComentarioShimoda("");
+
+  if (!publicacionShimodaActualId) {
+    mostrarMensajeComentarioShimoda("Todavía no se cargó la publicación.", true);
+    return;
+  }
+
+  const { data: usuarioData, error: usuarioError } = await supabaseClient.auth.getUser();
+  const usuario = usuarioData ? usuarioData.user : null;
+
+  if (usuarioError || !usuario) {
+    mostrarMensajeComentarioShimoda("Debés iniciar sesión para comentar.", true);
+    return;
+  }
+
+  const campoComentario = document.getElementById("comentarioShimoda");
+  const contenido = campoComentario.value.trim();
+
+  if (contenido.length < 2 || contenido.length > 1000) {
+    mostrarMensajeComentarioShimoda("El comentario debe tener entre 2 y 1000 caracteres.", true);
+    return;
+  }
+
+  const botonEnviar = event.currentTarget.querySelector('button[type="submit"]');
+  botonEnviar.disabled = true;
+  botonEnviar.textContent = "Enviando...";
+
+  const { error } = await supabaseClient
+    .from("shimoda_comentarios")
+    .insert({
+      publicacion_id: publicacionShimodaActualId,
+      user_id: usuario.id,
+      contenido: contenido
+    });
+
+  botonEnviar.disabled = false;
+  botonEnviar.textContent = "Enviar comentario";
+
+  if (error) {
+    console.error("Error al enviar comentario de Shimoda:", error);
+    mostrarMensajeComentarioShimoda("No se pudo enviar el comentario. Intentá nuevamente.", true);
+    return;
+  }
+
+  event.currentTarget.reset();
+  mostrarMensajeComentarioShimoda("Comentario enviado. Quedó pendiente de aprobación.");
+});
 
  async function cargarAnterioresShimoda() {
   const { data, error } = await supabaseClient
