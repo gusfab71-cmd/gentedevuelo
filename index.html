@@ -765,6 +765,19 @@ header {
   gap: 18px;
 }
 
+#explorar.destacadas-cerradas .tarjetas {
+  display: none;
+}
+
+#explorar .destacadas-mostrar {
+  display: block;
+  margin: 0 auto 24px;
+}
+
+#explorar .destacadas-mostrar[hidden] {
+  display: none;
+}
+
 #explorar .tarjeta {
   background: #1d2225;
   border: 2px solid #ff642e;
@@ -1861,6 +1874,8 @@ body.modo-anexo-clasificados #clasificados-seccion {
    <h2 class="titulo-seccion">Secciones destacadas</h2>
 
    <p class="subtitulo">Descubrí contenidos, experiencias y espacios para participar, aprender y compartir nuestra pasión por la aviación.</p>
+
+   <button type="button" class="boton destacadas-mostrar" id="mostrarDestacadas" hidden>Mostrar tarjetas</button>
 
     <div class="tarjetas">
 <a href="#empresas-seccion" style="text-decoration:none; color:inherit;">
@@ -3850,6 +3865,50 @@ document.querySelector(".galeria-siguiente").addEventListener("click", () => {
 <script>
   const menuBoton = document.getElementById("menuBoton");
   const menuDesplegable = document.getElementById("menuDesplegable");
+  const seccionesDestacadas = document.getElementById("explorar");
+  const mostrarDestacadas = document.getElementById("mostrarDestacadas");
+
+  function cambiarVisibilidadDestacadas(cerrar) {
+    seccionesDestacadas.classList.toggle("destacadas-cerradas", cerrar);
+    mostrarDestacadas.hidden = !cerrar;
+  }
+
+  mostrarDestacadas.addEventListener("click", function () {
+    cambiarVisibilidadDestacadas(false);
+  });
+
+  function actualizarDestacadasPorDestino(hash) {
+    if (!hash || hash === "#") return;
+    const destino = document.getElementById(decodeURIComponent(hash.slice(1)));
+    if (!destino) return;
+    if (destino.closest("#explorar") || destino.id === "inicio") {
+      cambiarVisibilidadDestacadas(false);
+    } else if (!destino.closest(".anexo-portada")) {
+      cambiarVisibilidadDestacadas(true);
+    }
+  }
+
+  document.addEventListener("click", function (event) {
+    const enlace = event.target.closest('a[href^="#"]');
+    if (enlace) actualizarDestacadasPorDestino(enlace.getAttribute("href"));
+  });
+
+  window.addEventListener("hashchange", function () {
+    actualizarDestacadasPorDestino(window.location.hash);
+  });
+  actualizarDestacadasPorDestino(window.location.hash);
+
+  // También se cierran cuando se llega a otra sección desplazándose por la página.
+  const siguienteSeccionDestacadas = document.getElementById("meteorologia-seccion");
+  function cerrarDestacadasAlDesplazarse() {
+    if (document.body.classList.contains("modo-anexo") ||
+        seccionesDestacadas.classList.contains("destacadas-cerradas")) return;
+    if (siguienteSeccionDestacadas.getBoundingClientRect().top <= window.innerHeight * 0.5) {
+      cambiarVisibilidadDestacadas(true);
+    }
+  }
+  window.addEventListener("scroll", cerrarDestacadasAlDesplazarse, { passive: true });
+  cerrarDestacadasAlDesplazarse();
 
   menuBoton.addEventListener("click", function () {
     menuDesplegable.classList.toggle("abierto");
