@@ -63,6 +63,7 @@
       margin-left: 18px;
     }
 .portada-completa {
+  position: relative;
   background-image: url('IMAGEN DE AVION EN PISTA PORTADA LIMPIA SIN LOGO.png');
   background-size: cover;
   background-position: center 65%;
@@ -993,10 +994,10 @@ header {
     font-size: 22px;
   }
 }  
-   /* ===== MENÚ VERTICAL DESPLEGABLE ===== */
+   /* ===== MENÚ VERTICAL DESPLEGABLE - ANCLADO A LA PORTADA ===== */
 
 .menu-principal {
-  position: fixed;
+  position: absolute;
   top: 18px;
   left: 18px;
   z-index: 1000;
@@ -1087,7 +1088,7 @@ header {
     
 /* ===== ACCESOS LATERALES DE PORTADA ===== */
 .portada-accesos {
-  position: fixed;
+  position: absolute;
   top: 78px;
   left: 18px;
   z-index: 1000;
@@ -2087,8 +2088,11 @@ body:not(.modo-seccion-unica):not(.modo-anexo) > .solo-seccion {
 
 <body>
 <button type="button" id="volverPortada" aria-label="Volver a la portada">← VOLVER A PORTADA</button>
-
-
+<div class="controles-usuario" id="controlesUsuario">
+  <a href="#ingresar" class="boton-ingresar" id="botonIngresar">INGRESAR</a>
+  <a href="#" id="botonCerrarSesion" class="boton-ingresar" style="display:none;">CERRAR SESIÓN</a>
+</div>
+<div class="portada-completa">
  <nav class="menu-principal">
   <button class="menu-boton" id="menuBoton" type="button">
     ☰ MENÚ
@@ -2106,10 +2110,7 @@ body:not(.modo-seccion-unica):not(.modo-anexo) > .solo-seccion {
   <a href="#reglamento" id="enlaceReglamento">Código de Convivencia</a>
   </div>
 </nav>
-  <div class="controles-usuario" id="controlesUsuario">
-  <a href="#ingresar" class="boton-ingresar" id="botonIngresar">INGRESAR</a>
-  <a href="#" id="botonCerrarSesion" class="boton-ingresar" style="display:none;">CERRAR SESIÓN</a>
-</div>
+  
 
 <div class="portada-accesos" id="portadaAccesos">
   <a href="#shimoda" class="acceso-shimoda" title="Robert Shimoda - Consejos de Aviación">
@@ -2134,7 +2135,7 @@ body:not(.modo-seccion-unica):not(.modo-anexo) > .solo-seccion {
     <span class="acceso-foro-entrar">ENTRAR →</span>
   </a>
 </div>
-<div class="portada-completa">
+
   <section class="hero" id="inicio">
     
    <img src="logo circular recortado gente de vuelo.png"
