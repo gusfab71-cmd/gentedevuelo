@@ -429,8 +429,8 @@ min-height: 260px;
       background: #17324d;
       color: white;
       text-align: center;
-      padding: 30px 230px 30px 15px;
-      margin-top: 50px;
+      padding: 30px 15px;
+      margin-top: 0;
     }
 
     footer p {
@@ -1409,13 +1409,15 @@ body.modo-anexo-clasificados #clasificados-seccion {
 }
 
 .footer-enlaces {
-  position: absolute;
-  right: 24px;
-  bottom: 24px;
+  width: 100%;
   display: flex;
-  justify-content: flex-end;
-  gap: 10px;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
   margin: 0;
+  padding: 24px 15px 30px;
+  background: #171b1d;
+  box-sizing: border-box;
 }
 
 .footer-enlaces a {
@@ -1447,9 +1449,8 @@ body.modo-anexo-clasificados #clasificados-seccion {
   }
 
   .footer-enlaces {
-    position: static;
     justify-content: center;
-    margin-top: 18px;
+    padding: 20px 12px 26px;
   }
 }
 
@@ -3888,11 +3889,12 @@ body:not(.modo-seccion-unica):not(.modo-anexo) > .solo-seccion {
 </section>
   
   
+  <div class="footer-enlaces" aria-label="Navegación inferior">
+    <a href="#inicio">Inicio</a>
+    <a href="#mi-perfil">Mi perfil</a>
+  </div>
+
   <footer>
-    <div class="footer-enlaces">
-      <a href="#inicio">Inicio</a>
-      <a href="#mi-perfil">Mi perfil</a>
-    </div>
     <p><strong>Gente de Vuelo</strong></p>
     <p>Comunidad Aeronáutica</p>
     <p>Proyecto comunitario sin fines de lucro</p>
