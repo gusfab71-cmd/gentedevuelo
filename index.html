@@ -1503,6 +1503,50 @@ body.modo-anexo-clasificados #clasificados-seccion {
   gap: 18px;
 }
 
+.clasificados-filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 14px 0 20px;
+}
+
+.clasificados-filtro {
+  padding: 9px 16px;
+  border: 1px solid #8b742f;
+  border-radius: 999px;
+  background: #282d30;
+  color: #f7f4ec;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+}
+
+.clasificados-filtro:hover,
+.clasificados-filtro.activo {
+  background: #3a4144;
+  border-color: #f0c44f;
+  transform: translateY(-1px);
+}
+
+.clasificados-filtro.activo {
+  box-shadow: inset 0 0 0 1px rgba(240, 196, 79, 0.35);
+}
+
+.clasificado-tipo {
+  display: inline-block;
+  margin-bottom: 7px;
+  padding: 4px 9px;
+  border: 1px solid #bda15f;
+  border-radius: 999px;
+  background: #282d30;
+  color: #f4d887;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
 .clasificado-item {
   overflow: hidden;
   border: 2px solid #ab8c4c;
@@ -3604,18 +3648,18 @@ body:not(.modo-seccion-unica):not(.modo-anexo) > .solo-seccion {
 
   <div class="clasificados-opciones">
     <button type="button" class="clasificados-opcion activa" data-panel-clasificados="panelClasificadosLista">
-      <h3>Artículos publicados</h3>
-      <p>Explorá equipamiento, accesorios, indumentaria y otros artículos aeronáuticos ofrecidos por la comunidad.</p>
+      <h3>Tablero de clasificados</h3>
+      <p>Consultá artículos disponibles y requerimientos publicados por la comunidad aeronáutica.</p>
     </button>
 
     <button type="button" class="clasificados-opcion" data-panel-clasificados="panelClasificadosPublicar">
-      <h3>Publicar un artículo</h3>
-      <p>Los usuarios registrados podrán publicar fotografías, descripción, precio, ubicación y estado del producto.</p>
+      <h3>Publicar disponible</h3>
+      <p>Publicá un artículo disponible con fotografías, descripción, precio, ubicación y estado.</p>
     </button>
 
     <button type="button" class="clasificados-opcion" data-panel-clasificados="panelClasificadosBusqueda">
-      <h3>Mercado inverso</h3>
-      <p>Publicá qué artículo estás buscando para que otros miembros puedan comunicarse con vos.</p>
+      <h3>Publicar requerimiento</h3>
+      <p>Indicá qué artículo necesitás para que otros miembros puedan contactarse con vos.</p>
     </button>
   </div>
 
@@ -3623,13 +3667,18 @@ body:not(.modo-seccion-unica):not(.modo-anexo) > .solo-seccion {
 
   <div class="clasificados-listado clasificados-panel activo" id="panelClasificadosLista">
     <h3>Publicaciones de la comunidad</h3>
+    <div class="clasificados-filtros" aria-label="Filtrar clasificados">
+      <button type="button" class="clasificados-filtro activo" data-filtro-clasificados="todos">Todos</button>
+      <button type="button" class="clasificados-filtro" data-filtro-clasificados="venta">Disponibles</button>
+      <button type="button" class="clasificados-filtro" data-filtro-clasificados="busqueda">Requeridos</button>
+    </div>
     <div class="clasificados-publicaciones" id="listaClasificados">
       <p>Cargando publicaciones...</p>
     </div>
   </div>
 
   <div class="clasificados-listado clasificados-panel" id="panelClasificadosPublicar">
-    <h3>Publicar un artículo</h3>
+    <h3>Publicar un disponible</h3>
     <form class="clasificados-formulario" id="formularioClasificado">
       <div class="campo">
         <label for="clasificadoTitulo">Título</label>
@@ -3689,16 +3738,16 @@ body:not(.modo-seccion-unica):not(.modo-anexo) > .solo-seccion {
       </div>
 
       <div class="campo campo-ancho">
-        <button type="submit" class="boton">Enviar para revisión</button>
+        <button type="submit" class="boton">Enviar disponible para revisión</button>
       </div>
     </form>
   </div>
 
   <div class="clasificados-listado clasificados-panel" id="panelClasificadosBusqueda">
-    <h3>Publicar una búsqueda</h3>
+    <h3>Publicar un requerimiento</h3>
     <form class="clasificados-formulario" id="formularioBusquedaClasificado">
       <div class="campo">
-        <label for="busquedaTitulo">Qué necesitás</label>
+        <label for="busquedaTitulo">Artículo requerido</label>
         <input type="text" id="busquedaTitulo" maxlength="100" required>
       </div>
 
@@ -3726,7 +3775,7 @@ body:not(.modo-seccion-unica):not(.modo-anexo) > .solo-seccion {
       </div>
 
       <div class="campo campo-ancho">
-        <button type="submit" class="boton">Enviar búsqueda para revisión</button>
+        <button type="submit" class="boton">Enviar requerimiento para revisión</button>
       </div>
     </form>
   </div>
@@ -5247,6 +5296,8 @@ document.addEventListener("click", function (event) {
 const botonesClasificados = document.querySelectorAll("[data-panel-clasificados]");
 const panelesClasificados = document.querySelectorAll(".clasificados-panel");
 const mensajeClasificados = document.getElementById("mensajeClasificados");
+const filtrosClasificados = document.querySelectorAll("[data-filtro-clasificados]");
+let filtroClasificadosActual = "todos";
 
 function mostrarPanelClasificados(panelId) {
   panelesClasificados.forEach(function (panel) {
@@ -5277,6 +5328,18 @@ botonesClasificados.forEach(function (boton) {
   });
 });
 
+filtrosClasificados.forEach(function (boton) {
+  boton.addEventListener("click", function () {
+    filtroClasificadosActual = boton.dataset.filtroClasificados || "todos";
+
+    filtrosClasificados.forEach(function (otroBoton) {
+      otroBoton.classList.toggle("activo", otroBoton === boton);
+    });
+
+    cargarClasificados();
+  });
+});
+
 async function cargarClasificados() {
   const lista = document.getElementById("listaClasificados");
   if (!lista) return;
@@ -5295,14 +5358,23 @@ async function cargarClasificados() {
     return;
   }
 
+  const publicacionesFiltradas = (data || []).filter(function (publicacion) {
+    return filtroClasificadosActual === "todos" || publicacion.tipo === filtroClasificadosActual;
+  });
+
   lista.innerHTML = "";
 
-  if (!data || data.length === 0) {
-    lista.innerHTML = "<p>No hay publicaciones aprobadas por el momento.</p>";
+  if (publicacionesFiltradas.length === 0) {
+    const mensajeVacio = filtroClasificadosActual === "venta"
+      ? "No hay artículos disponibles publicados por el momento."
+      : filtroClasificadosActual === "busqueda"
+        ? "No hay artículos requeridos publicados por el momento."
+        : "No hay publicaciones aprobadas por el momento.";
+    lista.innerHTML = `<p>${mensajeVacio}</p>`;
     return;
   }
 
-  data.forEach(function (publicacion) {
+  publicacionesFiltradas.forEach(function (publicacion) {
     const articulo = document.createElement("article");
     articulo.className = "clasificado-item";
 
@@ -5318,7 +5390,8 @@ async function cargarClasificados() {
     contenido.className = "clasificado-item-contenido";
 
     const tipo = document.createElement("strong");
-    tipo.textContent = publicacion.tipo === "busqueda" ? "BUSCO" : "VENTA";
+    tipo.className = "clasificado-tipo";
+    tipo.textContent = publicacion.tipo === "busqueda" ? "REQUERIDO" : "DISPONIBLE";
 
     const titulo = document.createElement("h4");
     titulo.textContent = publicacion.titulo;
@@ -5389,7 +5462,7 @@ document.getElementById("formularioClasificado").addEventListener("submit", asyn
 
   const { data: { user } } = await supabaseClient.auth.getUser();
   if (!user) {
-    mostrarMensajeClasificados("Debés iniciar sesión para publicar un artículo.", true);
+    mostrarMensajeClasificados("Debés iniciar sesión para publicar un disponible.", true);
     return;
   }
 
@@ -5416,13 +5489,13 @@ document.getElementById("formularioClasificado").addEventListener("submit", asyn
 
     event.target.reset();
     mostrarPanelClasificados("panelClasificadosLista");
-    mostrarMensajeClasificados("Artículo enviado correctamente. Quedó pendiente de aprobación.");
+    mostrarMensajeClasificados("Disponible enviado correctamente. Quedó pendiente de aprobación.");
   } catch (error) {
     if (fotosSubidas.rutas.length) {
       await supabaseClient.storage.from("clasificados-fotos").remove(fotosSubidas.rutas);
     }
     console.error("Error al enviar clasificado:", error);
-    mostrarMensajeClasificados(error.message || "No se pudo enviar el artículo.", true);
+    mostrarMensajeClasificados(error.message || "No se pudo enviar el disponible.", true);
   }
 });
 
@@ -5431,7 +5504,7 @@ document.getElementById("formularioBusquedaClasificado").addEventListener("submi
 
   const { data: { user } } = await supabaseClient.auth.getUser();
   if (!user) {
-    mostrarMensajeClasificados("Debés iniciar sesión para publicar una búsqueda.", true);
+    mostrarMensajeClasificados("Debés iniciar sesión para publicar un requerimiento.", true);
     return;
   }
 
@@ -5446,14 +5519,14 @@ document.getElementById("formularioBusquedaClasificado").addEventListener("submi
   });
 
   if (error) {
-    console.error("Error al enviar búsqueda:", error);
-    mostrarMensajeClasificados("No se pudo enviar la búsqueda: " + error.message, true);
+    console.error("Error al enviar requerimiento:", error);
+    mostrarMensajeClasificados("No se pudo enviar el requerimiento: " + error.message, true);
     return;
   }
 
   event.target.reset();
   mostrarPanelClasificados("panelClasificadosLista");
-  mostrarMensajeClasificados("Búsqueda enviada correctamente. Quedó pendiente de aprobación.");
+  mostrarMensajeClasificados("Requerimiento enviado correctamente. Quedó pendiente de aprobación.");
 });
 
 let publicacionShimodaActualId = null;
