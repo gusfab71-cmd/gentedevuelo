@@ -1221,7 +1221,7 @@ body.modo-anexo-clasificados #clasificados-seccion {
 #clasificados-seccion .clasificados-opcion {
   width: 100%;
   padding: 24px;
-  border: 2px solid #d4842b;
+  border: 2px solid #bda15f;
   border-radius: 16px;
   background: #282d30;
   color: #f7f4ec;
@@ -1232,26 +1232,22 @@ body.modo-anexo-clasificados #clasificados-seccion {
 }
 
 #clasificados-seccion .clasificados-opcion h3 {
-  color: #ffbb65;
+  color: #f4d887;
   margin-top: 0;
 }
 
-#clasificados-seccion .clasificados-opcion:hover {
-  transform: translateY(-3px);
-  background: #353b3d;
-  border-color: #ffad58;
-}
-
+/* Las opciones mantienen el mismo aspecto al pasar el cursor y al seleccionarlas. */
+#clasificados-seccion .clasificados-opcion:hover,
 #clasificados-seccion .clasificados-opcion.activa,
 #clasificados-seccion .clasificados-opcion.activa:hover {
-  transform: translateY(-3px);
-  background: #e97832;
-  border-color: #a9481b;
-  color: #201e1c;
+  background: #282d30;
+  border-color: #bda15f;
+  color: #f7f4ec;
 }
 
-#clasificados-seccion .clasificados-opcion.activa h3 {
-  color: #201e1c;
+#clasificados-seccion .clasificados-opcion:focus-visible {
+  outline: 3px solid #292720;
+  outline-offset: 3px;
 }
 
 #clasificados-seccion .clasificados-listado {
@@ -1271,7 +1267,7 @@ body.modo-anexo-clasificados #clasificados-seccion {
 #clasificados-seccion .clasificados-aviso {
   margin-top: 24px;
   padding: 24px;
-  border: 2px solid #d4842b;
+  border: 2px solid #bda15f;
   border-radius: 16px;
   background: #282d30;
   color: #f7f4ec;
@@ -1280,13 +1276,23 @@ body.modo-anexo-clasificados #clasificados-seccion {
 }
 
 #clasificados-seccion .anexo-cerrar {
-  background: #e97832;
-  border-color: #a9481b;
-  color: #201e1c;
+  background: #282d30;
+  border-color: #bda15f;
+  color: #f7f4ec;
 }
 
 #clasificados-seccion .anexo-cerrar:hover {
-  background: #ff9c50;
+  background: #353b3d;
+}
+
+#clasificados-seccion .clasificados-formulario .boton {
+  background: #282d30;
+  color: #f7f4ec;
+  border: 2px solid #bda15f;
+}
+
+#clasificados-seccion .clasificados-formulario .boton:hover {
+  background: #353b3d;
 }
 
 .clasificados-panel {
@@ -1344,7 +1350,7 @@ body.modo-anexo-clasificados #clasificados-seccion {
 
 .clasificado-item {
   overflow: hidden;
-  border: 2px solid #bd7a27;
+  border: 2px solid #ab8c4c;
   border-radius: 14px;
   background: #ffffff;
   color: #292720;
