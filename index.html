@@ -1534,6 +1534,151 @@ body.modo-anexo-clasificados #clasificados-seccion {
   box-shadow: inset 0 0 0 1px rgba(240, 196, 79, 0.35);
 }
 
+/* ===== CLASIFICADOS: DISPONIBLES PRINCIPALES / REQUERIDOS SECUNDARIOS ===== */
+.clasificados-opciones.clasificados-opciones-centradas {
+  grid-template-columns: repeat(2, minmax(260px, 360px));
+  justify-content: center;
+  max-width: 780px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#panelClasificadosLista {
+  padding: 24px;
+}
+
+.clasificados-listado-cabecera {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 18px;
+}
+
+.clasificados-listado-cabecera h3 {
+  margin: 2px 0 4px;
+  color: #33250f;
+  font-size: 24px;
+}
+
+.clasificados-listado-cabecera p {
+  margin: 0;
+  color: #5d471d;
+  font-size: 13px;
+}
+
+.clasificados-kicker {
+  color: #7a520f;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+}
+
+.clasificados-requeridos {
+  margin-top: 28px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(70, 49, 13, 0.35);
+}
+
+.clasificados-requeridos-cabecera {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 12px;
+}
+
+.clasificados-requeridos-cabecera h4 {
+  margin: 2px 0 0;
+  color: #3e321d;
+  font-size: 17px;
+}
+
+.clasificados-requeridos-cabecera > p {
+  max-width: 540px;
+  margin: 0;
+  color: #6f5b32;
+  font-size: 12px;
+  text-align: right;
+}
+
+.clasificados-requeridos-lista {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 9px;
+}
+
+.clasificado-item.requerido-compacto {
+  border: 1px solid #b89a57;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: none;
+}
+
+.clasificado-item.requerido-compacto .clasificado-item-contenido {
+  display: grid;
+  grid-template-columns: auto minmax(160px, 0.8fr) minmax(220px, 1.5fr) auto;
+  align-items: center;
+  gap: 8px 14px;
+  padding: 11px 14px;
+}
+
+.clasificado-item.requerido-compacto .clasificado-tipo {
+  margin: 0;
+  padding: 3px 8px;
+  font-size: 9px;
+}
+
+.clasificado-item.requerido-compacto h4 {
+  margin: 0;
+  font-size: 15px;
+  color: #684214;
+}
+
+.clasificado-item.requerido-compacto p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.35;
+  color: #55462d;
+}
+
+.clasificados-volver {
+  display: inline-block;
+  margin: 0 0 16px;
+  padding: 7px 12px;
+  border: 1px solid #8b742f;
+  border-radius: 8px;
+  background: #282d30;
+  color: #f7f4ec;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.clasificados-volver:hover {
+  background: #353b3d;
+}
+
+@media (max-width: 850px) {
+  .clasificados-opciones.clasificados-opciones-centradas {
+    grid-template-columns: 1fr;
+  }
+
+  .clasificados-requeridos-cabecera {
+    display: block;
+  }
+
+  .clasificados-requeridos-cabecera > p {
+    margin-top: 6px;
+    text-align: left;
+  }
+
+  .clasificado-item.requerido-compacto .clasificado-item-contenido {
+    grid-template-columns: 1fr;
+  }
+}
+
 .clasificado-tipo {
   display: inline-block;
   margin-bottom: 7px;
@@ -3646,12 +3791,7 @@ body:not(.modo-seccion-unica):not(.modo-anexo) > .solo-seccion {
     Compra, venta y búsqueda de artículos entre miembros registrados de Gente de Vuelo.
   </p>
 
-  <div class="clasificados-opciones">
-    <button type="button" class="clasificados-opcion activa" data-panel-clasificados="panelClasificadosLista">
-      <h3>Tablero de clasificados</h3>
-      <p>Consultá artículos disponibles y requerimientos publicados por la comunidad aeronáutica.</p>
-    </button>
-
+  <div class="clasificados-opciones clasificados-opciones-centradas">
     <button type="button" class="clasificados-opcion" data-panel-clasificados="panelClasificadosPublicar">
       <h3>Publicar disponible</h3>
       <p>Publicá un artículo disponible con fotografías, descripción, precio, ubicación y estado.</p>
@@ -3666,18 +3806,34 @@ body:not(.modo-seccion-unica):not(.modo-anexo) > .solo-seccion {
   <p class="mensaje-clasificados" id="mensajeClasificados" aria-live="polite"></p>
 
   <div class="clasificados-listado clasificados-panel activo" id="panelClasificadosLista">
-    <h3>Publicaciones de la comunidad</h3>
-    <div class="clasificados-filtros" aria-label="Filtrar clasificados">
-      <button type="button" class="clasificados-filtro activo" data-filtro-clasificados="todos">Todos</button>
-      <button type="button" class="clasificados-filtro" data-filtro-clasificados="venta">Disponibles</button>
-      <button type="button" class="clasificados-filtro" data-filtro-clasificados="busqueda">Requeridos</button>
+    <div class="clasificados-listado-cabecera">
+      <div>
+        <span class="clasificados-kicker">OFERTAS DE LA COMUNIDAD</span>
+        <h3>Disponibles</h3>
+        <p>Artículos publicados por miembros de Gente de Vuelo.</p>
+      </div>
     </div>
-    <div class="clasificados-publicaciones" id="listaClasificados">
-      <p>Cargando publicaciones...</p>
+
+    <div class="clasificados-publicaciones" id="listaClasificadosDisponibles">
+      <p>Cargando disponibles...</p>
+    </div>
+
+    <div class="clasificados-requeridos">
+      <div class="clasificados-requeridos-cabecera">
+        <div>
+          <span class="clasificados-kicker">REQUERIMIENTOS</span>
+          <h4>Lo que busca la comunidad</h4>
+        </div>
+        <p>Pedidos publicados por miembros que necesitan localizar un artículo o equipamiento.</p>
+      </div>
+      <div class="clasificados-requeridos-lista" id="listaClasificadosRequeridos">
+        <p>Cargando requerimientos...</p>
+      </div>
     </div>
   </div>
 
   <div class="clasificados-listado clasificados-panel" id="panelClasificadosPublicar">
+    <button type="button" class="clasificados-volver" data-volver-clasificados>← Volver a publicaciones</button>
     <h3>Publicar un disponible</h3>
     <form class="clasificados-formulario" id="formularioClasificado">
       <div class="campo">
@@ -3744,6 +3900,7 @@ body:not(.modo-seccion-unica):not(.modo-anexo) > .solo-seccion {
   </div>
 
   <div class="clasificados-listado clasificados-panel" id="panelClasificadosBusqueda">
+    <button type="button" class="clasificados-volver" data-volver-clasificados>← Volver a publicaciones</button>
     <h3>Publicar un requerimiento</h3>
     <form class="clasificados-formulario" id="formularioBusquedaClasificado">
       <div class="campo">
@@ -5273,6 +5430,7 @@ accesoShimoda.addEventListener("click", function (event) {
 
 accesoClasificados.addEventListener("click", function (event) {
   event.preventDefault();
+  mostrarPanelClasificados("panelClasificadosLista");
   abrirAnexo("clasificados-seccion");
 });
 
@@ -5296,8 +5454,7 @@ document.addEventListener("click", function (event) {
 const botonesClasificados = document.querySelectorAll("[data-panel-clasificados]");
 const panelesClasificados = document.querySelectorAll(".clasificados-panel");
 const mensajeClasificados = document.getElementById("mensajeClasificados");
-const filtrosClasificados = document.querySelectorAll("[data-filtro-clasificados]");
-let filtroClasificadosActual = "todos";
+const volverClasificados = document.querySelectorAll("[data-volver-clasificados]");
 
 function mostrarPanelClasificados(panelId) {
   panelesClasificados.forEach(function (panel) {
@@ -5328,23 +5485,63 @@ botonesClasificados.forEach(function (boton) {
   });
 });
 
-filtrosClasificados.forEach(function (boton) {
+volverClasificados.forEach(function (boton) {
   boton.addEventListener("click", function () {
-    filtroClasificadosActual = boton.dataset.filtroClasificados || "todos";
-
-    filtrosClasificados.forEach(function (otroBoton) {
-      otroBoton.classList.toggle("activo", otroBoton === boton);
-    });
-
-    cargarClasificados();
+    mostrarPanelClasificados("panelClasificadosLista");
   });
 });
 
-async function cargarClasificados() {
-  const lista = document.getElementById("listaClasificados");
-  if (!lista) return;
+function crearTarjetaClasificado(publicacion, compacto = false) {
+  const articulo = document.createElement("article");
+  articulo.className = compacto ? "clasificado-item requerido-compacto" : "clasificado-item";
 
-  lista.innerHTML = "<p>Cargando publicaciones...</p>";
+  if (!compacto && Array.isArray(publicacion.fotos) && publicacion.fotos[0]) {
+    const imagen = document.createElement("img");
+    imagen.src = publicacion.fotos[0];
+    imagen.alt = publicacion.titulo;
+    imagen.loading = "lazy";
+    articulo.appendChild(imagen);
+  }
+
+  const contenido = document.createElement("div");
+  contenido.className = "clasificado-item-contenido";
+
+  const tipo = document.createElement("strong");
+  tipo.className = "clasificado-tipo";
+  tipo.textContent = publicacion.tipo === "busqueda" ? "REQUERIDO" : "DISPONIBLE";
+
+  const titulo = document.createElement("h4");
+  titulo.textContent = publicacion.titulo;
+
+  const descripcion = document.createElement("p");
+  descripcion.textContent = publicacion.descripcion;
+
+  const datos = document.createElement("p");
+  datos.textContent = `${publicacion.categoria} · ${publicacion.ubicacion}`;
+
+  contenido.append(tipo, titulo, descripcion, datos);
+
+  if (publicacion.tipo === "venta" && publicacion.precio !== null) {
+    const precio = document.createElement("p");
+    precio.style.fontWeight = "bold";
+    precio.textContent = new Intl.NumberFormat("es-AR", {
+      style: "currency",
+      currency: publicacion.moneda || "ARS"
+    }).format(Number(publicacion.precio));
+    contenido.appendChild(precio);
+  }
+
+  articulo.appendChild(contenido);
+  return articulo;
+}
+
+async function cargarClasificados() {
+  const listaDisponibles = document.getElementById("listaClasificadosDisponibles");
+  const listaRequeridos = document.getElementById("listaClasificadosRequeridos");
+  if (!listaDisponibles || !listaRequeridos) return;
+
+  listaDisponibles.innerHTML = "<p>Cargando disponibles...</p>";
+  listaRequeridos.innerHTML = "<p>Cargando requerimientos...</p>";
 
   const { data, error } = await supabaseClient
     .from("clasificados")
@@ -5354,69 +5551,36 @@ async function cargarClasificados() {
 
   if (error) {
     console.error("Error al cargar clasificados:", error);
-    lista.innerHTML = "<p>No se pudieron cargar los clasificados.</p>";
+    listaDisponibles.innerHTML = "<p>No se pudieron cargar los disponibles.</p>";
+    listaRequeridos.innerHTML = "<p>No se pudieron cargar los requerimientos.</p>";
     return;
   }
 
-  const publicacionesFiltradas = (data || []).filter(function (publicacion) {
-    return filtroClasificadosActual === "todos" || publicacion.tipo === filtroClasificadosActual;
+  const publicaciones = data || [];
+  const disponibles = publicaciones.filter(function (publicacion) {
+    return publicacion.tipo === "venta";
+  });
+  const requeridos = publicaciones.filter(function (publicacion) {
+    return publicacion.tipo === "busqueda";
   });
 
-  lista.innerHTML = "";
-
-  if (publicacionesFiltradas.length === 0) {
-    const mensajeVacio = filtroClasificadosActual === "venta"
-      ? "No hay artículos disponibles publicados por el momento."
-      : filtroClasificadosActual === "busqueda"
-        ? "No hay artículos requeridos publicados por el momento."
-        : "No hay publicaciones aprobadas por el momento.";
-    lista.innerHTML = `<p>${mensajeVacio}</p>`;
-    return;
+  listaDisponibles.innerHTML = "";
+  if (disponibles.length === 0) {
+    listaDisponibles.innerHTML = "<p>No hay artículos disponibles publicados por el momento.</p>";
+  } else {
+    disponibles.forEach(function (publicacion) {
+      listaDisponibles.appendChild(crearTarjetaClasificado(publicacion, false));
+    });
   }
 
-  publicacionesFiltradas.forEach(function (publicacion) {
-    const articulo = document.createElement("article");
-    articulo.className = "clasificado-item";
-
-    if (Array.isArray(publicacion.fotos) && publicacion.fotos[0]) {
-      const imagen = document.createElement("img");
-      imagen.src = publicacion.fotos[0];
-      imagen.alt = publicacion.titulo;
-      imagen.loading = "lazy";
-      articulo.appendChild(imagen);
-    }
-
-    const contenido = document.createElement("div");
-    contenido.className = "clasificado-item-contenido";
-
-    const tipo = document.createElement("strong");
-    tipo.className = "clasificado-tipo";
-    tipo.textContent = publicacion.tipo === "busqueda" ? "REQUERIDO" : "DISPONIBLE";
-
-    const titulo = document.createElement("h4");
-    titulo.textContent = publicacion.titulo;
-
-    const descripcion = document.createElement("p");
-    descripcion.textContent = publicacion.descripcion;
-
-    const datos = document.createElement("p");
-    datos.textContent = `${publicacion.categoria} · ${publicacion.ubicacion}`;
-
-    contenido.append(tipo, titulo, descripcion, datos);
-
-    if (publicacion.tipo === "venta" && publicacion.precio !== null) {
-      const precio = document.createElement("p");
-      precio.style.fontWeight = "bold";
-      precio.textContent = new Intl.NumberFormat("es-AR", {
-        style: "currency",
-        currency: publicacion.moneda || "ARS"
-      }).format(Number(publicacion.precio));
-      contenido.appendChild(precio);
-    }
-
-    articulo.appendChild(contenido);
-    lista.appendChild(articulo);
-  });
+  listaRequeridos.innerHTML = "";
+  if (requeridos.length === 0) {
+    listaRequeridos.innerHTML = "<p>No hay requerimientos publicados por el momento.</p>";
+  } else {
+    requeridos.forEach(function (publicacion) {
+      listaRequeridos.appendChild(crearTarjetaClasificado(publicacion, true));
+    });
+  }
 }
 
 async function subirFotosClasificado(archivos, userId) {
