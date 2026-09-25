@@ -1340,9 +1340,13 @@ body.modo-anexo-clasificados #clasificados-seccion {
 
 .clasificado-item img {
   width: 100%;
-  height: 190px;
-  object-fit: cover;
+  height: 260px;
+  object-fit: contain;
   display: block;
+  box-sizing: border-box;
+  padding: 10px;
+  background: #ffffff;
+  border-bottom: 1px solid #59646a;
 }
 
 .clasificado-item-contenido {
@@ -1589,6 +1593,10 @@ body.modo-anexo-clasificados #clasificados-seccion {
 
   .clasificados-formulario .campo-ancho {
     grid-column: auto;
+  }
+
+  .clasificado-item img {
+    height: 220px;
   }
 
   .anexo-cerrar {
