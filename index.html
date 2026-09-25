@@ -4283,6 +4283,7 @@ async function cargarPublicacionShimoda() {
 
 document.getElementById("formComentarioShimoda").addEventListener("submit", async function (event) {
   event.preventDefault();
+  const formulario = event.currentTarget;
   mostrarMensajeComentarioShimoda("");
 
   if (!publicacionShimodaActualId) {
@@ -4306,7 +4307,7 @@ document.getElementById("formComentarioShimoda").addEventListener("submit", asyn
     return;
   }
 
-  const botonEnviar = event.currentTarget.querySelector('button[type="submit"]');
+  const botonEnviar = formulario.querySelector('button[type="submit"]');
   botonEnviar.disabled = true;
   botonEnviar.textContent = "Enviando...";
 
@@ -4327,7 +4328,7 @@ document.getElementById("formComentarioShimoda").addEventListener("submit", asyn
     return;
   }
 
-  event.currentTarget.reset();
+  formulario.reset();
   mostrarMensajeComentarioShimoda("Comentario enviado. Quedó pendiente de aprobación.");
 });
 
