@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Moderación · Gente de Vuelo</title>
+  <style>
+    :root { color-scheme: dark; font-family: Arial, Helvetica, sans-serif; background: #14191c; color: #f4f5f6; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #14191c; min-height: 100vh; }
+    button, input, select { font: inherit; }
+    a { color: #ffb074; }
+    header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px max(18px, calc((100vw - 1240px) / 2)); background: #1d2529; border-bottom: 2px solid #ff642e; }
+    .marca { display: flex; align-items: center; gap: 12px; color: white; text-decoration: none; font-weight: 800; }
+    .marca img { width: 46px; height: 46px; object-fit: contain; }
+    header nav { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .link, button { border-radius: 10px; cursor: pointer; }
+    .link { display: inline-flex; padding: 10px 14px; border: 1px solid #ff642e; text-decoration: none; color: white; font-weight: 700; }
+    .link:hover, .link:focus-visible { background: #ff642e; }
+    main { max-width: 1240px; margin: 0 auto; padding: 28px 18px 60px; }
+    h1 { margin: 0 0 8px; font-size: clamp(28px, 4vw, 38px); }
+    .intro { color: #bbc7cb; margin: 0 0 24px; line-height: 1.5; }
+    .panel, .tarjeta { background: #1d2529; border: 1px solid rgba(255, 100, 46, .58); border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,.13); }
+    .panel { padding: 22px; }
+    [hidden] { display: none !important; }
+    #acceso { max-width: 560px; margin: 52px auto; }
+    #acceso h2 { margin-top: 0; }
+    #loginForm { display: grid; gap: 12px; }
+    label { display: grid; gap: 6px; font-size: 14px; font-weight: 700; }
+    input, select { min-height: 42px; padding: 9px 12px; border: 1px solid #66767c; border-radius: 9px; background: #11191d; color: white; }
+    input:focus-visible, select:focus-visible, button:focus-visible, .link:focus-visible { outline: 2px solid #ffbb73; outline-offset: 2px; }
+    button { border: 1px solid #ff642e; padding: 10px 15px; background: #ff642e; color: white; font-weight: 800; }
+    button:hover { background: #de5323; }
+    button:disabled { opacity: .55; cursor: wait; }
+    button.secundario { background: transparent; border-color: #aab7bc; }
+    button.secundario:hover { background: #344046; }
+    button.peligro { background: transparent; border-color: #ee866d; color: #ffc0b1; }
+    button.peligro:hover { background: #6e332a; }
+    .estado { min-height: 24px; color: #ffd5ab; line-height: 1.4; }
+    .filtros { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; margin: 22px 0 16px; }
+    .filtros label { flex: 1 1 200px; }
+    .pestanas { display: flex; flex-wrap: wrap; gap: 8px; margin: 20px 0 0; }
+    .pestanas button { background: #263136; border-color: #61727a; font-size: 14px; }
+    .pestanas button.activa { background: #ff642e; border-color: #ff642e; }
+    .resumen { color: #cbd5d8; margin: 12px 0 0; }
+    .lista { display: grid; gap: 14px; }
+    .tarjeta { padding: 18px; overflow-wrap: anywhere; }
+    .tarjeta-cabecera { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+    .tarjeta h2 { margin: 5px 0 8px; font-size: 20px; }
+    .meta { color: #ffb781; font-size: 12px; font-weight: 700; letter-spacing: .03em; }
+    .fecha { color: #b9c5c9; font-size: 12px; white-space: nowrap; }
+    .texto { white-space: pre-wrap; line-height: 1.5; color: #e6eaeb; margin: 10px 0; }
+    .detalle { color: #b9c5c9; font-size: 13px; }
+    .vista { max-width: 210px; max-height: 155px; object-fit: cover; border-radius: 9px; margin: 6px 0; }
+    .acciones { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+    .vacio { padding: 32px; text-align: center; color: #c8d1d4; }
+    #salir { font-size: 13px; }
+    @media (max-width: 650px) {
+      header { align-items: flex-start; }
+      .marca span { font-size: 13px; }
+      .link { padding: 8px 10px; }
+      .tarjeta-cabecera { flex-direction: column; }
+      .fecha { white-space: normal; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="marca" href="index.html"><img src="logo circular recortado gente de vuelo.png" alt=""><span>GENTE DE VUELO<br>MODERACIÓN</span></a>
+    <nav><a class="link" href="index.html">Volver al sitio</a><button id="salir" class="secundario" type="button" hidden>Cerrar sesión</button></nav>
+  </header>
+  <main>
+    <section id="acceso" class="panel">
+      <h2>Acceso a moderación</h2>
+      <p id="accesoMensaje" class="estado" role="status">Comprobando tu cuenta…</p>
+      <form id="loginForm" hidden>
+        <label>Correo electrónico<input name="email" type="email" autocomplete="username" required></label>
+        <label>Contraseña<input name="password" type="password" autocomplete="current-password" required></label>
+        <button type="submit">Ingresar con mi cuenta</button>
+      </form>
+    </section>
+    <section id="panel" hidden>
+      <h1>Panel de moderación</h1>
+      <p class="intro">Revisá los aportes de la comunidad y decidí qué se muestra en Gente de Vuelo. Los cambios se reflejan en la página al actualizarla.</p>
+      <p id="mensaje" class="estado" role="status"></p>
+      <div class="pestanas" role="group" aria-label="Estado de las publicaciones">
+        <button type="button" data-filtro="pendientes" class="activa">Por revisar <span id="numeroPendientes"></span></button>
+        <button type="button" data-filtro="publicadas">Publicadas</button>
+        <button type="button" data-filtro="otras">Ocultas y rechazadas</button>
+        <button type="button" data-filtro="todas">Todas</button>
+      </div>
+      <div class="filtros">
+        <label>Sección<select id="tipo"><option value="todas">Todas las secciones</option></select></label>
+        <label>Buscar<input id="buscar" type="search" placeholder="Título, autor o contenido"></label>
+        <button id="recargar" class="secundario" type="button">Actualizar lista</button>
+      </div>
+      <p id="resumen" class="resumen"></p>
+      <div id="lista" class="lista" aria-live="polite"></div>
+    </section>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const client = supabase.createClient(
+      "https://lmoifzyhqmccvmgitlcp.supabase.co",
+      "sb_publishable_YfQ3GwlhGecJyW1ZKcq8iQ_PbYp6THX"
+    );
+    const secciones = [
+      { tabla: "publicaciones", nombre: "Foro Aeronáutico", campos: "id,titulo,contenido,autor_nombre,aprobado,created_at" },
+      { tabla: "aportes_destacados", nombre: "Tarjetas temáticas", campos: "id,titulo,contenido,seccion,categoria,enlace,estado,visible,destacado,created_at" },
+      { tabla: "actividades", nombre: "Agenda Aeronáutica", campos: "id,titulo,descripcion,fecha_evento,lugar,localidad,estado,visible,created_at" },
+      { tabla: "galeria", nombre: "Galería", campos: "id,archivo,nombre_usuario,visible,created_at" },
+      { tabla: "travesias", nombre: "Travesías", campos: "id,titulo,relato,salida,destino,fotos,visible,created_at" },
+      { tabla: "clasificados", nombre: "Clasificados", campos: "id,titulo,descripcion,tipo,categoria,ubicacion,precio,moneda,fotos,estado_publicacion,created_at" },
+      { tabla: "shimoda_comentarios", nombre: "Comentarios de Shimoda", campos: "id,contenido,publicacion_id,estado,created_at" },
+      { tabla: "shimoda_publicaciones", nombre: "Publicaciones de Shimoda", campos: "id,titulo,contenido,publicado,fecha_publicacion,created_at" }
+    ];
+    const $ = id => document.getElementById(id);
+    const datos = new Map();
+    let filtro = "pendientes";
+    let administrador = false;
+
+    function mensaje(texto) { $("mensaje").textContent = texto; }
+    function nodo(etiqueta, texto, clase) {
+      const el = document.createElement(etiqueta);
+      if (clase) el.className = clase;
+      el.textContent = texto == null ? "" : String(texto);
+      return el;
+    }
+    function fecha(valor) {
+      if (!valor) return "";
+      const dia = String(valor).slice(0, 10).split("-");
+      return dia.length === 3 ? dia[2] + "/" + dia[1] + "/" + dia[0] : "";
+    }
+    function estado(item) {
+      const r = item.fila, t = item.config.tabla;
+      if (t === "shimoda_publicaciones") return r.publicado ? "publicadas" : "otras";
+      if (t === "publicaciones") return r.aprobado ? "publicadas" : "pendientes";
+      if (t === "galeria" || t === "travesias") return r.visible ? "publicadas" : "pendientes";
+      if (t === "clasificados") return r.estado_publicacion === "aprobado" ? "publicadas" : r.estado_publicacion === "pendiente" ? "pendientes" : "otras";
+      if (t === "shimoda_comentarios") return r.estado === "aprobado" ? "publicadas" : r.estado === "pendiente" ? "pendientes" : "otras";
+      return r.estado === "aprobado" && r.visible ? "publicadas" : r.estado === "pendiente" ? "pendientes" : "otras";
+    }
+    function etiquetaEstado(item) {
+      if (estado(item) === "publicadas") return "PUBLICADA";
+      const t = item.config.tabla;
+      if (t === "shimoda_publicaciones") return "SIN PUBLICAR";
+      if (t === "publicaciones" || t === "galeria" || t === "travesias") return "SIN PUBLICAR / POR REVISAR";
+      if (item.fila.estado === "rechazado" || item.fila.estado_publicacion === "rechazado") return "RECHAZADA";
+      return estado(item) === "pendientes" ? "PENDIENTE" : "OCULTA";
+    }
+    function cambio(item, accion) {
+      const t = item.config.tabla;
+      if (t === "publicaciones") return { aprobado: accion === "aprobar" };
+      if (t === "galeria" || t === "travesias") return { visible: accion === "aprobar" };
+      if (t === "shimoda_publicaciones") return accion === "aprobar"
+        ? { publicado: true, fecha_publicacion: item.fila.fecha_publicacion || new Date().toISOString().slice(0, 10) }
+        : { publicado: false };
+      if (t === "clasificados") return { estado_publicacion: accion === "aprobar" ? "aprobado" : "rechazado" };
+      if (t === "shimoda_comentarios") return { estado: accion === "aprobar" ? "aprobado" : "rechazado" };
+      if (t === "aportes_destacados") {
+        if (accion === "destacar") return { destacado: !item.fila.destacado };
+        return { estado: accion === "aprobar" ? "aprobado" : accion === "rechazar" ? "rechazado" : item.fila.estado, visible: accion === "aprobar" };
+      }
+      return { estado: accion === "aprobar" ? "aprobado" : accion === "rechazar" ? "rechazado" : item.fila.estado, visible: accion === "aprobar" };
+    }
+    async function guardar(item, accion, boton) {
+      boton.disabled = true;
+      mensaje("Guardando cambio…");
+      const cambios = cambio(item, accion);
+      const { data, error } = await client.from(item.config.tabla)
+        .update(cambios).eq("id", item.fila.id).select("id");
+      boton.disabled = false;
+      if (error || !data || data.length !== 1) {
+        mensaje("No se pudo guardar el cambio. " + (error ? error.message : "Verificá tu sesión."));
+        return;
+      }
+      Object.assign(item.fila, cambios);
+      mensaje("Cambio guardado. La publicación ya tiene el nuevo estado.");
+      pintar();
+    }
+    function botonAccion(item, accion, titulo, clase) {
+      const boton = nodo("button", titulo, clase);
+      boton.type = "button";
+      boton.addEventListener("click", () => guardar(item, accion, boton));
+      return boton;
+    }
+    function fotoSegura(valor) {
+      if (typeof valor !== "string") return "";
+      try {
+        const url = new URL(valor);
+        return url.protocol === "https:" ? url.href : "";
+      } catch (_) { return ""; }
+    }
+    function tarjeta(item) {
+      const r = item.fila, t = item.config.tabla;
+      const articulo = nodo("article", "", "tarjeta");
+      const cabecera = nodo("div", "", "tarjeta-cabecera");
+      const lado = nodo("div", "");
+      lado.append(
+        nodo("small", item.config.nombre + " · " + etiquetaEstado(item) + (r.destacado ? " · DESTACADA" : ""), "meta"),
+        nodo("h2", r.titulo || (t === "galeria" ? "Foto de " + (r.nombre_usuario || "la comunidad") : t === "shimoda_comentarios" ? "Comentario a Shimoda" : "Sin título"))
+      );
+      cabecera.append(lado, nodo("time", fecha(r.created_at || r.fecha_publicacion), "fecha"));
+      articulo.append(cabecera);
+      const detalle = [r.autor_nombre, r.seccion, r.categoria, r.tipo, r.ubicacion, r.salida && r.destino ? r.salida + " → " + r.destino : "", r.fecha_evento ? "Evento: " + fecha(r.fecha_evento) : ""].filter(Boolean).join(" · ");
+      if (detalle) articulo.append(nodo("p", detalle, "detalle"));
+      const contenido = r.contenido || r.descripcion || r.relato;
+      if (contenido) articulo.append(nodo("p", contenido, "texto"));
+      const archivo = t === "galeria" ? r.archivo : Array.isArray(r.fotos) ? r.fotos[0] : "";
+      const imagen = fotoSegura(archivo);
+      if (imagen) {
+        const img = document.createElement("img");
+        img.src = imagen;
+        img.alt = "Imagen adjunta a la publicación";
+        img.className = "vista";
+        img.loading = "lazy";
+        articulo.append(img);
+      }
+      if (r.enlace && fotoSegura(r.enlace)) {
+        const enlace = nodo("a", "Ver fuente ↗");
+        enlace.href = r.enlace;
+        enlace.target = "_blank";
+        enlace.rel = "noopener noreferrer";
+        articulo.append(enlace);
+      }
+      const acciones = nodo("div", "", "acciones");
+      if (estado(item) !== "publicadas") acciones.append(botonAccion(item, "aprobar", "Aprobar y publicar"));
+      if (estado(item) === "publicadas") acciones.append(botonAccion(item, "ocultar", "Ocultar", "secundario"));
+      if (estado(item) === "pendientes" && ["aportes_destacados", "actividades", "clasificados", "shimoda_comentarios"].includes(t)) {
+        acciones.append(botonAccion(item, "rechazar", "Rechazar", "peligro"));
+      }
+      if (t === "aportes_destacados" && estado(item) === "publicadas") {
+        acciones.append(botonAccion(item, "destacar", r.destacado ? "Quitar destacado" : "Destacar", "secundario"));
+      }
+      articulo.append(acciones);
+      return articulo;
+    }
+    function pintar() {
+      const items = secciones.flatMap(config => (datos.get(config.tabla) || []).map(fila => ({ config, fila })));
+      items.sort((a, b) => new Date(b.fila.created_at || 0) - new Date(a.fila.created_at || 0));
+      const pendientes = items.filter(item => estado(item) === "pendientes").length;
+      $("numeroPendientes").textContent = "(" + pendientes + ")";
+      const buscar = $("buscar").value.trim().toLocaleLowerCase("es-AR");
+      const seleccion = $("tipo").value;
+      const visibles = items.filter(item => (filtro === "todas" || estado(item) === filtro)
+        && (seleccion === "todas" || item.config.tabla === seleccion)
+        && (!buscar || [item.fila.titulo, item.fila.contenido, item.fila.descripcion, item.fila.relato, item.fila.autor_nombre, item.fila.nombre_usuario].filter(Boolean).join(" ").toLocaleLowerCase("es-AR").includes(buscar)));
+      $("resumen").textContent = visibles.length + " publicaciones en esta vista";
+      const lista = $("lista");
+      lista.replaceChildren();
+      if (!visibles.length) lista.append(nodo("p", "No hay publicaciones en esta vista.", "panel vacio"));
+      else visibles.forEach(item => lista.append(tarjeta(item)));
+    }
+    async function cargar() {
+      mensaje("Cargando publicaciones…");
+      $("recargar").disabled = true;
+      const resultados = await Promise.all(secciones.map(async config => {
+        const { data, error } = await client.from(config.tabla).select(config.campos)
+          .order("created_at", { ascending: false }).limit(200);
+        return { config, data, error };
+      }));
+      $("recargar").disabled = false;
+      const fallidas = [];
+      resultados.forEach(({ config, data, error }) => {
+        if (error) fallidas.push(config.nombre);
+        else datos.set(config.tabla, data || []);
+      });
+      mensaje(fallidas.length ? "No se pudieron cargar: " + fallidas.join(", ") + "." : "Lista actualizada.");
+      pintar();
+    }
+    async function iniciar() {
+      $("acceso").hidden = false;
+      $("panel").hidden = true;
+      $("salir").hidden = true;
+      $("loginForm").hidden = true;
+      $("accesoMensaje").textContent = "Comprobando tu cuenta…";
+      const { data: { user }, error } = await client.auth.getUser();
+      if (error || !user) {
+        administrador = false;
+        $("accesoMensaje").textContent = "Ingresá con tu cuenta de Gente de Vuelo.";
+        $("loginForm").hidden = false;
+        return;
+      }
+      const permiso = await client.from("site_admins").select("user_id").eq("user_id", user.id).maybeSingle();
+      if (permiso.error || !permiso.data) {
+        administrador = false;
+        $("accesoMensaje").textContent = "Esta cuenta no tiene acceso a moderación. Ingresá con la cuenta autorizada.";
+        $("salir").hidden = false;
+        return;
+      }
+      administrador = true;
+      $("acceso").hidden = true;
+      $("panel").hidden = false;
+      $("salir").hidden = false;
+      await cargar();
+    }
+    $("loginForm").addEventListener("submit", async event => {
+      event.preventDefault();
+      const form = event.currentTarget;
+      const boton = form.querySelector("button");
+      boton.disabled = true;
+      $("accesoMensaje").textContent = "Ingresando…";
+      const { error } = await client.auth.signInWithPassword({
+        email: form.elements.email.value.trim(), password: form.elements.password.value
+      });
+      form.elements.password.value = "";
+      boton.disabled = false;
+      if (error) $("accesoMensaje").textContent = "No se pudo ingresar: " + error.message;
+      else await iniciar();
+    });
+    $("salir").addEventListener("click", async () => {
+      await client.auth.signOut();
+      administrador = false;
+      datos.clear();
+      await iniciar();
+    });
+    document.querySelectorAll("[data-filtro]").forEach(boton => boton.addEventListener("click", () => {
+      filtro = boton.dataset.filtro;
+      document.querySelectorAll("[data-filtro]").forEach(b => b.classList.toggle("activa", b === boton));
+      pintar();
+    }));
+    secciones.forEach(config => {
+      const opcion = nodo("option", config.nombre);
+      opcion.value = config.tabla;
+      $("tipo").append(opcion);
+    });
+    $("tipo").addEventListener("change", pintar);
+    $("buscar").addEventListener("input", pintar);
+    $("recargar").addEventListener("click", cargar);
+    client.auth.onAuthStateChange(event => {
+      if (event === "SIGNED_OUT") setTimeout(iniciar, 0);
+    });
+    iniciar();
+  </script>
+</body>
+</html>
