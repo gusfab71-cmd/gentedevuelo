@@ -3731,6 +3731,57 @@ footer p:last-child { color: #aeb9be; font-size: 12px; }
   .cuenta-menu > summary span:not(.cuenta-chevron) { display: none; }
 }
 
+
+/* Botón de menú con la misma identidad visual que Mi cuenta */
+.menu-principal .menu-boton {
+  width: auto; min-width: 112px; min-height: 52px; gap: 11px;
+  padding: 9px 15px; border: 1px solid rgba(247,203,126,.78);
+  border-radius: 12px;
+  background: linear-gradient(145deg, rgba(27,37,41,.91), rgba(10,18,22,.83));
+  box-shadow: 0 6px 20px rgba(0,0,0,.29), inset 0 1px rgba(255,255,255,.16);
+  color: #fff1db; letter-spacing: 1.1px; font-size: 12px; font-weight: 800;
+}
+.menu-principal .menu-boton svg { width: 22px; height: 22px; color: #ffd28d; stroke-width: 2.1; }
+.menu-principal .menu-boton:hover,
+.menu-principal .menu-boton[aria-expanded="true"] {
+  border-color: #ffce83;
+  background: linear-gradient(145deg, rgba(38,49,51,.96), rgba(15,24,28,.92));
+  box-shadow: 0 6px 24px rgba(0,0,0,.36), 0 0 0 2px rgba(255,174,76,.12);
+}
+
+/* Relieve y reflejo sobre el logo original */
+.portada-completa .hero .logo-emblema {
+  position: absolute; top: 103px; left: 50%; z-index: 10;
+  width: 150px; height: 150px; border-radius: 50%;
+  transform: translateX(-50%) perspective(620px) rotateY(-8deg) rotateX(5deg);
+  background: #152023;
+  box-shadow: 0 15px 24px rgba(0,0,0,.56), 0 6px 0 #6a491e,
+    0 9px 0 #2e2317, inset 0 0 0 2px rgba(255,224,148,.5);
+  transition: transform .28s ease, box-shadow .28s ease;
+}
+.portada-completa .hero .logo-emblema:hover {
+  transform: translateX(-50%) perspective(620px) rotateY(0deg) rotateX(0deg) translateY(-2px);
+  box-shadow: 0 19px 28px rgba(0,0,0,.6), 0 7px 0 #6a491e,
+    0 10px 0 #2e2317, inset 0 0 0 2px rgba(255,224,148,.65);
+}
+.portada-completa .hero .logo-emblema::after {
+  content: ""; position: absolute; inset: 0; border-radius: 50%;
+  pointer-events: none;
+  background: linear-gradient(135deg, rgba(255,244,202,.25), transparent 34%, transparent 70%, rgba(0,0,0,.16));
+  box-shadow: inset 0 3px 3px rgba(255,234,173,.22), inset 0 -5px 9px rgba(0,0,0,.25);
+}
+.portada-completa .hero .logo-emblema .logo {
+  position: static; display: block; top: auto; left: auto;
+  transform: none; width: 100%; max-width: none; height: 100%;
+  object-fit: contain; border-radius: 50%; filter: none;
+}
+@media (max-width: 850px) {
+  .portada-completa .hero .logo-emblema { top: 167px; width: 132px; height: 132px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .portada-completa .hero .logo-emblema { transition: none; }
+}
+
 </style>
 </head>
 
@@ -3756,6 +3807,7 @@ footer p:last-child { color: #aeb9be; font-size: 12px; }
  <nav class="menu-principal">
   <button class="menu-boton" id="menuBoton" type="button" aria-label="Abrir menú principal" aria-controls="menuDesplegable" aria-expanded="false">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    <span>MENÚ</span>
   </button>
 
   <div class="menu-desplegable" id="menuDesplegable">
@@ -3802,9 +3854,11 @@ footer p:last-child { color: #aeb9be; font-size: 12px; }
 
   <section class="hero" id="inicio">
     
-   <img src="logo circular recortado gente de vuelo.png"
-     alt="Gente de Vuelo"
-     class="logo">     
+   <div class="logo-emblema">
+     <img src="logo circular recortado gente de vuelo.png"
+       alt="Gente de Vuelo"
+       class="logo">
+   </div>     
     <div class="hero-titulo">
   <h1>GENTE DE VUELO</h1>
   <p>COMUNIDAD AERONÁUTICA</p>
