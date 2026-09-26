@@ -6776,6 +6776,35 @@ cargarTravesias();
   let destino = null;
   const tarjetas = new Map();
 
+  function abrirFormularioAporte() {
+    if (!dialogo || !formulario) return;
+
+    try {
+      if (typeof dialogo.showModal === "function") {
+        if (!dialogo.open) dialogo.showModal();
+        return;
+      }
+    } catch (error) {
+      console.warn("No se pudo abrir el diálogo de forma nativa:", error);
+    }
+
+    dialogo.setAttribute("open", "");
+    dialogo.style.display = "block";
+    dialogo.setAttribute("aria-modal", "true");
+  }
+
+  function cerrarFormularioAporte() {
+    if (!dialogo) return;
+
+    if (typeof dialogo.close === "function" && dialogo.open) {
+      dialogo.close();
+    } else {
+      dialogo.removeAttribute("open");
+      dialogo.style.display = "";
+      destino = null;
+    }
+  }
+
   for (const [seccionId, categorias] of Object.entries(categoriasAportes)) {
     const seccion = document.getElementById(seccionId);
     const grupo = seccion && seccion.querySelector(":scope > .tarjetas");
@@ -6800,7 +6829,7 @@ cargarTravesias();
         formulario.reset();
         mensaje.textContent = "";
         document.getElementById("destinoAporte").textContent = nombre;
-        dialogo.showModal();
+        abrirFormularioAporte();
       });
       const lista = document.createElement("div");
       lista.className = "aporte-lista";
@@ -6896,7 +6925,7 @@ cargarTravesias();
     tarjetas.forEach(function (_, clave) { pintarAportes(clave, grupos.get(clave) || []); });
   }
 
-  document.getElementById("cancelarAporte").addEventListener("click", function () { dialogo.close(); });
+  document.getElementById("cancelarAporte").addEventListener("click", cerrarFormularioAporte);
   dialogo.addEventListener("close", function () { destino = null; });
   formulario.addEventListener("submit", async function (event) {
     event.preventDefault();
@@ -6931,7 +6960,7 @@ cargarTravesias();
       return;
     }
     destino.aviso.textContent = "Tu información fue enviada y quedó pendiente de aprobación.";
-    dialogo.close();
+    cerrarFormularioAporte();
   });
   cargarAportes();
 })();
