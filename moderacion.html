@@ -110,7 +110,7 @@
       { tabla: "aportes_destacados", nombre: "Tarjetas temáticas", campos: "id,titulo,contenido,seccion,categoria,enlace,estado,visible,destacado,created_at" },
       { tabla: "actividades", nombre: "Agenda Aeronáutica", campos: "id,titulo,descripcion,fecha_evento,lugar,localidad,estado,visible,created_at" },
       { tabla: "galeria", nombre: "Galería", campos: "id,archivo,nombre_usuario,visible,created_at" },
-      { tabla: "travesias", nombre: "Travesías", campos: "id,titulo,relato,salida,destino,fotos,visible,created_at" },
+      { tabla: "travesias", nombre: "Travesías", campos: "id,titulo,relato,salida,destino,fotos,videos,visible,created_at" },
       { tabla: "clasificados", nombre: "Clasificados", campos: "id,titulo,descripcion,tipo,categoria,ubicacion,precio,moneda,fotos,estado_publicacion,created_at" },
       { tabla: "shimoda_comentarios", nombre: "Comentarios de Shimoda", campos: "id,contenido,publicacion_id,estado,created_at" },
       { tabla: "shimoda_publicaciones", nombre: "Publicaciones de Shimoda", campos: "id,titulo,contenido,publicado,fecha_publicacion,created_at" }
@@ -192,6 +192,7 @@
         return url.protocol === "https:" ? url.href : "";
       } catch (_) { return ""; }
     }
+    function esVideo(valor) { return /\\.(mp4|webm|mov)(?:$|[?#])/i.test(valor || ""); }
     function tarjeta(item) {
       const r = item.fila, t = item.config.tabla;
       const articulo = nodo("article", "", "tarjeta");
@@ -199,7 +200,7 @@
       const lado = nodo("div", "");
       lado.append(
         nodo("small", item.config.nombre + " · " + etiquetaEstado(item) + (r.destacado ? " · DESTACADA" : ""), "meta"),
-        nodo("h2", r.titulo || (t === "galeria" ? "Foto de " + (r.nombre_usuario || "la comunidad") : t === "shimoda_comentarios" ? "Comentario a Shimoda" : t === "forum_respuestas" ? "Respuesta en el foro" : "Sin título"))
+        nodo("h2", r.titulo || (t === "galeria" ? (esVideo(r.archivo) ? "Video de " : "Foto de ") + (r.nombre_usuario || "la comunidad") : t === "shimoda_comentarios" ? "Comentario a Shimoda" : t === "forum_respuestas" ? "Respuesta en el foro" : "Sin título"))
       );
       cabecera.append(lado, nodo("time", fecha(r.created_at || r.fecha_publicacion), "fecha"));
       articulo.append(cabecera);
@@ -207,15 +208,28 @@
       if (detalle) articulo.append(nodo("p", detalle, "detalle"));
       const contenido = r.contenido || r.descripcion || r.relato;
       if (contenido) articulo.append(nodo("p", contenido, "texto"));
-      const archivo = t === "galeria" ? r.archivo : Array.isArray(r.fotos) ? r.fotos[0] : "";
+      const archivo = t === "galeria"
+        ? client.storage.from("hangar-fotos").getPublicUrl(r.archivo || "").data.publicUrl
+        : Array.isArray(r.fotos) ? r.fotos[0] : "";
       const imagen = fotoSegura(archivo);
-      if (imagen) {
+      if (imagen && !(t === "galeria" && esVideo(r.archivo))) {
         const img = document.createElement("img");
         img.src = imagen;
         img.alt = "Imagen adjunta a la publicación";
         img.className = "vista";
         img.loading = "lazy";
         articulo.append(img);
+      }
+      const video = t === "galeria" && esVideo(r.archivo) ? imagen
+        : t === "travesias" && Array.isArray(r.videos) && r.videos.length ? fotoSegura(r.videos[0]) : "";
+      if (video) {
+        const reproductor = document.createElement("video");
+        reproductor.src = video;
+        reproductor.controls = true;
+        reproductor.preload = "metadata";
+        reproductor.className = "vista";
+        reproductor.setAttribute("aria-label", "Video adjunto a la publicación");
+        articulo.append(reproductor);
       }
       if (r.enlace && fotoSegura(r.enlace)) {
         const enlace = nodo("a", "Ver fuente ↗");
