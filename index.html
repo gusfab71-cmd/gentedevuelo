@@ -362,6 +362,10 @@ min-height: 260px;
       font-weight: 700;
       cursor: pointer;
     }
+    .boton-google:disabled {
+      opacity: .7;
+      cursor: not-allowed;
+    }
 
     .separador-acceso {
       display: flex;
@@ -4493,8 +4497,8 @@ body.modo-seccion-unica > #dialogoAporte[open] { display: block !important; }
 
     <form id="formAcceso">
 
-    <button class="boton-google" id="botonGoogle" type="button" onclick="ingresarConGoogle()">
-      Continuar con Google
+    <button class="boton-google" id="botonGoogle" type="button" onclick="ingresarConGoogle()" disabled>
+      Google en preparación
     </button>
 
     <div class="separador-acceso" id="separadorAcceso">o ingresá con tu correo</div>
@@ -4859,19 +4863,45 @@ document.getElementById("formAcceso").addEventListener("submit", event => {
 
 async function ingresarConGoogle() {
   const mensaje = document.getElementById("mensajeUsuario");
+  if (!googleHabilitado) {
+    mensaje.textContent = "El acceso con Google todavía no está habilitado. Por ahora ingresá con tu correo.";
+    return;
+  }
   mensaje.textContent = "Abriendo el acceso con Google...";
 
-  const { error } = await supabaseClient.auth.signInWithOAuth({
-    provider: "google",
-    options: {
-      redirectTo: window.location.origin + window.location.pathname
+  try {
+    const { error } = await supabaseClient.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: window.location.origin + window.location.pathname
+      }
+    });
+    if (error) {
+      mensaje.textContent = "No se pudo iniciar con Google: " + error.message;
     }
-  });
-
-  if (error) {
-    mensaje.textContent = "No se pudo iniciar con Google: " + error.message;
+  } catch (error) {
+    mensaje.textContent = "No se pudo abrir el acceso con Google. Intentá nuevamente.";
+    console.error("Error de acceso con Google:", error);
   }
 }
+
+let googleHabilitado = false;
+async function comprobarAccesoGoogle() {
+  try {
+    const respuesta = await fetch(SUPABASE_URL + "/auth/v1/settings", {
+      headers: { apikey: SUPABASE_KEY }
+    });
+    if (!respuesta.ok) return;
+    const configuracion = await respuesta.json();
+    googleHabilitado = configuracion.external?.google === true;
+    const boton = document.getElementById("botonGoogle");
+    boton.disabled = !googleHabilitado;
+    boton.textContent = googleHabilitado ? "Continuar con Google" : "Google en preparación";
+  } catch (error) {
+    console.warn("No se pudo consultar el estado de acceso con Google:", error);
+  }
+}
+comprobarAccesoGoogle();
 
 async function recuperarPassword() {
   const email = document.getElementById("email").value.trim();
