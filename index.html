@@ -6749,16 +6749,17 @@ cargarTravesias();
 <script>
 /* Las categorías habilitadas tienen una tarjeta informativa, no un enlace oficial. */
 (function () {
-  const categoriasAportes = {
-    "empresas-seccion": ["fabricantes-talleres", "repuestos-equipamiento", "servicios-aeronauticos"],
-    "formacion-seccion": ["escuelas-vuelo", "cursos-capacitacion", "orientacion-comenzar"],
-    "experimental-seccion": ["proyectos-construccion", "aeronaves-experimentales", "ultralivianos"],
-    "stol-seccion": ["aeronaves-stol", "tecnicas-operacion", "experiencias-proyectos"],
-    "aeromodelismo-seccion": ["modelos-construccion", "clubes-pistas", "encuentros-experiencias"],
-    "simuladores-seccion": ["plataformas-simuladores", "equipos-configuracion", "experiencias-comunidad"],
-    "historia-seccion": ["historias-acontecimientos", "personajes-aviacion", "historias-poco-conocidas"],
-    "instituciones-seccion": ["asociaciones-federaciones", "aeroclubes", "clubes-aeromodelismo"]
-  };
+ const categoriasAportes = {
+  "empresas-seccion": ["fabricantes-talleres", "repuestos-equipamiento", "servicios-aeronauticos"],
+  "formacion-seccion": ["escuelas-vuelo", "cursos-capacitacion", "orientacion-comenzar"],
+  "experimental-seccion": ["proyectos-construccion", "aeronaves-experimentales", "ultralivianos"],
+  "stol-seccion": ["aeronaves-stol", "tecnicas-operacion", "experiencias-proyectos"],
+  "aeromodelismo-seccion": ["modelos-construccion", "clubes-pistas", "encuentros-experiencias"],
+  "simuladores-seccion": ["plataformas-simuladores", "equipos-configuracion", "experiencias-comunidad"],
+  "historia-seccion": ["historias-acontecimientos", "personajes-aviacion", "historias-poco-conocidas"],
+  "instituciones-seccion": ["asociaciones-federaciones", "aeroclubes", "clubes-aeromodelismo"],
+  "tienda-seccion": ["indumentaria-accesorios", "equipamiento-aeronautico", "productos-comunidad"]
+};
   const dialogo = document.getElementById("dialogoAporte");
   const formulario = document.getElementById("formAporte");
   const mensaje = document.getElementById("mensajeAporte");
