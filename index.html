@@ -4490,6 +4490,7 @@ body.modo-seccion-unica > #dialogoAporte[open] { display: block !important; }
   <section id="mi-perfil" class="solo-seccion">
     <div class="contenedor">
       <h2>Mi Hangar Virtual</h2>
+      <a href="moderacion.html" id="enlaceModeracion" class="boton" style="display:none;">Abrir panel de moderación</a>
 
       <div class="hangar-perfil-principal">
         <div class="hangar-perfil-cabecera">
@@ -5056,6 +5057,14 @@ document.getElementById("hangarAeroclub").textContent = perfil?.aviation_organiz
 document.getElementById("hangarLicense").textContent = perfil?.aviation_license || "Sin completar";
   
 }
+
+  const enlaceModeracion = document.getElementById("enlaceModeracion");
+  enlaceModeracion.style.display = "none";
+  if (user) {
+    const { data: permisoModeracion } = await supabaseClient
+      .from("site_admins").select("user_id").eq("user_id", user.id).maybeSingle();
+    if (permisoModeracion) enlaceModeracion.style.display = "inline-block";
+  }
 
   if (user) {
    seccionIngresar.style.display = "none"; 
