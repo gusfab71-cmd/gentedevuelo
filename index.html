@@ -745,7 +745,7 @@ header {
   padding-bottom: 0 !important;
 }
 
-#mi-perfil .contenedor {
+#mi-perfil > div > .contenedor {
   width: 100%;
 }
 
@@ -3428,6 +3428,11 @@ body.modo-seccion-unica > #dialogoAporte[open] { display: block !important; }
 #formAporte button[type=button] { background: #4b555a; }
 #formAporte button:disabled { opacity: .6; cursor: wait; }
 #mensajeAporte { min-height: 24px; color: #ffb0a3; }
+.tarjeta > .tarjeta-enlace {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
 </style>
 </head>
 
@@ -3626,15 +3631,19 @@ body.modo-seccion-unica > #dialogoAporte[open] { display: block !important; }
 
   <div class="tarjetas">
 
-   <a href="#proximos-eventos" style="text-decoration:none; color:inherit;" class="tarjeta">
-  <h3>Próximos eventos</h3>
-  <p>Encuentros, festivales, exhibiciones y actividades aeronáuticas próximas.</p>
-</a>
+   <div class="tarjeta">
+    <a href="#proximos-eventos" class="tarjeta-enlace">
+      <h3>Próximos eventos</h3>
+      <p>Encuentros, festivales, exhibiciones y actividades aeronáuticas próximas.</p>
+    </a>
+  </div>
 
-  <a href="#jornadas-encuentros" style="text-decoration:none; color:inherit;" class="tarjeta">
-  <h3>Jornadas y encuentros</h3>
-  <p>Jornadas, reuniones y encuentros organizados por instituciones y comunidades aeronáuticas.</p>
-</a>
+  <div class="tarjeta">
+    <a href="#jornadas-encuentros" class="tarjeta-enlace">
+      <h3>Jornadas y encuentros</h3>
+      <p>Jornadas, reuniones y encuentros organizados por instituciones y comunidades aeronáuticas.</p>
+    </a>
+  </div>
 
     <a href="#difundir-actividad" style="text-decoration:none; color:inherit;" class="tarjeta">
   <h3>Difundí una actividad</h3>
@@ -6758,7 +6767,8 @@ cargarTravesias();
   "simuladores-seccion": ["plataformas-simuladores", "equipos-configuracion", "experiencias-comunidad"],
   "historia-seccion": ["historias-acontecimientos", "personajes-aviacion", "historias-poco-conocidas"],
   "instituciones-seccion": ["asociaciones-federaciones", "aeroclubes", "clubes-aeromodelismo"],
-  "tienda-seccion": ["indumentaria-accesorios", "equipamiento-aeronautico", "productos-comunidad"]
+  "tienda-seccion": ["indumentaria-accesorios", "equipamiento-aeronautico", "productos-comunidad"],
+  "agenda-seccion": ["agenda-proximos-eventos", "agenda-jornadas-encuentros"]
 };
   const dialogo = document.getElementById("dialogoAporte");
   const formulario = document.getElementById("formAporte");
