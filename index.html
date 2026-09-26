@@ -2379,7 +2379,7 @@ body.modo-seccion-unica {
   overflow-x: hidden;
 }
 
-body.modo-seccion-unica > *:not(.seccion-enfoque):not(#volverPortada):not(script) {
+body.modo-seccion-unica > *:not(.seccion-enfoque):not(#volverPortada):not(#dialogoAporte):not(script) {
   display: none !important;
 }
 
@@ -3645,10 +3645,13 @@ body.modo-seccion-unica > #dialogoAporte[open] { display: block !important; }
     </a>
   </div>
 
-    <a href="#difundir-actividad" style="text-decoration:none; color:inherit;" class="tarjeta">
-  <h3>Difundí una actividad</h3>
-  <p>Espacio para compartir actividades aeronáuticas de interés para la comunidad. Su difusión es gratuita y sin fines comerciales.</p>
-</a>
+  <div class="tarjeta">
+    <a href="#difundir-actividad" id="enlaceDifundirActividad" class="tarjeta-enlace">
+      <h3>Difundí una actividad</h3>
+      <p>Espacio para compartir actividades aeronáuticas de interés para la comunidad. Su difusión es gratuita y sin fines comerciales.</p>
+    </a>
+    <button type="button" id="botonDifundirActividad" class="aporte-publicar">Publicar información aquí</button>
+  </div>
 
   </div>
 </section>
@@ -4686,6 +4689,10 @@ async function enviarActividad(event) {
 
   alert("Actividad enviada correctamente. Quedará pendiente de revisión antes de publicarse.");
 }
+
+document.getElementById("botonDifundirActividad").addEventListener("click", function () {
+  document.getElementById("enlaceDifundirActividad").click();
+});
 
 async function cargarActividadesPublicadas() {
   const hoy = new Date().toISOString().split("T")[0];
