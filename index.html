@@ -6023,7 +6023,7 @@ function extensionVideo(archivo) {
   return extension;
 }
 function esVideoArchivo(ruta) {
-  return /\\.(mp4|webm|mov)(?:$|[?#])/i.test(ruta || "");
+  return /\.(mp4|webm|mov)(?:$|[?#])/i.test(ruta || "");
 }
 async function enviarVideoGaleria(inputId, mensajeId) {
   const input = document.getElementById(inputId);
