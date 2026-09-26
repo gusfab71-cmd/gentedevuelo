@@ -106,6 +106,7 @@
     );
     const secciones = [
       { tabla: "publicaciones", nombre: "Foro Aeronáutico", campos: "id,titulo,contenido,autor_nombre,aprobado,created_at" },
+      { tabla: "forum_respuestas", nombre: "Respuestas del foro", campos: "id,publicacion_id,autor_nombre,contenido,estado,created_at" },
       { tabla: "aportes_destacados", nombre: "Tarjetas temáticas", campos: "id,titulo,contenido,seccion,categoria,enlace,estado,visible,destacado,created_at" },
       { tabla: "actividades", nombre: "Agenda Aeronáutica", campos: "id,titulo,descripcion,fecha_evento,lugar,localidad,estado,visible,created_at" },
       { tabla: "galeria", nombre: "Galería", campos: "id,archivo,nombre_usuario,visible,created_at" },
@@ -137,7 +138,7 @@
       if (t === "publicaciones") return r.aprobado ? "publicadas" : "pendientes";
       if (t === "galeria" || t === "travesias") return r.visible ? "publicadas" : "pendientes";
       if (t === "clasificados") return r.estado_publicacion === "aprobado" ? "publicadas" : r.estado_publicacion === "pendiente" ? "pendientes" : "otras";
-      if (t === "shimoda_comentarios") return r.estado === "aprobado" ? "publicadas" : r.estado === "pendiente" ? "pendientes" : "otras";
+      if (t === "shimoda_comentarios" || t === "forum_respuestas") return r.estado === "aprobado" ? "publicadas" : r.estado === "pendiente" ? "pendientes" : "otras";
       return r.estado === "aprobado" && r.visible ? "publicadas" : r.estado === "pendiente" ? "pendientes" : "otras";
     }
     function etiquetaEstado(item) {
@@ -156,7 +157,7 @@
         ? { publicado: true, fecha_publicacion: item.fila.fecha_publicacion || new Date().toISOString().slice(0, 10) }
         : { publicado: false };
       if (t === "clasificados") return { estado_publicacion: accion === "aprobar" ? "aprobado" : "rechazado" };
-      if (t === "shimoda_comentarios") return { estado: accion === "aprobar" ? "aprobado" : "rechazado" };
+      if (t === "shimoda_comentarios" || t === "forum_respuestas") return { estado: accion === "aprobar" ? "aprobado" : "rechazado" };
       if (t === "aportes_destacados") {
         if (accion === "destacar") return { destacado: !item.fila.destacado };
         return { estado: accion === "aprobar" ? "aprobado" : accion === "rechazar" ? "rechazado" : item.fila.estado, visible: accion === "aprobar" };
@@ -198,11 +199,11 @@
       const lado = nodo("div", "");
       lado.append(
         nodo("small", item.config.nombre + " · " + etiquetaEstado(item) + (r.destacado ? " · DESTACADA" : ""), "meta"),
-        nodo("h2", r.titulo || (t === "galeria" ? "Foto de " + (r.nombre_usuario || "la comunidad") : t === "shimoda_comentarios" ? "Comentario a Shimoda" : "Sin título"))
+        nodo("h2", r.titulo || (t === "galeria" ? "Foto de " + (r.nombre_usuario || "la comunidad") : t === "shimoda_comentarios" ? "Comentario a Shimoda" : t === "forum_respuestas" ? "Respuesta en el foro" : "Sin título"))
       );
       cabecera.append(lado, nodo("time", fecha(r.created_at || r.fecha_publicacion), "fecha"));
       articulo.append(cabecera);
-      const detalle = [r.autor_nombre, r.seccion, r.categoria, r.tipo, r.ubicacion, r.salida && r.destino ? r.salida + " → " + r.destino : "", r.fecha_evento ? "Evento: " + fecha(r.fecha_evento) : ""].filter(Boolean).join(" · ");
+      const detalle = [r.autor_nombre, r.publicacion_id ? "Publicación #" + r.publicacion_id : "", r.seccion, r.categoria, r.tipo, r.ubicacion, r.salida && r.destino ? r.salida + " → " + r.destino : "", r.fecha_evento ? "Evento: " + fecha(r.fecha_evento) : ""].filter(Boolean).join(" · ");
       if (detalle) articulo.append(nodo("p", detalle, "detalle"));
       const contenido = r.contenido || r.descripcion || r.relato;
       if (contenido) articulo.append(nodo("p", contenido, "texto"));
@@ -226,7 +227,7 @@
       const acciones = nodo("div", "", "acciones");
       if (estado(item) !== "publicadas") acciones.append(botonAccion(item, "aprobar", "Aprobar y publicar"));
       if (estado(item) === "publicadas") acciones.append(botonAccion(item, "ocultar", "Ocultar", "secundario"));
-      if (estado(item) === "pendientes" && ["aportes_destacados", "actividades", "clasificados", "shimoda_comentarios"].includes(t)) {
+      if (estado(item) === "pendientes" && ["aportes_destacados", "actividades", "clasificados", "shimoda_comentarios", "forum_respuestas"].includes(t)) {
         acciones.append(botonAccion(item, "rechazar", "Rechazar", "peligro"));
       }
       if (t === "aportes_destacados" && estado(item) === "publicadas") {
