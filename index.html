@@ -3672,6 +3672,65 @@ body:not(.modo-anexo) {
   background-size: 14px 14px;
 }
 
+
+/* Pie de página integrado al fondo de carbono */
+footer {
+  background-color: #11171a;
+  background-image:
+    repeating-linear-gradient(45deg, rgba(255,255,255,.019) 0 1px, transparent 1px 7px),
+    repeating-linear-gradient(-45deg, rgba(0,0,0,.2) 0 1px, transparent 1px 7px);
+  background-size: 14px 14px;
+  border-top: 1px solid rgba(255,159,28,.55);
+  padding: 32px 16px 38px;
+  color: #d8dfe0;
+}
+footer .footer-enlaces {
+  width: auto; padding: 0 0 24px; background: transparent;
+}
+footer .footer-enlaces a {
+  min-width: 0; min-height: 36px; padding: 7px 14px;
+  border: 1px solid rgba(255,177,87,.5); border-radius: 999px;
+  background: rgba(255,255,255,.035); color: #f8d39a;
+  font-size: 12px; font-weight: 700; box-shadow: none;
+}
+footer .footer-enlaces a:hover, footer .footer-enlaces a:focus-visible {
+  background: rgba(255,159,28,.17); border-color: #ffb157; color: #fff;
+}
+footer p { margin: 5px 0; font-size: 13px; line-height: 1.45; }
+footer p strong { color: #f4c879; font-size: 16px; letter-spacing: .4px; }
+footer p:last-child { color: #aeb9be; font-size: 12px; }
+
+/* Acceso a la cuenta con forma de insignia aeronáutica */
+.cuenta-menu > summary {
+  min-height: 52px; gap: 10px; padding: 5px 13px 5px 5px;
+  border: 1px solid rgba(247,203,126,.73); border-radius: 999px;
+  background: linear-gradient(145deg, rgba(25,35,39,.88), rgba(11,19,23,.8));
+  box-shadow: 0 6px 20px rgba(0,0,0,.28), inset 0 1px rgba(255,255,255,.16);
+}
+.cuenta-menu > summary:hover, .cuenta-menu[open] > summary {
+  border-color: #ffce83;
+  background: linear-gradient(145deg, rgba(34,45,48,.94), rgba(16,25,29,.92));
+  box-shadow: 0 6px 24px rgba(0,0,0,.34), 0 0 0 2px rgba(255,174,76,.12);
+}
+.cuenta-menu > summary svg {
+  width: 39px; height: 39px; padding: 8px; flex: 0 0 39px;
+  border: 1px solid #dba35c; border-radius: 50%;
+  background: radial-gradient(circle at 35% 25%, #58452b, #252a2a 72%);
+  color: #ffd28d; stroke-width: 1.7;
+}
+.cuenta-menu > summary span:not(.cuenta-chevron) {
+  color: #fff1db; font-size: 12px; font-weight: 800;
+  letter-spacing: 1px; text-transform: uppercase;
+}
+.cuenta-menu > summary .cuenta-chevron {
+  margin-left: 2px; color: #f4bb72; transition: transform .2s ease;
+}
+.cuenta-menu[open] > summary .cuenta-chevron { transform: rotate(180deg); }
+@media (max-width: 420px) {
+  .cuenta-menu > summary { gap: 4px; padding-right: 9px; }
+  .cuenta-menu > summary span:not(.cuenta-chevron) { display: none; }
+}
+
 </style>
 </head>
 
@@ -4865,11 +4924,6 @@ body:not(.modo-anexo) {
 </section>
   
   
-  <div class="footer-enlaces" aria-label="Navegación inferior">
-    <a href="#inicio">Inicio</a>
-  </div>
-
-
 <dialog id="dialogoAporte" aria-labelledby="tituloDialogoAporte">
   <h2 id="tituloDialogoAporte">Publicar información</h2>
   <p id="destinoAporte"></p>
@@ -4889,6 +4943,9 @@ body:not(.modo-anexo) {
   </form>
 </dialog>
   <footer>
+    <div class="footer-enlaces" aria-label="Navegación inferior">
+      <a href="#inicio" aria-label="Volver arriba, a la portada">↑ Volver arriba</a>
+    </div>
     <p><strong>Gente de Vuelo</strong></p>
     <p>Comunidad Aeronáutica</p>
     <p>Proyecto comunitario sin fines de lucro</p>
