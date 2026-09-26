@@ -192,7 +192,7 @@
         return url.protocol === "https:" ? url.href : "";
       } catch (_) { return ""; }
     }
-    function esVideo(valor) { return /\\.(mp4|webm|mov)(?:$|[?#])/i.test(valor || ""); }
+    function esVideo(valor) { return /\.(mp4|webm|mov)(?:$|[?#])/i.test(valor || ""); }
     function tarjeta(item) {
       const r = item.fila, t = item.config.tabla;
       const articulo = nodo("article", "", "tarjeta");
