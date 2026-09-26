@@ -5386,6 +5386,7 @@ tarjeta.appendChild(respuestas);
   .from("forum_respuestas")
   .select("autor_nombre, contenido, created_at")
   .eq("publicacion_id", publicacion.id)
+  .eq("estado", "aprobado")
   .order("created_at", { ascending: true });
 
 if (!errorCargarRespuestas && respuestasGuardadas) {
@@ -5395,10 +5396,11 @@ if (!errorCargarRespuestas && respuestasGuardadas) {
     respuestaDiv.style.padding = "10px";
     respuestaDiv.style.borderTop = "1px solid #555";
 respuestaDiv.style.fontFamily = "Arial, Helvetica, sans-serif";
-    respuestaDiv.innerHTML = `
-      <strong>${respuesta.autor_nombre || "Usuario"}</strong>
-      <p>${respuesta.contenido}</p>
-    `;
+    const nombreRespuesta = document.createElement("strong");
+    nombreRespuesta.textContent = respuesta.autor_nombre || "Usuario";
+    const textoRespuesta = document.createElement("p");
+    textoRespuesta.textContent = respuesta.contenido;
+    respuestaDiv.append(nombreRespuesta, textoRespuesta);
 
     respuestas.appendChild(respuestaDiv);
   });
@@ -5457,7 +5459,7 @@ if (errorRespuesta) {
   return;
 }
 
-alert("Respuesta enviada correctamente.");
+alert("Respuesta enviada para moderación. Aparecerá cuando sea aprobada.");
 textarea.value = ""; 
 });
   botonResponder.style.display = "none";
