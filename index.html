@@ -3839,6 +3839,26 @@ body.modo-anexo-clasificados #clasificados-seccion {
   background-size: 14px 14px, 14px 14px, auto;
 }
 
+
+  /* Videos de la comunidad */
+  .galeria-subida-video { width: min(820px, calc(100% - 32px)); margin: 24px auto 0; padding: 18px; border: 1px solid rgba(255,100,46,.55); border-radius: 16px; background: #1d2529; color: #f4f5f6; }
+  .galeria-subida-video label { display: block; margin-bottom: 10px; font-weight: 700; }
+  .galeria-subida-acciones { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .galeria-subida-acciones input { max-width: 100%; color: #f4f5f6; }
+  .galeria-subida-video small, .ayuda-media, .campo-media small { display: block; color: #b9c7cd; font-size: 12px; margin-top: 8px; }
+  .galeria-subida-video p, .mensaje-media { color: #ffd2b3; min-height: 20px; margin-top: 8px; }
+  .galeria-pista video { display: block; background: #101719; }
+  #mi-perfil .hangar-subida-foto + .ayuda-media { margin-top: 6px; }
+  #mi-perfil #misFotosHangar video { width: 118px; height: 82px; object-fit: contain; background: #101719; border-radius: 9px; margin: 4px; }
+  #formularioTravesia .campo-media { grid-column: span 2; color: #f4f5f6; font-weight: 700; font-size: 14px; }
+  #formularioTravesia .campo-media input { display: block; margin-top: 8px; }
+  #formularioTravesia .mensaje-media { grid-column: 1 / -1; }
+  .travesia-resumen-imagen video { width: 100%; height: 100%; min-height: 150px; max-height: 260px; object-fit: contain; background: #101719; display: block; }
+  @media (max-width: 800px) { #formularioTravesia .campo-media { grid-column: 1; } }
+  .travesia-video-adicional { width: 100%; max-height: 260px; border-radius: 9px; background: #101719; margin-top: 10px; }
+  .travesia-resumen.solo-video { grid-template-columns: minmax(0, 1fr); }
+  .travesia-resumen.solo-video .travesia-resumen-imagen { height: min(55vw, 310px); }
+  .travesia-resumen.solo-video .travesia-resumen-imagen video { height: 100%; max-height: none; }
 </style>
 </head>
 
@@ -3964,7 +3984,17 @@ body.modo-anexo-clasificados #clasificados-seccion {
     Vuelos, aeronaves y momentos compartidos por nuestra comunidad.
   </p>
 
-  <div class="galeria-carrusel">
+  <div class="galeria-subida-video">
+      <label for="videoGaleria">Compartí un video con la comunidad</label>
+      <div class="galeria-subida-acciones">
+        <input type="file" id="videoGaleria" accept="video/mp4,video/webm,video/quicktime,.mov">
+        <button class="boton" id="subirVideoGaleria" type="button">Enviar video</button>
+      </div>
+      <small>MP4, WEBM o MOV · máximo 40 MB · se publicará después de la aprobación.</small>
+      <p id="mensajeVideoGaleria" role="status"></p>
+    </div>
+
+    <div class="galeria-carrusel">
 
     <button class="galeria-flecha galeria-anterior" type="button" aria-label="Imagen anterior">
       &#10094;
@@ -3972,7 +4002,7 @@ body.modo-anexo-clasificados #clasificados-seccion {
 
     <div class="galeria-ventana">
       <div class="galeria-pista" id="galeriaPista">
-        <!-- Aquí se mostrarán las fotos aprobadas de la comunidad -->
+        <!-- Aquí se muestran las fotos y los videos aprobados de la comunidad -->
       </div>
     </div>
 
@@ -4433,7 +4463,9 @@ body.modo-anexo-clasificados #clasificados-seccion {
     <input type="text" id="travesiaEscalas" placeholder="Escalas (opcional)">
     <input type="text" id="travesiaAeronave" placeholder="Aeronave">
     <textarea id="travesiaRelato" placeholder="Contanos la experiencia de la travesía"></textarea>
-    <input type="file" id="travesiaFotos" accept="image/*" multiple>
+    <label class="campo-media" for="travesiaFotos">Fotos de la travesía <input type="file" id="travesiaFotos" accept="image/jpeg,image/png,image/webp" multiple></label>
+    <label class="campo-media" for="travesiaVideo">Video de la travesía (opcional) <input type="file" id="travesiaVideo" accept="video/mp4,video/webm,video/quicktime,.mov"><small>MP4, WEBM o MOV · máximo 40 MB.</small></label>
+    <p id="mensajeTravesiaMedia" class="mensaje-media" role="status"></p>
     <button class="boton" id="botonEnviarTravesia">Enviar travesía</button>
   </div>
 </section>
@@ -4898,13 +4930,19 @@ body.modo-anexo-clasificados #clasificados-seccion {
 
         <div class="hangar-paneles-secundarios">
           <div class="hangar-mini-card">
-            <h3>Fotos de mi Hangar</h3>
-            <p>Vuelos, aeronaves y experiencias compartidas.</p>
+            <h3>Fotos y videos de mi Hangar</h3>
+            <p>Vuelos, aeronaves y experiencias compartidas. Se muestran en Galería después de la aprobación.</p>
             <div class="hangar-subida-foto">
               <input type="file" id="fotoHangar" accept="image/*">
               <button class="boton" id="subirFotoHangar" type="button">Subir foto</button>
             </div>
-            <p id="mensajeFotoHangar"></p>
+            <p id="mensajeFotoHangar" role="status"></p>
+            <div class="hangar-subida-foto">
+              <input type="file" id="videoHangar" accept="video/mp4,video/webm,video/quicktime,.mov">
+              <button class="boton" id="subirVideoHangar" type="button">Subir video</button>
+            </div>
+            <small class="ayuda-media">MP4, WEBM o MOV · máximo 40 MB.</small>
+            <p id="mensajeVideoHangar" role="status"></p>
             <div id="misFotosHangar"></div>
           </div>
 
@@ -5971,6 +6009,57 @@ document.getElementById("hangar-publico").scrollIntoView({
   behavior: "smooth"
 });
 }
+const FORMATOS_VIDEO = { "video/mp4": "mp4", "video/webm": "webm", "video/quicktime": "mov" };
+const LIMITE_VIDEO = 40 * 1024 * 1024;
+function extensionVideo(archivo) {
+  const extension = (archivo.name.split(".").pop() || "").toLowerCase();
+  if (!["mp4", "webm", "mov"].includes(extension) ||
+      (archivo.type && FORMATOS_VIDEO[archivo.type] !== extension)) {
+    throw new Error("Elegí un video MP4, WEBM o MOV.");
+  }
+  if (archivo.size === 0 || archivo.size > LIMITE_VIDEO) {
+    throw new Error("El video debe pesar entre 1 byte y 40 MB.");
+  }
+  return extension;
+}
+function esVideoArchivo(ruta) {
+  return /\\.(mp4|webm|mov)(?:$|[?#])/i.test(ruta || "");
+}
+async function enviarVideoGaleria(inputId, mensajeId) {
+  const input = document.getElementById(inputId);
+  const mensaje = document.getElementById(mensajeId);
+  const boton = document.getElementById(inputId === "videoGaleria" ? "subirVideoGaleria" : "subirVideoHangar");
+  const archivo = input.files[0];
+  if (!archivo) { mensaje.textContent = "Seleccioná un video."; return; }
+  let ruta = "";
+  boton.disabled = true;
+  try {
+    const extension = extensionVideo(archivo);
+    const { data: { user }, error: errorUsuario } = await supabaseClient.auth.getUser();
+    if (errorUsuario || !user) throw new Error("Debés iniciar sesión para enviar un video.");
+    mensaje.textContent = "Subiendo video… Mantené abierta esta página.";
+    const { data: perfil } = await supabaseClient.from("profiles")
+      .select("full_name").eq("id", user.id).maybeSingle();
+    ruta = `${user.id}/${crypto.randomUUID()}.${extension}`;
+    const { error: errorSubida } = await supabaseClient.storage
+      .from("hangar-fotos").upload(ruta, archivo, { upsert: false, contentType: archivo.type || "video/" + extension });
+    if (errorSubida) throw errorSubida;
+    const { error: errorRegistro } = await supabaseClient.from("galeria").insert({
+      user_id: user.id, archivo: ruta,
+      nombre_usuario: perfil?.full_name || user.email, visible: false
+    });
+    if (errorRegistro) throw errorRegistro;
+    ruta = "";
+    input.value = "";
+    mensaje.textContent = "Video enviado. Quedó pendiente de aprobación.";
+    await cargarMisFotosHangar();
+  } catch (error) {
+    if (ruta) await supabaseClient.storage.from("hangar-fotos").remove([ruta]);
+    mensaje.textContent = "No se pudo enviar el video: " + (error.message || "Intentá de nuevo.");
+  } finally {
+    boton.disabled = false;
+  }
+}
 async function subirFotoHangar() {
   const archivo = document.getElementById("fotoHangar").files[0];
   const mensaje = document.getElementById("mensajeFotoHangar");
@@ -6092,16 +6181,24 @@ const bloqueFoto = document.createElement("div");
 bloqueFoto.style.display = "inline-flex";
 bloqueFoto.style.flexDirection = "column";
 bloqueFoto.style.alignItems = "center";
-    const imagen = document.createElement("img");
-    imagen.src = data.publicUrl;
-    imagen.alt = "Foto del Hangar";
-    imagen.style.maxWidth = "250px";
-    imagen.style.margin = "10px";
+    const video = esVideoArchivo(archivo.name);
+    const medio = document.createElement(video ? "video" : "img");
+    medio.src = data.publicUrl;
+    if (video) {
+      medio.controls = true;
+      medio.preload = "metadata";
+      medio.playsInline = true;
+      medio.setAttribute("aria-label", "Video de mi Hangar");
+    } else {
+      medio.alt = "Foto del Hangar";
+    }
+    medio.style.maxWidth = "250px";
+    medio.style.margin = "10px";
 
-    bloqueFoto.appendChild(imagen);
+    bloqueFoto.appendChild(medio);
 contenedor.appendChild(bloqueFoto);
 const botonEliminar = document.createElement("button");
-botonEliminar.textContent = "Eliminar foto";
+botonEliminar.textContent = video ? "Eliminar video" : "Eliminar foto";
 botonEliminar.className = "boton";
 botonEliminar.style.display = "block";
 botonEliminar.style.margin = "8px auto 16px auto";
@@ -6117,14 +6214,15 @@ bloqueFoto.appendChild(botonEliminar);
 }
     async function eliminarFotoHangar(rutaArchivo) {
      console.log("RUTA QUE INTENTA BORRAR:", rutaArchivo); 
-  const confirmar = confirm("¿Querés eliminar esta foto?");
+  const video = esVideoArchivo(rutaArchivo);
+  const confirmar = confirm(video ? "¿Querés eliminar este video?" : "¿Querés eliminar esta foto?");
 
   if (!confirmar) return;
 
   const { data: { user } } = await supabaseClient.auth.getUser();
 
   if (!user || !rutaArchivo.startsWith(user.id + "/")) {
-    alert("No tenés permiso para eliminar esta foto.");
+    alert("No tenés permiso para eliminar este archivo.");
     return;
   }
 
@@ -6138,7 +6236,7 @@ console.log("Resultado DELETE galeria:", errorGaleria);
       
   if (errorGaleria) {
     console.error("Error al eliminar de galería:", errorGaleria);
-    alert("No se pudo eliminar la foto.");
+    alert("No se pudo eliminar el archivo.");
     return;
   }
 
@@ -6148,14 +6246,14 @@ console.log("Resultado DELETE galeria:", errorGaleria);
 
   if (errorStorage) {
     console.error("Error al eliminar el archivo:", errorStorage);
-    alert("La foto se quitó de la galería, pero hubo un problema al eliminar el archivo.");
+    alert("Se quitó de la galería, pero hubo un problema al eliminar el archivo.");
     return;
   }
 
   await cargarMisFotosHangar();
   await cargarGaleria();
 
-  alert("Foto eliminada correctamente.");
+  alert(video ? "Video eliminado correctamente." : "Foto eliminada correctamente.");
 }
   async function cargarGaleria() {
   const pista = document.getElementById("galeriaPista");
@@ -6184,12 +6282,20 @@ console.log("Resultado DELETE galeria:", errorGaleria);
     contenedor.style.minWidth = "100%";
     contenedor.style.textAlign = "center";
 
-    const imagen = document.createElement("img");
-    imagen.src = data.publicUrl;
-    imagen.alt = "Foto de la comunidad";
-    imagen.style.width = "100%";
-    imagen.style.height = "360px";
-    imagen.style.objectFit = "contain";
+    const video = esVideoArchivo(foto.archivo);
+    const medio = document.createElement(video ? "video" : "img");
+    medio.src = data.publicUrl;
+    if (video) {
+      medio.controls = true;
+      medio.preload = "metadata";
+      medio.playsInline = true;
+      medio.setAttribute("aria-label", "Video de la comunidad");
+    } else {
+      medio.alt = "Foto de la comunidad";
+    }
+    medio.style.width = "100%";
+    medio.style.height = "360px";
+    medio.style.objectFit = "contain";
 
     const referencia = document.createElement("div");
     referencia.style.marginTop = "8px";
@@ -6200,7 +6306,7 @@ referencia.style.fontFamily = "Georgia, serif";
     referencia.textContent =
       `Compartida por ${foto.nombre_usuario || "Usuario"} · ${fecha}`;
 
-    contenedor.appendChild(imagen);
+    contenedor.appendChild(medio);
     contenedor.appendChild(referencia);
     pista.appendChild(contenedor);
   });
@@ -6215,6 +6321,8 @@ referencia.style.fontFamily = "Georgia, serif";
   });
 } 
 document.getElementById("subirFotoHangar").addEventListener("click", subirFotoHangar);
+document.getElementById("subirVideoHangar").addEventListener("click", () => enviarVideoGaleria("videoHangar", "mensajeVideoHangar"));
+document.getElementById("subirVideoGaleria").addEventListener("click", () => enviarVideoGaleria("videoGaleria", "mensajeVideoGaleria"));
 document.getElementById("subirAvatar").addEventListener("click", subirAvatar);
     
   cargarMisFotosHangar();  
@@ -6233,6 +6341,7 @@ function moverGaleria(direccion) {
 
   if (elementos.length === 0) return;
 
+  pista.querySelectorAll("video").forEach(video => video.pause());
   galeriaIndice += direccion;
 
   if (galeriaIndice < 0) {
@@ -7116,14 +7225,12 @@ cargarPublicacionShimoda();
   const botonEnviarTravesia = document.getElementById("botonEnviarTravesia");
 
   botonEnviarTravesia.addEventListener("click", async function () {
-
-    const { data: { user } } = await supabaseClient.auth.getUser();
-
-    if (!user) {
-      alert("Debes iniciar sesión para compartir una travesía.");
+    const mensaje = document.getElementById("mensajeTravesiaMedia");
+    const { data: { user }, error: errorUsuario } = await supabaseClient.auth.getUser();
+    if (errorUsuario || !user) {
+      mensaje.textContent = "Debés iniciar sesión para compartir una travesía.";
       return;
     }
-
     const titulo = document.getElementById("travesiaTitulo").value.trim();
     const fecha = document.getElementById("travesiaFecha").value || null;
     const salida = document.getElementById("travesiaSalida").value.trim();
@@ -7131,55 +7238,66 @@ cargarPublicacionShimoda();
     const escalas = document.getElementById("travesiaEscalas").value.trim();
     const aeronave = document.getElementById("travesiaAeronave").value.trim();
     const relato = document.getElementById("travesiaRelato").value.trim();
-const archivosFotos = document.getElementById("travesiaFotos").files;
+    const archivosFotos = Array.from(document.getElementById("travesiaFotos").files);
+    const archivoVideo = document.getElementById("travesiaVideo").files[0];
     if (!titulo || !salida || !destino) {
-      alert("Completá el título, el aeropuerto de salida y el destino.");
+      mensaje.textContent = "Completá el título, el aeropuerto de salida y el destino.";
       return;
     }
-        const urlsFotos = [];
-
-    for (const archivo of archivosFotos) {
-      const nombreArchivo = `${user.id}/${Date.now()}-${archivo.name}`;
-
-      const { error: errorSubida } = await supabaseClient.storage
-        .from("travesias-fotos")
-        .upload(nombreArchivo, archivo);
-
-      if (errorSubida) {
-        console.error("Error al subir foto:", errorSubida);
-        alert("No se pudo subir una de las fotos: " + errorSubida.message);
-        return;
+    if (archivosFotos.length > 5) {
+      mensaje.textContent = "Podés subir hasta 5 fotos por travesía.";
+      return;
+    }
+    const rutasSubidas = [];
+    botonEnviarTravesia.disabled = true;
+    try {
+      if (archivoVideo) extensionVideo(archivoVideo);
+      for (const foto of archivosFotos) {
+        if (!["image/jpeg", "image/png", "image/webp"].includes(foto.type) || foto.size === 0 || foto.size > 5 * 1024 * 1024) {
+          throw new Error("Cada foto debe ser JPG, PNG o WEBP y pesar hasta 5 MB.");
+        }
       }
-
-      const { data: datosUrl } = supabaseClient.storage
-        .from("travesias-fotos")
-        .getPublicUrl(nombreArchivo);
-
-      urlsFotos.push(datosUrl.publicUrl);
-    }
-
-    const { error } = await supabaseClient
-      .from("travesias")
-      .insert({
-        user_id: user.id,
-        titulo: titulo,
-        fecha: fecha,
-        salida: salida,
-        destino: destino,
-        escalas: escalas || null,
-        aeronave: aeronave || null,
-        relato: relato || null,
-        fotos: urlsFotos,
-        visible: false
+      mensaje.textContent = "Subiendo archivos… Mantené abierta esta página.";
+      const urlsFotos = [];
+      for (const foto of archivosFotos) {
+        const extension = foto.type === "image/jpeg" ? "jpg" : foto.type.split("/")[1];
+        const ruta = `${user.id}/${crypto.randomUUID()}.${extension}`;
+        const { error } = await supabaseClient.storage.from("travesias-fotos")
+          .upload(ruta, foto, { upsert: false, contentType: foto.type });
+        if (error) throw error;
+        rutasSubidas.push(ruta);
+        const { data } = supabaseClient.storage.from("travesias-fotos").getPublicUrl(ruta);
+        urlsFotos.push(data.publicUrl);
+      }
+      const urlsVideos = [];
+      if (archivoVideo) {
+        mensaje.textContent = "Subiendo video… Mantené abierta esta página.";
+        const extension = extensionVideo(archivoVideo);
+        const ruta = `${user.id}/${crypto.randomUUID()}.${extension}`;
+        const { error } = await supabaseClient.storage.from("travesias-fotos")
+          .upload(ruta, archivoVideo, { upsert: false, contentType: archivoVideo.type || "video/" + extension });
+        if (error) throw error;
+        rutasSubidas.push(ruta);
+        const { data } = supabaseClient.storage.from("travesias-fotos").getPublicUrl(ruta);
+        urlsVideos.push(data.publicUrl);
+      }
+      const { error } = await supabaseClient.from("travesias").insert({
+        user_id: user.id, titulo, fecha, salida, destino,
+        escalas: escalas || null, aeronave: aeronave || null,
+        relato: relato || null, fotos: urlsFotos, videos: urlsVideos, visible: false
       });
-
-    if (error) {
-      console.error("Error al enviar travesía:", error);
-      alert("No se pudo enviar la travesía: " + error.message);
-      return;
+      if (error) throw error;
+      document.querySelectorAll("#formularioTravesia input, #formularioTravesia textarea")
+        .forEach(campo => { campo.value = ""; });
+      mensaje.textContent = "Travesía enviada. Quedó pendiente de aprobación.";
+    } catch (error) {
+      if (rutasSubidas.length) {
+        await supabaseClient.storage.from("travesias-fotos").remove(rutasSubidas);
+      }
+      mensaje.textContent = "No se pudo enviar la travesía: " + (error.message || "Intentá de nuevo.");
+    } finally {
+      botonEnviarTravesia.disabled = false;
     }
-
-    alert("Travesía enviada correctamente. Quedará pendiente de moderación.");
   });
 </script> 
  <script>
@@ -7210,14 +7328,16 @@ function renderizarTravesias() {
   visibles.forEach(function (travesia) {
     const autor = travesia.autor?.full_name || travesia.autor?.username || "Usuario de Gente de Vuelo";
     const foto = Array.isArray(travesia.fotos) && travesia.fotos.length ? travesia.fotos[0] : "";
+    const video = Array.isArray(travesia.videos) && travesia.videos.length ? travesia.videos[0] : "";
     const tarjeta = document.createElement("article");
-    tarjeta.className = "travesia-resumen";
+    tarjeta.className = "travesia-resumen" + (video && !foto ? " solo-video" : "");
 
     tarjeta.innerHTML = `
       <div class="travesia-resumen-imagen">
         ${foto
           ? `<img src="${escaparHTML(foto)}" alt="Foto de la travesía ${escaparHTML(travesia.titulo || "")}">`
-          : '<div class="travesia-sin-foto">SIN FOTO</div>'}
+          : video ? `<video src="${escaparHTML(video)}" controls preload="metadata" playsinline aria-label="Video de la travesía ${escaparHTML(travesia.titulo || "")}"></video>`
+          : '<div class="travesia-sin-foto">SIN FOTO NI VIDEO</div>'}
       </div>
       <div class="travesia-resumen-contenido">
         <div class="travesia-meta">
@@ -7228,6 +7348,7 @@ function renderizarTravesias() {
         <p class="travesia-ruta">${escaparHTML(travesia.salida || "Salida")} <span>→</span> ${escaparHTML(travesia.destino || "Destino")}</p>
         <p class="travesia-autor">Compartida por ${escaparHTML(autor)}</p>
         ${travesia.relato ? `<p class="travesia-relato">${escaparHTML(travesia.relato)}</p>` : ""}
+        ${foto && video ? `<video class="travesia-video-adicional" src="${escaparHTML(video)}" controls preload="metadata" playsinline aria-label="Video de la travesía ${escaparHTML(travesia.titulo || "")}"></video>` : ""}
       </div>
     `;
 
