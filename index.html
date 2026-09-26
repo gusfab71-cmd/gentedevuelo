@@ -3505,19 +3505,170 @@ body.modo-seccion-unica > #dialogoAporte[open] { display: block !important; }
   text-decoration: none;
   color: inherit;
 }
+
+/* Portada: navegación ligera sobre la fotografía */
+.portada-completa { min-height: 620px; isolation: isolate; }
+.portada-completa::before {
+  content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background: linear-gradient(180deg, rgba(9,18,25,.34) 0%, rgba(9,18,25,.05) 39%, rgba(9,18,25,.48) 100%);
+}
+.portada-completa .hero { min-height: 620px; position: relative; z-index: 1; }
+.portada-completa .hero .logo {
+  top: 106px; width: 144px; max-width: 144px; height: auto;
+  filter: drop-shadow(0 6px 18px rgba(0,0,0,.55));
+}
+.portada-completa .hero-titulo { top: 255px; padding: 0 14px; }
+.portada-completa .hero-titulo h1 {
+  font-size: clamp(36px, 5.4vw, 76px); line-height: 1.08;
+  color: #f5cf77; text-shadow: 0 2px 4px #142027, 0 5px 18px rgba(0,0,0,.85);
+}
+.portada-completa .hero-titulo p,
+.portada-completa .hero-lema { text-shadow: 0 2px 9px #0b161d, 0 1px 3px #0b161d; }
+.portada-completa .hero-titulo p { font-size: clamp(11px, 1.5vw, 18px); letter-spacing: clamp(2px, .45vw, 6px); }
+.portada-completa .hero-lema { font-size: clamp(18px, 2vw, 25px); }
+
+.menu-principal { top: 18px; left: 22px; width: auto; max-width: none; z-index: 1102; }
+.menu-boton,
+.cuenta-ingresar,
+.cuenta-menu > summary {
+  display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+  min-height: 48px; border: 1px solid rgba(255,255,255,.45);
+  border-radius: 13px; padding: 10px 14px;
+  background: rgba(19,29,35,.53); color: #fff; cursor: pointer;
+  font: inherit; font-weight: 700; text-shadow: 0 1px 3px #15212a;
+  box-shadow: 0 4px 20px rgba(0,0,0,.18);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+}
+.menu-boton { width: 50px; padding: 10px; }
+.menu-boton svg,
+.cuenta-ingresar svg,
+.cuenta-menu svg,
+.atajos-portada svg {
+  width: 23px; height: 23px; fill: none; stroke: currentColor;
+  stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round;
+}
+.menu-boton:hover, .cuenta-ingresar:hover, .cuenta-menu > summary:hover,
+.menu-boton[aria-expanded="true"] { background: rgba(19,29,35,.82); border-color: #ffd18a; }
+.menu-desplegable {
+  width: min(265px, calc(100vw - 28px)); margin-top: 8px; padding: 8px;
+  border: 1px solid rgba(255,209,138,.5);
+  background: rgba(17,26,31,.9);
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+}
+.menu-desplegable a { font-size: 14px; padding: 12px; }
+.menu-desplegable a:hover { background: rgba(255,100,46,.28); }
+.controles-usuario { top: 18px; right: 22px; z-index: 1103; }
+.controles-usuario [hidden] { display: none !important; }
+.cuenta-ingresar { font-size: 14px; }
+.cuenta-menu { position: relative; }
+.cuenta-menu > summary { list-style: none; font-size: 14px; }
+.cuenta-menu > summary::-webkit-details-marker { display: none; }
+.cuenta-chevron { font-size: 21px; line-height: 0; margin-left: 2px; }
+.cuenta-opciones {
+  position: absolute; top: calc(100% + 8px); right: 0; width: 195px;
+  padding: 7px; border: 1px solid rgba(255,209,138,.5); border-radius: 13px;
+  background: rgba(17,26,31,.94); color: white;
+  box-shadow: 0 14px 30px rgba(0,0,0,.4);
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+}
+.cuenta-opciones a, .cuenta-opciones button {
+  display: block; width: 100%; padding: 11px 12px; border: 0; border-radius: 8px;
+  background: transparent; color: white; text-align: left;
+  text-decoration: none; font: inherit; font-size: 14px; cursor: pointer;
+}
+.cuenta-opciones a:hover, .cuenta-opciones a:focus-visible,
+.cuenta-opciones button:hover, .cuenta-opciones button:focus-visible { background: rgba(255,255,255,.13); }
+.cuenta-opciones button { color: #ffc3b2; border-top: 1px solid rgba(255,255,255,.15); }
+.cuenta-opciones button:hover { background: rgba(162,59,40,.35); }
+.acceso-usuarios:not(.abierto) { display: none !important; }
+.acceso-usuarios.abierto { top: 76px; right: 22px; border-color: rgba(255,209,138,.7);
+  background: rgba(19,29,35,.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+
+.atajos-portada {
+  position: absolute; z-index: 1101; top: 16px; left: 50%;
+  transform: translateX(-50%); display: flex; justify-content: center; gap: 6px;
+}
+.atajos-portada a {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 3px; min-width: 90px; min-height: 54px; padding: 5px 8px;
+  border: 1px solid transparent; border-radius: 11px; color: #fff;
+  text-align: center; text-decoration: none; text-shadow: 0 1px 5px #09151d;
+  font-size: 11px; font-weight: 700; line-height: 1.12;
+}
+.atajos-portada a:hover, .atajos-portada a:focus-visible {
+  background: rgba(19,29,35,.69); border-color: rgba(255,255,255,.45);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+}
+.atajos-portada svg { width: 24px; height: 24px; }
+
+.portada-accesos {
+  position: absolute; z-index: 1000; top: auto; bottom: 26px; left: 22px;
+  width: min(532px, calc(100% - 44px)); transition: none;
+}
+.portada-accesos.menu-abierto { top: auto; }
+.acceso-shimoda, .acceso-clasificados, .acceso-foro {
+  background: rgba(17,26,31,.76); border: 1px solid rgba(255,197,111,.58);
+  box-shadow: 0 10px 28px rgba(0,0,0,.27);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+}
+.acceso-shimoda:hover, .acceso-clasificados:hover, .acceso-foro:hover { transform: translateY(-3px); }
+.acceso-shimoda:focus-visible, .acceso-clasificados:focus-visible,
+.acceso-foro:focus-visible, .menu-boton:focus-visible,
+.cuenta-ingresar:focus-visible, .cuenta-menu > summary:focus-visible,
+.atajos-portada a:focus-visible { outline: 3px solid #ffd166; outline-offset: 3px; }
+.acceso-foro-entrar { border-radius: 10px; }
+
+@media (max-width: 850px) {
+  .menu-principal { top: 12px; left: 12px; width: auto; max-width: none; }
+  .menu-principal .menu-desplegable { width: min(265px, calc(100vw - 24px)); }
+  .controles-usuario { top: 12px; right: 12px; }
+  .acceso-usuarios.abierto { top: 68px; right: 12px; }
+  .atajos-portada { top: 77px; width: min(100%, 520px); gap: 0; padding: 0 7px; }
+  .atajos-portada a { min-width: 0; flex: 1; padding: 5px 2px; font-size: 10px; }
+  .atajos-portada svg { width: 21px; height: 21px; }
+  .portada-completa, .portada-completa .hero { min-height: 770px; }
+  .portada-completa .hero .logo { top: 170px; width: 130px; max-width: 130px; }
+  .portada-completa .hero-titulo { top: 310px; }
+  .portada-accesos, .portada-accesos.menu-abierto {
+    top: auto; bottom: 20px; left: 12px; width: min(360px, calc(100% - 24px));
+    flex-direction: column; gap: 8px;
+  }
+  .acceso-shimoda, .acceso-clasificados, .acceso-foro { width: 100%; }
+}
+@media (max-width: 420px) {
+  .portada-completa, .portada-completa .hero { min-height: 815px; }
+  .portada-completa .hero-titulo h1 { font-size: clamp(32px, 9vw, 42px); letter-spacing: 1px; }
+  .portada-completa .hero-titulo p { letter-spacing: 2px; }
+  .portada-completa .hero-lema { margin-top: 8px; }
+  .atajos-portada a { font-size: 9px; }
+  .cuenta-menu > summary span:not(.cuenta-chevron) { display: none; }
+}
+
 </style>
 </head>
 
 <body>
 <button type="button" id="volverPortada" aria-label="Volver a la portada">← VOLVER A PORTADA</button>
 <div class="controles-usuario" id="controlesUsuario">
-  <a href="#ingresar" class="boton-ingresar" id="botonIngresar">INGRESAR</a>
-  <a href="#" id="botonCerrarSesion" class="boton-ingresar" style="display:none;">CERRAR SESIÓN</a>
+  <button type="button" class="cuenta-ingresar" id="botonIngresar" aria-controls="ingresar" aria-expanded="false">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+    <span>Ingresar</span>
+  </button>
+  <details class="cuenta-menu" id="menuCuenta" hidden>
+    <summary aria-label="Abrir menú de cuenta" aria-controls="opcionesCuenta">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+      <span>Mi cuenta</span><span class="cuenta-chevron" aria-hidden="true">⌄</span>
+    </summary>
+    <div class="cuenta-opciones" id="opcionesCuenta">
+      <a href="#mi-perfil">Mi perfil</a>
+      <button type="button" id="botonCerrarSesion">Cerrar sesión</button>
+    </div>
+  </details>
 </div>
 <div class="portada-completa">
  <nav class="menu-principal">
-  <button class="menu-boton" id="menuBoton" type="button">
-    ☰ MENÚ
+  <button class="menu-boton" id="menuBoton" type="button" aria-label="Abrir menú principal" aria-controls="menuDesplegable" aria-expanded="false">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
   </button>
 
   <div class="menu-desplegable" id="menuDesplegable">
@@ -3528,6 +3679,13 @@ body.modo-seccion-unica > #dialogoAporte[open] { display: block !important; }
     <a href="#reglamento" id="enlaceReglamento">Código de Convivencia</a>
   </div>
 
+</nav>
+<div class="atajos-portada" aria-label="Accesos rápidos">
+  <a href="#tienda-seccion"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2 3h2l2.5 13h13l2-9H5"/></svg><span>Tienda Aeronáutica</span></a>
+  <a href="#galeria-seccion"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="15" rx="2"/><circle cx="8.5" cy="10" r="1.5"/><path d="m4 17 5-5 4 4 3-3 4 4"/></svg><span>Galería</span></a>
+  <a href="#quienes-somos"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7h.01"/></svg><span>Quiénes somos</span></a>
+  <a href="#reglamento" id="atajoReglamento"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h12a2 2 0 0 1 2 2v16H7a2 2 0 0 1-2-2V3Zm2 14h12M9 8h6M9 12h6"/></svg><span>Código de convivencia</span></a>
+</div>
 <div class="portada-accesos" id="portadaAccesos">
   <a href="#shimoda" class="acceso-shimoda" title="Robert Shimoda - Consejos de Aviación">
     <img src="LOGO SE ROBERT SHIMODA MEJORADO.png" alt="Robert Shimoda - Consejos de Aviación">
@@ -3554,7 +3712,6 @@ body.modo-seccion-unica > #dialogoAporte[open] { display: block !important; }
     <span class="acceso-foro-entrar">ENTRAR</span>
   </a>
 </div>
-</nav>
 
   <section class="hero" id="inicio">
     
@@ -5020,7 +5177,7 @@ async function recuperarPassword() {
 async function actualizarBotonIngreso() {
   
   const boton = document.getElementById("botonIngresar");
-  const botonCerrar = document.getElementById("botonCerrarSesion");
+  const menuCuenta = document.getElementById("menuCuenta");
 const seccionIngresar = document.getElementById("ingresar");
   const controlesUsuario = document.getElementById("controlesUsuario");
   
@@ -5066,20 +5223,16 @@ document.getElementById("hangarLicense").textContent = perfil?.aviation_license 
     if (permisoModeracion) enlaceModeracion.style.display = "inline-block";
   }
 
+  controlesUsuario.style.display = "flex";
+  boton.hidden = !!user;
+  menuCuenta.hidden = !user;
   if (user) {
-   seccionIngresar.style.display = "none"; 
-   controlesUsuario.style.display = "flex";
-   botonCerrar.style.display = "inline-block"; 
-    boton.textContent = "MI PERFIL";
-   boton.href = "#mi-perfil";
-    
+    seccionIngresar.classList.remove("abierto");
+    seccionIngresar.style.display = "none";
+    boton.setAttribute("aria-expanded", "false");
   } else {
-   seccionIngresar.style.display = "block"; 
-   controlesUsuario.style.display = "none";
-   botonCerrar.style.display = "none"; 
-    boton.textContent = "INGRESAR";
-    boton.href = "#ingresar";
- 
+    seccionIngresar.style.display = "";
+    menuCuenta.open = false;
   }
 }
 async function guardarLicencia() {
@@ -5155,13 +5308,49 @@ async function cargarLicencias() {
 }
     
 async function cerrarSesion() {
+  document.getElementById("menuCuenta").open = false;
   await supabaseClient.auth.signOut();
   window.location.href = "#inicio";
   actualizarBotonIngreso();
 }
- document.getElementById("botonCerrarSesion").addEventListener("click", function(event) {
+document.getElementById("botonCerrarSesion").addEventListener("click", function(event) {
   event.preventDefault();
   cerrarSesion();
+});
+const botonIngresoPortada = document.getElementById("botonIngresar");
+const panelIngresoPortada = document.getElementById("ingresar");
+const menuCuentaPortada = document.getElementById("menuCuenta");
+function cerrarPanelIngreso() {
+  panelIngresoPortada.classList.remove("abierto");
+  botonIngresoPortada.setAttribute("aria-expanded", "false");
+}
+botonIngresoPortada.addEventListener("click", function () {
+  const abierto = panelIngresoPortada.classList.toggle("abierto");
+  botonIngresoPortada.setAttribute("aria-expanded", String(abierto));
+  if (abierto) panelIngresoPortada.querySelector("#email")?.focus();
+});
+document.addEventListener("click", function (event) {
+  if (event.target.closest('a[href="#ingresar"]')) {
+    event.preventDefault();
+    event.stopPropagation();
+    if (document.body.classList.contains("modo-seccion-unica")) {
+      document.getElementById("volverPortada")?.click();
+    }
+    panelIngresoPortada.classList.add("abierto");
+    botonIngresoPortada.setAttribute("aria-expanded", "true");
+    panelIngresoPortada.querySelector("#email")?.focus();
+    return;
+  }
+  if (!panelIngresoPortada.contains(event.target) && !botonIngresoPortada.contains(event.target)) {
+    cerrarPanelIngreso();
+  }
+  if (!menuCuentaPortada.contains(event.target)) menuCuentaPortada.open = false;
+});
+document.addEventListener("keydown", function (event) {
+  if (event.key === "Escape") {
+    cerrarPanelIngreso();
+    menuCuentaPortada.open = false;
+  }
 });   
     
 const dialogoNuevaPassword = document.getElementById("dialogoNuevaPassword");
@@ -5911,7 +6100,9 @@ document.querySelector(".galeria-siguiente").addEventListener("click", () => {
 
   menuBoton.addEventListener("click", function () {
     menuDesplegable.classList.toggle("abierto");
-    portadaAccesos.classList.toggle("menu-abierto", menuDesplegable.classList.contains("abierto"));
+    const abierto = menuDesplegable.classList.contains("abierto");
+    menuBoton.setAttribute("aria-expanded", String(abierto));
+    portadaAccesos.classList.toggle("menu-abierto", abierto);
   });
 
   const portadaAccesos = document.getElementById("portadaAccesos");
@@ -5919,6 +6110,7 @@ document.querySelector(".galeria-siguiente").addEventListener("click", () => {
   menuDesplegable.querySelectorAll("a").forEach(function (enlace) {
     enlace.addEventListener("click", function () {
       menuDesplegable.classList.remove("abierto");
+      menuBoton.setAttribute("aria-expanded", "false");
       portadaAccesos.classList.remove("menu-abierto");
       cerrarAnexos();
     });
@@ -5929,15 +6121,24 @@ document.addEventListener("click", function (event) {
     !menuBoton.contains(event.target)
   ) {
     menuDesplegable.classList.remove("abierto");
+    menuBoton.setAttribute("aria-expanded", "false");
     portadaAccesos.classList.remove("menu-abierto");
+  }
+});
+document.addEventListener("keydown", function (event) {
+  if (event.key === "Escape") {
+    menuDesplegable.classList.remove("abierto");
+    menuBoton.setAttribute("aria-expanded", "false");
   }
 });
   
   const enlaceReglamento = document.getElementById("enlaceReglamento");
 const seccionReglamento = document.getElementById("reglamento");
 
-enlaceReglamento.addEventListener("click", function () {
-  seccionReglamento.style.display = "block";
+[enlaceReglamento, document.getElementById("atajoReglamento")].forEach(function (enlace) {
+  enlace.addEventListener("click", function () {
+    seccionReglamento.style.display = "block";
+  });
 });
 
 document.querySelectorAll(".menu-desplegable a").forEach(enlace => {
