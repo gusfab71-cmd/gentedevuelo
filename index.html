@@ -3859,6 +3859,16 @@ body.modo-anexo-clasificados #clasificados-seccion {
   .travesia-resumen.solo-video { grid-template-columns: minmax(0, 1fr); }
   .travesia-resumen.solo-video .travesia-resumen-imagen { height: min(55vw, 310px); }
   .travesia-resumen.solo-video .travesia-resumen-imagen video { height: 100%; max-height: none; }
+  #formularioTravesia .campo-media input::file-selector-button,
+  .galeria-subida-acciones input::file-selector-button,
+  #mi-perfil .hangar-subida-foto input::file-selector-button {
+    background: #263136; color: #fff; border: 1px solid #ff642e;
+    border-radius: 8px; padding: 8px 10px; margin-right: 9px;
+    cursor: pointer; font: inherit; font-weight: 700;
+  }
+  #formularioTravesia .campo-media input::file-selector-button:hover,
+  .galeria-subida-acciones input::file-selector-button:hover,
+  #mi-perfil .hangar-subida-foto input::file-selector-button:hover { background: #ff642e; }
 </style>
 </head>
 
