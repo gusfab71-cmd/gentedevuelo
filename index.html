@@ -6042,7 +6042,7 @@ async function enviarVideoGaleria(inputId, mensajeId) {
       .select("full_name").eq("id", user.id).maybeSingle();
     ruta = `${user.id}/${crypto.randomUUID()}.${extension}`;
     const { error: errorSubida } = await supabaseClient.storage
-      .from("hangar-fotos").upload(ruta, archivo, { upsert: false, contentType: archivo.type || "video/" + extension });
+      .from("hangar-fotos").upload(ruta, archivo, { upsert: false, contentType: archivo.type || (extension === "mov" ? "video/quicktime" : "video/" + extension) });
     if (errorSubida) throw errorSubida;
     const { error: errorRegistro } = await supabaseClient.from("galeria").insert({
       user_id: user.id, archivo: ruta,
@@ -7275,7 +7275,7 @@ cargarPublicacionShimoda();
         const extension = extensionVideo(archivoVideo);
         const ruta = `${user.id}/${crypto.randomUUID()}.${extension}`;
         const { error } = await supabaseClient.storage.from("travesias-fotos")
-          .upload(ruta, archivoVideo, { upsert: false, contentType: archivoVideo.type || "video/" + extension });
+          .upload(ruta, archivoVideo, { upsert: false, contentType: archivoVideo.type || (extension === "mov" ? "video/quicktime" : "video/" + extension) });
         if (error) throw error;
         rutasSubidas.push(ruta);
         const { data } = supabaseClient.storage.from("travesias-fotos").getPublicUrl(ruta);
