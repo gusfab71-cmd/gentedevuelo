@@ -3644,6 +3644,34 @@ body.modo-seccion-unica > #dialogoAporte[open] { display: block !important; }
   .cuenta-menu > summary span:not(.cuenta-chevron) { display: none; }
 }
 
+
+/* Unión suave entre portada y contenido */
+.portada-completa::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 145px;
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(180deg,
+    rgba(21,26,29,0) 0%,
+    rgba(21,26,29,.35) 48%,
+    #151a1d 100%);
+}
+
+/* Trama discreta inspirada en fibra de carbono */
+body:not(.modo-anexo):not(.modo-seccion-unica) {
+  background-color: #151a1d;
+  background-image:
+    repeating-linear-gradient(45deg,
+      rgba(255,255,255,.027) 0 1px, transparent 1px 7px),
+    repeating-linear-gradient(-45deg,
+      rgba(0,0,0,.18) 0 1px, transparent 1px 7px);
+  background-size: 14px 14px;
+}
+
 </style>
 </head>
 
