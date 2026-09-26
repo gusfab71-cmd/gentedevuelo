@@ -1293,6 +1293,7 @@ header {
   margin: 0 0 5px;
   color: #ff9f1c;
   font-size: 17px;
+  text-align: center;
 }
 
 .acceso-clasificados p {
@@ -1300,6 +1301,31 @@ header {
   color: white;
   font-size: 12px;
   line-height: 1.35;
+}
+
+.clasificados-ultimo {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 159, 28, 0.45);
+  color: #ffffff;
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.clasificados-ultimo strong,
+.clasificados-ultimo time {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.clasificados-ultimo strong {
+  color: #ffcf79;
+  font-size: 12px;
+}
+
+.clasificados-ultimo time {
+  margin-top: 3px;
+  color: #e3e3e3;
 }
 
 /* ===== ANEXOS DE PORTADA ===== */
@@ -2276,12 +2302,16 @@ body.modo-anexo-clasificados #clasificados-seccion {
   text-align: left;
 }
 
-.acceso-shimoda .shimoda-texto {
-  font-size: 11px;
-  line-height: 1.4;
-  color: white;
-  margin: 0;
-  text-align: left;
+.acceso-shimoda .shimoda-info {
+  min-width: 0;
+}
+
+.acceso-shimoda .shimoda-titulo {
+  overflow-wrap: anywhere;
+}
+
+.acceso-shimoda .shimoda-subtitulo {
+  margin-bottom: 0;
 }    
 
 .acceso-shimoda:hover,
@@ -2664,10 +2694,23 @@ body.modo-seccion-unica > .seccion-enfoque {
 
 .acceso-foro-entrar {
   flex: 0 0 auto;
-  color: #f4d887;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 7px 15px;
+  border: 1px solid #ff9f1c;
+  border-radius: 9px;
+  background: #ff642e;
+  color: #ffffff;
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.4px;
+}
+
+.acceso-foro:hover .acceso-foro-entrar,
+.acceso-foro:focus-visible .acceso-foro-entrar {
+  background: #d94f20;
 }
 
 @media (max-width: 900px) {
@@ -2690,10 +2733,12 @@ body.modo-seccion-unica > .seccion-enfoque {
     grid-column: auto;
   }
   .acceso-foro {
-    align-items: flex-start;
+    align-items: center;
+    flex-wrap: wrap;
   }
   .acceso-foro-entrar {
-    display: none;
+    display: inline-flex;
+    margin-left: auto;
   }
 }
 
@@ -3487,15 +3532,18 @@ body.modo-seccion-unica > #dialogoAporte[open] { display: block !important; }
   <a href="#shimoda" class="acceso-shimoda" title="Robert Shimoda - Consejos de Aviación">
     <img src="LOGO SE ROBERT SHIMODA MEJORADO.png" alt="Robert Shimoda - Consejos de Aviación">
     <div class="shimoda-info">
-      <p class="shimoda-titulo" id="shimodaPortadaTitulo">Robert Shimoda</p>
-      <p class="shimoda-subtitulo" id="shimodaPortadaFecha">Última publicación</p>
-      <p class="shimoda-texto" id="shimodaPortadaTexto">Consejos, experiencias e historias para aprender y disfrutar de la aviación.</p>
+      <p class="shimoda-titulo" id="shimodaPortadaTitulo">Última publicación</p>
+      <p class="shimoda-subtitulo" id="shimodaPortadaFecha"></p>
     </div>
   </a>
 
   <a href="#clasificados-seccion" class="acceso-clasificados" title="Clasificados de la comunidad">
     <h3>Clasificados</h3>
     <p>Compra, venta y búsquedas entre miembros de la comunidad.</p>
+    <div class="clasificados-ultimo" aria-live="polite">
+      <strong id="clasificadosPortadaTitulo">Cargando última publicación…</strong>
+      <time id="clasificadosPortadaFecha"></time>
+    </div>
   </a>
 
   <a href="#foro-comunidad" class="acceso-foro" title="Foro Aeronáutico">
@@ -3503,7 +3551,7 @@ body.modo-seccion-unica > #dialogoAporte[open] { display: block !important; }
       <h3>Foro Aeronáutico</h3>
       <p>Consultas, experiencias e ideas compartidas por la comunidad.</p>
     </div>
-    <span class="acceso-foro-entrar">ENTRAR →</span>
+    <span class="acceso-foro-entrar">ENTRAR</span>
   </a>
 </div>
 </nav>
@@ -6219,6 +6267,42 @@ async function cargarClasificados() {
   }
 }
 
+async function cargarUltimoClasificadoPortada() {
+  const titulo = document.getElementById("clasificadosPortadaTitulo");
+  const fecha = document.getElementById("clasificadosPortadaFecha");
+  if (!titulo || !fecha) return;
+
+  const { data, error } = await supabaseClient
+    .from("clasificados")
+    .select("titulo, created_at")
+    .eq("estado_publicacion", "aprobado")
+    .order("created_at", { ascending: false })
+    .limit(1);
+
+  if (error) {
+    console.error("Error al cargar el último clasificado:", error);
+    titulo.textContent = "No se pudo cargar la última publicación.";
+    return;
+  }
+
+  const publicacion = data && data[0];
+  if (!publicacion) {
+    titulo.textContent = "Todavía no hay publicaciones aprobadas.";
+    return;
+  }
+
+  titulo.textContent = publicacion.titulo || "Publicación sin título";
+  if (publicacion.created_at) {
+    const partes = publicacion.created_at.slice(0, 10).split("-");
+    fecha.dateTime = publicacion.created_at;
+    fecha.textContent = partes.length === 3
+      ? `Publicado el ${partes[2]}/${partes[1]}/${partes[0]}`
+      : "";
+  }
+}
+
+cargarUltimoClasificadoPortada();
+
 async function subirFotosClasificado(archivos, userId) {
   if (archivos.length > 5) {
     throw new Error("Podés subir hasta 5 fotografías.");
@@ -6419,10 +6503,8 @@ async function cargarPublicacionShimoda() {
 
   const portadaTitulo = document.getElementById("shimodaPortadaTitulo");
   const portadaFecha = document.getElementById("shimodaPortadaFecha");
-  const portadaTexto = document.getElementById("shimodaPortadaTexto");
-
   if (portadaTitulo) {
-    portadaTitulo.textContent = publicacion.titulo || "Robert Shimoda";
+    portadaTitulo.textContent = publicacion.titulo || "Publicación sin título";
   }
 
   if (portadaFecha && publicacion.fecha_publicacion) {
@@ -6430,11 +6512,6 @@ async function cargarPublicacionShimoda() {
     portadaFecha.textContent = fechaPortada.length === 3
       ? `${fechaPortada[2]}/${fechaPortada[1]}/${fechaPortada[0]}`
       : publicacion.fecha_publicacion;
-  }
-
-  if (portadaTexto && publicacion.contenido) {
-    const resumen = publicacion.contenido.replace(/<[^>]*>/g, "").trim();
-    portadaTexto.textContent = resumen.length > 105 ? resumen.slice(0, 105) + "…" : resumen;
   }
 
   document.getElementById("shimodaTitulo").textContent =
