@@ -31,6 +31,7 @@ create or replace function gdv_private.guard_content() returns trigger language 
      if tg_table_name='gdv_comments' then if new.deleted<>old.deleted then new.content:='Comentario eliminado por su autor';end if;end if;
      if new.content<>old.content then new.status:='pending';end if;
    end if;
+   if tg_table_name='gdv_comments' then if new.deleted then new.content:='Comentario eliminado por su autor'; new.status:=old.status; end if; end if;
    new.updated_at:=now();
    insert into public.gdv_audit(actor,entity,record_id,old_data,new_data) values(auth.uid(),tg_table_name,new.id,to_jsonb(old),to_jsonb(new));
  end if;
