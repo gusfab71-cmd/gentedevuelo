@@ -3869,6 +3869,7 @@ body.modo-anexo-clasificados #clasificados-seccion {
   #formularioTravesia .campo-media input::file-selector-button:hover,
   .galeria-subida-acciones input::file-selector-button:hover,
   #mi-perfil .hangar-subida-foto input::file-selector-button:hover { background: #ff642e; }
+.community-carbon{background-color:#242424;background-image:linear-gradient(45deg,#ffffff04 25%,transparent 25%,transparent 75%,#ffffff04 75%),linear-gradient(45deg,#00000024 25%,transparent 25%,transparent 75%,#00000024 75%);background-size:8px 8px;background-position:0 0,4px 4px;border:1px solid #505050;border-radius:14px;padding:clamp(20px,4vw,42px);color:#fff;text-align:left}.community-carbon h2,.community-carbon p,.community-carbon blockquote{color:#fff}.community-carbon h2{margin-top:26px}.community-carbon h2:first-child{margin-top:0}.community-carbon p{line-height:1.75}.community-carbon blockquote{margin:28px 0 0;border-left:3px solid #bdbdbd;padding:12px 20px}
 </style>
 <style>
 /* Comunidad 2026: portada conservada; menú integrado y emblema plano. */
@@ -3892,7 +3893,7 @@ body:not(.modo-seccion-unica):not(.modo-anexo)>#explorar,body:not(.modo-seccion-
 </style>
 <meta name="robots" content="noindex,nofollow"></head>
 
-<body class="gdv-review"><div style="padding:7px 12px;background:#49391e;color:#ffe1a0;text-align:center;font:13px Arial;position:relative;z-index:2000">Versión en revisión · El registro nuevo está pendiente de habilitación</div>
+<body class="gdv-review"><div style="padding:7px 12px;background:#49391e;color:#ffe1a0;text-align:center;font:13px Arial;position:relative;z-index:2000">Versión en revisión</div>
 <button type="button" id="volverPortada" aria-label="Volver a la portada">← VOLVER A PORTADA</button>
 <div class="controles-usuario" id="controlesUsuario">
   <button type="button" class="cuenta-ingresar" id="botonIngresar" aria-controls="ingresar" aria-expanded="false">
@@ -3910,7 +3911,7 @@ body:not(.modo-seccion-unica):not(.modo-anexo)>#explorar,body:not(.modo-seccion-
     </div>
   </details>
 </div>
-<a class="gdv-register" id="gdv-register" href="comunidad.html#registro">Registrarse</a>
+
 <div class="portada-completa">
  <nav class="menu-principal">
   <button class="menu-boton" id="menuBoton" type="button" aria-label="Abrir menú principal" aria-controls="menuDesplegable" aria-expanded="false">
@@ -3919,15 +3920,13 @@ body:not(.modo-seccion-unica):not(.modo-anexo)>#explorar,body:not(.modo-seccion-
   </button>
 
   <div class="menu-desplegable" id="menuDesplegable">
-    <a href="#inicio">Inicio</a><a href="comunidad.html#foro">Foro</a><a href="comunidad.html#tematicas">Temáticas</a><a href="#tienda-seccion">AeroShop</a><a href="comunidad.html#hangar" id="gdv-hangar-link" hidden>Mi Hangar</a><a href="#quienes-somos">Quiénes somos</a><a href="comunidad.html#normativa" id="enlaceReglamento">Normativa de la Comunidad</a><a href="comunidad.html#contacto">Contacto</a>
+    <a href="#inicio">Inicio</a><a href="comunidad.html#foro">Foro</a><a href="comunidad.html#tematicas">Temáticas</a><a href="#tienda-seccion">AeroShop</a><a href="comunidad.html#hangar" id="gdv-hangar-link" hidden>Mi Hangar</a><a href="#clasificados-seccion">CompraVenta</a><a href="comunidad.html#integrantes">Integrantes</a><a href="comunidad.html#contacto">Contacto</a>
   </div>
 
 </nav>
 <div class="atajos-portada" aria-label="Accesos rápidos">
   <a href="#tienda-seccion"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2 3h2l2.5 13h13l2-9H5"/></svg><span>AeroShop</span></a>
   <a href="comunidad.html#multimedia"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="15" rx="2"/><circle cx="8.5" cy="10" r="1.5"/><path d="m4 17 5-5 4 4 3-3 4 4"/></svg><span>Galería</span></a>
-  <a href="#quienes-somos"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7h.01"/></svg><span>Quiénes somos</span></a>
-  <a href="#reglamento" id="atajoReglamento"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h12a2 2 0 0 1 2 2v16H7a2 2 0 0 1-2-2V3Zm2 14h12M9 8h6M9 12h6"/></svg><span>Normativa de la Comunidad</span></a>
 </div>
 <div class="portada-accesos" id="portadaAccesos">
   <a href="#shimoda" class="acceso-shimoda" title="Robert Shimoda - Consejos de Aviación">
@@ -3939,7 +3938,7 @@ body:not(.modo-seccion-unica):not(.modo-anexo)>#explorar,body:not(.modo-seccion-
   </a>
 
   <a href="#clasificados-seccion" class="acceso-clasificados" title="Clasificados de la comunidad">
-    <h3>AeroTrade</h3>
+    <h3>CompraVenta</h3>
     <p>Compra, venta y búsquedas entre miembros de la comunidad.</p>
     <div class="clasificados-ultimo" aria-live="polite">
       <strong id="clasificadosPortadaTitulo">Cargando última publicación…</strong>
@@ -3947,13 +3946,7 @@ body:not(.modo-seccion-unica):not(.modo-anexo)>#explorar,body:not(.modo-seccion-
     </div>
   </a>
 
-  <a href="comunidad.html#foro" class="acceso-foro" title="Foro">
-    <div>
-      <h3>Foro</h3>
-      <p>Consultas, experiencias e ideas compartidas por la comunidad.</p>
-    </div>
-    <span class="acceso-foro-entrar">ENTRAR</span>
-  </a>
+
 </div>
 
   <section class="hero" id="inicio">
@@ -3966,7 +3959,7 @@ body:not(.modo-seccion-unica):not(.modo-anexo)>#explorar,body:not(.modo-seccion-
     <div class="hero-titulo">
   <h1>GENTE DE VUELO</h1>
   <p>COMUNIDAD AERONÁUTICA</p>
-  <div class="hero-lema">Pasión que nos une</div><a class="gdv-forum-cta" href="comunidad.html#foro">Entrar al Foro →</a>
+  <div class="hero-lema">Pasión que nos une</div>
 </div>
   </section>
 
@@ -4580,7 +4573,7 @@ body:not(.modo-seccion-unica):not(.modo-anexo)>#explorar,body:not(.modo-seccion-
 <section class="contenedor anexo-portada" id="clasificados-seccion" aria-hidden="true">
   <button type="button" class="anexo-cerrar" data-cerrar-anexo="clasificados-seccion">Cerrar</button>
 
-  <h2 class="titulo-seccion">AeroTrade</h2>
+  <h2 class="titulo-seccion">CompraVenta</h2>
   <p class="subtitulo">
     Compra, venta y búsqueda de artículos entre miembros registrados de Gente de Vuelo.
   </p>
@@ -4783,7 +4776,7 @@ body:not(.modo-seccion-unica):not(.modo-anexo)>#explorar,body:not(.modo-seccion-
   </div>
 
   <div class="clasificados-aviso">
-    AeroTrade es un espacio destinado a vendedores, particulares y miembros de la comunidad que deseen ofrecer productos, equipamiento y artículos vinculados a la aviación. Gente de Vuelo facilita el contacto entre las partes, pero no participa en las operaciones, pagos, envíos, garantías ni verifica el estado de los productos publicados.
+    CompraVenta es un espacio destinado a vendedores, particulares y miembros de la comunidad que deseen ofrecer productos, equipamiento y artículos vinculados a la aviación. Gente de Vuelo facilita el contacto entre las partes, pero no participa en las operaciones, pagos, envíos, garantías ni verifica el estado de los productos publicados.
   </div>
 </section>
   
@@ -5086,18 +5079,18 @@ body:not(.modo-seccion-unica):not(.modo-anexo)>#explorar,body:not(.modo-seccion-
   <button class="boton" onclick="cerrarHangarPublico()">Volver a la Comunidad</button>
 </section>
 
-<section class="mision solo-seccion" id="quienes-somos">
-  <h2>Quiénes somos</h2>
-  <p>
-    Gente de Vuelo es un punto de encuentro para pilotos, estudiantes,
-    instructores, aeromodelistas, constructores de aeronaves experimentales
-    y apasionados por la aviación. Un espacio sin fines de lucro para
-    compartir conocimientos, experiencias e historias, conocer gente y
-    disfrutar juntos el mundo de la aviación, teniendo la posibilidad de
-    crear tu propio perfil de usuario, participar, interactuar y compartir
-    contenido dentro de un espacio moderado.
-  </p>
-</section>
+<section class="mision solo-seccion community-carbon" id="quienes-somos"><h1>Quiénes somos</h1><h2>¡Bienvenido a Gente de Vuelo!</h2>
+<p>Un punto de encuentro para entusiastas y apasionados de la aviación. Fundado con pasión por el mundo aeronáutico y su comunidad, este espacio reúne a pilotos, estudiantes, instructores, aeromodelistas, constructores de aeronaves experimentales y a todas las personas que disfrutan de la aviación.</p>
+<h2>¡Unite a nosotros!</h2>
+<p>Ya sea que busques mejorar tus conocimientos y habilidades, mantenerte informado o disfrutar de una buena charla con gente apasionada por la aviación como vos, te invitamos a formar parte de una comunidad en crecimiento.</p>
+<h2>¡Lo que ofrecemos!</h2>
+<p>Un espacio para compartir conocimientos, experiencias e historias. En el Rincón de Robert Shimoda, nuestro personaje destacado, encontrarás consejos y relatos para aprender y reflexionar sobre la aviación desde la curiosidad histórica.</p>
+<p>También te ofrecemos AeroShop, una tienda virtual donde los comercios del sector podrán presentar sus productos, y nuestra sección de CompraVenta, donde podrás comprar, vender e intercambiar con la comunidad productos relacionados con la aviación.</p>
+<h2>¡Nuestro compromiso!</h2>
+<p>Estamos comprometidos con la transparencia, la inclusión, la seguridad de la información y el crecimiento impulsado por la comunidad. Sus ideas y aportes guiarán nuestras decisiones.</p>
+<h2>¡Unite a nosotros!</h2>
+<p>Tanto si sos un entusiasta, soñás con ser piloto o ya lo sos, en nuestra comunidad tendrás un lugar para encontrarte con gente que hable de lo que más nos gusta.</p>
+<blockquote><em>“Una vez que hayas probado el vuelo, caminarás para siempre por la tierra con la mirada puesta en el cielo…”</em></blockquote></section>
   
   
 <dialog id="dialogoAporte" aria-labelledby="tituloDialogoAporte">
@@ -5489,7 +5482,7 @@ document.getElementById("hangarLicense").textContent = perfil?.aviation_license 
 
   controlesUsuario.style.display = "flex";
   boton.hidden = !!user;
-  document.getElementById("gdv-register").hidden = !!user;
+
   document.getElementById("gdv-hangar-link").hidden = !user;
   menuCuenta.hidden = !user;
   if (user) {
@@ -5575,6 +5568,7 @@ async function cargarLicencias() {
     
 async function cerrarSesion() {
   document.getElementById("menuCuenta").open = false;
+  await window.GDVPresence.leave();
   await supabaseClient.auth.signOut();
   window.location.href = "#inicio";
   actualizarBotonIngreso();
@@ -6472,7 +6466,7 @@ document.addEventListener("keydown", function (event) {
   const enlaceReglamento = document.getElementById("enlaceReglamento");
 const seccionReglamento = document.getElementById("reglamento");
 
-[enlaceReglamento, document.getElementById("atajoReglamento")].forEach(function (enlace) {
+[enlaceReglamento, document.getElementById("atajoReglamento")].filter(Boolean).forEach(function (enlace) {
   enlace.addEventListener("click", function () {
     seccionReglamento.style.display = "block";
   });
@@ -7787,5 +7781,6 @@ document.addEventListener('click', function(event) {
   }
 }, true);
 </script>
+<script src="assets/presence.js"></script><script>window.GDVPresence.start(supabaseClient);</script>
 </body>
 </html>
