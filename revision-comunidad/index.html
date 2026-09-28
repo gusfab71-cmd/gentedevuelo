@@ -3876,13 +3876,14 @@ body.modo-anexo-clasificados #clasificados-seccion {
 .portada-completa .hero .logo-emblema::after{display:none}
 .menu-principal{position:relative!important;inset:auto!important;margin:0;padding:82px 20px 0;width:100%!important;max-width:none!important;z-index:20}
 #menuBoton{display:none!important}
-#menuDesplegable{display:flex!important;position:relative!important;inset:auto!important;width:100%!important;max-width:1200px;margin:auto;flex-wrap:wrap;gap:5px;padding:10px;background:rgba(20,27,32,.94);border:1px solid #555b5d;border-radius:12px;box-shadow:none;opacity:1!important;visibility:visible!important;transform:none!important}
+#menuDesplegable{display:flex!important;position:relative!important;inset:auto!important;width:100%!important;max-width:1200px;margin:auto;flex-direction:row;align-items:center;flex-wrap:wrap;gap:5px;padding:10px;background:rgba(20,27,32,.94);border:1px solid #555b5d;border-radius:12px;box-shadow:none;opacity:1!important;visibility:visible!important;transform:none!important}
 #menuDesplegable a{display:block;padding:8px 11px;color:#fff;border-radius:7px;font-size:14px;white-space:normal}
 #menuDesplegable a:hover{background:#59402a}
 #menuDesplegable [hidden]{display:none!important}
 .atajos-portada{display:none!important}
 .gdv-register{position:absolute;top:18px;left:22px;z-index:1105;padding:12px 20px;min-height:48px;border:1px solid #d29f52;border-radius:12px;background:#202a30;color:#fff;text-decoration:none;font-weight:bold}
 .gdv-register[hidden]{display:none}
+body.gdv-review .gdv-register,body.gdv-review .controles-usuario{top:48px}
 .gdv-forum-cta{display:inline-block;margin-top:24px;padding:12px 24px;background:#f18b3d;color:#1e1914;border-radius:10px;text-shadow:none;text-decoration:none;font-weight:bold;font-size:17px}
 .portada-accesos .acceso-foro{display:none!important}
 body:not(.modo-seccion-unica):not(.modo-anexo)>#explorar,body:not(.modo-seccion-unica):not(.modo-anexo)>.accesos-principales,body:not(.modo-seccion-unica):not(.modo-anexo)>#galeria-seccion,body:not(.modo-seccion-unica):not(.modo-anexo)>.modulo-portada{display:none!important}
@@ -3890,7 +3891,7 @@ body:not(.modo-seccion-unica):not(.modo-anexo)>#explorar,body:not(.modo-seccion-
 </style>
 <meta name="robots" content="noindex,nofollow"></head>
 
-<body><div style="padding:7px 12px;background:#49391e;color:#ffe1a0;text-align:center;font:13px Arial;position:relative;z-index:2000">Versión en revisión · El registro nuevo está pendiente de habilitación</div>
+<body class="gdv-review"><div style="padding:7px 12px;background:#49391e;color:#ffe1a0;text-align:center;font:13px Arial;position:relative;z-index:2000">Versión en revisión · El registro nuevo está pendiente de habilitación</div>
 <button type="button" id="volverPortada" aria-label="Volver a la portada">← VOLVER A PORTADA</button>
 <div class="controles-usuario" id="controlesUsuario">
   <button type="button" class="cuenta-ingresar" id="botonIngresar" aria-controls="ingresar" aria-expanded="false">
