@@ -52,3 +52,25 @@ Primera integración funcional en rama de desarrollo. No reemplazar `main` hasta
 ## Código y base
 
 `assets/comunidad.js` usa la clave **publicable** del proyecto; los permisos los impone RLS. `db/` documenta los cambios ya aplicados; no ejecutar de nuevo en producción a ciegas. `community.sql` contiene la definición consolidada de la base, y los archivos siguientes conservan las correcciones.
+
+## Continuación del 28/09/2026
+
+El usuario pidió dejar CAPTCHA pendiente y completar el resto. No se ha eliminado ni simulado esa protección. El registro nuevo continúa bloqueado hasta su configuración.
+
+Completado en esta revisión:
+- Ingreso por usuario o correo. La función `username-login` autentica la contraseña contra Supabase Auth; el correo se resuelve solo en servidor mediante RPC restringida a `service_role`. Límite de diez intentos por usuario cada cinco minutos.
+- Editor de Mi Hangar integrado, foto de perfil recortada y sin metadatos, y cambio de usuario limitado a una vez cada 90 días con historial privado.
+- Edición de comentarios, solicitudes de retiro, formato con listas y enlaces, menciones enlazadas y notificación de menciones aprobadas.
+- Borradores con los campos de travesía, aviso antes de salir, validación previa de archivos, límite de seis adjuntos también en servidor.
+- Filtro de fotos reparado, vista de video en las tarjetas, acceso independiente a AeroShop y recuperación de todos los lotes de datos (sin truncar a 200 temas).
+- Panel para mover/fijar/cerrar/reabrir/restaurar temas, editar bienvenidas y normas, consultar historial, restringir cuentas o suspenderlas por 7/30 días con motivo y notificación.
+- Revisión previa también ante cambios de título, resumen, categoría, fuente, etiquetas o ruta; autor no puede reabrir un tema cerrado por moderación. Suspensiones permiten enviar apelación privada por Contacto.
+
+Verificación:
+- `npm test`: navegación, migas, filtros multimedia, HTML escapado, formato, cuenta anónima, mostrar contraseña, borrador de travesía, perfil y controles de moderación.
+- `tests/permissions.sql`: transacción con rollback; no deja contenido, perfiles ni sanciones de prueba. Comprobó autoría, publicación pendiente, imposibilidad de autoaprobar, moderación de cambios de título, cierre y suspensión con canal de apelación.
+- RPC de login: acceso denegado a anon y authenticated; permitido solo a service_role.
+- Endpoint de login devuelve error genérico ante credenciales de prueba inexistentes. No se han utilizado contraseñas reales ni creado cuentas de prueba.
+- Asesor de seguridad: las tablas privadas sin políticas están bloqueadas por diseño; sigue pendiente la protección contra contraseñas filtradas.
+
+Pendiente: prueba de ingreso correcto y correo con cuenta real; CAPTCHA; revisión visual y prueba cerrada; migración final; los componentes avanzados todavía enumerados arriba (moderadores por categoría, expiración comercial, suscripciones por correo, eliminación de cuenta y respaldos periódicos). Esta revisión no es un lanzamiento definitivo del plan integral.

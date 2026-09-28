@@ -1,0 +1,1 @@
+{"name":"gente-de-vuelo","private":true,"version":"1.0.0","scripts":{"test":"node tests/community.test.cjs","check":"node --check assets/comunidad.js"},"devDependencies":{"jsdom":"26.1.0"}}

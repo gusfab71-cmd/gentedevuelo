@@ -3903,7 +3903,7 @@ body:not(.modo-seccion-unica):not(.modo-anexo)>#explorar,body:not(.modo-seccion-
       <span>Mi cuenta</span><span class="cuenta-chevron" aria-hidden="true">⌄</span>
     </summary>
     <div class="cuenta-opciones" id="opcionesCuenta">
-      <a href="comunidad.html#hangar">Mi Hangar</a><a href="#mi-perfil">Editar perfil</a>
+      <a href="comunidad.html#hangar">Mi Hangar</a><a href="comunidad.html#perfil">Editar perfil</a>
       <button type="button" id="botonCerrarSesion">Cerrar sesión</button>
     </div>
   </details>
@@ -7775,6 +7775,15 @@ cargarTravesias();
   });
   cargarAportes();
 })();
+</script>
+<script>
+// All entry points use the same community authentication and profile flows.
+document.addEventListener('click', function(event) {
+  if (event.target.closest('#botonIngresar')) {
+    event.preventDefault(); event.stopImmediatePropagation();
+    location.href = 'comunidad.html#ingresar';
+  }
+}, true);
 </script>
 </body>
 </html>
