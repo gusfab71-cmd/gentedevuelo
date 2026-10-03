@@ -98,7 +98,7 @@
       <div id="lista" class="lista" aria-live="polite"></div>
     </section>
   </main>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/supabase-2.117.2.min.js"></script>
   <script>
     const client = supabase.createClient(
       "https://lmoifzyhqmccvmgitlcp.supabase.co",
@@ -111,13 +111,13 @@
       { tabla: "actividades", nombre: "Agenda Aeronáutica", campos: "id,titulo,descripcion,fecha_evento,lugar,localidad,estado,visible,created_at" },
       { tabla: "galeria", nombre: "Galería", campos: "id,archivo,nombre_usuario,visible,created_at" },
       { tabla: "travesias", nombre: "Travesías", campos: "id,titulo,relato,salida,destino,fotos,videos,visible,created_at" },
-      { tabla: "clasificados", nombre: "Clasificados", campos: "id,titulo,descripcion,tipo,categoria,ubicacion,precio,moneda,fotos,estado_publicacion,created_at" },
+      { tabla: "clasificados", nombre: "CompraVenta", campos: "id,titulo,descripcion,tipo,categoria,ubicacion,precio,moneda,fotos,estado_publicacion,created_at" },
       { tabla: "shimoda_comentarios", nombre: "Comentarios de Shimoda", campos: "id,contenido,publicacion_id,estado,created_at" },
       { tabla: "shimoda_publicaciones", nombre: "Publicaciones de Shimoda", campos: "id,titulo,contenido,publicado,fecha_publicacion,created_at" }
     ];
     const $ = id => document.getElementById(id);
     const datos = new Map();
-    let filtro = "pendientes";
+    let filtro = location.hash?"todas":"pendientes";
     let administrador = false;
 
     function mensaje(texto) { $("mensaje").textContent = texto; }
@@ -165,9 +165,12 @@
       return { estado: accion === "aprobar" ? "aprobado" : accion === "rechazar" ? "rechazado" : item.fila.estado, visible: accion === "aprobar" };
     }
     async function guardar(item, accion, boton) {
+      const motivo=prompt("Motivo de la medida (se comunicará al autor):");
+      if(motivo===null)return;
+      if(motivo.trim().length<5){mensaje("Escribí un motivo de al menos cinco caracteres.");return;}
       boton.disabled = true;
       mensaje("Guardando cambio…");
-      const cambios = cambio(item, accion);
+      const cambios = {...cambio(item, accion),moderation_reason:motivo.trim()};
       const { data, error } = await client.from(item.config.tabla)
         .update(cambios).eq("id", item.fila.id).select("id");
       boton.disabled = false;
@@ -257,7 +260,8 @@
       $("numeroPendientes").textContent = "(" + pendientes + ")";
       const buscar = $("buscar").value.trim().toLocaleLowerCase("es-AR");
       const seleccion = $("tipo").value;
-      const visibles = items.filter(item => (filtro === "todas" || estado(item) === filtro)
+      const target=location.hash.slice(1).split("/");
+      const visibles = items.filter(item => (!target[0]||(item.config.tabla===target[0]&&String(item.fila.id)===target[1])) && (filtro === "todas" || estado(item) === filtro)
         && (seleccion === "todas" || item.config.tabla === seleccion)
         && (!buscar || [item.fila.titulo, item.fila.contenido, item.fila.descripcion, item.fila.relato, item.fila.autor_nombre, item.fila.nombre_usuario].filter(Boolean).join(" ").toLocaleLowerCase("es-AR").includes(buscar)));
       $("resumen").textContent = visibles.length + " publicaciones en esta vista";

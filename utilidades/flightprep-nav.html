@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>FlightPrep - Viento y Navegación por piernas</title>
+<link rel="stylesheet" href="utilities.css">
+<style>
+:root{box-sizing:border-box;color-scheme:dark}
+body{background:radial-gradient(1100px 500px at 0 -10%,#0e749055,transparent),radial-gradient(900px 500px at 100% 0,#4f46e555,transparent),#070b14;color:#e2e8f0;font-family:system-ui,sans-serif}
+.card{background:rgba(17,25,45,.82);border:1px solid rgba(255,255,255,.08);border-radius:1rem}
+.fld{background:#0f172a;border:1px solid #334155;border-radius:.5rem;padding:.35rem .5rem;width:100%;font-weight:600}
+.fld:focus{outline:none;border-color:#38bdf8}
+.tab{padding:.7rem 1.2rem;font-size:.9rem;font-weight:600;color:#94a3b8;border-bottom:3px solid transparent;white-space:nowrap}
+.tab.on{color:#38bdf8;border-color:#38bdf8;background:#38bdf814}
+table input{width:4.3rem;background:#0f172a;border:1px solid #334155;border-radius:.4rem;padding:.2rem .3rem;text-align:right;font-weight:600}
+table input.t{width:7rem;text-align:left}
+th{font-size:10px;text-transform:uppercase;color:#94a3b8;padding:.4rem .3rem;white-space:nowrap}
+td{padding:.35rem .3rem;white-space:nowrap}
+
+@media print {
+  body { background: #ffffff !important; color: #000000 !important; font-size: 11px !important; }
+  header, nav, button, .no-print, .fld:focus { display: none !important; }
+  .card { background: #ffffff !important; border: 1px solid #cccccc !important; color: #000000 !important; box-shadow: none !important; }
+  .fld, table input { background: #ffffff !important; border: none !important; color: #000000 !important; padding: 0 !important; text-align: inherit; }
+  table input.t { width: auto !important; }
+  th { color: #333333 !important; border-bottom: 2px solid #000 !important; }
+  td { border-bottom: 1px solid #eee !important; color: #000 !important; }
+  svg { max-height: 180px !important; }
+  .text-sky-300, .text-emerald-300, .text-cyan-300, .text-amber-300, .text-fuchsia-300 { color: #000000 !important; font-weight: bold; }
+  .print-header { display: block !important; margin-bottom: 15px; border-bottom: 2px solid #000; padding-bottom: 5px; }
+  .print-footer { display: block !important; margin-top: 20px; text-align: center; font-size: 10px; border-top: 1px solid #ccc; padding-top: 5px; color: #333 !important; }
+  section { display: block !important; page-break-inside: avoid; }
+}
+.print-header { display: none; }
+.print-footer { display: none; }
+
+.back{display:block;padding:12px 20px;color:#7dd3fc}.validation{color:#fda4af;font-weight:bold;padding:12px}.disclaimer{margin:12px 20px;padding:12px;border:1px solid #64748b;color:#e2e8f0;font-size:13px}header{flex-wrap:wrap;gap:12px}@media print{.disclaimer{color:#000}#v-w,#v-n{display:block!important}.card{break-inside:avoid}input{color:#000!important}}
+
+.print-value{display:none}@media print{@page{size:A4;margin:12mm}main{padding:0!important}table{min-width:0!important;width:100%!important;table-layout:fixed;font-size:8px!important}th,td{white-space:normal!important;overflow-wrap:anywhere;padding:3px!important}table th:first-child{width:15%}input{display:none!important}.print-value{display:block!important;white-space:normal;overflow-wrap:anywhere;color:#000}.overflow-x-auto{overflow:visible!important}.card{margin-bottom:10px}svg{max-width:100%}#g,#cfg{display:grid;grid-template-columns:repeat(3,1fr)!important}.disclaimer{margin:8px 0}}
+
+@media print{html,body{color-scheme:light!important;background:#fff!important;min-height:0!important}section{break-inside:auto!important;page-break-inside:auto!important}.card,.card label,.card p,.card span,.card div,.card h2{color:#000!important}.validation:empty{display:none}#v-w{display:grid!important;grid-template-columns:1fr 1fr!important;gap:10px}#v-w>div:last-child{grid-column:1/-1}#v-w #w_main{grid-template-columns:repeat(4,1fr)}#v-n{break-before:page}#v-n>.grid,main>.grid{grid-template-columns:1fr 1fr!important}.card{padding:10px!important}#tot{font-size:10px!important}#w_main .text-3xl{font-size:20px}#items .print-value{font-size:10px}#items td:first-child{width:35%}}
+</style></head>
+<body class="min-h-screen"><a class="no-print back" href="./">← Utilidades</a>
+
+<div class="print-header">
+  <h1 style="font-size: 18px; font-weight: bold;">GENTE DE VUELO - REPORTE DE NAVEGACIÓN Y VIENTO</h1>
+  <p style="font-size: 10px;">Planilla precomputada generada desde el módulo de utilidades</p>
+</div>
+
+<header class="px-5 py-3 border-b border-white/10 flex items-center justify-between sticky top-0 z-40 bg-[#070b14]/90 backdrop-blur" style="padding-top:calc(.75rem + env(safe-area-inset-top,0px))">
+  <div class="flex items-center gap-3">
+    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-400 to-indigo-600 grid place-items-center text-xl">🧭</div>
+    <div>
+      <h1 class="font-extrabold tracking-wide text-white leading-tight">FLIGHTPREP <span class="text-[10px] bg-sky-500/20 text-sky-300 px-1.5 py-0.5 rounded align-middle">NAV</span></h1>
+      <p class="text-[11px] text-slate-400">Viento en pista · Navegación por piernas · <span class="text-sky-400 font-medium">Powered by Gente de Vuelo</span></p>
+    </div>
+  </div>
+  
+  <div class="flex gap-2 no-print">
+    <button onclick="exportJSON()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg font-bold border border-white/10 transition">💾 Guardar JSON</button>
+    <button onclick="printReport()" class="text-xs bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1">📥 Descargar Reporte (PDF/Imprimir)</button>
+  </div>
+</header>
+
+<nav class="flex overflow-x-auto border-b border-white/10 px-3 no-print">
+  <button class="tab on" id="t-w" onclick="tab('w')">🌬 Viento en pista</button>
+  <button class="tab" id="t-n" onclick="tab('n')">🧭 Navegación por piernas</button>
+</nav>
+
+<p class="disclaimer">Herramienta orientativa. Cargá datos verificados del manual y de la hoja de peso y balance de tu aeronave. Los resultados no certifican aeronavegabilidad ni autorizan un vuelo.</p><div id="validation" class="validation" role="alert"></div><main class="max-w-7xl mx-auto p-4 sm:p-6">
+<section id="v-w" class="grid lg:grid-cols-12 gap-5">
+  <div class="lg:col-span-4 card p-4 space-y-3">
+    <h2 class="font-bold text-sky-300">Datos</h2>
+    <label class="block text-xs text-slate-400">Pista en uso (01–36)<input id="w_r" type="number" min="1" max="36" value="18" class="fld" oninput="calcWind()"></label>
+    <label class="block text-xs text-slate-400">Viento: dirección DE donde sopla (°)<input id="w_d" type="number" min="0" max="360" value="230" class="fld" oninput="calcWind()"></label>
+    <label class="block text-xs text-slate-400">Velocidad (kt)<input id="w_s" type="number" min="0" value="15" class="fld" oninput="calcWind()"></label>
+    <label class="block text-xs text-slate-400">Ráfaga (kt, opcional)<input id="w_g" type="number" min="0" value="22" class="fld" oninput="calcWind()"></label>
+    <label class="block text-xs text-slate-400">Límite de viento cruzado de su avión (kt)<input id="w_l" type="number" min="1" value="15" class="fld" oninput="calcWind()"></label>
+    <p class="text-[11px] text-slate-500 no-print">Use la misma referencia para pista y viento (magnético, como el parte del ATIS/torre).</p>
+  </div>
+  <div class="lg:col-span-4 card p-4"><svg id="wsvg" viewBox="0 0 300 300" class="w-full max-w-sm mx-auto"></svg></div>
+  <div class="lg:col-span-4 space-y-3">
+    <div id="w_main" class="grid grid-cols-2 gap-3"></div>
+    <div id="w_msg" class="card p-3 text-sm"></div>
+    <div id="w_both" class="card p-3 text-sm"></div>
+  </div>
+</section>
+
+<section id="v-n" class="hidden space-y-5">
+  <div class="card p-4"><h2 class="font-bold text-sky-300 mb-3">Datos del vuelo y la aeronave</h2><div id="g" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 text-xs text-slate-400"></div></div>
+  <div class="card p-4">
+    <div class="flex justify-between items-center mb-2">
+      <h2 class="font-bold text-sky-300">Piernas (Origen → Destino)</h2>
+      <div class="flex gap-2 no-print">
+        <button onclick="addLeg()" class="text-xs bg-sky-600 hover:bg-sky-500 text-white px-3 py-1.5 rounded-lg font-bold">＋ Pierna</button>
+        <button onclick="resetNav()" class="text-xs bg-slate-800 text-slate-300 px-3 py-1.5 rounded-lg">Reiniciar</button>
+      </div>
+    </div>
+    <p class="text-[11px] text-slate-500 mb-2 no-print">TC = curso verdadero · Viento verdadero DE donde sopla · Variación y desvío: Este (+) / Oeste (−)</p>
+    <div class="overflow-x-auto"><table class="w-full text-sm min-w-[900px]"><thead><tr class="border-b border-white/10">
+      <th>Hasta</th><th>TC°</th><th>Dist NM</th><th>Viento°</th><th>Vel kt</th><th>Var</th><th>Desvío</th>
+      <th class="text-amber-300">WCA</th><th class="text-emerald-300">RM (mag)</th><th class="text-emerald-300">RC (comp)</th><th class="text-cyan-300">GS kt</th><th class="text-cyan-300">ETE</th><th class="text-cyan-300">ETA</th><th class="text-fuchsia-300">Comb gal</th><th class="no-print"></th></tr></thead>
+    <tbody id="legs" class="divide-y divide-white/5"></tbody></table></div>
+  </div>
+  <div class="grid lg:grid-cols-12 gap-5">
+    <div class="lg:col-span-5 card p-4"><h2 class="font-bold text-sky-300 mb-2">Totales y combustible</h2><div id="tot" class="text-sm space-y-1"></div><div id="nstatus" class="mt-3"></div></div>
+    <div class="lg:col-span-7 card p-4"><h2 class="font-bold text-sky-300 mb-2">Combustible remanente a lo largo del vuelo</h2><svg id="fchart" viewBox="0 0 460 230" class="w-full rounded-xl bg-[#050810]"></svg></div>
+  </div>
+</section>
+</main>
+
+<div class="print-footer">
+  <p>FlightPrep NAV · Powered by Gente de Vuelo</p>
+</div>
+
+<script>
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const $=i=>document.getElementById(i), R=Math.PI/180, n360=a=>((a%360)+360)%360, p3=a=>String(Math.round(n360(a))||360).padStart(3,'0');
+function tab(t){['w','n'].forEach(x=>{$('v-'+x).classList.toggle('hidden',x!=t);$('t-'+x).classList.toggle('on',x==t)});if(t=='n')calcNav()}
+
+function preparePrint(){document.querySelectorAll('.print-value').forEach(n=>n.remove());document.querySelectorAll('input').forEach(input=>{const span=document.createElement('span');span.className='print-value';span.textContent=input.value||'—';input.after(span)})}
+window.addEventListener('beforeprint',preparePrint);
+function printReport() { preparePrint();window.print(); }
+function exportJSON() {
+  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({navigation:S,wind:Object.fromEntries(['w_r','w_d','w_s','w_g','w_l'].map(id=>[id,$(id).value])),units:{speed:'kt',distance:'NM',fuel:'US gal'}}, null, 2));
+  const downloadAnchor = document.createElement('a');
+  downloadAnchor.setAttribute("href", dataStr);
+  downloadAnchor.setAttribute("download", `FlightPrep_${S.org}_${S.dst}.json`);
+  document.body.appendChild(downloadAnchor);
+  downloadAnchor.click();
+  downloadAnchor.remove();
+}
+
+function comp(ws,wd,hdg){const a=(wd-hdg)*R;return{head:ws*Math.cos(a),cross:ws*Math.sin(a)}} 
+function calcWind(){
+ const rn=+$('w_r').value,hdg=rn*10,wd=+$('w_d').value,ws=+$('w_s').value,g=$('w_g').value===''?ws:+$('w_g').value,lim=+$('w_l').value;
+ if(!Number.isInteger(rn)||rn<1||rn>36||wd<0||wd>360||ws<0||g<ws||lim<=0||['w_r','w_d','w_s','w_l'].some(id=>$(id).value==='')){$('w_main').textContent='';$('w_both').textContent='';$('wsvg').innerHTML='';$('w_msg').textContent='Revisá pista, viento y límite. La ráfaga debe ser igual o mayor al viento sostenido.';return}
+ const c=comp(ws,wd,hdg),cg=comp(g,wd,hdg),hw=Math.round(c.head),xw=Math.round(Math.abs(c.cross)),gx=Math.round(Math.abs(cg.cross));
+ const side=c.cross>0?'derecha':'izquierda',col=v=>v>lim?'rose':v>lim*.7?'amber':'emerald';
+ const card=(t,v,sub,c,unit='kt')=>`<div class="card p-3 border-l-4 !border-l-${c}-500"><div class="text-[11px] text-slate-400">${t}</div><div class="text-3xl font-extrabold text-${c}-300">${v}<span class="text-sm"> ${unit}</span></div><div class="text-[11px] text-slate-400">${sub}</div></div>`;
+ $('w_main').innerHTML=card(hw>=0?'Viento de frente':'Viento de cola ⚠',Math.abs(hw),hw>=0?'ayuda al despegue':'alarga el recorrido',hw>=0?'sky':'rose')
+  +card('Viento cruzado',xw,xw?'desde la '+side:'—',col(xw))
+  +card('Cruzado en ráfaga',gx,`de frente ${Math.round(cg.head)} kt`,col(gx))+card('Ángulo viento-pista',Math.round(Math.abs(((wd-hdg+540)%360)-180)),'grados','indigo','°');
+ const m=[];if(hw<-2)m.push('🔴 Viento de cola: considere la pista opuesta.');if(Math.abs(cg.cross)>lim)m.push('🔴 Cruzado en ráfagas supera su límite ('+lim+' kt).');else if(Math.abs(c.cross)>lim)m.push('🔴 Cruzado superior al límite ('+lim+' kt).');else if(xw>lim*.7)m.push('🟡 Cruzado cercano al límite: técnica de viento cruzado y margen.');
+ if(!m.length)m.push('🟢 Componentes dentro de los límites indicados.');
+ $('w_msg').innerHTML=m.join('<br>');
+ const rn2=((rn+17)%36)+1,h2=rn2*10,c2=comp(ws,wd,h2),best=c.head>=c2.head?rn:rn2;
+ $('w_both').innerHTML=`<div class="font-semibold mb-1 text-sky-300">Comparación de cabeceras</div>`+[[rn,c],[rn2,c2]].map(([r,k])=>`<div class="flex justify-between ${r==best?'text-emerald-300 font-bold':'text-slate-300'}"><span>Pista ${String(r).padStart(2,'0')} ${r==best?'★':''}</span><span>${k.head>=0?'frente':'cola'} ${Math.abs(Math.round(k.head))} · cruz ${Math.abs(Math.round(k.cross))}</span></div>`).join('');
+ drawWind(hdg,wd,rn,ws);
+}
+function drawWind(hdg,wd,rn,ws){
+ let s=`<circle cx="150" cy="150" r="128" fill="#0b1220" stroke="#334155" stroke-width="2"/>`;
+ for(let a=0;a<360;a+=10){const l=a%30==0?12:6,x1=150+Math.sin(a*R)*128,y1=150-Math.cos(a*R)*128,x2=150+Math.sin(a*R)*(128-l),y2=150-Math.cos(a*R)*(128-l);s+=`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#64748b"/>`}
+ [['N',0],['E',90],['S',180],['O',270]].forEach(([t,a])=>s+=`<text x="${150+Math.sin(a*R)*104}" y="${150-Math.cos(a*R)*104+4}" fill="${t=='N'?'#f87171':'#94a3b8'}" font-size="12" font-weight="700" text-anchor="middle">${t}</text>`);
+ s+=`<g transform="rotate(${hdg} 150 150)"><rect x="136" y="60" width="28" height="180" rx="3" fill="#1e293b" stroke="#475569"/><line x1="150" y1="68" x2="150" y2="232" stroke="#e2e8f0" stroke-width="2" stroke-dasharray="10 8"/><text x="150" y="226" fill="#fff" font-size="13" font-weight="800" text-anchor="middle">${String(rn).padStart(2,'0')}</text><path d="M150 40 L140 58 L160 58Z" fill="#38bdf8"/><text x="170" y="52" fill="#38bdf8" font-size="9">despegue</text></g>`;
+ s+=`<g transform="rotate(${wd} 150 150)"><line x1="150" y1="14" x2="150" y2="104" stroke="#fbbf24" stroke-width="5" stroke-linecap="round"/><path d="M150 112 L137 90 L163 90Z" fill="#fbbf24"/><text x="150" y="9" fill="#fbbf24" font-size="11" font-weight="800" text-anchor="middle" transform="rotate(${-wd} 150 9)">${p3(wd)}°/${ws}kt</text></g>`;
+ $('wsvg').innerHTML=s}
+
+const DEF={org:'Origen',dst:'Destino',tas:100,gph:7,taxi:1.5,cont:10,res:45,alt:0,fuel:40,etd:'10:00',
+ legs:[{to:'Punto 1',tc:270,d:55,wd:230,ws:15,v:-8,dv:0},{to:'Punto 2',tc:300,d:48,wd:230,ws:18,v:-8,dv:0},{to:'Destino',tc:340,d:62,wd:240,ws:20,v:-7,dv:0}]};
+let S=JSON.parse(JSON.stringify(DEF));try{const x=JSON.parse(localStorage.getItem('fp_nav2'));if(x&&x.legs)S=x}catch(e){}
+const GF=[['org','Origen','text'],['dst','Destino','text'],['tas','TAS crucero (kt)'],['gph','Consumo (US gal/h)'],['taxi','Rodaje+ascenso (gal)'],['cont','Contingencia (%)'],['res','Reserva final (min)'],['alt','Alternativa (min)'],['fuel','Combustible a bordo (US gal)'],['etd','ETD (hh:mm)','time']];
+function buildG(){$('g').innerHTML=GF.map(([k,l,t])=>`<label>${l}<input class="fld mt-0.5" type="${t||'number'}" step="any" value="${esc(S[k])}" oninput="G('${k}',this.value,'${t||''}')"></label>`).join('')}
+function G(k,v,t){S[k]=t?v:(v===''?NaN:Number(v));calcNav()}
+function buildLegs(){$('legs').innerHTML=S.legs.map((l,i)=>`<tr><td><input class="t" value="${esc(l.to)}" oninput="L(${i},'to',this.value)"></td>`+
+ ['tc','d','wd','ws','v','dv'].map(k=>`<td><input type="number" step="any" value="${l[k]}" oninput="L('${i}','${k}',this.value)"></td>`).join('')+
+ ['w','m','c','g','e','a','f'].map((k,j)=>`<td id="${k}${i}" class="font-bold text-center ${['text-amber-300','text-emerald-300','text-emerald-300','text-cyan-300','text-cyan-300','text-cyan-300','text-fuchsia-300'][j]}"></td>`).join('')+
+ `<td class="no-print"><button onclick="delLeg(${i})" class="text-rose-400 px-1">✕</button></td></tr>`).join('')}
+function L(i,k,v){S.legs[i][k]=k=='to'?v:(v===''?NaN:Number(v));calcNav()}
+function addLeg(){const l=S.legs[S.legs.length-1]||{tc:0,d:50,wd:0,ws:0,v:0,dv:0};S.legs.push({...l,to:'Punto '+(S.legs.length+1)});buildLegs();calcNav()}
+function delLeg(i){if(S.legs.length>1){S.legs.splice(i,1);buildLegs();calcNav()}}
+function resetNav(){S=JSON.parse(JSON.stringify(DEF));buildG();buildLegs();calcNav()}
+const fT=m=>{m=Math.round(m);return Math.floor(m/60)+'h '+String(m%60).padStart(2,'0')+'m'},clk=m=>{m=((Math.round(m)%1440)+1440)%1440;return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0')};
+
+function calcNav(){
+ const invalid=!Number.isFinite(S.tas)||S.tas<=0||!Number.isFinite(S.gph)||S.gph<=0||['taxi','cont','res','alt','fuel'].some(k=>!Number.isFinite(S[k])||S[k]<0)||!/^([01]\d|2[0-3]):[0-5]\d$/.test(S.etd)||!S.legs.length||S.legs.some(l=>['tc','d','wd','ws','v','dv'].some(k=>!Number.isFinite(l[k]))||l.d<=0||l.ws<0||l.tc<0||l.tc>360||l.wd<0||l.wd>360);
+ if(invalid){$('nstatus').textContent='Revisá los datos: TAS, consumo y distancias deben ser positivos; combustible y tiempos no pueden ser negativos.';$('tot').textContent='';$('fchart').innerHTML='';S.legs.forEach((l,i)=>['w','m','c','g','e','a','f'].forEach(k=>{if($(k+i))$(k+i).textContent='—'}));return}
+
+ try{localStorage.setItem('fp_nav2',JSON.stringify(S))}catch(e){}
+ const [hh,mm]=(S.etd||'0:0').split(':').map(Number);let clock=(hh||0)*60+(mm||0),cum=0,dist=0,trip=0,bad=false;
+ const pts=[{t:0,f:S.fuel-S.taxi,n:S.org}];
+ S.legs.forEach((l,i)=>{
+  const rel=(l.wd-l.tc)*R,x=l.ws*Math.sin(rel)/S.tas,set=(k,h)=>$(k+i).innerHTML=h;
+  if(!(S.tas>0)||Math.abs(x)>=1){bad=true;['w','m','c','g','e','a','f'].forEach(k=>set(k,'—'));return}
+  const wca=Math.asin(x)/R,gs=S.tas*Math.cos(wca*R)-l.ws*Math.cos(rel);
+  if(gs<=0){bad=true;['w','m','c','g','e','a','f'].forEach(k=>set(k,'—'));return}
+  const th=l.tc+wca,mh=th-l.v,ch=mh-l.dv,ete=l.d/gs*60,f=ete/60*S.gph;
+  clock+=ete;cum+=ete;dist+=l.d;trip+=f;
+  set('w',(wca>=0?'D ':'I ')+Math.abs(wca).toFixed(1)+'°');set('m',p3(mh)+'°');set('c',p3(ch)+'°');set('g',gs.toFixed(0));set('e',fT(ete));set('a',clk(clock));set('f',f.toFixed(1));
+  pts.push({t:cum,f:S.fuel-S.taxi-trip,n:l.to});
+ });
+ if(bad){$('tot').textContent='Cálculo no disponible: al menos una pierna no es realizable con estos datos.';$('nstatus').textContent='Revisá viento, TAS y velocidad de avance.';$('fchart').innerHTML='';return}
+ const cont=trip*S.cont/100,res=S.res/60*S.gph,alt=S.alt/60*S.gph,req=trip+S.taxi+cont+res+alt,mar=S.fuel-req,endu=S.gph>0?S.fuel/S.gph*60:0;
+ const row=(a,b,c='')=>`<div class="flex justify-between ${c}"><span class="text-slate-400">${a}</span><b>${b}</b></div>`;
+ $('tot').innerHTML=row('Distancia total',dist.toFixed(0)+' NM')+row('Tiempo en ruta',fT(cum))+row('Combustible en ruta',trip.toFixed(1)+' gal')+row('Rodaje + ascenso',S.taxi.toFixed(1)+' gal')+row('Contingencia ('+S.cont+'%)',cont.toFixed(1)+' gal')+row('Reserva final ('+S.res+' min)',res.toFixed(1)+' gal')+(S.alt?row('Alternativa',alt.toFixed(1)+' gal'):'')+
+  `<hr class="border-white/10 my-1">`+row('Combustible requerido',req.toFixed(1)+' gal','text-sky-300')+row('Combustible a bordo',S.fuel.toFixed(1)+' gal')+row('Autonomía total',fT(endu))+row('ETA destino',clk(clock));
+ $('nstatus').innerHTML=bad?`<div class="rounded-xl p-3 bg-rose-500/15 border border-rose-500/40 text-rose-300 font-bold">⚠ Revise datos: viento mayor que TAS o velocidad de tierra nula en alguna pierna.</div>`
+  :mar>=0?`<div class="rounded-xl p-3 bg-emerald-500/15 border border-emerald-500/40 text-emerald-300"><b>🟢 COMBUSTIBLE SUFICIENTE</b><div class="text-xs">Excedente ${mar.toFixed(1)} gal (${fT(mar/S.gph*60)} extra)</div></div>`
+  :`<div class="rounded-xl p-3 bg-rose-500/15 border border-rose-500/40 text-rose-300"><b>🔴 COMBUSTIBLE INSUFICIENTE</b><div class="text-xs">Faltan ${(-mar).toFixed(1)} gal para cumplir reservas</div></div>`;
+ chartF(pts,res+alt)}
+function chartF(p,rsv){
+ const W=460,H=230,Lm=46,Rm=38,T=16,B=34,xm=Math.max(...p.map(a=>a.t),1),ym=Math.max(S.fuel,1),sx=v=>Lm+v/xm*(W-Lm-Rm),sy=v=>H-B-Math.max(v,0)/ym*(H-B-T);
+ let s='';for(let i=0;i<=4;i++){const v=ym*i/4;s+=`<line x1="${Lm}" x2="${W-Rm}" y1="${sy(v)}" y2="${sy(v)}" stroke="#fff1"/><text x="${Lm-6}" y="${sy(v)+3}" fill="#94a3b8" font-size="10" text-anchor="end">${v.toFixed(0)}</text>`}
+ s+=`<rect x="${Lm}" y="${sy(rsv)}" width="${W-Lm-Rm}" height="${H-B-sy(rsv)}" fill="#ef44441f"/><line x1="${Lm}" x2="${W-Rm}" y1="${sy(rsv)}" y2="${sy(rsv)}" stroke="#f87171" stroke-dasharray="5 4"/><text x="${W-Rm-3}" y="${sy(rsv)-4}" fill="#f87171" font-size="10" text-anchor="end">reserva ${rsv.toFixed(1)}</text>`;
+ const pl=p.map(a=>sx(a.t)+','+sy(a.f)).join(' ');
+ s+=`<polygon points="${sx(0)},${H-B} ${pl} ${sx(p[p.length-1].t)},${H-B}" fill="#10b9812e"/><polyline points="${pl}" fill="none" stroke="#34d399" stroke-width="3" stroke-linejoin="round"/>`;
+ p.forEach((a,i)=>{const bad=a.f<rsv;s+=`<g><title>${esc(a.n)}: ${a.f.toFixed(1)} gal · ${fT(a.t)}</title><circle cx="${sx(a.t)}" cy="${sy(a.f)}" r="6" fill="${bad?'#f87171':'#34d399'}" stroke="#fff" stroke-width="1.5"/></g><text x="${sx(a.t)}" y="${H-B+14}" fill="#cbd5e1" font-size="9" text-anchor="middle">${esc(a.n.slice(0,9))}</text><text x="${sx(a.t)}" y="${sy(a.f)-10}" fill="#e2e8f0" font-size="10" font-weight="700" text-anchor="middle">${a.f.toFixed(1)}</text>`});
+ s+=`<text x="${(Lm+W-Rm)/2}" y="${H-4}" fill="#64748b" font-size="10" text-anchor="middle">Progreso del vuelo (gal restantes en cada punto)</text>`;
+ $('fchart').innerHTML=s}
+
+buildG();buildLegs();calcNav();calcWind();
+</script></body></html>
