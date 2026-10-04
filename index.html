@@ -6990,27 +6990,138 @@ document.getElementById("formularioBusquedaClasificado").addEventListener("submi
 });
 
 let publicacionShimodaActualId = null;
+let publicacionShimodaEsForo = false;
 
 function mostrarMensajeComentarioShimoda(mensaje, esError = false) {
   const elemento = document.getElementById("mensajeComentarioShimoda");
-
   if (!elemento) return;
-
   elemento.textContent = mensaje;
   elemento.style.color = esError ? "#ff8a65" : "#d6a84b";
 }
 
-async function cargarComentariosShimoda(publicacionId) {
-  const contenedor = document.getElementById("listaComentariosShimoda");
+function obtenerTopicShimodaDesdeURL() {
+  return new URLSearchParams(window.location.search).get("shimoda_topic");
+}
 
-  if (!contenedor || !publicacionId) return;
+function asegurarContenedorMediaShimoda() {
+  let contenedor = document.getElementById("shimodaMediaForo");
+  if (contenedor) return contenedor;
+
+  const publicacion = document.querySelector("#shimoda .shimoda-publicacion");
+  if (!publicacion) return null;
+
+  contenedor = document.createElement("div");
+  contenedor.id = "shimodaMediaForo";
+  contenedor.style.display = "grid";
+  contenedor.style.gap = "12px";
+  contenedor.style.marginTop = "18px";
+  publicacion.appendChild(contenedor);
+  return contenedor;
+}
+
+async function cargarMediaShimodaForo(topicId) {
+  const contenedor = asegurarContenedorMediaShimoda();
+  if (!contenedor) return;
+  contenedor.innerHTML = "";
 
   const { data, error } = await supabaseClient
-    .from("shimoda_comentarios")
-    .select("id, contenido, created_at, profiles(full_name, username)")
-    .eq("publicacion_id", publicacionId)
-    .eq("estado", "aprobado")
+    .from("gdv_media")
+    .select("id, path, legacy_url, kind")
+    .eq("topic_id", topicId)
     .order("created_at", { ascending: true });
+
+  if (error) {
+    console.error("Error al cargar multimedia de Shimoda:", error);
+    return;
+  }
+
+  for (const archivo of data || []) {
+    let url = archivo.legacy_url || "";
+
+    if (!url && archivo.path) {
+      const firmado = await supabaseClient.storage
+        .from("community-media")
+        .createSignedUrl(archivo.path, 3600);
+
+      if (!firmado.error) {
+        url = firmado.data?.signedUrl || "";
+      }
+    }
+
+    if (!url) continue;
+
+    if (archivo.kind === "image") {
+      const imagen = document.createElement("img");
+      imagen.src = url;
+      imagen.alt = "Imagen de la publicación de Robert Shimoda";
+      imagen.loading = "lazy";
+      imagen.style.width = "100%";
+      imagen.style.maxHeight = "620px";
+      imagen.style.objectFit = "contain";
+      imagen.style.borderRadius = "12px";
+      contenedor.appendChild(imagen);
+    } else if (archivo.kind === "video") {
+      const video = document.createElement("video");
+      video.src = url;
+      video.controls = true;
+      video.preload = "metadata";
+      video.style.width = "100%";
+      video.style.borderRadius = "12px";
+      contenedor.appendChild(video);
+    }
+  }
+}
+
+async function cargarComentariosShimoda(publicacionId, desdeForo = false) {
+  const contenedor = document.getElementById("listaComentariosShimoda");
+  if (!contenedor || !publicacionId) return;
+
+  let data;
+  let error;
+
+  if (desdeForo) {
+    const respuesta = await supabaseClient
+      .from("gdv_comments")
+      .select("id, content, created_at, author_id, deleted")
+      .eq("topic_id", publicacionId)
+      .eq("status", "approved")
+      .order("created_at", { ascending: true });
+
+    data = respuesta.data;
+    error = respuesta.error;
+
+    if (!error && data) {
+      const autores = [...new Set(data.map(c => c.author_id).filter(Boolean))];
+      let perfiles = [];
+
+      if (autores.length) {
+        const perfilesRespuesta = await supabaseClient
+          .from("profiles")
+          .select("id, full_name, username")
+          .in("id", autores);
+
+        if (!perfilesRespuesta.error) perfiles = perfilesRespuesta.data || [];
+      }
+
+      const mapaPerfiles = new Map(perfiles.map(p => [p.id, p]));
+      data = data.map(c => ({
+        id: c.id,
+        contenido: c.deleted ? "Comentario eliminado por su autor" : c.content,
+        created_at: c.created_at,
+        profiles: mapaPerfiles.get(c.author_id) || {}
+      }));
+    }
+  } else {
+    const respuesta = await supabaseClient
+      .from("shimoda_comentarios")
+      .select("id, contenido, created_at, profiles(full_name, username)")
+      .eq("publicacion_id", publicacionId)
+      .eq("estado", "aprobado")
+      .order("created_at", { ascending: true });
+
+    data = respuesta.data;
+    error = respuesta.error;
+  }
 
   if (error) {
     console.error("Error al cargar comentarios de Shimoda:", error);
@@ -7054,6 +7165,45 @@ async function cargarComentariosShimoda(publicacionId) {
 }
 
 async function cargarPublicacionShimoda() {
+  const topicId = obtenerTopicShimodaDesdeURL();
+
+  if (topicId) {
+    const { data, error } = await supabaseClient
+      .from("gdv_topics")
+      .select("id, title, content, category, created_at, special_role, status")
+      .eq("id", topicId)
+      .eq("special_role", "shimoda")
+      .eq("status", "approved")
+      .maybeSingle();
+
+    if (error) {
+      console.error("Error al cargar publicación del Foro de Shimoda:", error);
+    } else if (data) {
+      publicacionShimodaActualId = data.id;
+      publicacionShimodaEsForo = true;
+
+      const portadaTitulo = document.getElementById("shimodaPortadaTitulo");
+      const portadaFecha = document.getElementById("shimodaPortadaFecha");
+      const fecha = new Date(data.created_at);
+
+      if (portadaTitulo) portadaTitulo.textContent = data.title || "Publicación sin título";
+      if (portadaFecha) portadaFecha.textContent = fecha.toLocaleDateString("es-AR");
+
+      document.getElementById("shimodaTitulo").textContent = data.title || "Publicación sin título";
+      document.getElementById("shimodaContenido").textContent = data.content || "";
+      document.getElementById("shimodaFecha").textContent =
+        `${fecha.toLocaleDateString("es-AR")} · ${data.category || ""}`;
+
+      await cargarMediaShimodaForo(data.id);
+      await cargarComentariosShimoda(data.id, true);
+      return;
+    }
+  }
+
+  publicacionShimodaEsForo = false;
+  const mediaForo = document.getElementById("shimodaMediaForo");
+  if (mediaForo) mediaForo.innerHTML = "";
+
   const { data, error } = await supabaseClient
     .from("shimoda_publicaciones")
     .select("*")
@@ -7066,15 +7216,14 @@ async function cargarPublicacionShimoda() {
     return;
   }
 
-  if (!data || data.length === 0) {
-    return;
-  }
+  if (!data || data.length === 0) return;
 
   const publicacion = data[0];
   publicacionShimodaActualId = publicacion.id;
 
   const portadaTitulo = document.getElementById("shimodaPortadaTitulo");
   const portadaFecha = document.getElementById("shimodaPortadaFecha");
+
   if (portadaTitulo) {
     portadaTitulo.textContent = publicacion.titulo || "Publicación sin título";
   }
@@ -7086,20 +7235,16 @@ async function cargarPublicacionShimoda() {
       : publicacion.fecha_publicacion;
   }
 
-  document.getElementById("shimodaTitulo").textContent =
-    publicacion.titulo;
-
-  document.getElementById("shimodaContenido").textContent =
-    publicacion.contenido;
+  document.getElementById("shimodaTitulo").textContent = publicacion.titulo;
+  document.getElementById("shimodaContenido").textContent = publicacion.contenido;
 
   if (publicacion.fecha_publicacion) {
     const partes = publicacion.fecha_publicacion.split("-");
-
     document.getElementById("shimodaFecha").textContent =
       `${partes[2]}/${partes[1]}/${partes[0]} · ${publicacion.categoria || ""}`;
   }
 
-  cargarComentariosShimoda(publicacion.id);
+  await cargarComentariosShimoda(publicacion.id, false);
 }
 
 document.getElementById("formComentarioShimoda").addEventListener("submit", async function (event) {
@@ -7132,13 +7277,33 @@ document.getElementById("formComentarioShimoda").addEventListener("submit", asyn
   botonEnviar.disabled = true;
   botonEnviar.textContent = "Enviando...";
 
-  const { error } = await supabaseClient
-    .from("shimoda_comentarios")
-    .insert({
-      publicacion_id: publicacionShimodaActualId,
-      user_id: usuario.id,
-      contenido: contenido
-    });
+  let error;
+  let estado = "pending";
+
+  if (publicacionShimodaEsForo) {
+    const respuesta = await supabaseClient
+      .from("gdv_comments")
+      .insert({
+        topic_id: publicacionShimodaActualId,
+        author_id: usuario.id,
+        content: contenido
+      })
+      .select("status")
+      .single();
+
+    error = respuesta.error;
+    estado = respuesta.data?.status || "pending";
+  } else {
+    const respuesta = await supabaseClient
+      .from("shimoda_comentarios")
+      .insert({
+        publicacion_id: publicacionShimodaActualId,
+        user_id: usuario.id,
+        contenido: contenido
+      });
+
+    error = respuesta.error;
+  }
 
   botonEnviar.disabled = false;
   botonEnviar.textContent = "Enviar comentario";
@@ -7150,10 +7315,16 @@ document.getElementById("formComentarioShimoda").addEventListener("submit", asyn
   }
 
   formulario.reset();
-  mostrarMensajeComentarioShimoda("Comentario enviado. Quedó pendiente de aprobación.");
+
+  if (publicacionShimodaEsForo && estado === "approved") {
+    mostrarMensajeComentarioShimoda("Comentario publicado.");
+    await cargarComentariosShimoda(publicacionShimodaActualId, true);
+  } else {
+    mostrarMensajeComentarioShimoda("Comentario enviado. Quedó pendiente de aprobación.");
+  }
 });
 
- async function cargarAnterioresShimoda() {
+async function cargarAnterioresShimoda() {
   const { data, error } = await supabaseClient
     .from("shimoda_publicaciones")
     .select("*")
