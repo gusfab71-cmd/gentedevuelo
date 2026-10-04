@@ -52,6 +52,10 @@
     .texto { white-space: pre-wrap; line-height: 1.5; color: #e6eaeb; margin: 10px 0; }
     .detalle { color: #b9c5c9; font-size: 13px; }
     .vista { max-width: 210px; max-height: 155px; object-fit: cover; border-radius: 9px; margin: 6px 0; }
+    .aporte-origen-mod { margin: 8px 0; color: #d6dee1; font-size: 13px; }
+    .aporte-adjuntos-mod { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 4px; }
+    .aporte-adjunto-mod { display: inline-flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid #7b8990; border-radius: 9px; background: #141c20; color: #ffb074; text-decoration: none; font-size: 13px; }
+    .aporte-adjunto-mod img { width: 64px; height: 48px; object-fit: cover; border-radius: 6px; }
     .acciones { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
     .vacio { padding: 32px; text-align: center; color: #c8d1d4; }
     #salir { font-size: 13px; }
@@ -104,7 +108,7 @@
     const secciones = [
       { tabla: "publicaciones", nombre: "Foro Aeronáutico", campos: "id,titulo,contenido,autor_nombre,aprobado,created_at" },
       { tabla: "forum_respuestas", nombre: "Respuestas del foro", campos: "id,publicacion_id,autor_nombre,contenido,estado,created_at" },
-      { tabla: "aportes_destacados", nombre: "Tarjetas temáticas", campos: "id,titulo,contenido,seccion,categoria,enlace,estado,visible,destacado,created_at" },
+      { tabla: "aportes_destacados", nombre: "Tarjetas temáticas", campos: "id,user_id,titulo,contenido,seccion,categoria,enlace,estado,visible,destacado,created_at,origen_tipo,origen_nombre,origen_profile_id" },
       { tabla: "actividades", nombre: "Agenda Aeronáutica", campos: "id,titulo,descripcion,fecha_evento,lugar,localidad,estado,visible,created_at" },
       { tabla: "galeria", nombre: "Galería", campos: "id,archivo,nombre_usuario,visible,created_at" },
       { tabla: "travesias", nombre: "Travesías", campos: "id,titulo,relato,salida,destino,fotos,videos,visible,created_at" },
@@ -206,6 +210,12 @@
       articulo.append(cabecera);
       const detalle = [r.autor_nombre, r.publicacion_id ? "Publicación #" + r.publicacion_id : "", r.seccion, r.categoria, r.tipo, r.ubicacion, r.salida && r.destino ? r.salida + " → " + r.destino : "", r.fecha_evento ? "Evento: " + fecha(r.fecha_evento) : ""].filter(Boolean).join(" · ");
       if (detalle) articulo.append(nodo("p", detalle, "detalle"));
+      if (t === "aportes_destacados") {
+        const perfil = r._perfil || null;
+        const nombreOrigen = perfil?.username || perfil?.full_name || r.origen_nombre || "Miembro de Gente de Vuelo";
+        const organizacion = perfil?.aviation_organization ? " · Organización: " + perfil.aviation_organization : "";
+        articulo.append(nodo("p", "Aportado por: " + nombreOrigen + organizacion, "aporte-origen-mod"));
+      }
       const contenido = r.contenido || r.descripcion || r.relato;
       if (contenido) articulo.append(nodo("p", contenido, "texto"));
       const archivo = t === "galeria"
@@ -237,6 +247,31 @@
         enlace.target = "_blank";
         enlace.rel = "noopener noreferrer";
         articulo.append(enlace);
+      }
+      if (t === "aportes_destacados" && Array.isArray(r._adjuntos) && r._adjuntos.length) {
+        const contenedorAdjuntos = nodo("div", "", "aporte-adjuntos-mod");
+        articulo.append(contenedorAdjuntos);
+        r._adjuntos.forEach(async archivoAdjunto => {
+          const { data: firma, error: errorFirma } = await client.storage.from("aportes")
+            .createSignedUrl(archivoAdjunto.storage_path, 3600);
+          if (errorFirma || !firma?.signedUrl) return;
+          const enlaceAdjunto = nodo("a", "", "aporte-adjunto-mod");
+          enlaceAdjunto.href = firma.signedUrl;
+          enlaceAdjunto.target = "_blank";
+          enlaceAdjunto.rel = "noopener noreferrer";
+          if (archivoAdjunto.mime_type?.startsWith("image/")) {
+            const mini = document.createElement("img");
+            mini.src = firma.signedUrl;
+            mini.alt = "";
+            enlaceAdjunto.append(mini);
+          }
+          enlaceAdjunto.append(document.createTextNode(
+            archivoAdjunto.mime_type === "application/pdf"
+              ? "PDF · " + archivoAdjunto.nombre_archivo
+              : archivoAdjunto.nombre_archivo
+          ));
+          contenedorAdjuntos.append(enlaceAdjunto);
+        });
       }
       const acciones = nodo("div", "", "acciones");
       if (estado(item) !== "publicadas") acciones.append(botonAccion(item, "aprobar", "Aprobar y publicar"));
@@ -281,6 +316,39 @@
         if (error) fallidas.push(config.nombre);
         else datos.set(config.tabla, data || []);
       });
+
+      const aportes = datos.get("aportes_destacados") || [];
+      if (aportes.length) {
+        const ids = aportes.map(a => a.id);
+        const perfilIds = [...new Set(aportes.map(a => a.origen_profile_id || a.user_id).filter(Boolean))];
+
+        const [respAdjuntos, respPerfiles] = await Promise.all([
+          client.from("aportes_adjuntos")
+            .select("aporte_id,storage_path,nombre_archivo,mime_type,tamano_bytes")
+            .in("aporte_id", ids)
+            .order("created_at", { ascending: true }),
+          perfilIds.length
+            ? client.from("profiles")
+                .select("id,username,full_name,aviation_organization")
+                .in("id", perfilIds)
+            : Promise.resolve({ data: [], error: null })
+        ]);
+
+        if (!respAdjuntos.error) {
+          const porAporte = new Map();
+          (respAdjuntos.data || []).forEach(adj => {
+            if (!porAporte.has(adj.aporte_id)) porAporte.set(adj.aporte_id, []);
+            porAporte.get(adj.aporte_id).push(adj);
+          });
+          aportes.forEach(a => { a._adjuntos = porAporte.get(a.id) || []; });
+        }
+
+        if (!respPerfiles.error) {
+          const porPerfil = new Map((respPerfiles.data || []).map(p => [p.id, p]));
+          aportes.forEach(a => { a._perfil = porPerfil.get(a.origen_profile_id || a.user_id) || null; });
+        }
+      }
+
       mensaje(fallidas.length ? "No se pudieron cargar: " + fallidas.join(", ") + "." : "Lista actualizada.");
       pintar();
     }
