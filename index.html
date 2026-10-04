@@ -1626,6 +1626,64 @@ body.modo-anexo-clasificados #clasificados-seccion {
   letter-spacing: 1.4px;
 }
 
+.subasta-inversa-destacada {
+  margin-top: 34px;
+  padding: 24px;
+  border: 2px solid #7f5a18;
+  border-radius: 16px;
+  background: linear-gradient(145deg, #2a3033, #202629);
+  color: #f7f4ec;
+  box-shadow: 0 12px 28px rgba(66, 43, 8, 0.18);
+}
+
+.subasta-inversa-cabecera {
+  margin-bottom: 18px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(244, 216, 135, 0.28);
+}
+
+.subasta-inversa-kicker {
+  display: inline-block;
+  margin-bottom: 5px;
+  color: #f4d887;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 1.6px;
+}
+
+.subasta-inversa-cabecera h3 {
+  margin: 0 0 8px !important;
+  color: #ffffff !important;
+  font-size: 25px !important;
+}
+
+.subasta-inversa-cabecera p {
+  max-width: 820px;
+  margin: 0;
+  color: #e6dfcf;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.subasta-inversa-destacada .clasificados-requeridos {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.subasta-inversa-destacada .clasificados-requeridos-cabecera h4 {
+  color: #f4d887;
+}
+
+.subasta-inversa-destacada .clasificados-requeridos-cabecera > p {
+  color: #d3c9b3;
+}
+
+.subasta-inversa-destacada .clasificado-item.requerido-compacto {
+  border-color: #8e7338;
+  background: #f8f3e6;
+}
+
 .clasificados-requeridos {
   margin-top: 28px;
   padding-top: 18px;
@@ -3947,9 +4005,9 @@ body:not(.modo-seccion-unica):not(.modo-anexo)>#explorar,body:not(.modo-seccion-
     <p>Entidades que acompañan y forman parte de la comunidad aeronáutica.</p>
   </a>
 
-  <a href="#clasificados-seccion" class="acceso-clasificados" title="Clasificados de la comunidad">
-    <h3>CompraVenta</h3>
-    <p>Compra, venta y búsquedas entre miembros de la comunidad.</p>
+  <a href="#clasificados-seccion" class="acceso-clasificados" title="CompraVenta y Subasta Inversa">
+    <h3>CompraVenta y Subasta Inversa</h3>
+    <p>Publicaciones disponibles y requerimientos de lo que busca la comunidad.</p>
     <div class="clasificados-ultimo" aria-live="polite">
       <strong id="clasificadosPortadaTitulo">Cargando última publicación…</strong>
       <time id="clasificadosPortadaFecha"></time>
@@ -4681,19 +4739,25 @@ body:not(.modo-seccion-unica):not(.modo-anexo)>#explorar,body:not(.modo-seccion-
       <p class="clasificados-consulta-nota">Los datos de contacto corresponden al aviso publicado por el anunciante.</p>
     </aside>
 
-    <h3 class="subasta-titulo">ATENTOS COMERCIANTES! Sector destinado a Subasta Inversa, lo que busca la comunidad</h3>
-    <div class="clasificados-requeridos">
-      <div class="clasificados-requeridos-cabecera">
-        <div>
-          <span class="clasificados-kicker">REQUERIMIENTOS</span>
-          <h4>Lo que busca la comunidad</h4>
-        </div>
-        <p>Pedidos publicados por miembros que necesitan localizar un artículo o equipamiento.</p>
+    <section class="subasta-inversa-destacada" aria-labelledby="tituloSubastaInversa">
+      <div class="subasta-inversa-cabecera">
+        <span class="subasta-inversa-kicker">SUBASTA INVERSA</span>
+        <h3 id="tituloSubastaInversa">Lo que busca la comunidad</h3>
+        <p>Un espacio pensado especialmente para comerciantes, proveedores y miembros que puedan responder a pedidos concretos de artículos o equipamiento aeronáutico.</p>
       </div>
+      <div class="clasificados-requeridos">
+        <div class="clasificados-requeridos-cabecera">
+          <div>
+            <span class="clasificados-kicker">REQUERIMIENTOS ACTIVOS</span>
+            <h4>Pedidos publicados por la comunidad</h4>
+          </div>
+          <p>Consultá qué están buscando los miembros y contactalos si podés ofrecer una solución.</p>
+        </div>
       <div class="clasificados-requeridos-lista" id="listaClasificadosRequeridos">
         <p>Cargando requerimientos...</p>
       </div>
     </div>
+    </section>
   </div>
 
   <div class="clasificados-listado clasificados-panel" id="panelClasificadosPublicar">
