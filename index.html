@@ -3989,7 +3989,254 @@ body:not(.modo-seccion-unica):not(.modo-anexo)>#explorar,body:not(.modo-seccion-
 @media(min-width:851px){body:has(.gdv-register:not([hidden])) .menu-principal{padding-left:175px}}
 @media(max-width:850px){.menu-principal{padding:82px 12px 0}.portada-completa .hero .logo-emblema{top:40px}.portada-completa .hero-titulo{top:200px}.portada-completa .hero{min-height:670px}.gdv-register{left:14px;padding:10px 14px}}
 </style>
-<style id="auth-pending-style">html.auth-pending body{visibility:hidden}</style><script>document.documentElement.classList.add("auth-pending")</script><script src="assets/supabase-2.117.2.min.js"></script><script src="assets/community-config.js"></script><script src="assets/auth-guard.js?v=20261004"></script></head>
+<style id="auth-pending-style">html.auth-pending body{visibility:hidden}</style><script>document.documentElement.classList.add("auth-pending")</script><script src="assets/supabase-2.117.2.min.js"></script><script src="assets/community-config.js"></script><script src="assets/auth-guard.js?v=20261004"></script>
+<style id="responsive-consolidado-20261004">
+/* Ajuste responsive consolidado: móvil y tablet */
+html, body { max-width: 100%; overflow-x: hidden; }
+img, video { max-width: 100%; }
+
+@media (max-width: 850px) {
+  body.modo-seccion-unica > .seccion-enfoque {
+    width: calc(100% - 20px) !important;
+    max-width: none !important;
+  }
+
+  .contenedor,
+  #travesias,
+  #hangar-comunidad,
+  #hangar-publico,
+  #mi-perfil,
+  #foro-comunidad,
+  #clasificados-seccion,
+  #tienda-seccion,
+  #agenda-seccion,
+  #galeria-seccion {
+    box-sizing: border-box;
+  }
+
+  .tarjetas {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+
+  .tarjeta {
+    min-width: 0;
+    padding: 18px !important;
+    border-width: 2px !important;
+    border-radius: 16px !important;
+  }
+
+  .titulo-seccion,
+  #hangar-comunidad > h2,
+  #travesias .titulo-seccion,
+  #mi-perfil h2 {
+    font-size: clamp(24px, 7vw, 30px) !important;
+    line-height: 1.15;
+  }
+
+  .subtitulo,
+  #hangar-comunidad > p,
+  #travesias .subtitulo {
+    font-size: 15px !important;
+    line-height: 1.5 !important;
+  }
+
+  #foro-comunidad {
+    width: calc(100% - 20px) !important;
+    margin: 72px auto 22px !important;
+    border-radius: 16px !important;
+  }
+
+  .foro-cabecera {
+    align-items: flex-start !important;
+    flex-direction: column;
+    gap: 10px !important;
+    padding: 20px 16px !important;
+  }
+
+  .foro-layout {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+    padding: 12px !important;
+  }
+
+  .foro-panel {
+    padding: 15px !important;
+    border-radius: 12px !important;
+  }
+
+  .clasificados-listado,
+  #clasificados-seccion .clasificados-aviso {
+    padding: 16px !important;
+    border-radius: 12px !important;
+  }
+
+  .clasificados-formulario {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  .clasificados-formulario .campo-ancho {
+    grid-column: auto !important;
+  }
+
+  #dialogoAporte {
+    width: calc(100vw - 20px) !important;
+    max-height: calc(100vh - 20px) !important;
+    padding: 18px !important;
+    border-radius: 14px !important;
+  }
+
+  #dialogoAporte h2 { font-size: 21px !important; }
+
+  #formAporte .acciones-aporte {
+    flex-direction: column;
+  }
+
+  #formAporte .acciones-aporte button {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  .aporte-publicacion-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .aporte-publicacion-media {
+    width: 100% !important;
+    height: min(52vw, 220px) !important;
+  }
+
+  .aporte-publicacion-acciones {
+    width: 100%;
+  }
+
+  .aporte-publicacion-acciones a,
+  .aporte-publicacion-acciones button {
+    flex: 1 1 135px;
+    min-height: 40px;
+  }
+}
+
+@media (max-width: 560px) {
+  .menu-principal .menu-boton {
+    min-width: 52px !important;
+    width: 52px !important;
+    padding: 9px !important;
+  }
+
+  .menu-principal .menu-boton span {
+    display: none;
+  }
+
+  .menu-principal .menu-desplegable {
+    width: min(230px, calc(100vw - 24px)) !important;
+    max-height: calc(100vh - 90px);
+    overflow-y: auto;
+  }
+
+  .controles-usuario {
+    max-width: calc(100vw - 80px);
+  }
+
+  .cuenta-ingresar,
+  .cuenta-menu > summary {
+    min-width: 48px;
+    min-height: 48px;
+    padding: 9px 11px !important;
+  }
+
+  .portada-completa,
+  .portada-completa .hero {
+    min-height: 720px !important;
+  }
+
+  .portada-completa .hero .logo-emblema {
+    top: 142px !important;
+    width: 116px !important;
+    height: 116px !important;
+  }
+
+  .portada-completa .hero-titulo {
+    top: 270px !important;
+    width: calc(100% - 28px);
+  }
+
+  .portada-completa .hero-titulo h1 {
+    font-size: clamp(31px, 10vw, 42px) !important;
+  }
+
+  .portada-completa .hero-lema {
+    font-size: 17px !important;
+  }
+
+  .portada-accesos,
+  .portada-accesos.menu-abierto {
+    left: 10px !important;
+    right: 10px !important;
+    width: auto !important;
+    bottom: 14px !important;
+  }
+
+  .acceso-shimoda,
+  .acceso-instituciones,
+  .acceso-clasificados,
+  .acceso-foro {
+    width: 100% !important;
+  }
+
+  .modulo-portada,
+  #hangar-comunidad,
+  #travesias,
+  #hangar-publico,
+  #mi-perfil {
+    margin-left: 10px !important;
+    margin-right: 10px !important;
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+
+  .travesia-resumen {
+    grid-template-columns: 1fr !important;
+  }
+
+  .travesia-resumen-imagen,
+  .travesia-resumen-imagen img,
+  .travesia-sin-foto {
+    width: 100% !important;
+    min-height: 180px !important;
+  }
+
+  #mi-perfil .hangar-perfil-cabecera {
+    grid-template-columns: 1fr !important;
+  }
+
+  #mi-perfil #perfilAvatar {
+    width: 112px !important;
+    height: 76px !important;
+  }
+
+  #mi-perfil .hangar-avatar-acciones {
+    grid-column: auto !important;
+    flex-wrap: wrap;
+  }
+
+  .instituciones-carrusel {
+    align-items: stretch;
+  }
+
+  .institucion-ficha {
+    flex-basis: calc(100vw - 92px) !important;
+    min-height: 320px !important;
+    padding: 16px !important;
+  }
+
+  footer {
+    font-size: 13px;
+  }
+}
+</style>
+</head>
 
 <body>
 <button type="button" id="volverPortada" aria-label="Volver a la portada">← VOLVER A PORTADA</button>
