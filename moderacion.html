@@ -222,34 +222,22 @@
       mensaje("Eliminando publicación…");
       try {
         const t = item.config.tabla, r = item.fila;
+        const archivos = [];
 
-        if (t === "aportes_destacados" && Array.isArray(r._adjuntos) && r._adjuntos.length) {
+        if (t === "aportes_destacados" && Array.isArray(r._adjuntos)) {
           const rutas = r._adjuntos.map(a => a.storage_path).filter(Boolean);
-          if (rutas.length) {
-            const borrado = await client.storage.from("aportes").remove(rutas);
-            if (borrado.error) throw borrado.error;
-          }
+          if (rutas.length) archivos.push({ bucket: "aportes", rutas });
         }
-
         if (t === "galeria" && r.archivo) {
-          const borrado = await client.storage.from("hangar-fotos").remove([r.archivo]);
-          if (borrado.error) throw borrado.error;
+          archivos.push({ bucket: "hangar-fotos", rutas: [r.archivo] });
         }
-
-        if (t === "clasificados" && Array.isArray(r.fotos) && r.fotos.length) {
+        if (t === "clasificados" && Array.isArray(r.fotos)) {
           const rutas = r.fotos.map(url => rutaPublicaDeBucket(url, "clasificados-fotos")).filter(Boolean);
-          if (rutas.length) {
-            const borrado = await client.storage.from("clasificados-fotos").remove(rutas);
-            if (borrado.error) throw borrado.error;
-          }
+          if (rutas.length) archivos.push({ bucket: "clasificados-fotos", rutas });
         }
-
-        if (t === "travesias" && Array.isArray(r.fotos) && r.fotos.length) {
+        if (t === "travesias" && Array.isArray(r.fotos)) {
           const rutas = r.fotos.map(url => rutaPublicaDeBucket(url, "travesias-fotos")).filter(Boolean);
-          if (rutas.length) {
-            const borrado = await client.storage.from("travesias-fotos").remove(rutas);
-            if (borrado.error) throw borrado.error;
-          }
+          if (rutas.length) archivos.push({ bucket: "travesias-fotos", rutas });
         }
 
         const respuesta = await client.from(t).delete().eq("id", r.id).select("id");
@@ -257,9 +245,20 @@
           throw respuesta.error || new Error("No se pudo confirmar la eliminación.");
         }
 
+        let limpiezaFallida = false;
+        for (const archivo of archivos) {
+          const borrado = await client.storage.from(archivo.bucket).remove(archivo.rutas);
+          if (borrado.error) {
+            limpiezaFallida = true;
+            console.error("No se pudo limpiar archivo asociado:", borrado.error);
+          }
+        }
+
         const filas = datos.get(t) || [];
         datos.set(t, filas.filter(fila => String(fila.id) !== String(r.id)));
-        mensaje("Publicación eliminada definitivamente.");
+        mensaje(limpiezaFallida
+          ? "Publicación eliminada. Algún archivo asociado no pudo limpiarse automáticamente."
+          : "Publicación eliminada definitivamente.");
         pintar();
       } catch (error) {
         console.error("Error al eliminar:", error);
