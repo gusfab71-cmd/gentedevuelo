@@ -3942,6 +3942,11 @@ body:not(.modo-seccion-unica):not(.modo-anexo)>#explorar,body:not(.modo-seccion-
     </div>
   </a>
 
+  <a href="#instituciones-seccion" class="acceso-instituciones" title="Instituciones Amigas">
+    <h3>Instituciones Amigas</h3>
+    <p>Entidades que acompañan y forman parte de la comunidad aeronáutica.</p>
+  </a>
+
   <a href="#clasificados-seccion" class="acceso-clasificados" title="Clasificados de la comunidad">
     <h3>CompraVenta</h3>
     <p>Compra, venta y búsquedas entre miembros de la comunidad.</p>
@@ -3998,7 +4003,7 @@ body:not(.modo-seccion-unica):not(.modo-anexo)>#explorar,body:not(.modo-seccion-
     <a href="#meteorologia-seccion">Meteorología Aeronáutica</a>
     <a href="#normativas-seccion">Actualizaciones Normativas</a>
     <a href="#agenda-seccion">Agenda Aeronáutica</a>
-    <a href="#instituciones-seccion">Entidades y Organizaciones</a>
+    <a href="#instituciones-seccion">Instituciones Amigas</a>
     <a href="#historia-seccion">Historia de la Aviación</a>
   </div>
 </section>
@@ -4232,31 +4237,71 @@ body:not(.modo-seccion-unica):not(.modo-anexo)>#explorar,body:not(.modo-seccion-
 
   </div>
 </section>
-  <section class="contenedor solo-seccion" id="instituciones-seccion">
-  <h2 class="titulo-seccion">Entidades y Organizaciones Aeronáuticas</h2>
+  <section class="contenedor solo-seccion instituciones-amigas" id="instituciones-seccion">
+  <h2 class="titulo-seccion">Instituciones Amigas</h2>
 
   <p class="subtitulo">
-    Un espacio para conocer entidades y organizaciones vinculadas a las distintas actividades del mundo aeronáutico.
+    Instituciones, aeroclubes, asociaciones y organizaciones que acompañan a Gente de Vuelo y comparten la pasión por la aviación.
   </p>
 
-  <div class="tarjetas">
-
-    <div class="tarjeta">
-      <h3>Asociaciones y federaciones</h3>
-      <p>Organizaciones y entidades representativas de distintas actividades aeronáuticas.</p>
+  <div class="instituciones-carrusel" aria-label="Instituciones Amigas">
+    <button type="button" class="instituciones-flecha" id="institucionesAnterior" aria-label="Institución anterior">&#10094;</button>
+    <div class="instituciones-ventana">
+      <div class="instituciones-pista" id="institucionesPista">
+        <p class="instituciones-vacio">Cargando instituciones…</p>
+      </div>
     </div>
-
-    <div class="tarjeta">
-      <h3>Aeroclubes</h3>
-      <p>Aeroclubes y entidades dedicadas a promover y desarrollar la actividad aérea.</p>
-    </div>
-
-    <div class="tarjeta">
-      <h3>Clubes de aeromodelismo</h3>
-      <p>Clubes y organizaciones vinculadas a la práctica y difusión del aeromodelismo.</p>
-    </div>
-
+    <button type="button" class="instituciones-flecha" id="institucionesSiguiente" aria-label="Institución siguiente">&#10095;</button>
   </div>
+
+  <section class="instituciones-admin" id="institucionesAdmin" hidden>
+    <div class="instituciones-admin-cabecera">
+      <span class="hangar-etiqueta">ADMINISTRACIÓN</span>
+      <h3>Gestionar Instituciones Amigas</h3>
+    </div>
+
+    <form id="institucionesForm" class="instituciones-formulario">
+      <input type="hidden" id="institucionId">
+
+      <label>Nombre
+        <input type="text" id="institucionNombre" maxlength="120" required>
+      </label>
+
+      <label>Dirección
+        <input type="text" id="institucionDireccion" maxlength="240">
+      </label>
+
+      <label>Teléfono
+        <input type="text" id="institucionTelefono" maxlength="80">
+      </label>
+
+      <label>Sitio web
+        <input type="url" id="institucionWeb" placeholder="https://...">
+      </label>
+
+      <label>URL del logo
+        <input type="url" id="institucionLogo" placeholder="https://...">
+      </label>
+
+      <label>Orden
+        <input type="number" id="institucionOrden" value="0" step="1">
+      </label>
+
+      <label class="institucion-activa">
+        <input type="checkbox" id="institucionActiva" checked>
+        Visible públicamente
+      </label>
+
+      <div class="instituciones-form-acciones">
+        <button type="submit" class="boton">Guardar institución</button>
+        <button type="button" id="institucionCancelar" class="boton">Cancelar edición</button>
+      </div>
+
+      <p id="institucionesMensaje" role="status"></p>
+    </form>
+
+    <div id="institucionesAdminLista" class="instituciones-admin-lista"></div>
+  </section>
 </section>
   <section class="contenedor solo-seccion" id="tienda-seccion">
   <h2 class="titulo-seccion">AeroShop</h2>
@@ -7974,5 +8019,359 @@ window.GDV_AUTH.ready.then(user=>{
 });
 window.addEventListener('hashchange',abrirAnexoDesdeURL);
 window.addEventListener('popstate',abrirAnexoDesdeURL);
-</script></body>
+</script>
+<style id="instituciones-amigas-css">
+/* ===== INSTITUCIONES AMIGAS ===== */
+.acceso-shimoda,
+.acceso-instituciones,
+.acceso-clasificados {
+  flex: 1 1 calc(33.333% - 8px);
+  min-width: 0;
+}
+.acceso-instituciones {
+  display: block;
+  padding: 12px;
+  background: rgba(23,27,29,.82);
+  border: 2px solid #d6a84b;
+  border-radius: 14px;
+  text-decoration: none;
+  color: #fff;
+  text-align: center;
+  box-shadow: 0 4px 14px rgba(0,0,0,.35);
+}
+.acceso-instituciones h3 { margin: 0 0 5px; color: #f2cf78; font-size: 16px; }
+.acceso-instituciones p { margin: 0; color: #fff; font-size: 11px; line-height: 1.35; }
+
+.instituciones-amigas { overflow: hidden; }
+.instituciones-carrusel {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 24px;
+}
+.instituciones-ventana { flex: 1; min-width: 0; overflow: hidden; }
+.instituciones-pista {
+  display: flex;
+  gap: 18px;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
+  padding: 8px 4px 16px;
+}
+.institucion-ficha {
+  flex: 0 0 min(320px, calc(100vw - 92px));
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  min-height: 360px;
+  padding: 20px;
+  border: 1px solid rgba(214,168,75,.55);
+  border-radius: 16px;
+  background: linear-gradient(145deg,#222a2e,#171c1f);
+  box-shadow: 0 10px 28px rgba(0,0,0,.24);
+}
+.institucion-logo {
+  height: 130px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+  border-radius: 12px;
+  background: rgba(255,255,255,.96);
+  overflow: hidden;
+}
+.institucion-logo img { max-width: 90%; max-height: 110px; object-fit: contain; }
+.institucion-logo-sin-imagen { color: #59646a; font-weight: 800; text-align: center; padding: 10px; }
+.institucion-ficha h3 { margin: 0 0 12px; color: #f2cf78; font-size: 20px; }
+.institucion-ficha p { margin: 4px 0; color: #e7e7e7; line-height: 1.4; overflow-wrap: anywhere; }
+.institucion-ficha .institucion-web { margin-top: auto; padding-top: 18px; }
+.institucion-ficha .institucion-web a {
+  display: inline-flex;
+  justify-content: center;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 14px;
+  border-radius: 9px;
+  background: #d6a84b;
+  color: #14202a;
+  text-decoration: none;
+  font-weight: 800;
+}
+.instituciones-flecha {
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  border: 2px solid #d6a84b;
+  border-radius: 50%;
+  background: #1d2225;
+  color: #fff;
+  font-size: 24px;
+  cursor: pointer;
+}
+.instituciones-flecha:hover { background: #d6a84b; color: #172027; }
+.instituciones-vacio { width: 100%; text-align: center; color: #c7c7c7; }
+
+.instituciones-admin {
+  margin-top: 34px;
+  padding: 22px;
+  border: 1px solid rgba(214,168,75,.55);
+  border-radius: 16px;
+  background: rgba(15,20,23,.72);
+}
+.instituciones-admin-cabecera h3 { margin: 5px 0 18px; }
+.instituciones-formulario {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 14px;
+}
+.instituciones-formulario label { display: grid; gap: 6px; font-weight: 700; }
+.instituciones-formulario input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid #59646a;
+  border-radius: 9px;
+  background: #fff;
+  color: #202426;
+  font: inherit;
+}
+.instituciones-formulario .institucion-activa { display: flex; align-items: center; gap: 8px; }
+.instituciones-formulario .institucion-activa input { width: auto; }
+.instituciones-form-acciones { grid-column: 1/-1; display: flex; flex-wrap: wrap; gap: 10px; }
+#institucionesMensaje { grid-column: 1/-1; margin: 0; }
+.instituciones-admin-lista { display: grid; gap: 9px; margin-top: 20px; }
+.institucion-admin-item {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 13px;
+  border: 1px solid #465157;
+  border-radius: 10px;
+  background: #20272b;
+}
+.institucion-admin-item strong { color: #fff; }
+.institucion-admin-item small { display: block; margin-top: 3px; color: #aeb8bd; }
+.institucion-admin-acciones { display: flex; flex-wrap: wrap; gap: 6px; }
+.institucion-admin-acciones button {
+  padding: 6px 9px;
+  border: 1px solid #69777e;
+  border-radius: 7px;
+  background: #2b3439;
+  color: #fff;
+  cursor: pointer;
+}
+@media (max-width:700px) {
+  .acceso-shimoda,
+  .acceso-instituciones,
+  .acceso-clasificados { flex: 1 1 100%; }
+  .instituciones-formulario { grid-template-columns: 1fr; }
+  .instituciones-carrusel { gap: 6px; }
+  .instituciones-flecha { flex-basis: 36px; width: 36px; height: 36px; font-size: 19px; }
+  .institucion-admin-item { grid-template-columns: 1fr; }
+}
+</style>
+
+<script id="instituciones-amigas-js">
+(function(){
+  const escInst=value=>String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  let institucionesAmigas=[];
+
+  function urlSeguraInstitucion(valor){
+    try{
+      const u=new URL(valor);
+      return ["http:","https:"].includes(u.protocol)?u.href:"";
+    }catch{return "";}
+  }
+
+  function renderInstituciones(){
+    const pista=document.getElementById("institucionesPista");
+    if(!pista)return;
+
+    const visibles=institucionesAmigas.filter(x=>x.active);
+    if(!visibles.length){
+      pista.innerHTML='<p class="instituciones-vacio">Todavía no hay instituciones publicadas.</p>';
+      return;
+    }
+
+    pista.innerHTML=visibles.map(i=>{
+      const logo=urlSeguraInstitucion(i.logo_url);
+      const web=urlSeguraInstitucion(i.website_url);
+      return `<article class="institucion-ficha">
+        <div class="institucion-logo">
+          ${logo
+            ? `<img src="${escInst(logo)}" alt="Logo de ${escInst(i.name)}" loading="lazy">`
+            : `<div class="institucion-logo-sin-imagen">${escInst(i.name)}</div>`
+          }
+        </div>
+        <h3>${escInst(i.name)}</h3>
+        ${i.address?`<p><strong>Dirección:</strong> ${escInst(i.address)}</p>`:""}
+        ${i.phone?`<p><strong>Teléfono:</strong> ${escInst(i.phone)}</p>`:""}
+        <div class="institucion-web">
+          ${web?`<a href="${escInst(web)}" target="_blank" rel="noopener noreferrer">Visitar sitio web</a>`:""}
+        </div>
+      </article>`;
+    }).join("");
+  }
+
+  function limpiarFormularioInstitucion(){
+    const ids=["institucionId","institucionNombre","institucionDireccion","institucionTelefono","institucionWeb","institucionLogo"];
+    ids.forEach(id=>{const e=document.getElementById(id);if(e)e.value="";});
+    const orden=document.getElementById("institucionOrden");
+    const activa=document.getElementById("institucionActiva");
+    if(orden)orden.value="0";
+    if(activa)activa.checked=true;
+    const mensaje=document.getElementById("institucionesMensaje");
+    if(mensaje)mensaje.textContent="";
+  }
+
+  function renderAdminInstituciones(){
+    const panel=document.getElementById("institucionesAdmin");
+    const lista=document.getElementById("institucionesAdminLista");
+    if(!panel||!lista)return;
+
+    panel.hidden=!window.gdvLegacyAdmin;
+    if(!window.gdvLegacyAdmin)return;
+
+    if(!institucionesAmigas.length){
+      lista.innerHTML='<p class="instituciones-vacio">Todavía no hay instituciones cargadas.</p>';
+      return;
+    }
+
+    lista.innerHTML=institucionesAmigas.map(i=>`
+      <div class="institucion-admin-item">
+        <div>
+          <strong>${escInst(i.name)}</strong>
+          <small>Orden ${Number(i.sort_order)||0} · ${i.active?"Visible":"Oculta"}</small>
+        </div>
+        <div class="institucion-admin-acciones">
+          <button type="button" data-inst-edit="${escInst(i.id)}">Editar</button>
+          <button type="button" data-inst-toggle="${escInst(i.id)}">${i.active?"Ocultar":"Mostrar"}</button>
+          <button type="button" data-inst-delete="${escInst(i.id)}">Eliminar</button>
+        </div>
+      </div>`).join("");
+  }
+
+  async function cargarInstitucionesAmigas(){
+    const {data,error}=await supabaseClient
+      .from("gdv_friendly_institutions")
+      .select("*")
+      .order("sort_order",{ascending:true})
+      .order("created_at",{ascending:true});
+
+    if(error){
+      console.error("Error al cargar Instituciones Amigas:",error);
+      const pista=document.getElementById("institucionesPista");
+      if(pista)pista.innerHTML='<p class="instituciones-vacio">No se pudieron cargar las instituciones.</p>';
+      return;
+    }
+
+    institucionesAmigas=data||[];
+    renderInstituciones();
+    renderAdminInstituciones();
+  }
+
+  document.getElementById("institucionesAnterior")?.addEventListener("click",()=>{
+    document.getElementById("institucionesPista")?.scrollBy({left:-338,behavior:"smooth"});
+  });
+
+  document.getElementById("institucionesSiguiente")?.addEventListener("click",()=>{
+    document.getElementById("institucionesPista")?.scrollBy({left:338,behavior:"smooth"});
+  });
+
+  document.getElementById("institucionCancelar")?.addEventListener("click",limpiarFormularioInstitucion);
+
+  document.getElementById("institucionesForm")?.addEventListener("submit",async event=>{
+    event.preventDefault();
+    if(!window.gdvLegacyAdmin)return;
+
+    const id=document.getElementById("institucionId").value;
+    const payload={
+      name:document.getElementById("institucionNombre").value.trim(),
+      address:document.getElementById("institucionDireccion").value.trim(),
+      phone:document.getElementById("institucionTelefono").value.trim(),
+      website_url:document.getElementById("institucionWeb").value.trim(),
+      logo_url:document.getElementById("institucionLogo").value.trim(),
+      sort_order:Number(document.getElementById("institucionOrden").value)||0,
+      active:document.getElementById("institucionActiva").checked,
+      updated_at:new Date().toISOString()
+    };
+
+    const mensaje=document.getElementById("institucionesMensaje");
+    mensaje.textContent="Guardando…";
+
+    const resultado=id
+      ? await supabaseClient.from("gdv_friendly_institutions").update(payload).eq("id",id)
+      : await supabaseClient.from("gdv_friendly_institutions").insert(payload);
+
+    if(resultado.error){
+      console.error("Error al guardar institución:",resultado.error);
+      mensaje.textContent="No se pudo guardar la institución.";
+      return;
+    }
+
+    limpiarFormularioInstitucion();
+    mensaje.textContent="Institución guardada.";
+    await cargarInstitucionesAmigas();
+  });
+
+  document.addEventListener("click",async event=>{
+    const editar=event.target.closest("[data-inst-edit]");
+    const alternar=event.target.closest("[data-inst-toggle]");
+    const eliminar=event.target.closest("[data-inst-delete]");
+    if(!window.gdvLegacyAdmin||(!editar&&!alternar&&!eliminar))return;
+
+    const id=(editar||alternar||eliminar).dataset.instEdit
+      ||(editar||alternar||eliminar).dataset.instToggle
+      ||(editar||alternar||eliminar).dataset.instDelete;
+    const item=institucionesAmigas.find(x=>x.id===id);
+    if(!item)return;
+
+    if(editar){
+      document.getElementById("institucionId").value=item.id;
+      document.getElementById("institucionNombre").value=item.name||"";
+      document.getElementById("institucionDireccion").value=item.address||"";
+      document.getElementById("institucionTelefono").value=item.phone||"";
+      document.getElementById("institucionWeb").value=item.website_url||"";
+      document.getElementById("institucionLogo").value=item.logo_url||"";
+      document.getElementById("institucionOrden").value=item.sort_order||0;
+      document.getElementById("institucionActiva").checked=!!item.active;
+      document.getElementById("institucionesForm").scrollIntoView({behavior:"smooth",block:"center"});
+      return;
+    }
+
+    if(alternar){
+      const {error}=await supabaseClient
+        .from("gdv_friendly_institutions")
+        .update({active:!item.active,updated_at:new Date().toISOString()})
+        .eq("id",id);
+      if(error){console.error(error);return;}
+      await cargarInstitucionesAmigas();
+      return;
+    }
+
+    if(eliminar){
+      if(!confirm("¿Eliminar esta institución de forma permanente?"))return;
+      const {error}=await supabaseClient
+        .from("gdv_friendly_institutions")
+        .delete()
+        .eq("id",id);
+      if(error){console.error(error);return;}
+      limpiarFormularioInstitucion();
+      await cargarInstitucionesAmigas();
+    }
+  });
+
+  window.addEventListener("gdv-admin-ready",()=>{
+    renderAdminInstituciones();
+  });
+
+  window.addEventListener("load",()=>{
+    cargarInstitucionesAmigas();
+    setTimeout(renderAdminInstituciones,300);
+  });
+})();
+</script>
+</body>
 </html>
