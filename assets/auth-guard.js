@@ -8,8 +8,10 @@
   let verifiedUser = null;
   let pendingValidation = null;
   function publicRoute() {
-    return location.pathname === loginURL.pathname &&
-      ['#ingresar', '#registro', '#recuperar', '#normativa'].includes(location.hash);
+    const onCommunity = location.pathname === loginURL.pathname;
+    const onHome = location.pathname === base.pathname || location.pathname === new URL('index.html', base).pathname;
+    return onHome || (onCommunity &&
+      ['#ingresar', '#registro', '#recuperar', '#normativa'].includes(location.hash));
   }
   function rememberDestination() {
     if (!publicRoute() && !recovery) {
