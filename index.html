@@ -4279,9 +4279,12 @@ body:not(.modo-seccion-unica):not(.modo-anexo)>#explorar,body:not(.modo-seccion-
         <input type="url" id="institucionWeb" placeholder="https://...">
       </label>
 
-      <label>URL del logo
-        <input type="url" id="institucionLogo" placeholder="https://...">
+      <label>Logo
+        <input type="file" id="institucionLogoArchivo" accept="image/jpeg,image/png,image/webp">
+        <small>JPG, PNG o WEBP · máximo 5 MB.</small>
       </label>
+
+      <div id="institucionLogoActual" class="institucion-logo-actual" hidden></div>
 
       <label>Orden
         <input type="number" id="institucionOrden" value="0" step="1">
@@ -8144,6 +8147,23 @@ window.addEventListener('popstate',abrirAnexoDesdeURL);
   font: inherit;
 }
 .instituciones-formulario .institucion-activa { display: flex; align-items: center; gap: 8px; }
+.institucion-logo-actual {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:10px;
+  border:1px solid #465157;
+  border-radius:10px;
+  background:#20272b;
+}
+.institucion-logo-actual img {
+  width:72px;
+  height:52px;
+  object-fit:contain;
+  border-radius:8px;
+  background:#fff;
+}
+.institucion-logo-actual span { color:#cfd8dc; font-size:12px; }
 .instituciones-formulario .institucion-activa input { width: auto; }
 .instituciones-form-acciones { grid-column: 1/-1; display: flex; flex-wrap: wrap; gap: 10px; }
 #institucionesMensaje { grid-column: 1/-1; margin: 0; }
@@ -8223,8 +8243,12 @@ window.addEventListener('popstate',abrirAnexoDesdeURL);
   }
 
   function limpiarFormularioInstitucion(){
-    const ids=["institucionId","institucionNombre","institucionDireccion","institucionTelefono","institucionWeb","institucionLogo"];
+    const ids=["institucionId","institucionNombre","institucionDireccion","institucionTelefono","institucionWeb"];
     ids.forEach(id=>{const e=document.getElementById(id);if(e)e.value="";});
+    const logoArchivo=document.getElementById("institucionLogoArchivo");
+    const logoActual=document.getElementById("institucionLogoActual");
+    if(logoArchivo)logoArchivo.value="";
+    if(logoActual){logoActual.hidden=true;logoActual.innerHTML="";}
     const orden=document.getElementById("institucionOrden");
     const activa=document.getElementById("institucionActiva");
     if(orden)orden.value="0";
@@ -8294,12 +8318,17 @@ window.addEventListener('popstate',abrirAnexoDesdeURL);
     if(!window.gdvLegacyAdmin)return;
 
     const id=document.getElementById("institucionId").value;
+    const logoInput=document.getElementById("institucionLogoArchivo");
+    const archivoLogo=logoInput?.files?.[0]||null;
+    const anterior=id?institucionesAmigas.find(x=>x.id===id):null;
+
     const payload={
       name:document.getElementById("institucionNombre").value.trim(),
       address:document.getElementById("institucionDireccion").value.trim(),
       phone:document.getElementById("institucionTelefono").value.trim(),
       website_url:document.getElementById("institucionWeb").value.trim(),
-      logo_url:document.getElementById("institucionLogo").value.trim(),
+      logo_url:anterior?.logo_url||"",
+      logo_path:anterior?.logo_path||"",
       sort_order:Number(document.getElementById("institucionOrden").value)||0,
       active:document.getElementById("institucionActiva").checked,
       updated_at:new Date().toISOString()
@@ -8308,9 +8337,40 @@ window.addEventListener('popstate',abrirAnexoDesdeURL);
     const mensaje=document.getElementById("institucionesMensaje");
     mensaje.textContent="Guardando…";
 
+    if(archivoLogo){
+      if(!["image/jpeg","image/png","image/webp"].includes(archivoLogo.type)){
+        mensaje.textContent="El logo debe ser JPG, PNG o WEBP.";
+        return;
+      }
+      if(archivoLogo.size>5*1024*1024){
+        mensaje.textContent="El logo no puede superar los 5 MB.";
+        return;
+      }
+
+      const extension=archivoLogo.type==="image/png"?"png":archivoLogo.type==="image/webp"?"webp":"jpg";
+      const ruta="logos/"+crypto.randomUUID()+"."+extension;
+      const subida=await supabaseClient.storage
+        .from("institution-logos")
+        .upload(ruta,archivoLogo,{contentType:archivoLogo.type,upsert:false});
+
+      if(subida.error){
+        console.error("Error al subir logo:",subida.error);
+        mensaje.textContent="No se pudo subir el logo.";
+        return;
+      }
+
+      const publica=supabaseClient.storage.from("institution-logos").getPublicUrl(ruta);
+      payload.logo_path=ruta;
+      payload.logo_url=publica.data.publicUrl||"";
+    }
+
     const resultado=id
       ? await supabaseClient.from("gdv_friendly_institutions").update(payload).eq("id",id)
       : await supabaseClient.from("gdv_friendly_institutions").insert(payload);
+
+    if(resultado.error && archivoLogo && payload.logo_path){
+      await supabaseClient.storage.from("institution-logos").remove([payload.logo_path]);
+    }
 
     if(resultado.error){
       console.error("Error al guardar institución:",resultado.error);
@@ -8341,7 +8401,16 @@ window.addEventListener('popstate',abrirAnexoDesdeURL);
       document.getElementById("institucionDireccion").value=item.address||"";
       document.getElementById("institucionTelefono").value=item.phone||"";
       document.getElementById("institucionWeb").value=item.website_url||"";
-      document.getElementById("institucionLogo").value=item.logo_url||"";
+      const logoArchivo=document.getElementById("institucionLogoArchivo");
+      if(logoArchivo)logoArchivo.value="";
+      const logoActual=document.getElementById("institucionLogoActual");
+      if(logoActual){
+        const logoSeguro=urlSeguraInstitucion(item.logo_url);
+        logoActual.hidden=!logoSeguro;
+        logoActual.innerHTML=logoSeguro
+          ? `<img src="${escInst(logoSeguro)}" alt="Logo actual de ${escInst(item.name)}"><span>Logo actual</span>`
+          : "";
+      }
       document.getElementById("institucionOrden").value=item.sort_order||0;
       document.getElementById("institucionActiva").checked=!!item.active;
       document.getElementById("institucionesForm").scrollIntoView({behavior:"smooth",block:"center"});
@@ -8365,6 +8434,9 @@ window.addEventListener('popstate',abrirAnexoDesdeURL);
         .delete()
         .eq("id",id);
       if(error){console.error(error);return;}
+      if(item.logo_path){
+        await supabaseClient.storage.from("institution-logos").remove([item.logo_path]);
+      }
       limpiarFormularioInstitucion();
       await cargarInstitucionesAmigas();
     }
