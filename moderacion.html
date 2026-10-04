@@ -166,19 +166,33 @@
       return { estado: accion === "aprobar" ? "aprobado" : accion === "rechazar" ? "rechazado" : item.fila.estado, visible: accion === "aprobar" };
     }
     async function guardar(item, accion, boton) {
-      const motivo=prompt("Motivo de la medida (se comunicará al autor):");
-      if(motivo===null)return;
-      if(motivo.trim().length<5){mensaje("Escribí un motivo de al menos cinco caracteres.");return;}
+      let motivo = "";
+      if (accion !== "aprobar" && accion !== "destacar") {
+        const respuesta = prompt("Motivo de la medida (se comunicará al autor):");
+        if (respuesta === null) return;
+        if (respuesta.trim().length < 5) {
+          mensaje("Escribí un motivo de al menos cinco caracteres.");
+          return;
+        }
+        motivo = respuesta.trim();
+      }
+
       boton.disabled = true;
       mensaje("Guardando cambio…");
-      const cambios = {...cambio(item, accion),moderation_reason:motivo.trim()};
+
+      const cambios = { ...cambio(item, accion) };
+      if (motivo) cambios.moderation_reason = motivo;
+      if (accion === "aprobar") cambios.moderation_reason = "";
+
       const { data, error } = await client.from(item.config.tabla)
         .update(cambios).eq("id", item.fila.id).select("id");
+
       boton.disabled = false;
       if (error || !data || data.length !== 1) {
         mensaje("No se pudo guardar el cambio. " + (error ? error.message : "Verificá tu sesión."));
         return;
       }
+
       Object.assign(item.fila, cambios);
       mensaje("Cambio guardado. La publicación ya tiene el nuevo estado.");
       pintar();
