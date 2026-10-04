@@ -4075,6 +4075,56 @@ body.modo-anexo-clasificados #clasificados-seccion {
 .subasta-titulo{font-size:clamp(20px,3vw,28px);line-height:1.35;color:#ffe5a1;margin:32px 0 16px;text-align:center}
 #clasificados-seccion .clasificados-requeridos{border:2px solid #e6c280;border-radius:18px;padding:24px;background:linear-gradient(135deg,#54451d,#29271e);box-shadow:0 8px 28px #0004}
 #clasificados-seccion .clasificados-requeridos-cabecera h4{font-size:24px;color:#ffe5a1}
+
+/* ===== COMPRAVENTA: TARJETAS DE PRODUCTO MÁS COMPACTAS ===== */
+@media (min-width: 901px) {
+  #listaClasificadosDisponibles.clasificados-publicaciones {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 220px));
+    justify-content: start;
+    gap: 10px;
+  }
+
+  #listaClasificadosDisponibles .clasificado-item {
+    width: 100%;
+    border-radius: 10px;
+  }
+
+  #listaClasificadosDisponibles .clasificado-item img {
+    height: 125px;
+    max-height: 125px;
+    padding: 6px;
+    object-fit: contain;
+  }
+
+  #listaClasificadosDisponibles .clasificado-item-contenido {
+    padding: 11px 12px 12px;
+  }
+
+  #listaClasificadosDisponibles .clasificado-tipo {
+    margin-bottom: 5px;
+    padding: 3px 7px;
+    font-size: 9px;
+  }
+
+  #listaClasificadosDisponibles .clasificado-item-contenido h4 {
+    margin-bottom: 6px;
+    font-size: 15px;
+    line-height: 1.2;
+  }
+
+  #listaClasificadosDisponibles .clasificado-item-contenido p {
+    font-size: 11px;
+    line-height: 1.3;
+  }
+
+  #listaClasificadosDisponibles .clasificado-consultar {
+    margin-top: 8px;
+    padding: 7px 12px;
+    border-radius: 7px;
+    font-size: 11px;
+  }
+}
+
 </style>
 <style>
 /* Comunidad 2026: portada conservada; menú integrado y emblema plano. */
