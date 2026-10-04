@@ -84,12 +84,12 @@ function topicCard(t){
        isShimoda=t.special_role==='shimoda',
        authorName=isShimoda?(t.special_display_label||'Robert Shimoda'):name(t.author_id),
        topicHref=isShimoda&&t.interaction_target==='rincon_shimoda'
-         ?'index.html#shimoda'
+         ?'index.html?shimoda_topic='+encodeURIComponent(t.id)+'#shimoda'
          :'#tema/'+t.id;
 
  return `<article class="card topic-card ${isShimoda?'shimoda-topic':''}" style="--category:${esc(c.color)}">
    <div class="post-row">
-     <a href="${isShimoda?'index.html#shimoda':'#hangar/'+esc(t.author_id||'')}" aria-label="${isShimoda?'Abrir Rincón Shimoda':'Ver hangar de '+esc(authorName)}">
+     <a href="${isShimoda?'index.html?shimoda_topic='+encodeURIComponent(t.id)+'#shimoda':'#hangar/'+esc(t.author_id||'')}" aria-label="${isShimoda?'Abrir Rincón Shimoda':'Ver hangar de '+esc(authorName)}">
        ${avatar(t.author_id)}
      </a>
 
@@ -98,7 +98,7 @@ function topicCard(t){
          ${t.pinned?'<span class="tag">Fijado</span>':''}
          ${isShimoda?'<span class="tag shimoda-badge">Robert Shimoda</span>':''}
          ${isShimoda
-           ?`<a href="index.html#shimoda">${esc(authorName)}</a>`
+           ?`<a href="index.html?shimoda_topic=${encodeURIComponent(t.id)}#shimoda">${esc(authorName)}</a>`
            :link(authorName,'#hangar/'+t.author_id,'')
          }
          · ${date(t.created_at)}
@@ -155,7 +155,7 @@ async function topicView(id,highlight){
  }
 
  if(t.special_role==='shimoda' && t.interaction_target==='rincon_shimoda'){
-   window.location.href='index.html#shimoda';
+   window.location.href='index.html?shimoda_topic='+encodeURIComponent(t.id)+'#shimoda';
    return;
  }
 
