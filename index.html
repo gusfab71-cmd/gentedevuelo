@@ -5129,15 +5129,15 @@ body:not(.modo-seccion-unica):not(.modo-anexo)>#explorar,body:not(.modo-seccion-
 
   <dialog id="dialogoNuevaPassword" aria-labelledby="tituloNuevaPassword">
     <h2 id="tituloNuevaPassword">Elegí una contraseña nueva</h2>
-    <p>Escribí una contraseña de al menos 6 caracteres para recuperar tu cuenta.</p>
+    <p>Escribí una contraseña de al menos 8 caracteres, con al menos una letra y un número.</p>
     <form id="formNuevaPassword">
       <div class="campo">
         <label for="nuevaPassword">Contraseña nueva</label>
-        <input id="nuevaPassword" type="password" autocomplete="new-password" minlength="6" required>
+        <input id="nuevaPassword" type="password" autocomplete="new-password" minlength="8" pattern="(?=.*[A-Za-z])(?=.*[0-9]).{8,}" required>
       </div>
       <div class="campo">
         <label for="confirmarNuevaPassword">Repetir contraseña</label>
-        <input id="confirmarNuevaPassword" type="password" autocomplete="new-password" minlength="6" required>
+        <input id="confirmarNuevaPassword" type="password" autocomplete="new-password" minlength="8" pattern="(?=.*[A-Za-z])(?=.*[0-9]).{8,}" required>
       </div>
       <button class="boton" id="botonGuardarNuevaPassword" type="submit">Guardar contraseña</button>
     </form>
@@ -5471,7 +5471,7 @@ async function ingresarConGoogle() {
     const { error } = await supabaseClient.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: window.GDV_AUTH.recoveryURL
+        redirectTo: window.GDV_AUTH.homeURL
       }
     });
     if (error) {
@@ -5744,6 +5744,10 @@ document.getElementById("formNuevaPassword").addEventListener("submit", async ev
 
   if (password !== confirmacion) {
     mensaje.textContent = "Las contraseñas no coinciden.";
+    return;
+  }
+  if (!/^(?=.*[A-Za-z])(?=.*\d).{8,}$/.test(password)) {
+    mensaje.textContent = "La contraseña debe tener al menos 8 caracteres e incluir una letra y un número.";
     return;
   }
 
