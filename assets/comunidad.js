@@ -133,9 +133,7 @@ function topicCard(t){
    </div>
  </article>`;
 }
- const c=cat(t.category),replies=comments.filter(r=>r.topic_id===t.id&&r.status==='approved'),votes=reactions.filter(r=>r.topic_id===t.id&&r.kind==='useful').length,m=media.find(m=>m.topic_id===t.id&&['image','video'].includes(m.kind));
- return `<article class="card topic-card" style="--category:${esc(c.color)}"><div class="post-row"><a href="#hangar/${esc(t.author_id||'')}" aria-label="Ver hangar de ${esc(name(t.author_id))}">${avatar(t.author_id)}</a><div class="post-body"><div class="meta">${t.pinned?'<span class="tag">Fijado</span>':''}${link(name(t.author_id),'#hangar/'+t.author_id,'')} · ${date(t.created_at)}</div><a class="category" href="#tematica/${esc(c.slug||'otros')}">${esc(c.name)}</a><div class="post-layout"><div><h3>${link(t.title,'#tema/'+t.id,'post-title')}</h3><p class="muted">${esc(t.summary||t.content.slice(0,200))}</p>${t.status!=='approved'?`<span class="tag status-pending">${stateLabel(t.status)}</span>`:''}</div>${m?.url?`<a href="#tema/${t.id}" aria-label="Abrir publicación">${m.kind==='video'?'<span class="thumb video-thumb">▶ Ver video</span>':`<img class="thumb" src="${esc(m.url)}" alt="${esc(t.title)}" loading="lazy">`}</a>`:''}</div><div class="metrics"><span>${replies.length} respuestas</span><span>${votes} aportes útiles</span><span>${replies.length?'Última respuesta: '+date(replies.at(-1).created_at):'Sin respuestas'}</span></div></div></div></article>`;
-}
+ 
 function feed(category){
  const c=cat(category);crumbs(category?[['Foro','#foro'],[c.name]]:[['Foro']]);
  app.innerHTML=`<h1>${category?esc(c.name):'Foro'}</h1>${category?'<div class="toolbar">'+link('+ Crear publicación','#crear','button primary')+link('Foro General','#foro')+'</div>':toolbar()}<div class="toolbar">${link('Quiénes somos','#quienes-somos')}${link('Normativa de la comunidad','#normativa')}</div><div class="toolbar"><input id="search" placeholder="Buscar publicaciones, autores o temáticas…" aria-label="Buscar publicaciones"><select id="sort" aria-label="Ordenar publicaciones"><option value="recent">Recientes</option><option value="useful">Más valoradas</option><option value="unanswered">Sin respuesta</option></select></div><div id="feed"></div>${category?'':extras()}`;
@@ -156,6 +154,20 @@ async function topicView(id,highlight){
    return;
  }
  const all=comments.filter(r=>r.topic_id===id&&(!r.deleted||comments.some(child=>child.parent_id===r.id))),ids=new Set(all.map(c=>c.id));
+ if(!t){
+  app.innerHTML='<h1>Publicación no disponible</h1><p>Puede estar pendiente de revisión o haber sido retirada.</p>'+link('Volver al Foro','#foro');
+  return;
+}
+
+const c=cat(t.category);
+
+crumbs([
+  ['Foro','#foro'],
+  [c.name,'#tematica/'+t.category],
+  [t.title]
+]);
+
+replyParent=null;
  app.innerHTML=`<article class="card topic-card" style="--category:${esc(c.color)}"><div class="post-row">${avatar(t.author_id)}<div class="post-body"><div class="meta">${t.pinned?'<span class="tag">Fijado</span>':''}${link(name(t.author_id),'#hangar/'+t.author_id,'')} · ${date(t.created_at)}</div><span class="tag">${esc(c.name)}</span><span class="tag">${stateLabel(t.state)}</span>${t.status!=='approved'?`<span class="tag">${stateLabel(t.status)}</span>`:''}<h1>${esc(t.title)}</h1><p class="meta">${edited(t).replace(/^ · /,'')}</p><p class="muted">${esc(t.summary)}</p><div class="body-text">${body(t.content)}</div>${t.travel?`<dl class="profile-fields">${Object.entries(t.travel).filter(([,v])=>v).map(([k,v])=>`<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>`:''}<div class="attachments">${media.filter(m=>m.topic_id===id).map(attachment).join('')}</div>${safeURL(t.source_url)?`<p><a href="${esc(safeURL(t.source_url))}" target="_blank" rel="noopener noreferrer">Fuente o enlace relacionado ↗</a></p>`:''}<div>${t.tags.map(x=>`<span class="tag">${esc(x)}</span>`).join('')}</div><div class="actions">${reactionButton('topic_id',id,'useful')}${reactionButton('topic_id',id,'award')}<button data-action="share" data-id="${id}">Compartir</button><button data-action="save" data-id="${id}" aria-pressed="false">Guardar</button><button data-action="follow" data-id="${id}" aria-pressed="false">Seguir tema</button><button data-action="report" data-id="${id}">Denunciar</button>${t.author_id===user?.id?`<a class="button" href="#editar/${id}">Editar</a><button data-action="request-removal" data-id="${id}">Solicitar retiro</button>`:''}</div></div></div></article><h2>Conversación</h2>${all.filter(r=>!r.parent_id||!ids.has(r.parent_id)).map(r=>commentView(r,all)).join('')||'<p class="muted">Todavía no hay respuestas.</p>'}${t.state==='closed'||t.state==='archived'?'<p>Este tema está cerrado.</p>':`<form id="reply-form"><label id="reply-label" for="reply">Comentar la publicación</label><textarea id="reply" maxlength="10000" required placeholder="Compartí tu aporte…"></textarea><div class="toolbar"><button class="primary">Enviar respuesta</button><button type="button" data-action="cancel-reply">Cancelar respuesta</button></div></form>`}`;
  if($('reply-form'))$('reply-form').onsubmit=async e=>{e.preventDefault();if(!authenticated())return;await busy(e.submitter,async()=>{checked(await db.from('gdv_comments').insert({topic_id:id,parent_id:replyParent,author_id:user.id,content:$('reply').value.trim()}).select());await load();await route();message('Respuesta enviada. Si corresponde revisión previa, aparecerá públicamente después de su aprobación.')})};
  if(user){for(const [table,action] of [['gdv_saved','save'],['gdv_follows','follow']]){const r=await db.from(table).select('topic_id').eq('topic_id',id).eq('user_id',user.id).maybeSingle();const b=app.querySelector(`[data-action="${action}"]`);if(b&&r.data){b.setAttribute('aria-pressed','true');b.textContent=action==='save'?'Guardado':'Siguiendo'}}}
