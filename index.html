@@ -8551,18 +8551,23 @@ window.addEventListener('popstate',abrirAnexoDesdeURL);
 </style>
 
 <style id="menu-horizontal-distribuido-20261004">
-/* Distribución uniforme del menú horizontal superior */
+/* Menú superior más compacto y centrado */
 @media (min-width: 851px) {
   #menuDesplegable {
-    justify-content: space-between !important;
+    width: min(850px, calc(100% - 160px)) !important;
+    max-width: 850px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    justify-content: center !important;
     gap: 0 !important;
   }
 
   #menuDesplegable a {
     flex: 1 1 0;
+    min-width: 0;
     text-align: center;
-    padding-left: 14px;
-    padding-right: 14px;
+    padding-left: 8px;
+    padding-right: 8px;
   }
 }
 </style>
