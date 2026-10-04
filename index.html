@@ -4663,7 +4663,14 @@ img, video { max-width: 100%; }
 
   <a href="#instituciones-seccion" class="acceso-instituciones" title="Instituciones Amigas">
     <h3>Instituciones Amigas</h3>
-    <p>Entidades que acompañan y forman parte de la comunidad aeronáutica.</p>
+    <div class="instituciones-portada-banner" aria-live="polite">
+      <div class="instituciones-portada-logo" id="institucionesPortadaLogo">
+        <span>Próximamente</span>
+      </div>
+      <div class="instituciones-portada-nombre" id="institucionesPortadaNombre">
+        Entidades que acompañan a la comunidad
+      </div>
+    </div>
   </a>
 
   <a href="#clasificados-seccion" class="acceso-clasificados" title="CompraVenta y Subasta Inversa">
@@ -9024,6 +9031,56 @@ window.addEventListener('popstate',abrirAnexoDesdeURL);
 .acceso-instituciones h3 { margin: 0 0 5px; color: #f2cf78; font-size: 16px; }
 .acceso-instituciones p { margin: 0; color: #fff; font-size: 11px; line-height: 1.35; }
 
+.instituciones-portada-banner {
+  position: relative;
+  height: 78px;
+  margin-top: 7px;
+  overflow: hidden;
+  border: 1px solid rgba(214,168,75,.38);
+  border-radius: 10px;
+  background: rgba(255,255,255,.94);
+}
+
+.instituciones-portada-logo {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 8px 3px;
+}
+
+.instituciones-portada-logo img {
+  max-width: 100%;
+  max-height: 48px;
+  object-fit: contain;
+  display: block;
+  animation: institucionPortadaEntrada .45s ease;
+}
+
+.instituciones-portada-logo span {
+  color: #59646a;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.instituciones-portada-nombre {
+  height: 20px;
+  padding: 2px 7px 4px;
+  overflow: hidden;
+  color: #2b2f31;
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1.15;
+  text-align: center;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+@keyframes institucionPortadaEntrada {
+  from { opacity: 0; transform: translateX(16px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
 .instituciones-amigas { overflow: hidden; }
 .instituciones-carrusel {
   display: flex;
@@ -9176,6 +9233,49 @@ window.addEventListener('popstate',abrirAnexoDesdeURL);
 (function(){
   const escInst=value=>String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   let institucionesAmigas=[];
+  let indiceInstitucionPortada=0;
+  let intervaloInstitucionPortada=null;
+
+  function renderBannerInstitucionesPortada(visibles){
+    const logoBox=document.getElementById("institucionesPortadaLogo");
+    const nombreBox=document.getElementById("institucionesPortadaNombre");
+    if(!logoBox||!nombreBox)return;
+
+    const conLogo=visibles.filter(i=>urlSeguraInstitucion(i.logo_url));
+    const lista=conLogo.length?conLogo:visibles;
+
+    if(!lista.length){
+      logoBox.innerHTML="<span>Próximamente</span>";
+      nombreBox.textContent="Entidades que acompañan a la comunidad";
+      if(intervaloInstitucionPortada){
+        clearInterval(intervaloInstitucionPortada);
+        intervaloInstitucionPortada=null;
+      }
+      return;
+    }
+
+    indiceInstitucionPortada%=lista.length;
+    const item=lista[indiceInstitucionPortada];
+    const logo=urlSeguraInstitucion(item.logo_url);
+
+    logoBox.innerHTML=logo
+      ? `<img src="${escInst(logo)}" alt="Logo de ${escInst(item.name)}">`
+      : `<span>${escInst(item.name)}</span>`;
+    nombreBox.textContent=item.name||"Institución amiga";
+
+    if(intervaloInstitucionPortada)clearInterval(intervaloInstitucionPortada);
+    if(lista.length>1){
+      intervaloInstitucionPortada=setInterval(()=>{
+        indiceInstitucionPortada=(indiceInstitucionPortada+1)%lista.length;
+        const siguiente=lista[indiceInstitucionPortada];
+        const siguienteLogo=urlSeguraInstitucion(siguiente.logo_url);
+        logoBox.innerHTML=siguienteLogo
+          ? `<img src="${escInst(siguienteLogo)}" alt="Logo de ${escInst(siguiente.name)}">`
+          : `<span>${escInst(siguiente.name)}</span>`;
+        nombreBox.textContent=siguiente.name||"Institución amiga";
+      },3500);
+    }
+  }
 
   function urlSeguraInstitucion(valor){
     try{
@@ -9189,6 +9289,7 @@ window.addEventListener('popstate',abrirAnexoDesdeURL);
     if(!pista)return;
 
     const visibles=institucionesAmigas.filter(x=>x.active);
+    renderBannerInstitucionesPortada(visibles);
     if(!visibles.length){
       pista.innerHTML='<p class="instituciones-vacio">Todavía no hay instituciones publicadas.</p>';
       return;
