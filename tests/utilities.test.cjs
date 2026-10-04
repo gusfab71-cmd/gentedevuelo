@@ -1,7 +1,7 @@
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const vm=require('node:vm');
-function load(file){const html=fs.readFileSync(require('node:path').join(__dirname,'../utilidades/',file),'utf8');const nodes=new Map();const node=id=>{if(!nodes.has(id))nodes.set(id,{value:'',innerHTML:'',textContent:'',classList:{toggle(){}},setAttribute(){}});return nodes.get(id)};for(const m of html.matchAll(/<input[^>]*id="([^"]+)"[^>]*value="([^"]*)"/g))node(m[1]).value=m[2];const context=vm.createContext({document:{getElementById:node},localStorage:{getItem:()=>null,setItem(){}},console,window:{addEventListener(){}}});for(const m of html.matchAll(/<script>([\s\S]*?)<\/script>/g))vm.runInContext(m[1],context);return{node,run:code=>vm.runInContext(code,context)}}
+function load(file){const html=fs.readFileSync(require('node:path').join(__dirname,'../utilidades/',file),'utf8');const nodes=new Map();const node=id=>{if(!nodes.has(id))nodes.set(id,{value:'',innerHTML:'',textContent:'',classList:{toggle(){}},setAttribute(){}});return nodes.get(id)};for(const m of html.matchAll(/<input[^>]*id="([^"]+)"[^>]*value="([^"]*)"/g))node(m[1]).value=m[2];const context=vm.createContext({document:{documentElement:{classList:{add(){}}},getElementById:node},localStorage:{getItem:()=>null,setItem(){}},console,window:{addEventListener(){}}});for(const m of html.matchAll(/<script>([\s\S]*?)<\/script>/g))vm.runInContext(m[1],context);return{node,run:code=>vm.runInContext(code,context)}}
 const nav=load('flightprep-nav.html');
 assert.equal(nav.run('Math.round(comp(20,180,180).head)'),20);
 assert.equal(nav.run('Math.round(comp(20,270,180).cross)'),20);

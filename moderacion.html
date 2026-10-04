@@ -63,7 +63,7 @@
       .fecha { white-space: normal; }
     }
   </style>
-</head>
+<style id="auth-pending-style">html.auth-pending body{visibility:hidden}</style><script>document.documentElement.classList.add("auth-pending")</script><script src="assets/supabase-2.117.2.min.js"></script><script src="assets/community-config.js"></script><script src="assets/auth-guard.js?v=20261004"></script></head>
 <body>
   <header>
     <a class="marca" href="index.html"><img src="logo circular recortado gente de vuelo.png" alt=""><span>GENTE DE VUELO<br>MODERACIÓN</span></a>
@@ -98,12 +98,9 @@
       <div id="lista" class="lista" aria-live="polite"></div>
     </section>
   </main>
-  <script src="assets/supabase-2.117.2.min.js"></script>
+
   <script>
-    const client = supabase.createClient(
-      "https://lmoifzyhqmccvmgitlcp.supabase.co",
-      "sb_publishable_YfQ3GwlhGecJyW1ZKcq8iQ_PbYp6THX"
-    );
+    const client = window.GDV_AUTH.client;
     const secciones = [
       { tabla: "publicaciones", nombre: "Foro Aeronáutico", campos: "id,titulo,contenido,autor_nombre,aprobado,created_at" },
       { tabla: "forum_respuestas", nombre: "Respuestas del foro", campos: "id,publicacion_id,autor_nombre,contenido,estado,created_at" },

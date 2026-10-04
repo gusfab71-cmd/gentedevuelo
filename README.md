@@ -21,3 +21,13 @@ La migración de `supabase/migrations/` amplía el esquema existente; no es una 
 La carpeta `revision-comunidad/` se conserva como versión histórica. La versión consolidada se sirve desde la raíz. No se configuraron dominios ni plataformas externas de hosting.
 
 Diseño y reglas: `docs/arquitectura-comunidad.md`.
+
+## Acceso y utilidades (octubre de 2026)
+
+`assets/auth-guard.js` comparte un único cliente Auth por página. Consulta `getSession()` y valida la cuenta con `getUser()` antes de mostrar las secciones; una sesión de cuenta eliminada se descarta localmente. Ingreso, registro, recuperación y normativa son rutas públicas. Los enlaces privados vuelven al destino solicitado después del ingreso. Las páginas históricas redirigen a las actuales. Este control de navegación no reemplaza las políticas RLS de la base de datos.
+
+La URL de recuperación se deriva de la raíz del sitio (`index.html`), también cuando se solicita desde una subcarpeta. En producción es `https://gusfab71-cmd.github.io/gentedevuelo/index.html`; debe estar autorizada en Supabase Auth. No hay bloqueos específicos por correo en el frontend.
+
+`utilidades/calculo-sustentacion.html` contiene el simulador NACA provisto, junto a FlightPrep NAV y Peso y Balance. Los colores de las 13 temáticas se fijan en `assets/comunidad.js` según la paleta solicitada, sin modificar registros de Supabase.
+
+Pruebas: `node tests/auth-guard.test.cjs` y `node tests/utilities.test.cjs`. La navegación, la recuperación y el simulador también se comprobaron en un DOM con respuestas Auth simuladas; no se realizó una prueba de entrega de correo ni una revisión visual en navegador.

@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Perfiles NACA 4 dígitos · Pérdida y flaps · gente de vuelo</title>
+<style>
+  :root { box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+    --bg:#F3F5F8; --card:#FFF; --txt:#0F1B2D; --suave:#5B6B80; --borde:#D9E0E8; --acento:#0B6E99; --acento2:#E4572E; --ok:#1F9D63; --alerta:#E39A0B; --mal:#D83A3F; --dibujo:#0F2A44; --dib2:#9FC4DE; }
+  html { scroll-padding-top:env(safe-area-inset-top,0px); }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#0B1220; --card:#131D30; --txt:#E8EEF6; --suave:#93A4BA; --borde:#26344D; --acento:#4DB6E6; --acento2:#FF8A63; --dibujo:#07111F; } }
+  :root[data-theme="dark"] { --bg:#0B1220; --card:#131D30; --txt:#E8EEF6; --suave:#93A4BA; --borde:#26344D; --acento:#4DB6E6; --acento2:#FF8A63; --dibujo:#07111F; }
+  *,*::before,*::after { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--txt); font:16px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif; }
+  main { max-width:760px; margin:0 auto; padding:16px; display:grid; gap:14px; }
+  h1 { font-size:22px; margin:4px 0 0; } h2 { font-size:13px; letter-spacing:.08em; text-transform:uppercase; color:var(--suave); margin:0 0 10px; }
+  .sub,.nota { color:var(--suave); margin:0; font-size:14px; } .nota { font-size:13px; }
+  .card { background:var(--card); border:1px solid var(--borde); border-radius:16px; padding:14px; }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  label { display:block; font-size:13px; color:var(--suave); }
+  input[type=number],input[type=text] { width:100%; margin-top:4px; padding:11px 12px; font:inherit; font-size:17px; color:var(--txt); background:var(--bg); border:1px solid var(--borde); border-radius:12px; }
+  input[type=range] { width:100%; accent-color:var(--acento); height:36px; }
+  #naca { font:700 34px ui-monospace,Menlo,Consolas,monospace; letter-spacing:.2em; text-align:center; }
+  .msg { min-height:20px; font-size:14px; margin:6px 0 0; } .err { color:var(--acento2); }
+  svg { width:100%; height:auto; display:block; touch-action:none; } .draw { background:var(--dibujo); border-radius:12px; }
+  .badge { display:inline-flex; align-items:center; gap:8px; font-weight:800; padding:6px 12px; border-radius:20px; color:#fff; margin-bottom:8px; }
+  .explica { margin:10px 0 0; padding:12px; border-radius:12px; background:var(--bg); border-left:5px solid var(--acento); }
+  .big { font-size:40px; font-weight:800; line-height:1.1; letter-spacing:-.02em; } .big small { font-size:16px; color:var(--suave); font-weight:600; }
+  .kpis { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:12px; }
+  .kpi { background:var(--bg); border-radius:12px; padding:10px; } .kpi b { display:block; font-size:19px; } .kpi span { font-size:12px; color:var(--suave); }
+  .aviso { margin-top:10px; padding:10px 12px; border-radius:12px; background:color-mix(in srgb,var(--acento2) 14%,transparent); font-size:14px; }
+  textarea { width:100%; height:110px; font:12px ui-monospace,Menlo,monospace; background:var(--bg); color:var(--txt); border:1px solid var(--borde); border-radius:12px; padding:8px; }
+  details summary { cursor:pointer; font-weight:600; min-height:34px; } details p { margin:4px 0 10px; font-size:14px; color:var(--suave); }
+  .ex { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; } .ex button,#play { min-height:40px; padding:0 14px; border-radius:20px; border:1px solid var(--borde); background:var(--bg); color:var(--txt); font:600 14px ui-monospace,Menlo,monospace; cursor:pointer; }
+  #play { background:var(--acento); color:#fff; border:0; font:700 15px system-ui; }
+  .flujo { animation:flujo 1s linear infinite; } @keyframes flujo { to { stroke-dashoffset:-24; } }
+  @media (prefers-reduced-motion: reduce) { .flujo { animation:none; } }
+  .powered { text-align:center; font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:var(--suave); padding:9px 12px; background:var(--card); border-bottom:1px solid var(--borde); }
+  .powered b { color:var(--acento); letter-spacing:.18em; }
+  .ex button.on { background:var(--acento); color:#fff; border-color:transparent; }
+</style>
+<style id="auth-pending-style">html.auth-pending body{visibility:hidden}</style><script>document.documentElement.classList.add("auth-pending")</script><script src="../assets/supabase-2.117.2.min.js"></script><script src="../assets/community-config.js"></script><script src="../assets/auth-guard.js?v=20261004"></script></head>
+<body>
+<nav class="powered"><a href="index.html">← Utilidades</a> · <a href="../comunidad.html#foro">Foro</a></nav>
+<div class="powered"> powered by <b>gente de vuelo</b></div>
+<main>
+  <header><h1>Perfiles NACA de 4 dígitos</h1><p class="sub">Mueve el ángulo, baja los flaps y descubre cuándo un ala pierde la sustentación.</p></header>
+
+  <section class="card">
+    <h2>1 · Elige el perfil</h2>
+    <input id="naca" type="text" inputmode="numeric" maxlength="4" value="2412" aria-label="Código NACA de 4 dígitos">
+    <p id="desc" class="msg"></p>
+    <div class="ex" id="exnaca"><button>0009</button><button>0012</button><button>2412</button><button>4412</button><button>4415</button><button>6409</button></div>
+    <details style="margin-top:10px"><summary>Coordenadas del perfil (cuerda = 1)</summary><textarea id="coords" readonly></textarea><p>Extradós → borde de ataque → intradós. Mantén pulsado para copiar.</p></details>
+  </section>
+
+  <section class="card">
+    <h2>2 · Laboratorio</h2>
+    <div id="badge" class="badge"></div>
+    <svg id="lab" class="draw" viewBox="0 0 600 320" role="img" aria-label="Perfil en el flujo de aire"></svg>
+    <label style="margin-top:10px">Ángulo de ataque: <b id="alfaTxt"></b>
+      <input id="alfa" type="range" min="-6" max="24" step="0.5" value="3"></label>
+    <div style="display:flex;gap:10px;align-items:center;margin-top:4px"><button id="play"> Subir el ángulo hasta la pérdida</button></div>
+    <p id="explica" class="explica"></p>
+  </section>
+
+  <section class="card">
+    <h2>3 · Flaps</h2>
+    <div class="ex" id="tipos" style="margin-top:0"><button data-t="sin" class="on">Sin flaps</button><button data-t="plain">Simple</button><button data-t="split">Split</button><button data-t="slotted">Ranurado</button><button data-t="fowler">Fowler</button></div>
+    <label style="margin-top:10px">Deflexión: <b id="dTxt"></b><input id="fdelta" type="range" min="0" max="45" step="1" value="0"></label>
+    <div class="grid"><label>Cuerda del flap: <b id="cfTxt"></b><input id="fcf" type="range" min="15" max="35" step="1" value="25"></label>
+    <label>Envergadura con flap: <b id="etaTxt"></b><input id="feta" type="range" min="20" max="100" step="5" value="60"></label></div>
+    <div class="ex" id="presets"><button data-p="0">Crucero 0°</button><button data-p="15">Despegue 15°</button><button data-p="35">Aterrizaje 35°</button></div>
+    <p id="efectoFlap" class="explica"></p>
+  </section>
+
+  <section class="card">
+    <h2>4 · Ala y vuelo</h2>
+    <div class="grid">
+      <label>Envergadura (m)<input id="b" type="number" inputmode="decimal" value="11" min="0.1" step="0.1"></label>
+      <label>Cuerda raíz (m)<input id="cr" type="number" inputmode="decimal" value="1.6" min="0.01" step="0.05"></label>
+      <label>Cuerda punta (m)<input id="ct" type="number" inputmode="decimal" value="1.12" min="0.01" step="0.05"></label>
+      <label>Peso (kg)<input id="peso" type="number" inputmode="decimal" value="1000" min="1" step="50"></label>
+      <label>Velocidad (m/s)<input id="V" type="number" inputmode="decimal" value="55" min="1" step="1"></label>
+      <label>Altitud (m)<input id="h" type="number" inputmode="decimal" value="0" min="0" max="11000" step="100"></label>
+    </div>
+    <p class="nota" id="deriv" style="margin-top:8px"></p>
+  </section>
+
+  <section class="card">
+    <h2>Resultado</h2>
+    <div class="big"><span id="L">–</span> <small>N</small></div>
+    <div class="nota" id="kgf"></div>
+    <div class="nota" id="vsost" style="font-weight:700;margin-top:4px"></div>
+    <div class="kpis">
+      <div class="kpi"><b id="aS">–</b><span>Ángulo crítico del ala</span></div>
+      <div class="kpi"><b id="CLm">–</b><span>CL máximo del ala</span></div>
+      <div class="kpi"><b id="Vs">–</b><span>Velocidad de pérdida</span></div>
+      <div class="kpi"><b id="CL">–</b><span>CL actual</span></div>
+      <div class="kpi"><b id="aS2">–</b><span>Crítico del perfil solo</span></div>
+      <div class="kpi"><b id="aL0">–</b><span>α de sustentación nula</span></div>
+      <div class="kpi"><b id="dCL0">–</b><span>CL extra por flaps (α fijo)</span></div>
+      <div class="kpi"><b id="CLm0">–</b><span>CL máx sin flaps</span></div>
+      <div class="kpi"><b id="Vs0">–</b><span>Pérdida sin flaps</span></div>
+    </div>
+    <div id="aviso"></div>
+  </section>
+
+  <section class="card">
+    <h2>CL según el ángulo · toca o arrastra</h2>
+    <svg id="curva" viewBox="0 0 600 280" role="img" aria-label="Curva CL contra alfa"></svg>
+    <p class="nota">Línea sólida: el ala. Línea punteada: el ala sin flaps. La zona roja es la pérdida.</p>
+  </section>
+
+  <section class="card">
+    <h2>¿Dónde empieza a perder el ala?</h2>
+    <svg id="planta" class="draw" viewBox="0 0 600 190" role="img" aria-label="Vista superior del ala coloreada por carga"></svg>
+    <p class="nota" id="plantaTxt" style="margin-top:8px"></p>
+  </section>
+
+  <section class="card">
+    <h2>Aprende</h2>
+    <details><summary>¿Qué es el ángulo de ataque?</summary><p>Es el ángulo entre la cuerda del perfil (la línea de borde de ataque a borde de salida) y el aire que llega. Más ángulo = el aire se desvía más hacia abajo = más sustentación, hasta cierto límite.</p></details>
+    <details><summary>¿Por qué se pierde la sustentación?</summary><p>Con mucho ángulo, el aire pegado a la superficie superior no logra seguir la curva: se despega (separación de la capa límite). La zona de baja presión se desordena, la sustentación cae y la resistencia sube. Se llama pérdida o “stall”. No depende de la velocidad, sino del ángulo.</p></details>
+    <details><summary>¿Por qué el perfil grueso y el curvo aguantan más?</summary><p>Un perfil muy delgado (0009) se despega de golpe en el borde de ataque; uno de 12–15 % de espesor se despega poco a poco desde atrás. La curvatura aumenta el CL máximo, aunque el ángulo crítico sube poco.</p></details>
+    <details><summary>¿Por qué el ala pierde antes en un sitio?</summary><p>La sustentación no se reparte igual a lo largo del ala. En un ala rectangular la sección más cargada está en la raíz, así que pierde primero ahí y los alerones de la punta siguen mandando. En un ala muy afilada la zona crítica se mueve hacia la punta, que es peligroso: se pierde el control lateral.</p></details>
+    <details><summary>¿Qué hacen los flaps?</summary><p>Al bajarlos, el perfil gana curvatura: genera más sustentación al mismo ángulo y su CL máximo sube, así que se puede volar más lento (despegue y aterrizaje). A cambio aumentan la resistencia y el ángulo crítico baja unos grados. Los tipos ranurado y Fowler guían aire por una ranura o agrandan el ala y suben más el CL máximo que el simple o el split.</p></details>
+    <details><summary>¿Qué es la velocidad de pérdida?</summary><p>Para sostener el peso hace falta L = W. Con el CL máximo del ala se obtiene la velocidad mínima a la que aún se puede volar recto: V = √(2W / (ρ·S·CLmáx)). Más peso o más altitud suben esa velocidad.</p></details>
+  </section>
+
+  <p class="nota"><b>Precisión:</b> los efectos de los flaps son una estimación (perfil delgado + factores empíricos, ± 25 %): no incluyen resistencia ni momento de cabeceo. La sustentación antes de la pérdida sale de la teoría del perfil delgado y la línea sustentadora de Prandtl. El <b>ángulo crítico y el CL máximo son una estimación semiempírica</b> (referida a datos publicados, ± 2–3° y ± 15 %); dependen mucho del Reynolds y de la rugosidad. No sustituye ensayos en túnel, XFOIL ni CFD, ni sirve para dimensionar una aeronave real.</p>
+</main>
+
+<script>
+/* ===== NÚCLEO DE CÁLCULO (sin DOM) ===== */
+const RAD = Math.PI / 180;
+
+function parseNaca(code) {
+  if (!/^\d{4}$/.test(code)) return { error: 'Escribe 4 dígitos, por ejemplo 2412' };
+  const M = +code[0], P = +code[1], T = +code.slice(2);
+  if (T === 0) return { error: 'El espesor no puede ser 00' };
+  if (M > 0 && P === 0) return { error: 'Con curvatura (1.er dígito > 0) la posición no puede ser 0' };
+  return { m: M / 100, p: P / 10, t: T / 100 };
+}
+function curvatura(m, p, x) {
+  if (m === 0) return { yc: 0, dyc: 0 };
+  if (x < p) return { yc: (m / (p * p)) * (2 * p * x - x * x), dyc: ((2 * m) / (p * p)) * (p - x) };
+  const q = (1 - p) * (1 - p);
+  return { yc: (m / q) * (1 - 2 * p + 2 * p * x - x * x), dyc: ((2 * m) / q) * (p - x) };
+}
+function espesor(t, x) {
+  return 5 * t * (0.2969 * Math.sqrt(x) - 0.1260 * x - 0.3516 * x * x + 0.2843 * x ** 3 - 0.1036 * x ** 4);
+}
+function geometria(f, n = 60) {
+  const sup = [], inf = [], cam = [];
+  for (let i = 0; i <= n; i++) {
+    const x = (1 - Math.cos((Math.PI * i) / n)) / 2;      // espaciado coseno
+    const { yc, dyc } = curvatura(f.m, f.p, x);
+    const yt = espesor(f.t, x), th = Math.atan(dyc);
+    sup.push([x - yt * Math.sin(th), yc + yt * Math.cos(th)]);
+    inf.push([x + yt * Math.sin(th), yc - yt * Math.cos(th)]);
+    cam.push([x, yc]);
+  }
+  return { sup, inf, cam };
+}
+// Ángulo de sustentación nula (teoría del perfil delgado), en radianes
+function alfaL0(f, N = 2000) {
+  let s = 0;
+  for (let i = 0; i <= N; i++) {
+    const th = (Math.PI * i) / N, x = (1 - Math.cos(th)) / 2;
+    const w = i === 0 || i === N ? 1 : i % 2 ? 4 : 2;     // Simpson
+    s += w * curvatura(f.m, f.p, x).dyc * (Math.cos(th) - 1);
+  }
+  return -(1 / Math.PI) * ((s * Math.PI) / N / 3);
+}
+// Línea sustentadora de Prandtl (Glauert). Ala trapezoidal sin torsión ni flecha.
+// dAlfa(θ): incremento local de ángulo efectivo (rad) debido a flaps (opcional).
+function alaFinita({ b, cr, ct, a0 = 2 * Math.PI, N = 24, cuerdaFn = null, Sfija = null, dAlfa = null }) {
+  const S = Sfija ?? ((cr + ct) / 2) * b, AR = (b * b) / S, lam = ct / cr;
+  const cuerda = (th) => (cuerdaFn ? cuerdaFn(th) : cr * (1 - (1 - lam) * Math.abs(Math.cos(th))));
+  const A = [], r1 = [], r2 = [];
+  for (let i = 1; i <= N; i++) {
+    const th = (i * Math.PI) / (2 * N), mu = (cuerda(th) * a0) / (4 * b);
+    A.push(Array.from({ length: N }, (_, j) => { const n = 2 * j + 1; return Math.sin(n * th) * (n * mu + Math.sin(th)); }));
+    r1.push(mu * Math.sin(th));
+    r2.push(dAlfa ? mu * Math.sin(th) * dAlfa(th) : 0);
+  }
+  for (let k = 0; k < N; k++) {                              // Gauss con pivoteo
+    let piv = k;
+    for (let r = k + 1; r < N; r++) if (Math.abs(A[r][k]) > Math.abs(A[piv][k])) piv = r;
+    [A[k], A[piv]] = [A[piv], A[k]]; [r1[k], r1[piv]] = [r1[piv], r1[k]]; [r2[k], r2[piv]] = [r2[piv], r2[k]];
+    for (let r = k + 1; r < N; r++) {
+      const f = A[r][k] / A[k][k];
+      for (let c = k; c < N; c++) A[r][c] -= f * A[k][c];
+      r1[r] -= f * r1[k]; r2[r] -= f * r2[k];
+    }
+  }
+  const X = Array(N).fill(0), Z = Array(N).fill(0);
+  for (let r = N - 1; r >= 0; r--) {
+    let s1 = r1[r], s2 = r2[r];
+    for (let c = r + 1; c < N; c++) { s1 -= A[r][c] * X[c]; s2 -= A[r][c] * Z[c]; }
+    X[r] = s1 / A[r][r]; Z[r] = s2 / A[r][r];
+  }
+  let delta = 0;
+  for (let j = 1; j < N; j++) delta += (2 * j + 1) * (X[j] / X[0]) ** 2;
+  return { S, AR, lam, cm: S / b, CLalfa: Math.PI * AR * X[0], e: 1 / (1 + delta), X, Z, CL0f: Math.PI * AR * Z[0], b, cuerda };
+}
+// Atmósfera estándar (troposfera, hasta 11 km)
+function atmosfera(h) {
+  h = Math.min(Math.max(h, 0), 11000);
+  const T = 288.15 - 0.0065 * h;
+  return { T, rho: 1.225 * (T / 288.15) ** 4.25588, mu: (1.458e-6 * T ** 1.5) / (T + 110.4) };
+}
+function calcular(f, ala, alfaDeg, V, h) {
+  const a0 = 2 * Math.PI, aL0 = alfaL0(f);
+  const w = alaFinita({ ...ala, a0 });
+  const atm = atmosfera(h);
+  const alfa = alfaDeg * RAD;
+  const cl2d = a0 * (alfa - aL0);
+  const CL = w.CLalfa * (alfa - aL0);
+  const q = 0.5 * atm.rho * V * V;
+  const L = q * w.S * CL;
+  return { aL0, cl2d, CL, CLalfa: w.CLalfa, e: w.e, AR: w.AR, S: w.S, cm: w.cm, lam: w.lam,
+           rho: atm.rho, Re: (atm.rho * V * w.cm) / atm.mu, q, L,
+           CDi: (CL * CL) / (Math.PI * w.AR * w.e) };
+}
+
+/* ===== MODELO DE PÉRDIDA (semiempírico, aproximado) ===== */
+const lim = (v, a, b) => Math.min(Math.max(v, a), b);
+function interp(tx, ty, x) {
+  if (x <= tx[0]) return ty[0];
+  for (let i = 1; i < tx.length; i++) if (x <= tx[i]) return ty[i - 1] + ((ty[i] - ty[i - 1]) * (x - tx[i - 1])) / (tx[i] - tx[i - 1]);
+  return ty[ty.length - 1];
+}
+// cl máximo del perfil: base por espesor (referencia Re≈3·10⁶) + aporte de la curvatura, escalado con Reynolds
+function clMax2D(f, Re) {
+  const base = interp([0.06, 0.09, 0.12, 0.15, 0.18, 0.24], [0.95, 1.33, 1.52, 1.57, 1.47, 1.28], f.t);
+  return (base + 5 * f.m) * lim((Re / 3e6) ** 0.15, 0.5, 1.15);
+}
+const deltaRedondeo = (f) => lim(35 * f.t, 2, 6) * RAD;      // zona donde la curva se dobla antes de la cima
+const caidaPostPerdida = (f) => (f.t < 0.09 ? 0.45 : f.t < 0.15 ? 0.25 : 0.15); // fracción de CLmax perdida cada 10°
+// Curva con recta, codo suave, máximo y caída
+function curvaCL(a, aL0, CLmax, delta, caida) {
+  const aK = aL0 + CLmax / a - delta / 2, aS = aK + delta;
+  const fn = (al) => {
+    if (al <= aK) return a * (al - aL0);
+    if (al <= aS) { const d = al - aK; return a * (aK - aL0) + a * d - (a * d * d) / (2 * delta); }
+    return Math.max(CLmax * (1 - (caida * (al - aS)) / (10 * RAD)), 0.35 * CLmax);
+  };
+  return { fn, aK, aS };
+}
+// Sustentación local por unidad de (α − α0) a lo largo de la envergadura (Glauert)
+function clLocalUnit(w, th) {
+  let s = 0;
+  for (let j = 0; j < w.X.length; j++) s += w.X[j] * Math.sin((2 * j + 1) * th);
+  return (4 * w.b * s) / w.cuerda(th);
+}
+function clLocalZ(w, th) {
+  let s = 0;
+  for (let j = 0; j < w.Z.length; j++) s += w.Z[j] * Math.sin((2 * j + 1) * th);
+  return (4 * w.b * s) / w.cuerda(th);
+}
+/* ===== FLAPS (teoría del perfil delgado + factores empíricos, ±25 %) ===== */
+const TIPOS_FLAP = {
+  sin:     { k: 0,    dc: 0,   ref: 35 },
+  plain:   { k: 1.0,  dc: 0.9, ref: 35 },   // simple
+  split:   { k: 1.05, dc: 0.9, ref: 45 },
+  slotted: { k: 1.15, dc: 1.3, ref: 35 },   // ranurado
+  fowler:  { k: 1.3,  dc: 1.5, ref: 35 },
+};
+function flapEfecto(flap) {
+  const t = TIPOS_FLAP[flap.tipo], d = flap.delta;
+  if (!t || t.k === 0 || d <= 0) return { da: 0, dClmax: 0, tau: 0 };
+  const th = Math.acos(2 * flap.cf - 1), tau = 1 - (th - Math.sin(th)) / Math.PI;      // eficacia (perfil delgado)
+  const eta = interp([0, 10, 20, 30, 40, 50, 60], [1, 0.85, 0.68, 0.55, 0.46, 0.4, 0.35], d); // pérdida viscosa
+  return { da: tau * eta * t.k * d * RAD, dClmax: t.dc * Math.min(1, d / t.ref) * lim(Math.sqrt(flap.cf / 0.25), 0.4, 1.4), tau };
+}
+const FLAP0 = { tipo: 'sin', delta: 0, cf: 0.25, eta: 0.6 };
+function nucleo(f, ala, atm, V, flap) {
+  const a0 = 2 * Math.PI, aL0 = alfaL0(f), cm = (ala.cr + ala.ct) / 2, Re = (atm.rho * V * cm) / atm.mu;
+  const cm2 = clMax2D(f, Re), d = deltaRedondeo(f), k = caidaPostPerdida(f), fe = flapEfecto(flap);
+  const ramp = (y) => lim((flap.eta + 0.04 - y) / 0.08, 0, 1);               // 1 con flap, 0 sin flap (borde suavizado)
+  const w = alaFinita({ ...ala, a0, dAlfa: fe.da > 0 ? (th) => fe.da * ramp(Math.abs(Math.cos(th))) : null });
+  const cmax = (th) => cm2 + fe.dClmax * ramp(Math.abs(Math.cos(th)));
+  let x = 1e9, thC = Math.PI / 2;                                             // sección que llega antes a su cl máx
+  for (let i = 1; i <= 400; i++) {
+    const th = (i * Math.PI) / 800, l = clLocalUnit(w, th);
+    if (l <= 1e-6) continue;
+    const xi = (cmax(th) - clLocalZ(w, th)) / l;
+    if (xi < x) { x = xi; thC = th; }
+  }
+  x = Math.max(x, 0.02);
+  const CLmaxW = w.CLalfa * x + w.CL0f, aL0eff = aL0 - w.CL0f / w.CLalfa;
+  return { aL0, aL0eff, w, Re, cm2, CLmaxW, fe, cmax, yCrit: Math.cos(thC),
+           wing: curvaCL(w.CLalfa, aL0eff, CLmaxW, d, k), foil: curvaCL(a0, aL0 - fe.da, cm2 + fe.dClmax, d, k) };
+}
+function analisis(f, ala, alfaDeg, V, h, pesoKg, flap = FLAP0) {
+  const atm = atmosfera(h), n = nucleo(f, ala, atm, V, flap), n0 = nucleo(f, ala, atm, V, FLAP0);
+  const al = alfaDeg * RAD, CL = n.wing.fn(al), q = 0.5 * atm.rho * V * V, L = q * n.w.S * CL, W = pesoKg * 9.80665;
+  const estado = al >= n.wing.aS ? 'perdida' : al >= n.wing.aK ? 'cerca' : al < n.aL0eff ? 'neg' : 'adherido';
+  const vs = (c) => Math.sqrt((2 * W) / (atm.rho * n.w.S * c));
+  return { ...n, rho: atm.rho, q, L, CL, CDi: (CL * CL) / (Math.PI * n.w.AR * n.w.e), estado, base: n0,
+           aS2D: n.foil.aS, aSw: n.wing.aS, ellMax: 0, Vs: vs(n.CLmaxW), Vs0: vs(n0.CLmaxW), peso: W, CL0f: n.w.CL0f,
+           localR: (alr, th) => (clLocalUnit(n.w, th) * (alr - n.aL0) + clLocalZ(n.w, th)) / n.cmax(th) };
+}
+
+
+const $ = (id) => document.getElementById(id);
+const fmt = (v, d = 2) => (Number.isFinite(v) ? v.toFixed(d) : '–');
+const COL = { adherido: 'var(--ok)', cerca: 'var(--alerta)', perdida: 'var(--mal)', neg: '#7C8794' };
+const ROT = { adherido: ' Flujo pegado', cerca: ' Cerca del ángulo crítico', perdida: ' Pérdida de sustentación', neg: ' Sin sustentación positiva' };
+let R = null, F = null, ALA = null, TIPO = 'sin', FLAP = { tipo: 'sin', delta: 0, cf: 0.25, eta: 0.6 };
+const NOMBRE = { sin: 'sin flaps', plain: 'simples', split: 'split', slotted: 'ranurados', fowler: 'Fowler' };
+
+// Geometría del perfil con el flap deflectado (para el dibujo)
+function perfilConFlap(f, fl) {
+  const surf = (x) => { const { yc, dyc } = curvatura(f.m, f.p, x), yt = espesor(f.t, x), th = Math.atan(dyc);
+    return { u: [x - yt * Math.sin(th), yc + yt * Math.cos(th)], l: [x + yt * Math.sin(th), yc - yt * Math.cos(th)], c: [x, yc] }; };
+  const cf = fl.cf, xh = 1 - cf, d = fl.delta * RAD, nA = 60, nB = 14;
+  const A = Array.from({ length: nA + 1 }, (_, i) => surf((xh * (1 - Math.cos((Math.PI * i) / nA))) / 2));
+  const B = Array.from({ length: nB + 1 }, (_, i) => surf(xh + (cf * i) / nB));
+  const H = surf(xh).c, k = Math.min(1, fl.delta / 35);
+  const giro = (p, sx = 0, sy = 0) => { const dx = p[0] - H[0], dy = p[1] - H[1];
+    return [H[0] + dx * Math.cos(d) + dy * Math.sin(d) + sx, H[1] - dx * Math.sin(d) + dy * Math.cos(d) + sy]; };
+  const Au = A.map((s) => s.u), Al = A.map((s) => s.l).reverse(), Bu = B.map((s) => s.u), Bl = B.map((s) => s.l);
+  if (fl.tipo === 'sin' || d <= 0) return { polys: [Au.concat(Bu, Bl.slice().reverse(), Al)] };
+  if (fl.tipo === 'plain') return { polys: [Au.concat(Bu.map((p) => giro(p)), Bl.slice().reverse().map((p) => giro(p)), Al)] };
+  if (fl.tipo === 'split') return { polys: [Au.concat(Bu, Bl.slice().reverse(), Al)], placa: Bl.map((p) => giro(p)) };
+  const sx = fl.tipo === 'fowler' ? 0.45 * cf * k : 0.015, sy = fl.tipo === 'fowler' ? -0.035 * k : -0.012;   // ranura / desplazamiento hacia atrás
+  return { polys: [Au.concat(Al), Bu.map((p) => giro(p, sx, sy)).concat(Bl.slice().reverse().map((p) => giro(p, sx, sy)))] };
+}
+
+function explicarFlap(r) {
+  const el = $('efectoFlap');
+  if (FLAP.tipo === 'sin' || FLAP.delta <= 0) { el.style.borderLeftColor = 'var(--acento)'; el.textContent = 'Configuración limpia (crucero). Elige un tipo de flap y baja la deflexión, o usa “Despegue / Aterrizaje”, para ver cómo cambia la curva.'; return; }
+  const dA = (r.base.wing.aS - r.aSw) / RAD, dV = (r.Vs0 - r.Vs) * 3.6, edge = Math.abs(r.yCrit) > FLAP.eta - 0.05;
+  el.style.borderLeftColor = 'var(--ok)';
+  el.innerHTML = `Con flaps <b>${NOMBRE[FLAP.tipo]}</b> a ${FLAP.delta}°: la sustentación nula pasa de ${fmt(r.base.aL0eff / RAD, 1)}° a <b>${fmt(r.aL0eff / RAD, 1)}°</b> (vuela con el morro más bajo), el CL máximo sube de ${fmt(r.base.CLmaxW, 2)} a <b>${fmt(r.CLmaxW, 2)}</b> y la velocidad de pérdida baja <b>${fmt(Math.max(dV, 0), 0)} km/h</b>. A cambio, el ángulo crítico ${dA > 0.2 ? `baja ${fmt(dA, 1)}°` : 'casi no cambia'} y aumenta la resistencia (no calculada). ${edge ? 'La pérdida empieza en el borde del flap, es decir, manda la parte del ala que no lo tiene: prueba a ampliar su envergadura.' : ''}`;
+}
+
+function dibujarLab(f, r, alfa) {
+  const g = geometria(f, 80), C = 330, x0 = 140, y0 = 165;
+  const P = ([x, y]) => `${(x0 + x * C).toFixed(1)},${(y0 - y * C).toFixed(1)}`;
+  const pf = perfilConFlap(f, FLAP);
+  const cont = pf.polys.map((pl) => `<polygon points="${pl.map(P).join(' ')}" fill="${COL[r.estado]}" fill-opacity=".45" stroke="${COL[r.estado]}" stroke-width="3" stroke-linejoin="round"/>`).join('') + (pf.placa ? `<polyline points="${pf.placa.map(P).join(' ')}" fill="none" stroke="${COL[r.estado]}" stroke-width="5" stroke-linecap="round"/>` : '');
+  const col = COL[r.estado], cl = Math.max(0, Math.min(r.CL, 2)), bend = 10 + 16 * cl;
+  let s = '';
+  [55, 92, 128].forEach((y) => {
+    s += r.estado === 'perdida'
+      ? `<path class="flujo" d="M0 ${y} Q120 ${y - 6} 250 ${y - 10} T 340 ${y - 4} T 430 ${y - 22} T 520 ${y - 6} T 600 ${y - 18}" fill="none" stroke="var(--acento2)" stroke-width="2.5" stroke-dasharray="10 14" opacity=".9"/>`
+      : `<path class="flujo" d="M0 ${y} Q300 ${y - bend} 600 ${y}" fill="none" stroke="var(--dib2)" stroke-width="2" stroke-dasharray="10 14" opacity=".75"/>`;
+  });
+  [215, 252, 288].forEach((y) => { s += `<path class="flujo" d="M0 ${y} Q300 ${y + bend * 0.45} 600 ${y}" fill="none" stroke="var(--dib2)" stroke-width="2" stroke-dasharray="10 14" opacity=".5"/>`; });
+  const px = x0 + 0.25 * C, alt = 20 + 70 * cl;
+  s += `<g transform="rotate(${alfa.toFixed(2)} ${px} ${y0})">${cont}</g>`;
+  if (cl > 0.02) s += `<line x1="${px}" y1="${y0}" x2="${px}" y2="${y0 - alt}" stroke="#fff" stroke-width="5"/><polygon points="${px - 11},${y0 - alt + 2} ${px + 11},${y0 - alt + 2} ${px},${y0 - alt - 16}" fill="#fff"/><text x="${px + 14}" y="${y0 - alt + 6}" fill="#fff" font-size="15" font-family="system-ui">Sustentación</text>`;
+  s += `<text x="12" y="22" fill="var(--dib2)" font-size="14" font-family="system-ui">viento →</text>`;
+  s += `<text x="588" y="24" fill="#fff" font-size="15" font-family="system-ui" text-anchor="end">α = ${alfa.toFixed(1)}°</text>`;
+  if (r.estado === 'perdida') s += `<text x="588" y="46" fill="var(--acento2)" font-size="14" font-family="system-ui" text-anchor="end">flujo despegado</text>`;
+  $('lab').innerHTML = s;
+}
+
+function dibujarCurva(r, alfa) {
+  const w = 600, h = 280, ml = 44, mb = 32, mt = 14, mr = 12, A0 = -6, A1 = 24;
+  const pa = [], pf = [];
+  for (let a = A0; a <= A1 + 1e-9; a += 0.5) { pa.push([a, r.wing.fn(a * RAD)]); pf.push([a, r.base.wing.fn(a * RAD)]); }
+  const all = pa.concat(pf).map((p) => p[1]).concat([0]);
+  const y0 = Math.floor(Math.min(...all) * 2) / 2, y1 = Math.ceil(Math.max(...all) * 2) / 2 + 0.5;
+  const sx = (a) => ml + ((a - A0) / (A1 - A0)) * (w - ml - mr), sy = (y) => h - mb - ((y - y0) / (y1 - y0)) * (h - mb - mt);
+  const aS = r.aSw / RAD;
+  let s = `<rect x="${sx(Math.min(aS, A1))}" y="${mt}" width="${Math.max(0, w - mr - sx(Math.min(aS, A1)))}" height="${h - mb - mt}" fill="var(--mal)" opacity=".13"/>`;
+  for (let y = y0; y <= y1 + 1e-9; y += 0.5) s += `<line x1="${ml}" x2="${w - mr}" y1="${sy(y)}" y2="${sy(y)}" stroke="var(--borde)"/><text x="${ml - 6}" y="${sy(y) + 4}" font-size="12" fill="var(--suave)" text-anchor="end">${y.toFixed(1)}</text>`;
+  for (let a = A0; a <= A1; a += 6) s += `<text x="${sx(a)}" y="${h - 10}" font-size="12" fill="var(--suave)" text-anchor="middle">${a}°</text>`;
+  s += `<line x1="${sx(0)}" x2="${sx(0)}" y1="${mt}" y2="${h - mb}" stroke="var(--borde)"/>`;
+  const L = (pts) => pts.map((p) => sx(p[0]).toFixed(1) + ',' + sy(p[1]).toFixed(1)).join(' ');
+  s += `<polyline fill="none" stroke="var(--suave)" stroke-width="2" stroke-dasharray="5 5" points="${L(pf)}"/>`;
+  s += `<polyline fill="none" stroke="var(--acento)" stroke-width="3.5" points="${L(pa)}"/>`;
+  s += `<circle cx="${sx(aS)}" cy="${sy(r.CLmaxW)}" r="6" fill="var(--mal)"/><text x="${sx(aS) - 8}" y="${sy(r.CLmaxW) - 10}" font-size="13" font-weight="700" fill="var(--mal)" text-anchor="${aS > 18 ? 'end' : 'middle'}">pérdida ${aS.toFixed(1)}°</text>`;
+  const ax = Math.min(Math.max(alfa, A0), A1);
+  s += `<line x1="${sx(ax)}" x2="${sx(ax)}" y1="${mt}" y2="${h - mb}" stroke="var(--acento2)" stroke-dasharray="3 4"/><circle cx="${sx(ax)}" cy="${sy(r.CL)}" r="8" fill="var(--acento2)" stroke="var(--card)" stroke-width="2"/>`;
+  s += `<text x="${w - mr}" y="${mt + 10}" font-size="12" fill="var(--suave)" text-anchor="end">CL</text>`;
+  $('curva').innerHTML = s;
+  $('curva')._map = (cx) => { const b = $('curva').getBoundingClientRect(); return A0 + (((cx - b.left) / b.width) * w - ml) / (w - ml - mr) * (A1 - A0); };
+}
+
+function dibujarPlanta(r, alfa) {
+  const w = r.w, N = 48, W = 560, cmax = Math.max(ALA.cr, ALA.ct), sc = Math.min(W / ALA.b, 170 / cmax), X0 = 20, Yq = 80;
+  const aEff = Math.max(alfa * RAD - r.aL0, 0);
+  let s = '';
+  for (let i = 0; i < N; i++) {
+    const yn = -1 + (2 * (i + 0.5)) / N, th = Math.acos(-yn), c = w.cuerda(th);
+    const rr = r.localR(alfa * RAD, th), hue = Math.max(0, Math.min(140, 140 * (1 - (rr - 0.6) / 0.4)));
+    s += `<rect x="${(X0 + ((yn + 1) / 2) * W - 0.3).toFixed(1)}" y="${(Yq - 0.25 * c * sc).toFixed(1)}" width="${(W / N + 0.6).toFixed(1)}" height="${(c * sc).toFixed(1)}" fill="${rr <= 0.02 ? '#5B6B80' : `hsl(${hue.toFixed(0)} 75% 48%)`}"/>`;
+  }
+  if (FLAP.tipo !== 'sin' && FLAP.delta > 0) {
+    const top = [], bot = [];
+    for (let i = 0; i <= 24; i++) { const yn = -FLAP.eta + (2 * FLAP.eta * i) / 24, c = w.cuerda(Math.acos(-yn)), x = X0 + ((yn + 1) / 2) * W, ye = Yq + 0.75 * c * sc; bot.push([x, ye]); top.push([x, ye - FLAP.cf * c * sc]); }
+    s += `<polygon points="${top.concat(bot.slice().reverse()).map((p) => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ')}" fill="#fff" fill-opacity=".28" stroke="#fff" stroke-width="2"/>`;
+  }
+  const xc = X0 + ((Math.abs(r.yCrit) + 1) / 2) * W, xc2 = X0 + ((1 - Math.abs(r.yCrit)) / 2) * W;
+  s += `<g stroke="#fff" stroke-width="2" stroke-dasharray="4 4"><line x1="${xc}" x2="${xc}" y1="6" y2="174"/><line x1="${xc2}" x2="${xc2}" y1="6" y2="174"/></g>`;
+  s += `<text x="300" y="186" fill="var(--dib2)" font-size="13" text-anchor="middle" font-family="system-ui">verde = holgura · rojo = zona en pérdida · líneas blancas = dónde empieza · blanco = flap</text>`;
+  $('planta').innerHTML = s;
+  const y = Math.abs(r.yCrit), donde = y < 0.25 ? 'en la raíz (junto al fuselaje)' : y < 0.6 ? `a media ala (${(y * 100).toFixed(0)} % de la semienvergadura)` : `hacia la punta (${(y * 100).toFixed(0)} % de la semienvergadura)`;
+  $('plantaTxt').innerHTML = `La sección más cargada está <b>${donde}</b>. ${FLAP.tipo !== 'sin' && FLAP.delta > 0 && Math.abs(y - FLAP.eta) < 0.08 ? 'Con flaps, la zona crítica queda justo en el extremo del flap: la parte del ala sin flap es la que pierde antes. Amplía la envergadura del flap o reduce la deflexión.' : y < 0.25 ? 'Es lo deseable: los alerones de la punta siguen funcionando mientras empieza la pérdida.' : y >= 0.6 ? 'Ojo: pierde primero cerca de la punta, donde están los alerones; se pierde el control lateral. Prueba con menos estrechamiento (cuerda punta más parecida a la raíz).' : 'Posición intermedia.'}`;
+}
+
+function explicar(r, alfa) {
+  const a = alfa.toFixed(1), c = (r.aSw / RAD).toFixed(1), k = (r.wing.aK / RAD).toFixed(1);
+  const t = {
+    neg: `Con ${a}° el perfil todavía no sustenta: necesitas más de ${fmt(r.aL0eff / RAD, 1)}° para que empiece la sustentación positiva.`,
+    adherido: `El aire sigue pegado a la cara superior y la sustentación sube casi en línea recta con el ángulo. Margen hasta el codo de la curva: ${fmt(r.wing.aK / RAD - alfa, 1)}°.`,
+    cerca: `La capa límite empieza a despegarse desde el borde de salida y la curva se dobla: cada grado extra da menos sustentación. El ángulo crítico estimado es ${c}°.`,
+    perdida: `Pasaste el ángulo crítico (${c}°): el flujo se despega de la cara superior, la sustentación cae y la resistencia sube. Para recuperarte, baja el ángulo de ataque.`,
+  }[r.estado];
+  $('explica').style.borderLeftColor = COL[r.estado];
+  $('explica').textContent = t;
+}
+
+function actualizar() {
+  const f = parseNaca($('naca').value.trim()), alfa = +$('alfa').value, V = +$('V').value, h = +$('h').value, W = +$('peso').value;
+  ALA = { b: +$('b').value, cr: +$('cr').value, ct: +$('ct').value };
+  FLAP = { tipo: TIPO, delta: +$('fdelta').value, cf: +$('fcf').value / 100, eta: +$('feta').value / 100 };
+  $('dTxt').textContent = FLAP.delta + '°'; $('cfTxt').textContent = Math.round(FLAP.cf * 100) + ' %'; $('etaTxt').textContent = Math.round(FLAP.eta * 100) + ' %';
+  document.querySelectorAll('#tipos button').forEach((b) => b.classList.toggle('on', b.dataset.t === TIPO));
+  $('alfaTxt').textContent = alfa.toFixed(1) + '°';
+  if (f.error) { $('desc').textContent = f.error; $('desc').className = 'msg err'; return; }
+  $('desc').className = 'msg';
+  $('desc').textContent = f.m > 0 ? `Curvatura ${(f.m * 100).toFixed(0)} % a ${(f.p * 100).toFixed(0)} % de la cuerda · espesor ${(f.t * 100).toFixed(0)} %` : `Simétrico · espesor ${(f.t * 100).toFixed(0)} %`;
+  if (!(ALA.b > 0 && ALA.cr > 0 && ALA.ct > 0 && V > 0 && W > 0)) return;
+  if (F !== $('naca').value) { const g = geometria(f, 60); $('coords').value = g.sup.slice().reverse().concat(g.inf.slice(1)).map(([x, y]) => `${x.toFixed(5)}  ${y.toFixed(5)}`).join('\n'); F = $('naca').value; }
+  const r = (R = analisis(f, ALA, alfa, V, h, W, FLAP));
+  $('badge').textContent = ROT[r.estado]; $('badge').style.background = COL[r.estado];
+  $('deriv').textContent = `S = ${fmt(r.w.S)} m² · alargamiento ${fmt(r.w.AR, 1)} · estrechamiento ${fmt(r.w.lam)} · Reynolds ≈ ${r.Re >= 1e6 ? fmt(r.Re / 1e6, 2) + ' M' : Math.round(r.Re / 1e3) + ' k'}`;
+  $('L').textContent = Math.round(r.L).toLocaleString('es');
+  $('kgf').textContent = `≈ ${Math.round(r.L / 9.80665).toLocaleString('es')} kgf de sustentación · peso ${Math.round(r.peso).toLocaleString('es')} N`;
+  const ratio = r.L / r.peso;
+  $('vsost').style.color = ratio >= 1 ? 'var(--ok)' : 'var(--mal)';
+  $('vsost').textContent = ratio >= 1 ? ` Sostiene el peso (${(ratio * 100).toFixed(0)} % del necesario)` : ` No sostiene el peso (solo ${Math.max(0, ratio * 100).toFixed(0)} %)`;
+  $('aS').textContent = fmt(r.aSw / RAD, 1) + '°'; $('CLm').textContent = fmt(r.CLmaxW, 2); $('Vs').textContent = fmt(r.Vs * 3.6, 0) + ' km/h';
+  $('CL').textContent = fmt(r.CL, 3); $('aS2').textContent = fmt(r.aS2D / RAD, 1) + '°'; $('aL0').textContent = fmt(r.aL0eff / RAD, 1) + '°';
+  $('dCL0').textContent = '+' + fmt(r.CL0f, 2); $('CLm0').textContent = fmt(r.base.CLmaxW, 2); $('Vs0').textContent = fmt(r.Vs0 * 3.6, 0) + ' km/h';
+  const av = [];
+  if (r.Re < 2e5) av.push('Reynolds bajo (< 200 000): el ángulo crítico real puede ser bastante distinto.');
+  if (h > 11000) av.push('La atmósfera modelada llega solo a 11 km.');
+  $('aviso').innerHTML = av.map((x) => `<div class="aviso">${x}</div>`).join('');
+  dibujarLab(f, r, alfa); dibujarCurva(r, alfa); dibujarPlanta(r, alfa); explicar(r, alfa); explicarFlap(r);
+}
+
+['naca', 'alfa', 'b', 'cr', 'ct', 'V', 'h', 'peso', 'fdelta', 'fcf', 'feta'].forEach((id) => $(id).addEventListener('input', () => { detener(); actualizar(); }));
+document.querySelectorAll('#exnaca button').forEach((b) => b.addEventListener('click', () => { $('naca').value = b.textContent; detener(); actualizar(); }));
+
+document.querySelectorAll('#tipos button').forEach((b) => b.addEventListener('click', () => {
+  TIPO = b.dataset.t; detener();
+  if (TIPO !== 'sin' && +$('fdelta').value === 0) $('fdelta').value = 20;
+  actualizar();
+}));
+document.querySelectorAll('#presets button').forEach((b) => b.addEventListener('click', () => {
+  detener(); $('fdelta').value = b.dataset.p;
+  if (+b.dataset.p > 0 && TIPO === 'sin') TIPO = 'slotted';
+  actualizar();
+}));
+
+// Arrastrar sobre la gráfica para cambiar el ángulo
+let arrastrando = false;
+const moverAlfa = (e) => { if (!R) return; const a = Math.round(Math.min(24, Math.max(-6, $('curva')._map(e.clientX))) * 2) / 2; $('alfa').value = a; detener(); actualizar(); };
+$('curva').addEventListener('pointerdown', (e) => { arrastrando = true; $('curva').setPointerCapture(e.pointerId); moverAlfa(e); });
+$('curva').addEventListener('pointermove', (e) => { if (arrastrando) moverAlfa(e); });
+$('curva').addEventListener('pointerup', () => { arrastrando = false; });
+
+// Animación: sube el ángulo poco a poco hasta pasar la pérdida
+let timer = null;
+function detener() { if (timer) { clearInterval(timer); timer = null; $('play').textContent = ' Subir el ángulo hasta la pérdida'; } }
+$('play').addEventListener('click', () => {
+  if (timer) return detener();
+  if (!R) return;
+  const tope = Math.min(24, R.aSw / RAD + 5);
+  if (+$('alfa').value >= tope - 0.2) $('alfa').value = 0;
+  $('play').textContent = ' Pausar';
+  timer = setInterval(() => {
+    const a = +$('alfa').value + 0.15;
+    if (a >= tope) { $('alfa').value = tope; actualizar(); return detener(); }
+    $('alfa').value = a; actualizar();
+  }, 50);
+});
+actualizar();
+</script>
+</body>
+</html>

@@ -3869,6 +3869,10 @@ body.modo-anexo-clasificados #clasificados-seccion {
   #formularioTravesia .campo-media input::file-selector-button:hover,
   .galeria-subida-acciones input::file-selector-button:hover,
   #mi-perfil .hangar-subida-foto input::file-selector-button:hover { background: #ff642e; }
+
+.subasta-titulo{font-size:clamp(20px,3vw,28px);line-height:1.35;color:#ffe5a1;margin:32px 0 16px;text-align:center}
+#clasificados-seccion .clasificados-requeridos{border:2px solid #e6c280;border-radius:18px;padding:24px;background:linear-gradient(135deg,#54451d,#29271e);box-shadow:0 8px 28px #0004}
+#clasificados-seccion .clasificados-requeridos-cabecera h4{font-size:24px;color:#ffe5a1}
 </style>
 <style>
 /* Comunidad 2026: portada conservada; menú integrado y emblema plano. */
@@ -3876,7 +3880,7 @@ body.modo-anexo-clasificados #clasificados-seccion {
 .portada-completa .hero .logo-emblema::after{display:none}
 .menu-principal{position:relative!important;inset:auto!important;margin:0;padding:18px 210px 0 22px;width:100%!important;max-width:none!important;z-index:20}
 #menuBoton{display:none!important}
-#menuDesplegable{display:flex!important;position:relative!important;inset:auto!important;width:100%!important;max-width:1200px;margin:auto;flex-direction:row;align-items:center;flex-wrap:wrap;gap:5px;padding:10px;background:rgba(20,27,32,.94);border:1px solid #555b5d;border-radius:12px;box-shadow:none;opacity:1!important;visibility:visible!important;transform:none!important}
+#menuDesplegable{display:flex!important;position:relative!important;inset:auto!important;width:100%!important;max-width:1200px;margin:auto;flex-direction:row;align-items:center;justify-content:center;flex-wrap:wrap;gap:5px;padding:10px;background:rgba(20,27,32,.94);border:1px solid #555b5d;border-radius:12px;box-shadow:none;opacity:1!important;visibility:visible!important;transform:none!important}
 #menuDesplegable a{display:block;padding:8px 11px;color:#fff;border-radius:7px;font-size:14px;white-space:normal}
 #menuDesplegable a:hover{background:#59402a}
 #menuDesplegable [hidden]{display:none!important}
@@ -3890,7 +3894,7 @@ body:not(.modo-seccion-unica):not(.modo-anexo)>#explorar,body:not(.modo-seccion-
 @media(min-width:851px){body:has(.gdv-register:not([hidden])) .menu-principal{padding-left:175px}}
 @media(max-width:850px){.menu-principal{padding:82px 12px 0}.portada-completa .hero .logo-emblema{top:40px}.portada-completa .hero-titulo{top:200px}.portada-completa .hero{min-height:670px}.gdv-register{left:14px;padding:10px 14px}}
 </style>
-</head>
+<style id="auth-pending-style">html.auth-pending body{visibility:hidden}</style><script>document.documentElement.classList.add("auth-pending")</script><script src="assets/supabase-2.117.2.min.js"></script><script src="assets/community-config.js"></script><script src="assets/auth-guard.js?v=20261004"></script></head>
 
 <body>
 <button type="button" id="volverPortada" aria-label="Volver a la portada">← VOLVER A PORTADA</button>
@@ -3919,7 +3923,7 @@ body:not(.modo-seccion-unica):not(.modo-anexo)>#explorar,body:not(.modo-seccion-
   </button>
 
   <div class="menu-desplegable" id="menuDesplegable">
-    <a href="#inicio">Inicio</a><a href="comunidad.html#foro">Foro</a><a href="#tienda-seccion">AeroShop</a><a href="#clasificados-seccion">CompraVenta</a><a href="comunidad.html#integrantes">Integrantes</a><a href="utilidades/">Utilidades</a><a href="comunidad.html#contacto">Contacto</a><a href="comunidad.html#hangar" id="gdv-hangar-link" hidden>Mi Hangar</a>
+    <a href="#inicio">Inicio</a><a href="comunidad.html#foro">Foro</a><a href="#tienda-seccion">AeroShop</a><a href="comunidad.html#integrantes">Integrantes</a><a href="utilidades/">Utilidades</a><a href="comunidad.html#contacto">Contacto</a><a href="comunidad.html#hangar" id="gdv-hangar-link" hidden>Mi Hangar</a>
   </div>
 
 </nav>
@@ -4629,6 +4633,7 @@ body:not(.modo-seccion-unica):not(.modo-anexo)>#explorar,body:not(.modo-seccion-
       <p class="clasificados-consulta-nota">Los datos de contacto corresponden al aviso publicado por el anunciante.</p>
     </aside>
 
+    <h3 class="subasta-titulo">ATENTOS COMERCIANTES! Sector destinado a Subasta Inversa, lo que busca la comunidad</h3>
     <div class="clasificados-requeridos">
       <div class="clasificados-requeridos-cabecera">
         <div>
@@ -5121,16 +5126,13 @@ body:not(.modo-seccion-unica):not(.modo-anexo)>#explorar,body:not(.modo-seccion-
     <p>Proyecto comunitario sin fines de lucro</p>
   </footer>
 
-  <script src="assets/supabase-2.117.2.min.js"></script>
+
 
   <script>
     const SUPABASE_URL = "https://lmoifzyhqmccvmgitlcp.supabase.co";
     const SUPABASE_KEY = "sb_publishable_YfQ3GwlhGecJyW1ZKcq8iQ_PbYp6THX";
 
-    const supabaseClient = supabase.createClient(
-      SUPABASE_URL,
-      SUPABASE_KEY
-    );
+    const supabaseClient = window.GDV_AUTH.client;
 
     function actualizarHoraZulu() {
       const ahora = new Date();
@@ -5357,7 +5359,7 @@ async function ingresarConGoogle() {
     const { error } = await supabaseClient.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: window.location.origin + window.location.pathname
+        redirectTo: window.GDV_AUTH.recoveryURL
       }
     });
     if (error) {
@@ -5396,7 +5398,7 @@ async function recuperarPassword() {
   mensaje.textContent = "Enviando el enlace...";
   try {
     const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-      redirectTo: window.location.origin + window.location.pathname
+      redirectTo: window.GDV_AUTH.recoveryURL
     });
 
     mensaje.textContent = error
@@ -7783,5 +7785,23 @@ document.addEventListener('click', function(event) {
   }
 }, true);
 </script>
-</body>
+<script>
+// Links from the forum and browser history must open the actual annex.
+function abrirAnexoDesdeURL(){
+  const id=location.hash.slice(1);
+  if(['clasificados-seccion','shimoda'].includes(id)){
+    document.body.classList.remove('modo-seccion-unica');
+    abrirAnexo(id);
+  }
+}
+window.GDV_AUTH.ready.then(user=>{
+  if(user)abrirAnexoDesdeURL();
+  if(window.GDV_AUTH.recovery && !dialogoNuevaPassword.open){
+    dialogoNuevaPassword.showModal();
+    if(!user)document.getElementById('mensajeNuevaPassword').textContent='El enlace venció o no pudo verificarse. Solicitá uno nuevo.';
+  }
+});
+window.addEventListener('hashchange',abrirAnexoDesdeURL);
+window.addEventListener('popstate',abrirAnexoDesdeURL);
+</script></body>
 </html>
