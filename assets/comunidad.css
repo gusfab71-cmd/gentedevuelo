@@ -306,3 +306,23 @@
     max-width:calc(100vw - 24px) !important;
   }
 }
+
+/* Estado visual de accesos de moderación */
+.moderation-action{
+  background:#292f38 !important;
+  border-color:#46505c !important;
+  color:#f1f2f4 !important;
+  font-weight:700;
+}
+.moderation-action:hover{
+  background:#38414d !important;
+}
+.moderation-action.has-pending{
+  background:#f28c3e !important;
+  border-color:#f28c3e !important;
+  color:#21170e !important;
+  box-shadow:0 0 0 2px rgba(242,140,62,.14),0 0 18px rgba(242,140,62,.12);
+}
+.moderation-action.has-pending:hover{
+  background:#ffa95c !important;
+}
