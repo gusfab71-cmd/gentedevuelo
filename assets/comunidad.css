@@ -296,3 +296,13 @@
 @media(max-width:620px){
   .legacy-pending-grid{grid-template-columns:1fr}
 }
+
+/* Corrección menú Mi cuenta en móvil - 2026-10-04 */
+@media(max-width:620px){
+  .account-menu-panel{
+    left:0 !important;
+    right:auto !important;
+    width:175px !important;
+    max-width:calc(100vw - 24px) !important;
+  }
+}
