@@ -197,3 +197,62 @@
     width: auto !important;
   }
 }
+/* Ajuste móvil de la sección CompraVenta */
+@media (max-width: 620px) {
+
+  #clasificados-seccion,
+  .clasificados-seccion,
+  .compraventa-seccion {
+    padding: 16px !important;
+  }
+
+  #clasificados-seccion h2,
+  .clasificados-seccion h2,
+  .compraventa-seccion h2 {
+    font-size: 28px !important;
+    line-height: 1.1 !important;
+    margin-bottom: 14px !important;
+  }
+
+  #clasificados-seccion > p,
+  .clasificados-seccion > p,
+  .compraventa-seccion > p {
+    font-size: 15px !important;
+    line-height: 1.45 !important;
+    max-width: 100% !important;
+    margin-bottom: 18px !important;
+  }
+
+  #clasificados-seccion .card,
+  .clasificados-seccion .card,
+  .compraventa-seccion .card,
+  #clasificados-seccion .tarjeta,
+  .clasificados-seccion .tarjeta,
+  .compraventa-seccion .tarjeta {
+    padding: 18px 16px !important;
+    border-radius: 18px !important;
+    margin-bottom: 14px !important;
+  }
+
+  #clasificados-seccion .card h3,
+  .clasificados-seccion .card h3,
+  .compraventa-seccion .card h3,
+  #clasificados-seccion .tarjeta h3,
+  .clasificados-seccion .tarjeta h3,
+  .compraventa-seccion .tarjeta h3 {
+    font-size: 18px !important;
+    line-height: 1.2 !important;
+    margin-bottom: 8px !important;
+  }
+
+  #clasificados-seccion .card p,
+  .clasificados-seccion .card p,
+  .compraventa-seccion .card p,
+  #clasificados-seccion .tarjeta p,
+  .clasificados-seccion .tarjeta p,
+  .compraventa-seccion .tarjeta p {
+    font-size: 14px !important;
+    line-height: 1.4 !important;
+    margin-bottom: 0 !important;
+  }
+}
