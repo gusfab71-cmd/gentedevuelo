@@ -75,3 +75,85 @@
   .post-options-panel button,.post-options-panel a{min-height:32px;padding:6px 8px;font-size:12px}
   .card{padding:13px 10px}
 }
+/* =========================================================
+   AJUSTE FINAL FORO MÓVIL
+   Reduce botones grandes de Foro / Temáticas
+   ========================================================= */
+
+@media (max-width: 620px) {
+
+  .toolbar {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    margin: 14px 0 16px !important;
+    align-items: stretch !important;
+  }
+
+  .toolbar .button,
+  .toolbar button,
+  .toolbar a {
+    min-height: 52px !important;
+    padding: 9px 10px !important;
+    font-size: 14px !important;
+    line-height: 1.15 !important;
+    border-radius: 9px !important;
+    text-align: center !important;
+    justify-content: center !important;
+  }
+
+  .toolbar .primary {
+    min-height: 56px !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+  }
+
+  .toolbar input {
+    grid-column: 1 / -1 !important;
+    min-height: 44px !important;
+    padding: 9px 10px !important;
+    font-size: 14px !important;
+  }
+
+  .toolbar select {
+    min-height: 44px !important;
+    padding: 9px 10px !important;
+    font-size: 14px !important;
+  }
+
+  .row h1,
+  h1 {
+    font-size: 26px !important;
+    margin-bottom: 10px !important;
+  }
+
+  .site-nav a {
+    padding: 7px 8px !important;
+    font-size: 13px !important;
+  }
+}
+
+@media (max-width: 420px) {
+
+  .toolbar {
+    gap: 6px !important;
+  }
+
+  .toolbar .button,
+  .toolbar button,
+  .toolbar a {
+    min-height: 48px !important;
+    padding: 8px 8px !important;
+    font-size: 13px !important;
+  }
+
+  .toolbar .primary {
+    min-height: 52px !important;
+  }
+
+  .toolbar input,
+  .toolbar select {
+    min-height: 42px !important;
+    font-size: 13px !important;
+  }
+}
