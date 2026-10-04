@@ -3531,13 +3531,41 @@ body:not(.modo-seccion-unica):not(.modo-anexo) > .solo-seccion {
 .tarjeta .aporte-lista > h4 { margin: 0 0 12px; color: #ffb07b; font-size: 16px; }
 .tarjeta .aporte-vacio, .tarjeta .aporte-error { font-size: 14px; color: #d8d8d8; }
 .tarjeta .aporte-error { color: #ffb0a3; }
-.aporte-item { padding: 12px 0; border-top: 1px solid rgba(255,255,255,.15); overflow-wrap: anywhere; }
-.aporte-item:first-of-type { border-top: 0; }
-.aporte-item h5 { margin: 0 0 6px; color: white; font-size: 17px; }
-.aporte-item time { color: #bac4c8; font-size: 12px; }
-.tarjeta .aporte-item p { margin: 8px 0; white-space: pre-wrap; color: #e6e6e6; }
+.aporte-item {
+  margin-top: 12px;
+  padding: 14px;
+  border: 1px solid rgba(255,138,69,.34);
+  border-radius: 14px;
+  background: linear-gradient(145deg, rgba(35,43,47,.96), rgba(24,30,33,.96));
+  box-shadow: 0 6px 18px rgba(0,0,0,.16);
+  overflow-wrap: anywhere;
+}
+.aporte-item:first-of-type { margin-top: 8px; }
+.aporte-item h5 { margin: 0; color: white; font-size: 18px; line-height: 1.25; }
+.aporte-item time { color: #98a8ae; font-size: 12px; }
+.tarjeta .aporte-item p { margin: 8px 0; white-space: pre-wrap; color: #e6e6e6; line-height: 1.45; }
 .aporte-item a { color: #ffbc93; overflow-wrap: anywhere; }
 .aporte-item details summary { color: #ffbc93; cursor: pointer; }
+.aporte-publicacion-grid { display:grid; grid-template-columns: 118px minmax(0,1fr); gap:14px; align-items:start; }
+.aporte-publicacion-media { width:118px; height:86px; border-radius:10px; overflow:hidden; background:#111819; border:1px solid rgba(255,255,255,.12); display:flex; align-items:center; justify-content:center; }
+.aporte-publicacion-media img { width:100%; height:100%; object-fit:cover; display:block; }
+.aporte-publicacion-media .aporte-pdf-icono { font-size:34px; line-height:1; }
+.aporte-publicacion-cuerpo { min-width:0; }
+.aporte-publicacion-meta { display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin:5px 0 8px; color:#aebbc0; font-size:12px; }
+.aporte-publicacion-meta .aporte-origen { margin:0; }
+.aporte-publicacion-acciones { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+.aporte-publicacion-acciones a,
+.aporte-publicacion-acciones button {
+  display:inline-flex; align-items:center; justify-content:center; min-height:34px; padding:7px 11px;
+  border:1px solid #ff8a45; border-radius:9px; background:transparent; color:#ffbc93;
+  text-decoration:none; font:inherit; font-size:12px; font-weight:700; cursor:pointer;
+}
+.aporte-publicacion-acciones a:hover,
+.aporte-publicacion-acciones button:hover { background:rgba(255,100,46,.14); }
+@media (max-width:700px) {
+  .aporte-publicacion-grid { grid-template-columns:1fr; }
+  .aporte-publicacion-media { width:100%; height:180px; }
+}
 .aporte-ver-todos { background: transparent; border: 1px solid #ff8a45;
   color: #ffbc93; padding: 7px 12px; border-radius: 12px; cursor: pointer; }
 .aviso-aporte { margin: 14px 0; color: #ffbc93; font-weight: 700; }
@@ -7984,13 +8012,55 @@ cargarTravesias();
       const articulo = document.createElement("article");
       articulo.className = "aporte-item";
       if (indice >= 3) articulo.hidden = true;
-      if (aporte.destacado) articulo.append(texto("small", "★ Información destacada"));
-      articulo.append(texto("h5", aporte.titulo));
 
-      const origen = document.createElement("div");
+      const grid = document.createElement("div");
+      grid.className = "aporte-publicacion-grid";
+
+      const media = document.createElement("div");
+      media.className = "aporte-publicacion-media";
+
+      let primerAdjunto = null;
+      let primerAdjuntoUrl = "";
+      if (aporte._adjuntos?.length) {
+        primerAdjunto = aporte._adjuntos[0];
+        const { data: firma } = await supabaseClient.storage
+          .from("aportes")
+          .createSignedUrl(primerAdjunto.storage_path, 3600);
+        primerAdjuntoUrl = firma?.signedUrl || "";
+
+        if (primerAdjuntoUrl && primerAdjunto.mime_type.startsWith("image/")) {
+          const imagen = document.createElement("img");
+          imagen.src = primerAdjuntoUrl;
+          imagen.alt = "Imagen de " + aporte.titulo;
+          media.append(imagen);
+        } else if (primerAdjunto.mime_type === "application/pdf") {
+          const icono = document.createElement("span");
+          icono.className = "aporte-pdf-icono";
+          icono.textContent = "PDF";
+          media.append(icono);
+        }
+      }
+
+      if (!media.childNodes.length) {
+        const icono = document.createElement("span");
+        icono.className = "aporte-pdf-icono";
+        icono.textContent = "✈";
+        media.append(icono);
+      }
+
+      const cuerpoWrap = document.createElement("div");
+      cuerpoWrap.className = "aporte-publicacion-cuerpo";
+
+      if (aporte.destacado) cuerpoWrap.append(texto("small", "★ Información destacada"));
+      cuerpoWrap.append(texto("h5", aporte.titulo));
+
+      const meta = document.createElement("div");
+      meta.className = "aporte-publicacion-meta";
+
+      const origen = document.createElement("span");
       origen.className = "aporte-origen";
       const nombreOrigen = aporte._perfil?.username || aporte._perfil?.full_name || aporte.origen_nombre || "Miembro de Gente de Vuelo";
-      origen.append(document.createTextNode("Aportado por: "));
+      origen.append(document.createTextNode("Publicado por "));
       if (aporte.origen_profile_id && typeof verHangar === "function") {
         const botonPerfil = document.createElement("button");
         botonPerfil.type = "button";
@@ -8003,66 +8073,88 @@ cargarTravesias();
       if (aporte._perfil?.aviation_organization) {
         origen.append(document.createTextNode(" · " + aporte._perfil.aviation_organization));
       }
-      articulo.append(origen);
+      meta.append(origen);
+
+      const separador = document.createElement("span");
+      separador.textContent = "·";
+      meta.append(separador);
 
       const fecha = document.createElement("time");
       fecha.dateTime = aporte.created_at;
       fecha.textContent = new Date(aporte.created_at).toLocaleDateString("es-AR");
-      articulo.append(fecha);
+      meta.append(fecha);
+
+      cuerpoWrap.append(meta);
 
       const cuerpo = (aporte.contenido || "").trim();
-      if (cuerpo.length <= 200) {
-        articulo.append(texto("p", cuerpo));
-      } else {
-        articulo.append(texto("p", cuerpo.slice(0, 200) + "…"));
-        const detalle = document.createElement("details");
-        detalle.append(texto("summary", "Leer completo"), texto("p", cuerpo));
-        articulo.append(detalle);
+      const resumen = cuerpo.length <= 180 ? cuerpo : cuerpo.slice(0, 180) + "…";
+      cuerpoWrap.append(texto("p", resumen));
+
+      const acciones = document.createElement("div");
+      acciones.className = "aporte-publicacion-acciones";
+
+      if (cuerpo.length > 180) {
+        const verPublicacion = document.createElement("button");
+        verPublicacion.type = "button";
+        verPublicacion.textContent = "Ver publicación";
+        verPublicacion.addEventListener("click", function () {
+          const detalleExistente = cuerpoWrap.querySelector("details");
+          if (detalleExistente) {
+            detalleExistente.open = true;
+            detalleExistente.scrollIntoView({ behavior: "smooth", block: "nearest" });
+            return;
+          }
+          const detalle = document.createElement("details");
+          detalle.open = true;
+          detalle.append(texto("summary", "Ocultar detalle"), texto("p", cuerpo));
+          cuerpoWrap.insertBefore(detalle, acciones);
+        });
+        acciones.append(verPublicacion);
+      }
+
+      if (primerAdjunto && primerAdjuntoUrl) {
+        const verArchivo = document.createElement("a");
+        verArchivo.href = primerAdjuntoUrl;
+        verArchivo.target = "_blank";
+        verArchivo.rel = "noopener noreferrer";
+        verArchivo.textContent = primerAdjunto.mime_type === "application/pdf" ? "Ver PDF" : "Ver imagen";
+        acciones.append(verArchivo);
       }
 
       if (aporte.enlace) {
         try {
           const url = new URL(aporte.enlace);
           if (url.protocol === "https:" || url.protocol === "http:") {
-            const enlace = document.createElement("a");
-            enlace.href = url.href;
-            enlace.target = "_blank";
-            enlace.rel = "noopener noreferrer";
-            enlace.textContent = "Ver fuente ↗";
-            articulo.append(enlace);
+            const fuente = document.createElement("a");
+            fuente.href = url.href;
+            fuente.target = "_blank";
+            fuente.rel = "noopener noreferrer";
+            fuente.textContent = "Ver fuente";
+            acciones.append(fuente);
           }
-        } catch (_) { /* Una URL incorrecta no se muestra. */ }
+        } catch (_) {}
       }
 
-      if (aporte._adjuntos?.length) {
-        const adjuntos = document.createElement("div");
-        adjuntos.className = "aporte-adjuntos";
-        for (const archivo of aporte._adjuntos) {
+      if (aporte._adjuntos?.length > 1) {
+        for (let i = 1; i < aporte._adjuntos.length; i++) {
+          const archivo = aporte._adjuntos[i];
           const { data: firma } = await supabaseClient.storage
             .from("aportes")
             .createSignedUrl(archivo.storage_path, 3600);
           if (!firma?.signedUrl) continue;
-
-          const enlaceArchivo = document.createElement("a");
-          enlaceArchivo.className = "aporte-adjunto";
-          enlaceArchivo.href = firma.signedUrl;
-          enlaceArchivo.target = "_blank";
-          enlaceArchivo.rel = "noopener noreferrer";
-
-          if (archivo.mime_type.startsWith("image/")) {
-            const miniatura = document.createElement("img");
-            miniatura.src = firma.signedUrl;
-            miniatura.alt = "";
-            enlaceArchivo.append(miniatura);
-          }
-          enlaceArchivo.append(document.createTextNode(
-            archivo.mime_type === "application/pdf" ? "PDF · " + archivo.nombre_archivo : archivo.nombre_archivo
-          ));
-          adjuntos.append(enlaceArchivo);
+          const extra = document.createElement("a");
+          extra.href = firma.signedUrl;
+          extra.target = "_blank";
+          extra.rel = "noopener noreferrer";
+          extra.textContent = archivo.mime_type === "application/pdf" ? "Ver PDF " + (i + 1) : "Ver imagen " + (i + 1);
+          acciones.append(extra);
         }
-        if (adjuntos.childNodes.length) articulo.append(adjuntos);
       }
 
+      if (acciones.childNodes.length) cuerpoWrap.append(acciones);
+
+      grid.append(media, cuerpoWrap);
+      articulo.append(grid);
       lista.append(articulo);
     }
 
