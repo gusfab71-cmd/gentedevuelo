@@ -3558,6 +3558,15 @@ body.modo-seccion-unica > #dialogoAporte[open] { display: block !important; }
 #formAporte button[type=button] { background: #4b555a; }
 #formAporte button:disabled { opacity: .6; cursor: wait; }
 #mensajeAporte { min-height: 24px; color: #ffb0a3; }
+#formAporte input[type="file"] { padding: 10px; }
+#formAporte .aporte-ayuda { display:block; margin-top:6px; color:#b8c1c6; line-height:1.4; }
+#formAporte .aporte-origen-aviso { margin:14px 0 0; padding:10px 12px; border-left:3px solid #ff8a45; background:rgba(255,138,69,.08); color:#dfe5e8; font-size:13px; }
+.aporte-origen { margin:6px 0 8px; color:#c7d0d4; font-size:13px; }
+.aporte-origen button { padding:0; border:0; background:transparent; color:#ffbc93; font:inherit; font-weight:700; cursor:pointer; text-decoration:underline; }
+.aporte-adjuntos { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+.aporte-adjunto { display:inline-flex; align-items:center; gap:7px; padding:7px 10px; border:1px solid rgba(255,188,147,.45); border-radius:10px; background:rgba(255,255,255,.04); color:#ffbc93; text-decoration:none; font-size:13px; }
+.aporte-adjunto img { width:56px; height:42px; object-fit:cover; border-radius:6px; }
+
 .tarjeta > .tarjeta-enlace {
   display: block;
   text-decoration: none;
@@ -5218,10 +5227,20 @@ body:not(.modo-seccion-unica):not(.modo-anexo)>#explorar,body:not(.modo-seccion-
   <form id="formAporte">
     <label for="aporteTitulo">Título</label>
     <input id="aporteTitulo" name="titulo" maxlength="120" minlength="5" required>
+
     <label for="aporteContenido">Información para compartir</label>
     <textarea id="aporteContenido" name="contenido" minlength="20" maxlength="3000" required></textarea>
+
     <label for="aporteEnlace">Fuente o enlace (opcional)</label>
     <input id="aporteEnlace" name="enlace" type="url" maxlength="500" placeholder="https://...">
+
+    <label for="aporteArchivos">Adjuntar imágenes o PDF (opcional)</label>
+    <input id="aporteArchivos" name="archivos" type="file"
+      accept="image/jpeg,image/png,image/webp,application/pdf" multiple>
+    <small class="aporte-ayuda">Hasta 5 archivos · máximo 10 MB cada uno · JPG, PNG, WEBP o PDF.</small>
+
+    <p class="aporte-origen-aviso">El aporte quedará identificado con tu perfil de Gente de Vuelo y, si lo informaste en tu perfil, con tu organización.</p>
+
     <p id="mensajeAporte" role="alert" aria-live="polite"></p>
     <div class="acciones-aporte">
       <button type="submit">Enviar para revisión</button>
@@ -7951,7 +7970,7 @@ cargarTravesias();
     return nodo;
   }
 
-  function pintarAportes(clave, publicaciones) {
+  async function pintarAportes(clave, publicaciones) {
     const lista = tarjetas.get(clave);
     if (!lista) return;
     lista.replaceChildren(texto("h4", "Publicaciones de la comunidad"));
@@ -7959,16 +7978,38 @@ cargarTravesias();
       lista.append(texto("p", "Todavía no hay aportes aprobados.", "aporte-vacio"));
       return;
     }
-    publicaciones.forEach(function (aporte, indice) {
+
+    for (let indice = 0; indice < publicaciones.length; indice++) {
+      const aporte = publicaciones[indice];
       const articulo = document.createElement("article");
       articulo.className = "aporte-item";
       if (indice >= 3) articulo.hidden = true;
       if (aporte.destacado) articulo.append(texto("small", "★ Información destacada"));
       articulo.append(texto("h5", aporte.titulo));
+
+      const origen = document.createElement("div");
+      origen.className = "aporte-origen";
+      const nombreOrigen = aporte._perfil?.username || aporte._perfil?.full_name || aporte.origen_nombre || "Miembro de Gente de Vuelo";
+      origen.append(document.createTextNode("Aportado por: "));
+      if (aporte.origen_profile_id && typeof verHangar === "function") {
+        const botonPerfil = document.createElement("button");
+        botonPerfil.type = "button";
+        botonPerfil.textContent = nombreOrigen;
+        botonPerfil.addEventListener("click", function () { verHangar(aporte.origen_profile_id); });
+        origen.append(botonPerfil);
+      } else {
+        origen.append(document.createTextNode(nombreOrigen));
+      }
+      if (aporte._perfil?.aviation_organization) {
+        origen.append(document.createTextNode(" · " + aporte._perfil.aviation_organization));
+      }
+      articulo.append(origen);
+
       const fecha = document.createElement("time");
       fecha.dateTime = aporte.created_at;
       fecha.textContent = new Date(aporte.created_at).toLocaleDateString("es-AR");
       articulo.append(fecha);
+
       const cuerpo = (aporte.contenido || "").trim();
       if (cuerpo.length <= 200) {
         articulo.append(texto("p", cuerpo));
@@ -7978,6 +8019,7 @@ cargarTravesias();
         detalle.append(texto("summary", "Leer completo"), texto("p", cuerpo));
         articulo.append(detalle);
       }
+
       if (aporte.enlace) {
         try {
           const url = new URL(aporte.enlace);
@@ -7991,8 +8033,39 @@ cargarTravesias();
           }
         } catch (_) { /* Una URL incorrecta no se muestra. */ }
       }
+
+      if (aporte._adjuntos?.length) {
+        const adjuntos = document.createElement("div");
+        adjuntos.className = "aporte-adjuntos";
+        for (const archivo of aporte._adjuntos) {
+          const { data: firma } = await supabaseClient.storage
+            .from("aportes")
+            .createSignedUrl(archivo.storage_path, 3600);
+          if (!firma?.signedUrl) continue;
+
+          const enlaceArchivo = document.createElement("a");
+          enlaceArchivo.className = "aporte-adjunto";
+          enlaceArchivo.href = firma.signedUrl;
+          enlaceArchivo.target = "_blank";
+          enlaceArchivo.rel = "noopener noreferrer";
+
+          if (archivo.mime_type.startsWith("image/")) {
+            const miniatura = document.createElement("img");
+            miniatura.src = firma.signedUrl;
+            miniatura.alt = "";
+            enlaceArchivo.append(miniatura);
+          }
+          enlaceArchivo.append(document.createTextNode(
+            archivo.mime_type === "application/pdf" ? "PDF · " + archivo.nombre_archivo : archivo.nombre_archivo
+          ));
+          adjuntos.append(enlaceArchivo);
+        }
+        if (adjuntos.childNodes.length) articulo.append(adjuntos);
+      }
+
       lista.append(articulo);
-    });
+    }
+
     if (publicaciones.length > 3) {
       const boton = texto("button", "Ver todas (" + publicaciones.length + ")", "aporte-ver-todos");
       boton.type = "button";
@@ -8009,11 +8082,13 @@ cargarTravesias();
 
   async function cargarAportes() {
     if (!tarjetas.size) return;
+
     const { data, error } = await supabaseClient.from("aportes_destacados")
-      .select("seccion,categoria,titulo,contenido,enlace,destacado,created_at")
+      .select("id,user_id,seccion,categoria,titulo,contenido,enlace,destacado,created_at,origen_tipo,origen_nombre,origen_profile_id")
       .eq("visible", true).eq("estado", "aprobado")
       .order("destacado", { ascending: false })
       .order("created_at", { ascending: false }).limit(200);
+
     if (error) {
       console.error("Error al cargar los aportes:", error);
       tarjetas.forEach(function (lista) {
@@ -8021,28 +8096,75 @@ cargarTravesias();
       });
       return;
     }
+
+    const aportes = data || [];
+    const ids = aportes.map(a => a.id);
+    const perfilesIds = [...new Set(aportes.map(a => a.origen_profile_id || a.user_id).filter(Boolean))];
+
+    let adjuntos = [];
+    if (ids.length) {
+      const respuestaAdjuntos = await supabaseClient.from("aportes_adjuntos")
+        .select("aporte_id,storage_path,nombre_archivo,mime_type,tamano_bytes")
+        .in("aporte_id", ids)
+        .order("created_at", { ascending: true });
+      if (!respuestaAdjuntos.error) adjuntos = respuestaAdjuntos.data || [];
+    }
+
+    let perfiles = [];
+    if (perfilesIds.length) {
+      const respuestaPerfiles = await supabaseClient.from("profiles")
+        .select("id,username,full_name,aviation_organization")
+        .in("id", perfilesIds);
+      if (!respuestaPerfiles.error) perfiles = respuestaPerfiles.data || [];
+    }
+
+    const perfilesPorId = new Map(perfiles.map(p => [p.id, p]));
+    const adjuntosPorAporte = new Map();
+    adjuntos.forEach(a => {
+      if (!adjuntosPorAporte.has(a.aporte_id)) adjuntosPorAporte.set(a.aporte_id, []);
+      adjuntosPorAporte.get(a.aporte_id).push(a);
+    });
+
     const grupos = new Map();
-    (data || []).forEach(function (aporte) {
+    aportes.forEach(function (aporte) {
+      aporte._perfil = perfilesPorId.get(aporte.origen_profile_id || aporte.user_id) || null;
+      aporte._adjuntos = adjuntosPorAporte.get(aporte.id) || [];
       const clave = aporte.seccion + ":" + aporte.categoria;
       if (!grupos.has(clave)) grupos.set(clave, []);
       grupos.get(clave).push(aporte);
     });
-    tarjetas.forEach(function (_, clave) { pintarAportes(clave, grupos.get(clave) || []); });
+
+    await Promise.all([...tarjetas.keys()].map(function (clave) {
+      return pintarAportes(clave, grupos.get(clave) || []);
+    }));
+  }
+
+  function limpiarNombreArchivo(nombre) {
+    const partes = String(nombre || "archivo").split(".");
+    const extension = partes.length > 1 ? "." + partes.pop().toLowerCase().replace(/[^a-z0-9]/g, "") : "";
+    const base = partes.join(".").normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-zA-Z0-9_-]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60) || "archivo";
+    return base + extension;
   }
 
   document.getElementById("cancelarAporte").addEventListener("click", cerrarFormularioAporte);
   dialogo.addEventListener("close", function () { destino = null; });
+
   formulario.addEventListener("submit", async function (event) {
     event.preventDefault();
     if (!destino) return;
+
     const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
     if (authError || !user) {
       mensaje.textContent = "Para publicar, iniciá sesión desde INGRESAR en la portada.";
       return;
     }
+
     const titulo = formulario.elements.titulo.value.trim();
     const contenido = formulario.elements.contenido.value.trim();
     const enlace = formulario.elements.enlace.value.trim();
+    const archivos = Array.from(formulario.elements.archivos.files || []);
+
     if (titulo.length < 5 || contenido.length < 20) {
       mensaje.textContent = "Escribí un título de al menos 5 caracteres y una descripción de al menos 20.";
       return;
@@ -8051,22 +8173,88 @@ cargarTravesias();
       mensaje.textContent = "El enlace debe comenzar con https:// o http://.";
       return;
     }
-    const boton = formulario.querySelector('button[type="submit"]');
-    boton.disabled = true;
-    mensaje.textContent = "Enviando…";
-    const { error } = await supabaseClient.from("aportes_destacados").insert({
-      user_id: user.id, seccion: destino.seccionId, categoria: destino.categoria,
-      titulo, contenido, enlace: enlace || null
-    });
-    boton.disabled = false;
-    if (error) {
-      console.error("Error al enviar el aporte:", error);
-      mensaje.textContent = "No se pudo enviar. Intentá nuevamente.";
+    if (archivos.length > 5) {
+      mensaje.textContent = "Podés adjuntar hasta 5 archivos por aporte.";
       return;
     }
-    destino.aviso.textContent = "Tu información fue enviada y quedó pendiente de aprobación.";
-    cerrarFormularioAporte();
+
+    const tiposPermitidos = new Set(["image/jpeg", "image/png", "image/webp", "application/pdf"]);
+    for (const archivo of archivos) {
+      if (!tiposPermitidos.has(archivo.type)) {
+        mensaje.textContent = "Solo se permiten JPG, PNG, WEBP o PDF.";
+        return;
+      }
+      if (archivo.size > 10 * 1024 * 1024) {
+        mensaje.textContent = "Cada archivo puede pesar como máximo 10 MB.";
+        return;
+      }
+    }
+
+    const boton = formulario.querySelector('button[type="submit"]');
+    boton.disabled = true;
+    mensaje.textContent = "Enviando aporte…";
+
+    try {
+      const { data: perfil } = await supabaseClient.from("profiles")
+        .select("username,full_name")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      const { data: aporteCreado, error: errorAporte } = await supabaseClient
+        .from("aportes_destacados")
+        .insert({
+          user_id: user.id,
+          seccion: destino.seccionId,
+          categoria: destino.categoria,
+          titulo,
+          contenido,
+          enlace: enlace || null,
+          origen_tipo: "usuario",
+          origen_profile_id: user.id,
+          origen_nombre: perfil?.username || perfil?.full_name || null
+        })
+        .select("id")
+        .single();
+
+      if (errorAporte) throw errorAporte;
+
+      for (const archivo of archivos) {
+        mensaje.textContent = "Subiendo " + archivo.name + "…";
+        const nombreSeguro = limpiarNombreArchivo(archivo.name);
+        const ruta = user.id + "/" + aporteCreado.id + "/" + crypto.randomUUID() + "-" + nombreSeguro;
+
+        const { error: errorUpload } = await supabaseClient.storage
+          .from("aportes")
+          .upload(ruta, archivo, { cacheControl: "3600", upsert: false, contentType: archivo.type });
+        if (errorUpload) throw errorUpload;
+
+        const { error: errorAdjunto } = await supabaseClient.from("aportes_adjuntos").insert({
+          aporte_id: aporteCreado.id,
+          user_id: user.id,
+          storage_path: ruta,
+          nombre_archivo: archivo.name.slice(0, 255),
+          mime_type: archivo.type,
+          tamano_bytes: archivo.size
+        });
+
+        if (errorAdjunto) {
+          await supabaseClient.storage.from("aportes").remove([ruta]);
+          throw errorAdjunto;
+        }
+      }
+
+      destino.aviso.textContent = archivos.length
+        ? "Tu información y sus archivos fueron enviados y quedaron pendientes de aprobación."
+        : "Tu información fue enviada y quedó pendiente de aprobación.";
+      cerrarFormularioAporte();
+    } catch (error) {
+      console.error("Error al enviar el aporte:", error);
+      mensaje.textContent = "No se pudo completar el envío. Revisá los datos e intentá nuevamente.";
+    } finally {
+      boton.disabled = false;
+    }
   });
+
   cargarAportes();
 })();
 </script>
