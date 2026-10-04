@@ -453,8 +453,7 @@
       const permiso = await client.from("site_admins").select("user_id").eq("user_id", user.id).maybeSingle();
       if (permiso.error || !permiso.data) {
         administrador = false;
-        $("accesoMensaje").textContent = "Esta cuenta no tiene acceso a moderación. Ingresá con la cuenta autorizada.";
-        $("salir").hidden = false;
+        window.location.replace("comunidad.html#foro");
         return;
       }
       administrador = true;
