@@ -1586,6 +1586,113 @@ body.modo-anexo-clasificados #clasificados-seccion {
   box-shadow: inset 0 0 0 1px rgba(240, 196, 79, 0.35);
 }
 
+
+/* ===== COMPRAVENTA COMPACTA EN ESCRITORIO ===== */
+@media (min-width: 901px) {
+  body.modo-anexo > #clasificados-seccion.anexo-portada.activo {
+    width: min(1040px, calc(100% - 48px));
+    max-width: 1040px;
+    min-height: auto;
+    margin: 12px auto 28px;
+    padding: 22px 26px 30px;
+  }
+
+  #clasificados-seccion .titulo-seccion {
+    font-size: 30px;
+    margin: 0 0 4px;
+  }
+
+  #clasificados-seccion .subtitulo {
+    margin: 0 auto 14px;
+    font-size: 14px;
+  }
+
+  #clasificados-seccion .anexo-cerrar {
+    top: 14px;
+    right: 14px;
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  #clasificados-seccion .clasificados-opciones.clasificados-opciones-centradas {
+    grid-template-columns: repeat(2, minmax(230px, 320px));
+    max-width: 680px;
+    gap: 14px;
+    margin-top: 18px;
+  }
+
+  #clasificados-seccion .clasificados-opcion {
+    padding: 16px 18px;
+    border-radius: 12px;
+  }
+
+  #clasificados-seccion .clasificados-opcion h3 {
+    margin: 0 0 5px;
+    font-size: 16px;
+  }
+
+  #clasificados-seccion .clasificados-opcion p {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.3;
+  }
+
+  #clasificados-seccion .clasificados-listado {
+    margin-top: 16px;
+    padding: 18px;
+    border-radius: 14px;
+  }
+
+  #panelClasificadosLista {
+    padding: 18px;
+  }
+
+  .clasificados-listado-cabecera {
+    margin-bottom: 12px;
+  }
+
+  .clasificados-listado-cabecera h3 {
+    font-size: 21px;
+    margin: 1px 0 2px;
+  }
+
+  .clasificados-listado-cabecera p {
+    font-size: 12px;
+  }
+
+  .clasificados-publicaciones {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  #clasificados-seccion .clasificado-item {
+    border-radius: 12px;
+  }
+
+  #clasificados-seccion .clasificado-item img {
+    max-height: 165px;
+    object-fit: cover;
+  }
+
+  .subasta-inversa-destacada {
+    margin-top: 22px;
+    padding: 18px;
+  }
+
+  .subasta-inversa-cabecera {
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+  }
+
+  .subasta-inversa-cabecera h3 {
+    font-size: 21px !important;
+  }
+
+  .subasta-inversa-cabecera p {
+    font-size: 12px;
+  }
+}
+
 /* ===== CLASIFICADOS: DISPONIBLES PRINCIPALES / REQUERIDOS SECUNDARIOS ===== */
 .clasificados-opciones.clasificados-opciones-centradas {
   grid-template-columns: repeat(2, minmax(260px, 360px));
