@@ -5522,11 +5522,18 @@ document.getElementById("hangarLicense").textContent = perfil?.aviation_license 
 
   const enlaceModeracion = document.getElementById("enlaceModeracion");
   enlaceModeracion.style.display = "none";
+  window.gdvLegacyAdmin = false;
   if (user) {
     const { data: permisoModeracion } = await supabaseClient
       .from("site_admins").select("user_id").eq("user_id", user.id).maybeSingle();
-    if (permisoModeracion) {enlaceModeracion.style.display = "inline-block";window.gdvLegacyAdmin=true;}
+    if (permisoModeracion) {
+      enlaceModeracion.style.display = "inline-block";
+      window.gdvLegacyAdmin = true;
+    }
   }
+  window.dispatchEvent(new CustomEvent("gdv-admin-ready", {
+    detail: { isAdmin: !!window.gdvLegacyAdmin }
+  }));
 
   controlesUsuario.style.display = "flex";
   boton.hidden = !!user;
