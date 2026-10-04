@@ -77,6 +77,62 @@ function account(){ $('account').innerHTML=user?`${link('Notificaciones','#notif
 const toolbar=(active='foro')=>`<div class="toolbar">${link('+ Crear publicación','#crear','button primary')}${link('Temáticas','#tematicas','button '+(active==='tematicas'?'active':''))}${link('Foro','#foro','button '+(active==='foro'?'active':''))}${link('Multimedia','#multimedia','button '+(active==='multimedia'?'active':''))}</div>`;
 const extras=()=>`<div class="grid annex-grid"><a class="card blue" href="index.html#shimoda"><h3>Rincón Shimoda</h3><p>Consejos, relatos y curiosidades.</p></a><a class="card gold" href="index.html#clasificados-seccion"><h3>CompraVenta</h3><p>Compra, venta y búsquedas entre miembros.</p></a><a class="card gold" href="index.html#tienda-seccion"><h3>AeroShop</h3><p>Tiendas, productos y equipamiento aeronáutico.</p></a></div>`;
 function topicCard(t){
+ const c=cat(t.category),
+       replies=comments.filter(r=>r.topic_id===t.id&&r.status==='approved'),
+       votes=reactions.filter(r=>r.topic_id===t.id&&r.kind==='useful').length,
+       m=media.find(m=>m.topic_id===t.id&&['image','video'].includes(m.kind)),
+       isShimoda=t.special_role==='shimoda',
+       authorName=isShimoda?(t.special_display_label||'Robert Shimoda'):name(t.author_id),
+       topicHref=isShimoda&&t.interaction_target==='rincon_shimoda'
+         ?'index.html#shimoda'
+         :'#tema/'+t.id;
+
+ return `<article class="card topic-card ${isShimoda?'shimoda-topic':''}" style="--category:${esc(c.color)}">
+   <div class="post-row">
+     <a href="${isShimoda?'index.html#shimoda':'#hangar/'+esc(t.author_id||'')}" aria-label="${isShimoda?'Abrir Rincón Shimoda':'Ver hangar de '+esc(authorName)}">
+       ${avatar(t.author_id)}
+     </a>
+
+     <div class="post-body">
+       <div class="meta">
+         ${t.pinned?'<span class="tag">Fijado</span>':''}
+         ${isShimoda?'<span class="tag shimoda-badge">Robert Shimoda</span>':''}
+         ${isShimoda
+           ?`<a href="index.html#shimoda">${esc(authorName)}</a>`
+           :link(authorName,'#hangar/'+t.author_id,'')
+         }
+         · ${date(t.created_at)}
+       </div>
+
+       <a class="category" href="#tematica/${esc(c.slug||'otros')}">${esc(c.name)}</a>
+
+       <div class="post-layout">
+         <div>
+           <h3><a class="post-title" href="${topicHref}">${esc(t.title)}</a></h3>
+           <p class="muted">${esc(t.summary||t.content.slice(0,200))}</p>
+           ${t.status!=='approved'?`<span class="tag status-pending">${stateLabel(t.status)}</span>`:''}
+         </div>
+
+         ${m?.url
+           ?`<a href="${topicHref}" aria-label="Abrir publicación">
+               ${m.kind==='video'
+                 ?'<span class="thumb video-thumb">▶ Ver video</span>'
+                 :`<img class="thumb" src="${esc(m.url)}" alt="${esc(t.title)}" loading="lazy">`
+               }
+             </a>`
+           :''
+         }
+       </div>
+
+       <div class="metrics">
+         <span>${replies.length} respuestas</span>
+         <span>${votes} aportes útiles</span>
+         <span>${replies.length?'Última respuesta: '+date(replies.at(-1).created_at):'Sin respuestas'}</span>
+       </div>
+     </div>
+   </div>
+ </article>`;
+}
  const c=cat(t.category),replies=comments.filter(r=>r.topic_id===t.id&&r.status==='approved'),votes=reactions.filter(r=>r.topic_id===t.id&&r.kind==='useful').length,m=media.find(m=>m.topic_id===t.id&&['image','video'].includes(m.kind));
  return `<article class="card topic-card" style="--category:${esc(c.color)}"><div class="post-row"><a href="#hangar/${esc(t.author_id||'')}" aria-label="Ver hangar de ${esc(name(t.author_id))}">${avatar(t.author_id)}</a><div class="post-body"><div class="meta">${t.pinned?'<span class="tag">Fijado</span>':''}${link(name(t.author_id),'#hangar/'+t.author_id,'')} · ${date(t.created_at)}</div><a class="category" href="#tematica/${esc(c.slug||'otros')}">${esc(c.name)}</a><div class="post-layout"><div><h3>${link(t.title,'#tema/'+t.id,'post-title')}</h3><p class="muted">${esc(t.summary||t.content.slice(0,200))}</p>${t.status!=='approved'?`<span class="tag status-pending">${stateLabel(t.status)}</span>`:''}</div>${m?.url?`<a href="#tema/${t.id}" aria-label="Abrir publicación">${m.kind==='video'?'<span class="thumb video-thumb">▶ Ver video</span>':`<img class="thumb" src="${esc(m.url)}" alt="${esc(t.title)}" loading="lazy">`}</a>`:''}</div><div class="metrics"><span>${replies.length} respuestas</span><span>${votes} aportes útiles</span><span>${replies.length?'Última respuesta: '+date(replies.at(-1).created_at):'Sin respuestas'}</span></div></div></div></article>`;
 }
@@ -92,7 +148,13 @@ function commentView(c,all,depth=0,seen=new Set()){
  if(seen.has(c.id))return '';seen=new Set(seen).add(c.id);const children=all.filter(x=>x.parent_id===c.id),parent=all.find(x=>x.id===c.parent_id);
  return `<article class="comment" id="comentario-${c.id}"><div class="post-row">${avatar(c.author_id)}<div class="post-body"><div class="meta">${link(name(c.author_id),'#hangar/'+c.author_id,'')} · ${date(c.created_at)}${edited(c)} ${c.status!=='approved'?`<span class="tag">${stateLabel(c.status)}</span>`:''}</div>${c.parent_id?`<div class="small muted">En respuesta a @${esc(name(parent?.author_id))}</div>`:''}<div class="body-text">${body(c.deleted?'Comentario eliminado por su autor':c.content)}</div><div class="actions">${c.deleted?'':`<button data-action="reply" data-id="${c.id}">Responder</button>${reactionButton('comment_id',c.id,'useful')}${reactionButton('comment_id',c.id,'award')}`}<button data-action="share" data-id="${c.topic_id}" data-comment="${c.id}">Compartir</button><button data-action="report" data-id="${c.topic_id}" data-comment="${c.id}">Denunciar</button>${c.author_id===user?.id&&!c.deleted?`<button data-action="edit-comment" data-id="${c.id}">Editar</button><button data-action="delete-comment" data-id="${c.id}">Retirar comentario</button>`:''}${children.length?`<button data-action="collapse" data-id="${c.id}" aria-expanded="true">Ocultar respuestas</button>`:''}</div></div></div><div id="children-${c.id}" class="${depth<2?'comment-children':''}">${children.map(x=>commentView(x,all,depth+1,seen)).join('')}</div></article>`;
 }
-async function topicView(id,highlight){const t=topics.find(t=>t.id===id);if(!t){app.innerHTML='<h1>Publicación no disponible</h1><p>Puede estar pendiente de revisión o haber sido retirada.</p>'+link('Volver al Foro','#foro');return}const c=cat(t.category);crumbs([['Foro','#foro'],[c.name,'#tematica/'+t.category],[t.title]]);replyParent=null;
+async function topicView(id,highlight){
+ const t=topics.find(t=>t.id===id);
+
+ if(t?.special_role==='shimoda' && t?.interaction_target==='rincon_shimoda'){
+   window.location.href='index.html#shimoda';
+   return;
+ }
  const all=comments.filter(r=>r.topic_id===id&&(!r.deleted||comments.some(child=>child.parent_id===r.id))),ids=new Set(all.map(c=>c.id));
  app.innerHTML=`<article class="card topic-card" style="--category:${esc(c.color)}"><div class="post-row">${avatar(t.author_id)}<div class="post-body"><div class="meta">${t.pinned?'<span class="tag">Fijado</span>':''}${link(name(t.author_id),'#hangar/'+t.author_id,'')} · ${date(t.created_at)}</div><span class="tag">${esc(c.name)}</span><span class="tag">${stateLabel(t.state)}</span>${t.status!=='approved'?`<span class="tag">${stateLabel(t.status)}</span>`:''}<h1>${esc(t.title)}</h1><p class="meta">${edited(t).replace(/^ · /,'')}</p><p class="muted">${esc(t.summary)}</p><div class="body-text">${body(t.content)}</div>${t.travel?`<dl class="profile-fields">${Object.entries(t.travel).filter(([,v])=>v).map(([k,v])=>`<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>`:''}<div class="attachments">${media.filter(m=>m.topic_id===id).map(attachment).join('')}</div>${safeURL(t.source_url)?`<p><a href="${esc(safeURL(t.source_url))}" target="_blank" rel="noopener noreferrer">Fuente o enlace relacionado ↗</a></p>`:''}<div>${t.tags.map(x=>`<span class="tag">${esc(x)}</span>`).join('')}</div><div class="actions">${reactionButton('topic_id',id,'useful')}${reactionButton('topic_id',id,'award')}<button data-action="share" data-id="${id}">Compartir</button><button data-action="save" data-id="${id}" aria-pressed="false">Guardar</button><button data-action="follow" data-id="${id}" aria-pressed="false">Seguir tema</button><button data-action="report" data-id="${id}">Denunciar</button>${t.author_id===user?.id?`<a class="button" href="#editar/${id}">Editar</a><button data-action="request-removal" data-id="${id}">Solicitar retiro</button>`:''}</div></div></div></article><h2>Conversación</h2>${all.filter(r=>!r.parent_id||!ids.has(r.parent_id)).map(r=>commentView(r,all)).join('')||'<p class="muted">Todavía no hay respuestas.</p>'}${t.state==='closed'||t.state==='archived'?'<p>Este tema está cerrado.</p>':`<form id="reply-form"><label id="reply-label" for="reply">Comentar la publicación</label><textarea id="reply" maxlength="10000" required placeholder="Compartí tu aporte…"></textarea><div class="toolbar"><button class="primary">Enviar respuesta</button><button type="button" data-action="cancel-reply">Cancelar respuesta</button></div></form>`}`;
  if($('reply-form'))$('reply-form').onsubmit=async e=>{e.preventDefault();if(!authenticated())return;await busy(e.submitter,async()=>{checked(await db.from('gdv_comments').insert({topic_id:id,parent_id:replyParent,author_id:user.id,content:$('reply').value.trim()}).select());await load();await route();message('Respuesta enviada. Si corresponde revisión previa, aparecerá públicamente después de su aprobación.')})};
