@@ -118,7 +118,7 @@
     ];
     const $ = id => document.getElementById(id);
     const datos = new Map();
-    let filtro = location.hash?"todas":"pendientes";
+    let filtro = "pendientes";
     let administrador = false;
 
     function mensaje(texto) { $("mensaje").textContent = texto; }
@@ -307,7 +307,7 @@
       const buscar = $("buscar").value.trim().toLocaleLowerCase("es-AR");
       const seleccion = $("tipo").value;
       const target=location.hash.slice(1).split("/");
-      const visibles = items.filter(item => (!target[0]||(item.config.tabla===target[0]&&String(item.fila.id)===target[1])) && (filtro === "todas" || estado(item) === filtro)
+      const visibles = items.filter(item => (!target[0]||(item.config.tabla===target[0]&&(!target[1]||String(item.fila.id)===target[1]))) && (filtro === "todas" || estado(item) === filtro)
         && (seleccion === "todas" || item.config.tabla === seleccion)
         && (!buscar || [item.fila.titulo, item.fila.contenido, item.fila.descripcion, item.fila.relato, item.fila.autor_nombre, item.fila.nombre_usuario].filter(Boolean).join(" ").toLocaleLowerCase("es-AR").includes(buscar)));
       $("resumen").textContent = visibles.length + " publicaciones en esta vista";
@@ -390,6 +390,12 @@
       $("acceso").hidden = true;
       $("panel").hidden = false;
       $("salir").hidden = false;
+      const tablaDestino = location.hash.slice(1).split("/")[0];
+      if (tablaDestino && secciones.some(s => s.tabla === tablaDestino)) {
+        $("tipo").value = tablaDestino;
+        filtro = "pendientes";
+        document.querySelectorAll("[data-filtro]").forEach(b => b.classList.toggle("activa", b.dataset.filtro === "pendientes"));
+      }
       await cargar();
     }
     $("loginForm").addEventListener("submit", async event => {
