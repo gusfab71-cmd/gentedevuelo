@@ -3,8 +3,11 @@
   const base = new URL('../', document.currentScript.src);
   const client = supabase.createClient(GDV_CONFIG.url, GDV_CONFIG.key);
   const loginURL = new URL('comunidad.html#ingresar', base);
-  const recoveryURL = new URL('index.html', base).href;
-  const recovery = new URLSearchParams(location.hash.slice(1)).get('type') === 'recovery';
+  const homeURL = new URL('index.html', base).href;
+  const recoveryURL = new URL('index.html?gdv_recovery=1', base).href;
+  const recovery =
+    new URLSearchParams(location.search).get('gdv_recovery') === '1' ||
+    new URLSearchParams(location.hash.slice(1)).get('type') === 'recovery';
   let verifiedUser = null;
   let pendingValidation = null;
   function publicRoute() {
@@ -68,7 +71,7 @@
     else document.documentElement.classList.remove('auth-pending');
     return user;
   });
-  window.GDV_AUTH = { client, ready, validate, requireRoute, afterLogin, recoveryURL, recovery };
+  window.GDV_AUTH = { client, ready, validate, requireRoute, afterLogin, homeURL, recoveryURL, recovery };
   client.auth.onAuthStateChange(event => {
     if (event === 'SIGNED_OUT') {
       verifiedUser = null;
