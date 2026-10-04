@@ -203,6 +203,77 @@
       boton.addEventListener("click", () => guardar(item, accion, boton));
       return boton;
     }
+    function rutaPublicaDeBucket(url, bucket) {
+      if (typeof url !== "string" || !url) return "";
+      try {
+        const u = new URL(url);
+        const marca = "/storage/v1/object/public/" + bucket + "/";
+        const pos = u.pathname.indexOf(marca);
+        if (pos < 0) return "";
+        return decodeURIComponent(u.pathname.slice(pos + marca.length));
+      } catch (_) { return ""; }
+    }
+    async function eliminarDefinitivamente(item, boton) {
+      if (!administrador) return;
+      const titulo = item.fila.titulo || item.config.nombre || "esta publicación";
+      if (!confirm('¿Eliminar definitivamente "' + titulo + '"?\n\nEsta acción no se puede deshacer.')) return;
+
+      boton.disabled = true;
+      mensaje("Eliminando publicación…");
+      try {
+        const t = item.config.tabla, r = item.fila;
+
+        if (t === "aportes_destacados" && Array.isArray(r._adjuntos) && r._adjuntos.length) {
+          const rutas = r._adjuntos.map(a => a.storage_path).filter(Boolean);
+          if (rutas.length) {
+            const borrado = await client.storage.from("aportes").remove(rutas);
+            if (borrado.error) throw borrado.error;
+          }
+        }
+
+        if (t === "galeria" && r.archivo) {
+          const borrado = await client.storage.from("hangar-fotos").remove([r.archivo]);
+          if (borrado.error) throw borrado.error;
+        }
+
+        if (t === "clasificados" && Array.isArray(r.fotos) && r.fotos.length) {
+          const rutas = r.fotos.map(url => rutaPublicaDeBucket(url, "clasificados-fotos")).filter(Boolean);
+          if (rutas.length) {
+            const borrado = await client.storage.from("clasificados-fotos").remove(rutas);
+            if (borrado.error) throw borrado.error;
+          }
+        }
+
+        if (t === "travesias" && Array.isArray(r.fotos) && r.fotos.length) {
+          const rutas = r.fotos.map(url => rutaPublicaDeBucket(url, "travesias-fotos")).filter(Boolean);
+          if (rutas.length) {
+            const borrado = await client.storage.from("travesias-fotos").remove(rutas);
+            if (borrado.error) throw borrado.error;
+          }
+        }
+
+        const respuesta = await client.from(t).delete().eq("id", r.id).select("id");
+        if (respuesta.error || !respuesta.data || respuesta.data.length !== 1) {
+          throw respuesta.error || new Error("No se pudo confirmar la eliminación.");
+        }
+
+        const filas = datos.get(t) || [];
+        datos.set(t, filas.filter(fila => String(fila.id) !== String(r.id)));
+        mensaje("Publicación eliminada definitivamente.");
+        pintar();
+      } catch (error) {
+        console.error("Error al eliminar:", error);
+        mensaje("No se pudo eliminar. " + (error?.message || "Intentá nuevamente."));
+      } finally {
+        boton.disabled = false;
+      }
+    }
+    function botonEliminar(item) {
+      const boton = nodo("button", "Eliminar definitivamente", "peligro");
+      boton.type = "button";
+      boton.addEventListener("click", () => eliminarDefinitivamente(item, boton));
+      return boton;
+    }
     function fotoSegura(valor) {
       if (typeof valor !== "string") return "";
       try {
@@ -296,6 +367,7 @@
       if (t === "aportes_destacados" && estado(item) === "publicadas") {
         acciones.append(botonAccion(item, "destacar", r.destacado ? "Quitar destacado" : "Destacar", "secundario"));
       }
+      acciones.append(botonEliminar(item));
       articulo.append(acciones);
       return articulo;
     }
