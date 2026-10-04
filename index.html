@@ -4263,6 +4263,198 @@ img, video { max-width: 100%; }
   }
 }
 </style>
+<style id="ajuste-movil-portada-shimoda-final">
+/* =========================================================
+   AJUSTE FINAL MÓVIL
+   - Levanta portada (avión + logo + título)
+   - Reduce y ordena sección Shimoda
+   ========================================================= */
+
+@media (max-width: 620px) {
+
+  /* ===== PORTADA ===== */
+  .portada-completa {
+    background-position: center 46% !important;
+  }
+
+  .portada-completa,
+  .portada-completa .hero {
+    min-height: 635px !important;
+  }
+
+  .menu-principal {
+    padding-top: 66px !important;
+  }
+
+  .atajos-portada {
+    top: 58px !important;
+  }
+
+  .portada-completa .hero .logo-emblema {
+    top: 72px !important;
+    width: 104px !important;
+    height: 104px !important;
+  }
+
+  .portada-completa .hero-titulo {
+    top: 178px !important;
+    width: calc(100% - 24px) !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    padding: 0 8px !important;
+  }
+
+  .portada-completa .hero-titulo h1 {
+    font-size: clamp(28px, 9vw, 38px) !important;
+    line-height: 1.02 !important;
+    margin-bottom: 6px !important;
+  }
+
+  .portada-completa .hero-titulo p {
+    font-size: 12px !important;
+    letter-spacing: 1.4px !important;
+    margin-bottom: 6px !important;
+  }
+
+  .portada-completa .hero-lema {
+    font-size: 15px !important;
+    margin-top: 4px !important;
+  }
+
+  .portada-accesos,
+  .portada-accesos.menu-abierto {
+    bottom: 10px !important;
+  }
+
+  /* ===== SHIMODA ===== */
+  #shimoda,
+  #shimoda .shimoda-seccion,
+  #shimoda .shimoda-contenedor {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+
+  #shimoda .shimoda-cabecera,
+  #shimoda .shimoda-header,
+  #shimoda .shimoda-portada,
+  #shimoda .shimoda-layout,
+  #shimoda .shimoda-superior,
+  #shimoda .shimoda-bloque-superior {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+    align-items: start !important;
+  }
+
+  #shimoda img,
+  #shimoda .shimoda-logo,
+  #shimoda .shimoda-emblema,
+  #shimoda .shimoda-portada-logo,
+  #shimoda .shimoda-cabecera img {
+    width: min(220px, 68vw) !important;
+    max-width: 220px !important;
+    height: auto !important;
+    display: block !important;
+    margin: 0 auto !important;
+  }
+
+  #shimoda h2,
+  #shimoda .shimoda-titulo-principal {
+    font-size: 30px !important;
+    line-height: 1.02 !important;
+    text-align: center !important;
+    margin-bottom: 6px !important;
+  }
+
+  #shimoda h3,
+  #shimoda .shimoda-subtitulo {
+    font-size: 18px !important;
+    line-height: 1.12 !important;
+    text-align: center !important;
+    margin-bottom: 8px !important;
+  }
+
+  #shimoda p,
+  #shimoda .shimoda-descripcion,
+  #shimoda .shimoda-texto {
+    font-size: 15px !important;
+    line-height: 1.45 !important;
+    text-align: left !important;
+  }
+
+  #shimoda .shimoda-publicacion-hoy,
+  #shimoda .shimoda-publicacion,
+  #shimoda .shimoda-card {
+    padding: 16px !important;
+    border-radius: 18px !important;
+  }
+
+  #shimoda .shimoda-publicacion h3,
+  #shimoda .shimoda-card h3 {
+    font-size: 18px !important;
+    line-height: 1.18 !important;
+  }
+
+  #shimoda .shimoda-fecha,
+  #shimoda .shimoda-meta {
+    font-size: 13px !important;
+  }
+
+  #shimoda button,
+  #shimoda .boton-cerrar,
+  #shimoda .shimoda-cerrar {
+    min-height: 40px !important;
+    padding: 8px 14px !important;
+    font-size: 14px !important;
+  }
+}
+
+@media (max-width: 420px) {
+
+  .portada-completa,
+  .portada-completa .hero {
+    min-height: 620px !important;
+  }
+
+  .portada-completa .hero .logo-emblema {
+    top: 68px !important;
+    width: 96px !important;
+    height: 96px !important;
+  }
+
+  .portada-completa .hero-titulo {
+    top: 165px !important;
+  }
+
+  .portada-completa .hero-titulo h1 {
+    font-size: clamp(26px, 9vw, 34px) !important;
+  }
+
+  .portada-completa .hero-lema {
+    font-size: 14px !important;
+  }
+
+  #shimoda img,
+  #shimoda .shimoda-logo,
+  #shimoda .shimoda-emblema,
+  #shimoda .shimoda-portada-logo,
+  #shimoda .shimoda-cabecera img {
+    width: min(200px, 64vw) !important;
+    max-width: 200px !important;
+  }
+
+  #shimoda h2,
+  #shimoda .shimoda-titulo-principal {
+    font-size: 26px !important;
+  }
+
+  #shimoda h3,
+  #shimoda .shimoda-subtitulo {
+    font-size: 17px !important;
+  }
+}
+</style>
+  
 </head>
 
 <body>
