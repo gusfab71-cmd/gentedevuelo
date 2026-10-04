@@ -1331,6 +1331,15 @@ header {
   color: #e3e3e3;
 }
 
+.clasificado-portada-entra {
+  animation: clasificadoPortadaEntrada .42s ease;
+}
+
+@keyframes clasificadoPortadaEntrada {
+  from { opacity: 0; transform: translateX(12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
 /* ===== ANEXOS DE PORTADA ===== */
 .anexo-portada {
   display: none;
@@ -7645,6 +7654,9 @@ async function cargarClasificados() {
   }
 }
 
+let indiceClasificadoPortada = 0;
+let intervaloClasificadosPortada = null;
+
 async function cargarUltimoClasificadoPortada() {
   const titulo = document.getElementById("clasificadosPortadaTitulo");
   const fecha = document.getElementById("clasificadosPortadaFecha");
@@ -7652,30 +7664,59 @@ async function cargarUltimoClasificadoPortada() {
 
   const { data, error } = await supabaseClient
     .from("clasificados")
-    .select("titulo, created_at")
+    .select("titulo, created_at, tipo")
     .eq("estado_publicacion", "aprobado")
     .order("created_at", { ascending: false })
-    .limit(1);
+    .limit(8);
 
   if (error) {
-    console.error("Error al cargar el último clasificado:", error);
-    titulo.textContent = "No se pudo cargar la última publicación.";
+    console.error("Error al cargar clasificados de portada:", error);
+    titulo.textContent = "No se pudieron cargar las publicaciones.";
     return;
   }
 
-  const publicacion = data && data[0];
-  if (!publicacion) {
+  const publicaciones = data || [];
+  if (!publicaciones.length) {
     titulo.textContent = "Todavía no hay publicaciones aprobadas.";
+    fecha.textContent = "";
     return;
   }
 
-  titulo.textContent = publicacion.titulo || "Publicación sin título";
-  if (publicacion.created_at) {
-    const partes = publicacion.created_at.slice(0, 10).split("-");
-    fecha.dateTime = publicacion.created_at;
-    fecha.textContent = partes.length === 3
-      ? `Publicado el ${partes[2]}/${partes[1]}/${partes[0]}`
-      : "";
+  function mostrarClasificadoPortada() {
+    const publicacion = publicaciones[indiceClasificadoPortada % publicaciones.length];
+    const prefijo = publicacion.tipo === "busqueda" ? "Se busca" : "Disponible";
+    titulo.textContent = `${prefijo}: ${publicacion.titulo || "Publicación sin título"}`;
+
+    if (publicacion.created_at) {
+      const partes = publicacion.created_at.slice(0, 10).split("-");
+      fecha.dateTime = publicacion.created_at;
+      fecha.textContent = partes.length === 3
+        ? `Publicado el ${partes[2]}/${partes[1]}/${partes[0]}`
+        : "";
+    } else {
+      fecha.textContent = "";
+      fecha.removeAttribute("datetime");
+    }
+
+    titulo.classList.remove("clasificado-portada-entra");
+    fecha.classList.remove("clasificado-portada-entra");
+    void titulo.offsetWidth;
+    titulo.classList.add("clasificado-portada-entra");
+    fecha.classList.add("clasificado-portada-entra");
+  }
+
+  mostrarClasificadoPortada();
+
+  if (intervaloClasificadosPortada) {
+    clearInterval(intervaloClasificadosPortada);
+    intervaloClasificadosPortada = null;
+  }
+
+  if (publicaciones.length > 1) {
+    intervaloClasificadosPortada = setInterval(() => {
+      indiceClasificadoPortada = (indiceClasificadoPortada + 1) % publicaciones.length;
+      mostrarClasificadoPortada();
+    }, 4000);
   }
 }
 
