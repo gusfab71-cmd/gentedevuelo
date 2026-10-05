@@ -8649,9 +8649,16 @@ async function cargarAnterioresShimoda() {
       </span>
       <h4>${publicacion.titulo || ""}</h4>
       <p>${publicacion.contenido || ""}</p>
+      <div class="shimoda-comentarios-en-publicacion shimoda-comentarios-historicos" data-comentarios-shimoda="${publicacion.id}">
+        <p>Cargando comentarios...</p>
+      </div>
     `;
 
     contenedor.appendChild(articulo);
+    cargarComentariosLegacyShimodaEn(
+      articulo.querySelector("[data-comentarios-shimoda]"),
+      publicacion.id
+    );
   });
 }
 
