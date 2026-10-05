@@ -2450,6 +2450,23 @@ body.modo-anexo-clasificados #clasificados-seccion {
   margin-top: 22px;
 }
 
+.shimoda-form-comentario[hidden] {
+  display: none !important;
+}
+
+.shimoda-comentar-inline {
+  margin-top: 14px;
+}
+
+.shimoda-comentar-inline .boton {
+  padding: 8px 12px;
+  font-size: 12px;
+}
+
+.shimoda-comentarios-historicos + .shimoda-comentar-inline {
+  margin-top: 12px;
+}
+
 .shimoda-form-comentario textarea {
   width: 100%;
   min-height: 100px;
@@ -5461,7 +5478,7 @@ img, video { max-width: 100%; }
       <p>Todavía no hay comentarios aprobados.</p>
     </div>
 
-    <form id="formComentarioShimoda" class="shimoda-form-comentario">
+    <form id="formComentarioShimoda" class="shimoda-form-comentario" hidden>
       <label for="comentarioShimoda">Dejá tu comentario</label>
       <textarea
         id="comentarioShimoda"
@@ -8481,10 +8498,18 @@ if (botonComentarShimoda) {
       window.location.href = "comunidad.html#ingresar";
       return;
     }
+
+    const formulario = document.getElementById("formComentarioShimoda");
     const campo = document.getElementById("comentarioShimoda");
-    if (campo) {
-      campo.scrollIntoView({ behavior: "smooth", block: "center" });
-      setTimeout(() => campo.focus(), 350);
+    if (!formulario || !campo) return;
+
+    const abrir = formulario.hidden;
+    formulario.hidden = !abrir;
+    botonComentarShimoda.textContent = abrir ? "Cerrar comentario" : "Comentar publicación";
+
+    if (abrir) {
+      formulario.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      setTimeout(() => campo.focus(), 250);
     }
   });
 }
@@ -8557,6 +8582,8 @@ document.getElementById("formComentarioShimoda").addEventListener("submit", asyn
   }
 
   formulario.reset();
+  formulario.hidden = true;
+  if (botonComentarShimoda) botonComentarShimoda.textContent = "Comentar publicación";
 
   if (publicacionShimodaEsForo && estado === "approved") {
     mostrarMensajeComentarioShimoda("Comentario publicado.");
@@ -8565,6 +8592,131 @@ document.getElementById("formComentarioShimoda").addEventListener("submit", asyn
     mostrarMensajeComentarioShimoda("Comentario enviado. Quedó pendiente de aprobación.");
   }
 });
+
+async function enviarComentarioLegacyShimoda(publicacionId, formulario, mensajeEl) {
+  if (!publicacionId || !formulario) return;
+
+  if (mensajeEl) {
+    mensajeEl.textContent = "";
+    mensajeEl.style.color = "#d6a84b";
+  }
+
+  const { data: usuarioData, error: usuarioError } = await supabaseClient.auth.getUser();
+  const usuario = usuarioData ? usuarioData.user : null;
+
+  if (usuarioError || !usuario) {
+    window.location.href = "comunidad.html#ingresar";
+    return;
+  }
+
+  const campo = formulario.querySelector("textarea");
+  const contenido = (campo?.value || "").trim();
+
+  if (contenido.length < 2 || contenido.length > 1000) {
+    if (mensajeEl) {
+      mensajeEl.textContent = "El comentario debe tener entre 2 y 1000 caracteres.";
+      mensajeEl.style.color = "#ff8a65";
+    }
+    return;
+  }
+
+  const boton = formulario.querySelector('button[type="submit"]');
+  if (boton) {
+    boton.disabled = true;
+    boton.textContent = "Enviando...";
+  }
+
+  const respuesta = await supabaseClient
+    .from("shimoda_comentarios")
+    .insert({
+      publicacion_id: publicacionId,
+      user_id: usuario.id,
+      contenido
+    });
+
+  if (boton) {
+    boton.disabled = false;
+    boton.textContent = "Enviar comentario";
+  }
+
+  if (respuesta.error) {
+    console.error("Error al enviar comentario histórico de Shimoda:", respuesta.error);
+    if (mensajeEl) {
+      mensajeEl.textContent = "No se pudo enviar el comentario. Intentá nuevamente.";
+      mensajeEl.style.color = "#ff8a65";
+    }
+    return;
+  }
+
+  formulario.reset();
+  formulario.hidden = true;
+  const tarjeta = formulario.closest(".shimoda-publicacion-anterior");
+  const botonAbrir = tarjeta?.querySelector("[data-comentar-shimoda]");
+  if (botonAbrir) botonAbrir.textContent = "Comentar publicación";
+
+  if (mensajeEl) {
+    mensajeEl.textContent = "Comentario enviado. Quedó pendiente de aprobación.";
+    mensajeEl.style.color = "#d6a84b";
+  }
+}
+
+function prepararComentarioEnTarjetaShimoda(articulo, publicacionId) {
+  if (!articulo || !publicacionId) return;
+
+  const acciones = document.createElement("div");
+  acciones.className = "shimoda-comentar-inline";
+
+  const boton = document.createElement("button");
+  boton.type = "button";
+  boton.className = "boton";
+  boton.dataset.comentarShimoda = String(publicacionId);
+  boton.textContent = "Comentar publicación";
+
+  const formulario = document.createElement("form");
+  formulario.className = "shimoda-form-comentario";
+  formulario.hidden = true;
+  formulario.dataset.publicacionShimoda = String(publicacionId);
+
+  const label = document.createElement("label");
+  label.textContent = "Dejá tu comentario";
+
+  const textarea = document.createElement("textarea");
+  textarea.maxLength = 1000;
+  textarea.required = true;
+  textarea.placeholder = "Compartí tu opinión sobre esta publicación";
+
+  const enviar = document.createElement("button");
+  enviar.type = "submit";
+  enviar.className = "boton";
+  enviar.textContent = "Enviar comentario";
+
+  const mensajeEl = document.createElement("p");
+  mensajeEl.className = "shimoda-mensaje-comentario";
+  mensajeEl.setAttribute("aria-live", "polite");
+
+  label.appendChild(textarea);
+  formulario.append(label, enviar, mensajeEl);
+  acciones.append(boton, formulario);
+  articulo.appendChild(acciones);
+
+  boton.addEventListener("click", async function () {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) {
+      window.location.href = "comunidad.html#ingresar";
+      return;
+    }
+
+    const abrir = formulario.hidden;
+    formulario.hidden = !abrir;
+    boton.textContent = abrir ? "Cerrar comentario" : "Comentar publicación";
+    if (abrir) setTimeout(() => textarea.focus(), 150);
+  });
+
+  formulario.addEventListener("submit", async function (event) {
+    event.preventDefault();
+    await enviarComentarioLegacyShimoda(publicacionId, formulario, mensajeEl);
+  });
+}
 
 async function cargarAnterioresShimoda() {
   const { data, error } = await supabaseClient
@@ -8612,6 +8764,7 @@ async function cargarAnterioresShimoda() {
       articulo.querySelector("[data-comentarios-shimoda]"),
       publicacion.id
     );
+    prepararComentarioEnTarjetaShimoda(articulo, publicacion.id);
   });
 } 
  async function cargarTodasShimoda() {
@@ -8659,6 +8812,7 @@ async function cargarAnterioresShimoda() {
       articulo.querySelector("[data-comentarios-shimoda]"),
       publicacion.id
     );
+    prepararComentarioEnTarjetaShimoda(articulo, publicacion.id);
   });
 }
 
