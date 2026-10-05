@@ -59,6 +59,66 @@
     .acciones { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
     .vacio { padding: 32px; text-align: center; color: #c8d1d4; }
     #salir { font-size: 13px; }
+
+    .robert-admin {
+      margin: 0 0 28px;
+      padding: 22px;
+      border: 1px solid rgba(73, 167, 255, .65);
+      border-radius: 16px;
+      background: linear-gradient(145deg, #102333, #0c1822);
+      box-shadow: 0 10px 28px rgba(0,0,0,.18);
+    }
+    .robert-admin h2 { margin: 0 0 6px; color: #fff; }
+    .robert-admin p { color: #b8cad8; line-height: 1.5; }
+    .robert-admin-form {
+      display: grid;
+      grid-template-columns: minmax(220px, 1fr) auto;
+      gap: 12px;
+      align-items: end;
+      margin: 18px 0;
+    }
+    .robert-admin-form input[type="file"] {
+      padding: 9px;
+      min-height: 44px;
+      background: #0b141b;
+    }
+    .robert-docs {
+      display: grid;
+      gap: 10px;
+      margin-top: 16px;
+    }
+    .robert-doc {
+      padding: 14px;
+      border: 1px solid rgba(126, 166, 196, .35);
+      border-radius: 12px;
+      background: rgba(5, 13, 19, .55);
+    }
+    .robert-doc-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+    }
+    .robert-doc h3 { margin: 0 0 4px; font-size: 16px; }
+    .robert-doc-meta { color: #9db5c5; font-size: 12px; line-height: 1.45; }
+    .robert-status {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .04em;
+      background: #263640;
+      color: #dbe8ef;
+      white-space: nowrap;
+    }
+    .robert-status.ready { background: #163c2d; color: #b8f0d2; }
+    .robert-status.processing { background: #443913; color: #ffe89a; }
+    .robert-status.error { background: #4b2222; color: #ffc3c3; }
+    .robert-doc-error { margin-top: 8px; color: #ffb8a8; font-size: 12px; }
+    .robert-doc-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+    .robert-doc-actions button { padding: 7px 10px; font-size: 12px; }
     @media (max-width: 650px) {
       header { align-items: flex-start; }
       .marca span { font-size: 13px; }
@@ -87,6 +147,23 @@
       <h1>Panel de moderación</h1>
       <p class="intro">Revisá los aportes de la comunidad y decidí qué se muestra en Gente de Vuelo. Los cambios se reflejan en la página al actualizarla.</p>
       <p id="mensaje" class="estado" role="status"></p>
+
+      <section class="robert-admin" id="robertAdmin">
+        <h2>Conocimiento de Robert Shimoda</h2>
+        <p>Subí documentos para incorporar información al RAG. Formatos admitidos: PDF, TXT, Markdown y DOCX.</p>
+
+        <form id="robertUploadForm" class="robert-admin-form">
+          <label>
+            Documento
+            <input id="robertArchivo" type="file" accept=".pdf,.txt,.md,.markdown,.docx,application/pdf,text/plain,text/markdown,application/vnd.openxmlformats-officedocument.wordprocessingml.document" required>
+          </label>
+          <button id="robertSubir" type="submit">Subir y procesar</button>
+        </form>
+
+        <p id="robertAdminEstado" class="estado" role="status" aria-live="polite"></p>
+        <div id="robertDocs" class="robert-docs"></div>
+      </section>
+
       <div class="pestanas" role="group" aria-label="Estado de las publicaciones">
         <button type="button" data-filtro="pendientes" class="activa">Por revisar <span id="numeroPendientes"></span></button>
         <button type="button" data-filtro="publicadas">Publicadas</button>
@@ -437,6 +514,188 @@
       mensaje(fallidas.length ? "No se pudieron cargar: " + fallidas.join(", ") + "." : "Lista actualizada.");
       pintar();
     }
+    function robertEstadoEtiqueta(status) {
+      if (status === "ready") return "LISTO";
+      if (status === "processing") return "PROCESANDO";
+      if (status === "error") return "ERROR";
+      if (status === "archived") return "ARCHIVADO";
+      return "PENDIENTE";
+    }
+
+    function robertTituloArchivo(nombre) {
+      return String(nombre || "Documento")
+        .replace(/\.[^.]+$/, "")
+        .replace(/[_-]+/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    async function cargarRobertDocs() {
+      const contenedor = $("robertDocs");
+      const estadoPanel = $("robertAdminEstado");
+      if (!contenedor) return;
+
+      estadoPanel.textContent = "Cargando documentos de Robert…";
+      const { data, error } = await client
+        .from("robert_documents")
+        .select("id,title,original_filename,mime_type,storage_path,status,page_count,chunk_count,metadata,created_at")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        estadoPanel.textContent = "No se pudieron cargar los documentos: " + error.message;
+        return;
+      }
+
+      contenedor.replaceChildren();
+      if (!data?.length) {
+        contenedor.append(nodo("p", "Todavía no hay documentos cargados.", "vacio"));
+        estadoPanel.textContent = "";
+        return;
+      }
+
+      for (const doc of data) {
+        const card = nodo("article", "", "robert-doc");
+        const top = nodo("div", "", "robert-doc-top");
+        const left = nodo("div", "");
+        left.append(
+          nodo("h3", doc.title || doc.original_filename || "Documento"),
+          nodo("div",
+            [
+              doc.original_filename,
+              doc.page_count ? doc.page_count + " pág." : "",
+              doc.chunk_count ? doc.chunk_count + " fragmentos" : "",
+              fecha(doc.created_at)
+            ].filter(Boolean).join(" · "),
+            "robert-doc-meta")
+        );
+
+        const badge = nodo("span", robertEstadoEtiqueta(doc.status), "robert-status " + (doc.status || ""));
+        top.append(left, badge);
+        card.append(top);
+
+        const lastError = doc.metadata?.last_error;
+        if (lastError) card.append(nodo("div", String(lastError), "robert-doc-error"));
+
+        const actions = nodo("div", "", "robert-doc-actions");
+
+        const reprocesar = nodo("button", "Reprocesar", "secundario");
+        reprocesar.type = "button";
+        reprocesar.addEventListener("click", async () => {
+          reprocesar.disabled = true;
+          estadoPanel.textContent = "Reprocesando " + (doc.title || doc.original_filename) + "…";
+          const { data: respuesta, error: invokeError } = await client.functions.invoke("robert-ingest", {
+            body: { document_id: doc.id }
+          });
+          reprocesar.disabled = false;
+
+          if (invokeError || !respuesta?.ok) {
+            estadoPanel.textContent = "No se pudo reprocesar el documento.";
+          } else {
+            estadoPanel.textContent = "Documento reprocesado correctamente.";
+          }
+          await cargarRobertDocs();
+        });
+
+        const eliminar = nodo("button", "Eliminar", "peligro");
+        eliminar.type = "button";
+        eliminar.addEventListener("click", async () => {
+          if (!confirm("¿Eliminar este documento de la base de conocimiento de Robert?")) return;
+
+          eliminar.disabled = true;
+          estadoPanel.textContent = "Eliminando documento…";
+
+          if (doc.storage_path) {
+            const storageDelete = await client.storage.from("robert-knowledge").remove([doc.storage_path]);
+            if (storageDelete.error) {
+              console.error("No se pudo borrar el archivo de Storage:", storageDelete.error);
+            }
+          }
+
+          const dbDelete = await client.from("robert_documents").delete().eq("id", doc.id);
+          eliminar.disabled = false;
+
+          if (dbDelete.error) {
+            estadoPanel.textContent = "No se pudo eliminar el registro: " + dbDelete.error.message;
+            return;
+          }
+
+          estadoPanel.textContent = "Documento eliminado.";
+          await cargarRobertDocs();
+        });
+
+        actions.append(reprocesar, eliminar);
+        card.append(actions);
+        contenedor.append(card);
+      }
+
+      estadoPanel.textContent = data.length + " documento" + (data.length === 1 ? "" : "s") + " en la base de conocimiento.";
+    }
+
+    async function subirDocumentoRobert(event) {
+      event.preventDefault();
+      const archivoInput = $("robertArchivo");
+      const boton = $("robertSubir");
+      const estadoPanel = $("robertAdminEstado");
+      const archivo = archivoInput.files?.[0];
+      if (!archivo) return;
+
+      const extensionesPermitidas = [".pdf", ".txt", ".md", ".markdown", ".docx"];
+      const nombreMinuscula = archivo.name.toLowerCase();
+      if (!extensionesPermitidas.some(ext => nombreMinuscula.endsWith(ext))) {
+        estadoPanel.textContent = "Formato no admitido. Usá PDF, TXT, Markdown o DOCX.";
+        return;
+      }
+
+      boton.disabled = true;
+      estadoPanel.textContent = "Subiendo " + archivo.name + "…";
+
+      const ruta = Date.now() + "-" + archivo.name.replace(/[^a-zA-Z0-9._-]+/g, "-");
+      const upload = await client.storage
+        .from("robert-knowledge")
+        .upload(ruta, archivo, { upsert: false, contentType: archivo.type || undefined });
+
+      if (upload.error) {
+        boton.disabled = false;
+        estadoPanel.textContent = "No se pudo subir el archivo: " + upload.error.message;
+        return;
+      }
+
+      const { data: userData } = await client.auth.getUser();
+      const registro = await client.from("robert_documents").insert({
+        title: robertTituloArchivo(archivo.name),
+        original_filename: archivo.name,
+        source_type: "document",
+        mime_type: archivo.type || null,
+        storage_path: ruta,
+        status: "pending",
+        uploaded_by: userData?.user?.id || null,
+        metadata: { source: "moderation_panel" }
+      }).select("id").single();
+
+      if (registro.error || !registro.data?.id) {
+        await client.storage.from("robert-knowledge").remove([ruta]);
+        boton.disabled = false;
+        estadoPanel.textContent = "No se pudo registrar el documento: " + (registro.error?.message || "Error desconocido.");
+        return;
+      }
+
+      estadoPanel.textContent = "Procesando documento…";
+      const proceso = await client.functions.invoke("robert-ingest", {
+        body: { document_id: registro.data.id }
+      });
+
+      boton.disabled = false;
+      archivoInput.value = "";
+
+      if (proceso.error || !proceso.data?.ok) {
+        estadoPanel.textContent = "El archivo se subió, pero ocurrió un error al procesarlo. Podés usar Reprocesar.";
+      } else {
+        estadoPanel.textContent = "Documento incorporado correctamente a Robert Shimoda.";
+      }
+
+      await cargarRobertDocs();
+    }
+
     async function iniciar() {
       $("acceso").hidden = false;
       $("panel").hidden = true;
@@ -466,7 +725,7 @@
         filtro = "pendientes";
         document.querySelectorAll("[data-filtro]").forEach(b => b.classList.toggle("activa", b.dataset.filtro === "pendientes"));
       }
-      await cargar();
+      await Promise.all([cargar(), cargarRobertDocs()]);
     }
     $("loginForm").addEventListener("submit", async event => {
       event.preventDefault();
@@ -501,6 +760,7 @@
     $("tipo").addEventListener("change", pintar);
     $("buscar").addEventListener("input", pintar);
     $("recargar").addEventListener("click", cargar);
+    $("robertUploadForm")?.addEventListener("submit", subirDocumentoRobert);
     client.auth.onAuthStateChange(event => {
       if (event === "SIGNED_OUT") setTimeout(iniciar, 0);
     });
