@@ -5769,7 +5769,7 @@ img, video { max-width: 100%; }
             <input id="editarSimulators" type="text" placeholder="Simuladores de vuelo">
             <input id="editarExperience" type="text" placeholder="Experiencia aeronáutica">
             <input id="editarHomeBase" type="text" placeholder="Aeropuerto base">
-            <input id="editarFlightHours" type="number" placeholder="Horas de vuelo">
+            <input id="editarFlightHours" type="text" inputmode="numeric" maxlength="5" pattern="[0-9]{1,5}" autocomplete="off" placeholder="Horas de vuelo" oninput="this.value=this.value.replace(/\D/g,'').slice(0,5)">
             <input id="editarAeroclub" type="text" placeholder="Aeroclub / Escuela">
             <input id="editarLicense" type="text" placeholder="Licencia / Habilitación">
           </div>
@@ -6570,7 +6570,14 @@ actualizarBotonIngreso();
   const flight_simulators = document.getElementById("editarSimulators").value.trim();
    const aviation_experience = document.getElementById("editarExperience").value.trim();
 const home_airfield = document.getElementById("editarHomeBase").value.trim();
-const flight_hours = document.getElementById("editarFlightHours").value.trim() === "" ? null : Number(document.getElementById("editarFlightHours").value);
+const flightHoursInput = document.getElementById("editarFlightHours");
+const flightHoursValue = flightHoursInput.value.trim();
+if (flightHoursValue !== "" && !/^\d{1,5}$/.test(flightHoursValue)) {
+  document.getElementById("mensajeInfoAeronautica").textContent = "Las horas de vuelo deben contener solo números y un máximo de 5 dígitos.";
+  flightHoursInput.focus();
+  return;
+}
+const flight_hours = flightHoursValue === "" ? null : Number(flightHoursValue);
 const aviation_organization = document.getElementById("editarAeroclub").value.trim();
 const aviation_license = document.getElementById("editarLicense").value.trim();   
 
