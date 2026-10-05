@@ -2047,46 +2047,77 @@ body.modo-anexo-clasificados #clasificados-seccion {
 }
 
 
-/* ===== CLASIFICADOS: CONSULTA LATERAL DENTRO DE LA SECCIÓN ===== */
+/* ===== COMPRAVENTA: VISTA DE DETALLE ENFOCADA ===== */
 #panelClasificadosLista.consulta-abierta {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 330px;
-  gap: 20px;
-  align-items: start;
+  display: block;
 }
 
-#panelClasificadosLista.consulta-abierta .clasificados-listado-cabecera {
-  grid-column: 1;
-  grid-row: 1;
+#panelClasificadosLista.consulta-abierta > .clasificados-listado-cabecera,
+#panelClasificadosLista.consulta-abierta > #listaClasificadosDisponibles,
+#panelClasificadosLista.consulta-abierta > .subasta-inversa-destacada {
+  display: none !important;
 }
 
-#panelClasificadosLista.consulta-abierta #listaClasificadosDisponibles {
-  grid-column: 1;
-  grid-row: 2;
-}
-
-#panelClasificadosLista.consulta-abierta .clasificados-requeridos {
-  grid-column: 1;
-  grid-row: 3;
+#clasificados-seccion.detalle-clasificado-abierto > .clasificados-opciones,
+#clasificados-seccion.detalle-clasificado-abierto > .mensaje-clasificados {
+  display: none !important;
 }
 
 .clasificados-consulta-panel {
   display: none;
   position: relative;
-  padding: 18px;
+  width: min(1100px, 100%);
+  margin: 0 auto;
+  padding: 30px;
   border: 2px solid #b87920;
-  border-radius: 16px;
+  border-radius: 18px;
   background: #282d30;
   color: #f7f4ec;
-  box-shadow: 0 12px 28px rgba(66, 43, 8, 0.18);
+  box-shadow: 0 18px 44px rgba(66, 43, 8, 0.24);
 }
 
 #panelClasificadosLista.consulta-abierta .clasificados-consulta-panel {
   display: block;
-  grid-column: 2;
-  grid-row: 1 / span 3;
-  position: sticky;
-  top: 18px;
+}
+
+#panelClasificadosLista.consulta-abierta .clasificados-consulta-panel {
+  min-height: 520px;
+}
+
+#panelClasificadosLista.consulta-abierta .clasificados-consulta-imagen {
+  width: min(620px, 100%);
+  margin: 6px auto 24px;
+}
+
+#panelClasificadosLista.consulta-abierta .clasificados-consulta-imagen img {
+  height: min(58vh, 520px);
+  max-height: 520px;
+  object-fit: contain;
+}
+
+#panelClasificadosLista.consulta-abierta .clasificados-consulta-panel h3 {
+  font-size: clamp(26px, 3vw, 38px);
+  margin-bottom: 12px;
+}
+
+#panelClasificadosLista.consulta-abierta .clasificados-consulta-descripcion,
+#panelClasificadosLista.consulta-abierta .clasificados-consulta-dato {
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+#panelClasificadosLista.consulta-abierta #consultaClasificadoPrecio {
+  font-size: 26px;
+  color: #f4d887;
+  margin-top: 8px;
+}
+
+#panelClasificadosLista.consulta-abierta .clasificados-consulta-anunciante {
+  margin-top: 26px;
+}
+
+#panelClasificadosLista.consulta-abierta .clasificados-consulta-acciones {
+  max-width: 440px;
 }
 
 .clasificados-consulta-cerrar {
@@ -2241,20 +2272,12 @@ body.modo-anexo-clasificados #clasificados-seccion {
 }
 
 @media (max-width: 950px) {
-  #panelClasificadosLista.consulta-abierta {
-    grid-template-columns: 1fr;
+  .clasificados-consulta-panel {
+    padding: 20px 16px;
   }
 
-  #panelClasificadosLista.consulta-abierta .clasificados-listado-cabecera,
-  #panelClasificadosLista.consulta-abierta #listaClasificadosDisponibles,
-  #panelClasificadosLista.consulta-abierta .clasificados-requeridos,
-  #panelClasificadosLista.consulta-abierta .clasificados-consulta-panel {
-    grid-column: 1;
-    grid-row: auto;
-  }
-
-  #panelClasificadosLista.consulta-abierta .clasificados-consulta-panel {
-    position: static;
+  #panelClasificadosLista.consulta-abierta .clasificados-consulta-imagen img {
+    height: min(52vh, 390px);
   }
 }
 
@@ -5545,7 +5568,7 @@ img, video { max-width: 100%; }
     </div>
 
     <aside class="clasificados-consulta-panel" id="clasificadosConsultaPanel" aria-hidden="true">
-      <button type="button" class="clasificados-consulta-cerrar" id="cerrarConsultaClasificado" aria-label="Cerrar consulta">×</button>
+      <button type="button" class="clasificados-consulta-cerrar" id="cerrarConsultaClasificado" aria-label="Volver a CompraVenta">×</button>
       <span class="clasificados-consulta-kicker">CONSULTA DEL AVISO</span>
       <div class="clasificados-consulta-imagen" id="consultaClasificadoImagen"></div>
       <h3 id="consultaClasificadoTitulo">Artículo seleccionado</h3>
@@ -7709,6 +7732,20 @@ function crearTarjetaClasificado(publicacion, compacto = false, usuarioId = null
     }
 
     articulo.appendChild(contenido);
+    articulo.tabIndex = 0;
+    articulo.setAttribute("role", "button");
+    articulo.setAttribute("aria-label", "Ver detalle de " + (publicacion.titulo || "la publicación"));
+    articulo.addEventListener("click", function (event) {
+      if (event.target.closest("button, a")) return;
+      abrirConsultaClasificado(publicacion);
+    });
+    articulo.addEventListener("keydown", function (event) {
+      if (event.key === "Enter" || event.key === " ") {
+        if (event.target !== articulo) return;
+        event.preventDefault();
+        abrirConsultaClasificado(publicacion);
+      }
+    });
     return articulo;
   }
 
@@ -7741,6 +7778,20 @@ function crearTarjetaClasificado(publicacion, compacto = false, usuarioId = null
   contenido.appendChild(abrirDetalle);
 
   articulo.appendChild(contenido);
+  articulo.tabIndex = 0;
+  articulo.setAttribute("role", "button");
+  articulo.setAttribute("aria-label", "Ver detalle de " + (publicacion.titulo || "la publicación"));
+  articulo.addEventListener("click", function (event) {
+    if (event.target.closest("button, a")) return;
+    abrirConsultaClasificado(publicacion);
+  });
+  articulo.addEventListener("keydown", function (event) {
+    if (event.key === "Enter" || event.key === " ") {
+      if (event.target !== articulo) return;
+      event.preventDefault();
+      abrirConsultaClasificado(publicacion);
+    }
+  });
   return articulo;
 }
 
@@ -7748,6 +7799,7 @@ function cerrarConsultaClasificado() {
   clasificadoEnConsulta = null;
   if (panelListaClasificados) panelListaClasificados.classList.remove("consulta-abierta");
   if (panelConsultaClasificado) panelConsultaClasificado.setAttribute("aria-hidden", "true");
+  document.getElementById("clasificados-seccion")?.classList.remove("detalle-clasificado-abierto");
 }
 
 async function abrirConsultaClasificado(publicacion) {
@@ -7756,6 +7808,7 @@ async function abrirConsultaClasificado(publicacion) {
   clasificadoEnConsulta = publicacion;
   panelListaClasificados.classList.add("consulta-abierta");
   panelConsultaClasificado.setAttribute("aria-hidden", "false");
+  document.getElementById("clasificados-seccion")?.classList.add("detalle-clasificado-abierto");
 
   const imagenContenedor = document.getElementById("consultaClasificadoImagen");
   const titulo = document.getElementById("consultaClasificadoTitulo");
