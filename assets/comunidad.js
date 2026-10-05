@@ -325,11 +325,71 @@ async function reviewContent(table,id,status){
 }
 function contextualModeration(){if(!isAdmin)return;const [view,id]=location.hash.slice(1).split('/');if(view!=='tema')return;const t=topics.find(t=>t.id===id);if(!t)return;const box=(host,html)=>{if(!host)return;const d=document.createElement('details');d.className='staff-context';d.innerHTML='<summary aria-label="Herramientas de moderación">⋯ Moderación</summary>'+html;host.prepend(d)};box(app.querySelector('.topic-card .post-body'),`<button data-manage-topic="${t.id}">Visibilidad, cierre y ubicación</button><button data-warning-user="${t.author_id||''}">Aviso privado al autor</button>`);for(const c of comments.filter(c=>c.topic_id===id))box($('comentario-'+c.id)?.querySelector('.post-body'),`<button data-review="gdv_comments" data-id="${c.id}" data-status="pending">Revisar comentario</button><button data-warning-user="${c.author_id||''}">Aviso privado al autor</button>`);}
 document.addEventListener('click',e=>{const b=e.target.closest('[data-warning-user]');if(!b||!isAdmin||!b.dataset.warningUser)return;showDialog('<h2>Aviso privado</h2><form id="warning-form"><label for="warning-message">Mensaje al integrante</label><textarea id="warning-message" required minlength="5" maxlength="1000"></textarea><button class="primary">Enviar aviso</button></form>');$('warning-form').onsubmit=e=>{e.preventDefault();busy(e.submitter,async()=>{checked(await db.from('gdv_warnings').insert({user_id:b.dataset.warningUser,actor:user.id,message:$('warning-message').value.trim()}));dialog.close();message('Aviso privado enviado y registrado.')})}});
+
+async function mountRobertKnowledgePanel(){
+ if(!isAdmin)return;
+ const existing=$('robert-knowledge-admin');if(existing)existing.remove();
+ const section=document.createElement('section');
+ section.id='robert-knowledge-admin';
+ section.className='card robert-knowledge-admin';
+ section.innerHTML=`<h2>Conocimiento de Robert Shimoda</h2>
+ <p>Subí documentos para incorporarlos al RAG. Formatos admitidos: PDF, TXT, Markdown y DOCX.</p>
+ <form id="robert-knowledge-form" class="toolbar">
+   <input id="robert-knowledge-file" type="file" accept=".pdf,.txt,.md,.markdown,.docx,application/pdf,text/plain,text/markdown,application/vnd.openxmlformats-officedocument.wordprocessingml.document" required>
+   <button class="primary" type="submit">Subir y procesar</button>
+ </form>
+ <p id="robert-knowledge-status" class="meta" aria-live="polite"></p>
+ <div id="robert-knowledge-list"></div>`;
+ const overview=app.querySelector('.moderation-overview');
+ if(overview)overview.after(section);else app.querySelector('h1')?.after(section);
+
+ const status=$('robert-knowledge-status'),list=$('robert-knowledge-list'),form=$('robert-knowledge-form'),fileInput=$('robert-knowledge-file');
+ const titleFromFile=name=>String(name||'Documento').replace(/\.[^.]+$/,'').replace(/[_-]+/g,' ').replace(/\s+/g,' ').trim();
+
+ async function loadDocs(){
+   status.textContent='Cargando documentos…';
+   const res=await db.from('robert_documents').select('id,title,original_filename,mime_type,storage_path,status,page_count,chunk_count,metadata,created_at').order('created_at',{ascending:false});
+   if(res.error){status.textContent='No se pudieron cargar los documentos: '+res.error.message;return}
+   const rows=res.data||[];
+   list.innerHTML=rows.map(doc=>`<article class="card" data-robert-doc="${doc.id}">
+     <div class="post-head"><div><h3>${esc(doc.title||doc.original_filename||'Documento')}</h3><span class="meta">${esc(doc.original_filename||'')}${doc.page_count?' · '+doc.page_count+' pág.':''}${doc.chunk_count?' · '+doc.chunk_count+' fragmentos':''} · ${date(doc.created_at)}</span></div><strong>${esc((doc.status||'pending').toUpperCase())}</strong></div>
+     ${doc.metadata?.last_error?'<p class="priority">'+esc(doc.metadata.last_error)+'</p>':''}
+     <div class="toolbar"><button data-robert-reprocess="${doc.id}">Reprocesar</button><button class="danger" data-robert-delete="${doc.id}" data-storage-path="${esc(doc.storage_path||'')}">Eliminar</button></div>
+   </article>`).join('')||'<p>Todavía no hay documentos cargados.</p>';
+   status.textContent=rows.length+' documento'+(rows.length===1?'':'s')+' en la base de conocimiento.';
+ }
+
+ form.onsubmit=async e=>{
+   e.preventDefault();const file=fileInput.files?.[0];if(!file)return;
+   const lower=file.name.toLowerCase(),allowed=['.pdf','.txt','.md','.markdown','.docx'];
+   if(!allowed.some(ext=>lower.endsWith(ext))){status.textContent='Formato no admitido.';return}
+   const button=e.submitter;button.disabled=true;status.textContent='Subiendo '+file.name+'…';
+   const path=Date.now()+'-'+file.name.replace(/[^a-zA-Z0-9._-]+/g,'-');
+   const upload=await db.storage.from('robert-knowledge').upload(path,file,{upsert:false,contentType:file.type||undefined});
+   if(upload.error){button.disabled=false;status.textContent='No se pudo subir: '+upload.error.message;return}
+   const reg=await db.from('robert_documents').insert({title:titleFromFile(file.name),original_filename:file.name,source_type:'document',mime_type:file.type||null,storage_path:path,status:'pending',uploaded_by:user.id,metadata:{source:'community_moderation'}}).select('id').single();
+   if(reg.error||!reg.data?.id){await db.storage.from('robert-knowledge').remove([path]);button.disabled=false;status.textContent='No se pudo registrar el documento.';return}
+   status.textContent='Procesando documento…';
+   const proc=await db.functions.invoke('robert-ingest',{body:{document_id:reg.data.id}});
+   button.disabled=false;fileInput.value='';
+   status.textContent=proc.error||!proc.data?.ok?'El archivo se subió, pero ocurrió un error al procesarlo. Podés usar Reprocesar.':'Documento incorporado correctamente a Robert Shimoda.';
+   await loadDocs();
+ };
+
+ section.onclick=async e=>{
+   const re=e.target.closest('[data-robert-reprocess]');
+   if(re){re.disabled=true;status.textContent='Reprocesando…';const proc=await db.functions.invoke('robert-ingest',{body:{document_id:re.dataset.robertReprocess}});re.disabled=false;status.textContent=proc.error||!proc.data?.ok?'No se pudo reprocesar.':'Documento reprocesado correctamente.';await loadDocs();return}
+   const del=e.target.closest('[data-robert-delete]');
+   if(del){if(!confirm('¿Eliminar este documento de la base de conocimiento de Robert?'))return;del.disabled=true;status.textContent='Eliminando documento…';const path=del.dataset.storagePath;if(path)await db.storage.from('robert-knowledge').remove([path]);const removed=await db.from('robert_documents').delete().eq('id',del.dataset.robertDelete);del.disabled=false;status.textContent=removed.error?'No se pudo eliminar: '+removed.error.message:'Documento eliminado.';await loadDocs()}
+ };
+ await loadDocs();
+}
+
 const basicModeration=moderation;
 moderation=async function(){await basicModeration();if(!isAdmin)return;const reports=checked(await db.from('gdv_reports').select('*').eq('status','pending')),members=checked(await db.from('gdv_members').select('*')),legacy=await getLegacyPendingCounts();const counts=new Map();reports.forEach(r=>{const key=r.comment_id||r.topic_id;const set=counts.get(key)||new Set();set.add(r.user_id);counts.set(key,set)});const urgent=[...counts].filter(([,users])=>users.size>=3);const panel=document.createElement('section');panel.className='moderation-overview';panel.innerHTML=`<div class="grid">${[['Reportes pendientes',reports.length],['Aportes pendientes',topics.filter(t=>t.status==='pending').length+comments.filter(c=>c.status==='pending').length],['Cuentas restringidas',members.filter(m=>m.restricted||new Date(m.suspended_until)>new Date()).length],['Alertas prioritarias',urgent.length]].map(([label,n])=>`<div class="card"><strong class="metric-value">${n}</strong><span>${label}</span></div>`).join('')}</div><div class="legacy-pending-grid"><a class="card legacy-pending-card ${legacy.shimoda?'has-pending':''}" href="moderacion.html#shimoda_comentarios"><strong class="metric-value">${legacy.shimoda}</strong><span>Rincón Shimoda pendientes</span></a><a class="card legacy-pending-card ${legacy.compraVenta?'has-pending':''}" href="moderacion.html#clasificados"><strong class="metric-value">${legacy.compraVenta}</strong><span>CompraVenta pendientes</span></a></div><p>Prioridad alta: tres denunciantes distintos sobre el mismo contenido. La decisión sigue siendo humana.</p>${urgent.map(([id,users])=>{const r=reports.find(r=>(r.comment_id||r.topic_id)===id);return `<p class="priority">⚑ ${users.size} denunciantes · ${link('Revisar contenido','#tema/'+r.topic_id+(r.comment_id?'/'+r.comment_id:''))}</p>`}).join('')}`;app.querySelector('h1').after(panel);
 const actionButtons=[...app.querySelectorAll('.moderation-action')];
 if(actionButtons[1])actionButtons[1].classList.toggle('has-pending',(legacy.shimoda+legacy.compraVenta)>0);
-refreshAdminPendingBadge().catch(()=>{});};
+refreshAdminPendingBadge().catch(()=>{});await mountRobertKnowledgePanel();};
 
 (async()=>{try{user=await window.GDV_AUTH.ready;await loadRole();await heartbeat();account();if(user)await load();await route()}catch(e){app.innerHTML='<h1>Comunidad</h1><p>No se pudo conectar. Volvé a intentarlo en unos momentos.</p>';message(e.message,true)}})();
 })();
