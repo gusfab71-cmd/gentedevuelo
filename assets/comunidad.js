@@ -382,7 +382,7 @@ async function mountRobertKnowledgePanel(){
    dailyToggle.disabled=true;
    dailyStatus.textContent=enabled?'Desactivando…':'Activando…';
    const res=await db.from('robert_daily_config')
-     .update({enabled:!enabled,updated_at:new Date().toISOString()})
+     .update({enabled:!enabled})
      .eq('singleton',true);
    if(res.error){
      dailyStatus.textContent='No se pudo cambiar el estado: '+res.error.message;
