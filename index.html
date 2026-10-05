@@ -5369,6 +5369,10 @@ img, video { max-width: 100%; }
  <p id="shimodaContenido">
     Estamos cargando la publicación de Robert Shimoda.
   </p>
+
+  <div class="shimoda-acciones-publicacion">
+    <button type="button" class="boton" id="shimodaComentarPublicacion">Comentar publicación</button>
+  </div>
 </div>
 
 <div class="shimoda-comentarios">
@@ -8147,6 +8151,22 @@ async function cargarPublicacionShimoda() {
   }
 
   await cargarComentariosShimoda(publicacion.id, false);
+}
+
+const botonComentarShimoda = document.getElementById("shimodaComentarPublicacion");
+if (botonComentarShimoda) {
+  botonComentarShimoda.addEventListener("click", async () => {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) {
+      window.location.href = "comunidad.html#ingresar";
+      return;
+    }
+    const campo = document.getElementById("comentarioShimoda");
+    if (campo) {
+      campo.scrollIntoView({ behavior: "smooth", block: "center" });
+      setTimeout(() => campo.focus(), 350);
+    }
+  });
 }
 
 document.getElementById("formComentarioShimoda").addEventListener("submit", async function (event) {
