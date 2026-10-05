@@ -48,7 +48,7 @@ td{padding:.35rem .3rem;white-space:nowrap}
 
 <header class="px-5 py-3 border-b border-white/10 flex items-center justify-between sticky top-0 z-40 bg-[#070b14]/90 backdrop-blur" style="padding-top:calc(.75rem + env(safe-area-inset-top,0px))">
   <div class="flex items-center gap-3">
-    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-400 to-indigo-600 grid place-items-center text-xl">🧭</div>
+    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-400 to-indigo-600 grid place-items-center text-xl">NAV</div>
     <div>
       <h1 class="font-extrabold tracking-wide text-white leading-tight">FLIGHTPREP <span class="text-[10px] bg-sky-500/20 text-sky-300 px-1.5 py-0.5 rounded align-middle">NAV</span></h1>
       <p class="text-[11px] text-slate-400">Viento en pista · Navegación por piernas · <span class="text-sky-400 font-medium">Powered by Gente de Vuelo</span></p>
@@ -56,14 +56,14 @@ td{padding:.35rem .3rem;white-space:nowrap}
   </div>
   
   <div class="flex gap-2 no-print">
-    <button onclick="exportJSON()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg font-bold border border-white/10 transition">💾 Guardar JSON</button>
-    <button onclick="printReport()" class="text-xs bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1">📥 Descargar Reporte (PDF/Imprimir)</button>
+    <button onclick="exportJSON()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg font-bold border border-white/10 transition">Guardar JSON</button>
+    <button onclick="printReport()" class="text-xs bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1">Descargar Reporte (PDF/Imprimir)</button>
   </div>
 </header>
 
 <nav class="flex overflow-x-auto border-b border-white/10 px-3 no-print">
-  <button class="tab on" id="t-w" onclick="tab('w')">🌬 Viento en pista</button>
-  <button class="tab" id="t-n" onclick="tab('n')">🧭 Navegación por piernas</button>
+  <button class="tab on" id="t-w" onclick="tab('w')">Viento en pista</button>
+  <button class="tab" id="t-n" onclick="tab('n')">Navegación por piernas</button>
 </nav>
 
 <p class="disclaimer">Herramienta orientativa. Cargá datos verificados del manual y de la hoja de peso y balance de tu aeronave. Los resultados no certifican aeronavegabilidad ni autorizan un vuelo.</p><div id="validation" class="validation" role="alert"></div><main class="max-w-7xl mx-auto p-4 sm:p-6">
@@ -137,14 +137,14 @@ function calcWind(){
  const c=comp(ws,wd,hdg),cg=comp(g,wd,hdg),hw=Math.round(c.head),xw=Math.round(Math.abs(c.cross)),gx=Math.round(Math.abs(cg.cross));
  const side=c.cross>0?'derecha':'izquierda',col=v=>v>lim?'rose':v>lim*.7?'amber':'emerald';
  const card=(t,v,sub,c,unit='kt')=>`<div class="card p-3 border-l-4 !border-l-${c}-500"><div class="text-[11px] text-slate-400">${t}</div><div class="text-3xl font-extrabold text-${c}-300">${v}<span class="text-sm"> ${unit}</span></div><div class="text-[11px] text-slate-400">${sub}</div></div>`;
- $('w_main').innerHTML=card(hw>=0?'Viento de frente':'Viento de cola ⚠',Math.abs(hw),hw>=0?'ayuda al despegue':'alarga el recorrido',hw>=0?'sky':'rose')
+ $('w_main').innerHTML=card(hw>=0?'Viento de frente':'Viento de cola',Math.abs(hw),hw>=0?'ayuda al despegue':'alarga el recorrido',hw>=0?'sky':'rose')
   +card('Viento cruzado',xw,xw?'desde la '+side:'—',col(xw))
   +card('Cruzado en ráfaga',gx,`de frente ${Math.round(cg.head)} kt`,col(gx))+card('Ángulo viento-pista',Math.round(Math.abs(((wd-hdg+540)%360)-180)),'grados','indigo','°');
- const m=[];if(hw<-2)m.push('🔴 Viento de cola: considere la pista opuesta.');if(Math.abs(cg.cross)>lim)m.push('🔴 Cruzado en ráfagas supera su límite ('+lim+' kt).');else if(Math.abs(c.cross)>lim)m.push('🔴 Cruzado superior al límite ('+lim+' kt).');else if(xw>lim*.7)m.push('🟡 Cruzado cercano al límite: técnica de viento cruzado y margen.');
- if(!m.length)m.push('🟢 Componentes dentro de los límites indicados.');
+ const m=[];if(hw<-2)m.push('Viento de cola: considere la pista opuesta.');if(Math.abs(cg.cross)>lim)m.push('Cruzado en ráfagas supera su límite ('+lim+' kt).');else if(Math.abs(c.cross)>lim)m.push('Cruzado superior al límite ('+lim+' kt).');else if(xw>lim*.7)m.push('Cruzado cercano al límite: técnica de viento cruzado y margen.');
+ if(!m.length)m.push('Componentes dentro de los límites indicados.');
  $('w_msg').innerHTML=m.join('<br>');
  const rn2=((rn+17)%36)+1,h2=rn2*10,c2=comp(ws,wd,h2),best=c.head>=c2.head?rn:rn2;
- $('w_both').innerHTML=`<div class="font-semibold mb-1 text-sky-300">Comparación de cabeceras</div>`+[[rn,c],[rn2,c2]].map(([r,k])=>`<div class="flex justify-between ${r==best?'text-emerald-300 font-bold':'text-slate-300'}"><span>Pista ${String(r).padStart(2,'0')} ${r==best?'★':''}</span><span>${k.head>=0?'frente':'cola'} ${Math.abs(Math.round(k.head))} · cruz ${Math.abs(Math.round(k.cross))}</span></div>`).join('');
+ $('w_both').innerHTML=`<div class="font-semibold mb-1 text-sky-300">Comparación de cabeceras</div>`+[[rn,c],[rn2,c2]].map(([r,k])=>`<div class="flex justify-between ${r==best?'text-emerald-300 font-bold':'text-slate-300'}"><span>Pista ${String(r).padStart(2,'0')} ${r==best?'Recomendada':''}</span><span>${k.head>=0?'frente':'cola'} ${Math.abs(Math.round(k.head))} · cruz ${Math.abs(Math.round(k.cross))}</span></div>`).join('');
  drawWind(hdg,wd,rn,ws);
 }
 function drawWind(hdg,wd,rn,ws){
@@ -193,9 +193,9 @@ function calcNav(){
  const row=(a,b,c='')=>`<div class="flex justify-between ${c}"><span class="text-slate-400">${a}</span><b>${b}</b></div>`;
  $('tot').innerHTML=row('Distancia total',dist.toFixed(0)+' NM')+row('Tiempo en ruta',fT(cum))+row('Combustible en ruta',trip.toFixed(1)+' gal')+row('Rodaje + ascenso',S.taxi.toFixed(1)+' gal')+row('Contingencia ('+S.cont+'%)',cont.toFixed(1)+' gal')+row('Reserva final ('+S.res+' min)',res.toFixed(1)+' gal')+(S.alt?row('Alternativa',alt.toFixed(1)+' gal'):'')+
   `<hr class="border-white/10 my-1">`+row('Combustible requerido',req.toFixed(1)+' gal','text-sky-300')+row('Combustible a bordo',S.fuel.toFixed(1)+' gal')+row('Autonomía total',fT(endu))+row('ETA destino',clk(clock));
- $('nstatus').innerHTML=bad?`<div class="rounded-xl p-3 bg-rose-500/15 border border-rose-500/40 text-rose-300 font-bold">⚠ Revise datos: viento mayor que TAS o velocidad de tierra nula en alguna pierna.</div>`
-  :mar>=0?`<div class="rounded-xl p-3 bg-emerald-500/15 border border-emerald-500/40 text-emerald-300"><b>🟢 COMBUSTIBLE SUFICIENTE</b><div class="text-xs">Excedente ${mar.toFixed(1)} gal (${fT(mar/S.gph*60)} extra)</div></div>`
-  :`<div class="rounded-xl p-3 bg-rose-500/15 border border-rose-500/40 text-rose-300"><b>🔴 COMBUSTIBLE INSUFICIENTE</b><div class="text-xs">Faltan ${(-mar).toFixed(1)} gal para cumplir reservas</div></div>`;
+ $('nstatus').innerHTML=bad?`<div class="rounded-xl p-3 bg-rose-500/15 border border-rose-500/40 text-rose-300 font-bold"> Revise datos: viento mayor que TAS o velocidad de tierra nula en alguna pierna.</div>`
+  :mar>=0?`<div class="rounded-xl p-3 bg-emerald-500/15 border border-emerald-500/40 text-emerald-300"><b> COMBUSTIBLE SUFICIENTE</b><div class="text-xs">Excedente ${mar.toFixed(1)} gal (${fT(mar/S.gph*60)} extra)</div></div>`
+  :`<div class="rounded-xl p-3 bg-rose-500/15 border border-rose-500/40 text-rose-300"><b> COMBUSTIBLE INSUFICIENTE</b><div class="text-xs">Faltan ${(-mar).toFixed(1)} gal para cumplir reservas</div></div>`;
  chartF(pts,res+alt)}
 function chartF(p,rsv){
  const W=460,H=230,Lm=46,Rm=38,T=16,B=34,xm=Math.max(...p.map(a=>a.t),1),ym=Math.max(S.fuel,1),sx=v=>Lm+v/xm*(W-Lm-Rm),sy=v=>H-B-Math.max(v,0)/ym*(H-B-T);
