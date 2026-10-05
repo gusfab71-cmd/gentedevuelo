@@ -1833,8 +1833,8 @@ body.modo-anexo-clasificados #clasificados-seccion {
 
 .clasificados-requeridos-lista {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 9px;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 18px;
 }
 
 .clasificado-item.requerido-compacto {
@@ -1969,6 +1969,81 @@ body.modo-anexo-clasificados #clasificados-seccion {
 .clasificado-consultar:hover {
   background: #ff7848;
   transform: translateY(-1px);
+}
+
+.clasificado-item > img {
+  cursor: zoom-in;
+}
+
+.clasificado-propietario-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.clasificado-propietario-acciones button {
+  padding: 8px 12px;
+  border: 1px solid #8b742f;
+  border-radius: 8px;
+  background: #282d30;
+  color: #f7f4ec;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.clasificado-propietario-acciones button:hover {
+  background: #353b3d;
+}
+
+.clasificado-propietario-acciones .eliminar {
+  border-color: #a64040;
+  background: #7f2d2d;
+}
+
+.clasificado-pausado {
+  opacity: 0.72;
+}
+
+.clasificado-foto-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(10, 12, 13, 0.88);
+}
+
+.clasificado-foto-modal[hidden] {
+  display: none;
+}
+
+.clasificado-foto-modal img {
+  max-width: min(96vw, 1200px);
+  max-height: 90vh;
+  object-fit: contain;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 18px 60px rgba(0,0,0,.45);
+}
+
+.clasificado-foto-modal button {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  width: 40px;
+  height: 40px;
+  border: 1px solid #bda15f;
+  border-radius: 9px;
+  background: #282d30;
+  color: #ffffff;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
 }
 
 
@@ -5444,13 +5519,13 @@ img, video { max-width: 100%; }
     <div class="clasificados-listado-cabecera">
       <div>
         <span class="clasificados-kicker">OFERTAS DE LA COMUNIDAD</span>
-        <h3>Disponibles</h3>
+        <h3>Venta</h3>
         <p>Artículos publicados por miembros de Gente de Vuelo.</p>
       </div>
     </div>
 
     <div class="clasificados-publicaciones" id="listaClasificadosDisponibles">
-      <p>Cargando disponibles...</p>
+      <p>Cargando ventas...</p>
     </div>
 
     <aside class="clasificados-consulta-panel" id="clasificadosConsultaPanel" aria-hidden="true">
@@ -5485,8 +5560,8 @@ img, video { max-width: 100%; }
       <div class="clasificados-requeridos">
         <div class="clasificados-requeridos-cabecera">
           <div>
-            <span class="clasificados-kicker">REQUERIMIENTOS ACTIVOS</span>
-            <h4>Pedidos publicados por la comunidad</h4>
+            <span class="clasificados-kicker">COMPRAS ACTIVAS</span>
+            <h4>Pedidos de compra publicados por la comunidad</h4>
           </div>
           <p>Consultá qué están buscando los miembros y contactalos si podés ofrecer una solución.</p>
         </div>
@@ -7492,16 +7567,109 @@ volverClasificados.forEach(function (boton) {
   });
 });
 
-function crearTarjetaClasificado(publicacion, compacto = false) {
+function abrirFotoClasificado(src, alt) {
+  if (!src) return;
+  let modal = document.getElementById("clasificadoFotoModal");
+  if (!modal) {
+    modal = document.createElement("div");
+    modal.id = "clasificadoFotoModal";
+    modal.className = "clasificado-foto-modal";
+    modal.hidden = true;
+
+    const cerrar = document.createElement("button");
+    cerrar.type = "button";
+    cerrar.setAttribute("aria-label", "Cerrar foto ampliada");
+    cerrar.textContent = "×";
+
+    const imagen = document.createElement("img");
+    modal.append(cerrar, imagen);
+    document.body.appendChild(modal);
+
+    const cerrarModal = function () {
+      modal.hidden = true;
+      imagen.removeAttribute("src");
+    };
+
+    cerrar.addEventListener("click", cerrarModal);
+    modal.addEventListener("click", function (event) {
+      if (event.target === modal) cerrarModal();
+    });
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape" && !modal.hidden) cerrarModal();
+    });
+  }
+
+  const imagenModal = modal.querySelector("img");
+  imagenModal.src = src;
+  imagenModal.alt = alt || "Foto del artículo";
+  modal.hidden = false;
+}
+
+async function alternarPausaClasificado(publicacion) {
+  const { data, error } = await supabaseClient.rpc("toggle_clasificado_pausa", {
+    p_id: publicacion.id
+  });
+
+  if (error) {
+    console.error("Error al pausar/reanudar clasificado:", error);
+    mostrarMensajeClasificados("No se pudo cambiar el estado de la publicación.", true);
+    return;
+  }
+
+  mostrarMensajeClasificados(data === "pausado"
+    ? "La venta quedó pausada."
+    : "La venta volvió a estar activa.");
+  await cargarClasificados();
+  cargarUltimoClasificadoPortada();
+}
+
+async function eliminarClasificadoPropio(publicacion, usuarioId) {
+  if (!publicacion || !usuarioId || publicacion.user_id !== usuarioId) return;
+  if (!confirm("¿Querés eliminar definitivamente esta publicación?")) return;
+
+  const { error } = await supabaseClient
+    .from("clasificados")
+    .delete()
+    .eq("id", publicacion.id)
+    .eq("user_id", usuarioId);
+
+  if (error) {
+    console.error("Error al eliminar clasificado:", error);
+    mostrarMensajeClasificados("No se pudo eliminar la publicación.", true);
+    return;
+  }
+
+  mostrarMensajeClasificados("Publicación eliminada.");
+  await cargarClasificados();
+  cargarUltimoClasificadoPortada();
+}
+
+function crearTarjetaClasificado(publicacion, compacto = false, usuarioId = null) {
   const articulo = document.createElement("article");
-  articulo.dataset.moderationId=publicacion.id;
+  articulo.dataset.moderationId = publicacion.id;
   articulo.className = compacto ? "clasificado-item requerido-compacto" : "clasificado-item";
+
+  const esPropietario = Boolean(usuarioId && publicacion.user_id === usuarioId);
+  const estaPausado = publicacion.tipo === "venta" && publicacion.estado_operacion === "pausado";
+  if (estaPausado) articulo.classList.add("clasificado-pausado");
 
   if (!compacto && Array.isArray(publicacion.fotos) && publicacion.fotos[0]) {
     const imagen = document.createElement("img");
     imagen.src = publicacion.fotos[0];
     imagen.alt = publicacion.titulo;
     imagen.loading = "lazy";
+    imagen.tabIndex = 0;
+    imagen.setAttribute("role", "button");
+    imagen.setAttribute("aria-label", "Ampliar foto de " + (publicacion.titulo || "la publicación"));
+    imagen.addEventListener("click", function () {
+      abrirFotoClasificado(imagen.src, imagen.alt);
+    });
+    imagen.addEventListener("keydown", function (event) {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        abrirFotoClasificado(imagen.src, imagen.alt);
+      }
+    });
     articulo.appendChild(imagen);
   }
 
@@ -7510,7 +7678,9 @@ function crearTarjetaClasificado(publicacion, compacto = false) {
 
   const tipo = document.createElement("strong");
   tipo.className = "clasificado-tipo";
-  tipo.textContent = publicacion.tipo === "busqueda" ? "REQUERIDO" : "DISPONIBLE";
+  tipo.textContent = publicacion.tipo === "busqueda"
+    ? "COMPRO"
+    : (estaPausado ? "PAUSADA" : "VENTA");
 
   const titulo = document.createElement("h4");
   titulo.textContent = publicacion.titulo;
@@ -7533,7 +7703,7 @@ function crearTarjetaClasificado(publicacion, compacto = false) {
     contenido.appendChild(precio);
   }
 
-  if (publicacion.tipo === "venta") {
+  if (publicacion.tipo === "venta" && !estaPausado) {
     const consultar = document.createElement("button");
     consultar.type = "button";
     consultar.className = "clasificado-consultar";
@@ -7542,6 +7712,32 @@ function crearTarjetaClasificado(publicacion, compacto = false) {
       abrirConsultaClasificado(publicacion);
     });
     contenido.appendChild(consultar);
+  }
+
+  if (esPropietario) {
+    const acciones = document.createElement("div");
+    acciones.className = "clasificado-propietario-acciones";
+
+    if (publicacion.tipo === "venta") {
+      const pausar = document.createElement("button");
+      pausar.type = "button";
+      pausar.textContent = estaPausado ? "Reanudar venta" : "Pausar venta";
+      pausar.addEventListener("click", function () {
+        alternarPausaClasificado(publicacion);
+      });
+      acciones.appendChild(pausar);
+    }
+
+    const eliminar = document.createElement("button");
+    eliminar.type = "button";
+    eliminar.className = "eliminar";
+    eliminar.textContent = "Eliminar";
+    eliminar.addEventListener("click", function () {
+      eliminarClasificadoPropio(publicacion, usuarioId);
+    });
+    acciones.appendChild(eliminar);
+
+    contenido.appendChild(acciones);
   }
 
   if(window.gdvLegacyAdmin){const d=document.createElement("details"),summary=document.createElement("summary"),a=document.createElement("a");summary.textContent="⋯ Moderación";a.textContent="Revisar este anuncio";a.href="moderacion.html#clasificados/"+publicacion.id;d.append(summary,a);contenido.append(d);}
@@ -7670,8 +7866,11 @@ async function cargarClasificados() {
   const listaRequeridos = document.getElementById("listaClasificadosRequeridos");
   if (!listaDisponibles || !listaRequeridos) return;
 
-  listaDisponibles.innerHTML = "<p>Cargando disponibles...</p>";
-  listaRequeridos.innerHTML = "<p>Cargando requerimientos...</p>";
+  listaDisponibles.innerHTML = "<p>Cargando ventas...</p>";
+  listaRequeridos.innerHTML = "<p>Cargando compras...</p>";
+
+  const { data: authData } = await supabaseClient.auth.getUser();
+  const usuarioId = authData && authData.user ? authData.user.id : null;
 
   const { data, error } = await supabaseClient
     .from("clasificados")
@@ -7681,14 +7880,15 @@ async function cargarClasificados() {
 
   if (error) {
     console.error("Error al cargar clasificados:", error);
-    listaDisponibles.innerHTML = "<p>No se pudieron cargar los disponibles.</p>";
-    listaRequeridos.innerHTML = "<p>No se pudieron cargar los requerimientos.</p>";
+    listaDisponibles.innerHTML = "<p>No se pudieron cargar las ventas.</p>";
+    listaRequeridos.innerHTML = "<p>No se pudieron cargar las compras.</p>";
     return;
   }
 
   const publicaciones = data || [];
   const disponibles = publicaciones.filter(function (publicacion) {
-    return publicacion.tipo === "venta";
+    return publicacion.tipo === "venta"
+      && (publicacion.estado_operacion !== "pausado" || publicacion.user_id === usuarioId);
   });
   const requeridos = publicaciones.filter(function (publicacion) {
     return publicacion.tipo === "busqueda";
@@ -7696,19 +7896,19 @@ async function cargarClasificados() {
 
   listaDisponibles.innerHTML = "";
   if (disponibles.length === 0) {
-    listaDisponibles.innerHTML = "<p>No hay artículos disponibles publicados por el momento.</p>";
+    listaDisponibles.innerHTML = "<p>No hay artículos en venta por el momento.</p>";
   } else {
     disponibles.forEach(function (publicacion) {
-      listaDisponibles.appendChild(crearTarjetaClasificado(publicacion, false));
+      listaDisponibles.appendChild(crearTarjetaClasificado(publicacion, false, usuarioId));
     });
   }
 
   listaRequeridos.innerHTML = "";
   if (requeridos.length === 0) {
-    listaRequeridos.innerHTML = "<p>No hay requerimientos publicados por el momento.</p>";
+    listaRequeridos.innerHTML = "<p>No hay pedidos de compra publicados por el momento.</p>";
   } else {
     requeridos.forEach(function (publicacion) {
-      listaRequeridos.appendChild(crearTarjetaClasificado(publicacion, true));
+      listaRequeridos.appendChild(crearTarjetaClasificado(publicacion, false, usuarioId));
     });
   }
 }
@@ -7723,8 +7923,9 @@ async function cargarUltimoClasificadoPortada() {
 
   const { data, error } = await supabaseClient
     .from("clasificados")
-    .select("titulo, created_at, tipo")
+    .select("titulo, created_at, tipo, estado_operacion")
     .eq("estado_publicacion", "aprobado")
+    .neq("estado_operacion", "pausado")
     .order("created_at", { ascending: false })
     .limit(8);
 
@@ -7743,7 +7944,7 @@ async function cargarUltimoClasificadoPortada() {
 
   function mostrarClasificadoPortada() {
     const publicacion = publicaciones[indiceClasificadoPortada % publicaciones.length];
-    const prefijo = publicacion.tipo === "busqueda" ? "Se busca" : "Disponible";
+    const prefijo = publicacion.tipo === "busqueda" ? "Compro" : "Venta";
     titulo.textContent = `${prefijo}: ${publicacion.titulo || "Publicación sin título"}`;
 
     if (publicacion.created_at) {
