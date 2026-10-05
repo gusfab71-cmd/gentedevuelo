@@ -13,8 +13,11 @@
   function publicRoute() {
     const onCommunity = location.pathname === loginURL.pathname;
     const onHome = location.pathname === base.pathname || location.pathname === new URL('index.html', base).pathname;
-    return onHome || (onCommunity &&
-      ['#ingresar', '#registro', '#recuperar', '#normativa'].includes(location.hash));
+    if (onHome) return true;
+    if (!onCommunity) return false;
+    const hash = location.hash || '#foro';
+    if (['#ingresar', '#registro', '#recuperar', '#normativa', '#quienes-somos', '#foro', '#tematicas', '#multimedia', '#integrantes'].includes(hash)) return true;
+    return ['#tematica/', '#tema/', '#hangar/'].some(prefix => hash.startsWith(prefix));
   }
   function rememberDestination() {
     if (!publicRoute() && !recovery) {
