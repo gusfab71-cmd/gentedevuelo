@@ -10,6 +10,7 @@ const cat=s=>categories.find(c=>c.slug===s)||{name:'Otros',color:'#aab6c2'};
 const profile=id=>profiles.get(id)||{username:'Usuario eliminado'};
 const name=id=>profile(id).username||'Miembro de la comunidad';
 const avatar=id=>safeURL(profile(id).avatar_url)?`<img class="avatar" src="${esc(safeURL(profile(id).avatar_url))}" alt="Foto de ${esc(name(id))}" loading="lazy">`:`<span class="avatar no-avatar" aria-label="${esc(name(id))}">${esc(name(id).slice(0,1).toUpperCase())}</span>`;
+const shimodaAvatar=()=>`<img class="avatar shimoda-avatar" src="LOGO SE ROBERT SHIMODA MEJORADO.png" alt="Foto de Robert Shimoda" loading="lazy">`;
 const message=(text,error=false)=>{notice.textContent=text;notice.classList.toggle('error',error)};
 const checked=r=>{if(r.error)throw new Error(r.error.message);return r.data||[]};
 const link=(label,hash,cls='button')=>`<a class="${cls}" href="${esc(hash)}">${esc(label)}</a>`;
@@ -120,7 +121,7 @@ function legacyShimodaCard(p){
  return `<article class="card topic-card shimoda-topic" style="--category:#E6C280">
    <div class="post-row">
      <a href="${href}" aria-label="Abrir Rincón Shimoda">
-       <span class="avatar no-avatar" aria-label="Robert Shimoda">R</span>
+       ${shimodaAvatar()}
      </a>
      <div class="post-body">
        <div class="meta">
@@ -157,7 +158,7 @@ function topicCard(t){
  return `<article class="card topic-card ${isShimoda?'shimoda-topic':''}" style="--category:${esc(c.color)}">
    <div class="post-row">
      <a href="${isShimoda?'index.html?shimoda_topic='+encodeURIComponent(t.id)+'#shimoda':'#hangar/'+esc(t.author_id||'')}" aria-label="${isShimoda?'Abrir Rincón Shimoda':'Ver hangar de '+esc(authorName)}">
-       ${avatar(t.author_id)}
+       ${isShimoda?shimodaAvatar():avatar(t.author_id)}
      </a>
 
      <div class="post-body">
