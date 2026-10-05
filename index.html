@@ -5548,6 +5548,7 @@ img, video { max-width: 100%; }
         <a id="consultaClasificadoWhatsappAccion" class="clasificados-contacto-boton" href="#" target="_blank" rel="noopener">WhatsApp</a>
         <a id="consultaClasificadoEmailAccion" class="clasificados-contacto-boton secundario" href="#" target="_blank" rel="noopener">Correo</a>
       </div>
+      <div class="clasificado-propietario-acciones clasificado-propietario-detalle" id="clasificadoPropietarioDetalle" hidden></div>
       <p class="clasificados-consulta-nota">Los datos de contacto corresponden al aviso publicado por el anunciante.</p>
     </aside>
 
@@ -7649,38 +7650,60 @@ function crearTarjetaClasificado(publicacion, compacto = false, usuarioId = null
   articulo.dataset.moderationId = publicacion.id;
   articulo.className = compacto ? "clasificado-item requerido-compacto" : "clasificado-item";
 
-  const esPropietario = Boolean(usuarioId && publicacion.user_id === usuarioId);
-  const estaPausado = publicacion.tipo === "venta" && publicacion.estado_operacion === "pausado";
+  const esVenta = publicacion.tipo === "venta";
+  const estaPausado = esVenta && publicacion.estado_operacion === "pausado";
   if (estaPausado) articulo.classList.add("clasificado-pausado");
 
-  if (!compacto && Array.isArray(publicacion.fotos) && publicacion.fotos[0]) {
-    const imagen = document.createElement("img");
-    imagen.src = publicacion.fotos[0];
-    imagen.alt = publicacion.titulo;
-    imagen.loading = "lazy";
-    imagen.tabIndex = 0;
-    imagen.setAttribute("role", "button");
-    imagen.setAttribute("aria-label", "Ampliar foto de " + (publicacion.titulo || "la publicación"));
-    imagen.addEventListener("click", function () {
-      abrirFotoClasificado(imagen.src, imagen.alt);
-    });
-    imagen.addEventListener("keydown", function (event) {
-      if (event.key === "Enter" || event.key === " ") {
-        event.preventDefault();
-        abrirFotoClasificado(imagen.src, imagen.alt);
-      }
-    });
-    articulo.appendChild(imagen);
+  if (esVenta) {
+    if (Array.isArray(publicacion.fotos) && publicacion.fotos[0]) {
+      const imagen = document.createElement("img");
+      imagen.src = publicacion.fotos[0];
+      imagen.alt = publicacion.titulo || "Artículo en venta";
+      imagen.loading = "lazy";
+      imagen.tabIndex = 0;
+      imagen.setAttribute("role", "button");
+      imagen.setAttribute("aria-label", "Ver detalle de " + (publicacion.titulo || "la publicación"));
+      imagen.addEventListener("click", function () {
+        abrirConsultaClasificado(publicacion);
+      });
+      imagen.addEventListener("keydown", function (event) {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          abrirConsultaClasificado(publicacion);
+        }
+      });
+      articulo.appendChild(imagen);
+    }
+
+    const contenido = document.createElement("div");
+    contenido.className = "clasificado-item-contenido clasificado-resumen-venta";
+
+    const titulo = document.createElement("h4");
+    titulo.textContent = publicacion.titulo;
+
+    contenido.appendChild(titulo);
+
+    if (publicacion.precio !== null && publicacion.precio !== undefined) {
+      const precio = document.createElement("p");
+      precio.className = "clasificado-precio-resumen";
+      precio.textContent = new Intl.NumberFormat("es-AR", {
+        style: "currency",
+        currency: publicacion.moneda || "ARS"
+      }).format(Number(publicacion.precio));
+      contenido.appendChild(precio);
+    }
+
+    articulo.appendChild(contenido);
+    return articulo;
   }
 
+  // Las publicaciones de compra conservan información suficiente para identificar lo buscado.
   const contenido = document.createElement("div");
   contenido.className = "clasificado-item-contenido";
 
   const tipo = document.createElement("strong");
   tipo.className = "clasificado-tipo";
-  tipo.textContent = publicacion.tipo === "busqueda"
-    ? "COMPRA"
-    : (estaPausado ? "PAUSADA" : "VENTA");
+  tipo.textContent = "COMPRA";
 
   const titulo = document.createElement("h4");
   titulo.textContent = publicacion.titulo;
@@ -7693,52 +7716,14 @@ function crearTarjetaClasificado(publicacion, compacto = false, usuarioId = null
 
   contenido.append(tipo, titulo, descripcion, datos);
 
-  if (publicacion.tipo === "venta" && publicacion.precio !== null) {
-    const precio = document.createElement("p");
-    precio.style.fontWeight = "bold";
-    precio.textContent = new Intl.NumberFormat("es-AR", {
-      style: "currency",
-      currency: publicacion.moneda || "ARS"
-    }).format(Number(publicacion.precio));
-    contenido.appendChild(precio);
-  }
-
-  if (publicacion.tipo === "venta" && !estaPausado) {
-    const consultar = document.createElement("button");
-    consultar.type = "button";
-    consultar.className = "clasificado-consultar";
-    consultar.textContent = "Consultar";
-    consultar.addEventListener("click", function () {
-      abrirConsultaClasificado(publicacion);
-    });
-    contenido.appendChild(consultar);
-  }
-
-  if (esPropietario) {
-    const acciones = document.createElement("div");
-    acciones.className = "clasificado-propietario-acciones";
-
-    if (publicacion.tipo === "venta") {
-      const pausar = document.createElement("button");
-      pausar.type = "button";
-      pausar.textContent = estaPausado ? "Reanudar venta" : "Pausar venta";
-      pausar.addEventListener("click", function () {
-        alternarPausaClasificado(publicacion);
-      });
-      acciones.appendChild(pausar);
-    }
-
-    const eliminar = document.createElement("button");
-    eliminar.type = "button";
-    eliminar.className = "eliminar";
-    eliminar.textContent = "Eliminar";
-    eliminar.addEventListener("click", function () {
-      eliminarClasificadoPropio(publicacion, usuarioId);
-    });
-    acciones.appendChild(eliminar);
-
-    contenido.appendChild(acciones);
-  }
+  const abrirDetalle = document.createElement("button");
+  abrirDetalle.type = "button";
+  abrirDetalle.className = "clasificado-consultar";
+  abrirDetalle.textContent = "Ver detalle";
+  abrirDetalle.addEventListener("click", function () {
+    abrirConsultaClasificado(publicacion);
+  });
+  contenido.appendChild(abrirDetalle);
 
   articulo.appendChild(contenido);
   return articulo;
@@ -7786,10 +7771,54 @@ async function abrirConsultaClasificado(publicacion) {
     imagen.src = publicacion.fotos[0];
     imagen.alt = publicacion.titulo || "Artículo disponible";
     imagen.loading = "lazy";
+    imagen.tabIndex = 0;
+    imagen.setAttribute("role", "button");
+    imagen.setAttribute("aria-label", "Ampliar foto");
+    imagen.addEventListener("click", function () {
+      abrirFotoClasificado(imagen.src, imagen.alt);
+    });
+    imagen.addEventListener("keydown", function (event) {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        abrirFotoClasificado(imagen.src, imagen.alt);
+      }
+    });
     imagenContenedor.appendChild(imagen);
     imagenContenedor.style.display = "block";
   } else {
     imagenContenedor.style.display = "none";
+  }
+
+  const propietarioDetalle = document.getElementById("clasificadoPropietarioDetalle");
+  if (propietarioDetalle) {
+    propietarioDetalle.innerHTML = "";
+    propietarioDetalle.hidden = true;
+
+    const { data: authData } = await supabaseClient.auth.getUser();
+    const usuarioId = authData && authData.user ? authData.user.id : null;
+    if (usuarioId && publicacion.user_id === usuarioId) {
+      if (publicacion.tipo === "venta") {
+        const pausar = document.createElement("button");
+        pausar.type = "button";
+        pausar.textContent = publicacion.estado_operacion === "pausado" ? "Reanudar venta" : "Pausar venta";
+        pausar.addEventListener("click", async function () {
+          cerrarConsultaClasificado();
+          await alternarPausaClasificado(publicacion);
+        });
+        propietarioDetalle.appendChild(pausar);
+      }
+
+      const eliminar = document.createElement("button");
+      eliminar.type = "button";
+      eliminar.className = "eliminar";
+      eliminar.textContent = "Eliminar";
+      eliminar.addEventListener("click", async function () {
+        cerrarConsultaClasificado();
+        await eliminarClasificadoPropio(publicacion, usuarioId);
+      });
+      propietarioDetalle.appendChild(eliminar);
+      propietarioDetalle.hidden = false;
+    }
   }
 
   anunciante.textContent = "Miembro de Gente de Vuelo";
@@ -10574,6 +10603,63 @@ window.addEventListener('popstate',abrirAnexoDesdeURL);
   #clasificados-seccion .clasificado-propietario-acciones button {
     padding: 6px 9px;
     font-size: 11px;
+  }
+}
+
+</style>
+<style>
+
+/* ===== COMPRAVENTA: VISTA RESUMIDA POR IMAGEN ===== */
+#listaClasificadosDisponibles .clasificado-item {
+  display: flex;
+  flex-direction: column;
+}
+
+#listaClasificadosDisponibles .clasificado-item > img {
+  width: 100%;
+  height: 320px;
+  max-height: 320px;
+  padding: 8px;
+  object-fit: contain;
+  cursor: zoom-in;
+  background: #ffffff;
+}
+
+#listaClasificadosDisponibles .clasificado-resumen-venta {
+  padding: 10px 12px 12px !important;
+}
+
+#listaClasificadosDisponibles .clasificado-resumen-venta h4 {
+  margin: 0 0 5px !important;
+  font-size: 17px !important;
+  line-height: 1.15;
+}
+
+#listaClasificadosDisponibles .clasificado-precio-resumen {
+  margin: 0 !important;
+  font-size: 15px !important;
+  font-weight: 900;
+  color: #2b2a22;
+}
+
+.clasificados-consulta-imagen img {
+  height: 300px;
+  padding: 6px;
+  cursor: zoom-in;
+}
+
+.clasificado-propietario-detalle {
+  margin-top: 12px;
+}
+
+@media (max-width: 900px) {
+  #listaClasificadosDisponibles .clasificado-item > img {
+    height: 280px;
+    max-height: 280px;
+  }
+
+  .clasificados-consulta-imagen img {
+    height: 250px;
   }
 }
 
