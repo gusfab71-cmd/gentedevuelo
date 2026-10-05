@@ -5,7 +5,7 @@ const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const safeURL=v=>{try{const u=new URL(v);return ['https:','http:'].includes(u.protocol)?u.href:''}catch{return ''}};
 const date=v=>v?new Date(v).toLocaleString('es-AR',{dateStyle:'medium',timeStyle:'short'}):'';
 const $=id=>document.getElementById(id);
-let user=null,isAdmin=false,categories=[],topics=[],comments=[],media=[],reactions=[],profiles=new Map(),epoch=0,replyParent=null,dirty=false,isOwnerAdmin=false;
+let user=null,isAdmin=false,categories=[],topics=[],comments=[],media=[],reactions=[],profiles=new Map(),legacyShimoda=[],legacyShimodaComments=[],epoch=0,replyParent=null,dirty=false,isOwnerAdmin=false;
 const cat=s=>categories.find(c=>c.slug===s)||{name:'Otros',color:'#aab6c2'};
 const profile=id=>profiles.get(id)||{username:'Usuario eliminado'};
 const name=id=>profile(id).username||'Miembro de la comunidad';
@@ -67,8 +67,23 @@ function showDialog(html){$('dialog-content').innerHTML=html;dialog.showModal()}
 $('close-dialog').onclick=()=>dialog.close();
 function authenticated(){if(user&&user.email_confirmed_at)return true;message('Ingresá con una cuenta cuyo correo esté confirmado para participar.',true);return false}
 async function load(){
- const results=await Promise.all([allRows('gdv_categories','*','position'),allRows('gdv_topics'),allRows('gdv_comments'),allRows('gdv_media'),allRows('profiles','id,username,full_name,avatar_url,bio,created_at,aviation_role,aircraft_flown,home_airfield,flight_hours,aviation_license,flight_simulators,hangar_intro'),allRows('gdv_reactions')]);
- [categories,topics,comments,media]=results;categories=categories.map(c=>({...c,color:categoryColors[c.slug]||c.color}));topics.reverse();profiles=new Map(results[4].map(p=>[p.id,p]));reactions=results[5];
+ const results=await Promise.all([
+  allRows('gdv_categories','*','position'),
+  allRows('gdv_topics'),
+  allRows('gdv_comments'),
+  allRows('gdv_media'),
+  allRows('profiles','id,username,full_name,avatar_url,bio,created_at,aviation_role,aircraft_flown,home_airfield,flight_hours,aviation_license,flight_simulators,hangar_intro'),
+  allRows('gdv_reactions'),
+  db.from('shimoda_publicaciones').select('id,titulo,contenido,categoria,fecha_publicacion,created_at').eq('publicado',true).order('created_at',{ascending:false}),
+  db.from('shimoda_comentarios').select('id,publicacion_id,contenido,created_at,user_id').eq('estado','aprobado').order('created_at',{ascending:true})
+ ]);
+ [categories,topics,comments,media]=results;
+ categories=categories.map(c=>({...c,color:categoryColors[c.slug]||c.color}));
+ topics.reverse();
+ profiles=new Map(results[4].map(p=>[p.id,p]));
+ reactions=results[5];
+ legacyShimoda=results[6].error?[]:(results[6].data||[]);
+ legacyShimodaComments=results[7].error?[]:(results[7].data||[]);
  const privateMedia=media.filter(m=>!m.legacy_url&&m.path);media.filter(m=>m.legacy_url).forEach(m=>m.url=safeURL(m.legacy_url));
  for(let start=0;start<privateMedia.length;start+=100){const batch=privateMedia.slice(start,start+100),result=await db.storage.from('community-media').createSignedUrls(batch.map(m=>m.path),3600);if(result.error)throw result.error;const urls=new Map(result.data.map(m=>[m.path,m.signedUrl]));batch.forEach(m=>m.url=urls.get(m.path)||'')}
 
@@ -98,6 +113,36 @@ async function refreshAdminPendingBadge(){
 }
 const toolbar=(active='foro')=>`<div class="toolbar">${link('+ Crear publicación','#crear','button primary')}${link('Temáticas','#tematicas','button '+(active==='tematicas'?'active':''))}${link('Foro','#foro','button '+(active==='foro'?'active':''))}${link('Multimedia','#multimedia','button '+(active==='multimedia'?'active':''))}</div>`;
 const extras=()=>`<div class="grid annex-grid"><a class="card blue" href="index.html#shimoda"><h3>Rincón Shimoda</h3><p>Consejos, relatos y curiosidades.</p></a><a class="card gold" href="index.html#clasificados-seccion"><h3>CompraVenta</h3><p>Compra, venta y búsquedas entre miembros.</p></a><a class="card gold" href="index.html#tienda-seccion"><h3>AeroShop</h3><p>Tiendas, productos y equipamiento aeronáutico.</p></a></div>`;
+function legacyShimodaCard(p){
+ const replies=legacyShimodaComments.filter(c=>c.publicacion_id===p.id);
+ const href='index.html?shimoda_legacy='+encodeURIComponent(p.id)+'#shimoda';
+ const when=p.fecha_publicacion||p.created_at;
+ return `<article class="card topic-card shimoda-topic" style="--category:#E6C280">
+   <div class="post-row">
+     <a href="${href}" aria-label="Abrir Rincón Shimoda">
+       <span class="avatar no-avatar" aria-label="Robert Shimoda">R</span>
+     </a>
+     <div class="post-body">
+       <div class="meta">
+         <span class="tag shimoda-badge">Robert Shimoda</span>
+         <a href="${href}">Robert Shimoda</a> · ${date(when)}
+       </div>
+       <span class="category">Rincón Shimoda</span>
+       <div class="post-layout">
+         <div>
+           <h3><a class="post-title" href="${href}">${esc(p.titulo||'Publicación de Robert Shimoda')}</a></h3>
+           <p class="muted">${esc((p.contenido||'').slice(0,220))}</p>
+         </div>
+       </div>
+       <div class="metrics">
+         <span>${replies.length} respuestas</span>
+         <span>${replies.length?'Última respuesta: '+date(replies.at(-1).created_at):'Sin respuestas'}</span>
+       </div>
+     </div>
+   </div>
+ </article>`;
+}
+
 function topicCard(t){
  const c=cat(t.category),
        replies=comments.filter(r=>r.topic_id===t.id&&r.status==='approved'),
@@ -159,7 +204,7 @@ function topicCard(t){
 function feed(category){
  const c=cat(category);crumbs(category?[['Foro','#foro'],[c.name]]:[['Foro']]);
  app.innerHTML=`<h1>${category?esc(c.name):'Foro'}</h1>${category?'<div class="toolbar">'+link('+ Crear publicación','#crear','button primary')+link('Foro General','#foro')+'</div>':toolbar()}<div class="toolbar">${link('Quiénes somos','#quienes-somos')}${link('Normativa de la comunidad','#normativa')}</div><div class="toolbar"><input id="search" placeholder="Buscar publicaciones, autores o temáticas…" aria-label="Buscar publicaciones"><select id="sort" aria-label="Ordenar publicaciones"><option value="recent">Recientes</option><option value="useful">Más valoradas</option><option value="unanswered">Sin respuesta</option></select></div><div id="feed"></div>${category?'':extras()}`;
- const paint=()=>{const q=$('search').value.toLocaleLowerCase('es'),sort=$('sort').value;let data=topics.filter(t=>t.status==='approved'&&(!category||t.category===category)&&[t.title,t.summary,t.content,name(t.author_id),cat(t.category).name,...t.tags].join(' ').toLocaleLowerCase('es').includes(q));if(sort==='unanswered')data=data.filter(t=>!comments.some(c=>c.topic_id===t.id&&c.status==='approved'));if(sort==='useful'){const count=id=>reactions.filter(r=>r.topic_id===id&&r.kind==='useful').length;data.sort((a,b)=>count(b.id)-count(a.id))}data.sort((a,b)=>Number(b.pinned)-Number(a.pinned));$('feed').innerHTML=data.map(topicCard).join('')||'<p class="empty">Todavía no hay publicaciones para esta búsqueda.</p>'};$('search').oninput=paint;$('sort').onchange=paint;paint();
+ const paint=()=>{const q=$('search').value.toLocaleLowerCase('es'),sort=$('sort').value;let data=topics.filter(t=>t.status==='approved'&&(!category||t.category===category)&&[t.title,t.summary,t.content,name(t.author_id),cat(t.category).name,...t.tags].join(' ').toLocaleLowerCase('es').includes(q));if(sort==='unanswered')data=data.filter(t=>!comments.some(c=>c.topic_id===t.id&&c.status==='approved'));if(sort==='useful'){const count=id=>reactions.filter(r=>r.topic_id===id&&r.kind==='useful').length;data.sort((a,b)=>count(b.id)-count(a.id))}data.sort((a,b)=>Number(b.pinned)-Number(a.pinned));let html=data.map(topicCard).join('');if(!category&&sort==='recent'){const legacy=legacyShimoda.filter(p=>[p.titulo,p.contenido,p.categoria,'Robert Shimoda','Rincón Shimoda'].join(' ').toLocaleLowerCase('es').includes(q));html+=legacy.map(legacyShimodaCard).join('')}$('feed').innerHTML=html||'<p class="empty">Todavía no hay publicaciones para esta búsqueda.</p>'};$('search').oninput=paint;$('sort').onchange=paint;paint();
 }
 function categoryView(){crumbs([['Foro','#foro'],['Temáticas']]);app.innerHTML=`<h1>Temáticas</h1>${toolbar('tematicas')}<div class="grid">${categories.map(c=>`<a class="card topic-card" style="--category:${esc(c.color)}" href="#tematica/${esc(c.slug)}"><div class="category-tile"><span class="category-icon" aria-hidden="true">${categoryIcon(c.slug)}</span><h3>${esc(c.name)}</h3></div></a>`).join('')}</div>`}
 function attachment(m){if(!m.url)return '';if(m.kind==='image')return `<img src="${esc(m.url)}" alt="Imagen de la publicación" loading="lazy">`;if(m.kind==='video')return `<video controls preload="metadata" src="${esc(m.url)}"></video>`;return `<a href="${esc(m.url)}" target="_blank" rel="noopener noreferrer">Abrir documento PDF ↗</a>`}
