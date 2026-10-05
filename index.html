@@ -10085,5 +10085,266 @@ window.addEventListener('popstate',abrirAnexoDesdeURL);
 </style>
 
 
+
+<!-- ===== ROBERT SHIMODA RAG CHAT · 2026-10-05 ===== -->
+<style id="robert-rag-chat-20261005">
+  .robert-rag-chat {
+    max-width: 920px;
+    margin: 28px auto 10px;
+    padding: 22px;
+    border: 1px solid rgba(52, 154, 255, .75);
+    border-radius: 18px;
+    background:
+      linear-gradient(145deg, rgba(10, 40, 70, .97), rgba(9, 24, 38, .98));
+    box-shadow: 0 16px 36px rgba(0,0,0,.28);
+    color: #eef7ff;
+  }
+  .robert-rag-head {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+  .robert-rag-head img {
+    width: 66px;
+    height: 66px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid rgba(255,255,255,.35);
+    background: #0d1b26;
+  }
+  .robert-rag-head h3 {
+    margin: 0 0 4px !important;
+    color: #fff !important;
+    font-size: 22px !important;
+  }
+  .robert-rag-head p {
+    margin: 0 !important;
+    color: #bcd8ef !important;
+    font-size: 13px !important;
+    line-height: 1.4 !important;
+  }
+  .robert-rag-form {
+    display: grid;
+    gap: 10px;
+  }
+  #robertPregunta {
+    width: 100%;
+    min-height: 96px;
+    resize: vertical;
+    padding: 13px 14px;
+    border: 1px solid #6c8da7;
+    border-radius: 12px;
+    background: #f7fbfe;
+    color: #17242d;
+    font: inherit;
+    line-height: 1.45;
+  }
+  #robertPregunta:focus {
+    outline: 2px solid #4aa9ff;
+    outline-offset: 2px;
+  }
+  .robert-rag-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  #robertPreguntar {
+    margin: 0;
+    border-radius: 10px;
+    background: #1689ff;
+  }
+  #robertPreguntar:hover { background: #0b74dd; }
+  #robertPreguntar:disabled { opacity: .6; cursor: wait; }
+  #robertEstado {
+    min-height: 20px;
+    color: #c9def0;
+    font-size: 12px;
+  }
+  #robertRespuesta[hidden] { display: none !important; }
+  #robertRespuesta {
+    margin-top: 18px;
+    padding: 18px;
+    border: 1px solid rgba(255,255,255,.16);
+    border-radius: 14px;
+    background: rgba(4, 14, 22, .52);
+  }
+  #robertRespuestaTexto {
+    color: #f2f7fa;
+    line-height: 1.65;
+    font-size: 15px;
+    white-space: pre-wrap;
+  }
+  #robertFuentes {
+    margin-top: 16px;
+    padding-top: 13px;
+    border-top: 1px solid rgba(255,255,255,.15);
+  }
+  #robertFuentes strong {
+    display: block;
+    margin-bottom: 8px;
+    color: #8ecbff;
+  }
+  #robertFuentes ul {
+    margin: 0;
+    padding-left: 20px;
+    color: #d8e8f5;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .robert-rag-nota {
+    margin-top: 12px;
+    color: #9eb8c9;
+    font-size: 11px;
+    line-height: 1.45;
+  }
+  @media (max-width: 700px) {
+    .robert-rag-chat {
+      margin: 18px 8px 8px;
+      padding: 16px;
+      border-radius: 15px;
+    }
+    .robert-rag-head {
+      align-items: flex-start;
+    }
+    .robert-rag-head img {
+      width: 54px;
+      height: 54px;
+      flex: 0 0 54px;
+    }
+    .robert-rag-head h3 {
+      font-size: 18px !important;
+    }
+    #robertPregunta {
+      min-height: 90px;
+      font-size: 16px;
+    }
+    #robertPreguntar {
+      width: 100%;
+    }
+  }
+</style>
+
+<script id="robert-rag-chat-script-20261005">
+(() => {
+  function escapeHtml(value) {
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+  function instalarRobertChat() {
+    const shimoda = document.getElementById("shimoda");
+    if (!shimoda || document.getElementById("robertRagChat")) return;
+
+    const panel = document.createElement("section");
+    panel.id = "robertRagChat";
+    panel.className = "robert-rag-chat";
+    panel.setAttribute("aria-label", "Chat con Robert Shimoda");
+    panel.innerHTML = `
+      <div class="robert-rag-head">
+        <img src="logo robert shimoda.png" alt="" onerror="this.style.display='none'">
+        <div>
+          <h3>Robert Shimoda — Asistente de Gente de Vuelo</h3>
+          <p>Consultá la base documental aeronáutica de Gente de Vuelo. Las respuestas se generan mediante RAG y muestran sus fuentes.</p>
+        </div>
+      </div>
+      <form id="robertRagForm" class="robert-rag-form">
+        <label for="robertPregunta" style="font-weight:700;color:#fff;">Tu pregunta</label>
+        <textarea id="robertPregunta" maxlength="1800" placeholder="Ejemplo: ¿Cómo evolucionó el IA-63 Pampa?" required></textarea>
+        <div class="robert-rag-actions">
+          <button id="robertPreguntar" class="boton" type="submit">Preguntar a Robert</button>
+          <span id="robertEstado" role="status" aria-live="polite"></span>
+        </div>
+      </form>
+      <div id="robertRespuesta" hidden>
+        <div id="robertRespuestaTexto"></div>
+        <div id="robertFuentes"></div>
+      </div>
+      <p class="robert-rag-nota">Robert Shimoda es un asistente de inteligencia artificial. Para información operacional, reglamentaria o de seguridad de vuelo, verificá siempre la documentación oficial vigente.</p>
+    `;
+
+    shimoda.appendChild(panel);
+
+    const form = panel.querySelector("#robertRagForm");
+    const input = panel.querySelector("#robertPregunta");
+    const button = panel.querySelector("#robertPreguntar");
+    const status = panel.querySelector("#robertEstado");
+    const answerBox = panel.querySelector("#robertRespuesta");
+    const answerText = panel.querySelector("#robertRespuestaTexto");
+    const sourcesBox = panel.querySelector("#robertFuentes");
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const question = input.value.trim();
+      if (question.length < 3) return;
+
+      const client = window.GDV_AUTH?.client;
+      if (!client) {
+        status.textContent = "No se pudo iniciar el asistente.";
+        return;
+      }
+
+      const { data: { user } } = await client.auth.getUser();
+      if (!user) {
+        status.textContent = "Ingresá a tu cuenta de Gente de Vuelo para consultar a Robert.";
+        return;
+      }
+
+      button.disabled = true;
+      status.textContent = "Robert está buscando en la base documental…";
+      answerBox.hidden = true;
+      answerText.textContent = "";
+      sourcesBox.innerHTML = "";
+
+      try {
+        const { data, error } = await client.functions.invoke("robert-chat", {
+          body: { question }
+        });
+
+        if (error) throw error;
+        if (!data?.answer) throw new Error("Robert no devolvió una respuesta.");
+
+        answerText.textContent = data.answer;
+
+        const sources = Array.isArray(data.sources) ? data.sources : [];
+        if (sources.length) {
+          sourcesBox.innerHTML =
+            "<strong>Fuentes consultadas</strong><ul>" +
+            sources.map((source, index) => {
+              const page = source.page ? " · pág. " + escapeHtml(source.page) : "";
+              return "<li>[" + (index + 1) + "] " + escapeHtml(source.title || source.filename || "Documento") + page + "</li>";
+            }).join("") +
+            "</ul>";
+        } else {
+          sourcesBox.innerHTML = "<strong>Fuentes</strong><span>No se encontró una fuente documental suficiente.</span>";
+        }
+
+        answerBox.hidden = false;
+        status.textContent = data.grounded
+          ? "Respuesta generada a partir de la base documental."
+          : "No se encontró contexto documental suficiente.";
+      } catch (error) {
+        console.error("Robert Shimoda:", error);
+        status.textContent = "No se pudo obtener la respuesta. Intentá nuevamente.";
+      } finally {
+        button.disabled = false;
+      }
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", instalarRobertChat);
+  } else {
+    instalarRobertChat();
+  }
+})();
+</script>
+<!-- ===== FIN ROBERT SHIMODA RAG CHAT ===== -->
+
 </body>
 </html>
