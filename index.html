@@ -5504,7 +5504,7 @@ img, video { max-width: 100%; }
   <div class="clasificados-opciones clasificados-opciones-centradas">
     <button type="button" class="clasificados-opcion" data-panel-clasificados="panelClasificadosPublicar">
       <h3>Publicar Venta</h3>
-      <p>Publicá un artículo disponible con fotografías, descripción, precio, ubicación y estado.</p>
+      <p>Publicá un artículo para la venta con fotografías, descripción, precio, ubicación y estado.</p>
     </button>
 
     <button type="button" class="clasificados-opcion" data-panel-clasificados="panelClasificadosBusqueda">
@@ -5566,7 +5566,7 @@ img, video { max-width: 100%; }
           <p>Consultá qué están buscando los miembros y contactalos si podés ofrecer una solución.</p>
         </div>
       <div class="clasificados-requeridos-lista" id="listaClasificadosRequeridos">
-        <p>Cargando requerimientos...</p>
+        <p>Cargando compras...</p>
       </div>
     </div>
     </section>
@@ -8060,7 +8060,7 @@ document.getElementById("formularioClasificado").addEventListener("submit", asyn
       await supabaseClient.storage.from("clasificados-fotos").remove(fotosSubidas.rutas);
     }
     console.error("Error al enviar clasificado:", error);
-    mostrarMensajeClasificados(error.message || "No se pudo enviar el disponible.", true);
+    mostrarMensajeClasificados(error.message || "No se pudo publicar la venta.", true);
   }
 });
 
