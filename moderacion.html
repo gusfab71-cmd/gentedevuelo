@@ -292,11 +292,15 @@
     }
     async function eliminarDefinitivamente(item, boton) {
       if (!administrador) return;
+      const esComentarioShimoda = item.config.tabla === "shimoda_comentarios";
       const titulo = item.fila.titulo || item.config.nombre || "esta publicación";
-      if (!confirm('¿Eliminar definitivamente "' + titulo + '"?\n\nEsta acción no se puede deshacer.')) return;
+      const pregunta = esComentarioShimoda
+        ? "¿Eliminar definitivamente este comentario de Robert Shimoda?\n\nEsta acción no se puede deshacer."
+        : '¿Eliminar definitivamente "' + titulo + '"?\n\nEsta acción no se puede deshacer.';
+      if (!confirm(pregunta)) return;
 
       boton.disabled = true;
-      mensaje("Eliminando publicación…");
+      mensaje(esComentarioShimoda ? "Eliminando comentario…" : "Eliminando publicación…");
       try {
         const t = item.config.tabla, r = item.fila;
         const archivos = [];
@@ -333,9 +337,11 @@
 
         const filas = datos.get(t) || [];
         datos.set(t, filas.filter(fila => String(fila.id) !== String(r.id)));
-        mensaje(limpiezaFallida
-          ? "Publicación eliminada. Algún archivo asociado no pudo limpiarse automáticamente."
-          : "Publicación eliminada definitivamente.");
+        mensaje(esComentarioShimoda
+          ? "Comentario de Robert Shimoda eliminado definitivamente."
+          : (limpiezaFallida
+              ? "Publicación eliminada. Algún archivo asociado no pudo limpiarse automáticamente."
+              : "Publicación eliminada definitivamente."));
         pintar();
       } catch (error) {
         console.error("Error al eliminar:", error);
@@ -345,7 +351,8 @@
       }
     }
     function botonEliminar(item) {
-      const boton = nodo("button", "Eliminar definitivamente", "peligro");
+      const esComentarioShimoda = item.config.tabla === "shimoda_comentarios";
+      const boton = nodo("button", esComentarioShimoda ? "Eliminar comentario" : "Eliminar definitivamente", "peligro");
       boton.type = "button";
       boton.addEventListener("click", () => eliminarDefinitivamente(item, boton));
       return boton;
