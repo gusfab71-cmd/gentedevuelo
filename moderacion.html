@@ -212,7 +212,7 @@
     }
     function estado(item) {
       const r = item.fila, t = item.config.tabla;
-      if (t === "shimoda_publicaciones") return r.publicado ? "publicadas" : "otras";
+      if (t === "shimoda_publicaciones") return r.publicado ? "publicadas" : (String(r.moderation_reason || "").startsWith("AUTO_ROBERT_DAILY:") ? "pendientes" : "otras");
       if (t === "publicaciones") return r.aprobado ? "publicadas" : "pendientes";
       if (t === "galeria" || t === "travesias") return r.visible ? "publicadas" : "pendientes";
       if (t === "clasificados") return r.estado_publicacion === "aprobado" ? "publicadas" : r.estado_publicacion === "pendiente" ? "pendientes" : "otras";
@@ -222,7 +222,7 @@
     function etiquetaEstado(item) {
       if (estado(item) === "publicadas") return "PUBLICADA";
       const t = item.config.tabla;
-      if (t === "shimoda_publicaciones") return "SIN PUBLICAR";
+      if (t === "shimoda_publicaciones") return String(item.fila.moderation_reason || "").startsWith("AUTO_ROBERT_DAILY:") ? "BORRADOR AUTOMÁTICO" : "SIN PUBLICAR";
       if (t === "publicaciones" || t === "galeria" || t === "travesias") return "SIN PUBLICAR / POR REVISAR";
       if (item.fila.estado === "rechazado" || item.fila.estado_publicacion === "rechazado") return "RECHAZADA";
       return estado(item) === "pendientes" ? "PENDIENTE" : "OCULTA";
