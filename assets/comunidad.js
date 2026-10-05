@@ -344,6 +344,16 @@ async function mountRobertKnowledgePanel(){
    </div>
    <p id="robert-daily-status" class="meta" style="margin-top:8px;"></p>
  </div>
+ <div class="card" style="margin:14px 0;">
+   <div class="post-head">
+     <div>
+       <h3 style="margin:0 0 4px;">Chat de Robert Shimoda</h3>
+       <span class="meta">Podés desactivar las respuestas del asistente sin ocultar la sección.</span>
+     </div>
+     <button id="robert-chat-toggle" type="button">Cargando…</button>
+   </div>
+   <p id="robert-chat-status" class="meta" style="margin-top:8px;"></p>
+ </div>
  <form id="robert-knowledge-form" class="toolbar">
    <input id="robert-knowledge-file" type="file" accept=".pdf,.txt,.md,.markdown,.docx,application/pdf,text/plain,text/markdown,application/vnd.openxmlformats-officedocument.wordprocessingml.document" required>
    <button class="primary" type="submit">Subir y procesar</button>
@@ -355,13 +365,14 @@ async function mountRobertKnowledgePanel(){
 
  const status=$('robert-knowledge-status'),list=$('robert-knowledge-list'),form=$('robert-knowledge-form'),fileInput=$('robert-knowledge-file');
  const dailyToggle=$('robert-daily-toggle'),dailyStatus=$('robert-daily-status');
+ const chatToggle=$('robert-chat-toggle'),chatStatus=$('robert-chat-status');
  const titleFromFile=name=>String(name||'Documento').replace(/\.[^.]+$/,'').replace(/[_-]+/g,' ').replace(/\s+/g,' ').trim();
 
  async function loadDailyConfig(){
-   if(!dailyToggle||!dailyStatus)return;
-   dailyToggle.disabled=true;
-   dailyStatus.textContent='Consultando estado…';
-   const res=await db.from('robert_daily_config').select('enabled').eq('singleton',true).maybeSingle();
+   if(!dailyToggle||!dailyStatus||!chatToggle||!chatStatus)return;
+   dailyToggle.disabled=true;chatToggle.disabled=true;
+   dailyStatus.textContent='Consultando estado…';chatStatus.textContent='Consultando estado…';
+   const res=await db.from('robert_daily_config').select('enabled,chat_enabled').eq('singleton',true).maybeSingle();
    if(res.error||!res.data){
      dailyToggle.textContent='No disponible';
      dailyStatus.textContent='No se pudo leer la configuración.';
@@ -375,6 +386,15 @@ async function mountRobertKnowledgePanel(){
    dailyStatus.textContent=enabled
      ?'Activo · próximo borrador programado: 09:00 (Argentina).'
      :'Desactivado · Robert no generará borradores ni consumirá API.';
+
+   const chatEnabled=res.data.chat_enabled!==false;
+   chatToggle.dataset.enabled=String(chatEnabled);
+   chatToggle.textContent=chatEnabled?'Desactivar':'Activar';
+   chatToggle.className=chatEnabled?'danger':'primary';
+   chatToggle.disabled=false;
+   chatStatus.textContent=chatEnabled
+     ?'Activo · Robert responde consultas y puede consumir API.'
+     :'Desactivado · Robert no responde consultas ni consume API.';
  }
 
  dailyToggle?.addEventListener('click',async()=>{
@@ -385,6 +405,19 @@ async function mountRobertKnowledgePanel(){
    if(res.error){
      dailyStatus.textContent='No se pudo cambiar el estado: '+res.error.message;
      dailyToggle.disabled=false;
+     return;
+   }
+   await loadDailyConfig();
+ });
+
+ chatToggle?.addEventListener('click',async()=>{
+   const enabled=chatToggle.dataset.enabled==='true';
+   chatToggle.disabled=true;
+   chatStatus.textContent=enabled?'Desactivando…':'Activando…';
+   const res=await db.rpc('set_robert_chat_enabled',{p_enabled:!enabled});
+   if(res.error){
+     chatStatus.textContent='No se pudo cambiar el estado: '+res.error.message;
+     chatToggle.disabled=false;
      return;
    }
    await loadDailyConfig();
