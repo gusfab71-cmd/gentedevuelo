@@ -7909,6 +7909,10 @@ function obtenerTopicShimodaDesdeURL() {
   return new URLSearchParams(window.location.search).get("shimoda_topic");
 }
 
+function obtenerLegacyShimodaDesdeURL() {
+  return new URLSearchParams(window.location.search).get("shimoda_legacy");
+}
+
 function asegurarContenedorMediaShimoda() {
   let contenedor = document.getElementById("shimodaMediaForo");
   if (contenedor) return contenedor;
@@ -8072,6 +8076,7 @@ async function cargarComentariosShimoda(publicacionId, desdeForo = false) {
 
 async function cargarPublicacionShimoda() {
   const topicId = obtenerTopicShimodaDesdeURL();
+  const legacyId = obtenerLegacyShimodaDesdeURL();
 
   if (topicId) {
     const { data, error } = await supabaseClient
@@ -8102,6 +8107,45 @@ async function cargarPublicacionShimoda() {
 
       await cargarMediaShimodaForo(data.id);
       await cargarComentariosShimoda(data.id, true);
+      return;
+    }
+  }
+
+  if (legacyId) {
+    const { data, error } = await supabaseClient
+      .from("shimoda_publicaciones")
+      .select("*")
+      .eq("id", legacyId)
+      .eq("publicado", true)
+      .maybeSingle();
+
+    if (error) {
+      console.error("Error al cargar publicación histórica de Shimoda:", error);
+    } else if (data) {
+      publicacionShimodaActualId = data.id;
+      publicacionShimodaEsForo = false;
+
+      const portadaTitulo = document.getElementById("shimodaPortadaTitulo");
+      const portadaFecha = document.getElementById("shimodaPortadaFecha");
+      if (portadaTitulo) portadaTitulo.textContent = data.titulo || "Publicación sin título";
+      if (portadaFecha && data.fecha_publicacion) {
+        const fechaPortada = data.fecha_publicacion.split("-");
+        portadaFecha.textContent = fechaPortada.length === 3
+          ? `${fechaPortada[2]}/${fechaPortada[1]}/${fechaPortada[0]}`
+          : data.fecha_publicacion;
+      }
+
+      document.getElementById("shimodaTitulo").textContent = data.titulo || "Publicación sin título";
+      document.getElementById("shimodaContenido").textContent = data.contenido || "";
+      if (data.fecha_publicacion) {
+        const partes = data.fecha_publicacion.split("-");
+        document.getElementById("shimodaFecha").textContent =
+          `${partes[2]}/${partes[1]}/${partes[0]} · ${data.categoria || ""}`;
+      }
+
+      const mediaForo = document.getElementById("shimodaMediaForo");
+      if (mediaForo) mediaForo.innerHTML = "";
+      await cargarComentariosShimoda(data.id, false);
       return;
     }
   }
