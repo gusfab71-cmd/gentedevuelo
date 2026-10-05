@@ -334,6 +334,16 @@ async function mountRobertKnowledgePanel(){
  section.className='card robert-knowledge-admin';
  section.innerHTML=`<h2>Conocimiento de Robert Shimoda</h2>
  <p>Subí documentos para incorporarlos al RAG. Formatos admitidos: PDF, TXT, Markdown y DOCX.</p>
+ <div class="card" style="margin:14px 0;">
+   <div class="post-head">
+     <div>
+       <h3 style="margin:0 0 4px;">Publicación automática diaria</h3>
+       <span class="meta">Robert prepara un borrador todos los días a las 09:00 de Argentina. Siempre requiere tu revisión antes de publicarse.</span>
+     </div>
+     <button id="robert-daily-toggle" type="button">Cargando…</button>
+   </div>
+   <p id="robert-daily-status" class="meta" style="margin-top:8px;"></p>
+ </div>
  <form id="robert-knowledge-form" class="toolbar">
    <input id="robert-knowledge-file" type="file" accept=".pdf,.txt,.md,.markdown,.docx,application/pdf,text/plain,text/markdown,application/vnd.openxmlformats-officedocument.wordprocessingml.document" required>
    <button class="primary" type="submit">Subir y procesar</button>
@@ -344,7 +354,43 @@ async function mountRobertKnowledgePanel(){
  if(overview)overview.after(section);else app.querySelector('h1')?.after(section);
 
  const status=$('robert-knowledge-status'),list=$('robert-knowledge-list'),form=$('robert-knowledge-form'),fileInput=$('robert-knowledge-file');
+ const dailyToggle=$('robert-daily-toggle'),dailyStatus=$('robert-daily-status');
  const titleFromFile=name=>String(name||'Documento').replace(/\.[^.]+$/,'').replace(/[_-]+/g,' ').replace(/\s+/g,' ').trim();
+
+ async function loadDailyConfig(){
+   if(!dailyToggle||!dailyStatus)return;
+   dailyToggle.disabled=true;
+   dailyStatus.textContent='Consultando estado…';
+   const res=await db.from('robert_daily_config').select('enabled').eq('singleton',true).maybeSingle();
+   if(res.error||!res.data){
+     dailyToggle.textContent='No disponible';
+     dailyStatus.textContent='No se pudo leer la configuración.';
+     return;
+   }
+   const enabled=!!res.data.enabled;
+   dailyToggle.dataset.enabled=String(enabled);
+   dailyToggle.textContent=enabled?'Desactivar':'Activar';
+   dailyToggle.className=enabled?'danger':'primary';
+   dailyToggle.disabled=false;
+   dailyStatus.textContent=enabled
+     ?'Activo · próximo borrador programado: 09:00 (Argentina).'
+     :'Desactivado · Robert no generará borradores ni consumirá API.';
+ }
+
+ dailyToggle?.addEventListener('click',async()=>{
+   const enabled=dailyToggle.dataset.enabled==='true';
+   dailyToggle.disabled=true;
+   dailyStatus.textContent=enabled?'Desactivando…':'Activando…';
+   const res=await db.from('robert_daily_config')
+     .update({enabled:!enabled,updated_at:new Date().toISOString()})
+     .eq('singleton',true);
+   if(res.error){
+     dailyStatus.textContent='No se pudo cambiar el estado: '+res.error.message;
+     dailyToggle.disabled=false;
+     return;
+   }
+   await loadDailyConfig();
+ });
 
  async function loadDocs(){
    status.textContent='Cargando documentos…';
@@ -382,7 +428,7 @@ async function mountRobertKnowledgePanel(){
    const del=e.target.closest('[data-robert-delete]');
    if(del){if(!confirm('¿Eliminar este documento de la base de conocimiento de Robert?'))return;del.disabled=true;status.textContent='Eliminando documento…';const path=del.dataset.storagePath;if(path)await db.storage.from('robert-knowledge').remove([path]);const removed=await db.from('robert_documents').delete().eq('id',del.dataset.robertDelete);del.disabled=false;status.textContent=removed.error?'No se pudo eliminar: '+removed.error.message:'Documento eliminado.';await loadDocs()}
  };
- await loadDocs();
+ await Promise.all([loadDocs(),loadDailyConfig()]);
 }
 
 const basicModeration=moderation;
