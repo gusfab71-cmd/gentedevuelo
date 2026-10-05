@@ -7679,7 +7679,7 @@ function crearTarjetaClasificado(publicacion, compacto = false, usuarioId = null
   const tipo = document.createElement("strong");
   tipo.className = "clasificado-tipo";
   tipo.textContent = publicacion.tipo === "busqueda"
-    ? "COMPRO"
+    ? "COMPRA"
     : (estaPausado ? "PAUSADA" : "VENTA");
 
   const titulo = document.createElement("h4");
@@ -7740,7 +7740,6 @@ function crearTarjetaClasificado(publicacion, compacto = false, usuarioId = null
     contenido.appendChild(acciones);
   }
 
-  if(window.gdvLegacyAdmin){const d=document.createElement("details"),summary=document.createElement("summary"),a=document.createElement("a");summary.textContent="⋯ Moderación";a.textContent="Revisar este anuncio";a.href="moderacion.html#clasificados/"+publicacion.id;d.append(summary,a);contenido.append(d);}
   articulo.appendChild(contenido);
   return articulo;
 }
@@ -10491,6 +10490,94 @@ window.addEventListener('popstate',abrirAnexoDesdeURL);
   }
 </style>
 
+<style>
+
+/* ===== COMPRAVENTA: TARJETAS GRANDES Y FOTO PROTAGONISTA ===== */
+@media (min-width: 901px) {
+  #listaClasificadosDisponibles,
+  #listaClasificadosRequeridos {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+  }
+
+  #clasificados-seccion .clasificado-item {
+    width: 100%;
+    max-width: none;
+    border-radius: 14px;
+  }
+
+  #clasificados-seccion .clasificado-item > img {
+    height: 285px;
+    max-height: 285px;
+    padding: 6px;
+    object-fit: contain;
+  }
+
+  #clasificados-seccion .clasificado-item-contenido {
+    padding: 12px 14px 14px;
+  }
+
+  #clasificados-seccion .clasificado-item-contenido h4 {
+    margin: 0 0 6px;
+    font-size: 18px;
+  }
+
+  #clasificados-seccion .clasificado-item-contenido p {
+    margin: 4px 0;
+    font-size: 12px;
+    line-height: 1.35;
+  }
+
+  #clasificados-seccion .clasificado-tipo {
+    margin-bottom: 6px;
+    padding: 3px 8px;
+    font-size: 9px;
+  }
+
+  #clasificados-seccion .clasificado-consultar,
+  #clasificados-seccion .clasificado-propietario-acciones button {
+    min-height: 28px;
+    padding: 5px 9px;
+    border-radius: 7px;
+    font-size: 10px;
+    line-height: 1.1;
+  }
+
+  #clasificados-seccion .clasificado-consultar {
+    margin-top: 8px;
+  }
+
+  #clasificados-seccion .clasificado-propietario-acciones {
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  .subasta-inversa-destacada {
+    width: 100%;
+    box-sizing: border-box;
+  }
+}
+
+@media (max-width: 900px) {
+  #listaClasificadosDisponibles,
+  #listaClasificadosRequeridos {
+    grid-template-columns: 1fr;
+  }
+
+  #clasificados-seccion .clasificado-item > img {
+    height: 240px;
+    max-height: 240px;
+    object-fit: contain;
+  }
+
+  #clasificados-seccion .clasificado-consultar,
+  #clasificados-seccion .clasificado-propietario-acciones button {
+    padding: 6px 9px;
+    font-size: 11px;
+  }
+}
+
+</style>
 <script id="robert-rag-chat-script-20261005">
 (() => {
   function escapeHtml(value) {
