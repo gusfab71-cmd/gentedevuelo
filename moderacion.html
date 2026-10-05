@@ -8,7 +8,7 @@
     :root { color-scheme: dark; font-family: Arial, Helvetica, sans-serif; background: #14191c; color: #f4f5f6; }
     * { box-sizing: border-box; }
     body { margin: 0; background: #14191c; min-height: 100vh; }
-    button, input, select { font: inherit; }
+    button, input, select, textarea { font: inherit; }
     a { color: #ffb074; }
     header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px max(18px, calc((100vw - 1240px) / 2)); background: #1d2529; border-bottom: 2px solid #ff642e; }
     .marca { display: flex; align-items: center; gap: 12px; color: white; text-decoration: none; font-weight: 800; }
@@ -27,7 +27,8 @@
     #acceso h2 { margin-top: 0; }
     #loginForm { display: grid; gap: 12px; }
     label { display: grid; gap: 6px; font-size: 14px; font-weight: 700; }
-    input, select { min-height: 42px; padding: 9px 12px; border: 1px solid #66767c; border-radius: 9px; background: #11191d; color: white; }
+    input, select, textarea { min-height: 42px; padding: 9px 12px; border: 1px solid #66767c; border-radius: 9px; background: #11191d; color: white; }
+    textarea { min-height: 130px; resize: vertical; }
     input:focus-visible, select:focus-visible, button:focus-visible, .link:focus-visible { outline: 2px solid #ffbb73; outline-offset: 2px; }
     button { border: 1px solid #ff642e; padding: 10px 15px; background: #ff642e; color: white; font-weight: 800; }
     button:hover { background: #de5323; }
@@ -162,6 +163,32 @@
 
         <p id="robertAdminEstado" class="estado" role="status" aria-live="polite"></p>
         <div id="robertDocs" class="robert-docs"></div>
+      </section>
+
+      <section class="panel" id="shimodaPublicarAdmin" style="margin:0 0 28px;">
+        <h2 style="margin-top:0;">Publicar en Rincón Shimoda</h2>
+        <p class="intro" style="margin-bottom:16px;">Las publicaciones creadas aquí por la cuenta administradora se publican directamente en Rincón Shimoda, sin aprobación adicional.</p>
+        <form id="shimodaPublicarForm" style="display:grid;gap:12px;">
+          <label>Título
+            <input id="shimodaPublicarTitulo" type="text" maxlength="180" required>
+          </label>
+          <label>Categoría
+            <select id="shimodaPublicarCategoria">
+              <option value="Consejo de vuelo">Consejo de vuelo</option>
+              <option value="Historia">Historia</option>
+              <option value="Curiosidad">Curiosidad</option>
+              <option value="Reflexión">Reflexión</option>
+              <option value="Efeméride">Efeméride</option>
+            </select>
+          </label>
+          <label>Contenido
+            <textarea id="shimodaPublicarContenido" maxlength="5000" required></textarea>
+          </label>
+          <div class="acciones" style="margin-top:0;">
+            <button id="shimodaPublicarBoton" type="submit">Publicar ahora</button>
+          </div>
+          <p id="shimodaPublicarEstado" class="estado" role="status" aria-live="polite"></p>
+        </form>
       </section>
 
       <div class="pestanas" role="group" aria-label="Estado de las publicaciones">
@@ -703,6 +730,52 @@
       await cargarRobertDocs();
     }
 
+    async function publicarShimodaDirecto(event) {
+      event.preventDefault();
+      if (!administrador) return;
+
+      const boton = $("shimodaPublicarBoton");
+      const estadoPanel = $("shimodaPublicarEstado");
+      const titulo = $("shimodaPublicarTitulo").value.trim();
+      const contenido = $("shimodaPublicarContenido").value.trim();
+      const categoria = $("shimodaPublicarCategoria").value || "Consejo de vuelo";
+
+      if (!titulo || !contenido) {
+        estadoPanel.textContent = "Completá título y contenido.";
+        return;
+      }
+
+      boton.disabled = true;
+      estadoPanel.textContent = "Publicando en Rincón Shimoda…";
+
+      const hoy = new Date().toISOString().slice(0, 10);
+      const { data, error } = await client
+        .from("shimoda_publicaciones")
+        .insert({
+          titulo,
+          contenido,
+          categoria,
+          publicado: true,
+          fecha_publicacion: hoy,
+          moderation_reason: ""
+        })
+        .select("id,titulo,contenido,categoria,publicado,fecha_publicacion,created_at")
+        .single();
+
+      boton.disabled = false;
+
+      if (error || !data) {
+        estadoPanel.textContent = "No se pudo publicar. " + (error?.message || "Verificá tu sesión.");
+        return;
+      }
+
+      $("shimodaPublicarForm").reset();
+      estadoPanel.textContent = "Publicación visible en Rincón Shimoda.";
+      const filas = datos.get("shimoda_publicaciones") || [];
+      datos.set("shimoda_publicaciones", [data, ...filas]);
+      pintar();
+    }
+
     async function iniciar() {
       $("acceso").hidden = false;
       $("panel").hidden = true;
@@ -768,6 +841,7 @@
     $("buscar").addEventListener("input", pintar);
     $("recargar").addEventListener("click", cargar);
     $("robertUploadForm")?.addEventListener("submit", subirDocumentoRobert);
+    $("shimodaPublicarForm")?.addEventListener("submit", publicarShimodaDirecto);
     client.auth.onAuthStateChange(event => {
       if (event === "SIGNED_OUT") setTimeout(iniciar, 0);
     });
