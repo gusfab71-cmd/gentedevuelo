@@ -48,7 +48,7 @@ td{padding:.35rem .3rem;white-space:nowrap}
 
 <header class="px-5 py-3 border-b border-white/10 flex items-center justify-between sticky top-0 z-40 bg-[#070b14]/90 backdrop-blur" style="padding-top:calc(.75rem + env(safe-area-inset-top,0px))">
   <div class="flex items-center gap-3">
-    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-400 to-indigo-600 grid place-items-center text-xl">⚖️</div>
+    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-400 to-indigo-600 grid place-items-center text-xl">WB</div>
     <div>
       <h1 class="font-extrabold tracking-wide text-white leading-tight">FLIGHTPREP <span class="text-[10px] bg-sky-500/20 text-sky-300 px-1.5 py-0.5 rounded align-middle">WEIGHT & BALANCE</span></h1>
       <p class="text-[11px] text-slate-400">Control de carga, momentos y centro de gravedad · <span class="text-sky-400 font-medium">Powered by Gente de Vuelo</span></p>
@@ -56,8 +56,8 @@ td{padding:.35rem .3rem;white-space:nowrap}
   </div>
   
   <div class="flex gap-2 no-print">
-    <button onclick="exportJSON()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg font-bold border border-white/10 transition">💾 Guardar JSON</button>
-    <button onclick="printReport()" class="text-xs bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1">📥 Descargar Reporte (PDF/Imprimir)</button>
+    <button onclick="exportJSON()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg font-bold border border-white/10 transition">Guardar JSON</button>
+    <button onclick="printReport()" class="text-xs bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1">Descargar Reporte (PDF/Imprimir)</button>
   </div>
 </header>
 
@@ -164,11 +164,11 @@ function calcWB(){
   $('tot').innerHTML=row('Peso Total',totW.toFixed(1)+' lb')+row('Momento Total',totM.toFixed(1))+row('Centro de Gravedad (CG)',cg.toFixed(2)+' in','text-sky-300');
 
   let msg='';
-  if(overW) msg+=`🔴 <b>PESO EXCEDIDO:</b> Supera el máximo permitido por ${ (totW-S.maxW).toFixed(1) } lb.<br>`;
-  if(cg<S.cgMin) msg+=`🔴 <b>CG MUY ADELANTADO:</b> Fuera de límite mínimo (${S.cgMin} in).<br>`;
-  else if(cg>S.cgMax) msg+=`🔴 <b>CG MUY ATRASADO:</b> Fuera de límite máximo (${S.cgMax} in).<br>`;
+  if(overW) msg+=`<b>PESO EXCEDIDO:</b> Supera el máximo permitido por ${ (totW-S.maxW).toFixed(1) } lb.<br>`;
+  if(cg<S.cgMin) msg+=`<b>CG MUY ADELANTADO:</b> Fuera de límite mínimo (${S.cgMin} in).<br>`;
+  else if(cg>S.cgMax) msg+=`<b>CG MUY ATRASADO:</b> Fuera de límite máximo (${S.cgMax} in).<br>`;
 
-  if(!msg) msg=`🟢 <b>DENTRO DE LOS LÍMITES INGRESADOS</b><br><span class="text-xs">Dentro de los límites rectangulares ingresados. Verificá la envolvente real del manual; puede variar con el peso.</span>`;
+  if(!msg) msg=`<b>DENTRO DE LOS LÍMITES INGRESADOS</b><br><span class="text-xs">Dentro de los límites rectangulares ingresados. Verificá la envolvente real del manual; puede variar con el peso.</span>`;
 
   $('wbstatus').innerHTML=`<div class="rounded-xl p-3 ${overW||badCG?'bg-rose-500/15 border border-rose-500/40 text-rose-300':'bg-emerald-500/15 border border-emerald-500/40 text-emerald-300'}">${msg}</div>`;
 
