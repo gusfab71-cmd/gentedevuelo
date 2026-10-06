@@ -3,7 +3,7 @@
 const cfg=window.GDV_CONFIG, db=window.GDV_AUTH.client, app=document.getElementById('app'), notice=document.getElementById('notice'), dialog=document.getElementById('dialog');
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const safeURL=v=>{try{const u=new URL(v);return ['https:','http:'].includes(u.protocol)?u.href:''}catch{return ''}};
-const date=v=>v?new Date(v).toLocaleString('es-AR',{dateStyle:'medium',timeStyle:'short'}):'';
+const date=v=>v?new Date(v).toLocaleString('es-AR',{dateStyle:'medium',timeStyle:'short',hourCycle:'h23'}):'';
 const $=id=>document.getElementById(id);
 let user=null,isAdmin=false,categories=[],topics=[],comments=[],media=[],reactions=[],profiles=new Map(),legacyShimoda=[],legacyShimodaComments=[],epoch=0,replyParent=null,dirty=false,isOwnerAdmin=false;
 const cat=s=>categories.find(c=>c.slug===s)||{name:'Otros',color:'#aab6c2'};
@@ -209,7 +209,7 @@ function topicCard(t){
        </div>
 
        ${latestReply?`<a class="reply-highlight" href="${topicHref}">
-         <span class="reply-highlight-label">RECIBIÓ UNA DEVOLUCIÓN</span>
+         <span class="reply-highlight-label">RECIBIÓ UNA RESPUESTA</span>
          <strong>${esc(name(latestReply.author_id))}</strong>
          <span>respondió · ${date(latestReply.created_at)}</span>
        </a>`:''}
