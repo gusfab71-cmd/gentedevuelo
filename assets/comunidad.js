@@ -115,7 +115,20 @@ async function refreshAdminPendingBadge(){
  badge.setAttribute('aria-label',total===1?'1 pendiente de moderación':total+' pendientes de moderación');
 }
 const toolbar=(active='foro')=>`<div class="toolbar">${link('+ Crear publicación','#crear','button primary')}${link('Temáticas','#tematicas','button '+(active==='tematicas'?'active':''))}${link('Foro','#foro','button '+(active==='foro'?'active':''))}${link('Multimedia','#multimedia','button '+(active==='multimedia'?'active':''))}</div>`;
-const extras=()=>`<div class="grid annex-grid"><a class="card blue" href="index.html#shimoda"><h3>Rincón Shimoda</h3><p>Consejos, relatos y curiosidades.</p></a><a class="card gold" href="index.html#clasificados-seccion"><h3>CompraVenta</h3><p>Compra, venta y búsquedas entre miembros.</p></a><a class="card gold" href="index.html#tienda-seccion"><h3>AeroShop</h3><p>Tiendas, productos y equipamiento aeronáutico.</p></a></div>`;
+const extras=()=>`<nav class="grid annex-grid" aria-label="Más espacios de la comunidad">
+ <a class="card annex-card annex-shimoda" href="index.html#shimoda">
+  <div class="annex-copy"><h3>Rincón <span>Shimoda</span></h3><p>Consejos, relatos y curiosidades.</p></div>
+  <span class="annex-icon" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M32 25c-8-6-16-8-24-7v31c8-1 16 1 24 7 8-6 16-8 24-7V18c-8-1-16 1-24 7Zm0 0v31M15 28l10 4m-10 5 10 4m14-9 10-4m-10 13 10-4M23 8l18 7M41 8l-18 7"/></svg></span>
+ </a>
+ <a class="card annex-card annex-market" href="index.html#clasificados-seccion">
+  <div class="annex-copy"><h3>Compra<span>Venta</span></h3><p>Compra, venta y búsquedas entre miembros.</p></div>
+  <span class="annex-icon" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 20 9-7 9 18-9 7-9-18Zm54 0-9-7-9 18 9 7 9-18ZM20 20l9-4 8 3 7 1M24 19l-5 7 8 5 7-7 15 14-12 14-19-17M27 42l7 6m-2-12 10 9m-5-15 10 9M15 37l-2 5 9 9 5-2"/></svg></span>
+ </a>
+ <a class="card annex-card annex-shop" href="index.html#tienda-seccion">
+  <div class="annex-copy"><h3>Aero<span>Shop</span></h3><p>Tiendas, productos y equipamiento aeronáutico.</p></div>
+  <span class="annex-icon" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 11h8l8 31h28l8-22H16M21 42l-2 6h31"/><circle cx="24" cy="55" r="4"/><circle cx="46" cy="55" r="4"/></svg></span>
+ </a>
+</nav>`;
 function legacyShimodaCard(p){
  const replies=legacyShimodaComments.filter(c=>c.publicacion_id===p.id);
  const href='index.html?shimoda_legacy='+encodeURIComponent(p.id)+'#shimoda';
