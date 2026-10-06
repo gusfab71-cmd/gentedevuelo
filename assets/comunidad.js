@@ -91,21 +91,23 @@ async function load(){
 }
 function account(){ $('account').innerHTML=user?`<details class="account-menu"><summary aria-label="Abrir menú de cuenta">Mi cuenta <span id="admin-pending-badge" class="admin-pending-badge" hidden></span> <span aria-hidden="true">⌄</span></summary><div class="account-menu-panel">${link('Notificaciones','#notificaciones','')}${isAdmin?link('Moderación','#moderacion',''):''}${link('Mi Hangar','#hangar','')}<button type="button" data-action="logout">Salir</button></div></details>`:`${link('Ingresar','#ingresar','button primary')}`; if(isAdmin)refreshAdminPendingBadge().catch(()=>{}); }
 async function getLegacyPendingCounts(){
- if(!isAdmin)return {shimoda:0,compraVenta:0};
- const [shimodaResp,compraResp]=await Promise.all([
+ if(!isAdmin)return {shimoda:0,compraVenta:0,aeroShop:0};
+ const [shimodaResp,compraResp,aeroShopResp]=await Promise.all([
   db.from('shimoda_comentarios').select('id',{count:'exact',head:true}).eq('estado','pendiente'),
-  db.from('clasificados').select('id',{count:'exact',head:true}).eq('estado_publicacion','pendiente')
+  db.from('clasificados').select('id',{count:'exact',head:true}).eq('estado_publicacion','pendiente'),
+  db.from('aportes_destacados').select('id',{count:'exact',head:true}).eq('seccion','tienda-seccion').eq('estado','pendiente')
  ]);
  return {
   shimoda:shimodaResp.error?0:(shimodaResp.count||0),
-  compraVenta:compraResp.error?0:(compraResp.count||0)
+  compraVenta:compraResp.error?0:(compraResp.count||0),
+  aeroShop:aeroShopResp.error?0:(aeroShopResp.count||0)
  };
 }
 async function refreshAdminPendingBadge(){
  if(!isAdmin)return;
  const legacy=await getLegacyPendingCounts();
  const forum=topics.filter(t=>t.status==='pending').length+comments.filter(c=>c.status==='pending').length;
- const total=forum+legacy.shimoda+legacy.compraVenta;
+ const total=forum+legacy.shimoda+legacy.compraVenta+legacy.aeroShop;
  const badge=$('admin-pending-badge');
  if(!badge)return;
  badge.textContent=String(total);
@@ -530,9 +532,9 @@ async function mountRobertKnowledgePanel(){
 }
 
 const basicModeration=moderation;
-moderation=async function(){await basicModeration();if(!isAdmin)return;const reports=checked(await db.from('gdv_reports').select('*').eq('status','pending')),members=checked(await db.from('gdv_members').select('*')),legacy=await getLegacyPendingCounts();const counts=new Map();reports.forEach(r=>{const key=r.comment_id||r.topic_id;const set=counts.get(key)||new Set();set.add(r.user_id);counts.set(key,set)});const urgent=[...counts].filter(([,users])=>users.size>=3);const panel=document.createElement('section');panel.className='moderation-overview';panel.innerHTML=`<div class="grid">${[['Reportes pendientes',reports.length],['Aportes pendientes',topics.filter(t=>t.status==='pending').length+comments.filter(c=>c.status==='pending').length],['Cuentas restringidas',members.filter(m=>m.restricted||new Date(m.suspended_until)>new Date()).length],['Alertas prioritarias',urgent.length]].map(([label,n])=>`<div class="card"><strong class="metric-value">${n}</strong><span>${label}</span></div>`).join('')}</div><div class="legacy-pending-grid"><a class="card legacy-pending-card ${legacy.shimoda?'has-pending':''}" href="moderacion.html#shimoda_comentarios"><strong class="metric-value">${legacy.shimoda}</strong><span>Rincón Shimoda pendientes</span></a><a class="card legacy-pending-card ${legacy.compraVenta?'has-pending':''}" href="moderacion.html#clasificados"><strong class="metric-value">${legacy.compraVenta}</strong><span>CompraVenta pendientes</span></a></div><p>Prioridad alta: tres denunciantes distintos sobre el mismo contenido. La decisión sigue siendo humana.</p>${urgent.map(([id,users])=>{const r=reports.find(r=>(r.comment_id||r.topic_id)===id);return `<p class="priority">⚑ ${users.size} denunciantes · ${link('Revisar contenido','#tema/'+r.topic_id+(r.comment_id?'/'+r.comment_id:''))}</p>`}).join('')}`;app.querySelector('h1').after(panel);
+moderation=async function(){await basicModeration();if(!isAdmin)return;const reports=checked(await db.from('gdv_reports').select('*').eq('status','pending')),members=checked(await db.from('gdv_members').select('*')),legacy=await getLegacyPendingCounts();const counts=new Map();reports.forEach(r=>{const key=r.comment_id||r.topic_id;const set=counts.get(key)||new Set();set.add(r.user_id);counts.set(key,set)});const urgent=[...counts].filter(([,users])=>users.size>=3);const panel=document.createElement('section');panel.className='moderation-overview';panel.innerHTML=`<div class="grid">${[['Reportes pendientes',reports.length],['Aportes pendientes',topics.filter(t=>t.status==='pending').length+comments.filter(c=>c.status==='pending').length],['Cuentas restringidas',members.filter(m=>m.restricted||new Date(m.suspended_until)>new Date()).length],['Alertas prioritarias',urgent.length]].map(([label,n])=>`<div class="card"><strong class="metric-value">${n}</strong><span>${label}</span></div>`).join('')}</div><div class="legacy-pending-grid"><a class="card legacy-pending-card ${legacy.shimoda?'has-pending':''}" href="moderacion.html#shimoda_comentarios"><strong class="metric-value">${legacy.shimoda}</strong><span>Rincón Shimoda pendientes</span></a><a class="card legacy-pending-card ${(legacy.compraVenta+legacy.aeroShop)?'has-pending':''}" href="moderacion.html"><strong class="metric-value">${legacy.compraVenta+legacy.aeroShop}</strong><span>CompraVenta / AeroShop pendientes</span><small>CompraVenta: ${legacy.compraVenta} · AeroShop: ${legacy.aeroShop}</small></a></div><p>Prioridad alta: tres denunciantes distintos sobre el mismo contenido. La decisión sigue siendo humana.</p>${urgent.map(([id,users])=>{const r=reports.find(r=>(r.comment_id||r.topic_id)===id);return `<p class="priority">⚑ ${users.size} denunciantes · ${link('Revisar contenido','#tema/'+r.topic_id+(r.comment_id?'/'+r.comment_id:''))}</p>`}).join('')}`;app.querySelector('h1').after(panel);
 const actionButtons=[...app.querySelectorAll('.moderation-action')];
-if(actionButtons[1])actionButtons[1].classList.toggle('has-pending',(legacy.shimoda+legacy.compraVenta)>0);
+if(actionButtons[1])actionButtons[1].classList.toggle('has-pending',(legacy.shimoda+legacy.compraVenta+legacy.aeroShop)>0);
 refreshAdminPendingBadge().catch(()=>{});await mountRobertKnowledgePanel();};
 
 (async()=>{try{user=await window.GDV_AUTH.ready;await loadRole();await heartbeat();account();await load();await route()}catch(e){app.innerHTML='<h1>Comunidad</h1><p>No se pudo conectar. Volvé a intentarlo en unos momentos.</p>';message(e.message,true)}})();
