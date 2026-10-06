@@ -389,3 +389,67 @@
 .foro-volver-arriba{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:10px 24px;margin-bottom:18px;border:1px solid #e8a447;border-radius:999px;color:#ffc166;background:repeating-linear-gradient(45deg,#ffffff04 0 3px,transparent 3px 6px),#14191e;box-shadow:0 0 13px #e8a44725,inset 0 0 8px #e8a44712}
 .foro-volver-arriba:hover{background-color:#25231e;text-decoration:none;box-shadow:0 0 17px #e8a44740}
 @media(prefers-reduced-motion:reduce){.annex-grid .annex-card{transition:none}.annex-grid .annex-card:hover{transform:none}}
+
+
+/* ===== FORO GENERAL · PUBLICACIONES CON DEVOLUCIÓN ===== */
+.topic-card.topic-card-replied {
+  border-color: rgba(255, 159, 28, 0.72);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.24), 0 0 0 1px rgba(255, 159, 28, 0.10);
+}
+
+.topic-card.topic-card-replied::before {
+  background: linear-gradient(180deg, #ff642e, #ff9f1c);
+}
+
+.reply-highlight {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 159, 28, 0.55);
+  border-radius: 10px;
+  background: rgba(255, 100, 46, 0.10);
+  color: #f4f7f8;
+  text-decoration: none;
+}
+
+.reply-highlight:hover {
+  border-color: #ff9f1c;
+  background: rgba(255, 100, 46, 0.16);
+}
+
+.reply-highlight-label {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #ff642e;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .55px;
+}
+
+.reply-highlight strong {
+  color: #ffffff;
+  font-size: 13px;
+}
+
+.reply-highlight > span:last-child {
+  color: #c7d0d4;
+  font-size: 12px;
+}
+
+@media (max-width: 680px) {
+  .reply-highlight {
+    grid-template-columns: 1fr;
+    gap: 5px;
+  }
+
+  .reply-highlight-label {
+    width: max-content;
+  }
+}
