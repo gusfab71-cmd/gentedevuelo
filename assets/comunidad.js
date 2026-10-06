@@ -452,9 +452,22 @@ async function adminDeleteContent(kind,id){
  });
 }
 
+async function adminDeleteMember(id,displayName){
+ if(!isOwnerAdmin||!id||id===user.id)return;
+ showDialog(`<h2>Eliminar integrante</h2><p>Vas a eliminar definitivamente la cuenta de <strong>${esc(displayName||name(id))}</strong> y quitarla de Integrantes.</p><p>Sus publicaciones y comentarios del foro se conservarán como contenido de un usuario eliminado. Esta acción no se puede deshacer.</p><div class="toolbar"><button id="confirm-member-delete" class="member-delete-confirm">Eliminar definitivamente</button><button type="button" id="cancel-member-delete">Cancelar</button></div>`);
+ $('cancel-member-delete').onclick=()=>dialog.close();
+ $('confirm-member-delete').onclick=()=>busy($('confirm-member-delete'),async()=>{
+   checked(await db.rpc('gdv_admin_delete_member',{p_user:id}));
+   dialog.close();
+   await load();
+   await membersView();
+   message('Integrante eliminado correctamente.');
+ });
+}
+
 async function toggleOwned(table,topicId){const r=await db.from(table).select('topic_id').eq('user_id',user.id).eq('topic_id',topicId).maybeSingle();if(r.error)throw r.error;checked(r.data?await db.from(table).delete().eq('user_id',user.id).eq('topic_id',topicId):await db.from(table).insert({user_id:user.id,topic_id:topicId}));await route()}
 document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const action=b.dataset.action;
- if(b.dataset.manageTopic){manageTopic(b.dataset.manageTopic);return}if(b.dataset.manageCategory){manageCategory(b.dataset.manageCategory);return}if(b.dataset.manageMember){manageMember(b.dataset.manageMember);return}if(b.dataset.adminDelete){adminDeleteContent(b.dataset.adminDelete,b.dataset.id);return}
+ if(b.dataset.manageTopic){manageTopic(b.dataset.manageTopic);return}if(b.dataset.manageCategory){manageCategory(b.dataset.manageCategory);return}if(b.dataset.manageMember){manageMember(b.dataset.manageMember);return}if(b.dataset.adminDeleteMember){adminDeleteMember(b.dataset.adminDeleteMember,b.dataset.memberName);return}if(b.dataset.adminDelete){adminDeleteContent(b.dataset.adminDelete,b.dataset.id);return}
  if(b.dataset.review){reviewContent(b.dataset.review,b.dataset.id,b.dataset.status);return}
  if(!action)return;
  if(action==='show-password'){const input=$(b.dataset.id);input.type=input.type==='password'?'text':'password';b.textContent=input.type==='password'?'Mostrar contraseña':'Ocultar contraseña';b.setAttribute('aria-pressed',String(input.type==='text'));return}
@@ -484,7 +497,7 @@ async function loadRole(){isOwnerAdmin=false;isAdmin=false;if(!user)return;isOwn
 async function heartbeat(){if(user&&document.visibilityState!=='hidden'){const r=await db.from('gdv_member_presence').upsert({user_id:user.id});if(r.error)console.warn('No se pudo actualizar la presencia.')}}
 setInterval(()=>heartbeat().catch(()=>{}),30000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)heartbeat().catch(()=>{})});
-async function membersView(){crumbs([['Integrantes']]);const online=new Set(checked(await db.from('gdv_member_presence').select('user_id').gt('last_seen',new Date(Date.now()-90000).toISOString())).map(p=>p.user_id));app.innerHTML='<h1>Integrantes</h1><p>Miembros más recientes primero. La presencia se actualiza cada 30 segundos.</p><div class="grid integrantes-grid">'+[...profiles.values()].sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)).map(p=>`<article class="card integrante-card"><div class="post-row">${avatar(p.id)}<div><h2>${link(p.full_name||p.username||'Miembro','#hangar/'+p.id,'')}</h2><p class="meta">Registro: ${date(p.created_at)}</p><p class="${online.has(p.id)?'online':'muted'}">${online.has(p.id)?'● En línea':'○ Desconectado'}</p></div></div></article>`).join('')+'</div>';}
+async function membersView(){crumbs([['Integrantes']]);const online=new Set(checked(await db.from('gdv_member_presence').select('user_id').gt('last_seen',new Date(Date.now()-90000).toISOString())).map(p=>p.user_id));app.innerHTML='<h1>Integrantes</h1><p>Miembros más recientes primero. La presencia se actualiza cada 30 segundos.</p><div class="grid integrantes-grid">'+[...profiles.values()].sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)).map(p=>`<article class="card integrante-card"><div class="post-row">${avatar(p.id)}<div class="integrante-info"><h2>${link(p.full_name||p.username||'Miembro','#hangar/'+p.id,'')}</h2><p class="meta">Registro: ${date(p.created_at)}</p><p class="${online.has(p.id)?'online':'muted'}">${online.has(p.id)?'● En línea':'○ Desconectado'}</p>${isOwnerAdmin&&p.id!==user.id?`<button type="button" class="member-delete-button" data-admin-delete-member="${p.id}" data-member-name="${esc(p.full_name||p.username||'Miembro')}">Eliminar</button>`:''}</div></div></article>`).join('')+'</div>';}
 async function reviewContent(table,id,status){
  if(!isAdmin)return;
  if(table!=='gdv_reports'&&(status==='approved'||status==='rejected')){
