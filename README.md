@@ -31,3 +31,7 @@ La URL de recuperación se deriva de la raíz del sitio (`index.html`), también
 `utilidades/calculo-sustentacion.html` contiene el simulador NACA provisto, junto a FlightPrep NAV y Peso y Balance. Los colores de las 13 temáticas se fijan en `assets/comunidad.js` según la paleta solicitada, sin modificar registros de Supabase.
 
 Pruebas: `node tests/auth-guard.test.cjs` y `node tests/utilities.test.cjs`. La navegación, la recuperación y el simulador también se comprobaron en un DOM con respuestas Auth simuladas; no se realizó una prueba de entrega de correo ni una revisión visual en navegador.
+
+
+## Cambio de administración de usernames — 2026-10-06
+Se actualizó en Supabase la protección de `profiles.username` para permitir que el administrador del sitio gestione usernames de otros integrantes, manteniendo las validaciones de formato, nombres reservados y la restricción normal para usuarios no administradores. También se habilitó la gestión directa desde el SQL Editor de Supabase.
