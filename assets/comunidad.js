@@ -271,8 +271,44 @@ async function hangar(id){id=id||user?.id;if(!id){app.innerHTML=link('Ingresar a
  const paint=async type=>{if(type==='comments')$('hangar-content').innerHTML=replied.map(c=>`<article class="card"><div class="meta">${date(c.created_at)}</div><p>${esc(c.deleted?'Comentario eliminado por su autor':c.content)}</p>${link('Ver conversación','#tema/'+c.topic_id+'/'+c.id)}</article>`).join('')||'<p>Sin respuestas públicas.</p>';else{let list=authored;if(type==='trips')list=list.filter(t=>t.category==='travesias');if(type==='media')list=list.filter(t=>media.some(m=>m.topic_id===t.id));if(type==='saved'){const rows=checked(await db.from('gdv_saved').select('topic_id').eq('user_id',user.id));list=topics.filter(t=>rows.some(s=>s.topic_id===t.id))}$('hangar-content').innerHTML=list.map(topicCard).join('')||'<p>Todavía no hay publicaciones en este apartado.</p>'}};app.querySelectorAll('[data-hangar]').forEach(b=>b.onclick=()=>busy(b,()=>paint(b.dataset.hangar)));await paint('posts');
 }
 async function notifications(){if(!authenticated()){app.innerHTML=link('Ingresar para ver tus notificaciones','#ingresar','button primary');return}crumbs([['Notificaciones']]);const rows=checked(await db.from('gdv_notifications').select('*').order('created_at',{ascending:false}).limit(100));app.innerHTML='<h1>Notificaciones</h1>'+ (rows.map(n=>`<article class="card"><p>${esc(n.message)}</p><span class="meta">${date(n.created_at)}${n.read?'':' · Nueva'}</span> ${n.topic_id?link('Abrir','#tema/'+n.topic_id):''}</article>`).join('')||'<p>No tenés notificaciones.</p>');checked(await db.from('gdv_notifications').update({read:true}).eq('user_id',user.id).eq('read',false))}
-async function moderation(){if(!isAdmin){app.innerHTML='<h1>Acceso restringido</h1>';return}crumbs([['Moderación']]);const contacts=checked(await db.from('gdv_contact').select('*').order('created_at',{ascending:false}).limit(100));const reports=checked(await db.from('gdv_reports').select('*').eq('status','pending').order('created_at'));const generalPending=reports.length+topics.filter(t=>t.status==='pending').length+comments.filter(c=>c.status==='pending').length;app.innerHTML=`<h1>Moderación de la comunidad</h1><div class="toolbar">${link('Gestionar publicaciones, cuentas y temáticas','#gestion','button moderation-action '+(generalPending>0?'has-pending':''))}</div><p>${link('Administrar Shimoda, CompraVenta y contenido anterior','moderacion.html','button moderation-action')}</p><h2>Publicaciones pendientes</h2>${topics.filter(t=>t.status==='pending').map(t=>`<article class="card"><h3>${esc(t.title)}</h3><p>${esc(t.content)}</p>${link('Revisar publicación','#tema/'+t.id)}<div class="toolbar"><button data-review="gdv_topics" data-id="${t.id}" data-status="approved">Aprobar</button><button data-review="gdv_topics" data-id="${t.id}" data-status="rejected">Rechazar</button><button data-admin-delete="topic" data-id="${t.id}">Eliminar</button></div></article>`).join('')||'<p>Sin publicaciones pendientes.</p>'}<h2>Comentarios pendientes</h2>${comments.filter(c=>c.status==='pending').map(c=>`<article class="card"><p>${esc(c.content)}</p>${link('Ver contexto','#tema/'+c.topic_id+'/'+c.id)}<div class="toolbar"><button data-review="gdv_comments" data-id="${c.id}" data-status="approved">Aprobar</button><button data-review="gdv_comments" data-id="${c.id}" data-status="rejected">Rechazar</button><button data-admin-delete="comment" data-id="${c.id}">Eliminar</button></div></article>`).join('')||'<p>Sin comentarios pendientes.</p>'}<h2>Denuncias</h2>${reports.map(r=>`<article class="card"><p>${esc(r.reason)}</p>${link('Revisar contexto','#tema/'+r.topic_id+(r.comment_id?'/'+r.comment_id:''))}<button data-review="gdv_reports" data-id="${r.id}" data-status="resolved">Marcar revisada</button></article>`).join('')||'<p>Sin denuncias pendientes.</p>'}<h2>Consultas privadas</h2>${contacts.map(c=>`<article class="card"><h3>${esc(c.subject)}</h3><p>${esc(c.message)}</p><p class="meta">${esc(name(c.user_id))} · ${date(c.created_at)}</p></article>`).join('')||'<p>Sin consultas.</p>'}`;
+async function moderation(){
+ if(!isAdmin){app.innerHTML='<h1>Acceso restringido</h1>';return}
+ crumbs([['Moderación']]);
+ const contacts=checked(await db.from('gdv_contact').select('*').order('created_at',{ascending:false}).limit(100));
+ const reports=checked(await db.from('gdv_reports').select('*').eq('status','pending').order('created_at'));
+ const generalPending=reports.length+topics.filter(t=>t.status==='pending').length+comments.filter(c=>c.status==='pending').length;
+ app.innerHTML=`<h1>Moderación de la comunidad</h1>
+ <div class="toolbar">${link('Gestionar publicaciones, cuentas y temáticas','#gestion','button moderation-action '+(generalPending>0?'has-pending':''))}</div>
+ <p>${link('Administrar Shimoda, CompraVenta y contenido anterior','moderacion.html','button moderation-action')}</p>
+ <h2>Publicaciones pendientes</h2>${topics.filter(t=>t.status==='pending').map(t=>`<article class="card"><h3>${esc(t.title)}</h3><p>${esc(t.content)}</p>${link('Revisar publicación','#tema/'+t.id)}<div class="toolbar"><button data-review="gdv_topics" data-id="${t.id}" data-status="approved">Aprobar</button><button data-review="gdv_topics" data-id="${t.id}" data-status="rejected">Rechazar</button><button data-admin-delete="topic" data-id="${t.id}">Eliminar</button></div></article>`).join('')||'<p>Sin publicaciones pendientes.</p>'}
+ <h2>Comentarios pendientes</h2>${comments.filter(c=>c.status==='pending').map(c=>`<article class="card"><p>${esc(c.content)}</p>${link('Ver contexto','#tema/'+c.topic_id+'/'+c.id)}<div class="toolbar"><button data-review="gdv_comments" data-id="${c.id}" data-status="approved">Aprobar</button><button data-review="gdv_comments" data-id="${c.id}" data-status="rejected">Rechazar</button><button data-admin-delete="comment" data-id="${c.id}">Eliminar</button></div></article>`).join('')||'<p>Sin comentarios pendientes.</p>'}
+ <h2>Denuncias</h2>${reports.map(r=>`<article class="card"><p>${esc(r.reason)}</p>${link('Revisar contexto','#tema/'+r.topic_id+(r.comment_id?'/'+r.comment_id:''))}<button data-review="gdv_reports" data-id="${r.id}" data-status="resolved">Marcar revisada</button></article>`).join('')||'<p>Sin denuncias pendientes.</p>'}
+ <h2>Consultas privadas</h2>${contacts.map(c=>`<article class="card contact-admin-card" data-contact-card="${c.id}"><h3>${esc(c.subject)}</h3><p>${esc(c.message)}</p><p class="meta">${esc(name(c.user_id))} · ${date(c.created_at)}</p>${c.admin_reply?`<div class="rule-box"><strong>Respuesta enviada</strong><p>${esc(c.admin_reply)}</p><span class="meta">${date(c.replied_at)}</span></div>`:''}<form data-contact-reply="${c.id}"><label for="reply-${c.id}">Responder al integrante</label><textarea id="reply-${c.id}" required minlength="1" maxlength="4000">${esc(c.admin_reply||'')}</textarea><div class="toolbar"><button class="primary">Enviar respuesta</button><button type="button" data-contact-delete="${c.id}">Eliminar consulta</button></div></form></article>`).join('')||'<p>Sin consultas.</p>'}`;
+
+ app.querySelectorAll('[data-contact-reply]').forEach(form=>{
+   form.onsubmit=e=>{
+     e.preventDefault();
+     const id=form.dataset.contactReply;
+     const textarea=form.querySelector('textarea');
+     const reply=textarea.value.trim();
+     if(!reply)return;
+     busy(e.submitter,async()=>{
+       checked(await db.from('gdv_contact').update({admin_reply:reply}).eq('id',id));
+       message('Respuesta enviada. El integrante la recibió en Notificaciones.');
+       await moderation();
+     });
+   };
+ });
+ app.querySelectorAll('[data-contact-delete]').forEach(button=>{
+   button.onclick=()=>busy(button,async()=>{
+     if(!confirm('¿Eliminar definitivamente esta consulta?'))return;
+     checked(await db.from('gdv_contact').delete().eq('id',button.dataset.contactDelete));
+     message('Consulta eliminada.');
+     await moderation();
+   });
+ });
 }
+
 async function administration(){
  if(!isAdmin){app.innerHTML='<h1>Acceso restringido</h1>';return}
  crumbs([['Moderación','#moderacion'],['Gestión']]);
@@ -324,8 +360,28 @@ function authView(mode){
  if($('google-login'))fetch(cfg.url+'/auth/v1/settings',{headers:{apikey:cfg.key}}).then(r=>r.json()).then(settings=>{const b=$('google-login');if(b&&!settings.external?.google){b.disabled=true;b.textContent='Google no está habilitado';}}).catch(()=>{});
  if($('google-login'))$('google-login').onclick=()=>busy($('google-login'),async()=>{const r=await db.auth.signInWithOAuth({provider:'google',options:{redirectTo:new URL('comunidad.html',location.href).href}});if(r.error)throw r.error});
 }
-function contact(){crumbs([['Contacto']]);app.innerHTML=`<section class="editor"><h1>Contacto</h1><p>Consultas, problemas o propuestas para la administración de Gente de Vuelo.</p>${user?'<form id="contact-form"><label for="contact-subject">Asunto</label><input id="contact-subject" required minlength="3" maxlength="120"><label for="contact-content">Tu mensaje</label><textarea id="contact-content" required minlength="10" maxlength="4000"></textarea><div class="toolbar"><button class="primary">Enviar a la administración</button></div></form>':link('Ingresar para enviar una consulta','#ingresar','button primary')}</section>`;if($('contact-form'))$('contact-form').onsubmit=e=>{e.preventDefault();busy(e.submitter,async()=>{checked(await db.from('gdv_contact').insert({user_id:user.id,subject:$('contact-subject').value.trim(),message:$('contact-content').value.trim()}));e.target.reset();message('Tu consulta fue enviada a la administración.')})}}
-async function route(){if(!await window.GDV_AUTH.requireRoute())return;const current=++epoch;notice.textContent='';const [view='foro',id,child]=location.hash.slice(1).split('/');document.querySelectorAll('.site-nav a').forEach(a=>a.setAttribute('aria-current',a.getAttribute('href')==='#'+view?'page':'false'));app.innerHTML='<p>Cargando…</p>';try{if(['registro','ingresar','recuperar'].includes(view))authView(view);else if(view==='tematicas')categoryView();else if(view==='tematica')feed(id);else if(view==='tema')await topicView(id,child);else if(view==='crear')editor();else if(view==='editar')editor(id);else if(view==='multimedia')multimedia();else if(view==='hangar')await hangar(id);else if(view==='notificaciones')await notifications();else if(view==='moderacion')await moderation();else if(view==='gestion')await administration();else if(view==='perfil')await profileEditor();else if(view==='normativa')rules();else if(view==='quienes-somos')about();else if(view==='integrantes')await membersView();else if(view==='contacto')contact();else feed();app.querySelectorAll('input[type="password"]').forEach(input=>{const b=document.createElement('button');b.type='button';b.className='password-toggle';b.dataset.action='show-password';b.dataset.id=input.id;b.textContent='Mostrar contraseña';b.setAttribute('aria-pressed','false');input.after(b)});friendlyActions();contextualModeration();if(current===epoch)document.title=(app.querySelector('h1')?.textContent||'Foro')+' · Gente de Vuelo'}catch(e){if(current===epoch){app.innerHTML='<p>No se pudo cargar este apartado.</p>'+link('Volver al Foro','#foro');message(e.message,true)}}}
+async function contact(){
+ crumbs([['Contacto']]);
+ let historial=[];
+ if(user){
+   const result=await db.from('gdv_contact').select('*').eq('user_id',user.id).order('created_at',{ascending:false}).limit(50);
+   historial=checked(result);
+ }
+ app.innerHTML=`<section class="editor"><h1>Contacto</h1><p>Consultas, problemas o propuestas para la administración de Gente de Vuelo.</p>
+ ${user?'<form id="contact-form"><label for="contact-subject">Asunto</label><input id="contact-subject" required minlength="3" maxlength="120"><label for="contact-content">Tu mensaje</label><textarea id="contact-content" required minlength="10" maxlength="4000"></textarea><div class="toolbar"><button class="primary">Enviar a la administración</button></div></form>':link('Ingresar para enviar una consulta','#ingresar','button primary')}
+ ${user?`<h2>Mis consultas</h2>${historial.map(c=>`<article class="card"><h3>${esc(c.subject)}</h3><p>${esc(c.message)}</p><p class="meta">Enviada: ${date(c.created_at)}</p>${c.admin_reply?`<div class="rule-box"><strong>Respuesta de la administración</strong><p>${esc(c.admin_reply)}</p><span class="meta">${date(c.replied_at)}</span></div>`:'<p class="muted">Pendiente de respuesta.</p>'}</article>`).join('')||'<p>Todavía no enviaste consultas.</p>'}`:''}
+ </section>`;
+ if($('contact-form'))$('contact-form').onsubmit=e=>{
+   e.preventDefault();
+   busy(e.submitter,async()=>{
+     checked(await db.from('gdv_contact').insert({user_id:user.id,subject:$('contact-subject').value.trim(),message:$('contact-content').value.trim()}));
+     e.target.reset();
+     message('Tu consulta fue enviada a la administración.');
+     await contact();
+   });
+ };
+}
+async function route(){if(!await window.GDV_AUTH.requireRoute())return;const current=++epoch;notice.textContent='';const [view='foro',id,child]=location.hash.slice(1).split('/');document.querySelectorAll('.site-nav a').forEach(a=>a.setAttribute('aria-current',a.getAttribute('href')==='#'+view?'page':'false'));app.innerHTML='<p>Cargando…</p>';try{if(['registro','ingresar','recuperar'].includes(view))authView(view);else if(view==='tematicas')categoryView();else if(view==='tematica')feed(id);else if(view==='tema')await topicView(id,child);else if(view==='crear')editor();else if(view==='editar')editor(id);else if(view==='multimedia')multimedia();else if(view==='hangar')await hangar(id);else if(view==='notificaciones')await notifications();else if(view==='moderacion')await moderation();else if(view==='gestion')await administration();else if(view==='perfil')await profileEditor();else if(view==='normativa')rules();else if(view==='quienes-somos')about();else if(view==='integrantes')await membersView();else if(view==='contacto')await contact();else feed();app.querySelectorAll('input[type="password"]').forEach(input=>{const b=document.createElement('button');b.type='button';b.className='password-toggle';b.dataset.action='show-password';b.dataset.id=input.id;b.textContent='Mostrar contraseña';b.setAttribute('aria-pressed','false');input.after(b)});friendlyActions();contextualModeration();if(current===epoch)document.title=(app.querySelector('h1')?.textContent||'Foro')+' · Gente de Vuelo'}catch(e){if(current===epoch){app.innerHTML='<p>No se pudo cargar este apartado.</p>'+link('Volver al Foro','#foro');message(e.message,true)}}}
 async function adminDeleteContent(kind,id){
  if(!isAdmin)return;
  const isTopic=kind==='topic';
