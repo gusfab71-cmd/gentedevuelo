@@ -162,6 +162,7 @@ function legacyShimodaCard(p){
 function topicCard(t){
  const c=cat(t.category),
        replies=comments.filter(r=>r.topic_id===t.id&&r.status==='approved'),
+       latestReply=replies.length?replies[replies.length-1]:null,
        votes=reactions.filter(r=>r.topic_id===t.id&&r.kind==='useful').length,
        m=media.find(m=>m.topic_id===t.id&&['image','video'].includes(m.kind)),
        isShimoda=t.special_role==='shimoda',
@@ -170,7 +171,7 @@ function topicCard(t){
          ?'index.html?shimoda_topic='+encodeURIComponent(t.id)+'#shimoda'
          :'#tema/'+t.id;
 
- return `<article class="card topic-card ${isShimoda?'shimoda-topic':''}" style="--category:${esc(c.color)}">
+ return `<article class="card topic-card ${isShimoda?'shimoda-topic':''} ${latestReply?'topic-card-replied':''}" style="--category:${esc(c.color)}">
    <div class="post-row">
      <a href="${isShimoda?'index.html?shimoda_topic='+encodeURIComponent(t.id)+'#shimoda':'#hangar/'+esc(t.author_id||'')}" aria-label="${isShimoda?'Abrir Rincón Shimoda':'Ver hangar de '+esc(authorName)}">
        ${isShimoda?shimodaAvatar():avatar(t.author_id)}
@@ -207,10 +208,15 @@ function topicCard(t){
          }
        </div>
 
+       ${latestReply?`<a class="reply-highlight" href="${topicHref}">
+         <span class="reply-highlight-label">RECIBIÓ UNA DEVOLUCIÓN</span>
+         <strong>${esc(name(latestReply.author_id))}</strong>
+         <span>respondió · ${date(latestReply.created_at)}</span>
+       </a>`:''}
        <div class="metrics">
-         <span>${replies.length} respuestas</span>
+         <span>${replies.length} ${replies.length===1?'respuesta':'respuestas'}</span>
          <span>${votes} aportes útiles</span>
-         <span>${replies.length?'Última respuesta: '+date(replies.at(-1).created_at):'Sin respuestas'}</span>
+         <span>${latestReply?'Conversación activa':'Esperando la primera respuesta'}</span>
        </div>
      </div>
    </div>
