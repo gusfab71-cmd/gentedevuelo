@@ -492,7 +492,16 @@
       const buscar = $("buscar").value.trim().toLocaleLowerCase("es-AR");
       const seleccion = $("tipo").value;
       const target=location.hash.slice(1).split("/");
-      const visibles = items.filter(item => (!target[0]||(item.config.tabla===target[0]&&(!target[1]||String(item.fila.id)===target[1]))) && (filtro === "todas" || estado(item) === filtro)
+      const coincideDestino = item => {
+        if (!target[0]) return true;
+        if (target[0] === "comercio") {
+          return item.config.tabla === "clasificados"
+            || (item.config.tabla === "aportes_destacados" && item.fila.seccion === "tienda-seccion");
+        }
+        return item.config.tabla === target[0]
+          && (!target[1] || String(item.fila.id) === target[1]);
+      };
+      const visibles = items.filter(item => coincideDestino(item) && (filtro === "todas" || estado(item) === filtro)
         && (seleccion === "todas" || item.config.tabla === seleccion)
         && (!buscar || [item.fila.titulo, item.fila.contenido, item.fila.descripcion, item.fila.relato, item.fila.autor_nombre, item.fila.nombre_usuario, item.fila.seccion, item.fila.categoria, item.fila.seccion === "tienda-seccion" ? "AeroShop" : ""].filter(Boolean).join(" ").toLocaleLowerCase("es-AR").includes(buscar)));
       $("resumen").textContent = visibles.length + " publicaciones en esta vista";
