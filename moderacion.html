@@ -812,12 +812,31 @@
       $("panel").hidden = false;
       $("salir").hidden = false;
       const tablaDestino = location.hash.slice(1).split("/")[0];
-      if (tablaDestino && secciones.some(s => s.tabla === tablaDestino)) {
+      const modoComercio = tablaDestino === "comercio";
+      const modoShimoda = tablaDestino === "shimoda_comentarios" || tablaDestino === "shimoda_publicaciones";
+
+      if ($("robertAdmin")) $("robertAdmin").hidden = modoComercio;
+      if ($("shimodaPublicarAdmin")) $("shimodaPublicarAdmin").hidden = modoComercio;
+
+      if (modoComercio) {
+        const tituloPanel = $("panel")?.querySelector("h1");
+        const introPanel = $("panel")?.querySelector(".intro");
+        if (tituloPanel) tituloPanel.textContent = "Moderación de CompraVenta y AeroShop";
+        if (introPanel) introPanel.textContent = "Revisá únicamente las publicaciones comerciales pendientes y decidí si se publican o se eliminan.";
+        $("tipo").value = "todas";
+        filtro = "pendientes";
+        document.querySelectorAll("[data-filtro]").forEach(b => b.classList.toggle("activa", b.dataset.filtro === "pendientes"));
+      } else if (tablaDestino && secciones.some(s => s.tabla === tablaDestino)) {
         $("tipo").value = tablaDestino;
         filtro = "pendientes";
         document.querySelectorAll("[data-filtro]").forEach(b => b.classList.toggle("activa", b.dataset.filtro === "pendientes"));
       }
-      await Promise.all([cargar(), cargarRobertDocs()]);
+
+      if (modoComercio) {
+        await cargar();
+      } else {
+        await Promise.all([cargar(), cargarRobertDocs()]);
+      }
     }
     $("loginForm").addEventListener("submit", async event => {
       event.preventDefault();
