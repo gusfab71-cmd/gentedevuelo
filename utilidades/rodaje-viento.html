@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rodaje con viento - Simulador de controles</title>
+<style>
+:root{--sky1:#bcd7e2;--sky2:#eef1ec;--ring:rgba(31,95,74,.10);--bg:#eef1ec;--panel:#fff;--ink:#1d2a24;--mut:#5d6b64;--line:#cfd7d0;--acc:#1f5f4a;--up:#2a6fdb;--dn:#e07a1f;--asp:#4a4f52}
+@media (prefers-color-scheme:dark){:root:not([data-t="l"]){--sky1:#0c1a24;--sky2:#141a17;--ring:rgba(88,194,156,.10);--bg:#141a17;--panel:#1d2521;--ink:#e6ede8;--mut:#9aaaa1;--line:#34423b;--acc:#58c29c;--asp:#2a2f31}}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:repeating-radial-gradient(circle at 80% 8%,transparent 0 46px,var(--ring) 47px 48px),linear-gradient(180deg,var(--sky1),var(--sky2) 70%) fixed;color:var(--ink);font:15px/1.45 Georgia,"Times New Roman",serif}
+.top{background:var(--acc);color:#fff;text-align:center;padding:9px 12px;font:italic 1.05rem Georgia,serif;letter-spacing:.04em;border-bottom:3px solid var(--dn)}
+.top b{font-style:normal;font-weight:700}
+.box{box-shadow:0 2px 10px rgba(0,0,0,.12)}
+h1{font-size:1.35rem;margin:0;padding:14px 16px 4px}
+p.s{margin:0;padding:0 16px 10px;color:var(--mut);font-size:.9rem}
+.wrap{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:12px;padding:0 12px 16px;max-width:1100px;margin:auto}
+@media(max-width:800px){.wrap{grid-template-columns:1fr}}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:12px}
+canvas{width:100%;height:auto;display:block;border-radius:4px;background:var(--sky2);touch-action:none}
+label{display:flex;justify-content:space-between;font-size:.88rem;color:var(--mut);margin-top:8px}
+input[type=range]{width:100%;accent-color:var(--acc)}
+.row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+button{font:inherit;font-size:.88rem;padding:7px 11px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:5px;cursor:pointer}
+button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.gear{display:flex;gap:6px}.gear button{flex:1}
+.ctl{display:flex;gap:14px;align-items:center;justify-content:space-around;flex-wrap:wrap}
+.big{font-size:1.05rem;margin:6px 0 2px}
+.tag{display:inline-block;padding:2px 8px;border-radius:10px;background:var(--acc);color:#fff;font-size:.8rem}
+ul{margin:6px 0 0;padding-left:18px}li{margin:3px 0}
+.leg{font-size:.8rem;color:var(--mut);margin-top:6px}
+.leg i{display:inline-block;width:10px;height:10px;margin:0 4px 0 8px;border-radius:2px}
+svg text{fill:var(--ink);font:11px Georgia,serif}
+nav.top a{color:inherit;padding:8px;display:inline-block} .wrap>div{min-width:0} button{min-height:44px} input[type=range]{min-height:32px}
+</style>
+<style id="auth-pending-style">html.auth-pending body{visibility:hidden}</style><script>document.documentElement.classList.add("auth-pending")</script><script src="../assets/supabase-2.117.2.min.js"></script><script src="../assets/community-config.js"></script><script src="../assets/auth-guard.js?v=20261004"></script>
+</head>
+<body>
+<nav class="top"><a href="index.html">Volver a Utilidades</a> · <a href="../comunidad.html#foro">Foro</a></nav>
+<div class="top">Desarrollado por <b>Gente de Vuelo</b></div>
+<h1>Rodaje con viento: cómo mover los controles</h1>
+<p class="s">Elegí el tren de aterrizaje, la dirección del viento y el rumbo del avión. Los controles se ajustan solos.</p>
+<div class="wrap">
+ <div>
+  <div class="box">
+   <canvas id="cv" width="640" height="640" aria-label="Vista superior del avión, viento y superficies de control">La descripción de los controles se muestra en Qué hacer.</canvas>
+   <div class="leg"><i style="background:var(--up)"></i>superficie arriba<i style="background:var(--dn)"></i>superficie abajo</div>
+  </div>
+  <div class="box" style="margin-top:12px">
+   <div class="gear"><button id="gT" class="on">Tren triciclo</button><button id="gC">Tren convencional</button></div>
+   <label for="wd"><span>Viento desde (grados)</span><b id="vW">270</b></label>
+   <input id="wd" type="range" min="0" max="359" value="270">
+   <label for="ws"><span>Intensidad del viento (kt)</span><b id="vS">15</b></label>
+   <input id="ws" type="range" min="0" max="35" value="15">
+   <label for="hd"><span>Rumbo del avión (grados)</span><b id="vH">360</b></label>
+   <input id="hd" type="range" min="1" max="360" value="360">
+   <div class="row">
+    <button id="go">Rodar</button>
+    <button id="bl">Girar izquierda</button>
+    <button id="br">Girar derecha</button>
+    <button id="rw">Volver y apuntar a la pista</button>
+   </div>
+   <div class="leg">Teclado: flechas izquierda y derecha para virar, espacio para rodar o detener.</div>
+  </div>
+ </div>
+ <div>
+  <div class="box">
+   <div><span class="tag" id="cat">-</span></div>
+   <div class="big" id="rel"></div>
+   <div class="ctl">
+    <svg id="yk" width="180" height="170" viewBox="0 0 170 170" aria-label="Cuerno de mando tipo Cessna 150">
+     <rect x="20" y="10" width="130" height="118" rx="8" fill="none" stroke="var(--line)" stroke-width="2"/>
+     <rect x="78" y="70" width="14" height="58" fill="var(--mut)"/>
+     <g id="yw" transform="translate(85 70) rotate(0) scale(1) translate(-85 -70)">
+      <g fill="none" stroke="var(--ink)" stroke-linecap="round" stroke-linejoin="round">
+       <path d="M85 70 C70 70 50 64 42 30" stroke-width="11"/>
+       <path d="M85 70 C100 70 120 64 128 30" stroke-width="11"/>
+       <path d="M42 30 L42 20" stroke-width="15"/>
+       <path d="M128 30 L128 20" stroke-width="15"/>
+      </g>
+      <circle cx="85" cy="70" r="13" fill="var(--panel)" stroke="var(--ink)" stroke-width="4"/>
+      <circle cx="85" cy="70" r="5" fill="var(--acc)"/>
+      <rect x="40" y="22" width="4" height="9" fill="var(--dn)"/>
+     </g>
+     <text id="ya" x="85" y="146" text-anchor="middle"></text>
+     <text x="85" y="163" text-anchor="middle">Cuerno: gira y entra o sale</text>
+    </svg>
+    <svg width="120" height="170" viewBox="0 0 120 170" aria-label="Elevador">
+     <text x="60" y="14" text-anchor="middle">Atrás (sube)</text>
+     <rect x="52" y="22" width="16" height="110" rx="8" fill="none" stroke="var(--line)" stroke-width="2"/>
+     <line x1="46" y1="77" x2="74" y2="77" stroke="var(--mut)"/>
+     <circle id="em" cx="60" cy="77" r="11" fill="var(--acc)"/>
+     <text x="60" y="150" text-anchor="middle">Adelante (baja)</text>
+     <text id="ye" x="60" y="166" text-anchor="middle"></text>
+    </svg>
+   </div>
+  </div>
+  <div class="box" style="margin-top:12px">
+   <b>Qué hacer</b>
+   <ul id="tips"></ul>
+  </div>
+  <div class="box" style="margin-top:12px">
+   <b>Regla práctica</b>
+   <ul>
+    <li>Viento de frente o cruzado sin componente de cola: gira el cuerno hacia el viento (alerón del lado del viento sube).</li>
+    <li>Viento de cola: gira el cuerno alejándote del viento (alerón del lado del viento baja).</li>
+    <li>Triciclo: palanca neutral con viento de frente, adelante con viento de cola.</li>
+    <li>Convencional: palanca atrás con viento de frente, adelante con viento de cola.</li>
+    <li>Siempre rodar a baja velocidad y usar pedales y frenos para dirigir.</li>
+   </ul>
+   <div class="leg">Material educativo esquemático: la amplitud dibujada no representa una deflexión operacional ni un modelo físico. Seguí siempre el manual de vuelo de la aeronave y las instrucciones del instructor. En tren convencional, un viento de frente muy fuerte puede requerir elevador más próximo a neutral. <a href="https://www.faa.gov/sites/faa.gov/files/regulations_policies/handbooks_manuals/aviation/airplane_handbook/03_afh_ch2.pdf" target="_blank" rel="noopener noreferrer">Referencia: FAA, Ground Operations</a>.</div>
+  </div>
+ </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const cv=$('cv'),c=cv.getContext('2d'),W=cv.width,H=cv.height;
+const st={gear:'T',wind:270,spd:15,hdg:360,x:0,y:0,roll:false,turn:0,ph:0};
+const rad=d=>d*Math.PI/180;
+const norm=a=>{a=((a%360)+360)%360;return a>180?a-360:a};
+const RW=360; // pista 36 (rumbo 360), ubicada arriba
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+function calc(){
+  const th=norm(st.wind-st.hdg),a=Math.abs(th),k=Math.min(1,st.spd/25);
+  const side=Math.sign(th)||1;
+  let ail=(a<=90?1:-1)*side*k*Math.sin(rad(a));
+  let el=k*Math.cos(rad(th));
+  if(st.gear==='T')el=Math.min(0,el);
+  let cat;
+  if(st.spd===0)cat='Viento calmo';
+  else if(a<15)cat='Viento de frente';
+  else if(a<75)cat='Viento cuarteando de frente';
+  else if(a<=105)cat='Viento cruzado';
+  else if(a<165)cat='Viento cuarteando de cola';
+  else cat='Viento de cola';
+  if(st.spd===0){ail=0;el=0}
+  return{th,a,side,ail,el,cat};
+}
+function tips(r){
+  const L=[];
+  const neutralA=Math.abs(r.ail)<.05, neutralE=Math.abs(r.el)<.05;
+  if(st.spd===0)L.push('Sin viento: alerones neutrales; posición del elevador según el manual de la aeronave.');
+  else {
+    L.push(neutralA?'Alerones: neutrales en esta representación.':
+      'Alerones: cuerno hacia la '+(r.ail>0?'derecha':'izquierda')+
+      (r.a<=90?' (hacia el viento).':' (alejado del viento).'));
+    L.push(neutralE?'Elevador: neutral en esta representación.':
+      r.el>0?'Elevador: palanca atrás.':'Elevador: palanca hacia adelante.');
+    L.push('Dirigí el rodaje con los pedales y, cuando corresponda, frenos diferenciales; los alerones no dirigen el avión en tierra.');
+    if(r.a>90)L.push('Viento de cola: rodá despacio y evitá frenadas bruscas.');
+    if(st.gear==='C')L.push('Tren convencional: seguí el manual para la posición del elevador; con viento de frente muy fuerte puede requerirse una posición más próxima a neutral.');
+  }
+  $('tips').innerHTML=L.map(t=>'<li>'+t+'</li>').join('');
+}
+
+function ui(){
+  const r=calc();
+  $('cat').textContent=r.cat;
+  const sd=r.th>0?'derecha':'izquierda';
+  $('rel').textContent=st.spd===0?'Sin viento':'Viento '+Math.round(r.a)+' grados desde la '+(r.a>=179?'cola':r.a<1?'proa':sd);
+  $('yw').setAttribute('transform','translate(85 70) rotate('+(r.ail*70)+') scale('+(1+r.el*.18)+') translate(-85 -70)');
+  $('ya').textContent=Math.abs(r.ail)<.05?'Alerones neutrales':'Cuerno '+(r.ail>0?'derecha':'izquierda');
+  $('em').setAttribute('cy',77-r.el*50);
+  $('ye').textContent=Math.abs(r.el)<.05?'Neutral':(r.el>0?'Atrás':'Adelante');
+  $('vW').textContent=st.wind;$('vS').textContent=st.spd;$('vH').textContent=Math.round(st.hdg);
+  tips(r);return r;
+}
+function surf(x,y,w,h,v,below){ // v>0 arriba; superficie integrada en el borde de fuga
+  const neutral=Math.abs(v)<.05;
+  const col=neutral?'#b9c2bc':(v>0?css('--up'):css('--dn'));
+  const hh=h+Math.abs(v)*1.6;
+  c.fillStyle=col;c.strokeStyle='#1d2a24';c.lineWidth=.9;
+  c.fillRect(x,y,w,hh);c.strokeRect(x,y,w,hh);
+  c.save();c.font='bold 5.2px Georgia';c.textAlign='center';
+  c.fillStyle=neutral?'#1d2a24':'#fff';
+  let ty=y+h/2+1.8;
+  if(below){c.fillStyle='#1d2a24';ty=y+hh+6.5}
+  c.fillText(neutral?'neutral':(v>0?'ARRIBA':'ABAJO'),x+w/2,ty);c.restore();
+}
+function plane(r){
+  c.save();c.translate(W/2,H/2);c.rotate(rad(st.hdg));c.scale(4,4);
+  const ink='#1d2a24',body='#f1f4f0',acc=css('--acc');
+  c.lineJoin='round';c.lineWidth=.9;c.strokeStyle=ink;
+  const poly=(pts,f)=>{c.beginPath();pts.forEach((p,i)=>i?c.lineTo(p[0],p[1]):c.moveTo(p[0],p[1]));c.closePath();c.fillStyle=f;c.fill();c.stroke()};
+  // tren (debajo del fuselaje)
+  const wh=(x,y,rr)=>{c.beginPath();c.arc(x,y,rr,0,7);c.fillStyle='#222';c.fill();c.beginPath();c.arc(x,y,rr*.4,0,7);c.fillStyle=acc;c.fill()};
+  c.strokeStyle=ink;c.lineWidth=1.2;
+  if(st.gear==='T'){
+    c.beginPath();c.moveTo(0,-30);c.lineTo(0,-22);c.moveTo(-14,6);c.lineTo(-6,-4);c.moveTo(14,6);c.lineTo(6,-4);c.stroke();
+    wh(0,-30,3.6);wh(-14,6,4.4);wh(14,6,4.4);
+  }else{
+    c.beginPath();c.moveTo(-14,-14);c.lineTo(-6,-6);c.moveTo(14,-14);c.lineTo(6,-6);c.moveTo(0,38);c.lineTo(0,32);c.stroke();
+    wh(-14,-14,4.6);wh(14,-14,4.6);wh(0,38,2.6);
+  }
+  c.lineWidth=.9;
+  // cola horizontal
+  poly([[-24,31],[24,31],[22,43],[-22,43]],body);
+  // ala
+  poly([[-54,-12],[-9,-14],[9,-14],[54,-12],[54,4],[-54,4]],body);
+  // franja de color en el ala
+  c.fillStyle=acc;c.fillRect(-54,-12,108,2.4);
+  // fuselaje
+  c.beginPath();c.moveTo(0,-43);c.bezierCurveTo(10,-43,10,-24,8,-8);c.bezierCurveTo(7,10,4,30,2,43);
+  c.lineTo(-2,43);c.bezierCurveTo(-4,30,-7,10,-8,-8);c.bezierCurveTo(-10,-24,-10,-43,0,-43);
+  c.fillStyle=body;c.fill();c.stroke();
+  // capot y cabina
+  c.fillStyle=acc;c.beginPath();c.moveTo(-7.4,-30);c.bezierCurveTo(-6,-41,6,-41,7.4,-30);c.closePath();c.fill();
+  poly([[-6,-24],[6,-24],[5,-12],[-5,-12]],'#2b4a5c');
+  // deriva
+  c.fillStyle=acc;c.fillRect(-1,26,2,16);
+  // helice
+  c.fillStyle='rgba(30,40,36,.35)';c.beginPath();c.ellipse(0,-45,17,2.2,0,0,7);c.fill();
+  c.fillStyle=ink;c.beginPath();c.arc(0,-44,2.2,0,7);c.fill();
+  // superficies moviles
+  surf(22,-4,30,8,r.ail,false);
+  surf(-52,-4,30,8,-r.ail,false);
+  surf(-22,37,44,6,r.el,true);
+  c.restore();
+}
+function wind(){
+  const to=rad(st.wind+180),dx=Math.sin(to),dy=-Math.cos(to);
+  const L=Math.min(60,10+st.spd*1.6);
+  c.strokeStyle=css('--mut');c.fillStyle=css('--mut');c.lineWidth=1.5;c.globalAlpha=.55;
+  const n=7,sp=90,cx=W/2,cy=H/2;
+  for(let i=-n;i<=n;i++){
+    for(let j=-n;j<=n;j++){
+      let px=cx+i*sp*0.7,py=cy+j*sp*0.7;
+      const m=(st.ph+(i*3+j*5)*13)%sp;
+      px+=dx*(m-sp/2);py+=dy*(m-sp/2);
+      if(px<0||px>W||py<0||py>H||st.spd===0)continue;
+      c.beginPath();c.moveTo(px,py);c.lineTo(px+dx*L*.5,py+dy*L*.5);c.stroke();
+      c.beginPath();c.moveTo(px+dx*L*.5,py+dy*L*.5);
+      c.lineTo(px+dx*L*.5-dx*6+dy*4,py+dy*L*.5-dy*6-dx*4);
+      c.lineTo(px+dx*L*.5-dx*6-dy*4,py+dy*L*.5-dy*6+dx*4);c.fill();
+    }
+  }
+  c.globalAlpha=1;
+}
+function scene(r){
+  const ox=W/2-st.x,oy=H/2-st.y; // desplazamiento del mundo: el avión queda centrado
+  c.clearRect(0,0,W,H);
+  c.fillStyle=css('--sky2');c.fillRect(0,0,W,H);
+  // cuadricula de pasto para percibir el movimiento
+  c.strokeStyle=css('--ring');c.lineWidth=1;
+  for(let gx=Math.floor((-ox)/100)*100;gx<-ox+W+100;gx+=100){c.beginPath();c.moveTo(gx+ox,0);c.lineTo(gx+ox,H);c.stroke()}
+  for(let gy=Math.floor((-oy)/100)*100;gy<-oy+H+100;gy+=100){c.beginPath();c.moveTo(0,gy+oy);c.lineTo(W,gy+oy);c.stroke()}
+  // pista 36: 560 de ancho (el ala mide 432)
+  const rx=-280,rw=560,rTop=-3000,rBot=-300;
+  c.fillStyle=css('--asp');c.fillRect(rx+ox,rTop+oy,rw,rBot-rTop);
+  c.fillStyle='#fff';
+  c.fillRect(rx+10+ox,rTop+oy,6,rBot-rTop);c.fillRect(rx+rw-16+ox,rTop+oy,6,rBot-rTop); // bordes
+  for(let y=rBot-60;y>rTop;y-=120)c.fillRect(-5+ox,y-60+oy,10,60); // eje
+  for(let i=0;i<8;i++){c.fillRect(rx+50+i*58+ox,rBot-110+oy,26,80)} // umbral
+  c.save();c.translate(ox,rBot-230+oy);c.font='bold 90px Georgia';c.textAlign='center';c.fillText('36',0,0);c.restore();
+  // calle de rodaje
+  c.fillStyle=css('--asp');c.fillRect(-60+ox,rBot+oy,120,2200);
+  c.fillStyle='#d9b200';c.fillRect(-3+ox,rBot+oy,6,2200);
+  wind();
+  // veleta en esquina
+  c.save();c.translate(46,46);c.rotate(rad(st.wind+180));
+  c.fillStyle=css('--acc');c.beginPath();c.moveTo(0,-22);c.lineTo(10,8);c.lineTo(0,2);c.lineTo(-10,8);c.fill();
+  c.restore();
+  c.fillStyle=css('--ink');c.font='13px Georgia';c.textAlign='left';
+  c.fillText('Viento '+st.wind+' / '+st.spd+' kt',14,H-14);
+  c.fillText('N',W-18,22);
+  plane(r);
+}
+let last=0;
+function loop(t){
+  const dt=Math.min(.05,(t-last)/1000||0);last=t;
+  st.ph=(st.ph+st.spd*dt*6)%90;
+  if(st.turn){st.hdg=((st.hdg-1+st.turn*40*dt+360)%360)+1;if(st.hdg>360)st.hdg-=360;$('hd').value=Math.round(st.hdg)}
+  if(st.roll){
+    st.x+=Math.sin(rad(st.hdg))*110*dt;st.y-=Math.cos(rad(st.hdg))*110*dt;
+  }
+  const rr=ui2();scene(rr);requestAnimationFrame(loop);
+}
+let lastKey='';
+function ui2(){const k=[st.wind,st.spd,Math.round(st.hdg),st.gear].join();if(k!==lastKey){lastKey=k;return ui()}return calc()}
+$('wd').oninput=e=>st.wind=+e.target.value;
+$('ws').oninput=e=>st.spd=+e.target.value;
+$('hd').oninput=e=>st.hdg=+e.target.value;
+function gear(g){st.gear=g;$('gT').classList.toggle('on',g==='T');$('gC').classList.toggle('on',g==='C')}
+$('gT').onclick=()=>gear('T');$('gC').onclick=()=>gear('C');
+$('go').onclick=()=>{st.roll=!st.roll;$('go').textContent=st.roll?'Detener':'Rodar';$('go').classList.toggle('on',st.roll)};
+$('rw').onclick=()=>{st.hdg=RW;st.x=0;st.y=0;st.turn=0;if(st.roll)$('go').click();$('hd').value=RW};
+const hold=(b,v)=>{b.onpointerdown=e=>{b.setPointerCapture(e.pointerId);st.turn=v};b.onpointerup=b.onpointercancel=b.onlostpointercapture=()=>st.turn=0};
+hold($('bl'),-1);hold($('br'),1);
+addEventListener('keydown',e=>{
+  if(['INPUT','TEXTAREA','SELECT','BUTTON','A'].includes(e.target.tagName))return;
+  if(e.key==='ArrowLeft'){st.turn=-1;e.preventDefault()}
+  if(e.key==='ArrowRight'){st.turn=1;e.preventDefault()}
+  if(e.key===' '&&!e.repeat){e.preventDefault();$('go').click()}
+});
+addEventListener('keyup',e=>{if(e.key==='ArrowLeft'||e.key==='ArrowRight')st.turn=0});
+addEventListener('blur',()=>{st.turn=0;if(st.roll)$('go').click()});
+document.addEventListener('visibilitychange',()=>{if(document.hidden){st.turn=0;if(st.roll)$('go').click()}});
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
+
