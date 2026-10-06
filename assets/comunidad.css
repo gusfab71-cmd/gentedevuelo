@@ -498,3 +498,49 @@
   border-color: #ff9f1c !important;
   box-shadow: 0 0 0 1px rgba(255,159,28,.15);
 }
+
+
+/* ===== FORO GENERAL · PENDIENTE DE MODERACIÓN ===== */
+.topic-card.topic-card-pending{
+  border-color:rgba(245,165,85,.82);
+  box-shadow:0 12px 30px rgba(0,0,0,.24),0 0 0 1px rgba(245,165,85,.16),0 0 20px rgba(245,165,85,.08);
+}
+.forum-pending-notice{
+  margin-top:12px;
+  padding:10px 12px;
+  display:flex;
+  align-items:center;
+  gap:9px;
+  flex-wrap:wrap;
+  border:1px solid rgba(245,165,85,.42);
+  border-radius:9px;
+  background:rgba(245,165,85,.10);
+  color:#ffd39b;
+  font-size:13px;
+}
+.forum-pending-dot{
+  width:9px;
+  height:9px;
+  border-radius:50%;
+  background:#f5a555;
+  box-shadow:0 0 0 4px rgba(245,165,85,.13);
+  flex:0 0 9px;
+}
+.forum-pending-manage{
+  margin-left:auto;
+  min-height:34px!important;
+  padding:6px 10px!important;
+  border-color:#f5a555!important;
+  background:#3c2c1f!important;
+  color:#ffd39b!important;
+  font-weight:700;
+}
+.forum-pending-manage:hover{
+  background:#513725!important;
+}
+@media(max-width:620px){
+  .forum-pending-manage{
+    width:100%;
+    margin-left:0;
+  }
+}
