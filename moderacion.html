@@ -212,7 +212,7 @@
     const secciones = [
       { tabla: "publicaciones", nombre: "Foro Aeronáutico", campos: "id,titulo,contenido,autor_nombre,aprobado,created_at" },
       { tabla: "forum_respuestas", nombre: "Respuestas del foro", campos: "id,publicacion_id,autor_nombre,contenido,estado,created_at" },
-      { tabla: "aportes_destacados", nombre: "Tarjetas temáticas", campos: "id,user_id,titulo,contenido,seccion,categoria,enlace,estado,visible,destacado,created_at,origen_tipo,origen_nombre,origen_profile_id" },
+      { tabla: "aportes_destacados", nombre: "Aportes / AeroShop", campos: "id,user_id,titulo,contenido,seccion,categoria,enlace,estado,visible,destacado,created_at,origen_tipo,origen_nombre,origen_profile_id" },
       { tabla: "actividades", nombre: "Agenda Aeronáutica", campos: "id,titulo,descripcion,fecha_evento,lugar,localidad,estado,visible,created_at" },
       { tabla: "galeria", nombre: "Galería", campos: "id,archivo,nombre_usuario,visible,created_at" },
       { tabla: "travesias", nombre: "Travesías", campos: "id,titulo,relato,salida,destino,fotos,videos,visible,created_at" },
@@ -397,8 +397,11 @@
       const articulo = nodo("article", "", "tarjeta");
       const cabecera = nodo("div", "", "tarjeta-cabecera");
       const lado = nodo("div", "");
+      const nombreSeccion = t === "aportes_destacados" && r.seccion === "tienda-seccion"
+        ? "AeroShop"
+        : item.config.nombre;
       lado.append(
-        nodo("small", item.config.nombre + " · " + etiquetaEstado(item) + (r.destacado ? " · DESTACADA" : ""), "meta"),
+        nodo("small", nombreSeccion + " · " + etiquetaEstado(item) + (r.destacado ? " · DESTACADA" : ""), "meta"),
         nodo("h2", r.titulo || (t === "galeria" ? (esVideo(r.archivo) ? "Video de " : "Foto de ") + (r.nombre_usuario || "la comunidad") : t === "shimoda_comentarios" ? "Comentario a Shimoda" : t === "forum_respuestas" ? "Respuesta en el foro" : "Sin título"))
       );
       cabecera.append(lado, nodo("time", fecha(r.created_at || r.fecha_publicacion), "fecha"));
@@ -491,7 +494,7 @@
       const target=location.hash.slice(1).split("/");
       const visibles = items.filter(item => (!target[0]||(item.config.tabla===target[0]&&(!target[1]||String(item.fila.id)===target[1]))) && (filtro === "todas" || estado(item) === filtro)
         && (seleccion === "todas" || item.config.tabla === seleccion)
-        && (!buscar || [item.fila.titulo, item.fila.contenido, item.fila.descripcion, item.fila.relato, item.fila.autor_nombre, item.fila.nombre_usuario].filter(Boolean).join(" ").toLocaleLowerCase("es-AR").includes(buscar)));
+        && (!buscar || [item.fila.titulo, item.fila.contenido, item.fila.descripcion, item.fila.relato, item.fila.autor_nombre, item.fila.nombre_usuario, item.fila.seccion, item.fila.categoria, item.fila.seccion === "tienda-seccion" ? "AeroShop" : ""].filter(Boolean).join(" ").toLocaleLowerCase("es-AR").includes(buscar)));
       $("resumen").textContent = visibles.length + " publicaciones en esta vista";
       const lista = $("lista");
       lista.replaceChildren();
