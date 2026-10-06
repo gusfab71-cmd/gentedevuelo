@@ -5,50 +5,54 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Rodaje con viento - Simulador de controles</title>
 <style>
-:root{--sky1:#bcd7e2;--sky2:#eef1ec;--ring:rgba(31,95,74,.10);--bg:#eef1ec;--panel:#fff;--ink:#1d2a24;--mut:#5d6b64;--line:#cfd7d0;--acc:#1f5f4a;--up:#2a6fdb;--dn:#e07a1f;--asp:#4a4f52}
-@media (prefers-color-scheme:dark){:root:not([data-t="l"]){--sky1:#0c1a24;--sky2:#141a17;--ring:rgba(88,194,156,.10);--bg:#141a17;--panel:#1d2521;--ink:#e6ede8;--mut:#9aaaa1;--line:#34423b;--acc:#58c29c;--asp:#2a2f31}}
+:root{color-scheme:dark;--sky1:#0c182b;--sky2:#101e30;--ring:rgba(125,211,252,.08);--bg:#070b14;--panel:#11192d;--ink:#e2e8f0;--mut:#a4b4ca;--line:#2c3d55;--acc:#38bdf8;--up:#2563eb;--dn:#c96716;--asp:#283344}
 *{box-sizing:border-box}
-body{margin:0;min-height:100vh;background:repeating-radial-gradient(circle at 80% 8%,transparent 0 46px,var(--ring) 47px 48px),linear-gradient(180deg,var(--sky1),var(--sky2) 70%) fixed;color:var(--ink);font:15px/1.45 Georgia,"Times New Roman",serif}
-.top{background:var(--acc);color:#fff;text-align:center;padding:9px 12px;font:italic 1.05rem Georgia,serif;letter-spacing:.04em;border-bottom:3px solid var(--dn)}
-.top b{font-style:normal;font-weight:700}
-.box{box-shadow:0 2px 10px rgba(0,0,0,.12)}
-h1{font-size:1.35rem;margin:0;padding:14px 16px 4px}
-p.s{margin:0;padding:0 16px 10px;color:var(--mut);font-size:.9rem}
-.wrap{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:12px;padding:0 12px 16px;max-width:1100px;margin:auto}
-@media(max-width:800px){.wrap{grid-template-columns:1fr}}
-.box{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:12px}
-canvas{width:100%;height:auto;display:block;border-radius:4px;background:var(--sky2);touch-action:none}
-label{display:flex;justify-content:space-between;font-size:.88rem;color:var(--mut);margin-top:8px}
-input[type=range]{width:100%;accent-color:var(--acc)}
-.row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
-button{font:inherit;font-size:.88rem;padding:7px 11px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:5px;cursor:pointer}
-button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
-button:focus-visible,input:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
-.gear{display:flex;gap:6px}.gear button{flex:1}
-.ctl{display:flex;gap:14px;align-items:center;justify-content:space-around;flex-wrap:wrap}
-.big{font-size:1.05rem;margin:6px 0 2px}
-.tag{display:inline-block;padding:2px 8px;border-radius:10px;background:var(--acc);color:#fff;font-size:.8rem}
-ul{margin:6px 0 0;padding-left:18px}li{margin:3px 0}
-.leg{font-size:.8rem;color:var(--mut);margin-top:6px}
-.leg i{display:inline-block;width:10px;height:10px;margin:0 4px 0 8px;border-radius:2px}
-svg text{fill:var(--ink);font:11px Georgia,serif}
-nav.top a{color:inherit;padding:8px;display:inline-block} .wrap>div{min-width:0} button{min-height:44px} input[type=range]{min-height:32px}
+body{margin:0;min-height:100vh;background:radial-gradient(900px 500px at 0 0,#0e749030,transparent),radial-gradient(800px 450px at 100% 0,#4f46e530,transparent),var(--bg);color:var(--ink);font:14px/1.6 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+a{color:#7dd3fc;text-underline-offset:4px}
+.top{max-width:1240px;margin:auto;padding:14px 24px;display:flex;justify-content:space-between;gap:16px;align-items:center;border-bottom:1px solid #ffffff0d;font-size:12px}
+.top a{text-decoration:none;display:inline-flex;align-items:center;min-height:44px;gap:8px}.top a:hover{color:#fff}.top svg{width:16px;height:16px}
+.brand{font-weight:750;letter-spacing:.14em;font-size:11px;color:var(--mut)}
+.hero{max-width:1240px;margin:0 auto;padding:26px 24px 22px;display:flex;align-items:center;gap:16px}
+.hero-mark{flex:0 0 48px;height:48px;display:grid;place-items:center;background:linear-gradient(135deg,#0891b2,#4f46e5);border:1px solid #7dd3fc44;border-radius:14px;box-shadow:0 8px 28px #0891b225}.hero-mark svg{width:28px;height:28px}
+.eyebrow{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#7dd3fc;font-weight:700}
+h1{font-size:clamp(22px,3vw,30px);letter-spacing:-.035em;line-height:1.2;margin:4px 0 8px;color:#f8fafc}
+p.s{margin:0;color:var(--mut);font-size:13px;max-width:760px}
+.wrap{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:20px;padding:0 24px 32px;max-width:1240px;margin:auto}.wrap>div{min-width:0;display:flex;flex-direction:column;gap:16px}
+.box{background:linear-gradient(145deg,#162137e6,#10182ae6);border:1px solid #ffffff12;border-radius:16px;padding:20px;box-shadow:0 12px 30px #00000020}
+.panel-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}.panel-heading h2,h2{font-size:14px;font-weight:650;margin:0;color:#eaf3ff}.panel-heading span{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--mut)}
+canvas{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:12px;background:var(--sky2);touch-action:none}
+label{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:12px;color:var(--mut);margin-top:14px}label b{font:600 15px/1.4 ui-monospace,monospace;color:#7dd3fc;background:#070b1466;border:1px solid #38bdf820;padding:3px 10px;border-radius:6px;min-width:48px;text-align:center}
+input[type=range]{width:100%;min-height:32px;margin:4px 0;accent-color:var(--acc);cursor:pointer}
+.row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:16px}#rw{grid-column:1/-1}
+button{font:600 12px/1.4 system-ui,sans-serif;padding:10px 12px;min-height:44px;border:1px solid var(--line);background:#17243a;color:var(--ink);border-radius:9px;cursor:pointer;transition:background .16s,border-color .16s}
+button:hover{background:#213551;border-color:#38bdf870}button.on{background:#38bdf81f;color:#7dd3fc;border-color:#38bdf880}#go{background:#38bdf8;color:#07121e;border-color:#38bdf8}#go.on{background:#fbbf24;color:#17130b;border-color:#fbbf24}
+button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid #7dd3fc;outline-offset:4px}
+.gear{display:flex;gap:8px;padding:5px;border:1px solid #ffffff0d;background:#070b1477;border-radius:12px}.gear button{flex:1}
+.ctl{display:flex;gap:14px;align-items:center;justify-content:space-around;flex-wrap:wrap;background:#070b1460;border:1px solid #ffffff0a;border-radius:12px;padding:20px 8px;margin-top:18px}
+.big{font-size:clamp(16px,2vw,20px);font-weight:600;line-height:1.4;margin:12px 0 2px;letter-spacing:-.02em}
+.tag{display:inline-block;padding:4px 10px;border-radius:6px;background:#38bdf815;border:1px solid #38bdf840;color:#7dd3fc;font-size:11px;font-weight:650}
+ul{margin:12px 0 0;padding-left:18px}li{margin:9px 0;color:#c3d0e2;font-size:13px}li::marker{color:#38bdf8}.guidance{border-top:2px solid #38bdf870}.reference{border-top:1px solid #ffffff10;padding-top:14px;margin-top:16px}
+.leg{font-size:11px;color:var(--mut);margin-top:12px;line-height:1.7}.legend{display:flex;justify-content:center;flex-wrap:wrap;gap:16px}.legend span{display:inline-flex;align-items:center;gap:6px}.leg i{display:inline-block;width:8px;height:8px;border-radius:2px}
+svg text{fill:var(--ink);font:11px system-ui,sans-serif}
+footer{max-width:1192px;margin:0 auto;padding:18px 24px 28px;border-top:1px solid #ffffff0d;color:#8293ad;font-size:11px;display:flex;justify-content:space-between;gap:12px}
+@media(max-width:800px){.wrap{grid-template-columns:1fr;max-width:660px;padding:0 16px 24px;gap:16px}.hero{padding:22px 16px}.top{padding:8px 16px}.box{padding:16px}.brand{font-size:9px;letter-spacing:.08em}.hero-mark{display:none}footer{margin:0 16px;padding:18px 0;flex-wrap:wrap}}
+@media(prefers-reduced-motion:reduce){button{transition:none}}
 </style>
 <style id="auth-pending-style">html.auth-pending body{visibility:hidden}</style><script>document.documentElement.classList.add("auth-pending")</script><script src="../assets/supabase-2.117.2.min.js"></script><script src="../assets/community-config.js"></script><script src="../assets/auth-guard.js?v=20261004"></script>
 </head>
 <body>
-<nav class="top"><a href="index.html">Volver a Utilidades</a> · <a href="../comunidad.html#foro">Foro</a></nav>
-<div class="top">Desarrollado por <b>Gente de Vuelo</b></div>
-<h1>Rodaje con viento: cómo mover los controles</h1>
-<p class="s">Elegí el tren de aterrizaje, la dirección del viento y el rumbo del avión. Los controles se ajustan solos.</p>
-<div class="wrap">
+<nav class="top" aria-label="Navegación de utilidades"><a href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m14 6-6 6 6 6M8 12h13"/></svg>Utilidades</a><span class="brand">GENTE DE VUELO</span><a href="../comunidad.html#foro">Foro</a></nav>
+<header class="hero"><div class="hero-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8h13a3 3 0 1 0-3-3M3 12h17M3 16h10a3 3 0 1 1-3 3"/></svg></div><div><div class="eyebrow">Simulador de controles · Entrenamiento en tierra</div><h1>Rodaje con viento</h1><p class="s">Elegí el tren de aterrizaje, la dirección del viento y el rumbo del avión. Observá cómo se ajustan los controles.</p></div></header>
+<main class="wrap">
  <div>
   <div class="box">
+   <div class="panel-heading"><h2>Vista de rodaje</h2><span>Vista superior</span></div>
    <canvas id="cv" width="640" height="640" aria-label="Vista superior del avión, viento y superficies de control">La descripción de los controles se muestra en Qué hacer.</canvas>
-   <div class="leg"><i style="background:var(--up)"></i>superficie arriba<i style="background:var(--dn)"></i>superficie abajo</div>
+   <div class="leg legend"><span><i style="background:var(--up)"></i>Superficie arriba</span><span><i style="background:var(--dn)"></i>Superficie abajo</span></div>
   </div>
-  <div class="box" style="margin-top:12px">
-   <div class="gear"><button id="gT" class="on">Tren triciclo</button><button id="gC">Tren convencional</button></div>
+  <div class="box">
+   <div class="panel-heading"><h2>Configuración del ejercicio</h2></div>
+   <div class="gear" role="group" aria-label="Tren de aterrizaje"><button id="gT" class="on" aria-pressed="true">Tren triciclo</button><button id="gC" aria-pressed="false">Tren convencional</button></div>
    <label for="wd"><span>Viento desde (grados)</span><b id="vW">270</b></label>
    <input id="wd" type="range" min="0" max="359" value="270">
    <label for="ws"><span>Intensidad del viento (kt)</span><b id="vS">15</b></label>
@@ -66,6 +70,7 @@ nav.top a{color:inherit;padding:8px;display:inline-block} .wrap>div{min-width:0}
  </div>
  <div>
   <div class="box">
+   <div class="panel-heading"><h2>Posición de los controles</h2></div>
    <div><span class="tag" id="cat">-</span></div>
    <div class="big" id="rel"></div>
    <div class="ctl">
@@ -96,12 +101,12 @@ nav.top a{color:inherit;padding:8px;display:inline-block} .wrap>div{min-width:0}
     </svg>
    </div>
   </div>
-  <div class="box" style="margin-top:12px">
-   <b>Qué hacer</b>
+  <div class="box guidance">
+   <h2>Qué hacer</h2>
    <ul id="tips"></ul>
   </div>
-  <div class="box" style="margin-top:12px">
-   <b>Regla práctica</b>
+  <div class="box">
+   <h2>Regla práctica</h2>
    <ul>
     <li>Viento de frente o cruzado sin componente de cola: gira el cuerno hacia el viento (alerón del lado del viento sube).</li>
     <li>Viento de cola: gira el cuerno alejándote del viento (alerón del lado del viento baja).</li>
@@ -109,10 +114,11 @@ nav.top a{color:inherit;padding:8px;display:inline-block} .wrap>div{min-width:0}
     <li>Convencional: palanca atrás con viento de frente, adelante con viento de cola.</li>
     <li>Siempre rodar a baja velocidad y usar pedales y frenos para dirigir.</li>
    </ul>
-   <div class="leg">Material educativo esquemático: la amplitud dibujada no representa una deflexión operacional ni un modelo físico. Seguí siempre el manual de vuelo de la aeronave y las instrucciones del instructor. En tren convencional, un viento de frente muy fuerte puede requerir elevador más próximo a neutral. <a href="https://www.faa.gov/sites/faa.gov/files/regulations_policies/handbooks_manuals/aviation/airplane_handbook/03_afh_ch2.pdf" target="_blank" rel="noopener noreferrer">Referencia: FAA, Ground Operations</a>.</div>
+   <div class="leg reference">Material educativo esquemático: la amplitud dibujada no representa una deflexión operacional ni un modelo físico. Seguí siempre el manual de vuelo de la aeronave y las instrucciones del instructor. En tren convencional, un viento de frente muy fuerte puede requerir elevador más próximo a neutral. <a href="https://www.faa.gov/sites/faa.gov/files/regulations_policies/handbooks_manuals/aviation/airplane_handbook/03_afh_ch2.pdf" target="_blank" rel="noopener noreferrer">Referencia: FAA, Ground Operations</a>.</div>
   </div>
  </div>
-</div>
+</main>
+<footer><span>Gente de Vuelo · Utilidades</span><span>Simulación educativa de rodaje</span></footer>
 <script>
 const $=id=>document.getElementById(id);
 const cv=$('cv'),c=cv.getContext('2d'),W=cv.width,H=cv.height;
@@ -173,7 +179,7 @@ function surf(x,y,w,h,v,below){ // v>0 arriba; superficie integrada en el borde 
   const hh=h+Math.abs(v)*1.6;
   c.fillStyle=col;c.strokeStyle='#1d2a24';c.lineWidth=.9;
   c.fillRect(x,y,w,hh);c.strokeRect(x,y,w,hh);
-  c.save();c.font='bold 5.2px Georgia';c.textAlign='center';
+  c.save();c.font='bold 5.2px system-ui';c.textAlign='center';
   c.fillStyle=neutral?'#1d2a24':'#fff';
   let ty=y+h/2+1.8;
   if(below){c.fillStyle='#1d2a24';ty=y+hh+6.5}
@@ -253,7 +259,7 @@ function scene(r){
   c.fillRect(rx+10+ox,rTop+oy,6,rBot-rTop);c.fillRect(rx+rw-16+ox,rTop+oy,6,rBot-rTop); // bordes
   for(let y=rBot-60;y>rTop;y-=120)c.fillRect(-5+ox,y-60+oy,10,60); // eje
   for(let i=0;i<8;i++){c.fillRect(rx+50+i*58+ox,rBot-110+oy,26,80)} // umbral
-  c.save();c.translate(ox,rBot-230+oy);c.font='bold 90px Georgia';c.textAlign='center';c.fillText('36',0,0);c.restore();
+  c.save();c.translate(ox,rBot-230+oy);c.font='bold 90px system-ui';c.textAlign='center';c.fillText('36',0,0);c.restore();
   // calle de rodaje
   c.fillStyle=css('--asp');c.fillRect(-60+ox,rBot+oy,120,2200);
   c.fillStyle='#d9b200';c.fillRect(-3+ox,rBot+oy,6,2200);
@@ -262,7 +268,7 @@ function scene(r){
   c.save();c.translate(46,46);c.rotate(rad(st.wind+180));
   c.fillStyle=css('--acc');c.beginPath();c.moveTo(0,-22);c.lineTo(10,8);c.lineTo(0,2);c.lineTo(-10,8);c.fill();
   c.restore();
-  c.fillStyle=css('--ink');c.font='13px Georgia';c.textAlign='left';
+  c.fillStyle=css('--ink');c.font='13px system-ui';c.textAlign='left';
   c.fillText('Viento '+st.wind+' / '+st.spd+' kt',14,H-14);
   c.fillText('N',W-18,22);
   plane(r);
@@ -282,7 +288,7 @@ function ui2(){const k=[st.wind,st.spd,Math.round(st.hdg),st.gear].join();if(k!=
 $('wd').oninput=e=>st.wind=+e.target.value;
 $('ws').oninput=e=>st.spd=+e.target.value;
 $('hd').oninput=e=>st.hdg=+e.target.value;
-function gear(g){st.gear=g;$('gT').classList.toggle('on',g==='T');$('gC').classList.toggle('on',g==='C')}
+function gear(g){st.gear=g;$('gT').classList.toggle('on',g==='T');$('gC').classList.toggle('on',g==='C');$('gT').setAttribute('aria-pressed',g==='T');$('gC').setAttribute('aria-pressed',g==='C')}
 $('gT').onclick=()=>gear('T');$('gC').onclick=()=>gear('C');
 $('go').onclick=()=>{st.roll=!st.roll;$('go').textContent=st.roll?'Detener':'Rodar';$('go').classList.toggle('on',st.roll)};
 $('rw').onclick=()=>{st.hdg=RW;st.x=0;st.y=0;st.turn=0;if(st.roll)$('go').click();$('hd').value=RW};
