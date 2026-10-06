@@ -7716,6 +7716,13 @@ function crearTarjetaClasificado(publicacion, compacto = false, usuarioId = null
     const contenido = document.createElement("div");
     contenido.className = "clasificado-item-contenido clasificado-resumen-venta";
 
+    if (publicacion.origen_aeroshop) {
+      const origenAeroShop = document.createElement("strong");
+      origenAeroShop.className = "clasificado-tipo";
+      origenAeroShop.textContent = "AEROSHOP";
+      contenido.appendChild(origenAeroShop);
+    }
+
     const titulo = document.createElement("h4");
     titulo.textContent = publicacion.titulo;
 
@@ -7864,7 +7871,7 @@ async function abrirConsultaClasificado(publicacion) {
 
     const { data: authData } = await supabaseClient.auth.getUser();
     const usuarioId = authData && authData.user ? authData.user.id : null;
-    if (usuarioId && publicacion.user_id === usuarioId) {
+    if (!publicacion.origen_aeroshop && usuarioId && publicacion.user_id === usuarioId) {
       if (publicacion.tipo === "venta") {
         const pausar = document.createElement("button");
         pausar.type = "button";
@@ -7889,7 +7896,9 @@ async function abrirConsultaClasificado(publicacion) {
     }
   }
 
-  anunciante.textContent = "Miembro de Gente de Vuelo";
+  anunciante.textContent = publicacion.origen_aeroshop
+    ? (publicacion.origen_nombre || "AeroShop · Gente de Vuelo")
+    : "Miembro de Gente de Vuelo";
 
   if (publicacion.user_id) {
     const { data: perfil, error } = await supabaseClient
@@ -7924,7 +7933,17 @@ async function abrirConsultaClasificado(publicacion) {
     }
   }
 
-  if (consultaClasificadoEmailAccion) {
+  if (consultaClasificadoEmailAccion && publicacion.origen_aeroshop && publicacion.enlace_aeroshop) {
+    consultaClasificadoEmailAccion.href = publicacion.enlace_aeroshop;
+    consultaClasificadoEmailAccion.textContent = "Ver publicación / contacto";
+    consultaClasificadoEmailAccion.target = "_blank";
+    consultaClasificadoEmailAccion.rel = "noopener noreferrer";
+    consultaClasificadoEmailAccion.classList.remove("deshabilitado");
+    consultaClasificadoEmailAccion.setAttribute("aria-disabled", "false");
+  } else if (consultaClasificadoEmailAccion) {
+    consultaClasificadoEmailAccion.textContent = "Enviar correo";
+    consultaClasificadoEmailAccion.removeAttribute("target");
+    consultaClasificadoEmailAccion.removeAttribute("rel");
     if (email) {
       const asuntoCorreo = `Consulta por ${publicacion.titulo || "clasificado"} - Gente de Vuelo`;
       const cuerpoCorreo = `Hola, te consulto por tu aviso en Gente de Vuelo: ${publicacion.titulo || "clasificado"}`;
@@ -7957,6 +7976,78 @@ if (consultaClasificadoEmailAccion) {
   });
 }
 
+async function cargarPublicacionesAeroShopParaVenta() {
+  const { data: aportes, error } = await supabaseClient
+    .from("aportes_destacados")
+    .select("id,user_id,titulo,contenido,categoria,enlace,created_at,origen_nombre,origen_profile_id")
+    .eq("seccion", "tienda-seccion")
+    .eq("visible", true)
+    .eq("estado", "aprobado")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Error al cargar publicaciones de AeroShop para CompraVenta:", error);
+    return [];
+  }
+
+  const filas = aportes || [];
+  if (!filas.length) return [];
+
+  const ids = filas.map(function (aporte) { return aporte.id; });
+  const { data: adjuntos, error: errorAdjuntos } = await supabaseClient
+    .from("aportes_adjuntos")
+    .select("aporte_id,storage_path,mime_type,created_at")
+    .in("aporte_id", ids)
+    .order("created_at", { ascending: true });
+
+  if (errorAdjuntos) {
+    console.error("Error al cargar imágenes de AeroShop para CompraVenta:", errorAdjuntos);
+  }
+
+  const primerAdjuntoPorAporte = new Map();
+  (adjuntos || []).forEach(function (adjunto) {
+    if (!primerAdjuntoPorAporte.has(adjunto.aporte_id) && String(adjunto.mime_type || "").startsWith("image/")) {
+      primerAdjuntoPorAporte.set(adjunto.aporte_id, adjunto);
+    }
+  });
+
+  const publicaciones = [];
+  for (const aporte of filas) {
+    let foto = "";
+    const adjunto = primerAdjuntoPorAporte.get(aporte.id);
+    if (adjunto?.storage_path) {
+      const { data: firma, error: errorFirma } = await supabaseClient.storage
+        .from("aportes")
+        .createSignedUrl(adjunto.storage_path, 3600);
+      if (!errorFirma) foto = firma?.signedUrl || "";
+    }
+
+    publicaciones.push({
+      id: "aeroshop-" + aporte.id,
+      aporte_id: aporte.id,
+      user_id: aporte.origen_profile_id || aporte.user_id || null,
+      tipo: "venta",
+      titulo: aporte.titulo || "Publicación de AeroShop",
+      descripcion: aporte.contenido || "",
+      precio: null,
+      moneda: "ARS",
+      ubicacion: "",
+      categoria: "AeroShop",
+      estado_articulo: "",
+      fotos: foto ? [foto] : [],
+      estado_operacion: "activo",
+      contacto_whatsapp: "",
+      contacto_email: "",
+      created_at: aporte.created_at,
+      origen_aeroshop: true,
+      origen_nombre: aporte.origen_nombre || "",
+      enlace_aeroshop: aporte.enlace || ""
+    });
+  }
+
+  return publicaciones;
+}
+
 async function cargarClasificados() {
   const listaDisponibles = document.getElementById("listaClasificadosDisponibles");
   const listaRequeridos = document.getElementById("listaClasificadosRequeridos");
@@ -7982,10 +8073,16 @@ async function cargarClasificados() {
   }
 
   const publicaciones = data || [];
-  const disponibles = publicaciones.filter(function (publicacion) {
+  const publicacionesAeroShop = await cargarPublicacionesAeroShopParaVenta();
+  const disponiblesClasificados = publicaciones.filter(function (publicacion) {
     return publicacion.tipo === "venta"
       && (publicacion.estado_operacion !== "pausado" || publicacion.user_id === usuarioId);
   });
+  const disponibles = disponiblesClasificados
+    .concat(publicacionesAeroShop)
+    .sort(function (a, b) {
+      return new Date(b.created_at || 0) - new Date(a.created_at || 0);
+    });
   const requeridos = publicaciones.filter(function (publicacion) {
     return publicacion.tipo === "busqueda";
   });
