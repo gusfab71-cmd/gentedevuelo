@@ -544,3 +544,23 @@
     margin-left:0;
   }
 }
+
+
+/* ===== MODERACIÓN · TARJETA FORO PENDIENTES CLICKEABLE ===== */
+.moderation-metric-link{
+  display:flex;
+  flex-direction:column;
+  text-decoration:none;
+  color:inherit;
+  cursor:pointer;
+  transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;
+}
+.moderation-metric-link:hover{
+  text-decoration:none;
+  transform:translateY(-1px);
+  border-color:#f5a555;
+  box-shadow:0 8px 24px rgba(0,0,0,.22),0 0 0 1px rgba(245,165,85,.12);
+}
+.moderation-metric-link.has-pending{
+  border-color:rgba(245,165,85,.72);
+}
