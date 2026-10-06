@@ -4791,9 +4791,6 @@ img, video { max-width: 100%; }
 .instagram-portada svg{
   width:21px;
   height:21px;
-  fill:none;
-  stroke:currentColor;
-  stroke-width:1.8;
 }
 .instagram-portada:hover{
   transform:translateY(-1px);
@@ -4817,9 +4814,18 @@ img, video { max-width: 100%; }
 <div class="controles-usuario" id="controlesUsuario">
   <a class="instagram-portada" href="https://www.instagram.com/gentedevuelo/" target="_blank" rel="noopener noreferrer" aria-label="Instagram de Gente de Vuelo" title="Instagram de Gente de Vuelo">
     <svg viewBox="0 0 24 24" aria-hidden="true">
-      <rect x="3" y="3" width="18" height="18" rx="5"></rect>
-      <circle cx="12" cy="12" r="4"></circle>
-      <circle cx="17.5" cy="6.5" r="1"></circle>
+      <defs>
+        <linearGradient id="instagramGradient" x1="0%" y1="100%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#feda75"></stop>
+          <stop offset="25%" stop-color="#fa7e1e"></stop>
+          <stop offset="50%" stop-color="#d62976"></stop>
+          <stop offset="75%" stop-color="#962fbf"></stop>
+          <stop offset="100%" stop-color="#4f5bd5"></stop>
+        </linearGradient>
+      </defs>
+      <rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="url(#instagramGradient)" stroke-width="1.9"></rect>
+      <circle cx="12" cy="12" r="4" fill="none" stroke="url(#instagramGradient)" stroke-width="1.9"></circle>
+      <circle cx="17.5" cy="6.5" r="1.1" fill="url(#instagramGradient)" stroke="none"></circle>
     </svg>
   </a>
   <button type="button" class="cuenta-ingresar" id="botonIngresar" aria-controls="ingresar" aria-expanded="false">
