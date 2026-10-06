@@ -335,3 +335,12 @@
   line-height:1.35;
   font-weight:400;
 }
+
+.integrantes-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.integrante-card{padding:14px}
+.integrante-card .post-row{gap:10px}
+.integrante-card .avatar{width:46px;height:46px;flex-basis:46px}
+.integrante-card h2{font-size:17px;margin:2px 0 6px}
+.integrante-card .meta,.integrante-card .muted,.integrante-card .online{font-size:12px}
+@media(max-width:950px){.integrantes-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:620px){.integrantes-grid{grid-template-columns:1fr}}
