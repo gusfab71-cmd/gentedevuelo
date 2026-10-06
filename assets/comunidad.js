@@ -171,7 +171,7 @@ function topicCard(t){
          ?'index.html?shimoda_topic='+encodeURIComponent(t.id)+'#shimoda'
          :'#tema/'+t.id;
 
- return `<article class="card topic-card ${isShimoda?'shimoda-topic':''} ${latestReply?'topic-card-replied':''}" style="--category:${esc(c.color)}">
+ return `<article class="card topic-card ${isShimoda?'shimoda-topic':''} ${latestReply?'topic-card-replied':''} ${t.status==='pending'?'topic-card-pending':''}" style="--category:${esc(c.color)}">
    <div class="post-row">
      <a href="${isShimoda?'index.html?shimoda_topic='+encodeURIComponent(t.id)+'#shimoda':'#hangar/'+esc(t.author_id||'')}" aria-label="${isShimoda?'Abrir Rincón Shimoda':'Ver hangar de '+esc(authorName)}">
        ${isShimoda?shimodaAvatar():avatar(t.author_id)}
@@ -194,7 +194,7 @@ function topicCard(t){
          <div>
            <h3><a class="post-title" href="${topicHref}">${esc(t.title)}</a></h3>
            <p class="muted">${esc(t.summary||t.content.slice(0,200))}</p>
-           ${t.status!=='approved'?`<span class="tag status-pending">${stateLabel(t.status)}</span>`:''}
+           ${t.status==='pending'?`<div class="forum-pending-notice"><span class="forum-pending-dot" aria-hidden="true"></span><strong>Pendiente de moderación</strong>${isAdmin?link('Gestionar','#moderacion','button forum-pending-manage'):''}</div>`:t.status!=='approved'?`<span class="tag status-pending">${stateLabel(t.status)}</span>`:''}
          </div>
 
          ${m?.url
@@ -226,7 +226,7 @@ function topicCard(t){
 function feed(category){
  const c=cat(category);crumbs(category?[['Foro','#foro'],[c.name]]:[['Foro']]);
  app.innerHTML=`<h1>${category?esc(c.name):'Foro'}</h1>${category?'<div class="toolbar">'+link('+ Crear publicación','#crear','button primary')+link('Foro General','#foro')+'</div>':toolbar()}<div class="toolbar">${link('Quiénes somos','#quienes-somos')}${link('Normativa de la comunidad','#normativa')}</div><div class="toolbar"><input id="search" placeholder="Buscar publicaciones, autores o temáticas…" aria-label="Buscar publicaciones"><select id="sort" aria-label="Ordenar publicaciones"><option value="recent">Recientes</option><option value="useful">Más valoradas</option><option value="unanswered">Sin respuesta</option></select></div><div id="feed"></div>${category?'':extras()}`;
- const paint=()=>{const q=$('search').value.toLocaleLowerCase('es'),sort=$('sort').value;let data=topics.filter(t=>t.status==='approved'&&(!category||t.category===category)&&[t.title,t.summary,t.content,name(t.author_id),cat(t.category).name,...t.tags].join(' ').toLocaleLowerCase('es').includes(q));if(sort==='unanswered')data=data.filter(t=>!comments.some(c=>c.topic_id===t.id&&c.status==='approved'));if(sort==='useful'){const count=id=>reactions.filter(r=>r.topic_id===id&&r.kind==='useful').length;data.sort((a,b)=>count(b.id)-count(a.id))}data.sort((a,b)=>Number(b.pinned)-Number(a.pinned));let html=data.map(topicCard).join('');if(!category&&sort==='recent'){const legacy=legacyShimoda.filter(p=>[p.titulo,p.contenido,p.categoria,'Robert Shimoda','Rincón Shimoda'].join(' ').toLocaleLowerCase('es').includes(q));html+=legacy.map(legacyShimodaCard).join('')}$('feed').innerHTML=html||'<p class="empty">Todavía no hay publicaciones para esta búsqueda.</p>'};$('search').oninput=paint;$('sort').onchange=paint;paint();
+ const paint=()=>{const q=$('search').value.toLocaleLowerCase('es'),sort=$('sort').value;let data=topics.filter(t=>(t.status==='approved'||(isAdmin&&t.status==='pending'))&&(!category||t.category===category)&&[t.title,t.summary,t.content,name(t.author_id),cat(t.category).name,...t.tags].join(' ').toLocaleLowerCase('es').includes(q));if(sort==='unanswered')data=data.filter(t=>!comments.some(c=>c.topic_id===t.id&&c.status==='approved'));if(sort==='useful'){const count=id=>reactions.filter(r=>r.topic_id===id&&r.kind==='useful').length;data.sort((a,b)=>count(b.id)-count(a.id))}data.sort((a,b)=>Number(b.pinned)-Number(a.pinned));let html=data.map(topicCard).join('');if(!category&&sort==='recent'){const legacy=legacyShimoda.filter(p=>[p.titulo,p.contenido,p.categoria,'Robert Shimoda','Rincón Shimoda'].join(' ').toLocaleLowerCase('es').includes(q));html+=legacy.map(legacyShimodaCard).join('')}$('feed').innerHTML=html||'<p class="empty">Todavía no hay publicaciones para esta búsqueda.</p>'};$('search').oninput=paint;$('sort').onchange=paint;paint();
 }
 function categoryView(){crumbs([['Foro','#foro'],['Temáticas']]);app.innerHTML=`<h1>Temáticas</h1>${toolbar('tematicas')}<div class="grid">${categories.map(c=>`<a class="card topic-card" style="--category:${esc(c.color)}" href="#tematica/${esc(c.slug)}"><div class="category-tile"><span class="category-icon" aria-hidden="true">${categoryIcon(c.slug)}</span><h3>${esc(c.name)}</h3></div></a>`).join('')}</div>`}
 function attachment(m){if(!m.url)return '';if(m.kind==='image')return `<img src="${esc(m.url)}" alt="Imagen de la publicación" loading="lazy">`;if(m.kind==='video')return `<video controls preload="metadata" src="${esc(m.url)}"></video>`;return `<a href="${esc(m.url)}" target="_blank" rel="noopener noreferrer">Abrir documento PDF ↗</a>`}
