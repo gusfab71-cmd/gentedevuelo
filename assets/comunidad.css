@@ -454,3 +454,47 @@
     width: max-content;
   }
 }
+
+
+/* ===== GESTIÓN · PENDIENTES DE MODERACIÓN ===== */
+.admin-topic-card {
+  position: relative;
+}
+
+.admin-topic-pending {
+  border-color: rgba(255, 159, 28, 0.78);
+  box-shadow: 0 0 0 1px rgba(255, 159, 28, 0.12), 0 12px 28px rgba(0,0,0,.22);
+  background: linear-gradient(180deg, rgba(255,159,28,.08), rgba(36,41,49,1) 44%);
+}
+
+.admin-pending-label {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 10px;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: #ff642e;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: .5px;
+}
+
+.admin-count-badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  margin-left: 5px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #ff642e;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.has-pending {
+  border-color: #ff9f1c !important;
+  box-shadow: 0 0 0 1px rgba(255,159,28,.15);
+}
