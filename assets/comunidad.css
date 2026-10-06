@@ -342,6 +342,11 @@
 .integrante-card .avatar{width:46px;height:46px;flex-basis:46px}
 .integrante-card h2{font-size:17px;margin:2px 0 6px}
 .integrante-card .meta,.integrante-card .muted,.integrante-card .online{font-size:12px}
+.integrante-info{min-width:0;flex:1}
+.member-delete-button{margin-top:8px;padding:6px 10px;border-color:#7a3434;background:#351f22;color:#ffb7b7;font-size:12px;font-weight:700}
+.member-delete-button:hover{background:#4a272b;border-color:#a84a4a}
+.member-delete-confirm{background:#a93232;border-color:#c44747;color:#fff;font-weight:700}
+.member-delete-confirm:hover{background:#c13c3c}
 @media(max-width:950px){.integrantes-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:620px){.integrantes-grid{grid-template-columns:1fr}}
 
