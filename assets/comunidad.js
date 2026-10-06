@@ -270,7 +270,23 @@ async function hangar(id){id=id||user?.id;if(!id){app.innerHTML=link('Ingresar a
  app.innerHTML=`<section class="card"><div class="post-row">${avatar(id)}<div class="post-body"><h1>${esc(name(id))}</h1><p>${esc(p.hangar_intro||p.bio||'Miembro de Gente de Vuelo.')}</p><p class="meta">Miembro desde ${date(p.created_at)}</p></div></div><dl class="profile-fields">${[['Actividad','aviation_role'],['Licencia','aviation_license'],['Horas de vuelo','flight_hours'],['Aeropuerto base','home_airfield'],['Aeronaves','aircraft_flown'],['Simulador de vuelo','flight_simulators']].filter(([,k])=>p[k]!==null&&p[k]!==undefined&&p[k]!=='').map(([n,k])=>`<div><dt>${n}</dt><dd>${esc(p[k])}</dd></div>`).join('')}</dl>${own?link('Editar perfil','#perfil'):''}</section><div class="toolbar"><button data-hangar="posts">Publicaciones</button><button data-hangar="comments">Respuestas</button><button data-hangar="media">Multimedia</button><button data-hangar="trips">Travesías</button>${own?'<button data-hangar="saved">Guardados privados</button>':''}${own&&isAdmin?link('Moderación privada','#moderacion'):''}</div><div id="hangar-content"></div>`;
  const paint=async type=>{if(type==='comments')$('hangar-content').innerHTML=replied.map(c=>`<article class="card"><div class="meta">${date(c.created_at)}</div><p>${esc(c.deleted?'Comentario eliminado por su autor':c.content)}</p>${link('Ver conversación','#tema/'+c.topic_id+'/'+c.id)}</article>`).join('')||'<p>Sin respuestas públicas.</p>';else{let list=authored;if(type==='trips')list=list.filter(t=>t.category==='travesias');if(type==='media')list=list.filter(t=>media.some(m=>m.topic_id===t.id));if(type==='saved'){const rows=checked(await db.from('gdv_saved').select('topic_id').eq('user_id',user.id));list=topics.filter(t=>rows.some(s=>s.topic_id===t.id))}$('hangar-content').innerHTML=list.map(topicCard).join('')||'<p>Todavía no hay publicaciones en este apartado.</p>'}};app.querySelectorAll('[data-hangar]').forEach(b=>b.onclick=()=>busy(b,()=>paint(b.dataset.hangar)));await paint('posts');
 }
-async function notifications(){if(!authenticated()){app.innerHTML=link('Ingresar para ver tus notificaciones','#ingresar','button primary');return}crumbs([['Notificaciones']]);const rows=checked(await db.from('gdv_notifications').select('*').order('created_at',{ascending:false}).limit(100));app.innerHTML='<h1>Notificaciones</h1>'+ (rows.map(n=>`<article class="card"><p>${esc(n.message)}</p><span class="meta">${date(n.created_at)}${n.read?'':' · Nueva'}</span> ${n.topic_id?link('Abrir','#tema/'+n.topic_id):''}</article>`).join('')||'<p>No tenés notificaciones.</p>');checked(await db.from('gdv_notifications').update({read:true}).eq('user_id',user.id).eq('read',false))}
+async function notifications(){
+ if(!authenticated()){app.innerHTML=link('Ingresar para ver tus notificaciones','#ingresar','button primary');return}
+ crumbs([['Notificaciones']]);
+ const rows=checked(await db.from('gdv_notifications').select('*').order('created_at',{ascending:false}).limit(100));
+ app.innerHTML=`<div class="toolbar" style="justify-content:space-between;align-items:center;"><h1 style="margin:0;">Notificaciones</h1>${rows.length?'<button id="delete-all-notifications" type="button">Borrar todas</button>':''}</div>`+
+   (rows.map(n=>`<article class="card"><p>${esc(n.message)}</p><span class="meta">${date(n.created_at)}${n.read?'':' · Nueva'}</span> ${n.topic_id?link('Abrir','#tema/'+n.topic_id):''}</article>`).join('')||'<p>No tenés notificaciones.</p>');
+ if(rows.length){
+   const borrarTodas=$('delete-all-notifications');
+   if(borrarTodas)borrarTodas.onclick=()=>busy(borrarTodas,async()=>{
+     if(!confirm('¿Borrar todas tus notificaciones?'))return;
+     checked(await db.from('gdv_notifications').delete().eq('user_id',user.id));
+     message('Se borraron todas tus notificaciones.');
+     await notifications();
+   });
+ }
+ checked(await db.from('gdv_notifications').update({read:true}).eq('user_id',user.id).eq('read',false));
+}
 async function moderation(){
  if(!isAdmin){app.innerHTML='<h1>Acceso restringido</h1>';return}
  crumbs([['Moderación']]);
