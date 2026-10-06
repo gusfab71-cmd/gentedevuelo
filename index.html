@@ -11149,5 +11149,135 @@ window.addEventListener('popstate',abrirAnexoDesdeURL);
 </script>
 <!-- ===== FIN ROBERT SHIMODA RAG CHAT ===== -->
 
+<style id="gdv-elegancia-secciones-20261006">
+/* Presentación editorial de Shimoda y mercado. Solo afecta estos dos anexos. */
+body.modo-anexo > #clasificados-seccion.anexo-portada.activo { padding-top: 76px; }
+#clasificados-seccion .clasificados-opciones.clasificados-opciones-centradas { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: none; }
+#clasificados-seccion article[tabindex]:focus-visible { outline: 2px solid #e8c783; outline-offset: 4px; }
+@media (max-width: 700px) {
+  #clasificados-seccion .clasificados-opciones.clasificados-opciones-centradas { grid-template-columns: minmax(0, 1fr); }
+}
+body.modo-anexo-shimoda, body.modo-anexo-clasificados { background: #0e1218; }
+body.modo-anexo-shimoda #shimoda,
+body.modo-anexo-clasificados #clasificados-seccion {
+  --section-accent: #8cc9ed;
+  padding: 76px clamp(18px, 4vw, 52px) 40px;
+  border: 1px solid #334455;
+  border-radius: 24px;
+  background: radial-gradient(ellipse at 10% 0%, #1b344a 0%, transparent 48%), linear-gradient(150deg, #171f29, #10161d);
+  color: #e9eef4;
+  box-shadow: 0 24px 70px #0005, inset 0 1px 0 #ffffff0d;
+}
+body.modo-anexo-clasificados #clasificados-seccion {
+  --section-accent: #e8c783;
+  border-color: #4c4434;
+  background: radial-gradient(ellipse at 90% 0%, #383126 0%, transparent 44%), linear-gradient(150deg, #1c2025, #12171d);
+}
+#shimoda .anexo-cerrar, #clasificados-seccion .anexo-cerrar {
+  min-height: 40px; padding: 9px 18px; border: 1px solid #66707a;
+  border-radius: 9px; background: #171e26; color: #e9eef4; font-size: 12px;
+}
+#shimoda .shimoda-cabecera { justify-content: flex-start; gap: 36px; padding-bottom: 32px; border-bottom: 1px solid #8cc9ed30; }
+#shimoda .shimoda-logo { width: 170px; height: 170px; object-fit: contain; flex-shrink: 0; filter: drop-shadow(0 8px 24px #0006); }
+#shimoda .shimoda-presentacion h2 { font-size: clamp(30px, 4vw, 46px); letter-spacing: -1.2px; color: #f3f7fb; }
+#shimoda .shimoda-presentacion h3 { margin: 10px 0 14px; color: #8cc9ed; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; }
+#shimoda .shimoda-presentacion p { color: #b8c8d7; font-size: 16px; line-height: 1.75; }
+#shimoda .shimoda-contenido > h3 { font-size: 14px; letter-spacing: 1.1px; color: #bdd0df; margin-bottom: 18px; }
+#shimoda .shimoda-publicacion, #shimoda .shimoda-publicacion-anterior {
+  padding: 30px; border: 1px solid #364959; border-radius: 16px;
+  background: linear-gradient(135deg, #202d3a, #17212b); box-shadow: 0 12px 30px #0003;
+  overflow-wrap: anywhere;
+}
+#shimoda .shimoda-publicacion { border-top: 2px solid #8cc9ed; }
+#shimoda .shimoda-publicacion h4 { font-size: clamp(22px, 3vw, 30px); line-height: 1.3; letter-spacing: -.4px; }
+#shimoda .shimoda-publicacion p, #shimoda .shimoda-publicacion-anterior p { color: #d1dce6; line-height: 1.8; }
+#shimoda .shimoda-fecha { color: #91b7d0; font-size: 12px; letter-spacing: .5px; }
+#shimoda .shimoda-comentarios-en-publicacion { margin-top: 24px; padding-top: 20px; border-color: #ffffff18; }
+#shimoda .shimoda-comentario { padding: 14px 0; border-color: #ffffff12; }
+#shimoda .shimoda-comentario-autor { color: #a5d5f2; }
+#shimoda .shimoda-nota-comentarios { color: #a7b7c6; font-size: 12px; margin-top: 16px; }
+#shimoda .shimoda-acciones-publicacion .boton,
+#shimoda .shimoda-form-comentario .boton,
+#shimoda .shimoda-comentar-inline .boton,
+#shimoda .shimoda-ver-todas {
+  min-height: 42px; padding: 11px 18px; border: 1px solid #739ab5;
+  border-radius: 9px; background: #243e52; color: #eaf5ff; font-size: 13px;
+}
+#shimoda .shimoda-form-comentario textarea { background: #111c26; color: #eef5fb; border: 1px solid #4b6276; border-radius: 10px; padding: 14px; }
+#shimoda .shimoda-hangar { max-width: 1100px; margin: 0 auto; }
+#clasificados-seccion .titulo-seccion { color: #f8f2e7; font-size: clamp(32px, 4vw, 46px); letter-spacing: -1.3px; margin-bottom: 12px; }
+#clasificados-seccion > .subtitulo { color: #bfc3c8; max-width: 640px; margin: 0 auto; line-height: 1.7; font-size: 15px; }
+#clasificados-seccion .clasificados-opciones { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 32px; }
+#clasificados-seccion .clasificados-opcion,
+#clasificados-seccion .clasificados-opcion:hover,
+#clasificados-seccion .clasificados-opcion.activa {
+  padding: 24px; border: 1px solid #62543b; border-radius: 14px; background: linear-gradient(125deg, #2b2b28, #20252a); color: #d5d5d1; transform: none;
+}
+#clasificados-seccion .clasificados-opcion h3 { color: #ecd199; font-size: 19px; margin-bottom: 10px; }
+#clasificados-seccion .clasificados-opcion p { color: #bfc4ca; font-size: 13px; line-height: 1.65; }
+#clasificados-seccion .clasificados-listado { padding: 26px; border: 1px solid #ffffff17; border-radius: 18px; background: #12181eaa; color: #c8cfd7; }
+#clasificados-seccion .clasificados-listado h3 { color: #f3eee5; }
+#clasificados-seccion .clasificados-listado-cabecera { margin-bottom: 24px; }
+#clasificados-seccion .clasificados-listado-cabecera h3 { font-size: 26px; margin: 7px 0; }
+#clasificados-seccion .clasificados-listado-cabecera p { color: #aeb9c5; font-size: 14px; }
+#clasificados-seccion .clasificados-kicker, #clasificados-seccion .subasta-inversa-kicker { color: #e8c783; font-size: 10px; letter-spacing: 2px; }
+#clasificados-seccion .clasificado-item { border: 1px solid #4c4840; background: #22282e; border-radius: 14px; overflow: hidden; box-shadow: 0 8px 22px #0003; }
+#clasificados-seccion #listaClasificadosDisponibles .clasificado-item > img { background: #e9ebed; height: 230px; max-height: 230px; padding: 12px; object-fit: contain; }
+#clasificados-seccion #listaClasificadosDisponibles .clasificado-resumen-venta { padding: 18px !important; }
+#clasificados-seccion .clasificado-item-contenido h4 { color: #f5f0e6; line-height: 1.4; overflow-wrap: anywhere; }
+#clasificados-seccion #listaClasificadosDisponibles .clasificado-precio-resumen { color: #ebce94; font-size: 19px !important; margin-top: 9px !important; }
+#clasificados-seccion .clasificado-item-contenido p { color: #bcc7d2; line-height: 1.6; }
+#clasificados-seccion .clasificado-tipo { background: #e8c78314; color: #e8c783; border: 1px solid #e8c78335; border-radius: 5px; }
+#clasificados-seccion .clasificado-consultar,
+#clasificados-seccion .clasificados-contacto-boton,
+#clasificados-seccion .clasificados-formulario .boton { min-height: 42px; padding: 11px 16px; border: 1px solid #e8c783; border-radius: 8px; background: #e8c783; color: #20242a; font-size: 13px; font-weight: 700; }
+#clasificados-seccion .clasificado-propietario-acciones button { min-height: 38px; font-size: 12px; }
+#clasificados-seccion .subasta-inversa-destacada { padding: 28px; margin-top: 36px; border: 1px solid #796445; border-radius: 16px; background: radial-gradient(ellipse at top right, #40362680, transparent 65%), #1b2229; box-shadow: inset 0 2px 0 #d6b77955; }
+#clasificados-seccion .subasta-inversa-cabecera { padding-bottom: 22px; border-color: #e8c78326; }
+#clasificados-seccion .subasta-inversa-cabecera h3 { margin: 10px 0 !important; font-size: clamp(22px, 3vw, 28px) !important; letter-spacing: -.4px; }
+#clasificados-seccion .subasta-inversa-cabecera p { color: #bfc8d0; line-height: 1.75; font-size: 14px; max-width: 720px; }
+#clasificados-seccion .clasificados-requeridos-cabecera h4 { color: #e5ddd0; margin-top: 8px; font-size: 15px; line-height: 1.5; }
+#clasificados-seccion #listaClasificadosRequeridos { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+#clasificados-seccion .clasificado-item.requerido-compacto { background: #202830; border-color: #53504a; }
+#clasificados-seccion .clasificado-item.requerido-compacto .clasificado-item-contenido { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; padding: 20px; }
+#clasificados-seccion .clasificado-item.requerido-compacto h4 { color: #f3eadb; font-size: 17px; }
+#clasificados-seccion .clasificado-item.requerido-compacto p { color: #bfc8d0; }
+#clasificados-seccion .clasificados-consulta-panel { background: #1d252d; border-color: #6b5b41; color: #eef0f3; box-shadow: 0 18px 50px #0004; }
+#clasificados-seccion .clasificados-consulta-panel h3 { color: #faf3e5; }
+#clasificados-seccion .clasificados-consulta-descripcion, #clasificados-seccion .clasificados-consulta-dato { color: #cdd5de; line-height: 1.7; overflow-wrap: anywhere; }
+#clasificados-seccion #consultaClasificadoPrecio { color: #ecd099; font-size: 25px; font-weight: 700; }
+#clasificados-seccion .clasificados-consulta-kicker { color: #e8c783; }
+#clasificados-seccion .clasificados-consulta-anunciante { background: #141c24; border-color: #ffffff20; color: #ecf0f4; }
+#clasificados-seccion .clasificados-consulta-nota { color: #b7c2cc; }
+#clasificados-seccion .clasificados-formulario label { color: #d9dfe5; font-size: 13px; }
+#clasificados-seccion .clasificados-formulario input, #clasificados-seccion .clasificados-formulario select, #clasificados-seccion .clasificados-formulario textarea { background: #10171e; color: #eef2f6; border: 1px solid #53606d; min-height: 44px; font-size: 16px; }
+#clasificados-seccion .clasificados-aviso { border: 1px solid #ffffff20; background: #1c2229; color: #b6c0ca; font-size: 12px; padding: 20px; }
+#shimoda :is(button, a, textarea):focus-visible,
+#clasificados-seccion :is(button, a, input, select, textarea):focus-visible { outline: 2px solid var(--section-accent); outline-offset: 4px; }
+@media (hover: hover) {
+  #clasificados-seccion .clasificado-item:hover { border-color: #bc9e63; }
+  #shimoda .shimoda-ver-todas:hover { background: #31536c; }
+}
+@media (max-width: 700px) {
+  body.modo-anexo > #shimoda.anexo-portada.activo, body.modo-anexo > #clasificados-seccion.anexo-portada.activo { width: calc(100% - 16px); margin: 8px auto; padding: 70px 14px 24px; border-radius: 17px; }
+  #shimoda .shimoda-cabecera { gap: 18px !important; padding-bottom: 24px; margin-bottom: 24px; }
+  #shimoda .shimoda-cabecera .shimoda-logo { width: 130px !important; max-width: 130px !important; }
+  #shimoda .shimoda-presentacion { max-width: none; }
+  #shimoda .shimoda-presentacion h3 { font-size: 12px !important; letter-spacing: 1.2px; line-height: 1.5 !important; }
+  #shimoda .shimoda-presentacion p { text-align: center !important; line-height: 1.65 !important; }
+  #shimoda .shimoda-publicacion-anterior { padding: 18px; }
+  #clasificados-seccion .clasificados-opciones { grid-template-columns: 1fr; gap: 12px; margin-top: 24px; }
+  #clasificados-seccion .clasificados-opcion { padding: 18px; }
+  #clasificados-seccion .clasificados-listado { padding: 16px; }
+  #clasificados-seccion .subasta-inversa-destacada { padding: 18px 14px; margin-top: 28px; }
+  #clasificados-seccion #listaClasificadosDisponibles, #clasificados-seccion #listaClasificadosRequeridos { grid-template-columns: minmax(0, 1fr); }
+  #clasificados-seccion .clasificados-formulario { grid-template-columns: minmax(0, 1fr); }
+  #clasificados-seccion .anexo-cerrar, #shimoda .anexo-cerrar { top: 16px; right: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #shimoda, #clasificados-seccion, #clasificados-seccion .clasificados-opcion { animation: none; transition: none; }
+}
+</style>
+
 </body>
 </html>
