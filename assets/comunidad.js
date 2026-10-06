@@ -293,7 +293,7 @@ async function moderation(){
      const reply=textarea.value.trim();
      if(!reply)return;
      busy(e.submitter,async()=>{
-       checked(await db.from('gdv_contact').update({admin_reply:reply}).eq('id',id));
+       checked(await db.rpc('gdv_reply_contact',{p_contact_id:id,p_reply:reply}));
        message('Respuesta enviada. El integrante la recibió en Notificaciones.');
        await moderation();
      });
