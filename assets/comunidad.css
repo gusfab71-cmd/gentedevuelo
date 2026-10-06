@@ -326,3 +326,12 @@
 .moderation-action.has-pending:hover{
   background:#ffa95c !important;
 }
+
+.moderation-card-help{
+  display:block;
+  margin-top:7px;
+  color:var(--muted,#aeb8bd);
+  font-size:12px;
+  line-height:1.35;
+  font-weight:400;
+}
