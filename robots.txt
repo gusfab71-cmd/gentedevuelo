@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /moderacion.html
+Disallow: /revision-comunidad/
+Disallow: /supabase/
+Disallow: /tests/
+Disallow: /docs/
+
+Sitemap: https://gentedevuelo.com/sitemap.xml
