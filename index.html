@@ -4773,7 +4773,8 @@ img, video { max-width: 100%; }
 </style>
 <style id="instagram-portada-20261006">
 .instagram-portada,
-.facebook-portada{
+.facebook-portada,
+.threads-portada{
   width:44px;
   height:44px;
   flex:0 0 44px;
@@ -4790,19 +4791,22 @@ img, video { max-width: 100%; }
   transition:transform .18s ease,border-color .18s ease,background .18s ease;
 }
 .instagram-portada svg,
-.facebook-portada svg{
+.facebook-portada svg,
+.threads-portada svg{
   width:21px;
   height:21px;
 }
 .instagram-portada:hover,
-.facebook-portada:hover{
+.facebook-portada:hover,
+.threads-portada:hover{
   transform:translateY(-1px);
   border-color:#ff8a45;
   background:rgba(28,34,38,.92);
 }
 @media(max-width:700px){
   .instagram-portada,
-  .facebook-portada{
+  .facebook-portada,
+  .threads-portada{
     width:42px;
     height:42px;
     flex-basis:42px;
@@ -4816,6 +4820,12 @@ img, video { max-width: 100%; }
 <body>
 <button type="button" id="volverPortada" aria-label="Volver a la portada">← VOLVER A PORTADA</button>
 <div class="controles-usuario" id="controlesUsuario">
+  <a class="threads-portada" href="https://www.threads.com/@gentedevuelo" target="_blank" rel="noopener noreferrer" aria-label="Threads de Gente de Vuelo" title="Threads de Gente de Vuelo">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="12" r="10" fill="#000"></circle>
+      <text x="12" y="16.2" text-anchor="middle" fill="#fff" font-size="15.5" font-weight="700" font-family="Arial, Helvetica, sans-serif">@</text>
+    </svg>
+  </a>
   <a class="facebook-portada" href="https://www.facebook.com/gentedevuelo.ar" target="_blank" rel="noopener noreferrer" aria-label="Facebook de Gente de Vuelo" title="Facebook de Gente de Vuelo">
     <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#1877F2"></circle><path d="M13.4 20v-7h2.35l.35-2.73h-2.7V8.53c0-.79.22-1.33 1.36-1.33h1.45V4.76c-.25-.03-1.11-.11-2.11-.11-2.09 0-3.52 1.28-3.52 3.62v2H8.52V13h2.36v7h2.52z" fill="#fff"></path></svg>
   </a>
@@ -10480,9 +10490,10 @@ window.addEventListener('popstate',abrirAnexoDesdeURL);
   z-index: 1206 !important;
 }
 
-/* En móvil, Facebook e Instagram quedan debajo del acceso de cuenta. */
+/* En móvil, Threads, Facebook e Instagram quedan debajo del acceso de cuenta. */
 .instagram-portada,
-.facebook-portada {
+.facebook-portada,
+.threads-portada {
   position: absolute !important;
   top: 54px !important;
   right: 0 !important;
@@ -10494,6 +10505,9 @@ window.addEventListener('popstate',abrirAnexoDesdeURL);
 }
 .facebook-portada {
   right: 50px !important;
+}
+.threads-portada {
+  right: 100px !important;
 }
 
   .cuenta-ingresar,
