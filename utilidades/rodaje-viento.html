@@ -183,7 +183,7 @@ function surf(x,y,w,h,v,below){ // v>0 arriba; superficie integrada en el borde 
   c.fillStyle=neutral?'#1d2a24':'#fff';
   let ty=y+h/2+1.8;
   if(below){c.fillStyle='#fff';ty=y+hh+6.5}
-  c.fillText(neutral?'neutral':(v>0?'ARRIBA':'ABAJO'),x+w/2,ty);c.restore();
+  c.fillText(neutral?'NEUTRAL':(v>0?'ARRIBA':'ABAJO'),x+w/2,ty);c.restore();
 }
 function plane(r){
   c.save();c.translate(W/2,H/2);c.rotate(rad(st.hdg));c.scale(4,4);
