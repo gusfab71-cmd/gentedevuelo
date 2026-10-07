@@ -4817,12 +4817,15 @@ img, video { max-width: 100%; }
 @media(max-width:700px){
   .instagram-portada,
   .facebook-portada{
+    position:absolute;
     width:42px;
     height:42px;
-    flex-basis:42px;
     border-radius:15px;
+    top:84px;
+    z-index:4;
   }
-  .instagram-portada{background:rgba(10,16,20,.86);}
+  .facebook-portada{right:76px;}
+  .instagram-portada{right:18px;background:rgba(10,16,20,.86);}
 }
 </style>
 </head>
