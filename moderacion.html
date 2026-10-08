@@ -225,6 +225,7 @@
     const datos = new Map();
     let filtro = "pendientes";
     let administrador = false;
+    let moderador = false;
 
     function mensaje(texto) { $("mensaje").textContent = texto; }
     function nodo(etiqueta, texto, clase) {
@@ -343,7 +344,7 @@
       }
     }
     async function eliminarDefinitivamente(item, boton) {
-      if (!administrador) return;
+      if (!administrador && !moderador) return;
       const esComentarioShimoda = item.config.tabla === "shimoda_comentarios";
       const titulo = item.fila.titulo || item.config.nombre || "esta publicación";
       const pregunta = esComentarioShimoda
@@ -552,7 +553,8 @@
     async function cargar() {
       mensaje("Cargando publicaciones…");
       $("recargar").disabled = true;
-      const resultados = await Promise.all(secciones.map(async config => {
+      const seccionesHabilitadas = moderador ? secciones.filter(config => config.tabla !== "shimoda_publicaciones") : secciones;
+      const resultados = await Promise.all(seccionesHabilitadas.map(async config => {
         const { data, error } = await client.from(config.tabla).select(config.campos)
           .order("created_at", { ascending: false }).limit(200);
         return { config, data, error };
@@ -836,17 +838,28 @@
       const { data: { user }, error } = await client.auth.getUser();
       if (error || !user) {
         administrador = false;
+        moderador = false;
         $("accesoMensaje").textContent = "Ingresá con tu cuenta de Gente de Vuelo.";
         $("loginForm").hidden = false;
         return;
       }
       const permiso = await client.from("site_admins").select("user_id").eq("user_id", user.id).maybeSingle();
-      if (permiso.error || !permiso.data) {
+      if (permiso.error) {
         administrador = false;
+        moderador = false;
         window.location.replace("comunidad.html#foro");
         return;
       }
-      administrador = true;
+      const esAdministrador = Boolean(permiso.data);
+      const permisoModerador = esAdministrador ? null : await client.from("gdv_moderators").select("user_id").eq("user_id", user.id).maybeSingle();
+      if (!esAdministrador && (permisoModerador?.error || !permisoModerador?.data)) {
+        administrador = false;
+        moderador = false;
+        window.location.replace("comunidad.html#foro");
+        return;
+      }
+      administrador = esAdministrador;
+      moderador = !esAdministrador;
       $("acceso").hidden = true;
       $("panel").hidden = false;
       $("salir").hidden = false;
@@ -854,9 +867,15 @@
       const modoComercio = tablaDestino === "comercio";
       const modoShimoda = tablaDestino === "shimoda_comentarios" || tablaDestino === "shimoda_publicaciones";
 
-      if ($("comunicadosAccesoModeracion")) $("comunicadosAccesoModeracion").hidden = modoComercio;
-      if ($("robertAdmin")) $("robertAdmin").hidden = modoComercio;
-      if ($("shimodaPublicarAdmin")) $("shimodaPublicarAdmin").hidden = modoComercio;
+      if ($("comunicadosAccesoModeracion")) $("comunicadosAccesoModeracion").hidden = modoComercio || moderador;
+      if ($("robertAdmin")) $("robertAdmin").hidden = modoComercio || moderador;
+      if ($("shimodaPublicarAdmin")) $("shimodaPublicarAdmin").hidden = modoComercio || moderador;
+      if (moderador) {
+        const tituloPanel = $("panel")?.querySelector("h1");
+        if (tituloPanel) tituloPanel.textContent = "Panel de moderador";
+        const introPanel = $("panel")?.querySelector(".intro");
+        if (introPanel) introPanel.textContent = "Revisá publicaciones y comentarios pendientes. La configuración, las cuentas y los comunicados son exclusivos del administrador.";
+      }
 
       if (modoComercio) {
         const tituloPanel = $("panel")?.querySelector("h1");
@@ -872,7 +891,7 @@
         document.querySelectorAll("[data-filtro]").forEach(b => b.classList.toggle("activa", b.dataset.filtro === "pendientes"));
       }
 
-      if (modoComercio) {
+      if (modoComercio || moderador) {
         await cargar();
       } else {
         await Promise.all([cargar(), cargarRobertDocs()]);
@@ -895,6 +914,7 @@
     $("salir").addEventListener("click", async () => {
       await client.auth.signOut();
       administrador = false;
+      moderador = false;
       datos.clear();
       await iniciar();
     });
