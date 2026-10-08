@@ -5686,7 +5686,7 @@ img, video { max-width: 100%; }
     <form class="clasificados-formulario" id="formularioClasificado">
       <div class="campo">
         <label for="clasificadoTitulo">Título</label>
-        <input type="text" id="clasificadoTitulo" maxlength="100" required>
+        <input type="text" id="clasificadoTitulo" minlength="3" maxlength="100" required>
       </div>
 
       <div class="campo">
@@ -5704,7 +5704,7 @@ img, video { max-width: 100%; }
 
       <div class="campo campo-ancho">
         <label for="clasificadoDescripcion">Descripción</label>
-        <textarea id="clasificadoDescripcion" maxlength="2000" required></textarea>
+        <textarea id="clasificadoDescripcion" minlength="10" maxlength="2000" required></textarea>
       </div>
 
       <div class="campo">
@@ -5722,7 +5722,7 @@ img, video { max-width: 100%; }
 
       <div class="campo">
         <label for="clasificadoUbicacion">Ubicación</label>
-        <input type="text" id="clasificadoUbicacion" maxlength="120" required>
+        <input type="text" id="clasificadoUbicacion" minlength="2" maxlength="120" required>
       </div>
 
       <div class="campo">
@@ -5785,7 +5785,7 @@ img, video { max-width: 100%; }
 
       <div class="campo campo-ancho">
         <label for="busquedaDescripcion">Descripción</label>
-        <textarea id="busquedaDescripcion" maxlength="2000" required></textarea>
+        <textarea id="busquedaDescripcion" minlength="10" maxlength="2000" required></textarea>
       </div>
 
       <div class="campo campo-ancho">
@@ -8356,6 +8356,29 @@ document.getElementById("formularioClasificado").addEventListener("submit", asyn
     return;
   }
 
+  const titulo = document.getElementById("clasificadoTitulo").value.trim();
+  const descripcion = document.getElementById("clasificadoDescripcion").value.trim();
+  const ubicacion = document.getElementById("clasificadoUbicacion").value.trim();
+  const categoria = document.getElementById("clasificadoCategoria").value;
+  const precio = Number(document.getElementById("clasificadoPrecio").value);
+
+  // Comprobar las restricciones de la base ANTES de subir fotos a Cloudflare R2.
+  if (titulo.length < 3 || titulo.length > 100) {
+    mostrarMensajeClasificados("El título debe tener entre 3 y 100 caracteres.", true);
+    document.getElementById("clasificadoTitulo").focus();
+    return;
+  }
+  if (descripcion.length < 10 || descripcion.length > 2000) {
+    mostrarMensajeClasificados("La descripción debe tener entre 10 y 2000 caracteres.", true);
+    document.getElementById("clasificadoDescripcion").focus();
+    return;
+  }
+  if (ubicacion.length < 2 || ubicacion.length > 120 || categoria.length < 2 || categoria.length > 80 ||
+      !Number.isFinite(precio) || precio < 0) {
+    mostrarMensajeClasificados("Revisá la ubicación, categoría y precio del aviso.", true);
+    return;
+  }
+
   const archivos = Array.from(document.getElementById("clasificadoFotos").files || []);
   let fotosSubidas = { urls: [], rutas: [] };
 
@@ -8365,12 +8388,12 @@ document.getElementById("formularioClasificado").addEventListener("submit", asyn
     const { error } = await supabaseClient.from("clasificados").insert({
       user_id: user.id,
       tipo: "venta",
-      titulo: document.getElementById("clasificadoTitulo").value.trim(),
-      descripcion: document.getElementById("clasificadoDescripcion").value.trim(),
-      precio: Number(document.getElementById("clasificadoPrecio").value),
+      titulo,
+      descripcion,
+      precio,
       moneda: document.getElementById("clasificadoMoneda").value,
-      ubicacion: document.getElementById("clasificadoUbicacion").value.trim(),
-      categoria: document.getElementById("clasificadoCategoria").value,
+      ubicacion,
+      categoria,
       estado_articulo: document.getElementById("clasificadoEstado").value,
       contacto_whatsapp: document.getElementById("clasificadoWhatsapp").value.trim(),
       contacto_email: document.getElementById("clasificadoEmail").value.trim(),
