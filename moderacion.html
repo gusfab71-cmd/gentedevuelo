@@ -402,7 +402,9 @@
               ? "Publicación eliminada. La limpieza R2 quedó registrada para reintentar."
               : limpiezaFallida
               ? "Publicación eliminada. Algún archivo asociado no pudo limpiarse automáticamente."
-              : "Publicación eliminada definitivamente. Limpieza R2 procesada."));
+              : cantidadEnR2
+              ? "Publicación eliminada. Limpieza de fotografías R2 procesada."
+              : "Publicación eliminada definitivamente."));
         pintar();
       } catch (error) {
         console.error("Error al eliminar:", error);
