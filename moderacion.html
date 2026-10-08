@@ -148,6 +148,7 @@
       <h1>Panel de moderación</h1>
       <p class="intro">Revisá los aportes de la comunidad y decidí qué se muestra en Gente de Vuelo. Los cambios se reflejan en la página al actualizarla.</p>
       <p id="mensaje" class="estado" role="status"></p>
+      <p id="comunicadosAccesoModeracion" style="margin:0 0 24px;"><a class="link" href="comunidad.html#gestion/comunicados">Enviar comunicado a todos los integrantes</a></p>
 
       <section class="robert-admin" id="robertAdmin">
         <h2>Conocimiento de Robert Shimoda</h2>
@@ -853,6 +854,7 @@
       const modoComercio = tablaDestino === "comercio";
       const modoShimoda = tablaDestino === "shimoda_comentarios" || tablaDestino === "shimoda_publicaciones";
 
+      if ($("comunicadosAccesoModeracion")) $("comunicadosAccesoModeracion").hidden = modoComercio;
       if ($("robertAdmin")) $("robertAdmin").hidden = modoComercio;
       if ($("shimodaPublicarAdmin")) $("shimodaPublicarAdmin").hidden = modoComercio;
 
