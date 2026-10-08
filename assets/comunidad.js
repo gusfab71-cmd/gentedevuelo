@@ -529,6 +529,8 @@ async function hangar(id){id=id||user?.id;if(!id){app.innerHTML=link('Ingresar a
    '<div id="hangar-fotos-galeria" class="hangar-fotos-galeria">Cargando fotografías…</div>';
  app.querySelector('.toolbar').before(fotosPanel);
  await listarFotosDeHangar(id,own);
+ // Reintenta tareas R2 pendientes al entrar al Hangar propio, sin bloquear la pantalla.
+ if(own) void procesarLimpiezaR2Comunidad();
  if(own){
   $('hangar-galeria-form').onsubmit=e=>{e.preventDefault();busy(e.submitter,async()=>{
    const campo=$('hangar-galeria-archivo'),estado=$('hangar-galeria-estado');
