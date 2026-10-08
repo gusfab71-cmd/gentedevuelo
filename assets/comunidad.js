@@ -281,52 +281,69 @@ async function busy(button,fn){if(button)button.disabled=true;try{await fn()}cat
 async function galeriaComunidad(){
  crumbs([['Foro','#foro'],['Galería']]);
  app.innerHTML='<h1>Galería aeronáutica</h1>'+
-  '<p class="muted">Fotografías y videos aprobados de los hangares de Gente de Vuelo.</p>'+
+  '<p class="muted">Vuelos, aeronaves y momentos compartidos por nuestra comunidad. Solo se muestran archivos aprobados.</p>'+
   '<div class="toolbar">'+link('Mi Hangar','#hangar','button')+link('Multimedia del Foro','#multimedia','button')+'</div>'+
   '<p id="galeria-estado" role="status">Cargando imágenes aprobadas…</p>'+
-  '<div id="galeria-comunidad-grid" class="galeria-comunidad-grid"></div>';
+  '<div id="gdv-galeria-calesita" class="gdv-galeria-calesita" hidden>'+
+   '<button type="button" id="gdv-galeria-anterior" class="gdv-galeria-nav" aria-label="Fotografía anterior" title="Anterior">&#10094;</button>'+
+   '<div id="gdv-galeria-ventana" class="gdv-galeria-ventana" tabindex="0" role="region" aria-label="Calesita de fotografías de la comunidad">'+
+    '<div id="gdv-galeria-pista" class="gdv-galeria-pista"></div>'+
+   '</div>'+
+   '<button type="button" id="gdv-galeria-siguiente" class="gdv-galeria-nav" aria-label="Fotografía siguiente" title="Siguiente">&#10095;</button>'+
+   '<p id="gdv-galeria-contador" class="gdv-galeria-contador" aria-live="polite"></p>'+
+  '</div>';
  const {data,error}=await db.from('galeria')
   .select('archivo,user_id,nombre_usuario,created_at,visible')
   .eq('visible',true).order('created_at',{ascending:false}).limit(100);
- const estado=$('galeria-estado'),contenedor=$('galeria-comunidad-grid');
- if(!contenedor)return;
+ const estado=$('galeria-estado'),calesita=$('gdv-galeria-calesita'),pista=$('gdv-galeria-pista');
+ if(!pista)return;
  if(error){
   console.error('No se pudo consultar la galería:',error);
   estado.textContent='No se pudo cargar la Galería. Intentá nuevamente.';
   return;
  }
- let contador=0;
+ const publicaciones=[];
  for(const fila of data||[]){
   const archivo=typeof fila.archivo==='string'?fila.archivo:'';
   const autor=typeof fila.user_id==='string'?fila.user_id:'';
   const esVideo=/\.(mp4|webm|mov)$/i.test(archivo);
   let src='';
   if(esVideo){
-   if(autor && archivo.startsWith(autor+'/') && !archivo.includes('..') &&
-       /^[A-Za-z0-9_./-]+$/.test(archivo)){
+   if(autor&&archivo.startsWith(autor+'/')&&!archivo.includes('..')&&
+      /^[A-Za-z0-9_./-]+$/.test(archivo)){
     src=db.storage.from('hangar-fotos').getPublicUrl(archivo).data.publicUrl;
    }
   }else{
    src=resolverFotoDeHangar(archivo,autor);
   }
-  if(!src||!safeURL(src))continue;
-  const card=document.createElement('article');
-  card.className='galeria-comunidad-item';
+  if(src&&safeURL(src))publicaciones.push({fila,src,esVideo,autor});
+ }
+ if(!publicaciones.length){
+  estado.textContent='Todavía no hay fotos ni videos aprobados. Podés compartir una fotografía desde Mi Hangar.';
+  return;
+ }
+ let bloqueoAmpliacion=0;
+ publicaciones.forEach(({fila,src,esVideo,autor},indice)=>{
+  const lamina=document.createElement('article');
+  lamina.className='gdv-galeria-lamina';
+  lamina.setAttribute('aria-label','Publicación '+(indice+1)+' de '+publicaciones.length);
   const marco=document.createElement('div');
-  marco.className='galeria-comunidad-medio';
+  marco.className='gdv-galeria-marco';
   if(esVideo){
-   const video=document.createElement('video');
-   video.src=src;video.controls=true;video.preload='metadata';video.playsInline=true;
-   video.setAttribute('aria-label','Video aeronáutico compartido');
-   marco.appendChild(video);
+   const reproductor=document.createElement('video');
+   reproductor.src=src;reproductor.controls=true;reproductor.preload='metadata';reproductor.playsInline=true;
+   reproductor.setAttribute('aria-label','Video de la comunidad');
+   marco.appendChild(reproductor);
   }else{
    const boton=document.createElement('button');
-   boton.type='button';boton.className='galeria-comunidad-ampliar';
-   boton.setAttribute('aria-label','Ampliar fotografía');
+   boton.type='button';boton.className='gdv-galeria-ampliar';
+   boton.setAttribute('aria-label','Ver fotografía ampliada');
+   boton.title='Hacé clic para ampliar';
    const imagen=document.createElement('img');
-   imagen.src=src;imagen.alt='Fotografía aeronáutica de la comunidad';imagen.loading='lazy';
+   imagen.src=src;imagen.alt='Fotografía aeronáutica de la comunidad';imagen.loading=indice<2?'eager':'lazy';
    boton.appendChild(imagen);
    boton.addEventListener('click',()=>{
+    if(Date.now()<bloqueoAmpliacion)return;
     showDialog('');
     const panel=$('dialog-content');
     const grande=document.createElement('img');
@@ -338,20 +355,52 @@ async function galeriaComunidad(){
    });
    marco.appendChild(boton);
   }
-  const pie=document.createElement('div');pie.className='galeria-comunidad-pie';
-  const titulo=document.createElement('strong');
-  titulo.textContent=fila.nombre_usuario||name(autor);
+  const pie=document.createElement('div');
+  pie.className='gdv-galeria-pie';
+  const autorTexto=document.createElement('strong');
+  autorTexto.textContent=fila.nombre_usuario||name(autor);
   const fecha=document.createElement('time');
   fecha.className='meta';fecha.textContent=date(fila.created_at);
   if(fila.created_at)fecha.dateTime=fila.created_at;
-  pie.append(titulo,fecha);
-  card.append(marco,pie);
-  contenedor.appendChild(card);
-  contador++;
+  pie.append(autorTexto,fecha);
+  lamina.append(marco,pie);
+  pista.appendChild(lamina);
+ });
+ calesita.hidden=false;
+ let actual=0;
+ const anterior=$('gdv-galeria-anterior'),siguiente=$('gdv-galeria-siguiente');
+ const contador=$('gdv-galeria-contador'),ventana=$('gdv-galeria-ventana');
+ function mostrar(direccion){
+  const total=publicaciones.length;
+  if(total<2)return;
+  pista.querySelectorAll('video').forEach(video=>video.pause());
+  actual=(actual+direccion+total)%total;
+  pista.style.transform='translateX(-'+(actual*100)+'%)';
+  contador.textContent=(actual+1)+' de '+total;
  }
- estado.textContent=contador
-   ?contador+' publicación'+(contador===1?'':'es')+' aprobada'+(contador===1?'':'s')
-   :'Todavía no hay fotos ni videos aprobados. Podés compartir una foto desde Mi Hangar.';
+ anterior.disabled=siguiente.disabled=publicaciones.length<2;
+ anterior.addEventListener('click',()=>mostrar(-1));
+ siguiente.addEventListener('click',()=>mostrar(1));
+ ventana.addEventListener('keydown',event=>{
+  if(event.target.closest('video'))return;
+  if(event.key==='ArrowLeft'){event.preventDefault();mostrar(-1)}
+  if(event.key==='ArrowRight'){event.preventDefault();mostrar(1)}
+ });
+ let toqueInicial=null;
+ ventana.addEventListener('touchstart',event=>{
+  toqueInicial=event.changedTouches[0]?.clientX??null;
+ },{passive:true});
+ ventana.addEventListener('touchend',event=>{
+  if(toqueInicial===null)return;
+  const desplazamiento=(event.changedTouches[0]?.clientX??toqueInicial)-toqueInicial;
+  toqueInicial=null;
+  if(Math.abs(desplazamiento)>55){
+   bloqueoAmpliacion=Date.now()+350;
+   mostrar(desplazamiento<0?1:-1);
+  }
+ },{passive:true});
+ estado.textContent=publicaciones.length===1?'1 publicación aprobada':publicaciones.length+' publicaciones aprobadas';
+ contador.textContent='1 de '+publicaciones.length;
 }
 function multimedia(){crumbs([['Foro','#foro'],['Multimedia']]);app.innerHTML=`<h1>Multimedia</h1>${toolbar('multimedia')}<div class="toolbar"><select id="media-kind" aria-label="Tipo de archivo"><option value="all">Fotos y videos</option><option value="image">Fotos</option><option value="video">Videos</option></select><select id="media-category" aria-label="Temática"><option value="">Todas las temáticas</option>${categories.map(c=>`<option value="${c.slug}">${esc(c.name)}</option>`).join('')}</select></div><div id="media-list" class="media-grid"></div>`;const paint=()=>{$('media-list').innerHTML=media.filter(m=>{const t=topics.find(t=>t.id===m.topic_id);return t?.status==='approved'&&m.kind!=='pdf'&&m.url&&($('media-kind').value==='all'||m.kind===$('media-kind').value)&&(!$('media-category').value||t.category===$('media-category').value)}).map(m=>{const t=topics.find(t=>t.id===m.topic_id);return `<article class="card">${attachment(m)}<h3>${link(t.title,'#tema/'+t.id,'')}</h3><div class="meta">${esc(name(t.author_id))} · ${esc(cat(t.category).name)}</div></article>`}).join('')||'<p class="empty">Todavía no hay archivos publicados con estos filtros.</p>'};$('media-kind').onchange=paint;$('media-category').onchange=paint;paint()}
 async function uploadFiles(files,topicId){
