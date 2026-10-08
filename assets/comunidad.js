@@ -458,10 +458,28 @@ async function optimizarFotoGaleria(archivo){
   return blob;
  }finally{if(bitmap.close)bitmap.close();}
 }
+// Procesa únicamente rutas R2 registradas por Supabase tras una eliminación real.
+async function procesarLimpiezaR2Comunidad(){
+ try{
+  const {data:{session},error} = await db.auth.getSession();
+  if(error||!session?.access_token)return false;
+  const respuesta=await fetch(cfg.url+'/functions/v1/r2-cleanup-queue',{
+   method:'POST',
+   headers:{Authorization:'Bearer '+session.access_token,apikey:cfg.key,'Content-Type':'application/json'},
+   body:'{}'
+  });
+  const resultado=await respuesta.json().catch(()=>({}));
+  if(!respuesta.ok||resultado.errors){
+   console.warn('Queda limpieza R2 pendiente de reintento:',resultado.error||resultado.errors);
+   return false;
+  }
+  return true;
+ }catch(error){console.warn('No se pudo limpiar R2 ahora:',error);return false}
+}
 async function listarFotosDeHangar(id,propio){
  const elemento=$('hangar-fotos-galeria');
  if(!elemento)return;
- let consulta=db.from('galeria').select('archivo,created_at,visible')
+ let consulta=db.from('galeria').select('id,archivo,created_at,visible')
     .eq('user_id',id).order('created_at',{ascending:false}).limit(60);
  if(!propio)consulta=consulta.eq('visible',true);
  const {data,error}=await consulta;
@@ -474,7 +492,31 @@ async function listarFotosDeHangar(id,propio){
   const img=document.createElement('img');img.src=foto.url;img.alt='Fotografía compartida en Mi Hangar';img.loading='lazy';
   const descripcion=document.createElement('figcaption');
   descripcion.textContent=(foto.visible?'Publicada':'Pendiente de aprobación')+' · '+date(foto.created_at);
-  figura.append(img,descripcion);elemento.appendChild(figura);
+  figura.append(img,descripcion);
+  if(propio&&user?.id===id){
+   const boton=document.createElement('button');
+   boton.type='button';
+   boton.className='hangar-foto-eliminar';
+   boton.textContent='Eliminar foto';
+   boton.setAttribute('aria-label','Eliminar fotografía de Mi Hangar');
+   boton.addEventListener('click',()=>busy(boton,async()=>{
+    if(!confirm('¿Eliminar definitivamente esta fotografía de Mi Hangar?'))return;
+    const {data:eliminadas,error:borradoError}=await db.from('galeria')
+      .delete().eq('id',foto.id).eq('user_id',user.id).select('id');
+    if(borradoError||!eliminadas?.length)throw new Error(borradoError?.message||'No se pudo eliminar la fotografía.');
+    const esR2=foto.url.startsWith(URL_FOTOS_HANGAR_R2);
+    if(esR2){
+     const limpio=await procesarLimpiezaR2Comunidad();
+     message(limpio?'Fotografía eliminada. Limpieza R2 procesada.':'Fotografía eliminada. Limpieza R2 registrada para reintentar.');
+    }else{
+     const resultado=await db.storage.from('hangar-fotos').remove([foto.archivo]);
+     message(resultado.error?'Foto retirada del Hangar; la limpieza del archivo está pendiente.':'Foto eliminada del Hangar.');
+    }
+    await listarFotosDeHangar(user.id,true);
+   }));
+   figura.appendChild(boton);
+  }
+  elemento.appendChild(figura);
  }
 }
 async function hangar(id){id=id||user?.id;if(!id){app.innerHTML=link('Ingresar a Mi Hangar','#ingresar','button primary');return}const p=profile(id),own=id===user?.id;crumbs([['Foro','#foro'],[own?'Mi Hangar':'Hangar de '+name(id)]]);const authored=topics.filter(t=>t.author_id===id),replied=comments.filter(c=>c.author_id===id);
@@ -611,7 +653,12 @@ async function profileEditor(){
   const result=await upload.json().catch(()=>({}));
   if(!upload.ok||typeof result.url!=='string'||!result.url.startsWith('https://media.gentedevuelo.com/'))throw new Error(result.error||'No se pudo guardar la fotografía en Cloudflare R2.');
   payload.avatar_url=result.url;}
-  checked(await db.from('profiles').update(payload).eq('id',user.id).select().single());await load();history.pushState(null,'','#hangar');await route();message('Tu perfil fue guardado.');
+  checked(await db.from('profiles').update(payload).eq('id',user.id).select().single());
+  // Reemplazar el avatar registra automáticamente la URL anterior en la cola R2.
+  if(file&&typeof p.avatar_url==='string'&&p.avatar_url.startsWith(URL_FOTOS_HANGAR_R2)){
+   await procesarLimpiezaR2Comunidad();
+  }
+  await load();history.pushState(null,'','#hangar');await route();message('Tu perfil fue guardado.');
  })};
 }
 function manageTopic(id){const t=topics.find(t=>t.id===id);if(!isAdmin||!t)return;
