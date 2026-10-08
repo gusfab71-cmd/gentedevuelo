@@ -278,6 +278,81 @@ async function topicView(id,highlight){
  if(highlight)document.getElementById('comentario-'+highlight)?.scrollIntoView({block:'center'});
 }
 async function busy(button,fn){if(button)button.disabled=true;try{await fn()}catch(e){message(e.message||'No se pudo completar la operación.',true)}finally{if(button)button.disabled=false}}
+async function galeriaComunidad(){
+ crumbs([['Foro','#foro'],['Galería']]);
+ app.innerHTML='<h1>Galería aeronáutica</h1>'+
+  '<p class="muted">Fotografías y videos aprobados de los hangares de Gente de Vuelo.</p>'+
+  '<div class="toolbar">'+link('Mi Hangar','#hangar','button')+link('Multimedia del Foro','#multimedia','button')+'</div>'+
+  '<p id="galeria-estado" role="status">Cargando imágenes aprobadas…</p>'+
+  '<div id="galeria-comunidad-grid" class="galeria-comunidad-grid"></div>';
+ const {data,error}=await db.from('galeria')
+  .select('archivo,user_id,nombre_usuario,created_at,visible')
+  .eq('visible',true).order('created_at',{ascending:false}).limit(100);
+ const estado=$('galeria-estado'),contenedor=$('galeria-comunidad-grid');
+ if(!contenedor)return;
+ if(error){
+  console.error('No se pudo consultar la galería:',error);
+  estado.textContent='No se pudo cargar la Galería. Intentá nuevamente.';
+  return;
+ }
+ let contador=0;
+ for(const fila of data||[]){
+  const archivo=typeof fila.archivo==='string'?fila.archivo:'';
+  const autor=typeof fila.user_id==='string'?fila.user_id:'';
+  const esVideo=/\.(mp4|webm|mov)$/i.test(archivo);
+  let src='';
+  if(esVideo){
+   if(autor && archivo.startsWith(autor+'/') && !archivo.includes('..') &&
+       /^[A-Za-z0-9_./-]+$/.test(archivo)){
+    src=db.storage.from('hangar-fotos').getPublicUrl(archivo).data.publicUrl;
+   }
+  }else{
+   src=resolverFotoDeHangar(archivo,autor);
+  }
+  if(!src||!safeURL(src))continue;
+  const card=document.createElement('article');
+  card.className='galeria-comunidad-item';
+  const marco=document.createElement('div');
+  marco.className='galeria-comunidad-medio';
+  if(esVideo){
+   const video=document.createElement('video');
+   video.src=src;video.controls=true;video.preload='metadata';video.playsInline=true;
+   video.setAttribute('aria-label','Video aeronáutico compartido');
+   marco.appendChild(video);
+  }else{
+   const boton=document.createElement('button');
+   boton.type='button';boton.className='galeria-comunidad-ampliar';
+   boton.setAttribute('aria-label','Ampliar fotografía');
+   const imagen=document.createElement('img');
+   imagen.src=src;imagen.alt='Fotografía aeronáutica de la comunidad';imagen.loading='lazy';
+   boton.appendChild(imagen);
+   boton.addEventListener('click',()=>{
+    showDialog('');
+    const panel=$('dialog-content');
+    const grande=document.createElement('img');
+    grande.src=src;grande.alt=imagen.alt;grande.className='galeria-comunidad-grande';
+    const descripcion=document.createElement('p');
+    descripcion.className='meta';
+    descripcion.textContent='Compartida por '+(fila.nombre_usuario||name(autor))+' · '+date(fila.created_at);
+    panel.replaceChildren(grande,descripcion);
+   });
+   marco.appendChild(boton);
+  }
+  const pie=document.createElement('div');pie.className='galeria-comunidad-pie';
+  const titulo=document.createElement('strong');
+  titulo.textContent=fila.nombre_usuario||name(autor);
+  const fecha=document.createElement('time');
+  fecha.className='meta';fecha.textContent=date(fila.created_at);
+  if(fila.created_at)fecha.dateTime=fila.created_at;
+  pie.append(titulo,fecha);
+  card.append(marco,pie);
+  contenedor.appendChild(card);
+  contador++;
+ }
+ estado.textContent=contador
+   ?contador+' publicación'+(contador===1?'':'es')+' aprobada'+(contador===1?'':'s')
+   :'Todavía no hay fotos ni videos aprobados. Podés compartir una foto desde Mi Hangar.';
+}
 function multimedia(){crumbs([['Foro','#foro'],['Multimedia']]);app.innerHTML=`<h1>Multimedia</h1>${toolbar('multimedia')}<div class="toolbar"><select id="media-kind" aria-label="Tipo de archivo"><option value="all">Fotos y videos</option><option value="image">Fotos</option><option value="video">Videos</option></select><select id="media-category" aria-label="Temática"><option value="">Todas las temáticas</option>${categories.map(c=>`<option value="${c.slug}">${esc(c.name)}</option>`).join('')}</select></div><div id="media-list" class="media-grid"></div>`;const paint=()=>{$('media-list').innerHTML=media.filter(m=>{const t=topics.find(t=>t.id===m.topic_id);return t?.status==='approved'&&m.kind!=='pdf'&&m.url&&($('media-kind').value==='all'||m.kind===$('media-kind').value)&&(!$('media-category').value||t.category===$('media-category').value)}).map(m=>{const t=topics.find(t=>t.id===m.topic_id);return `<article class="card">${attachment(m)}<h3>${link(t.title,'#tema/'+t.id,'')}</h3><div class="meta">${esc(name(t.author_id))} · ${esc(cat(t.category).name)}</div></article>`}).join('')||'<p class="empty">Todavía no hay archivos publicados con estos filtros.</p>'};$('media-kind').onchange=paint;$('media-category').onchange=paint;paint()}
 async function uploadFiles(files,topicId){
  for(const f of files){let data=f,kind,ext;const mimes={'image/jpeg':['image','jpg',10],'image/png':['image','png',10],'image/webp':['image','webp',10],'video/mp4':['video','mp4',40],'video/webm':['video','webm',40],'application/pdf':['pdf','pdf',15]};const rule=mimes[f.type];if(!rule||f.size>rule[2]*1024*1024)throw new Error('Formato o tamaño no permitido: '+f.name);[kind,ext]=rule;
@@ -540,7 +615,7 @@ async function contact(){
    });
  };
 }
-async function route(){if(!await window.GDV_AUTH.requireRoute())return;const current=++epoch;notice.textContent='';const [view='foro',id,child]=location.hash.slice(1).split('/');document.querySelectorAll('.site-nav a').forEach(a=>a.setAttribute('aria-current',a.getAttribute('href')==='#'+view?'page':'false'));app.innerHTML='<p>Cargando…</p>';try{if(['registro','ingresar','recuperar'].includes(view))authView(view);else if(view==='tematicas')categoryView();else if(view==='tematica')feed(id);else if(view==='tema')await topicView(id,child);else if(view==='crear')editor();else if(view==='editar')editor(id);else if(view==='multimedia')multimedia();else if(view==='hangar')await hangar(id);else if(view==='notificaciones')await notifications();else if(view==='moderacion')await moderation();else if(view==='gestion')await administration();else if(view==='perfil')await profileEditor();else if(view==='normativa')rules();else if(view==='quienes-somos')about();else if(view==='integrantes')await membersView();else if(view==='contacto')await contact();else feed();app.querySelectorAll('input[type="password"]').forEach(input=>{const b=document.createElement('button');b.type='button';b.className='password-toggle';b.dataset.action='show-password';b.dataset.id=input.id;b.textContent='Mostrar contraseña';b.setAttribute('aria-pressed','false');input.after(b)});friendlyActions();contextualModeration();if(current===epoch)document.title=(app.querySelector('h1')?.textContent||'Foro')+' · Gente de Vuelo'}catch(e){if(current===epoch){app.innerHTML='<p>No se pudo cargar este apartado.</p>'+link('Volver al Foro','#foro');message(e.message,true)}}}
+async function route(){if(!await window.GDV_AUTH.requireRoute())return;const current=++epoch;notice.textContent='';const [view='foro',id,child]=location.hash.slice(1).split('/');document.querySelectorAll('.site-nav a').forEach(a=>a.setAttribute('aria-current',a.getAttribute('href')==='#'+view?'page':'false'));app.innerHTML='<p>Cargando…</p>';try{if(['registro','ingresar','recuperar'].includes(view))authView(view);else if(view==='tematicas')categoryView();else if(view==='tematica')feed(id);else if(view==='tema')await topicView(id,child);else if(view==='crear')editor();else if(view==='editar')editor(id);else if(view==='multimedia')multimedia();else if(view==='galeria')await galeriaComunidad();else if(view==='hangar')await hangar(id);else if(view==='notificaciones')await notifications();else if(view==='moderacion')await moderation();else if(view==='gestion')await administration();else if(view==='perfil')await profileEditor();else if(view==='normativa')rules();else if(view==='quienes-somos')about();else if(view==='integrantes')await membersView();else if(view==='contacto')await contact();else feed();app.querySelectorAll('input[type="password"]').forEach(input=>{const b=document.createElement('button');b.type='button';b.className='password-toggle';b.dataset.action='show-password';b.dataset.id=input.id;b.textContent='Mostrar contraseña';b.setAttribute('aria-pressed','false');input.after(b)});friendlyActions();contextualModeration();if(current===epoch)document.title=(app.querySelector('h1')?.textContent||'Foro')+' · Gente de Vuelo'}catch(e){if(current===epoch){app.innerHTML='<p>No se pudo cargar este apartado.</p>'+link('Volver al Foro','#foro');message(e.message,true)}}}
 async function adminDeleteContent(kind,id){
  if(!isAdmin)return;
  const isTopic=kind==='topic';
