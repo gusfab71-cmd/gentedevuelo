@@ -7354,6 +7354,27 @@ async function cargarMisFotosHangar() {
     contenedor.appendChild(bloque);
   }
 }
+// Limpia únicamente archivos R2 previamente registrados como eliminados en Supabase.
+async function procesarColaLimpiezaR2() {
+  try {
+    const {data:{session},error} = await supabaseClient.auth.getSession();
+    if (error || !session?.access_token) return false;
+    const respuesta = await fetch(SUPABASE_URL + "/functions/v1/r2-cleanup-queue",{
+      method:"POST",
+      headers:{Authorization:"Bearer " + session.access_token,apikey:SUPABASE_KEY,"Content-Type":"application/json"},
+      body:"{}"
+    });
+    const resultado = await respuesta.json().catch(()=>({}));
+    if (!respuesta.ok || resultado.errors) {
+      console.warn("Limpieza R2 pendiente de reintento:",resultado.error || resultado.errors);
+      return false;
+    }
+    return true;
+  } catch (error) {
+    console.warn("No se pudo procesar la cola de limpieza R2:",error);
+    return false;
+  }
+}
 async function eliminarFotoHangar(rutaArchivo) {
   const {data:{user}} = await supabaseClient.auth.getUser();
   const enR2 = esFotoR2DeUsuario(rutaArchivo,user?.id);
@@ -7363,12 +7384,12 @@ async function eliminarFotoHangar(rutaArchivo) {
   }
   const video = !enR2 && esVideoArchivo(rutaArchivo);
   const aviso = enR2
-    ? "¿Quitar esta fotografía del Hangar? El archivo seguirá ocupando espacio en Cloudflare hasta la limpieza administrativa."
+    ? "¿Eliminar definitivamente esta fotografía de Mi Hangar y de Cloudflare R2?"
     : (video ? "¿Querés eliminar este video?" : "¿Querés eliminar esta foto?");
   if (!confirm(aviso)) return;
-  const {error:errorGaleria} = await supabaseClient.from("galeria").delete()
-    .eq("user_id",user.id).eq("archivo",rutaArchivo);
-  if (errorGaleria) {
+  const {data:eliminadas,error:errorGaleria} = await supabaseClient.from("galeria").delete()
+    .eq("user_id",user.id).eq("archivo",rutaArchivo).select("id");
+  if (errorGaleria || (enR2 && !eliminadas?.length)) {
     console.error("No se pudo quitar el archivo de Galería:",errorGaleria);
     alert("No se pudo eliminar el archivo del Hangar.");
     return;
@@ -7381,10 +7402,13 @@ async function eliminarFotoHangar(rutaArchivo) {
       return;
     }
   }
+  const limpiezaR2 = enR2 ? await procesarColaLimpiezaR2() : true;
   await cargarMisFotosHangar();
   await cargarGaleria();
   alert(enR2
-    ? "La foto se retiró del Hangar. Queda pendiente limpiar el archivo de Cloudflare R2."
+    ? (limpiezaR2
+        ? "Foto eliminada del Hangar. La limpieza de Cloudflare R2 fue procesada."
+        : "Foto eliminada del Hangar. Su limpieza de Cloudflare R2 quedó registrada para reintentar.")
     : (video ? "Video eliminado correctamente." : "Foto eliminada correctamente."));
 }
   async function cargarGaleria() {
@@ -7782,22 +7806,26 @@ async function eliminarClasificadoPropio(publicacion, usuarioId) {
   if (!publicacion || !usuarioId || publicacion.user_id !== usuarioId) return;
   if (!confirm("¿Querés eliminar definitivamente esta publicación?")) return;
 
-  const { error } = await supabaseClient
+  const { data: eliminados, error } = await supabaseClient
     .from("clasificados")
     .delete()
     .eq("id", publicacion.id)
-    .eq("user_id", usuarioId);
+    .eq("user_id", usuarioId)
+    .select("id");
 
-  if (error) {
+  if (error || !eliminados?.length) {
     console.error("Error al eliminar clasificado:", error);
     mostrarMensajeClasificados("No se pudo eliminar la publicación.", true);
     return;
   }
 
   const fotosEnR2 = Array.isArray(publicacion.fotos) &&
-    publicacion.fotos.some(url => typeof url === "string" && url.startsWith("https://media.gentedevuelo.com/"));
+    publicacion.fotos.some(url => typeof url === "string" && url.startsWith("https://media.gentedevuelo.com/imagenes/"));
+  const limpieza = fotosEnR2 ? await procesarColaLimpiezaR2() : true;
   mostrarMensajeClasificados(fotosEnR2
-    ? "Publicación eliminada. Sus fotografías en Cloudflare R2 quedan pendientes de limpieza."
+    ? (limpieza
+        ? "Publicación eliminada. Limpieza de fotografías R2 procesada."
+        : "Publicación eliminada. Limpieza R2 registrada para reintentar.")
     : "Publicación eliminada.");
   await cargarClasificados();
   cargarUltimoClasificadoPortada();
