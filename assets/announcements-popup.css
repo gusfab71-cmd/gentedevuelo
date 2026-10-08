@@ -1,0 +1,78 @@
+/* Ventana de novedades: misma estética de Gente de Vuelo, independiente del foro. */
+#gdv-comunicado-dialog {
+  box-sizing: border-box;
+  width: min(550px, calc(100vw - 28px));
+  max-height: min(84dvh, 720px);
+  margin: auto;
+  padding: 0;
+  overflow: auto;
+  border: 1px solid #b77b43;
+  border-radius: 18px;
+  color: #f4f5f6;
+  background: linear-gradient(150deg, #242d35, #151b22 78%);
+  box-shadow: 0 18px 55px rgba(0, 0, 0, .72), 0 0 0 1px rgba(241, 170, 96, .13);
+  font-family: Arial, Helvetica, sans-serif;
+}
+#gdv-comunicado-dialog::backdrop { background: rgba(5, 10, 16, .77); }
+#gdv-comunicado-dialog [hidden] { display: none !important; }
+#gdv-comunicado-dialog .gdv-comunicado-contenido {
+  box-sizing: border-box;
+  position: relative;
+  padding: 26px 26px 23px;
+  overflow-wrap: anywhere;
+}
+#gdv-comunicado-dialog .gdv-comunicado-etiqueta {
+  display: flex; align-items: center; gap: 9px;
+  padding-right: 34px;
+  font-size: 12px; font-weight: 800; letter-spacing: .065em;
+  text-transform: uppercase; color: #f7bc79;
+}
+#gdv-comunicado-dialog .gdv-comunicado-etiqueta svg {
+  width: 22px; height: 22px; flex-shrink: 0;
+  fill: none; stroke: currentColor; stroke-width: 1.7;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+#gdv-comunicado-dialog .gdv-comunicado-cerrar {
+  position: absolute; top: 12px; right: 12px;
+  display: grid; place-items: center;
+  width: 34px; min-height: 34px; padding: 0; font-size: 22px; line-height: 1;
+  color: #f7d3a8; background: #343b43; border: 1px solid #777d83; border-radius: 10px;
+  cursor: pointer;
+}
+#gdv-comunicado-dialog #gdv-comunicado-titulo {
+  margin: 20px 0 12px; color: #fff;
+  font-size: clamp(22px, 4.8vw, 27px); line-height: 1.26;
+}
+#gdv-comunicado-dialog .gdv-comunicado-mensaje {
+  margin: 0 0 13px;
+  white-space: pre-wrap; line-height: 1.7; font-size: 15px; color: #e2e8ec;
+}
+#gdv-comunicado-dialog .gdv-comunicado-fecha {
+  margin: 12px 0 17px; color: #dcb185; font-size: 12px;
+}
+#gdv-comunicado-dialog .gdv-comunicado-acciones {
+  display: flex; flex-wrap: wrap; gap: 10px;
+}
+#gdv-comunicado-dialog .gdv-comunicado-acciones button {
+  flex: 1 1 160px; min-height: 43px;
+  padding: 10px 13px; border-radius: 10px; font-size: 14px; font-weight: 800;
+  cursor: pointer;
+}
+#gdv-comunicado-dialog .gdv-comunicado-principal {
+  color: #221b15; background: #f0a55e; border: 1px solid #ffbf7e;
+}
+#gdv-comunicado-dialog .gdv-comunicado-secundario {
+  color: #fafafa; background: #303943; border: 1px solid #76828c;
+}
+#gdv-comunicado-dialog button:hover { filter: brightness(1.13); }
+#gdv-comunicado-dialog button:focus-visible { outline: 2px solid #f7c38c; outline-offset: 3px; }
+#gdv-comunicado-dialog button:disabled { opacity: .55; cursor: wait; }
+#gdv-comunicado-dialog .gdv-comunicado-ayuda {
+  margin: 15px 0 0; font-size: 12px; line-height: 1.55; color: #aebbc5;
+}
+#gdv-comunicado-dialog #gdv-comunicado-estado { margin-bottom: 0; color: #ffbba5; }
+@media (max-width: 550px) {
+  #gdv-comunicado-dialog .gdv-comunicado-contenido { padding: 22px 17px; }
+  #gdv-comunicado-dialog .gdv-comunicado-acciones { flex-direction: column; }
+  #gdv-comunicado-dialog .gdv-comunicado-acciones button { flex: 0 0 auto; }
+}
