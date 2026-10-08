@@ -9,9 +9,13 @@
   const notice = document.getElementById('chat-notice');
   const status = document.getElementById('connection-status');
   const dot = document.getElementById('connection-dot');
+  const onlineCount = document.getElementById('online-count');
+  const onlineUsers = document.getElementById('online-users');
   let currentUser = null;
   let staff = false;
   let channel = null;
+  let onlineChannel = null;
+  let onlineRequest = 0;
   let loading = false;
   let refreshAgain = false;
   let initial = true;
@@ -32,6 +36,97 @@
   function timeLabel(value) {
     return new Date(value).toLocaleString('es-AR', {timeZone:'America/Argentina/Buenos_Aires',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'});
   }
+
+  function onlineUnavailable(text) {
+    onlineRequest++;
+    onlineCount.textContent = '—';
+    const placeholder = document.createElement('li');
+    placeholder.className = 'online-placeholder';
+    placeholder.textContent = text;
+    onlineUsers.replaceChildren(placeholder);
+  }
+
+  async function updateOnlineList() {
+    if (!onlineChannel || !currentUser) return;
+    const request = ++onlineRequest;
+    // Multiple open tabs of one member count as one connected member.
+    const state = onlineChannel.presenceState();
+    const ids = [...new Set(Object.values(state).flatMap(
+      entries => Array.isArray(entries) ? entries.map(entry => entry.user_id) : []
+    ).filter(id => typeof id === 'string' && /^[0-9a-f-]{36}$/i.test(id)))];
+
+    if (!ids.length) {
+      if (request !== onlineRequest) return;
+      onlineCount.textContent = '0 en línea';
+      const placeholder = document.createElement('li');
+      placeholder.className = 'online-placeholder';
+      placeholder.textContent = 'Todavía no hay integrantes conectados.';
+      onlineUsers.replaceChildren(placeholder);
+      return;
+    }
+
+    // Always resolve usernames from trusted profiles, not client-supplied presence names.
+    const result = await db.from('profiles').select('id,username').in('id',ids);
+    if (request !== onlineRequest) return;
+    if (result.error) {
+      onlineUnavailable('No se pudo cargar el listado de conectados.');
+      return;
+    }
+    const people = (result.data || []).filter(item => ids.includes(item.id)).sort((a,b) => {
+      if (a.id === currentUser.id) return -1;
+      if (b.id === currentUser.id) return 1;
+      return (a.username || '').localeCompare(b.username || '', 'es');
+    });
+    onlineCount.textContent = String(people.length) + ' en línea';
+    const items = document.createDocumentFragment();
+    for (const person of people) {
+      const item = document.createElement('li');
+      item.className = 'online-user';
+      const dot = document.createElement('span');
+      dot.className = 'online-indicator';
+      dot.setAttribute('aria-hidden','true');
+      const link = document.createElement('a');
+      link.href = 'comunidad.html#hangar/' + encodeURIComponent(person.id);
+      link.textContent = person.username || 'Integrante';
+      item.append(dot, link);
+      if (person.id === currentUser.id) {
+        const you = document.createElement('span');
+        you.className = 'online-you';
+        you.textContent = 'Vos';
+        item.append(you);
+      }
+      items.append(item);
+    }
+    if (!people.length) {
+      onlineUnavailable('No hay integrantes visibles en la sala.');
+      return;
+    }
+    onlineUsers.replaceChildren(items);
+  }
+
+  function startOnlinePresence() {
+    // Private channel: PostgreSQL realtime.messages policies permit authenticated members only.
+    onlineChannel = db.channel('gdv-aerochat-online', {
+      config: { private: true, presence: { key: currentUser.id } }
+    });
+    onlineChannel
+      .on('presence', { event:'sync' }, () => {
+        updateOnlineList().catch(() => onlineUnavailable('No se pudo actualizar la lista.'));
+      })
+      .subscribe(async (state) => {
+        if (state === 'SUBSCRIBED') {
+          try {
+            const result = await onlineChannel.track({ user_id: currentUser.id });
+            if (result !== 'ok') onlineUnavailable('No se pudo informar tu conexión.');
+          } catch {
+            onlineUnavailable('No se pudo informar tu conexión.');
+          }
+        } else if (state === 'CHANNEL_ERROR' || state === 'TIMED_OUT' || state === 'CLOSED') {
+          onlineUnavailable('Presencia no disponible. Se intentará reconectar.');
+        }
+      });
+  }
+
   function render(messages, memberNames) {
     const stayAtEnd = initial || list.scrollHeight - list.scrollTop - list.clientHeight < 110;
     list.replaceChildren();
@@ -134,7 +229,13 @@
     }
   });
   document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh(); });
-  window.addEventListener('pagehide', () => { if (channel) db.removeChannel(channel); });
+  window.addEventListener('pagehide', () => {
+    if (onlineChannel) {
+      onlineChannel.untrack().catch(() => {});
+      db.removeChannel(onlineChannel);
+    }
+    if (channel) db.removeChannel(channel);
+  });
   setInterval(() => { if (!document.hidden) refresh(); }, 15000);
 
   async function start() {
@@ -148,6 +249,7 @@
     staff = roleResults.some(result => !result.error && result.data && result.data.length > 0);
     updateButton();
     await refresh();
+    startOnlinePresence();
     channel = db.channel('gdv-aerochat-live')
       .on('postgres_changes',{event:'*',schema:'public',table:'gdv_chat_messages'},() => refresh())
       .subscribe(state => {
