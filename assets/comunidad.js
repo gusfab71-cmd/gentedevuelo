@@ -89,7 +89,18 @@ async function load(){
  for(let start=0;start<privateMedia.length;start+=100){const batch=privateMedia.slice(start,start+100),result=await db.storage.from('community-media').createSignedUrls(batch.map(m=>m.path),3600);if(result.error)throw result.error;const urls=new Map(result.data.map(m=>[m.path,m.signedUrl]));batch.forEach(m=>m.url=urls.get(m.path)||'')}
 
 }
-function account(){ $('account').innerHTML=user?`<details class="account-menu"><summary aria-label="Abrir menú de cuenta">Mi cuenta <span id="admin-pending-badge" class="admin-pending-badge" hidden></span> <span aria-hidden="true">⌄</span></summary><div class="account-menu-panel">${link('Notificaciones','#notificaciones','')}${isAdmin?link('Moderación','#moderacion',''):''}${link('Mi Hangar','#hangar','')}<button type="button" data-action="logout">Salir</button></div></details>`:`${link('Ingresar','#ingresar','button primary')}`; if(isAdmin)refreshAdminPendingBadge().catch(()=>{}); }
+function account(){ $('account').innerHTML=user?`<details class="account-menu"><summary aria-label="Abrir menú de cuenta">Mi cuenta <span id="unread-notifications-badge" class="unread-notifications-badge" hidden aria-label="Notificaciones sin leer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg><span id="unread-notifications-count"></span></span> <span id="admin-pending-badge" class="admin-pending-badge" hidden></span> <span aria-hidden="true">⌄</span></summary><div class="account-menu-panel">${link('Notificaciones','#notificaciones','')}${isAdmin?link('Moderación','#moderacion',''):''}${link('Mi Hangar','#hangar','')}<button type="button" data-action="logout">Salir</button></div></details>`:`${link('Ingresar','#ingresar','button primary')}`; if(isAdmin)refreshAdminPendingBadge().catch(()=>{}); if(user)refreshUnreadNotificationsBadge().catch(()=>{}); }
+async function refreshUnreadNotificationsBadge(){
+ if(!user)return;
+ const response=await db.from('gdv_notifications').select('id',{count:'exact',head:true}).eq('user_id',user.id).eq('read',false);
+ if(response.error)return;
+ const badge=$('unread-notifications-badge'),label=$('unread-notifications-count');
+ if(!badge||!label)return;
+ const total=Number(response.count)||0;
+ badge.hidden=total===0;
+ label.textContent=total>99?'99+':String(total);
+ badge.setAttribute('aria-label',total+' notificaciones sin leer');
+}
 function closeAccountMenu(){
  const menu=document.querySelector('.account-menu[open]');
  if(menu)menu.open=false;
@@ -591,7 +602,7 @@ async function notifications(){
  crumbs([['Notificaciones']]);
  const rows=checked(await db.from('gdv_notifications').select('*').order('created_at',{ascending:false}).limit(100));
  app.innerHTML=`<div class="toolbar" style="justify-content:space-between;align-items:center;"><h1 style="margin:0;">Notificaciones</h1>${rows.length?'<button id="delete-all-notifications" type="button">Borrar todas</button>':''}</div>`+
-   (rows.map(n=>`<article class="card"><p>${esc(n.message)}</p><span class="meta">${date(n.created_at)}${n.read?'':' · Nueva'}</span> ${n.topic_id?link('Abrir','#tema/'+n.topic_id):''}</article>`).join('')||'<p>No tenés notificaciones.</p>');
+   (rows.map(n=>`<article class="card"><p class="notification-message">${esc(n.message)}</p><span class="meta">${date(n.created_at)}${n.read?'':' · Nueva'}</span> ${n.topic_id?link('Abrir','#tema/'+n.topic_id):''}</article>`).join('')||'<p>No tenés notificaciones.</p>');
  if(rows.length){
    const borrarTodas=$('delete-all-notifications');
    if(borrarTodas)borrarTodas.onclick=()=>busy(borrarTodas,async()=>{
@@ -602,6 +613,7 @@ async function notifications(){
    });
  }
  checked(await db.from('gdv_notifications').update({read:true}).eq('user_id',user.id).eq('read',false));
+ refreshUnreadNotificationsBadge().catch(()=>{});
 }
 async function moderation(){
  if(!isAdmin){app.innerHTML='<h1>Acceso restringido</h1>';return}
@@ -611,7 +623,7 @@ async function moderation(){
  const generalPending=reports.length;
  app.innerHTML=`<h1>Moderación de la comunidad</h1>
  <div class="toolbar">${link('Gestionar publicaciones, cuentas y temáticas','#gestion','button moderation-action '+(generalPending>0?'has-pending':''))}</div>
- <p>${link('Administrar Shimoda, CompraVenta y contenido anterior','moderacion.html','button moderation-action')}</p>
+ <p>${link('Administrar Shimoda, CompraVenta y contenido anterior','moderacion.html','button moderation-action')} ${link('Comunicados para integrantes','#gestion/comunicados','button moderation-action')}</p>
  <h2>Denuncias</h2>${reports.map(r=>`<article class="card"><p>${esc(r.reason)}</p>${link('Revisar contexto','#tema/'+r.topic_id+(r.comment_id?'/'+r.comment_id:''))}<button data-review="gdv_reports" data-id="${r.id}" data-status="resolved">Marcar revisada</button></article>`).join('')||'<p>Sin denuncias pendientes.</p>'}
  <h2>Consultas privadas</h2>${contacts.map(c=>`<article class="card contact-admin-card" data-contact-card="${c.id}"><h3>${esc(c.subject)}</h3><p>${esc(c.message)}</p><p class="meta">${esc(name(c.user_id))} · ${date(c.created_at)}</p>${c.admin_reply?`<div class="rule-box"><strong>Respuesta enviada</strong><p>${esc(c.admin_reply)}</p><span class="meta">${date(c.replied_at)}</span></div>`:''}<form data-contact-reply="${c.id}"><label for="reply-${c.id}">Responder al integrante</label><textarea id="reply-${c.id}" required minlength="1" maxlength="4000">${esc(c.admin_reply||'')}</textarea><div class="toolbar"><button class="primary">Enviar respuesta</button><button type="button" data-contact-delete="${c.id}">Eliminar consulta</button></div></form></article>`).join('')||'<p>Sin consultas.</p>'}`;
 
@@ -639,17 +651,36 @@ async function moderation(){
  });
 }
 
-async function administration(){
+async function administration(initialSection='topics'){
  if(!isAdmin){app.innerHTML='<h1>Acceso restringido</h1>';return}
  crumbs([['Moderación','#moderacion'],['Gestión']]);
  const pendingTopics=topics.filter(t=>t.status==='pending').length;
- app.innerHTML=`<h1>Gestión de la comunidad</h1><div class="toolbar">${link('Revisar pendientes','#moderacion','button '+(pendingTopics?'has-pending':''))}<button data-admin-tab="topics">Publicaciones${pendingTopics?` <span class="admin-count-badge">${pendingTopics}</span>`:''}</button><button data-admin-tab="members">Cuentas</button><button data-admin-tab="categories">Temáticas</button><button data-admin-tab="history">Historial</button></div><div id="admin-work"></div>`;
+ app.innerHTML=`<h1>Gestión de la comunidad</h1><div class="toolbar">${link('Revisar pendientes','#moderacion','button '+(pendingTopics?'has-pending':''))}<button data-admin-tab="topics">Publicaciones${pendingTopics?` <span class="admin-count-badge">${pendingTopics}</span>`:''}</button><button data-admin-tab="members">Cuentas</button><button data-admin-tab="announcements">Comunicados</button><button data-admin-tab="categories">Temáticas</button><button data-admin-tab="history">Historial</button></div><div id="admin-work"></div>`;
  async function paint(section){const area=$('admin-work');if(!area)return;
   if(section==='topics'){
    area.innerHTML='<label for="admin-search">Buscar publicación</label><input id="admin-search" placeholder="Título o usuario"><div id="admin-topics"></div>';
    const render=()=>{const q=$('admin-search').value.toLowerCase();const list=topics.filter(t=>(t.title+' '+name(t.author_id)).toLowerCase().includes(q)).sort((a,b)=>Number(b.status==='pending')-Number(a.status==='pending'));$('admin-topics').innerHTML=list.map(t=>`<article class="card admin-topic-card ${t.status==='pending'?'admin-topic-pending':''}">${t.status==='pending'?'<div class="admin-pending-label">PENDIENTE DE MODERACIÓN</div>':''}<h3>${esc(t.title)}</h3><p class="meta">${esc(name(t.author_id))} · ${stateLabel(t.status)} · ${stateLabel(t.state)}</p>${link('Ver tema','#tema/'+t.id,'button')}</article>`).join('')||'<p>No hay coincidencias.</p>'};$('admin-search').oninput=render;render();
   }else if(section==='categories'){
    area.innerHTML=categories.map(c=>`<article class="card"><h3>${esc(c.name)}</h3><p>${esc(c.welcome)}</p><button data-manage-category="${c.slug}">Editar bienvenida y normas</button></article>`).join('');
+  }else if(section==='announcements'){
+   area.innerHTML=`<section class="card announcement-admin"><h2>Enviar comunicado a todos</h2><p class="muted">El mensaje llegará a Notificaciones de los integrantes con correo confirmado, incluido el administrador. No se envían correos electrónicos.</p><form id="admin-announcement-form"><label for="admin-announcement-title">Título del comunicado</label><input id="admin-announcement-title" type="text" required minlength="5" maxlength="120" placeholder="Ej.: Novedades de Gente de Vuelo"><label for="admin-announcement-body">Mensaje</label><textarea id="admin-announcement-body" required minlength="10" maxlength="1200" rows="5" placeholder="Contales a los integrantes qué novedades se incorporaron."></textarea><p class="small muted">Antes de enviar se solicitará una confirmación. Máximo 1.200 caracteres.</p><button type="submit" class="primary">Enviar a todos los integrantes</button><p id="admin-announcement-status" class="small" role="status" aria-live="polite"></p></form></section>`;
+   const form=$('admin-announcement-form');
+   form.onsubmit=e=>{
+    e.preventDefault();
+    const titulo=$('admin-announcement-title').value.trim();
+    const cuerpo=$('admin-announcement-body').value.trim();
+    if(titulo.length<5||titulo.length>120||cuerpo.length<10||cuerpo.length>1200){$('admin-announcement-status').textContent='Revisá el título y el contenido antes de enviarlo.';return}
+    if(!confirm('¿Enviar el comunicado "'+titulo+'" a todos los integrantes con correo confirmado? Esta acción no se puede deshacer.'))return;
+    busy(e.submitter,async()=>{
+     const result=await db.rpc('gdv_admin_send_announcement',{p_title:titulo,p_body:cuerpo});
+     if(result.error)throw result.error;
+     const enviados=Number(result.data)||0;
+     form.reset();
+     $('admin-announcement-status').textContent='Comunicado enviado a '+enviados+' cuenta'+(enviados===1?'':'s')+' confirmada'+(enviados===1?'':'s')+'.';
+     message('Comunicado entregado en Notificaciones.');
+     refreshUnreadNotificationsBadge().catch(()=>{});
+    });
+   };
   }else if(section==='members'){
    const members=checked(await db.from('gdv_members').select('*'));
    area.innerHTML='<p>Las medidas quedan registradas y se notifican al titular con su motivo.</p>'+[...profiles.values()].map(p=>{const m=members.find(m=>m.user_id===p.id);return `<article class="card"><h3>${esc(p.username)}</h3><p>${m?.suspended_until&&new Date(m.suspended_until)>new Date()?'Suspendido hasta '+date(m.suspended_until):m?.restricted?'Revisión previa':'Habilitado'}</p><button data-manage-member="${p.id}" ${p.id===user.id||!isOwnerAdmin?'disabled':''}>Gestionar cuenta</button></article>`}).join('');
@@ -659,7 +690,7 @@ async function administration(){
   }
  }
  app.querySelectorAll('[data-admin-tab]').forEach(b=>b.onclick=()=>busy(b,()=>paint(b.dataset.adminTab)));
- await paint('topics');
+ await paint(initialSection);
 }
 async function profileEditor(){
  if(!authenticated())return;const p=profile(user.id);crumbs([['Mi Hangar','#hangar'],['Editar perfil']]);
@@ -746,7 +777,7 @@ async function contact(){
    });
  };
 }
-async function route(){if(!await window.GDV_AUTH.requireRoute())return;const current=++epoch;notice.textContent='';const [view='foro',id,child]=location.hash.slice(1).split('/');document.querySelectorAll('.site-nav a').forEach(a=>a.setAttribute('aria-current',a.getAttribute('href')==='#'+view?'page':'false'));app.innerHTML='<p>Cargando…</p>';try{if(['registro','ingresar','recuperar'].includes(view))authView(view);else if(view==='tematicas')categoryView();else if(view==='tematica')feed(id);else if(view==='tema')await topicView(id,child);else if(view==='crear')editor();else if(view==='editar')editor(id);else if(view==='multimedia')multimedia();else if(view==='galeria')await galeriaComunidad();else if(view==='hangar')await hangar(id);else if(view==='notificaciones')await notifications();else if(view==='moderacion')await moderation();else if(view==='gestion')await administration();else if(view==='perfil')await profileEditor();else if(view==='normativa')rules();else if(view==='quienes-somos')about();else if(view==='integrantes')await membersView();else if(view==='contacto')await contact();else feed();app.querySelectorAll('input[type="password"]').forEach(input=>{const b=document.createElement('button');b.type='button';b.className='password-toggle';b.dataset.action='show-password';b.dataset.id=input.id;b.textContent='Mostrar contraseña';b.setAttribute('aria-pressed','false');input.after(b)});friendlyActions();contextualModeration();if(current===epoch)document.title=(app.querySelector('h1')?.textContent||'Foro')+' · Gente de Vuelo'}catch(e){if(current===epoch){app.innerHTML='<p>No se pudo cargar este apartado.</p>'+link('Volver al Foro','#foro');message(e.message,true)}}}
+async function route(){if(!await window.GDV_AUTH.requireRoute())return;const current=++epoch;notice.textContent='';const [view='foro',id,child]=location.hash.slice(1).split('/');document.querySelectorAll('.site-nav a').forEach(a=>a.setAttribute('aria-current',a.getAttribute('href')==='#'+view?'page':'false'));app.innerHTML='<p>Cargando…</p>';try{if(['registro','ingresar','recuperar'].includes(view))authView(view);else if(view==='tematicas')categoryView();else if(view==='tematica')feed(id);else if(view==='tema')await topicView(id,child);else if(view==='crear')editor();else if(view==='editar')editor(id);else if(view==='multimedia')multimedia();else if(view==='galeria')await galeriaComunidad();else if(view==='hangar')await hangar(id);else if(view==='notificaciones')await notifications();else if(view==='moderacion')await moderation();else if(view==='gestion')await administration(id==='comunicados'?'announcements':'topics');else if(view==='perfil')await profileEditor();else if(view==='normativa')rules();else if(view==='quienes-somos')about();else if(view==='integrantes')await membersView();else if(view==='contacto')await contact();else feed();app.querySelectorAll('input[type="password"]').forEach(input=>{const b=document.createElement('button');b.type='button';b.className='password-toggle';b.dataset.action='show-password';b.dataset.id=input.id;b.textContent='Mostrar contraseña';b.setAttribute('aria-pressed','false');input.after(b)});friendlyActions();contextualModeration();if(current===epoch)document.title=(app.querySelector('h1')?.textContent||'Foro')+' · Gente de Vuelo'}catch(e){if(current===epoch){app.innerHTML='<p>No se pudo cargar este apartado.</p>'+link('Volver al Foro','#foro');message(e.message,true)}}}
 async function adminDeleteContent(kind,id){
  if(!isAdmin)return;
  const isTopic=kind==='topic';
