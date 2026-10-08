@@ -669,3 +669,90 @@
  .galeria-comunidad-pie strong{font-size:12px}
  .galeria-comunidad-grande{max-height:65vh}
 }
+
+/* Galería aeronáutica: calesita clásica con foto protagonista y flechas laterales */
+.gdv-galeria-calesita{
+ display:grid;
+ grid-template-columns:48px minmax(0,1fr) 48px;
+ align-items:center;
+ column-gap:14px;
+ row-gap:12px;
+ width:min(940px,100%);
+ margin:20px auto 34px;
+}
+.gdv-galeria-calesita[hidden]{display:none!important}
+.gdv-galeria-ventana{
+ min-width:0;
+ overflow:hidden;
+ border:2px solid #f28c3e;
+ border-radius:20px;
+ background:#151b22;
+ box-shadow:0 14px 36px rgba(0,0,0,.35),0 0 0 1px rgba(242,140,62,.1);
+}
+.gdv-galeria-pista{display:flex;align-items:stretch;transition:transform .42s ease;will-change:transform}
+@media(prefers-reduced-motion:reduce){.gdv-galeria-pista{transition:none}}
+.gdv-galeria-lamina{flex:0 0 100%;min-width:0;margin:0;display:flex;flex-direction:column}
+.gdv-galeria-marco{
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ height:clamp(300px,52vw,520px);
+ background:radial-gradient(ellipse at center,#29333c 0%,#141a20 85%);
+}
+.gdv-galeria-marco img,.gdv-galeria-marco video{display:block;width:100%;height:100%;object-fit:contain}
+.gdv-galeria-ampliar{
+ width:100%;
+ height:100%;
+ padding:0;
+ border:0;
+ border-radius:0;
+ background:transparent;
+ cursor:zoom-in;
+}
+.gdv-galeria-ampliar:hover{background:rgba(255,255,255,.025)}
+.gdv-galeria-pie{
+ display:flex;
+ justify-content:space-between;
+ align-items:center;
+ flex-wrap:wrap;
+ gap:5px 16px;
+ padding:14px 18px;
+ background:linear-gradient(90deg,#252b31,#1e242b);
+ border-top:1px solid #424a52;
+}
+.gdv-galeria-pie strong{font-size:15px;color:#f3d7ac}
+.gdv-galeria-pie .meta{font-size:13px;color:#c0c8d1}
+.gdv-galeria-nav{
+ display:grid;
+ place-items:center;
+ width:48px;
+ height:48px;
+ padding:0;
+ border:2px solid #f28c3e;
+ border-radius:50%;
+ background:#242a30;
+ color:#fff;
+ font-size:27px;
+ line-height:1;
+ font-weight:700;
+ transition:background .2s,transform .2s;
+}
+.gdv-galeria-nav:not(:disabled):hover{background:#a95c20;transform:scale(1.07)}
+.gdv-galeria-nav:disabled{cursor:default;opacity:.4}
+.gdv-galeria-contador{
+ grid-column:1/-1;
+ margin:0;
+ text-align:center;
+ color:#dfc4a4;
+ font-size:14px;
+ font-variant-numeric:tabular-nums;
+}
+@media(max-width:700px){
+ .gdv-galeria-calesita{grid-template-columns:34px minmax(0,1fr) 34px;gap:7px;width:100%}
+ .gdv-galeria-ventana{border-radius:12px}
+ .gdv-galeria-nav{width:34px;height:34px;font-size:21px;border-width:1px}
+ .gdv-galeria-marco{height:clamp(230px,73vw,360px)}
+ .gdv-galeria-pie{padding:10px 12px}
+ .gdv-galeria-pie strong{font-size:13px}
+ .gdv-galeria-pie .meta{font-size:12px}
+}
