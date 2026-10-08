@@ -7802,7 +7802,11 @@ async function eliminarClasificadoPropio(publicacion, usuarioId) {
     return;
   }
 
-  mostrarMensajeClasificados("Publicación eliminada.");
+  const fotosEnR2 = Array.isArray(publicacion.fotos) &&
+    publicacion.fotos.some(url => typeof url === "string" && url.startsWith("https://media.gentedevuelo.com/"));
+  mostrarMensajeClasificados(fotosEnR2
+    ? "Publicación eliminada. Sus fotografías en Cloudflare R2 quedan pendientes de limpieza."
+    : "Publicación eliminada.");
   await cargarClasificados();
   cargarUltimoClasificadoPortada();
 }
@@ -8299,42 +8303,48 @@ async function cargarUltimoClasificadoPortada() {
 
 cargarUltimoClasificadoPortada();
 
-async function subirFotosClasificado(archivos, userId) {
-  if (archivos.length > 5) {
-    throw new Error("Podés subir hasta 5 fotografías.");
-  }
+async function subirFotosClasificado(archivos, userId, resultado = { urls: [], rutas: [] }) {
+  if (archivos.length > 5) throw new Error("Podés subir hasta 5 fotografías.");
 
   const tiposPermitidos = ["image/jpeg", "image/png", "image/webp"];
-  const urls = [];
-  const rutas = [];
-
-  for (const archivo of archivos) {
-    if (!tiposPermitidos.includes(archivo.type)) {
-      throw new Error("Las fotografías deben ser JPG, PNG o WEBP.");
-    }
-
-    if (archivo.size > 5 * 1024 * 1024) {
-      throw new Error("Cada fotografía debe pesar menos de 5 MB.");
-    }
-
-    const extension = archivo.name.split(".").pop().toLowerCase();
-    const ruta = `${userId}/${crypto.randomUUID()}.${extension}`;
-
-    const { error } = await supabaseClient.storage
-      .from("clasificados-fotos")
-      .upload(ruta, archivo, { upsert: false, contentType: archivo.type });
-
-    if (error) throw error;
-
-    const { data } = supabaseClient.storage
-      .from("clasificados-fotos")
-      .getPublicUrl(ruta);
-
-    rutas.push(ruta);
-    urls.push(data.publicUrl);
+  // Las credenciales privadas de Cloudflare permanecen en la Edge Function de Supabase.
+  const { data: sessionData, error: sessionError } = await supabaseClient.auth.getSession();
+  if (sessionError || !sessionData.session?.access_token || sessionData.session.user.id !== userId) {
+    throw new Error("Tu sesión venció. Volvé a ingresar para subir las fotografías.");
   }
 
-  return { urls, rutas };
+  for (const original of archivos) {
+    if (!tiposPermitidos.includes(original.type) || !original.size || original.size > 5 * 1024 * 1024) {
+      throw new Error("Cada fotografía debe ser JPG, PNG o WEBP y pesar hasta 5 MB.");
+    }
+
+    const archivo = await optimizarImagenParaSubir(original, 1800, 0.80);
+    if (archivo.size > 4 * 1024 * 1024) {
+      throw new Error("Esta fotografía sigue superando los 4 MB después de comprimirla. Elegí una más pequeña.");
+    }
+
+    const respuesta = await fetch(SUPABASE_URL + "/functions/v1/r2-upload-image", {
+      method: "POST",
+      headers: {
+        Authorization: "Bearer " + sessionData.session.access_token,
+        apikey: SUPABASE_KEY,
+        "Content-Type": archivo.type
+      },
+      body: archivo
+    });
+
+    const subida = await respuesta.json().catch(() => ({}));
+    if (!respuesta.ok || typeof subida.url !== "string" ||
+        !subida.url.startsWith("https://media.gentedevuelo.com/imagenes/" + userId + "/") ||
+        typeof subida.path !== "string") {
+      throw new Error(subida.error || "No se pudo guardar una fotografía en Cloudflare R2.");
+    }
+
+    resultado.urls.push(subida.url);
+    resultado.rutas.push(subida.path);
+  }
+
+  return resultado;
 }
 
 document.getElementById("formularioClasificado").addEventListener("submit", async function (event) {
@@ -8350,7 +8360,7 @@ document.getElementById("formularioClasificado").addEventListener("submit", asyn
   let fotosSubidas = { urls: [], rutas: [] };
 
   try {
-    fotosSubidas = await subirFotosClasificado(archivos, user.id);
+    await subirFotosClasificado(archivos, user.id, fotosSubidas);
 
     const { error } = await supabaseClient.from("clasificados").insert({
       user_id: user.id,
@@ -8373,11 +8383,13 @@ document.getElementById("formularioClasificado").addEventListener("submit", asyn
     mostrarPanelClasificados("panelClasificadosLista");
     mostrarMensajeClasificados("Disponible enviado correctamente. Quedó pendiente de aprobación.");
   } catch (error) {
-    if (fotosSubidas.rutas.length) {
-      await supabaseClient.storage.from("clasificados-fotos").remove(fotosSubidas.rutas);
-    }
     console.error("Error al enviar clasificado:", error);
-    mostrarMensajeClasificados(error.message || "No se pudo publicar la venta.", true);
+    const pendientes = fotosSubidas.rutas.length;
+    mostrarMensajeClasificados(
+      (error.message || "No se pudo publicar la venta.") +
+      (pendientes ? " Se enviaron " + pendientes + " foto(s) a Cloudflare que requieren limpieza manual. Avisá al administrador." : ""),
+      true
+    );
   }
 });
 
