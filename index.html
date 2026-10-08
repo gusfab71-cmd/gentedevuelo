@@ -6238,8 +6238,6 @@ img, video { max-width: 100%; }
 async function enviarActividad(event) {
   event.preventDefault();
 
-  archivo = await optimizarImagenParaSubir(archivo);
-
   const { data: { user } } = await supabaseClient.auth.getUser();
 
   if (!user) {
@@ -7202,6 +7200,14 @@ async function subirFotoHangar() {
   .select("full_name")
   .eq("id", user.id)
   .maybeSingle();
+
+  try {
+    archivo = await optimizarImagenParaSubir(archivo);
+  } catch (error) {
+    console.error("Error al preparar la fotografía:", error);
+    mensaje.textContent = "No se pudo preparar la fotografía. Probá con otra imagen.";
+    return;
+  }
 
  const nombreSeguro = archivo.name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9._-]/g, "_");
 const nombreArchivo = `${user.id}/${Date.now()}-${nombreSeguro}`;
