@@ -7179,66 +7179,72 @@ async function optimizarImagenParaSubir(archivo, maxDimension = 1920, calidad = 
   return new File([blob], base + ".jpg", { type: "image/jpeg", lastModified: Date.now() });
 }
 
+// Las fotos públicas nuevas se guardan en R2; los videos conservan su almacenamiento actual.
+const GDV_R2_MEDIA_BASE = "https://media.gentedevuelo.com/imagenes/";
+function esFotoR2DeUsuario(url, userId) {
+  return typeof url === "string" &&
+    url.startsWith(GDV_R2_MEDIA_BASE + userId + "/") &&
+    /^https:\/\/media\.gentedevuelo\.com\/imagenes\/[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|png|webp)$/i.test(url);
+}
+async function subirImagenPublicaR2(original, userId, maxDimension = 1800) {
+  if (!original || !["image/jpeg","image/png","image/webp"].includes(original.type) ||
+      original.size === 0 || original.size > 5 * 1024 * 1024) {
+    throw new Error("Elegí una fotografía JPG, PNG o WEBP de hasta 5 MB.");
+  }
+  const archivo = await optimizarImagenParaSubir(original, maxDimension, 0.80);
+  if (!archivo || !["image/jpeg","image/png","image/webp"].includes(archivo.type) ||
+      archivo.size === 0 || archivo.size > 4 * 1024 * 1024) {
+    throw new Error("La fotografía supera los 4 MB incluso después de optimizarla.");
+  }
+  const { data, error } = await supabaseClient.auth.getSession();
+  if (error || !data.session?.access_token || data.session.user?.id !== userId) {
+    throw new Error("La sesión venció. Volvé a ingresar.");
+  }
+  const respuesta = await fetch(SUPABASE_URL + "/functions/v1/r2-upload-image", {
+    method:"POST",
+    headers:{Authorization:"Bearer " + data.session.access_token, apikey:SUPABASE_KEY,"Content-Type":archivo.type},
+    body:archivo
+  });
+  const resultado = await respuesta.json().catch(() => ({}));
+  if (!respuesta.ok || !esFotoR2DeUsuario(resultado.url, userId) ||
+      typeof resultado.path !== "string" || !resultado.url.endsWith("/" + resultado.path)) {
+    throw new Error(resultado.error || "No se pudo guardar la foto en Cloudflare R2.");
+  }
+  return { url:resultado.url, path:resultado.path };
+}
+
 async function subirFotoHangar() {
-  const archivoOriginal = document.getElementById("fotoHangar").files[0];
-  let archivo = archivoOriginal;
+  const input = document.getElementById("fotoHangar");
+  const original = input.files[0];
   const mensaje = document.getElementById("mensajeFotoHangar");
-
-  if (!archivo) {
-    mensaje.textContent = "Seleccioná una foto.";
-    return;
-  }
-
+  if (!original) { mensaje.textContent = "Seleccioná una foto."; return; }
   const { data: { user } } = await supabaseClient.auth.getUser();
-
-  if (!user) {
-    mensaje.textContent = "Debés iniciar sesión para subir una foto.";
-    return;
-  }
-  const { data: perfil } = await supabaseClient
-  .from("profiles")
-  .select("full_name")
-  .eq("id", user.id)
-  .maybeSingle();
-
+  if (!user) { mensaje.textContent = "Debés iniciar sesión para subir una foto."; return; }
+  mensaje.textContent = "Preparando fotografía para Cloudflare R2…";
+  let upload;
   try {
-    archivo = await optimizarImagenParaSubir(archivo);
+    upload = await subirImagenPublicaR2(original, user.id);
   } catch (error) {
-    console.error("Error al preparar la fotografía:", error);
-    mensaje.textContent = "No se pudo preparar la fotografía. Probá con otra imagen.";
+    console.error("Error al subir la foto del Hangar:", error);
+    mensaje.textContent = "No se pudo subir la foto: " + (error.message || "Intentá nuevamente.");
     return;
   }
-
- const nombreSeguro = archivo.name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9._-]/g, "_");
-const nombreArchivo = `${user.id}/${Date.now()}-${nombreSeguro}`;
-
-  const { error } = await supabaseClient.storage
-    .from("hangar-fotos")
-    .upload(nombreArchivo, archivo);
-
-  if (error) {
-    console.error("Error al subir la foto:", error);
-    mensaje.textContent = "Error: " + error.message;
-    return;
-  }
-
-  const { error: errorGaleria } = await supabaseClient
-  .from("galeria")
-  .insert({
-    user_id: user.id,
-    archivo: nombreArchivo,
-   nombre_usuario: perfil?.full_name || user.email,
-    visible: false
+  const { data: perfil } = await supabaseClient.from("profiles")
+    .select("full_name").eq("id",user.id).maybeSingle();
+  const { error: errorGaleria } = await supabaseClient.from("galeria").insert({
+    user_id:user.id,
+    archivo:upload.url,
+    nombre_usuario:perfil?.full_name || user.email,
+    visible:false
   });
   if (errorGaleria) {
-  console.error("Error al registrar la foto en galeria:", errorGaleria);
-  mensaje.textContent = "La foto se subió, pero hubo un error al registrarla.";
-  return;
-}
-  mensaje.textContent = "Foto subida correctamente.";
-  document.getElementById("fotoHangar").value = "";
-await cargarMisFotosHangar();
-  
+    console.error("Error al registrar foto del Hangar:",errorGaleria);
+    mensaje.textContent = "La foto llegó a Cloudflare, pero no pudo registrarse. Avisá al administrador para limpiarla.";
+    return;
+  }
+  input.value = "";
+  mensaje.textContent = "Foto enviada correctamente. Quedó pendiente de aprobación.";
+  await cargarMisFotosHangar();
 }
 async function subirAvatar() {
   const archivoOriginal = document.getElementById("avatarArchivo").files[0];
@@ -7295,105 +7301,91 @@ if (perfilAvatar) {
     
 async function cargarMisFotosHangar() {
   const contenedor = document.getElementById("misFotosHangar");
-
-  const { data: { user } } = await supabaseClient.auth.getUser();
-
+  if (!contenedor) return;
+  const { data: {user} } = await supabaseClient.auth.getUser();
   if (!user) return;
 
-  const { data: archivos, error } = await supabaseClient.storage
-    .from("hangar-fotos")
-    .list(user.id);
-
-  if (error) {
-    console.error("Error al cargar las fotos:", error);
-    return;
-  }
-
+  // Mantener visibles los archivos anteriores que están en Supabase Storage.
+  const [legacy, nuevas] = await Promise.all([
+    supabaseClient.storage.from("hangar-fotos").list(user.id),
+    supabaseClient.from("galeria").select("archivo,created_at")
+      .eq("user_id",user.id)
+      .like("archivo",GDV_R2_MEDIA_BASE + "%")
+      .order("created_at",{ascending:false})
+  ]);
+  if (legacy.error) console.error("Error al cargar fotos antiguas:",legacy.error);
+  if (nuevas.error) console.error("Error al cargar fotos de Cloudflare:",nuevas.error);
   contenedor.innerHTML = "";
-
-  archivos.forEach((archivo) => {
-if (archivo.name.startsWith("avatar-")) return;
-    
-    const { data } = supabaseClient.storage
-      .from("hangar-fotos")
-      .getPublicUrl(`${user.id}/${archivo.name}`);
-const bloqueFoto = document.createElement("div");
-bloqueFoto.style.display = "inline-flex";
-bloqueFoto.style.flexDirection = "column";
-bloqueFoto.style.alignItems = "center";
-    const video = esVideoArchivo(archivo.name);
-    const medio = document.createElement(video ? "video" : "img");
-    medio.src = data.publicUrl;
-    if (video) {
+  const archivos = [];
+  for (const item of legacy.data || []) {
+    if (!item.name || item.name.startsWith("avatar-") || item.name === ".emptyFolderPlaceholder") continue;
+    const ruta = user.id + "/" + item.name;
+    const url = supabaseClient.storage.from("hangar-fotos").getPublicUrl(ruta).data.publicUrl;
+    archivos.push({ruta,url,video:esVideoArchivo(item.name),r2:false});
+  }
+  for (const item of nuevas.data || []) {
+    if (!esFotoR2DeUsuario(item.archivo,user.id)) continue;
+    archivos.push({ruta:item.archivo,url:item.archivo,video:false,r2:true});
+  }
+  for (const archivo of archivos) {
+    const bloque = document.createElement("div");
+    bloque.style.display = "inline-flex";
+    bloque.style.flexDirection = "column";
+    bloque.style.alignItems = "center";
+    const medio = document.createElement(archivo.video ? "video" : "img");
+    medio.src = archivo.url;
+    if (archivo.video) {
       medio.controls = true;
       medio.preload = "metadata";
       medio.playsInline = true;
-      medio.setAttribute("aria-label", "Video de mi Hangar");
-    } else {
-      medio.alt = "Foto del Hangar";
-    }
+      medio.setAttribute("aria-label","Video de mi Hangar");
+    } else medio.alt = "Foto del Hangar";
     medio.style.maxWidth = "250px";
     medio.style.margin = "10px";
-
-    bloqueFoto.appendChild(medio);
-contenedor.appendChild(bloqueFoto);
-const botonEliminar = document.createElement("button");
-botonEliminar.textContent = video ? "Eliminar video" : "Eliminar foto";
-botonEliminar.className = "boton";
-botonEliminar.style.display = "block";
-botonEliminar.style.margin = "8px auto 16px auto";
-botonEliminar.style.width = "fit-content";
-
-botonEliminar.addEventListener("click", async () => {
-  await eliminarFotoHangar(`${user.id}/${archivo.name}`);
-});
-
-bloqueFoto.appendChild(botonEliminar);
-    
-  });
+    bloque.appendChild(medio);
+    const boton = document.createElement("button");
+    boton.textContent = archivo.video ? "Eliminar video" : "Eliminar foto";
+    boton.className = "boton";
+    boton.style.display = "block";
+    boton.style.margin = "8px auto 16px auto";
+    boton.style.width = "fit-content";
+    boton.addEventListener("click",()=>eliminarFotoHangar(archivo.ruta));
+    bloque.appendChild(boton);
+    contenedor.appendChild(bloque);
+  }
 }
-    async function eliminarFotoHangar(rutaArchivo) {
-     console.log("RUTA QUE INTENTA BORRAR:", rutaArchivo); 
-  const video = esVideoArchivo(rutaArchivo);
-  const confirmar = confirm(video ? "¿Querés eliminar este video?" : "¿Querés eliminar esta foto?");
-
-  if (!confirmar) return;
-
-  const { data: { user } } = await supabaseClient.auth.getUser();
-
-  if (!user || !rutaArchivo.startsWith(user.id + "/")) {
+async function eliminarFotoHangar(rutaArchivo) {
+  const {data:{user}} = await supabaseClient.auth.getUser();
+  const enR2 = esFotoR2DeUsuario(rutaArchivo,user?.id);
+  if (!user || (!enR2 && !rutaArchivo.startsWith(user.id + "/"))) {
     alert("No tenés permiso para eliminar este archivo.");
     return;
   }
-
-  const { error: errorGaleria } = await supabaseClient
-    .from("galeria")
-    .delete()
-    .eq("user_id", user.id)
-  .eq("archivo", rutaArchivo);
-    
-console.log("Resultado DELETE galeria:", errorGaleria);
-      
+  const video = !enR2 && esVideoArchivo(rutaArchivo);
+  const aviso = enR2
+    ? "¿Quitar esta fotografía del Hangar? El archivo seguirá ocupando espacio en Cloudflare hasta la limpieza administrativa."
+    : (video ? "¿Querés eliminar este video?" : "¿Querés eliminar esta foto?");
+  if (!confirm(aviso)) return;
+  const {error:errorGaleria} = await supabaseClient.from("galeria").delete()
+    .eq("user_id",user.id).eq("archivo",rutaArchivo);
   if (errorGaleria) {
-    console.error("Error al eliminar de galería:", errorGaleria);
-    alert("No se pudo eliminar el archivo.");
+    console.error("No se pudo quitar el archivo de Galería:",errorGaleria);
+    alert("No se pudo eliminar el archivo del Hangar.");
     return;
   }
-
-  const { error: errorStorage } = await supabaseClient.storage
-    .from("hangar-fotos")
-    .remove([rutaArchivo]);
-
-  if (errorStorage) {
-    console.error("Error al eliminar el archivo:", errorStorage);
-    alert("Se quitó de la galería, pero hubo un problema al eliminar el archivo.");
-    return;
+  if (!enR2) {
+    const {error:errorStorage} = await supabaseClient.storage.from("hangar-fotos").remove([rutaArchivo]);
+    if (errorStorage) {
+      console.error("Error al limpiar archivo de Supabase:",errorStorage);
+      alert("Se quitó de Galería, pero el archivo sigue almacenado. Avisá al administrador.");
+      return;
+    }
   }
-
   await cargarMisFotosHangar();
   await cargarGaleria();
-
-  alert(video ? "Video eliminado correctamente." : "Foto eliminada correctamente.");
+  alert(enR2
+    ? "La foto se retiró del Hangar. Queda pendiente limpiar el archivo de Cloudflare R2."
+    : (video ? "Video eliminado correctamente." : "Foto eliminada correctamente."));
 }
   async function cargarGaleria() {
   const pista = document.getElementById("galeriaPista");
@@ -7413,9 +7405,9 @@ console.log("Resultado DELETE galeria:", errorGaleria);
   pista.innerHTML = "";
 
   fotos.forEach(foto => {
-    const { data } = supabaseClient.storage
-      .from("hangar-fotos")
-      .getPublicUrl(foto.archivo);
+    const url = typeof foto.archivo === "string" &&
+      foto.archivo.startsWith(GDV_R2_MEDIA_BASE) ?
+      foto.archivo : supabaseClient.storage.from("hangar-fotos").getPublicUrl(foto.archivo || "").data.publicUrl;
 
     const contenedor = document.createElement("div");
     contenedor.style.width = "100%";
@@ -7424,7 +7416,7 @@ console.log("Resultado DELETE galeria:", errorGaleria);
 
     const video = esVideoArchivo(foto.archivo);
     const medio = document.createElement(video ? "video" : "img");
-    medio.src = data.publicUrl;
+    medio.src = url;
     if (video) {
       medio.controls = true;
       medio.preload = "metadata";
@@ -9169,6 +9161,7 @@ cargarPublicacionShimoda();
       return;
     }
     const rutasSubidas = [];
+    const rutasCloudflare = [];
     botonEnviarTravesia.disabled = true;
     try {
       if (archivoVideo) extensionVideo(archivoVideo);
@@ -9177,17 +9170,12 @@ cargarPublicacionShimoda();
           throw new Error("Cada foto debe ser JPG, PNG o WEBP y pesar hasta 5 MB.");
         }
       }
-      mensaje.textContent = "Subiendo archivos… Mantené abierta esta página.";
+      mensaje.textContent = "Subiendo fotografías a Cloudflare R2… Mantené abierta esta página.";
       const urlsFotos = [];
       for (const foto of archivosFotos) {
-        const extension = foto.type === "image/jpeg" ? "jpg" : foto.type.split("/")[1];
-        const ruta = `${user.id}/${crypto.randomUUID()}.${extension}`;
-        const { error } = await supabaseClient.storage.from("travesias-fotos")
-          .upload(ruta, foto, { upsert: false, contentType: foto.type });
-        if (error) throw error;
-        rutasSubidas.push(ruta);
-        const { data } = supabaseClient.storage.from("travesias-fotos").getPublicUrl(ruta);
-        urlsFotos.push(data.publicUrl);
+        const resultado = await subirImagenPublicaR2(foto,user.id);
+        rutasCloudflare.push(resultado.path);
+        urlsFotos.push(resultado.url);
       }
       const urlsVideos = [];
       if (archivoVideo) {
@@ -9212,9 +9200,11 @@ cargarPublicacionShimoda();
       mensaje.textContent = "Travesía enviada. Quedó pendiente de aprobación.";
     } catch (error) {
       if (rutasSubidas.length) {
-        await supabaseClient.storage.from("travesias-fotos").remove(rutasSubidas);
+        const {error:limpiezaError} = await supabaseClient.storage.from("travesias-fotos").remove(rutasSubidas);
+        if (limpiezaError) console.error("No se pudieron limpiar los videos de la travesía:",limpiezaError);
       }
-      mensaje.textContent = "No se pudo enviar la travesía: " + (error.message || "Intentá de nuevo.");
+      mensaje.textContent = "No se pudo enviar la travesía: " + (error.message || "Intentá de nuevo.") +
+        (rutasCloudflare.length ? " Algunas fotos quedaron en Cloudflare R2 y requieren limpieza administrativa." : "");
     } finally {
       botonEnviarTravesia.disabled = false;
     }
