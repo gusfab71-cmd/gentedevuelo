@@ -16,7 +16,7 @@
     if (onHome) return true;
     if (!onCommunity) return false;
     const hash = location.hash || '#foro';
-    if (['#ingresar', '#registro', '#recuperar', '#normativa', '#quienes-somos', '#foro', '#tematicas', '#multimedia', '#integrantes'].includes(hash)) return true;
+    if (['#ingresar', '#registro', '#recuperar', '#normativa', '#quienes-somos', '#foro', '#tematicas', '#multimedia', '#galeria', '#integrantes'].includes(hash)) return true;
     return ['#tematica/', '#tema/', '#hangar/'].some(prefix => hash.startsWith(prefix));
   }
   function rememberDestination() {
