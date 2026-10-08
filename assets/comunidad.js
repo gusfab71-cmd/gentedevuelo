@@ -380,6 +380,27 @@ async function galeriaComunidad(){
  let actual=0;
  const anterior=$('gdv-galeria-anterior'),siguiente=$('gdv-galeria-siguiente');
  const contador=$('gdv-galeria-contador'),ventana=$('gdv-galeria-ventana');
+ // En pantallas móviles, la altura acompaña la proporción de cada foto o video.
+ const consultaGaleriaMovil=window.matchMedia('(max-width:700px)');
+ const controladorGaleria=new AbortController();
+ function ajustarAlturaGaleria(){
+  if(!calesita.isConnected)return;
+  if(!consultaGaleriaMovil.matches){
+   ventana.style.removeProperty('height');
+   return;
+  }
+  const laminaVisible=pista.children[actual];
+  if(!laminaVisible)return;
+  const alto=Math.ceil(laminaVisible.getBoundingClientRect().height);
+  if(alto>0)ventana.style.height=(alto+4)+'px';
+ }
+ const refrescarAlturaGaleria=()=>requestAnimationFrame(ajustarAlturaGaleria);
+ pista.querySelectorAll('.gdv-galeria-ampliar img, .gdv-galeria-marco video').forEach(medio=>{
+  medio.addEventListener(medio.tagName==='VIDEO'?'loadedmetadata':'load',refrescarAlturaGaleria);
+ });
+ window.addEventListener('resize',refrescarAlturaGaleria,{signal:controladorGaleria.signal});
+ window.addEventListener('hashchange',()=>controladorGaleria.abort(),{once:true});
+
  function mostrar(direccion){
   const total=publicaciones.length;
   if(total<2)return;
@@ -387,6 +408,7 @@ async function galeriaComunidad(){
   actual=(actual+direccion+total)%total;
   pista.style.transform='translateX(-'+(actual*100)+'%)';
   contador.textContent=(actual+1)+' de '+total;
+  refrescarAlturaGaleria();
  }
  anterior.disabled=siguiente.disabled=publicaciones.length<2;
  anterior.addEventListener('click',()=>mostrar(-1));
@@ -411,6 +433,7 @@ async function galeriaComunidad(){
  },{passive:true});
  estado.textContent=publicaciones.length===1?'1 publicación aprobada':publicaciones.length+' publicaciones aprobadas';
  contador.textContent='1 de '+publicaciones.length;
+ refrescarAlturaGaleria();
 }
 function multimedia(){crumbs([['Foro','#foro'],['Multimedia']]);app.innerHTML=`<h1>Multimedia</h1>${toolbar('multimedia')}<div class="toolbar"><select id="media-kind" aria-label="Tipo de archivo"><option value="all">Fotos y videos</option><option value="image">Fotos</option><option value="video">Videos</option></select><select id="media-category" aria-label="Temática"><option value="">Todas las temáticas</option>${categories.map(c=>`<option value="${c.slug}">${esc(c.name)}</option>`).join('')}</select></div><div id="media-list" class="media-grid"></div>`;const paint=()=>{$('media-list').innerHTML=media.filter(m=>{const t=topics.find(t=>t.id===m.topic_id);return t?.status==='approved'&&m.kind!=='pdf'&&m.url&&($('media-kind').value==='all'||m.kind===$('media-kind').value)&&(!$('media-category').value||t.category===$('media-category').value)}).map(m=>{const t=topics.find(t=>t.id===m.topic_id);return `<article class="card">${attachment(m)}<h3>${link(t.title,'#tema/'+t.id,'')}</h3><div class="meta">${esc(name(t.author_id))} · ${esc(cat(t.category).name)}</div></article>`}).join('')||'<p class="empty">Todavía no hay archivos publicados con estos filtros.</p>'};$('media-kind').onchange=paint;$('media-category').onchange=paint;paint()}
 async function uploadFiles(files,topicId){
