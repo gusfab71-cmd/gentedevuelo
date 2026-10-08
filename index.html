@@ -4935,6 +4935,14 @@ img, video { max-width: 100%; }
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v10H8l-4 4z"/><path d="M8 9h8M8 12h5"/></svg>
     <span>Foro</span>
   </a>
+  <a href="comunidad.html#galeria">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="15" rx="2"/><circle cx="8" cy="10" r="1.5"/><path d="m4 17 5-5 4 4 3-3 4 4"/></svg>
+    <span>Galería</span>
+  </a>
+  <a href="aerochat.html">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v12H8l-4 3V5Z"/><path d="M8 10h8M8 13h5"/></svg>
+    <span>AeroChat</span>
+  </a>
   <a href="#tienda-seccion">
     <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="20" r="1"/><circle cx="18" cy="20" r="1"/><path d="M3 4h2l2 11h11l2-8H6"/></svg>
     <span>AeroShop</span>
@@ -10734,7 +10742,7 @@ window.addEventListener('popstate',abrirAnexoDesdeURL);
   .portada-nav-mobile {
     order: 2 !important;
     display: grid !important;
-    grid-template-columns: repeat(6, minmax(0,1fr)) !important;
+    grid-template-columns: repeat(4, minmax(0,1fr)) !important;
     width: calc(100% - 24px) !important;
     margin: 0 auto 14px !important;
     padding: 8px 4px !important;
@@ -10762,8 +10770,11 @@ window.addEventListener('popstate',abrirAnexoDesdeURL);
     border-right: 1px solid rgba(255,255,255,.11) !important;
   }
 
-  .portada-nav-mobile a:last-child {
+  .portada-nav-mobile a:nth-child(4n) {
     border-right: 0 !important;
+  }
+  .portada-nav-mobile a:nth-child(-n+4) {
+    border-bottom: 1px solid rgba(255,255,255,.11) !important;
   }
 
   .portada-nav-mobile svg {
