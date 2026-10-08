@@ -335,6 +335,16 @@ async function galeriaComunidad(){
    reproductor.setAttribute('aria-label','Video de la comunidad');
    marco.appendChild(reproductor);
   }else{
+   // Fondo ambiental: reutiliza la foto aprobada sin modificar el archivo en Cloudflare.
+   marco.classList.add('tiene-fondo');
+   const fondo=document.createElement('img');
+   fondo.className='gdv-galeria-fondo';
+   fondo.src=src;
+   fondo.alt='';
+   fondo.setAttribute('aria-hidden','true');
+   fondo.loading=indice<2?'eager':'lazy';
+   fondo.decoding='async';
+   marco.appendChild(fondo);
    const boton=document.createElement('button');
    boton.type='button';boton.className='gdv-galeria-ampliar';
    boton.setAttribute('aria-label','Ver fotografía ampliada');
