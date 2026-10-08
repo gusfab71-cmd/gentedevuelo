@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <title>AeroChat · Gente de Vuelo</title>
+  <link rel="stylesheet" href="assets/aerochat.css?v=20261008a1">
+  <style id="auth-pending-style">html.auth-pending body{visibility:hidden}</style>
+  <script>document.documentElement.classList.add('auth-pending')</script>
+  <script src="assets/supabase-2.117.2.min.js"></script>
+  <script src="assets/community-config.js"></script>
+  <script src="assets/auth-guard.js?v=20261008a1"></script>
+</head>
+<body>
+<a class="skip" href="#chat-main">Saltar al chat</a>
+<header class="top">
+  <a class="brand" href="index.html">
+    <img src="logo circular recortado gente de vuelo.png" alt="">
+    <span>GENTE DE VUELO<small>COMUNIDAD AERONÁUTICA</small></span>
+  </a>
+  <nav aria-label="Navegación">
+    <a href="index.html">Inicio</a>
+    <a href="comunidad.html#foro">Foro</a>
+    <a href="comunidad.html#multimedia">Multimedia</a>
+    <a href="comunidad.html#normativa">Normativa</a>
+  </nav>
+</header>
+<main id="chat-main" class="wrap">
+  <div class="intro">
+    <div><p class="eyebrow">COMUNIDAD · CONVERSACIÓN EN VIVO</p><h1>AeroChat</h1>
+    <p>La sala de encuentro de Gente de Vuelo. Compartí consultas e ideas aeronáuticas en tiempo real.</p></div>
+    <div class="connection"><span id="connection-dot" class="dot" aria-hidden="true"></span><span id="connection-status" role="status">Conectando…</span></div>
+  </div>
+  <div class="shell">
+    <section class="room" aria-label="Sala de AeroChat">
+      <div class="room-top"><div><h2>Sala general</h2><p>Mensajes recientes · horario argentino</p></div><span class="room-badge">Solo integrantes</span></div>
+      <div id="chat-messages" class="messages" role="log" aria-label="Mensajes de la sala" aria-live="off"><p class="empty">Cargando mensajes…</p></div>
+      <div id="chat-notice" class="notice" role="status" aria-live="polite"></div>
+      <form id="chat-form" class="composer">
+        <label for="chat-content">Tu mensaje</label>
+        <textarea id="chat-content" name="content" rows="2" maxlength="500" minlength="1" placeholder="Escribí tu mensaje…" required></textarea>
+        <div class="composer-bottom"><span><span id="chat-count">0</span> / 500 caracteres</span><button type="submit" id="chat-submit" disabled>Enviar mensaje</button></div>
+      </form>
+    </section>
+    <aside class="sidebar" aria-label="Información de la sala">
+      <h2>Antes de participar</h2>
+      <p>Esta sala es para conversar en forma cordial y respetuosa sobre aviación.</p>
+      <p>No compartas datos privados ni información operativa sensible. Para consultas que deban conservarse, utilizá el foro.</p>
+      <p>Los administradores y moderadores pueden retirar mensajes que incumplan las normas.</p>
+      <a href="comunidad.html#normativa">Leer la Normativa de Comunidad</a>
+      <hr>
+      <p class="hint">AeroChat no admite archivos adjuntos: no consume el almacenamiento destinado a las fotos y videos.</p>
+    </aside>
+  </div>
+</main>
+<footer>Gente de Vuelo · Pasión que nos une</footer>
+<script src="assets/aerochat.js?v=20261008a1"></script>
+</body>
+</html>
