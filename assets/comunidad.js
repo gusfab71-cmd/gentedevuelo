@@ -101,6 +101,7 @@ async function refreshUnreadNotificationsBadge(){
  label.textContent=total>99?'99+':String(total);
  badge.setAttribute('aria-label',total+' notificaciones sin leer');
 }
+window.addEventListener('gdv:notifications-updated',()=>refreshUnreadNotificationsBadge().catch(()=>{}));
 function closeAccountMenu(){
  const menu=document.querySelector('.account-menu[open]');
  if(menu)menu.open=false;
