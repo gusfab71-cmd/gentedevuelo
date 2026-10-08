@@ -883,3 +883,16 @@
 @media (max-width:700px) and (prefers-reduced-motion:reduce) {
   .gdv-galeria-ventana { transition:none; }
 }
+
+/* Comunicados y nuevas notificaciones en Mi cuenta */
+.unread-notifications-badge{display:inline-flex;align-items:center;gap:3px;padding:1px 5px;border:1px solid #f5a95f;border-radius:999px;background:#45311d;color:#ffcb96;font-size:11px;font-weight:800;line-height:1.4}
+.unread-notifications-badge[hidden]{display:none!important}
+.unread-notifications-badge svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.notification-message{white-space:pre-line;overflow-wrap:anywhere;line-height:1.65}
+.announcement-admin{max-width:740px;border-color:#9f7447}
+.announcement-admin h2{margin:0 0 10px;color:#f0c991}
+.announcement-admin label{font-size:14px;color:#e6e8ea;font-weight:700}
+.announcement-admin input,.announcement-admin textarea{width:100%;margin:5px 0 14px}
+.announcement-admin textarea{min-height:150px;resize:vertical}
+.announcement-admin .primary{margin-top:8px}
+@media(max-width:620px){.announcement-admin{padding:15px}.unread-notifications-badge{padding:1px 4px;font-size:10px}}
