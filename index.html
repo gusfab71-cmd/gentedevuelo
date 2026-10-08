@@ -7290,7 +7290,11 @@ if (errorPerfil) {
   return;
 }
 
- mensaje.textContent = "Foto de perfil actualizada correctamente.";
+// Si reemplaza una imagen de R2, el disparador SQL encola la anterior.
+const avatarLimpio = await procesarColaLimpiezaR2();
+mensaje.textContent = avatarLimpio
+  ? "Foto de perfil actualizada correctamente."
+  : "Foto de perfil actualizada. La limpieza de la anterior quedó registrada para reintentar.";
 
 const perfilAvatar = document.getElementById("perfilAvatar");
 if (perfilAvatar) {
