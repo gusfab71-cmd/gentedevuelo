@@ -307,6 +307,10 @@
       boton.addEventListener("click", () => guardar(item, accion, boton));
       return boton;
     }
+    function esFotoCloudflareR2(url) {
+      return typeof url === "string" &&
+        /^https:\/\/media\.gentedevuelo\.com\/imagenes\/[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|png|webp)$/i.test(url);
+    }
     function rutaPublicaDeBucket(url, bucket) {
       if (typeof url !== "string" || !url) return "";
       try {
@@ -324,7 +328,15 @@
       const pregunta = esComentarioShimoda
         ? "¿Eliminar definitivamente este comentario de Robert Shimoda?\n\nEsta acción no se puede deshacer."
         : '¿Eliminar definitivamente "' + titulo + '"?\n\nEsta acción no se puede deshacer.';
-      if (!confirm(pregunta)) return;
+      const urls = item.fila && item.config.tabla === "galeria"
+        ? [item.fila.archivo]
+        : item.fila && Array.isArray(item.fila.fotos) ? item.fila.fotos : [];
+      const cantidadEnR2 = urls.filter(esFotoCloudflareR2).length;
+      const advertenciaR2 = cantidadEnR2
+        ? "\n\nATENCIÓN: " + cantidadEnR2 +
+          " fotografía(s) almacenadas en Cloudflare R2 no se borrarán automáticamente y requerirán limpieza manual."
+        : "";
+      if (!confirm(pregunta + advertenciaR2)) return;
 
       boton.disabled = true;
       mensaje(esComentarioShimoda ? "Eliminando comentario…" : "Eliminando publicación…");
@@ -336,7 +348,7 @@
           const rutas = r._adjuntos.map(a => a.storage_path).filter(Boolean);
           if (rutas.length) archivos.push({ bucket: "aportes", rutas });
         }
-        if (t === "galeria" && r.archivo) {
+        if (t === "galeria" && r.archivo && !esFotoCloudflareR2(r.archivo)) {
           archivos.push({ bucket: "hangar-fotos", rutas: [r.archivo] });
         }
         if (t === "clasificados" && Array.isArray(r.fotos)) {
@@ -366,7 +378,9 @@
         datos.set(t, filas.filter(fila => String(fila.id) !== String(r.id)));
         mensaje(esComentarioShimoda
           ? "Comentario de Robert Shimoda eliminado definitivamente."
-          : (limpiezaFallida
+          : (cantidadEnR2
+              ? "Publicación eliminada. Sus " + cantidadEnR2 + " fotografía(s) de Cloudflare R2 quedan pendientes de limpieza manual."
+              : limpiezaFallida
               ? "Publicación eliminada. Algún archivo asociado no pudo limpiarse automáticamente."
               : "Publicación eliminada definitivamente."));
         pintar();
@@ -417,7 +431,9 @@
       const contenido = r.contenido || r.descripcion || r.relato;
       if (contenido) articulo.append(nodo("p", contenido, "texto"));
       const archivo = t === "galeria"
-        ? client.storage.from("hangar-fotos").getPublicUrl(r.archivo || "").data.publicUrl
+        ? (esFotoCloudflareR2(r.archivo)
+          ? r.archivo
+          : client.storage.from("hangar-fotos").getPublicUrl(r.archivo || "").data.publicUrl)
         : Array.isArray(r.fotos) ? r.fotos[0] : "";
       const imagen = fotoSegura(archivo);
       if (imagen && !(t === "galeria" && esVideo(r.archivo))) {
