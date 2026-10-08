@@ -823,3 +823,63 @@
  background:#693a2e;
  border-color:#f28c3e;
 }
+
+/* Galería aeronáutica en celulares: marco según proporción real de cada foto. */
+@media (max-width:700px) {
+  .gdv-galeria-pista {
+    align-items:flex-start;
+  }
+  .gdv-galeria-lamina {
+    align-self:flex-start;
+  }
+  .gdv-galeria-ventana {
+    transition:height .22s ease;
+  }
+  .gdv-galeria-marco,
+  .gdv-galeria-marco.tiene-fondo {
+    height:auto;
+    min-height:0;
+    background:#151b22;
+  }
+  .gdv-galeria-marco.tiene-fondo > .gdv-galeria-fondo,
+  .gdv-galeria-marco.tiene-fondo::after {
+    display:none;
+  }
+  .gdv-galeria-marco.tiene-fondo > .gdv-galeria-ampliar {
+    height:auto;
+    min-height:0;
+    padding:0;
+  }
+  .gdv-galeria-marco.tiene-fondo > .gdv-galeria-ampliar img {
+    display:block;
+    width:auto;
+    height:auto;
+    max-width:100%;
+    max-height:min(68svh,620px);
+    margin:0 auto;
+    object-fit:contain;
+    filter:none;
+  }
+  .gdv-galeria-marco > video {
+    display:block;
+    width:100%;
+    height:auto;
+    max-height:min(68svh,620px);
+    object-fit:contain;
+  }
+  .gdv-galeria-pie {
+    flex-direction:column;
+    align-items:flex-start;
+    justify-content:center;
+    gap:2px;
+    padding:9px 12px;
+  }
+  .gdv-galeria-pie strong,
+  .gdv-galeria-pie time {
+    display:block;
+    overflow-wrap:anywhere;
+  }
+}
+@media (max-width:700px) and (prefers-reduced-motion:reduce) {
+  .gdv-galeria-ventana { transition:none; }
+}
