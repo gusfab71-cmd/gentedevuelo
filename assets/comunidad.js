@@ -381,7 +381,16 @@ async function profileEditor(){
  const flightHoursField=$('profile-flight_hours');if(flightHoursField)flightHoursField.oninput=()=>{flightHoursField.value=flightHoursField.value.replace(/\D/g,'').slice(0,5)};
  $('profile-form').onsubmit=e=>{e.preventDefault();busy(e.submitter,async()=>{
   const flightHoursInput=$('profile-flight_hours');const flightHoursValue=flightHoursInput.value.trim();if(flightHoursValue!==''&&!/^\d{1,5}$/.test(flightHoursValue)){throw new Error('Las horas de vuelo deben contener solo números y un máximo de 5 dígitos.');}const payload=Object.fromEntries(fields.map(([k])=>[k,k==='flight_hours'?(flightHoursValue===''?null:Number(flightHoursValue)):$('profile-'+k).value.trim()]));
-  const file=$('profile-avatar').files[0];if(file){if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>5*1024*1024)throw new Error('Usá una imagen JPG, PNG o WebP de hasta 5 MB.');const bitmap=await createImageBitmap(file),canvas=document.createElement('canvas');canvas.width=canvas.height=400;const side=Math.min(bitmap.width,bitmap.height);canvas.getContext('2d').drawImage(bitmap,(bitmap.width-side)/2,(bitmap.height-side)/2,side,side,0,0,400,400);bitmap.close();const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/webp',.85));if(!blob)throw new Error('No se pudo preparar la foto.');const path=user.id+'/'+crypto.randomUUID()+'.webp';checked(await db.storage.from('hangar-fotos').upload(path,blob,{contentType:'image/webp'}));payload.avatar_url=db.storage.from('hangar-fotos').getPublicUrl(path).data.publicUrl;}
+  const file=$('profile-avatar').files[0];if(file){if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>5*1024*1024)throw new Error('Usá una imagen JPG, PNG o WebP de hasta 5 MB.');const bitmap=await createImageBitmap(file),canvas=document.createElement('canvas');canvas.width=canvas.height=400;const side=Math.min(bitmap.width,bitmap.height);canvas.getContext('2d').drawImage(bitmap,(bitmap.width-side)/2,(bitmap.height-side)/2,side,side,0,0,400,400);bitmap.close();const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/webp',.85));if(!blob)throw new Error('No se pudo preparar la foto.');const {data:sessionData,error:sessionError}=await db.auth.getSession();if(sessionError||!sessionData.session?.access_token)throw new Error('La sesión venció. Volvé a ingresar.');
+  if(blob.size>4*1024*1024)throw new Error('La fotografía supera los 4 MB admitidos.');
+  const upload=await fetch(cfg.url+'/functions/v1/r2-upload-image',{
+    method:'POST',
+    headers:{Authorization:'Bearer '+sessionData.session.access_token,apikey:cfg.key,'Content-Type':'image/webp'},
+    body:blob
+  });
+  const result=await upload.json().catch(()=>({}));
+  if(!upload.ok||typeof result.url!=='string'||!result.url.startsWith('https://media.gentedevuelo.com/'))throw new Error(result.error||'No se pudo guardar la fotografía en Cloudflare R2.');
+  payload.avatar_url=result.url;}
   checked(await db.from('profiles').update(payload).eq('id',user.id).select().single());await load();history.pushState(null,'','#hangar');await route();message('Tu perfil fue guardado.');
  })};
 }
