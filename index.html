@@ -7250,21 +7250,31 @@ async function subirAvatar() {
 }
   archivo = await optimizarImagenParaSubir(archivo, 1200, 0.82);
   const { data: { user } } = await supabaseClient.auth.getUser();
-const nombreArchivo = `${user.id}/avatar-${Date.now()}-${archivo.name}`;
-
-const { error: errorUpload } = await supabaseClient.storage
-  .from("hangar-fotos")
-  
-  .upload(nombreArchivo, archivo);
- if (errorUpload) {
-  mensaje.textContent = "Error al subir la foto: " + errorUpload.message;
+if (!user) {
+  mensaje.textContent = "Debés iniciar sesión para cambiar el avatar.";
   return;
 }
-const { data: urlData } = supabaseClient.storage
-  .from("hangar-fotos")
-  .getPublicUrl(nombreArchivo);
-
-const avatarUrl = urlData.publicUrl;
+let avatarUrl;
+try {
+  if (archivo.size > 4 * 1024 * 1024) throw new Error("La imagen supera los 4 MB. Elegí una foto más pequeña.");
+  const { data: sessionData, error: sessionError } = await supabaseClient.auth.getSession();
+  if (sessionError || !sessionData.session?.access_token) throw new Error("Tu sesión venció. Ingresá nuevamente.");
+  const respuesta = await fetch("https://lmoifzyhqmccvmgitlcp.supabase.co/functions/v1/r2-upload-image", {
+    method: "POST",
+    headers: {
+      Authorization: "Bearer " + sessionData.session.access_token,
+      apikey: SUPABASE_KEY,
+      "Content-Type": archivo.type
+    },
+    body: archivo
+  });
+  const resultado = await respuesta.json();
+  if (!respuesta.ok || !resultado.url) throw new Error(resultado.error || "No se pudo subir la fotografía a R2.");
+  avatarUrl = resultado.url;
+} catch (error) {
+  mensaje.textContent = "Error al subir el avatar: " + (error.message || "Intentá nuevamente.");
+  return;
+}
   const { error: errorPerfil } = await supabaseClient
   .from("profiles")
   .update({ avatar_url: avatarUrl })
