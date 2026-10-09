@@ -10655,7 +10655,7 @@ footer .contacto-pie-movil { display: none; }
   z-index: 1206 !important;
 }
 
-/* En móvil, YouTube, Threads, Facebook e Instagram quedan debajo del acceso de cuenta. */
+/* En móvil, solo YouTube, Facebook e Instagram quedan debajo del acceso de cuenta. */
 .youtube-portada,
 .instagram-portada,
 .facebook-portada,
@@ -10684,7 +10684,11 @@ footer .contacto-pie-movil { display: none; }
   right: 84px !important;
 }
 .youtube-portada {
-  right: 126px !important;
+  right: 84px !important;
+}
+/* Threads permanece visible en PC, pero se reemplaza por YouTube en celular. */
+.controles-usuario .threads-portada {
+  display: none !important;
 }
 
   .cuenta-ingresar,
