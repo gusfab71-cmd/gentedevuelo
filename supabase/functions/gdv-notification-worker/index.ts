@@ -1,6 +1,71 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import {createClient} from "npm:@supabase/supabase-js@2.57.0";
 const escape=(str:string)=>str.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]||c));
+
+// Plantillas institucionales de Gente de Vuelo.
+// Diseño apto para correo, contenido escapado y enlaces oficiales.
+const GDV_HOME="https://gentedevuelo.com";
+const GDV_FORUM=GDV_HOME+"/comunidad.html#foro";
+const GDV_PREFERENCES=GDV_HOME+"/comunidad.html#preferencias-correo";
+const GDV_LOGO="https://gentedevuelo.com/logo%20circular%20recortado%20gente%20de%20vuelo.png";
+const gdvEscape=(s:string)=>String(s||"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]||ch));
+const GDV_WELCOME_TEXT=[
+ "¡Bienvenido a bordo!",
+ "Nos alegra darte la bienvenida a Gente de Vuelo, una comunidad creada para quienes compartimos la pasión por la aviación.",
+ "Este espacio está pensado para pilotos, estudiantes, instructores, aeromodelistas y todos aquellos que encuentran en el vuelo algo verdaderamente especial.",
+ "¿Qué podés encontrar en nuestra comunidad?",
+ "• Participar en el Foro y sus distintas temáticas aeronáuticas.",
+ "• Crear tu propio espacio en Mi Hangar.",
+ "• Compartir fotografías, experiencias y travesías.",
+ "• Conocer novedades, eventos y actividades aeronáuticas.",
+ "• Intercambiar conocimientos con otros integrantes.",
+ "Te invitamos a completar tu perfil, conocer nuestras normas y comenzar a participar.",
+ "Gracias por acompañarnos en este proyecto.",
+ "Administración de Gente de Vuelo"
+].join("\n\n");
+function gdvEmailTemplate(kind:string,subject:string,body:string,moderationLink?:string){
+ const welcome=kind==="welcome",moderation=kind==="moderation",announcement=kind==="announcement";
+ const safeSubject=gdvEscape(subject.slice(0,120));
+ const heading=welcome?"¡Bienvenido a bordo!":moderation?"Nueva solicitud de moderación":subject;
+ const eyebrow=welcome?"BIENVENIDA A LA COMUNIDAD":moderation?"AVISO PRIVADO DE ADMINISTRACIÓN":"COMUNICADO A LA COMUNIDAD";
+ const actionUrl=moderation?(moderationLink||GDV_HOME+"/comunidad.html#moderacion"):GDV_FORUM;
+ const actionLabel=welcome?"INGRESAR A GENTE DE VUELO":moderation?"REVISAR MODERACIÓN":"VISITAR GENTE DE VUELO";
+ const content=welcome?GDV_WELCOME_TEXT.replace(/^¡Bienvenido a bordo!\n\n/,""):body;
+ const paragraphs=content.split(/\n+/).map(s=>s.trim()).filter(Boolean).map(s=>'<p style="margin:0 0 15px;font:15px/1.65 Arial,Helvetica,sans-serif;color:#333c47">'+gdvEscape(s)+'</p>').join("");
+ const footerNote=moderation
+  ?"Aviso automático exclusivo de la administración. Las aprobaciones se realizan únicamente desde el panel."
+  :announcement
+  ?"Recibiste este comunicado porque activaste voluntariamente la suscripción a novedades por correo electrónico."
+  :"Gracias por formar parte de nuestra comunidad aeronáutica.";
+ const preferencesLink=announcement?'<p style="margin:9px 0 0;font:12px/1.5 Arial,sans-serif"><a style="color:#b9763b;text-decoration:underline" href="'+GDV_PREFERENCES+'">Modificar o cancelar la suscripción</a></p>':"";
+ const html='<!doctype html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>'
+  +'<body style="margin:0;padding:0;background:#f6f4f0;color:#293039">'
+  +'<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f6f4f0"><tr><td align="center" style="padding:24px 12px">'
+  +'<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:600px;background:#ffffff;border:1px solid #e4e0da;border-radius:13px;overflow:hidden">'
+  +'<tr><td align="center" style="background:#292d32;padding:27px 20px 22px">'
+  +'<img alt="Logo de Gente de Vuelo" src="'+GDV_LOGO+'" width="92" height="92" style="width:92px;height:92px;object-fit:contain;border:0;display:block;margin:0 auto 13px">'
+  +'<div style="font:700 22px/1.3 Arial,Helvetica,sans-serif;letter-spacing:.5px;color:#f3cb8e">GENTE DE VUELO</div>'
+  +'<div style="font:11px/1.5 Arial,sans-serif;letter-spacing:2px;color:#e6a970;margin-top:8px">'+eyebrow+'</div></td></tr>'
+  +'<tr><td style="padding:28px 28px 18px">'
+  +'<h1 style="margin:0 0 21px;font:700 25px/1.35 Arial,sans-serif;color:#3a3b3d">'+gdvEscape(heading)+'</h1>'
+  +paragraphs
+  +'<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:24px 0 15px"><tr><td bgcolor="#d08a43" style="background:#d08a43;border-radius:8px;padding:14px 19px">'
+  +'<a href="'+actionUrl+'" style="display:inline-block;font:700 13px/1.3 Arial,sans-serif;text-decoration:none;letter-spacing:.2px;color:#20252b">'+actionLabel+'</a>'
+  +'</td></tr></table></td></tr>'
+  +'<tr><td style="padding:21px 28px 26px;border-top:1px solid #e9e5e0;background:#faf8f5">'
+  +'<p style="margin:0;font:12px/1.6 Arial,sans-serif;color:#656668">'+gdvEscape(footerNote)+'</p>'
+  +preferencesLink
+  +'<p style="margin:16px 0 0;font:italic 12px/1.5 Arial,sans-serif;color:#9b6b3f">Una comunidad unida por la pasión de volar.</p>'
+  +'<p style="margin:5px 0 0;font:12px/1.5 Arial,sans-serif"><a style="color:#805d41" href="'+GDV_HOME+'">gentedevuelo.com</a></p>'
+  +'</td></tr></table></td></tr></table></body></html>';
+ const textContent=(welcome?GDV_WELCOME_TEXT:((moderation?heading+"\n\n":"")+body))
+  +"\n\n"+actionLabel+": "+actionUrl
+  +"\n\n"+footerNote
+  +(announcement?"\nGestionar preferencias: "+GDV_PREFERENCES:"")
+  +"\n\nGente de Vuelo — Una comunidad unida por la pasión de volar.";
+ return {html,text:textContent,subject:safeSubject};
+}
+
 Deno.serve(async request=>{
  if(request.method!=="POST")return new Response("Método no permitido",{status:405});
  const bearer=request.headers.get("x-gdv-worker-token")||"";
@@ -58,15 +123,12 @@ Deno.serve(async request=>{
        continue;
       }
       const subj=String(item.subject).slice(0,120),body=String(item.body).slice(0,1600);
-      const prefs="https://gentedevuelo.com/comunidad.html#preferencias-correo";
-      const html='<div style="font-family:Arial,sans-serif;line-height:1.65;color:#222b35;max-width:600px;margin:auto"><h1 style="color:#b87738">Gente de Vuelo</h1><h2>'+escape(subj)+'</h2>'+body.split(/\n+/).filter(Boolean).map(s=>'<p>'+escape(s)+'</p>').join('')+
-       '<p><a href="https://gentedevuelo.com/comunidad.html#foro">Ir a Gente de Vuelo</a></p>'+
-       (item.kind==="announcement"?'<p style="font-size:12px">Recibiste este comunicado porque te suscribiste. <a href="'+prefs+'">Dejar de recibir correos</a>.</p>':'')+'</div>';
+      const {html,text:mailText}=gdvEmailTemplate(item.kind,subj,body);
       const response=await fetch("https://api.resend.com/emails",{method:"POST",
         headers:{Authorization:"Bearer "+resendKey,"Content-Type":"application/json"},
         body:JSON.stringify({from:Deno.env.get("GDV_MAIL_SENDER")||"Gente de Vuelo <hola@gentedevuelo.com>",
          to:[email],reply_to:"gentedevuelo@gmail.com",subject:subj,html,
-         text:body+(item.kind==="announcement"?"\n\nPreferencias: "+prefs:"")})});
+         text:mailText})});
       const data=await response.json().catch(()=>({}));
       if(response.ok&&data?.id){accepted=true;providerId=String(data.id);}
       else failure="Resend rechazó correo: "+String(data?.name||response.status);
@@ -114,15 +176,11 @@ Deno.serve(async request=>{
       const moderationUrl=item.source_table==="gdv_topics"||item.source_table==="gdv_comments"
        ?"https://gentedevuelo.com/comunidad.html#moderacion"
        :"https://gentedevuelo.com/moderacion.html";
-      const html='<div style="max-width:600px;margin:auto;font-family:Arial,sans-serif;color:#202832;line-height:1.65;background:#f8f9fb;padding:22px;border-radius:12px">'
-       +'<h1 style="color:#a96a34">Gente de Vuelo</h1><h2>'+escape(subject)+'</h2>'
-       +body.split(/\n+/).filter(Boolean).map((part:string)=>'<p>'+escape(part)+'</p>').join('')
-       +'<p><a style="display:inline-block;background:#f28c45;color:#1c2228;padding:12px 18px;border-radius:8px;font-weight:bold;text-decoration:none" href="'+moderationUrl+'">Revisar moderación</a></p>'
-       +'<p style="font-size:12px;color:#747b84">Aviso privado de administración. No es un comunicado a los integrantes.</p></div>';
+      const {html,text:mailText}=gdvEmailTemplate("moderation",subject,body,moderationUrl);
       const response=await fetch("https://api.resend.com/emails",{
        method:"POST",headers:{Authorization:"Bearer "+resendKey,"Content-Type":"application/json"},
        body:JSON.stringify({from:Deno.env.get("GDV_MAIL_SENDER")||"Gente de Vuelo <hola@gentedevuelo.com>",
-        to:[email],reply_to:"gentedevuelo@gmail.com",subject,html,text:body})
+        to:[email],reply_to:"gentedevuelo@gmail.com",subject,html,text:mailText})
       });
       const data=await response.json().catch(()=>({}));
       if(response.ok&&data?.id){delivered=true;providerId=String(data.id);}
