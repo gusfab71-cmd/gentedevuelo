@@ -1199,11 +1199,13 @@ async function initR2MigrationPanel(reference){
  if(!isOwnerAdmin||!reference)return;
  const section=document.createElement('section');
  section.className='card';
- section.innerHTML='<h2>Cloudflare R2 · migración de archivos</h2><p class="small muted">Las fotos, los videos y los PDF nuevos utilizan Cloudflare. Podés copiar los archivos antiguos todavía vinculados a publicaciones y logos sin eliminar sus originales de Supabase.</p><div class="toolbar"><button id="r2-setup-cors" type="button">Configurar acceso de carga</button><button id="r2-migrate-old" type="button" class="primary">Migrar archivos antiguos</button></div><p id="r2-migration-status" role="status" aria-live="polite">Consultando archivos pendientes…</p>';
+ section.innerHTML='<h2>Cloudflare R2 · migración de archivos</h2><p class="small muted">Las fotos, los videos y los PDF nuevos utilizan Cloudflare. Los archivos anteriores se conservan en Supabase como respaldo después de copiarlos y verificarlos.</p><div class="toolbar"><button id="r2-setup-cors" type="button">Optimizar carga directa (opcional)</button><button id="r2-migrate-old" type="button" class="primary">Migrar archivos antiguos</button></div><p id="r2-cors-status" class="small muted">La carga a Cloudflare dispone de un método alternativo cuando el navegador no puede transferir directamente.</p><p id="r2-migration-status" role="status" aria-live="polite">Consultando archivos pendientes…</p>';
  reference.after(section);
  const status=section.querySelector('#r2-migration-status');
  const setup=section.querySelector('#r2-setup-cors');
  const migrate=section.querySelector('#r2-migrate-old');
+ const corsStatus=section.querySelector('#r2-cors-status');
+ let lastPending=0;
  async function api(action,limit){
   const {data,error}=await db.auth.getSession();
   if(error||!data.session?.access_token)throw new Error('Iniciá sesión como administrador.');
@@ -1214,13 +1216,18 @@ async function initR2MigrationPanel(reference){
  }
  async function refresh(){
   const result=await api('inventory');
-  status.textContent=result.pending?result.pending+' archivos vinculados a publicaciones o instituciones pendientes de migración.':'No quedan referencias antiguas para migrar en las secciones verificadas.';
-  return result.pending;
+  lastPending=result.pending||0;
+  const done=Number(result.migratedTotal||0);
+  status.textContent=lastPending
+   ? done+' archivos copiados y verificados en Cloudflare. Pendientes: '+lastPending+'.'
+   : 'Migración completa: '+done+' archivos copiados y verificados en Cloudflare. No quedan referencias antiguas en las secciones revisadas.';
+  migrate.disabled=lastPending===0;
+  return lastPending;
  }
  setup.onclick=async()=>{
   setup.disabled=true;
-  try{const result=await window.GDV_R2_MEDIA.setupCors(db,cfg.url,cfg.key);status.textContent='Permiso de carga a R2 '+result.detail+'.';}
-  catch(e){status.textContent='No se pudo configurar CORS automáticamente: '+e.message+'. Revisá los permisos del token R2.'}
+  try{const result=await window.GDV_R2_MEDIA.setupCors(db,cfg.url,cfg.key);corsStatus.textContent='Carga directa R2: '+result.detail+'.';}
+  catch(e){corsStatus.textContent='No se pudo activar la carga directa (permisos CORS de Cloudflare). No afecta la migración; los archivos nuevos pueden usar la carga alternativa a R2.'}
   finally{setup.disabled=false}
  };
  migrate.onclick=async()=>{
@@ -1228,8 +1235,7 @@ async function initR2MigrationPanel(reference){
   migrate.disabled=true;
   let total=0;
   try{
-   const cors=await window.GDV_R2_MEDIA.setupCors(db,cfg.url,cfg.key).catch(e=>({error:e.message}));
-   if(cors.error)status.textContent='Advertencia: falta configurar CORS para nuevas cargas desde el navegador. '+cors.error;
+   // La migración usa conexión del servidor: no depende de CORS del navegador.
    for(let i=0;i<30;i++){
     const result=await api('migrate',5);
     total+=result.migrated||0;
@@ -1237,14 +1243,11 @@ async function initR2MigrationPanel(reference){
     if(!result.migrated||result.remainingEstimate===0)break;
    }
    const remaining=await refresh();
-   status.textContent='Archivos copiados y verificados: '+total+'. Referencias restantes: '+remaining+'. Los originales de Supabase se conservaron.';
+   if(remaining)status.textContent+=' Revisá las incidencias y volvé a intentar los archivos restantes.';
   }catch(e){status.textContent='Migración detenida después de '+total+' archivos: '+e.message}
-  finally{migrate.disabled=false}
+  finally{migrate.disabled=lastPending===0}
  };
  try{await refresh()}catch(e){status.textContent='No se pudo consultar la migración: '+e.message}
- // En la sesión administradora se comprueba CORS para las futuras cargas directas.
- try{await window.GDV_R2_MEDIA.setupCors(db,cfg.url,cfg.key)}
- catch(e){status.textContent+=' Aviso: falta configurar permisos de carga directa R2 ('+e.message+').'}
 }
 
 const basicModeration=moderation;
