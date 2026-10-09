@@ -730,8 +730,15 @@ async function administration(initialSection='topics'){
    waTestButton.disabled=!waReady;waRun.disabled=!waReady;
    waTestButton.onclick=()=>busy(waTestButton,async()=>{
      if(!confirm('¿Enviar a tu WhatsApp UN mensaje de prueba con el número de Meta?'))return;
-     const data=await waInvoke('test');
-     waOutput.textContent=data.accepted?'Meta aceptó la prueba. Revisá tu WhatsApp; la entrega puede tardar unos instantes.':'No se pudo confirmar la prueba.';
+     waOutput.textContent='Consultando Meta…';
+     try{
+       const data=await waInvoke('test');
+       waOutput.textContent=data.accepted
+         ?'Meta aceptó la prueba. Revisá tu WhatsApp; la entrega puede tardar unos instantes.'+(data.recipient_formato?.startsWith('Argentina')?' Meta necesitó el formato argentino sin el 9.':'')
+         :'No se pudo confirmar la prueba.';
+     }catch(error){
+       waOutput.textContent='No se envió el WhatsApp: '+(error.message||'Error de Meta')+'.';
+     }
    });
    async function waProcess(){
      if(waRunning)return;
