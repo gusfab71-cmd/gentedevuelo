@@ -323,7 +323,9 @@ async function galeriaComunidad(){
   const esVideo=/\.(mp4|webm|mov)$/i.test(archivo);
   let src='';
   if(esVideo){
-   if(autor&&archivo.startsWith(autor+'/')&&!archivo.includes('..')&&
+   if(autor&&archivo.startsWith('https://media.gentedevuelo.com/videos/'+autor+'/')&&
+      /^https:\/\/media\.gentedevuelo\.com\/videos\/[0-9a-f-]{36}\/[0-9a-f-]{36}\.(mp4|webm|mov)$/i.test(archivo))src=archivo;
+   else if(autor&&archivo.startsWith(autor+'/')&&!archivo.includes('..')&&
       /^[A-Za-z0-9_./-]+$/.test(archivo)){
     src=db.storage.from('hangar-fotos').getPublicUrl(archivo).data.publicUrl;
    }
