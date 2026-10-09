@@ -192,6 +192,12 @@
         </form>
       </section>
 
+      <section class="panel" id="panelFotosHangar" aria-labelledby="tituloFotosHangar" style="margin-bottom:20px;">
+        <h2 id="tituloFotosHangar">Fotografías de Mi Hangar pendientes de aprobación <span id="contadorFotosHangar"></span></h2>
+        <p id="estadoFotosHangar" class="intro">Cargando fotografías pendientes…</p>
+        <div id="listaFotosHangar" class="lista"></div>
+        <button type="button" id="actualizarFotosHangar" class="secundario">Actualizar fotografías</button>
+      </section>
       <div class="pestanas" role="group" aria-label="Estado de las publicaciones">
         <button type="button" data-filtro="pendientes" class="activa">Por revisar <span id="numeroPendientes"></span></button>
         <button type="button" data-filtro="publicadas">Publicadas</button>
@@ -524,6 +530,65 @@
       articulo.append(acciones);
       return articulo;
     }
+    async function cargarFotosHangarPendientes() {
+      const lista = $("listaFotosHangar"), estadoPanel = $("estadoFotosHangar");
+      if (!lista || !estadoPanel) return;
+      lista.replaceChildren();
+      estadoPanel.textContent = "Cargando fotografías pendientes…";
+      const { data, error } = await client.from("galeria")
+        .select("id,archivo,nombre_usuario,visible,created_at")
+        .eq("visible", false).order("created_at", { ascending: false }).limit(200);
+      if (error) {
+        estadoPanel.textContent = "No se pudieron consultar las fotos pendientes: " + error.message;
+        return;
+      }
+      $("contadorFotosHangar").textContent = "(" + (data || []).length + ")";
+      estadoPanel.textContent = data?.length ? "Revisá cada fotografía antes de publicarla." : "No hay fotografías pendientes.";
+      for (const fila of data || []) {
+        const tarjetaFoto = nodo("article", "", "panel");
+        tarjetaFoto.append(nodo("h3", "Foto de " + (fila.nombre_usuario || "integrante")));
+        tarjetaFoto.append(nodo("small", fecha(fila.created_at), "meta"));
+        const url = fotoSegura(fila.archivo);
+        if (url) {
+          const imagen = document.createElement("img");
+          imagen.src = url;
+          imagen.alt = "Fotografía pendiente de " + (fila.nombre_usuario || "integrante");
+          imagen.loading = "lazy";
+          imagen.style.cssText = "display:block;max-width:100%;max-height:320px;object-fit:contain;margin:12px 0;border-radius:10px";
+          tarjetaFoto.append(imagen);
+        }
+        const acciones = nodo("div", "", "acciones");
+        const aprobar = nodo("button", "Aprobar y publicar");
+        const eliminar = nodo("button", "Eliminar", "peligro");
+        aprobar.onclick = async () => {
+          aprobar.disabled = true;
+          const resultado = await client.from("galeria").update({ visible: true }).eq("id", fila.id).eq("visible", false).select("id");
+          aprobar.disabled = false;
+          if (resultado.error || !resultado.data?.length) {
+            estadoPanel.textContent = "No se pudo aprobar: " + (resultado.error?.message || "Verificá los permisos.");
+            return;
+          }
+          await cargarFotosHangarPendientes();
+          await cargar();
+        };
+        eliminar.onclick = async () => {
+          if (!confirm("¿Eliminar definitivamente esta fotografía pendiente?")) return;
+          eliminar.disabled = true;
+          const resultado = await client.from("galeria").delete().eq("id", fila.id).eq("visible", false).select("id");
+          eliminar.disabled = false;
+          if (resultado.error || !resultado.data?.length) {
+            estadoPanel.textContent = "No se pudo eliminar: " + (resultado.error?.message || "Verificá los permisos.");
+            return;
+          }
+          await procesarLimpiezaR2Moderacion();
+          await cargarFotosHangarPendientes();
+          await cargar();
+        };
+        acciones.append(aprobar, eliminar);
+        tarjetaFoto.append(acciones);
+        lista.append(tarjetaFoto);
+      }
+    }
     function pintar() {
       const items = secciones.flatMap(config => (datos.get(config.tabla) || []).map(fila => ({ config, fila })));
       items.sort((a, b) => new Date(b.fila.created_at || 0) - new Date(a.fila.created_at || 0));
@@ -551,6 +616,7 @@
       else visibles.forEach(item => lista.append(tarjeta(item)));
     }
     async function cargar() {
+      await cargarFotosHangarPendientes();
       mensaje("Cargando publicaciones…");
       $("recargar").disabled = true;
       const seccionesHabilitadas = moderador ? secciones.filter(config => config.tabla !== "shimoda_publicaciones") : secciones;
