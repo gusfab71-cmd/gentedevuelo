@@ -1,0 +1,52 @@
+/* Quiénes somos: identidad y servicios actuales de Gente de Vuelo */
+.gdv-about,
+.mision.gdv-about {
+  --gdv-about-gold:#f4bd82;
+  --gdv-about-orange:#f28c45;
+  --gdv-about-border:#53515a;
+  display:block;
+  width:min(1160px,100%);
+  margin:22px auto 42px;
+  padding:clamp(22px,4vw,48px);
+  background:linear-gradient(150deg,#242930 0%,#1b222a 65%,#292b30 100%);
+  color:#e9eef4;
+  border:1px solid #64503e;
+  border-top:3px solid var(--gdv-about-orange);
+  border-radius:18px;
+  text-align:left;
+  min-height:0;
+  box-shadow:0 18px 45px rgba(0,0,0,.18);
+  box-sizing:border-box;
+}
+.gdv-about *,
+.gdv-about *::before,
+.gdv-about *::after{box-sizing:border-box}
+.gdv-about .gdv-about-header{max-width:840px;margin:0 auto 28px;text-align:center}
+.gdv-about .gdv-about-eyebrow{font-size:12px!important;letter-spacing:.15em;text-transform:uppercase;color:#f1b27b!important;font-weight:800;margin:0 0 14px!important;max-width:none!important}
+.gdv-about h1,.gdv-about h2{color:#f4c18c!important;margin:0 0 16px!important;line-height:1.15;font-size:clamp(29px,4.2vw,46px)!important;font-weight:800}
+.gdv-about .gdv-about-lead{font-size:clamp(16px,1.9vw,19px)!important;line-height:1.7!important;color:#e2e8ef!important;max-width:850px!important;margin:0 auto 15px!important}
+.gdv-about .gdv-about-subtitle{font-size:17px!important;line-height:1.7!important;color:#b9c7d4!important;max-width:810px!important;margin:0 auto!important}
+.gdv-about .gdv-about-section-heading{font-size:24px!important;line-height:1.35!important;color:#f4c18c!important;margin:34px 0 15px!important;text-align:left!important}
+.gdv-about .gdv-about-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.gdv-about .gdv-about-feature{min-width:0;background:linear-gradient(135deg,#2e343e,#272d36);border:1px solid #474f5a;border-radius:13px;padding:18px 20px}
+.gdv-about .gdv-about-feature h3{font-size:18px!important;font-weight:800;color:#f9c594!important;margin:0 0 8px!important;line-height:1.3!important}
+.gdv-about .gdv-about-feature p{font-size:14px!important;line-height:1.65!important;color:#d3dce5!important;margin:0!important;max-width:none!important}
+.gdv-about .gdv-about-values{border:1px solid #6e5236;border-radius:13px;background:linear-gradient(120deg,#34302b,#2a3035);padding:21px 24px;margin:25px 0 0}
+.gdv-about .gdv-about-values h3{font-size:20px!important;color:#ffd0a3!important;margin:0 0 10px!important}
+.gdv-about .gdv-about-values p{font-size:15px!important;line-height:1.7!important;color:#e0e6ec!important;margin:0!important;max-width:none!important}
+.gdv-about .gdv-about-actions{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:12px;margin:25px 0 0}
+.gdv-about .gdv-about-actions a{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;font-size:14px;font-weight:800;border-radius:9px;padding:12px 19px;min-height:44px;line-height:1.3;transition:background .18s,color .18s}
+.gdv-about .gdv-about-actions .gdv-about-primary{background:#f28c45!important;color:#1b1e24!important;border:1px solid #f28c45!important}
+.gdv-about .gdv-about-actions .gdv-about-primary:hover{background:#ffad72!important}
+.gdv-about .gdv-about-actions .gdv-about-secondary{color:#f8d3a7!important;background:transparent!important;border:1px solid #ab865e!important}
+.gdv-about .gdv-about-actions .gdv-about-secondary:hover{background:#493b31!important}
+@media(max-width:700px){
+ .gdv-about,.mision.gdv-about{width:100%;padding:21px 14px;margin:14px auto 30px;border-radius:13px}
+ .gdv-about .gdv-about-grid{grid-template-columns:1fr;gap:10px}
+ .gdv-about .gdv-about-feature{padding:15px 16px}
+ .gdv-about .gdv-about-section-heading{text-align:center!important;font-size:21px!important}
+ .gdv-about .gdv-about-values{padding:17px 16px}
+ .gdv-about .gdv-about-actions{flex-direction:column}
+ .gdv-about .gdv-about-actions a{width:100%}
+}
+@media(prefers-reduced-motion:reduce){.gdv-about .gdv-about-actions a{transition:none}}
