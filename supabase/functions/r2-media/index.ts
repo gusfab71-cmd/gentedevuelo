@@ -18,7 +18,7 @@ const types: Record<string,[string,string,number]> = {
 const headers=(origin:string|null)=>({
   "Access-Control-Allow-Origin":origin && origins.includes(origin)?origin:origins[0],
   "Access-Control-Allow-Methods":"POST, OPTIONS",
-  "Access-Control-Allow-Headers":"authorization, apikey, content-type, x-client-info",
+  "Access-Control-Allow-Headers":"authorization, apikey, content-type, x-client-info, x-gdv-direct-upload",
   "Vary":"Origin"
 });
 const reply=(origin:string|null,code:number,data:unknown)=>new Response(JSON.stringify(data),{status:code,headers:{...headers(origin),"Content-Type":"application/json","Cache-Control":"no-store"}});
@@ -58,6 +58,29 @@ Deno.serve(async req=>{
  const auth=createClient(url,anon,{auth:{persistSession:false}});
  const {data:{user},error:authErr}=await auth.auth.getUser(jwt);
  if(authErr||!user)return reply(origin,401,{error:"Sesión inválida"});
+ if(req.headers.get("x-gdv-direct-upload")==="1"){
+  const ctype=(req.headers.get("content-type")||"").split(";")[0].trim().toLowerCase();
+  const spec=types[ctype];
+  if(!spec)return reply(origin,415,{error:"Formato no permitido"});
+  try{
+   const bytes=new Uint8Array(await req.arrayBuffer());
+   if(!bytes.length||bytes.length>spec[2])return reply(origin,413,{error:"El archivo supera el máximo permitido"});
+   const head=(n:number)=>new TextDecoder().decode(bytes.slice(0,n));
+   const signature=ctype==="image/jpeg" ? bytes[0]===255&&bytes[1]===216&&bytes[2]===255 :
+      ctype==="image/png" ? bytes[0]===137&&bytes[1]===80&&bytes[2]===78&&bytes[3]===71 :
+      ctype==="image/webp" ? head(4)==="RIFF"&&new TextDecoder().decode(bytes.slice(8,12))==="WEBP" :
+      ctype==="application/pdf" ? head(5)==="%PDF-" :
+      ctype==="video/webm" ? bytes[0]===26&&bytes[1]===69&&bytes[2]===223&&bytes[3]===163 :
+      new TextDecoder().decode(bytes.slice(4,8))==="ftyp";
+   if(!signature)return reply(origin,415,{error:"El contenido no corresponde al tipo declarado"});
+   const key=spec[0]+"/"+user.id+"/"+crypto.randomUUID()+"."+spec[1];
+   const client=r2();
+   await client.send(new PutObjectCommand({Bucket:bucket,Key:key,Body:bytes,ContentType:ctype}));
+   const confirmed=await client.send(new HeadObjectCommand({Bucket:bucket,Key:key}));
+   if(Number(confirmed.ContentLength)!==bytes.length)throw new Error("La copia en R2 no coincide");
+   return reply(origin,201,{url:base+key,path:key,size:bytes.length});
+  }catch(e){console.error("Carga directa R2:",e instanceof Error?e.message:"Error");return reply(origin,502,{error:"No se pudo transferir el archivo a Cloudflare R2"})}
+ }
  let input:any;
  try{input=await req.json()}catch{return reply(origin,400,{error:"Solicitud inválida"})}
  const action=input?.action;
