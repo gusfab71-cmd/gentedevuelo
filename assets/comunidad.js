@@ -73,7 +73,7 @@ async function load(){
   allRows('gdv_topics'),
   allRows('gdv_comments'),
   allRows('gdv_media'),
-  allRows('profiles','id,username,full_name,avatar_url,bio,created_at,aviation_role,aircraft_flown,home_airfield,flight_hours,aviation_license,flight_simulators,hangar_intro'),
+  allRows('profiles','id,username,full_name,avatar_url,bio,created_at,aviation_role,aircraft_flown,home_airfield,flight_hours,aviation_license,flight_simulators,hangar_intro,onboarding_completed'),
   allRows('gdv_reactions'),
   db.from('shimoda_publicaciones').select('id,titulo,contenido,categoria,fecha_publicacion,created_at').eq('publicado',true).order('created_at',{ascending:false}),
   db.from('shimoda_comentarios').select('id,publicacion_id,contenido,created_at,user_id').eq('estado','aprobado').order('created_at',{ascending:true})
@@ -693,9 +693,90 @@ async function administration(initialSection='topics'){
  app.querySelectorAll('[data-admin-tab]').forEach(b=>b.onclick=()=>busy(b,()=>paint(b.dataset.adminTab)));
  await paint(initialSection);
 }
+async function googleOnboarding(){
+ if(!user)return;
+ const p=profile(user.id);
+ crumbs([['Bienvenida a Gente de Vuelo']]);
+ const roles=['Entusiasta de la aviación','Estudiante de piloto','Piloto privado','Piloto comercial','Instructor de vuelo','Aeromodelista','Piloto de planeador','Piloto de ultraliviano','Piloto de helicóptero','Piloto de paramotor','Constructor de experimentales','Simulador de vuelo','Otro'];
+ app.innerHTML=`<section class="editor google-onboarding">
+  <div class="google-onboarding-heading">
+   <span class="google-onboarding-step">Registro con Google · Último paso</span>
+   <h1>Completá tu perfil</h1>
+   <p>¡Bienvenido a Gente de Vuelo! Antes de empezar a participar, contanos cómo querés presentarte en nuestra comunidad aeronáutica.</p>
+  </div>
+  <form id="google-onboarding-form" class="card">
+    <label for="google-profile-username">Nombre de usuario <span class="google-onboarding-required">Obligatorio</span></label>
+    <input id="google-profile-username" type="text" required minlength="3" maxlength="25" pattern="[A-Za-z0-9_-]{3,25}" autocomplete="username" value="${esc(p.username?.startsWith('piloto_')?'':p.username||'')}">
+    <p class="small muted">Se mostrará en el foro y Mi Hangar. De 3 a 25 caracteres: letras, números y guiones.</p>
+    <label for="google-profile-name">Nombre visible <span class="google-onboarding-required">Obligatorio</span></label>
+    <input id="google-profile-name" required minlength="2" maxlength="80" autocomplete="nickname" value="${esc(p.full_name||user.user_metadata?.full_name||user.user_metadata?.name||'')}">
+    <p class="small muted">Puede ser tu nombre de pila o el nombre con el que quieras que te conozca la comunidad. Será público.</p>
+    <label for="google-profile-role">Tu relación con la aviación <span class="google-onboarding-required">Obligatorio</span></label>
+    <select id="google-profile-role" required>
+      <option value="">Seleccioná una opción</option>
+      ${roles.map(role=>`<option value="${esc(role)}" ${role===p.aviation_role?'selected':''}>${esc(role)}</option>`).join('')}
+    </select>
+    <details class="google-onboarding-more">
+      <summary>Agregar más datos a Mi Hangar (opcional)</summary>
+      <p class="small muted">Estos datos no son obligatorios. Podés completarlos o modificarlos más adelante.</p>
+      <label for="google-profile-license">Licencias</label>
+      <input id="google-profile-license" maxlength="100" value="${esc(p.aviation_license||'')}">
+      <label for="google-profile-hours">Horas de vuelo</label>
+      <input id="google-profile-hours" type="text" inputmode="numeric" maxlength="5" pattern="[0-9]{0,5}" value="${esc(p.flight_hours??'')}">
+      <label for="google-profile-airfield">Aeropuerto o aeródromo base</label>
+      <input id="google-profile-airfield" maxlength="150" value="${esc(p.home_airfield||'')}">
+      <label for="google-profile-aircraft">Aeronaves</label>
+      <input id="google-profile-aircraft" maxlength="250" value="${esc(p.aircraft_flown||'')}">
+      <label for="google-profile-simulator">Simulador de vuelo</label>
+      <input id="google-profile-simulator" maxlength="200" value="${esc(p.flight_simulators||'')}">
+      <label for="google-profile-intro">Presentación personal</label>
+      <textarea id="google-profile-intro" maxlength="1000" rows="3">${esc(p.hangar_intro||'')}</textarea>
+    </details>
+    <p class="google-onboarding-privacy">Tu correo de Google y tu contraseña nunca se mostrarán públicamente. Los datos de este formulario, salvo tu correo, son visibles en tu perfil.</p>
+    <button class="primary google-onboarding-save" type="submit">Guardar perfil y entrar</button>
+    <p id="google-onboarding-status" role="status" aria-live="polite"></p>
+  </form>
+ </section>`;
+ const hours=$('google-profile-hours');hours.oninput=()=>{hours.value=hours.value.replace(/\D/g,'').slice(0,5)};
+ $('google-onboarding-form').onsubmit=e=>{
+  e.preventDefault();
+  busy(e.submitter,async()=>{
+   const status=$('google-onboarding-status');status.textContent='';
+   const username=$('google-profile-username').value.trim();
+   const fullName=$('google-profile-name').value.trim();
+   const role=$('google-profile-role').value;
+   if(!/^[A-Za-z0-9_-]{3,25}$/.test(username))throw new Error('El nombre de usuario debe tener entre 3 y 25 caracteres válidos.');
+   if(/^(admin|administrador|moderador|shimoda|gentedevuelo|soporte)$/i.test(username))throw new Error('Elegí otro nombre de usuario.');
+   if(fullName.length<2||fullName.length>80)throw new Error('Completá un nombre visible de entre 2 y 80 caracteres.');
+   if(!roles.includes(role))throw new Error('Seleccioná tu relación con la aviación.');
+   const flight=hours.value.trim();
+   if(flight&&!/^[0-9]{1,5}$/.test(flight))throw new Error('Las horas de vuelo deben tener hasta 5 dígitos.');
+   const other=checked(await db.from('profiles').select('id').ilike('username',username.replaceAll('_','\\_')).neq('id',user.id).limit(1));
+   if(other.length){status.textContent='Ese nombre de usuario ya está ocupado. Elegí otro.';return}
+   const payload={
+    username, full_name:fullName, aviation_role:role,
+    aviation_license:$('google-profile-license').value.trim(),
+    home_airfield:$('google-profile-airfield').value.trim(),
+    aircraft_flown:$('google-profile-aircraft').value.trim(),
+    flight_simulators:$('google-profile-simulator').value.trim(),
+    hangar_intro:$('google-profile-intro').value.trim(),
+    flight_hours:flight?Number(flight):null,
+    onboarding_completed:true
+   };
+   const result=await db.from('profiles').update(payload).eq('id',user.id).select('id,onboarding_completed').single();
+   if(result.error){status.textContent='No se pudo guardar el perfil: '+result.error.message;return}
+   if(!result.data?.onboarding_completed){status.textContent='No se pudo confirmar el perfil. Intentá nuevamente.';return}
+   await load();
+   history.replaceState(null,'','#foro');
+   await route();
+   message('¡Tu perfil está listo! Ya podés participar en Gente de Vuelo.');
+  });
+ };
+}
+
 async function profileEditor(){
  if(!authenticated())return;const p=profile(user.id);crumbs([['Mi Hangar','#hangar'],['Editar perfil']]);
- const fields=[['username','Nombre de usuario'],['hangar_intro','Presentación'],['aviation_role','Actividad aeronáutica'],['aviation_license','Licencias'],['flight_hours','Horas de vuelo'],['home_airfield','Aeropuerto base'],['aircraft_flown','Aeronaves'],['flight_simulators','Simulador de vuelo']];
+ const fields=[['username','Nombre de usuario'],['full_name','Nombre visible'],['hangar_intro','Presentación'],['aviation_role','Actividad aeronáutica'],['aviation_license','Licencias'],['flight_hours','Horas de vuelo'],['home_airfield','Aeropuerto base'],['aircraft_flown','Aeronaves'],['flight_simulators','Simulador de vuelo']];
  app.innerHTML=`<section class="editor"><h1>Editar Mi Hangar</h1><p>Tu usuario es público. Los demás datos son opcionales; se muestran en tu Hangar si los completás.</p><form id="profile-form">${fields.map(([k,label])=>`<label for="profile-${k}">${label}</label><input id="profile-${k}" ${k==='username'?'required minlength="3" maxlength="25" pattern="[A-Za-z0-9_-]{3,25}"':k==='flight_hours'?'type="text" inputmode="numeric" maxlength="5" pattern="[0-9]{1,5}" autocomplete="off"':'maxlength="1000"'} value="${esc(p[k]??'')}">`).join('')}<p class="small muted">El nombre de usuario puede cambiarse una vez cada 90 días.</p><label for="profile-avatar">Foto de perfil (JPG, PNG o WebP, hasta 5 MB)</label><input id="profile-avatar" type="file" accept="image/jpeg,image/png,image/webp"><div class="toolbar"><button class="primary">Guardar perfil</button>${link('Volver a Mi Hangar','#hangar')}</div></form></section>`;
  const flightHoursField=$('profile-flight_hours');if(flightHoursField)flightHoursField.oninput=()=>{flightHoursField.value=flightHoursField.value.replace(/\D/g,'').slice(0,5)};
  $('profile-form').onsubmit=e=>{e.preventDefault();busy(e.submitter,async()=>{
@@ -778,7 +859,7 @@ async function contact(){
    });
  };
 }
-async function route(){if(!await window.GDV_AUTH.requireRoute())return;const current=++epoch;notice.textContent='';const [view='foro',id,child]=location.hash.slice(1).split('/');document.querySelectorAll('.site-nav a').forEach(a=>a.setAttribute('aria-current',a.getAttribute('href')==='#'+view?'page':'false'));app.innerHTML='<p>Cargando…</p>';try{if(['registro','ingresar','recuperar'].includes(view))authView(view);else if(view==='tematicas')categoryView();else if(view==='tematica')feed(id);else if(view==='tema')await topicView(id,child);else if(view==='crear')editor();else if(view==='editar')editor(id);else if(view==='multimedia')multimedia();else if(view==='galeria')await galeriaComunidad();else if(view==='hangar')await hangar(id);else if(view==='notificaciones')await notifications();else if(view==='moderacion')await moderation();else if(view==='gestion')await administration(id==='comunicados'?'announcements':'topics');else if(view==='perfil')await profileEditor();else if(view==='normativa')rules();else if(view==='quienes-somos')about();else if(view==='integrantes')await membersView();else if(view==='contacto')await contact();else feed();app.querySelectorAll('input[type="password"]').forEach(input=>{const b=document.createElement('button');b.type='button';b.className='password-toggle';b.dataset.action='show-password';b.dataset.id=input.id;b.textContent='Mostrar contraseña';b.setAttribute('aria-pressed','false');input.after(b)});friendlyActions();contextualModeration();if(current===epoch)document.title=(app.querySelector('h1')?.textContent||'Foro')+' · Gente de Vuelo'}catch(e){if(current===epoch){app.innerHTML='<p>No se pudo cargar este apartado.</p>'+link('Volver al Foro','#foro');message(e.message,true)}}}
+async function route(){if(!await window.GDV_AUTH.requireRoute())return;const current=++epoch;notice.textContent='';const onboardingRequired=Boolean(user&&profiles.get(user.id)?.onboarding_completed===false);if(onboardingRequired&&location.hash!=='#completar-perfil')history.replaceState(null,'','#completar-perfil');const [view='foro',id,child]=location.hash.slice(1).split('/');document.querySelectorAll('.site-nav a').forEach(a=>a.setAttribute('aria-current',a.getAttribute('href')==='#'+view?'page':'false'));app.innerHTML='<p>Cargando…</p>';try{if(onboardingRequired)await googleOnboarding();else if(view==='completar-perfil'){history.replaceState(null,'','#foro');feed()}else if(['registro','ingresar','recuperar'].includes(view))authView(view);else if(view==='tematicas')categoryView();else if(view==='tematica')feed(id);else if(view==='tema')await topicView(id,child);else if(view==='crear')editor();else if(view==='editar')editor(id);else if(view==='multimedia')multimedia();else if(view==='galeria')await galeriaComunidad();else if(view==='hangar')await hangar(id);else if(view==='notificaciones')await notifications();else if(view==='moderacion')await moderation();else if(view==='gestion')await administration(id==='comunicados'?'announcements':'topics');else if(view==='perfil')await profileEditor();else if(view==='normativa')rules();else if(view==='quienes-somos')about();else if(view==='integrantes')await membersView();else if(view==='contacto')await contact();else feed();app.querySelectorAll('input[type="password"]').forEach(input=>{const b=document.createElement('button');b.type='button';b.className='password-toggle';b.dataset.action='show-password';b.dataset.id=input.id;b.textContent='Mostrar contraseña';b.setAttribute('aria-pressed','false');input.after(b)});friendlyActions();contextualModeration();if(current===epoch)document.title=(app.querySelector('h1')?.textContent||'Foro')+' · Gente de Vuelo'}catch(e){if(current===epoch){app.innerHTML='<p>No se pudo cargar este apartado.</p>'+link('Volver al Foro','#foro');message(e.message,true)}}}
 async function adminDeleteContent(kind,id){
  if(!isAdmin)return;
  const isTopic=kind==='topic';
