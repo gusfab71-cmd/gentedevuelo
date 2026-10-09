@@ -144,12 +144,13 @@
         if (state === 'SUBSCRIBED') {
           try {
             const result = await onlineChannel.track({ user_id: currentUser.id });
-            if (result !== 'ok') onlineUnavailable('No se pudo informar tu conexión.');
+            if (result !== 'ok') updateOnlineList().catch(() => {});
           } catch {
-            onlineUnavailable('No se pudo informar tu conexión.');
+            updateOnlineList().catch(() => {});
           }
         } else if (state === 'CHANNEL_ERROR' || state === 'TIMED_OUT' || state === 'CLOSED') {
-          onlineUnavailable('Presencia no disponible. Se intentará reconectar.');
+          // El listado general sigue funcionando aunque se interrumpa Realtime.
+          updateOnlineList().catch(() => {});
         }
       });
   }
