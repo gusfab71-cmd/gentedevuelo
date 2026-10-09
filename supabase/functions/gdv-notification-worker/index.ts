@@ -10,7 +10,7 @@ Deno.serve(async request=>{
  const db=createClient(url,secret,{auth:{persistSession:false}});
  const check=await db.rpc("gdv_worker_authorize",{p_secret:bearer});
  if(check.error||!check.data?.valid)return new Response("No autorizado",{status:403});
- const summary={whatsappAccepted:0,emailAccepted:0,errors:[] as string[]};
+ const summary={whatsappAccepted:0,emailAccepted:0,moderationAccepted:0,moderationSkipped:0,errors:[] as string[]};
  const waPhone=Deno.env.get("META_WA_PHONE_NUMBER_ID")||"";
  const waToken=Deno.env.get("META_WA_ACCESS_TOKEN")||"";
  const waRecipient=(Deno.env.get("META_WA_RECIPIENT")||"").replace(/\D/g,"");
@@ -76,5 +76,67 @@ Deno.serve(async request=>{
     if(accepted)summary.emailAccepted++;else{summary.errors.push(failure);break}
    }
  }
+
+ // Canal privado independiente: únicamente moderación para la cuenta administradora.
+ // No habilita bienvenidas ni comunicados generales.
+ if(check.data.moderationEmail){
+  if(!resendKey){
+   summary.errors.push("Falta configurar RESEND_API_KEY");
+  }else{
+   // Límite protector de 20 avisos por hora; los restantes esperan el próximo ciclo.
+   const hour=new Date(Date.now()-3600000).toISOString();
+   const {count:sentCount,error:countError}=await db.from("gdv_email_outbox")
+    .select("id",{count:"exact",head:true}).eq("kind","moderation").eq("status","sent").gte("sent_at",hour);
+   if(countError){
+    summary.errors.push("No se pudo comprobar el límite de moderación");
+   }else{
+    const claim=await db.rpc("gdv_email_claim_moderation",{p_limit:Math.min(5,Math.max(0,20-(sentCount||0)))});
+    if(claim.error){
+     summary.errors.push("No se pudo tomar la cola de moderación");
+    }else for(const item of claim.data||[]){
+     let delivered=false,providerId="",failure="";
+     try{
+      const accountResult=await db.auth.admin.getUserById(item.user_id);
+      const account=accountResult.data?.user;
+      const email=account?.email||"";
+      if(!account?.email_confirmed_at||!email||account?.deleted_at){
+       const skip=await db.from("gdv_email_outbox")
+        .update({status:"skipped",last_error:"Cuenta administradora sin correo activo"})
+        .eq("id",item.id).eq("status","sending").select("id");
+       if(skip.error||!skip.data?.length)summary.errors.push("No se pudo descartar un correo inválido");
+       summary.moderationSkipped++;
+       continue;
+      }
+      const subject=String(item.subject).slice(0,120);
+      const body=String(item.body).slice(0,1700);
+      const moderationUrl=item.source_table==="gdv_topics"||item.source_table==="gdv_comments"
+       ?"https://gentedevuelo.com/comunidad.html#moderacion"
+       :"https://gentedevuelo.com/moderacion.html";
+      const html='<div style="max-width:600px;margin:auto;font-family:Arial,sans-serif;color:#202832;line-height:1.65;background:#f8f9fb;padding:22px;border-radius:12px">'
+       +'<h1 style="color:#a96a34">Gente de Vuelo</h1><h2>'+escape(subject)+'</h2>'
+       +body.split(/\\n+/).filter(Boolean).map((part:string)=>'<p>'+escape(part)+'</p>').join('')
+       +'<p><a style="display:inline-block;background:#f28c45;color:#1c2228;padding:12px 18px;border-radius:8px;font-weight:bold;text-decoration:none" href="'+moderationUrl+'">Revisar moderación</a></p>'
+       +'<p style="font-size:12px;color:#747b84">Aviso privado de administración. No es un comunicado a los integrantes.</p></div>';
+      const response=await fetch("https://api.resend.com/emails",{
+       method:"POST",headers:{Authorization:"Bearer "+resendKey,"Content-Type":"application/json"},
+       body:JSON.stringify({from:Deno.env.get("GDV_MAIL_SENDER")||"Gente de Vuelo <hola@gentedevuelo.com>",
+        to:[email],reply_to:"gentedevuelo@gmail.com",subject,html,text:body})
+      });
+      const data=await response.json().catch(()=>({}));
+      if(response.ok&&data?.id){delivered=true;providerId=String(data.id);}
+      else failure="Resend no aceptó el aviso: "+String(data?.name||response.status).slice(0,90);
+     }catch{failure="No se pudo confirmar el envío; requiere revisión manual";}
+     const finish=await db.rpc("gdv_email_finish",{p_id:item.id,p_sent:delivered,p_error:failure||null,p_provider_id:providerId||null});
+     if(finish.error||finish.data!==true){
+      summary.errors.push("No se pudo guardar el estado de moderación: intervención manual");
+      break;
+     }
+     if(delivered)summary.moderationAccepted++;
+     else{summary.errors.push(failure);break}
+    }
+   }
+  }
+ }
+
  return new Response(JSON.stringify(summary),{status:200,headers:{"Content-Type":"application/json","Cache-Control":"no-store"}});
 });
