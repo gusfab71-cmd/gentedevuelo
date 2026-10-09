@@ -1,5 +1,20 @@
 'use strict';
 (() => {
+  // Consolidate the legacy GitHub Pages entrypoint on the official domain.
+  // Preserve OAuth fragments returned by Supabase so a Google sign-in is not lost.
+  if (location.hostname === 'gusfab71-cmd.github.io') {
+    const destination = new URL('https://gentedevuelo.com/comunidad.html');
+    if (location.hash.startsWith('#access_token=') ||
+        location.hash.startsWith('#error=')) {
+      destination.hash = location.hash;
+    } else if (new URLSearchParams(location.search).has('code')) {
+      destination.search = location.search;
+    } else {
+      destination.hash = '#ingresar';
+    }
+    location.replace(destination.href);
+    return;
+  }
   const base = new URL('../', document.currentScript.src);
   const client = supabase.createClient(GDV_CONFIG.url, GDV_CONFIG.key);
   const loginURL = new URL('comunidad.html#ingresar', base);
