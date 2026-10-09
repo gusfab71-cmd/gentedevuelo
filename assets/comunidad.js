@@ -1076,7 +1076,11 @@ async function googleOnboarding(){
    if(/^(admin|administrador|moderador|shimoda|gentedevuelo|soporte)$/i.test(username))throw new Error('Elegí otro nombre de usuario.');
    if(fullName.length<2||fullName.length>80)throw new Error('Completá un nombre visible de entre 2 y 80 caracteres.');
    if(!roles.includes(role))throw new Error('Seleccioná tu relación con la aviación.');
-   if(!selectedAvatar&&!avatarFile)throw new Error('Seleccioná un avatar o subí una foto de perfil para continuar.');
+   if(!selectedAvatar&&!avatarFile){
+    status.textContent='Para continuar, elegí uno de los avatares aeronáuticos o subí una foto de perfil.';
+    $('google-profile-avatar-file').focus();
+    return;
+   }
    if(!$('google-profile-consent').checked)throw new Error('Tenés que aceptar la Normativa de Comunidad para completar el registro.');
    const flight=hours.value.trim();
    if(flight&&!/^[0-9]{1,5}$/.test(flight))throw new Error('Las horas de vuelo deben tener hasta 5 dígitos.');
