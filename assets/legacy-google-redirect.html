@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="es">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gente de Vuelo · Acceso</title>
+<meta http-equiv="refresh" content="0;url=https://gentedevuelo.com/comunidad.html#ingresar">
+<script>
+(function(){
+ const target=new URL('https://gentedevuelo.com/comunidad.html');
+ if(location.hash.startsWith('#access_token=')||location.hash.startsWith('#error=')){
+  target.hash=location.hash;
+ }else if(new URLSearchParams(location.search).has('code')){
+  target.search=location.search;
+ }else target.hash='#ingresar';
+ location.replace(target.href);
+})();
+</script>
+</head><body><p>Continuar a <a href="https://gentedevuelo.com/comunidad.html#ingresar">Gente de Vuelo</a>.</p></body></html>
