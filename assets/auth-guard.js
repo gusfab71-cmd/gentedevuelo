@@ -36,7 +36,7 @@
   // A single heartbeat shared by Home, Foro, Galería and AeroChat.
   // PostgreSQL sets its own authoritative last_seen timestamp.
   async function heartbeat() {
-    if (!verifiedUser || document.hidden || presenceBusy || Date.now()-lastPresence<25000) return;
+    if (!verifiedUser || onboardingRequired || document.hidden || presenceBusy || Date.now()-lastPresence<25000) return;
     presenceBusy = true;
     try {
       const {error} = await client.from('gdv_member_presence').upsert({
