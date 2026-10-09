@@ -89,6 +89,8 @@ Deno.serve(async request=>{
     .select("id",{count:"exact",head:true}).eq("kind","moderation").eq("status","sent").gte("sent_at",hour);
    if(countError){
     summary.errors.push("No se pudo comprobar el límite de moderación");
+   }else if((sentCount||0)>=20){
+    // Se difieren los correos restantes, sin perder la cola.
    }else{
     const claim=await db.rpc("gdv_email_claim_moderation",{p_limit:Math.min(5,Math.max(0,20-(sentCount||0)))});
     if(claim.error){
@@ -114,7 +116,7 @@ Deno.serve(async request=>{
        :"https://gentedevuelo.com/moderacion.html";
       const html='<div style="max-width:600px;margin:auto;font-family:Arial,sans-serif;color:#202832;line-height:1.65;background:#f8f9fb;padding:22px;border-radius:12px">'
        +'<h1 style="color:#a96a34">Gente de Vuelo</h1><h2>'+escape(subject)+'</h2>'
-       +body.split(/\\n+/).filter(Boolean).map((part:string)=>'<p>'+escape(part)+'</p>').join('')
+       +body.split(/\n+/).filter(Boolean).map((part:string)=>'<p>'+escape(part)+'</p>').join('')
        +'<p><a style="display:inline-block;background:#f28c45;color:#1c2228;padding:12px 18px;border-radius:8px;font-weight:bold;text-decoration:none" href="'+moderationUrl+'">Revisar moderación</a></p>'
        +'<p style="font-size:12px;color:#747b84">Aviso privado de administración. No es un comunicado a los integrantes.</p></div>';
       const response=await fetch("https://api.resend.com/emails",{
