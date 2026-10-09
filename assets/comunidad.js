@@ -1190,6 +1190,58 @@ async function mountRobertKnowledgePanel(){
  await Promise.all([loadDocs(),loadDailyConfig()]);
 }
 
+async function initR2MigrationPanel(reference){
+ if(!isOwnerAdmin||!reference)return;
+ const section=document.createElement('section');
+ section.className='card';
+ section.innerHTML='<h2>Cloudflare R2 · migración de archivos</h2><p class="small muted">Las fotos, los videos y los PDF nuevos utilizan Cloudflare. Podés copiar los archivos antiguos todavía vinculados a publicaciones y logos sin eliminar sus originales de Supabase.</p><div class="toolbar"><button id="r2-setup-cors" type="button">Configurar acceso de carga</button><button id="r2-migrate-old" type="button" class="primary">Migrar archivos antiguos</button></div><p id="r2-migration-status" role="status" aria-live="polite">Consultando archivos pendientes…</p>';
+ reference.after(section);
+ const status=section.querySelector('#r2-migration-status');
+ const setup=section.querySelector('#r2-setup-cors');
+ const migrate=section.querySelector('#r2-migrate-old');
+ async function api(action,limit){
+  const {data,error}=await db.auth.getSession();
+  if(error||!data.session?.access_token)throw new Error('Iniciá sesión como administrador.');
+  const resp=await fetch(cfg.url+'/functions/v1/r2-migrate-legacy',{method:'POST',headers:{Authorization:'Bearer '+data.session.access_token,apikey:cfg.key,'Content-Type':'application/json'},body:JSON.stringify({action,limit})});
+  const result=await resp.json().catch(()=>({}));
+  if(!resp.ok)throw new Error(result.error||'Falló la consulta de migración.');
+  return result;
+ }
+ async function refresh(){
+  const result=await api('inventory');
+  status.textContent=result.pending?result.pending+' archivos vinculados a publicaciones o instituciones pendientes de migración.':'No quedan referencias antiguas para migrar en las secciones verificadas.';
+  return result.pending;
+ }
+ setup.onclick=async()=>{
+  setup.disabled=true;
+  try{const result=await window.GDV_R2_MEDIA.setupCors(db,cfg.url,cfg.key);status.textContent='Permiso de carga a R2 '+result.detail+'.';}
+  catch(e){status.textContent='No se pudo configurar CORS automáticamente: '+e.message+'. Revisá los permisos del token R2.'}
+  finally{setup.disabled=false}
+ };
+ migrate.onclick=async()=>{
+  if(!confirm('¿Copiar a Cloudflare los archivos antiguos vinculados a publicaciones e instituciones? Se conservarán los originales en Supabase.'))return;
+  migrate.disabled=true;
+  let total=0;
+  try{
+   const cors=await window.GDV_R2_MEDIA.setupCors(db,cfg.url,cfg.key).catch(e=>({error:e.message}));
+   if(cors.error)status.textContent='Advertencia: falta configurar CORS para nuevas cargas desde el navegador. '+cors.error;
+   for(let i=0;i<30;i++){
+    const result=await api('migrate',5);
+    total+=result.migrated||0;
+    status.textContent='Migrados y verificados: '+total+'. Restantes estimados: '+result.remainingEstimate+'.'+(result.errors?.length?' Incidencias: '+result.errors.slice(0,2).join(' · '):'');
+    if(!result.migrated||result.remainingEstimate===0)break;
+   }
+   const remaining=await refresh();
+   status.textContent='Archivos copiados y verificados: '+total+'. Referencias restantes: '+remaining+'. Los originales de Supabase se conservaron.';
+  }catch(e){status.textContent='Migración detenida después de '+total+' archivos: '+e.message}
+  finally{migrate.disabled=false}
+ };
+ try{await refresh()}catch(e){status.textContent='No se pudo consultar la migración: '+e.message}
+ // En la sesión administradora se comprueba CORS para las futuras cargas directas.
+ try{await window.GDV_R2_MEDIA.setupCors(db,cfg.url,cfg.key)}
+ catch(e){status.textContent+=' Aviso: falta configurar permisos de carga directa R2 ('+e.message+').'}
+}
+
 const basicModeration=moderation;
 moderation=async function(){await basicModeration();if(!isAdmin)return;const reports=checked(await db.from('gdv_reports').select('*').eq('status','pending')),members=checked(await db.from('gdv_members').select('*')),legacy=await getLegacyPendingCounts();const counts=new Map();reports.forEach(r=>{const key=r.comment_id||r.topic_id;const set=counts.get(key)||new Set();set.add(r.user_id);counts.set(key,set)});const urgent=[...counts].filter(([,users])=>users.size>=3);const panel=document.createElement('section');panel.className='moderation-overview';panel.innerHTML=`<div class="grid">${[
 ['Reportes pendientes',reports.length,'Denuncias enviadas por usuarios que todavía deben revisarse.'],
@@ -1199,7 +1251,7 @@ moderation=async function(){await basicModeration();if(!isAdmin)return;const rep
 ].map(([label,n,detail,href])=>href?`<a class="card moderation-metric-link ${n?'has-pending':''}" href="${href}"><strong class="metric-value">${n}</strong><span>${label}</span><small class="moderation-card-help">${detail}</small></a>`:`<div class="card"><strong class="metric-value">${n}</strong><span>${label}</span><small class="moderation-card-help">${detail}</small></div>`).join('')}</div><div class="legacy-pending-grid"><a class="card legacy-pending-card ${legacy.shimoda?'has-pending':''}" href="moderacion.html#shimoda_comentarios"><strong class="metric-value">${legacy.shimoda}</strong><span>Rincón Shimoda pendientes</span><small class="moderation-card-help">Comentarios del Rincón Shimoda que todavía esperan moderación.</small></a><a class="card legacy-pending-card ${(legacy.compraVenta+legacy.aeroShop)?'has-pending':''}" href="moderacion.html#comercio"><strong class="metric-value">${legacy.compraVenta+legacy.aeroShop}</strong><span>CompraVenta / AeroShop pendientes</span><small>CompraVenta: ${legacy.compraVenta} · AeroShop: ${legacy.aeroShop}</small><small class="moderation-card-help">Avisos de CompraVenta y publicaciones de AeroShop que todavía deben aprobarse.</small></a><a class="card legacy-pending-card ${legacy.fotosHangar?'has-pending':''}" href="moderacion.html#galeria"><strong class="metric-value">${legacy.fotosHangar}</strong><span>Fotos de Mi Hangar pendientes</span><small class="moderation-card-help">Fotografías enviadas por integrantes que esperan tu aprobación para aparecer en la Galería. Abrir para revisar, aprobar o eliminar.</small></a></div><p>Prioridad alta: tres denunciantes distintos sobre el mismo contenido. La decisión sigue siendo humana.</p>${urgent.map(([id,users])=>{const r=reports.find(r=>(r.comment_id||r.topic_id)===id);return `<p class="priority">⚑ ${users.size} denunciantes · ${link('Revisar contenido','#tema/'+r.topic_id+(r.comment_id?'/'+r.comment_id:''))}</p>`}).join('')}`;app.querySelector('h1').after(panel);
 const actionButtons=[...app.querySelectorAll('.moderation-action')];
 if(actionButtons[1])actionButtons[1].classList.toggle('has-pending',(legacy.shimoda+legacy.compraVenta+legacy.aeroShop+legacy.fotosHangar)>0);
-refreshAdminPendingBadge().catch(()=>{});await mountRobertKnowledgePanel();};
+refreshAdminPendingBadge().catch(()=>{});await initR2MigrationPanel(panel);await mountRobertKnowledgePanel();};
 
 (async()=>{try{user=await window.GDV_AUTH.ready;await loadRole();await heartbeat();account();await load();await route()}catch(e){app.innerHTML='<h1>Comunidad</h1><p>No se pudo conectar. Volvé a intentarlo en unos momentos.</p>';message(e.message,true)}})();
 })();
