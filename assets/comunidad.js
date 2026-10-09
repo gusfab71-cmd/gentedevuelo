@@ -1027,6 +1027,9 @@ async function googleOnboarding(){
    if(result.error){status.textContent='No se pudo guardar el perfil: '+result.error.message;return}
    if(!result.data?.onboarding_completed){status.textContent='No se pudo confirmar el perfil. Intentá nuevamente.';return}
    await window.GDV_AUTH.refreshOnboarding();
+   await loadRole();
+   account();
+   await heartbeat();
    await load();
    history.replaceState(null,'','#foro');
    await route();
@@ -1532,5 +1535,26 @@ const actionButtons=[...app.querySelectorAll('.moderation-action')];
 if(actionButtons[1])actionButtons[1].classList.toggle('has-pending',(legacy.shimoda+legacy.compraVenta+legacy.aeroShop+legacy.fotosHangar)>0);
 refreshAdminPendingBadge().catch(()=>{});await initR2MigrationPanel(panel);await mountRobertKnowledgePanel();};
 
-(async()=>{try{user=await window.GDV_AUTH.ready;await loadRole();await heartbeat();account();await load();await route()}catch(e){app.innerHTML='<h1>Comunidad</h1><p>No se pudo conectar. Volvé a intentarlo en unos momentos.</p>';message(e.message,true)}})();
+(async()=>{try{
+ user=await window.GDV_AUTH.ready;
+ if(user&&window.GDV_AUTH.needsOnboarding()){
+  // Solo consultamos el perfil propio: no cargamos publicaciones, miembros ni multimedia.
+  const result=await db.from('profiles')
+   .select('id,username,full_name,aviation_role,aviation_license,home_airfield,aircraft_flown,flight_simulators,hangar_intro,flight_hours,onboarding_completed')
+   .eq('id',user.id).maybeSingle();
+  if(result.error)throw result.error;
+  profiles=new Map(result.data?[[result.data.id,result.data]]:[]);
+  $('account').innerHTML='';
+  await route();
+  return;
+ }
+ await loadRole();
+ await heartbeat();
+ account();
+ await load();
+ await route();
+}catch(e){
+ app.innerHTML='<h1>Comunidad</h1><p>No se pudo conectar. Volvé a intentarlo en unos momentos.</p>';
+ message(e.message,true);
+}})();
 })();
