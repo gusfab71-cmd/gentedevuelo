@@ -4787,6 +4787,30 @@ img, video { max-width: 100%; }
   text-transform: none;
 }
 </style>
+<style id="gdv-social-alignment-20261009">
+/* Los enlaces sociales comparten caja y eje vertical en la portada. */
+.controles-usuario{align-items:center;}
+.controles-usuario > :is(.youtube-portada,.threads-portada,.facebook-portada,.instagram-portada){
+  box-sizing:border-box;
+  align-self:center;
+  flex-shrink:0;
+}
+.controles-usuario > :is(.youtube-portada,.threads-portada,.facebook-portada,.instagram-portada) svg{
+  display:block;
+  flex-shrink:0;
+}
+@media(min-width:701px){
+  .controles-usuario > :is(.youtube-portada,.threads-portada,.facebook-portada,.instagram-portada){
+    width:44px;
+    height:44px;
+    flex-basis:44px;
+  }
+  .controles-usuario > :is(.youtube-portada,.threads-portada,.facebook-portada,.instagram-portada) svg{
+    width:21px;
+    height:21px;
+  }
+}
+</style>
 <style id="instagram-portada-20261006">
 .youtube-portada,
 .instagram-portada,
