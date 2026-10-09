@@ -929,3 +929,50 @@
 .gdv-retention-policy p{line-height:1.65}
 .gdv-retention-policy ul{padding-left:23px}.gdv-retention-policy li{margin:0 0 12px;overflow-wrap:anywhere}
 @media(max-width:620px){.gdv-retention-policy{padding:16px 14px}.gdv-retention-policy ul{padding-left:18px}}
+
+
+/* Panel de capacidad Cloudflare R2 / Supabase Storage · solo administrador. */
+.storage-dashboard{max-width:1110px;margin:0 auto 36px;}
+.storage-dashboard-head{display:flex;justify-content:space-between;align-items:center;gap:18px;flex-wrap:wrap;margin-bottom:16px;}
+.storage-dashboard-head h1{margin:2px 0 10px;font-size:clamp(25px,3.5vw,33px);}
+.storage-dashboard-head p{margin:0;}
+.storage-eyebrow{color:#f0ac6d;font-weight:800;font-size:11px;letter-spacing:.17em;}
+.storage-dashboard-head #storage-update{min-width:162px;min-height:44px;}
+.storage-status{border:1px solid #46505c;border-radius:9px;padding:11px 15px;background:#1f262e;color:#d9e2ec;font-size:13px;margin:14px 0 19px;}
+.storage-service-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:17px;align-items:start;}
+.storage-service-card{background:linear-gradient(155deg,#2a3038,#20252b 75%);border:1px solid #65513d;border-radius:16px;padding:21px 23px;margin:0;min-width:0;}
+.storage-service-title{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+.storage-service-title h2{margin:0;color:#f6e5d4;font-size:20px;}
+.storage-provider-tag{font-size:11px;color:#ffca98;font-weight:800;background:#473323;border:1px solid #9c6a40;border-radius:999px;padding:5px 10px;white-space:nowrap;}
+.storage-main-number{font-size:clamp(28px,4vw,38px);font-weight:900;line-height:1.2;color:#f9b376;margin:24px 0 10px;font-variant-numeric:tabular-nums;}
+.storage-main-number span{display:block;color:#b5c1cd;font-weight:500;font-size:13px;margin-top:7px;}
+.storage-meter{display:flex;align-items:center;gap:12px;margin:18px 0 15px;}
+.storage-meter progress{width:100%;height:14px;min-width:0;appearance:none;-webkit-appearance:none;border:1px solid #46515e;border-radius:999px;background:#111820;overflow:hidden;}
+.storage-meter progress::-webkit-progress-bar{background:#111820;border-radius:999px;}
+.storage-meter progress::-webkit-progress-value{background:linear-gradient(90deg,#bd7135,#ffb36d);border-radius:999px;}
+.storage-meter progress::-moz-progress-bar{background:linear-gradient(90deg,#bd7135,#ffb36d);border-radius:999px;}
+.storage-meter span{font-weight:800;font-size:13px;color:#ffd0a6;white-space:nowrap;font-variant-numeric:tabular-nums;}
+.storage-stat-pair{display:flex;justify-content:space-between;align-items:stretch;gap:12px;flex-wrap:wrap;font-size:12px;color:#c0c9d2;margin-bottom:24px;}
+.storage-stat-pair>span{display:flex;flex-direction:column;gap:4px;}
+.storage-stat-pair strong{color:#f3f3f4;font-size:16px;font-variant-numeric:tabular-nums;}
+.storage-service-card h3{font-size:15px;font-weight:800;color:#ffca98;margin:10px 0 8px;}
+.storage-row-list{border-top:1px solid #45505b;}
+.storage-detail-row{display:flex;justify-content:space-between;align-items:center;gap:15px;padding:11px 0;border-bottom:1px solid #3b444e;font-size:13px;line-height:1.45;}
+.storage-detail-row>span:first-child{max-width:65%;color:#e0e5e9;}
+.storage-row-numbers{display:flex;flex-direction:column;align-items:flex-end;white-space:nowrap;gap:2px;}
+.storage-row-numbers strong{color:#fff;font-variant-numeric:tabular-nums;}
+.storage-row-numbers small{color:#aab8c4;font-size:11px;}
+.storage-report-date{font-size:12px;color:#aebac7;margin:12px 0 22px;text-align:right;}
+.storage-fail{border-left:3px solid #f2a06b;padding:10px;color:#ffcfaf;font-size:13px;}
+.storage-help{border-color:#495260;background:#232830;padding:21px 24px;}
+.storage-help h2{font-size:19px;color:#f3c394;margin:0 0 15px;}
+.storage-help p{font-size:13px;color:#d0d7df;line-height:1.65;}
+.storage-doc-links a{font-weight:700;color:#ffbc85;}
+@media(max-width:760px){
+ .storage-service-grid{grid-template-columns:1fr;}
+ .storage-dashboard-head #storage-update{width:100%;}
+ .storage-service-card{padding:17px 16px;}
+ .storage-stat-pair{gap:18px;}
+ .storage-help{padding:17px 15px;}
+ .storage-report-date{text-align:left;}
+}
