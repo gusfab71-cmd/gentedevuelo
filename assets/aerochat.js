@@ -16,7 +16,7 @@
   let channel = null;
   let onlineChannel = null;
   let onlineRequest = 0;
-  let heartbeatBusy = false;
+
   let loading = false;
   let refreshAgain = false;
   let initial = true;
@@ -47,20 +47,7 @@
     onlineUsers.replaceChildren(placeholder);
   }
 
-  async function heartbeat() {
-    if (!currentUser || document.hidden || heartbeatBusy) return;
-    heartbeatBusy = true;
-    try {
-      // The explicit timestamp updates an existing session as well as a new one.
-      const result = await db.from('gdv_member_presence').upsert({
-        user_id: currentUser.id,
-        last_seen: new Date().toISOString()
-      });
-      if (result.error) console.warn('No se pudo actualizar la presencia de AeroChat.');
-    } finally {
-      heartbeatBusy = false;
-    }
-  }
+  async function heartbeat() { await window.GDV_AUTH.heartbeat(); }
 
   async function updateOnlineList() {
     if (!currentUser) return;
@@ -276,7 +263,7 @@
       updateOnlineList().catch(() => onlineUnavailable('No se pudo actualizar la lista.'));
     }
   }, 15000);
-  setInterval(() => { heartbeat().catch(() => {}); }, 30000);
+
 
   async function start() {
     await window.GDV_AUTH.ready;
