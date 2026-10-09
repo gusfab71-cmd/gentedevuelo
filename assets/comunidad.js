@@ -960,12 +960,11 @@ async function googleOnboarding(){
  const p=profile(user.id);
  crumbs([['Bienvenida a Gente de Vuelo']]);
  const roles=['Entusiasta de la aviación','Estudiante de piloto','Piloto privado','Piloto comercial','Instructor de vuelo','Aeromodelista','Piloto de planeador','Piloto de ultraliviano','Piloto de helicóptero','Piloto de paramotor','Constructor de experimentales','Simulador de vuelo','Otro'];
- const availableAvatars=[
-  {name:'Piloto',url:'https://gentedevuelo.com/assets/avatares/piloto.svg'},
-  {name:'Avión',url:'https://gentedevuelo.com/assets/avatares/avion.svg'},
-  {name:'Brújula',url:'https://gentedevuelo.com/assets/avatares/brujula.svg'}
- ];
- let selectedAvatar=safeURL(p.avatar_url)||'';
+ // Solo una foto subida por el propio integrante a Cloudflare completa el registro.
+ // Los avatares prediseñados y las imágenes externas no sustituyen esa foto.
+ const ownPhotoPrefix='https://media.gentedevuelo.com/imagenes/'+user.id+'/';
+ let selectedAvatar=typeof p.avatar_url==='string'&&p.avatar_url.startsWith(ownPhotoPrefix)
+  &&/^https:\/\/media\.gentedevuelo\.com\/imagenes\/[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|png|webp)$/i.test(p.avatar_url)?p.avatar_url:'';
  let avatarFile=null,avatarPreviewObjectUrl=null;
  app.innerHTML=`<section class="editor google-onboarding">
   <div class="google-onboarding-heading">
@@ -986,21 +985,14 @@ async function googleOnboarding(){
       ${roles.map(role=>`<option value="${esc(role)}" ${role===p.aviation_role?'selected':''}>${esc(role)}</option>`).join('')}
     </select>
     <fieldset class="google-onboarding-avatar">
-      <legend>Foto de perfil o avatar <span class="google-onboarding-required">Obligatorio</span></legend>
-      <p class="small muted">Podés elegir un avatar aeronáutico o subir una fotografía. No hace falta mostrar tu cara.</p>
+      <legend>Foto de perfil <span class="google-onboarding-required">Obligatorio</span></legend>
+      <p class="small muted">Subí una foto personal o una imagen relacionada con tu actividad aeronáutica, por ejemplo una aeronave, un vuelo o tu aeroclub. No es necesario mostrar tu rostro.</p>
       <div class="google-onboarding-avatar-preview" id="google-avatar-preview-wrapper" ${selectedAvatar?'':'hidden'}>
         <img id="google-avatar-preview" src="${esc(selectedAvatar)}" alt="Imagen de perfil seleccionada">
         <span id="google-avatar-preview-description">Tu imagen de perfil</span>
       </div>
-      <div class="google-onboarding-avatars" role="group" aria-label="Elegir un avatar aeronáutico">
-        ${availableAvatars.map(item=>`<label class="google-onboarding-avatar-option">
-          <input type="radio" name="google-profile-avatar-option" value="${esc(item.url)}" ${selectedAvatar===item.url?'checked':''}>
-          <img src="${esc(item.url)}" alt="">
-          <span>${esc(item.name)}</span>
-        </label>`).join('')}
-      </div>
-      <label for="google-profile-avatar-file">O subí una foto desde tu dispositivo</label>
-      <input id="google-profile-avatar-file" type="file" accept="image/jpeg,image/png,image/webp">
+      <label for="google-profile-avatar-file">Seleccioná una foto desde tu dispositivo</label>
+      <input id="google-profile-avatar-file" type="file" accept="image/jpeg,image/png,image/webp" ${selectedAvatar?'':'required'}>
       <p class="small muted">Formatos JPG, PNG o WebP · hasta 5 MB. La imagen se optimiza y se guarda en Cloudflare.</p>
     </fieldset>
     <details class="google-onboarding-more">
@@ -1039,16 +1031,6 @@ async function googleOnboarding(){
  const clearAvatarPreviewObject=()=>{
   if(avatarPreviewObjectUrl){URL.revokeObjectURL(avatarPreviewObjectUrl);avatarPreviewObjectUrl=null;}
  };
- app.querySelectorAll('input[name="google-profile-avatar-option"]').forEach(radio=>{
-  radio.onchange=()=>{
-   if(!radio.checked)return;
-   clearAvatarPreviewObject();
-   avatarInput.value='';
-   avatarFile=null;
-   selectedAvatar=radio.value;
-   showAvatar(selectedAvatar,'Avatar '+radio.closest('label').querySelector('span').textContent);
-  };
- });
  avatarInput.onchange=()=>{
   const file=avatarInput.files?.[0];
   $('google-onboarding-status').textContent='';
@@ -1061,7 +1043,7 @@ async function googleOnboarding(){
   clearAvatarPreviewObject();
   avatarFile=file;
   selectedAvatar='';
-  app.querySelectorAll('input[name="google-profile-avatar-option"]').forEach(r=>r.checked=false);
+  avatarInput.required=false;
   avatarPreviewObjectUrl=URL.createObjectURL(file);
   showAvatar(avatarPreviewObjectUrl,'Foto elegida: '+file.name);
  };
@@ -1077,7 +1059,7 @@ async function googleOnboarding(){
    if(fullName.length<2||fullName.length>80)throw new Error('Completá un nombre visible de entre 2 y 80 caracteres.');
    if(!roles.includes(role))throw new Error('Seleccioná tu relación con la aviación.');
    if(!selectedAvatar&&!avatarFile){
-    status.textContent='Para continuar, elegí uno de los avatares aeronáuticos o subí una foto de perfil.';
+    status.textContent='Para continuar, subí una foto personal o una imagen relacionada con la aviación.';
     $('google-profile-avatar-file').focus();
     return;
    }
@@ -1116,6 +1098,7 @@ async function googleOnboarding(){
     avatarInput.value='';
     clearAvatarPreviewObject();
     showAvatar(selectedAvatar,'Foto de perfil guardada');
+    avatarInput.required=false;
     status.textContent='';
    }
    const payload={
