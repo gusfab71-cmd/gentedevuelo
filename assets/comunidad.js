@@ -664,7 +664,7 @@ async function administration(initialSection='topics'){
   }else if(section==='categories'){
    area.innerHTML=categories.map(c=>`<article class="card"><h3>${esc(c.name)}</h3><p>${esc(c.welcome)}</p><button data-manage-category="${c.slug}">Editar bienvenida y normas</button></article>`).join('');
   }else if(section==='announcements'){
-   area.innerHTML=`<section class="card announcement-admin"><h2>Enviar comunicado a todos</h2><p class="muted">El mensaje llegará a Notificaciones de los integrantes con correo confirmado, incluido el administrador. No se envían correos electrónicos.</p><form id="admin-announcement-form"><label for="admin-announcement-title">Título del comunicado</label><input id="admin-announcement-title" type="text" required minlength="5" maxlength="120" placeholder="Ej.: Novedades de Gente de Vuelo"><label for="admin-announcement-body">Mensaje</label><textarea id="admin-announcement-body" required minlength="10" maxlength="1200" rows="5" placeholder="Contales a los integrantes qué novedades se incorporaron."></textarea><p class="small muted">Antes de enviar se solicitará una confirmación. Máximo 1.200 caracteres.</p><button type="submit" class="primary">Enviar a todos los integrantes</button><p id="admin-announcement-status" class="small" role="status" aria-live="polite"></p></form></section>`;
+   area.innerHTML=`<section class="card announcement-admin"><h2>Enviar comunicado a todos</h2><p class="muted">El mensaje llegará a Notificaciones de los integrantes con correo confirmado, incluido el administrador. No se envían correos electrónicos.</p><form id="admin-announcement-form"><label for="admin-announcement-title">Título del comunicado</label><input id="admin-announcement-title" type="text" required minlength="5" maxlength="120" placeholder="Ej.: Novedades de Gente de Vuelo"><label for="admin-announcement-body">Mensaje</label><textarea id="admin-announcement-body" required minlength="10" maxlength="1200" rows="5" placeholder="Contales a los integrantes qué novedades se incorporaron."></textarea><p class="small muted">Antes de enviar se solicitará una confirmación. Máximo 1.200 caracteres.</p><button type="submit" class="primary">Enviar a todos los integrantes</button><p id="admin-announcement-status" class="small" role="status" aria-live="polite"></p></form></section><section class="card announcement-admin"><h2>Bienvenida por correo · Prueba</h2><p class="muted">Enviar una única prueba de bienvenida desde <strong>hola@gentedevuelo.com</strong> a <strong>gentedevuelo@gmail.com</strong>. Esta función no escribe a los integrantes ni activa envíos automáticos.</p><button type="button" id="gdv-welcome-test-button" class="primary">Enviar bienvenida de prueba</button><p id="gdv-welcome-test-status" class="small" role="status" aria-live="polite"></p></section>`;
    const form=$('admin-announcement-form');
    form.onsubmit=e=>{
     e.preventDefault();
@@ -680,6 +680,21 @@ async function administration(initialSection='topics'){
      $('admin-announcement-status').textContent='Comunicado enviado a '+enviados+' cuenta'+(enviados===1?'':'s')+' confirmada'+(enviados===1?'':'s')+'.';
      message('Comunicado entregado en Notificaciones.');
      refreshUnreadNotificationsBadge().catch(()=>{});
+    });
+   };
+   const testButton=$('gdv-welcome-test-button');
+   testButton.onclick=()=>{
+    if(!confirm('¿Enviar una única bienvenida de prueba desde hola@gentedevuelo.com a gentedevuelo@gmail.com? No se enviará nada a los integrantes.'))return;
+    busy(testButton,async()=>{
+     const result=await db.functions.invoke('gdv-welcome-test',{body:{}});
+     if(result.error){
+      let detail='No se pudo enviar el correo de prueba.';
+      try{const payload=await result.error.context?.json();if(payload?.error)detail=payload.error;}catch{}
+      throw new Error(detail);
+     }
+     if(!result.data?.ok)throw new Error(result.data?.error||'No se pudo confirmar el envío.');
+     $('gdv-welcome-test-status').textContent='Resend aceptó la prueba para gentedevuelo@gmail.com. Revisá Recibidos y Spam.';
+     message('Prueba enviada a gentedevuelo@gmail.com.');
     });
    };
   }else if(section==='members'){
