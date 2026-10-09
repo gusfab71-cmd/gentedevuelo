@@ -519,21 +519,26 @@ async function optimizarFotoGaleria(archivo){
  }finally{if(bitmap.close)bitmap.close();}
 }
 // Procesa únicamente rutas R2 registradas por Supabase tras una eliminación real.
-async function procesarLimpiezaR2Comunidad(){
+async function procesarLimpiezaR2Comunidad(maxLotes=1){
  try{
   const {data:{session},error} = await db.auth.getSession();
   if(error||!session?.access_token)return false;
-  const respuesta=await fetch(cfg.url+'/functions/v1/r2-cleanup-queue',{
-   method:'POST',
-   headers:{Authorization:'Bearer '+session.access_token,apikey:cfg.key,'Content-Type':'application/json'},
-   body:'{}'
-  });
-  const resultado=await respuesta.json().catch(()=>({}));
-  if(!respuesta.ok||resultado.errors){
-   console.warn('Queda limpieza R2 pendiente de reintento:',resultado.error||resultado.errors);
-   return false;
+  for(let lote=0;lote<maxLotes;lote++){
+   const respuesta=await fetch(cfg.url+'/functions/v1/r2-cleanup-queue',{
+    method:'POST',
+    headers:{Authorization:'Bearer '+session.access_token,apikey:cfg.key,'Content-Type':'application/json'},
+    body:'{}'
+   });
+   const resultado=await respuesta.json().catch(()=>({}));
+   if(!respuesta.ok||resultado.errors||resultado.pending){
+    console.warn('Queda limpieza R2 pendiente de reintento:',resultado.error||resultado.errors||resultado.pending);
+    return false;
+   }
+   // La función de Cloudflare procesa hasta 20 archivos por solicitud.
+   if(Number(resultado.processed||0)<20)return true;
   }
-  return true;
+  console.warn('La limpieza R2 continuará en un próximo procesamiento.');
+  return false;
  }catch(error){console.warn('No se pudo limpiar R2 ahora:',error);return false}
 }
 async function listarFotosDeHangar(id,propio){
@@ -1273,15 +1278,17 @@ async function adminDeleteContent(kind,id){
 
 async function adminDeleteMember(id,displayName){
  if(!isOwnerAdmin||!id||id===user.id)return;
- showDialog(`<h2>Eliminar integrante</h2><p>Vas a eliminar definitivamente la cuenta de <strong>${esc(displayName||name(id))}</strong> y quitarla de Integrantes.</p><p>Sus publicaciones y comentarios del foro se conservarán como contenido de un usuario eliminado. Esta acción no se puede deshacer.</p><div class="toolbar"><button id="confirm-member-delete" class="member-delete-confirm">Eliminar definitivamente</button><button type="button" id="cancel-member-delete">Cancelar</button></div>`);
+ const nombre=displayName||name(id);
+ showDialog(`<h2>Eliminar integrante y contenido</h2><p>Vas a eliminar definitivamente la cuenta de <strong>${esc(nombre)}</strong>, su Mi Hangar, publicaciones, respuestas, fotos, videos, archivos, avisos y mensajes asociados.</p><p>Se eliminarán también las conversaciones bajo sus publicaciones. Los archivos de Cloudflare se pondrán en la cola de eliminación. Si vuelve a registrarse, empezará desde cero.</p><p><strong>Esta acción es irreversible.</strong></p><div class="toolbar"><button id="confirm-member-delete" class="member-delete-confirm">Eliminar cuenta y contenido</button><button type="button" id="cancel-member-delete">Cancelar</button></div>`);
  $('cancel-member-delete').onclick=()=>dialog.close();
  $('confirm-member-delete').onclick=()=>busy($('confirm-member-delete'),async()=>{
+   if(!confirm('Confirmá la eliminación definitiva de '+nombre+' y TODO su contenido. No se podrá recuperar.'))return;
    checked(await db.rpc('gdv_admin_delete_member',{p_user:id}));
-   await procesarLimpiezaR2Comunidad();
+   const mediaLimpios=await procesarLimpiezaR2Comunidad(25);
    dialog.close();
    await load();
    await membersView();
-   message('Integrante eliminado correctamente.');
+   message(mediaLimpios?'Cuenta y contenido eliminados.':'Cuenta y contenido eliminados; quedan archivos de Cloudflare pendientes de limpieza.');
  });
 }
 
