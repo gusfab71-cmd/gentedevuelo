@@ -976,3 +976,18 @@
  .storage-help{padding:17px 15px;}
  .storage-report-date{text-align:left;}
 }
+
+
+/* Notificaciones por correo y mensajería comunitaria */
+.email-preferences{max-width:720px;margin:0 auto 25px;border-color:#806043;background:linear-gradient(145deg,#2a3037,#1e252e);}
+.email-preferences h1{color:#f4c494;}
+.email-preferences>p{line-height:1.75;color:#cbd5df;}
+.email-optin{display:flex;align-items:flex-start;gap:13px;margin:22px 0;padding:18px;border:1px solid #6c583f;border-radius:12px;background:#302d2c;cursor:pointer;}
+.email-optin input[type=checkbox]{width:21px;height:21px;flex:none;margin:2px 0 0;accent-color:#f28c45;cursor:pointer;}
+.email-optin span{display:flex;flex-direction:column;gap:6px;min-width:0;color:#f8dfc0;font-size:15px;}
+.email-optin small{display:block;color:#c7d0d9;font-size:12px;line-height:1.6;}
+.admin-email-option{margin:17px 0 12px;background:#292e36;}
+#gdv-email-channel-status,#gdv-whatsapp-live-config{border-left:3px solid #d99a5c;padding:10px 12px;background:#2f2c2b;border-radius:5px;line-height:1.5;}
+#gdv-email-counts{font-variant-numeric:tabular-nums;color:#f1c697;font-weight:700;line-height:1.65;}
+#gdv-email-delivery-status:not(:empty),#gdv-whatsapp-live-output:not(:empty){padding:11px 13px;border:1px solid #786448;border-radius:9px;background:#302b29;color:#ffdbb9;}
+@media(max-width:620px){.email-optin{padding:14px 12px;gap:10px}.email-preferences{padding:18px 15px}}
