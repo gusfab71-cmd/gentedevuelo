@@ -553,12 +553,13 @@
         tarjetaFoto.append(nodo("small", fecha(fila.created_at), "meta"));
         const url = fotoSegura(fila.archivo);
         if (url) {
-          const imagen = document.createElement("img");
-          imagen.src = url;
-          imagen.alt = "Fotografía pendiente de " + (fila.nombre_usuario || "integrante");
-          imagen.loading = "lazy";
-          imagen.style.cssText = "display:block;max-width:100%;max-height:320px;object-fit:contain;margin:12px 0;border-radius:10px";
-          tarjetaFoto.append(imagen);
+          const video = esVideo(url);
+          const medio = document.createElement(video ? "video" : "img");
+          medio.src = url;
+          if(video){medio.controls=true;medio.preload="metadata";medio.playsInline=true}
+          else{medio.alt="Fotografía pendiente de " + (fila.nombre_usuario || "integrante");medio.loading="lazy";}
+          medio.style.cssText="display:block;max-width:100%;max-height:320px;object-fit:contain;margin:12px 0;border-radius:10px";
+          tarjetaFoto.append(medio);
         }
         const acciones = nodo("div", "", "acciones");
         const aprobar = nodo("button", "Aprobar y publicar");
