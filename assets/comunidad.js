@@ -960,6 +960,13 @@ async function googleOnboarding(){
  const p=profile(user.id);
  crumbs([['Bienvenida a Gente de Vuelo']]);
  const roles=['Entusiasta de la aviación','Estudiante de piloto','Piloto privado','Piloto comercial','Instructor de vuelo','Aeromodelista','Piloto de planeador','Piloto de ultraliviano','Piloto de helicóptero','Piloto de paramotor','Constructor de experimentales','Simulador de vuelo','Otro'];
+ const availableAvatars=[
+  {name:'Piloto',url:'https://gentedevuelo.com/assets/avatares/piloto.svg'},
+  {name:'Avión',url:'https://gentedevuelo.com/assets/avatares/avion.svg'},
+  {name:'Brújula',url:'https://gentedevuelo.com/assets/avatares/brujula.svg'}
+ ];
+ let selectedAvatar=safeURL(p.avatar_url)||'';
+ let avatarFile=null,avatarPreviewObjectUrl=null;
  app.innerHTML=`<section class="editor google-onboarding">
   <div class="google-onboarding-heading">
    <span class="google-onboarding-step">Registro con Google · Último paso</span>
@@ -978,6 +985,24 @@ async function googleOnboarding(){
       <option value="">Seleccioná una opción</option>
       ${roles.map(role=>`<option value="${esc(role)}" ${role===p.aviation_role?'selected':''}>${esc(role)}</option>`).join('')}
     </select>
+    <fieldset class="google-onboarding-avatar">
+      <legend>Foto de perfil o avatar <span class="google-onboarding-required">Obligatorio</span></legend>
+      <p class="small muted">Podés elegir un avatar aeronáutico o subir una fotografía. No hace falta mostrar tu cara.</p>
+      <div class="google-onboarding-avatar-preview" id="google-avatar-preview-wrapper" ${selectedAvatar?'':'hidden'}>
+        <img id="google-avatar-preview" src="${esc(selectedAvatar)}" alt="Imagen de perfil seleccionada">
+        <span id="google-avatar-preview-description">Tu imagen de perfil</span>
+      </div>
+      <div class="google-onboarding-avatars" role="group" aria-label="Elegir un avatar aeronáutico">
+        ${availableAvatars.map(item=>`<label class="google-onboarding-avatar-option">
+          <input type="radio" name="google-profile-avatar-option" value="${esc(item.url)}" ${selectedAvatar===item.url?'checked':''}>
+          <img src="${esc(item.url)}" alt="">
+          <span>${esc(item.name)}</span>
+        </label>`).join('')}
+      </div>
+      <label for="google-profile-avatar-file">O subí una foto desde tu dispositivo</label>
+      <input id="google-profile-avatar-file" type="file" accept="image/jpeg,image/png,image/webp">
+      <p class="small muted">Formatos JPG, PNG o WebP · hasta 5 MB. La imagen se optimiza y se guarda en Cloudflare.</p>
+    </fieldset>
     <details class="google-onboarding-more">
       <summary>Agregar más datos a Mi Hangar (opcional)</summary>
       <p class="small muted">Estos datos no son obligatorios. Podés completarlos o modificarlos más adelante.</p>
@@ -1002,6 +1027,42 @@ async function googleOnboarding(){
   </form>
  </section>`;
  const hours=$('google-profile-hours');hours.oninput=()=>{hours.value=hours.value.replace(/\D/g,'').slice(0,5)};
+ const avatarPreview=$('google-avatar-preview');
+ const avatarPreviewWrapper=$('google-avatar-preview-wrapper');
+ const avatarPreviewDescription=$('google-avatar-preview-description');
+ const avatarInput=$('google-profile-avatar-file');
+ const showAvatar=(url,label)=>{
+  avatarPreview.src=url;
+  avatarPreviewDescription.textContent=label;
+  avatarPreviewWrapper.hidden=false;
+ };
+ const clearAvatarPreviewObject=()=>{
+  if(avatarPreviewObjectUrl){URL.revokeObjectURL(avatarPreviewObjectUrl);avatarPreviewObjectUrl=null;}
+ };
+ app.querySelectorAll('input[name="google-profile-avatar-option"]').forEach(radio=>{
+  radio.onchange=()=>{
+   if(!radio.checked)return;
+   clearAvatarPreviewObject();
+   avatarInput.value='';
+   avatarFile=null;
+   selectedAvatar=radio.value;
+   showAvatar(selectedAvatar,'Avatar '+radio.closest('label').querySelector('span').textContent);
+  };
+ });
+ avatarInput.onchange=()=>{
+  const file=avatarInput.files?.[0];
+  if(!file)return;
+  if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>5*1024*1024||!file.size){
+   avatarInput.value='';
+   throw new Error('Seleccioná una fotografía JPG, PNG o WebP de hasta 5 MB.');
+  }
+  clearAvatarPreviewObject();
+  avatarFile=file;
+  selectedAvatar='';
+  app.querySelectorAll('input[name="google-profile-avatar-option"]').forEach(r=>r.checked=false);
+  avatarPreviewObjectUrl=URL.createObjectURL(file);
+  showAvatar(avatarPreviewObjectUrl,'Foto elegida: '+file.name);
+ };
  $('google-onboarding-form').onsubmit=e=>{
   e.preventDefault();
   busy(e.submitter,async()=>{
@@ -1013,13 +1074,46 @@ async function googleOnboarding(){
    if(/^(admin|administrador|moderador|shimoda|gentedevuelo|soporte)$/i.test(username))throw new Error('Elegí otro nombre de usuario.');
    if(fullName.length<2||fullName.length>80)throw new Error('Completá un nombre visible de entre 2 y 80 caracteres.');
    if(!roles.includes(role))throw new Error('Seleccioná tu relación con la aviación.');
+   if(!selectedAvatar&&!avatarFile)throw new Error('Seleccioná un avatar o subí una foto de perfil para continuar.');
    if(!$('google-profile-consent').checked)throw new Error('Tenés que aceptar la Normativa de Comunidad para completar el registro.');
    const flight=hours.value.trim();
    if(flight&&!/^[0-9]{1,5}$/.test(flight))throw new Error('Las horas de vuelo deben tener hasta 5 dígitos.');
    const other=checked(await db.from('profiles').select('id').ilike('username',username.replaceAll('_','\\_')).neq('id',user.id).limit(1));
    if(other.length){status.textContent='Ese nombre de usuario ya está ocupado. Elegí otro.';return}
+   if(avatarFile){
+    const file=avatarFile;
+    const bitmap=await createImageBitmap(file);
+    const side=Math.min(bitmap.width,bitmap.height);
+    const canvas=document.createElement('canvas');
+    canvas.width=canvas.height=384;
+    canvas.getContext('2d').drawImage(bitmap,(bitmap.width-side)/2,(bitmap.height-side)/2,side,side,0,0,384,384);
+    bitmap.close();
+    const image=await new Promise(resolve=>canvas.toBlob(resolve,'image/webp',0.82));
+    if(!image||!image.size||image.size>4*1024*1024)throw new Error('No se pudo preparar la foto. Elegí otra imagen.');
+    const {data:sessionData,error:sessionError}=await db.auth.getSession();
+    if(sessionError||!sessionData.session?.access_token)throw new Error('La sesión venció. Volvé a ingresar.');
+    status.textContent='Guardando imagen de perfil en Cloudflare…';
+    const uploaded=await fetch(cfg.url+'/functions/v1/r2-upload-image',{
+     method:'POST',
+     headers:{Authorization:'Bearer '+sessionData.session.access_token,apikey:cfg.key,'Content-Type':'image/webp'},
+     body:image
+    });
+    const uploadedData=await uploaded.json().catch(()=>({}));
+    if(!uploaded.ok||typeof uploadedData.url!=='string'||!uploadedData.url.startsWith('https://media.gentedevuelo.com/imagenes/'+user.id+'/'))
+     throw new Error(uploadedData.error||'No se pudo guardar la fotografía. Probá nuevamente.');
+    // Guardar la referencia antes de finalizar el registro: si falla el resto,
+    // la foto permanece asociada al usuario y no ocupa espacio sin referencia.
+    const saved=await db.from('profiles').update({avatar_url:uploadedData.url}).eq('id',user.id).select('id').single();
+    if(saved.error)throw new Error('La foto se subió, pero no se pudo asociar al perfil: '+saved.error.message);
+    selectedAvatar=uploadedData.url;
+    avatarFile=null;
+    avatarInput.value='';
+    clearAvatarPreviewObject();
+    showAvatar(selectedAvatar,'Foto de perfil guardada');
+    status.textContent='';
+   }
    const payload={
-    username, full_name:fullName, aviation_role:role,
+    username, full_name:fullName, aviation_role:role, avatar_url:selectedAvatar,
     aviation_license:$('google-profile-license').value.trim(),
     home_airfield:$('google-profile-airfield').value.trim(),
     aircraft_flown:$('google-profile-aircraft').value.trim(),
