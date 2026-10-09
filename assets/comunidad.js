@@ -89,7 +89,7 @@ async function load(){
  for(let start=0;start<privateMedia.length;start+=100){const batch=privateMedia.slice(start,start+100),result=await db.storage.from('community-media').createSignedUrls(batch.map(m=>m.path),3600);if(result.error)throw result.error;const urls=new Map(result.data.map(m=>[m.path,m.signedUrl]));batch.forEach(m=>m.url=urls.get(m.path)||'')}
 
 }
-function account(){ $('account').innerHTML=user?`<details class="account-menu"><summary aria-label="Abrir menú de cuenta">Mi cuenta <span id="unread-notifications-badge" class="unread-notifications-badge" hidden aria-label="Notificaciones sin leer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg><span id="unread-notifications-count"></span></span> <span id="admin-pending-badge" class="admin-pending-badge" hidden></span> <span aria-hidden="true">⌄</span></summary><div class="account-menu-panel">${link('Notificaciones','#notificaciones','')}${isAdmin?link(isOwnerAdmin?'Moderación':'Panel de moderador','#moderacion',''):''}${isOwnerAdmin?link('Comunicados','#gestion/comunicados',''):''}${isOwnerAdmin?link('Almacenamiento','#almacenamiento',''):''}${link('Mi Hangar','#hangar','')}<button type="button" data-action="logout">Salir</button></div></details>`:`${link('Ingresar','#ingresar','button primary')}`; if(isAdmin)refreshAdminPendingBadge().catch(()=>{}); if(user)refreshUnreadNotificationsBadge().catch(()=>{}); }
+function account(){ $('account').innerHTML=user?`<details class="account-menu"><summary aria-label="Abrir menú de cuenta">Mi cuenta <span id="unread-notifications-badge" class="unread-notifications-badge" hidden aria-label="Notificaciones sin leer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg><span id="unread-notifications-count"></span></span> <span id="admin-pending-badge" class="admin-pending-badge" hidden></span> <span aria-hidden="true">⌄</span></summary><div class="account-menu-panel">${link('Notificaciones','#notificaciones','')}${isAdmin?link(isOwnerAdmin?'Moderación':'Panel de moderador','#moderacion',''):''}${isOwnerAdmin?link('Comunicados','#gestion/comunicados',''):''}${isOwnerAdmin?link('Almacenamiento','#almacenamiento',''):''}${link('Mi Hangar','#hangar','')}${link('Correos y avisos','#preferencias-correo','')}<button type="button" data-action="logout">Salir</button></div></details>`:`${link('Ingresar','#ingresar','button primary')}`; if(isAdmin)refreshAdminPendingBadge().catch(()=>{}); if(user)refreshUnreadNotificationsBadge().catch(()=>{}); }
 async function refreshUnreadNotificationsBadge(){
  if(!user)return;
  const response=await db.from('gdv_notifications').select('id',{count:'exact',head:true}).eq('user_id',user.id).eq('read',false);
@@ -692,7 +692,7 @@ async function administration(initialSection='topics'){
   }else if(section==='categories'){
    area.innerHTML=categories.map(c=>`<article class="card"><h3>${esc(c.name)}</h3><p>${esc(c.welcome)}</p><button data-manage-category="${c.slug}">Editar bienvenida y normas</button></article>`).join('');
   }else if(section==='announcements'){
-   area.innerHTML=`<section class="card announcement-admin"><h2>Enviar comunicado a todos</h2><p class="muted">El mensaje llegará a Notificaciones de los integrantes con correo confirmado, incluido el administrador. No se envían correos electrónicos.</p><form id="admin-announcement-form"><label for="admin-announcement-title">Título del comunicado</label><input id="admin-announcement-title" type="text" required minlength="5" maxlength="120" placeholder="Ej.: Novedades de Gente de Vuelo"><label for="admin-announcement-body">Mensaje</label><textarea id="admin-announcement-body" required minlength="10" maxlength="1200" rows="5" placeholder="Contales a los integrantes qué novedades se incorporaron."></textarea><p class="small muted">Antes de enviar se solicitará una confirmación. Máximo 1.200 caracteres.</p><button type="submit" class="primary">Enviar a todos los integrantes</button><p id="admin-announcement-status" class="small" role="status" aria-live="polite"></p></form></section><section class="card announcement-admin"><h2>Bienvenida por correo · Prueba</h2><p class="muted">Enviar una única prueba de bienvenida desde <strong>hola@gentedevuelo.com</strong> a <strong>gentedevuelo@gmail.com</strong>. Esta función no escribe a los integrantes ni activa envíos automáticos.</p><button type="button" id="gdv-welcome-test-button" class="primary">Enviar bienvenida de prueba</button><p id="gdv-welcome-test-status" class="small" role="status" aria-live="polite"></p></section><section class="card announcement-admin"><h2>Avisos de moderación por WhatsApp</h2><p>La detección de nuevas publicaciones pendientes ya está preparada para Foro, CompraVenta y AeroShop.</p><p><strong>Envío a WhatsApp: todavía no activado.</strong> Falta configurar un número emisor definitivo de Meta y la plantilla del aviso.</p><p id="gdv-whatsapp-queue-status" class="small" role="status" aria-live="polite">Consultando avisos preparados…</p><p id="gdv-wa-test-config" class="small" role="status" aria-live="polite">Comprobando configuración de Meta…</p><div class="toolbar"><button id="gdv-wa-send-test" type="button">Enviar mensaje de prueba a mi WhatsApp</button><button id="gdv-wa-run-test" type="button">Activar prueba temporal</button><button id="gdv-wa-stop-test" type="button" hidden>Detener prueba</button></div><p class="small muted">El modo temporal consulta las publicaciones nuevas cada minuto <strong>solo mientras este panel permanezca abierto</strong>, hasta 3 avisos por día. Meta utiliza su plantilla de prueba; todavía no es el aviso definitivo ni un servicio permanente.</p><p id="gdv-wa-test-output" class="small" role="status" aria-live="polite"></p></section>`;
+   area.innerHTML=`<section class="card announcement-admin"><h2>Enviar comunicado a todos</h2><p class="muted">El mensaje llegará a las Notificaciones de todos los integrantes con correo confirmado. También podés preparar un correo electrónico para quienes hayan elegido recibir comunicados.</p><form id="admin-announcement-form"><label for="admin-announcement-title">Título del comunicado</label><input id="admin-announcement-title" type="text" required minlength="5" maxlength="120" placeholder="Ej.: Novedades de Gente de Vuelo"><label for="admin-announcement-body">Mensaje</label><textarea id="admin-announcement-body" required minlength="10" maxlength="1200" rows="5" placeholder="Contales a los integrantes qué novedades se incorporaron."></textarea><label class="email-optin admin-email-option"><input type="checkbox" id="admin-announcement-email"><span><strong>Enviar también por correo a los integrantes suscriptos</strong><small>Preparará correos para quienes aceptaron recibir novedades. Requiere confirmar el envío desde el panel.</small></span></label><p class="small muted">Antes de enviar se solicitará una confirmación. Máximo 1.200 caracteres.</p><button type="submit" class="primary">Enviar a todos los integrantes</button><p id="admin-announcement-status" class="small" role="status" aria-live="polite"></p></form></section><section class="card announcement-admin"><h2>Envío de correos a integrantes</h2><p class="muted">Comunicados solo para integrantes suscriptos y bienvenidas a cuentas nuevas confirmadas. No se enviarán correos a usuarios no suscriptos a comunicados.</p><p id="gdv-email-channel-status" class="small muted" role="status">Consultando servicio de correo…</p><p id="gdv-email-counts" class="small muted"></p><div class="toolbar"><button type="button" id="gdv-email-process" class="primary">Procesar correos pendientes</button><button type="button" id="gdv-email-refresh">Actualizar estado</button></div><p id="gdv-email-delivery-status" class="small" role="status"></p></section><section class="card announcement-admin"><h2>Bienvenida por correo · Prueba</h2><p class="muted">Enviar una única prueba de bienvenida desde <strong>hola@gentedevuelo.com</strong> a <strong>gentedevuelo@gmail.com</strong>. Esta función no escribe a los integrantes ni activa envíos automáticos.</p><button type="button" id="gdv-welcome-test-button" class="primary">Enviar bienvenida de prueba</button><p id="gdv-welcome-test-status" class="small" role="status" aria-live="polite"></p></section><section class="card announcement-admin"><h2>Avisos de moderación por WhatsApp</h2><p>La detección de nuevas publicaciones pendientes ya está preparada para Foro, CompraVenta y AeroShop.</p><p><strong>Envío a WhatsApp: todavía no activado.</strong> Falta configurar un número emisor definitivo de Meta y la plantilla del aviso.</p><p id="gdv-whatsapp-queue-status" class="small" role="status" aria-live="polite">Consultando avisos preparados…</p><p id="gdv-whatsapp-live-config" class="small muted" role="status">Comprobando el envío definitivo de WhatsApp…</p><button type="button" id="gdv-whatsapp-live-send" class="primary">Procesar avisos definitivos pendientes</button><p id="gdv-whatsapp-live-output" class="small" role="status"></p><p id="gdv-wa-test-config" class="small" role="status" aria-live="polite">Comprobando configuración de Meta…</p><div class="toolbar"><button id="gdv-wa-send-test" type="button">Enviar mensaje de prueba a mi WhatsApp</button><button id="gdv-wa-run-test" type="button">Activar prueba temporal</button><button id="gdv-wa-stop-test" type="button" hidden>Detener prueba</button></div><p class="small muted">El modo temporal consulta las publicaciones nuevas cada minuto <strong>solo mientras este panel permanezca abierto</strong>, hasta 3 avisos por día. Meta utiliza su plantilla de prueba; todavía no es el aviso definitivo ni un servicio permanente.</p><p id="gdv-wa-test-output" class="small" role="status" aria-live="polite"></p></section>`;
    try{
      const pendingAlerts=await db.from('gdv_whatsapp_moderation_queue').select('id',{count:'exact',head:true}).eq('status','pending');
      const counter=$('gdv-whatsapp-queue-status');
@@ -764,19 +764,86 @@ async function administration(initialSection='topics'){
      waRun.hidden=false;waStop.hidden=true;
      waOutput.textContent='Prueba temporal detenida.';
    };
+   // Envío definitivo de WhatsApp (se activa únicamente cuando Meta esté listo).
+   const waLiveStatus=$('gdv-whatsapp-live-config'),waLiveSend=$('gdv-whatsapp-live-send'),waLiveOutput=$('gdv-whatsapp-live-output');
+   let waLiveReady=false;
+   async function callAdminFunction(fn,payload){
+    const response=await db.functions.invoke(fn,{body:payload});
+    if(response.error){
+     let detail='No se pudo comunicar con el servicio.';
+     try{const data=await response.error.context?.json();if(data?.error)detail=data.error;}catch{}
+     throw new Error(detail);
+    }
+    if(response.data?.error)throw new Error(response.data.error);
+    return response.data||{};
+   }
+   async function refreshLiveWhatsApp(){
+    try{
+     const state=await callAdminFunction('gdv-whatsapp-dispatch',{mode:'status'});
+     waLiveReady=Boolean(state.ready);
+     waLiveSend.disabled=!waLiveReady;
+     waLiveStatus.textContent=waLiveReady
+       ?'Credenciales de WhatsApp configuradas. Se necesita una plantilla Meta aprobada llamada '+state.templateName+' con cuatro campos.'
+       :'Envío definitivo aún sin conectar a Meta. Falta: '+(state.missing||[]).join(', ')+'. Las credenciales se guardan en Supabase Secrets.';
+    }catch(e){waLiveStatus.textContent='No se pudo comprobar Meta: '+e.message;waLiveSend.disabled=true}
+   }
+   await refreshLiveWhatsApp();
+   waLiveSend.onclick=()=>busy(waLiveSend,async()=>{
+    if(!waLiveReady)return;
+    if(!confirm('¿Enviar avisos pendientes únicamente al WhatsApp configurado para administración? Se procesarán hasta 5 por vez, sin repetir los enviados.'))return;
+    const res=await callAdminFunction('gdv-whatsapp-dispatch',{mode:'process',limit:5});
+    waLiveOutput.textContent='Meta aceptó '+(res.accepted||0)+' avisos. '+(res.errors?.length?'Incidencias: '+res.errors.join(' · '):'La entrega final debe comprobarse en WhatsApp.');
+   });
+   // Envío de correo bajo consentimiento y confirmación de administrador.
+   const emailChannel=$('gdv-email-channel-status'),emailCounts=$('gdv-email-counts'),emailProcess=$('gdv-email-process'),emailRefresh=$('gdv-email-refresh');
+   const emailOutput=$('gdv-email-delivery-status');
+   let emailReady=false;
+   async function refreshEmail(){
+    try{
+     const [service,count]=await Promise.all([
+      callAdminFunction('gdv-email-dispatch',{mode:'status'}),
+      db.rpc('gdv_email_admin_overview')
+     ]);
+     if(count.error)throw count.error;
+     emailReady=Boolean(service.ready);
+     emailChannel.textContent=emailReady
+       ?'Resend configurado: remitente '+service.sender+'.'
+       :'El envío de correo está pendiente de configurar RESEND_API_KEY en Supabase Secrets.';
+     const data=count.data||{};
+     emailCounts.textContent='Suscriptos: '+(data.subscribers||0)+' · Correos pendientes: '+(data.pending||0)+' · Aceptados: '+(data.sent||0)+' · Fallidos: '+(data.failed||0)+'.';
+     emailProcess.disabled=!emailReady||!Number(data.pending);
+    }catch(e){emailChannel.textContent='No se pudo consultar el servicio de correo: '+e.message;emailProcess.disabled=true}
+   }
+   emailRefresh.onclick=()=>busy(emailRefresh,refreshEmail);
+   emailProcess.onclick=()=>busy(emailProcess,async()=>{
+    if(!emailReady)return;
+    if(!confirm('¿Enviar por Resend un lote de hasta 10 correos pendientes a destinatarios habilitados?'))return;
+    const res=await callAdminFunction('gdv-email-dispatch',{mode:'process',limit:10});
+    emailOutput.textContent='Resend aceptó '+res.accepted+' correos; omitidos: '+res.skipped+'.'+(res.errors?.length?' Incidencias: '+res.errors.join(' · '):'');
+    await refreshEmail();
+   });
+   await refreshEmail();
    const form=$('admin-announcement-form');
    form.onsubmit=e=>{
     e.preventDefault();
     const titulo=$('admin-announcement-title').value.trim();
     const cuerpo=$('admin-announcement-body').value.trim();
     if(titulo.length<5||titulo.length>120||cuerpo.length<10||cuerpo.length>1200){$('admin-announcement-status').textContent='Revisá el título y el contenido antes de enviarlo.';return}
-    if(!confirm('¿Enviar el comunicado "'+titulo+'" a todos los integrantes con correo confirmado? Esta acción no se puede deshacer.'))return;
+    const emailRequested=$('admin-announcement-email').checked;
+    if(!confirm('¿Enviar el comunicado "'+titulo+'" a todos los integrantes con correo confirmado?'+(emailRequested?' También quedarán preparados correos para quienes se suscribieron.':'')+' Esta acción no se puede deshacer.'))return;
     busy(e.submitter,async()=>{
      const result=await db.rpc('gdv_admin_send_announcement',{p_title:titulo,p_body:cuerpo});
      if(result.error)throw result.error;
      const enviados=Number(result.data)||0;
      form.reset();
-     $('admin-announcement-status').textContent='Comunicado enviado a '+enviados+' cuenta'+(enviados===1?'':'s')+' confirmada'+(enviados===1?'':'s')+'.';
+     let queuedText='';
+     if(emailRequested){
+      const mailQueue=await db.rpc('gdv_admin_queue_announcement_email',{p_title:titulo,p_body:cuerpo});
+      if(mailQueue.error)queuedText=' No se pudieron preparar los correos: '+mailQueue.error.message;
+      else queuedText=' Correos preparados para '+Number(mailQueue.data||0)+' integrantes suscriptos. Confirmá el envío en la sección de correo.';
+      await refreshEmail();
+     }
+     $('admin-announcement-status').textContent='Comunicado enviado a '+enviados+' cuenta'+(enviados===1?'':'s')+' confirmada'+(enviados===1?'':'s')+'.'+queuedText;
      message('Comunicado entregado en Notificaciones.');
      refreshUnreadNotificationsBadge().catch(()=>{});
     });
@@ -1081,7 +1148,23 @@ async function storageDashboard(){
  await refresh();
 }
 
-async function route(){if(!await window.GDV_AUTH.requireRoute())return;const current=++epoch;notice.textContent='';const onboardingRequired=Boolean(user&&profiles.get(user.id)?.onboarding_completed===false);if(onboardingRequired&&location.hash!=='#completar-perfil')history.replaceState(null,'','#completar-perfil');const [view='foro',id,child]=location.hash.slice(1).split('/');document.querySelectorAll('.site-nav a').forEach(a=>a.setAttribute('aria-current',a.getAttribute('href')==='#'+view?'page':'false'));app.innerHTML='<p>Cargando…</p>';try{if(onboardingRequired)await googleOnboarding();else if(view==='completar-perfil'){history.replaceState(null,'','#foro');feed()}else if(['registro','ingresar','recuperar'].includes(view))authView(view);else if(view==='tematicas')categoryView();else if(view==='tematica')feed(id);else if(view==='tema')await topicView(id,child);else if(view==='crear')editor();else if(view==='editar')editor(id);else if(view==='multimedia')multimedia();else if(view==='galeria')await galeriaComunidad();else if(view==='hangar')await hangar(id);else if(view==='notificaciones')await notifications();else if(view==='moderacion')await moderation();else if(view==='almacenamiento')await storageDashboard();else if(view==='gestion')await administration(id==='comunicados'?'announcements':'topics');else if(view==='perfil')await profileEditor();else if(view==='normativa')rules();else if(view==='quienes-somos')about();else if(view==='integrantes')await membersView();else if(view==='contacto')await contact();else feed();app.querySelectorAll('input[type="password"]').forEach(input=>{const b=document.createElement('button');b.type='button';b.className='password-toggle';b.dataset.action='show-password';b.dataset.id=input.id;b.textContent='Mostrar contraseña';b.setAttribute('aria-pressed','false');input.after(b)});friendlyActions();contextualModeration();if(current===epoch)document.title=(app.querySelector('h1')?.textContent||'Foro')+' · Gente de Vuelo'}catch(e){if(current===epoch){app.innerHTML='<p>No se pudo cargar este apartado.</p>'+link('Volver al Foro','#foro');message(e.message,true)}}}
+async function emailPreferences(){
+ if(!user){app.innerHTML='<h1>Iniciá sesión</h1><p>Necesitás ingresar para administrar los correos.</p>';return}
+ crumbs([['Mi cuenta','#hangar'],['Correos y avisos']]);
+ app.innerHTML='<section class="card email-preferences"><h1>Correos y avisos</h1><p>Los avisos importantes de la comunidad seguirán apareciendo en Notificaciones dentro de Gente de Vuelo. También podés elegir recibir <strong>comunicados generales por correo electrónico</strong>.</p><form id="email-preferences-form"><label class="email-optin"><input type="checkbox" id="email-news-optin"><span><strong>Quiero recibir comunicados de Gente de Vuelo por email</strong><small>Novedades, actividades y anuncios de la comunidad. Podés cancelar esta suscripción cuando quieras.</small></span></label><div class="toolbar"><button type="submit" class="primary">Guardar preferencias</button></div><p id="email-preference-status" role="status" class="small muted"></p></form><p class="small muted">Los correos de verificación de cuenta, recuperación de contraseña y bienvenida son independientes de esta preferencia. No compartimos tu dirección de correo con otros integrantes.</p></section>';
+ const form=$('email-preferences-form'),checkbox=$('email-news-optin'),status=$('email-preference-status');
+ const initial=await db.from('gdv_email_preferences').select('news_opt_in').eq('user_id',user.id).maybeSingle();
+ if(initial.error)status.textContent='No se pudieron cargar tus preferencias: '+initial.error.message;
+ else checkbox.checked=Boolean(initial.data?.news_opt_in);
+ form.onsubmit=e=>{e.preventDefault();busy(e.submitter,async()=>{
+  const res=await db.from('gdv_email_preferences').upsert({user_id:user.id,news_opt_in:checkbox.checked,updated_at:new Date().toISOString()},{onConflict:'user_id'});
+  if(res.error)throw res.error;
+  status.textContent=checkbox.checked?'Recibirás los próximos comunicados por correo electrónico.':'No recibirás nuevos comunicados generales por email.';
+  message('Preferencias de correo guardadas.');
+ })};
+}
+
+async function route(){if(!await window.GDV_AUTH.requireRoute())return;const current=++epoch;notice.textContent='';const onboardingRequired=Boolean(user&&profiles.get(user.id)?.onboarding_completed===false);if(onboardingRequired&&location.hash!=='#completar-perfil')history.replaceState(null,'','#completar-perfil');const [view='foro',id,child]=location.hash.slice(1).split('/');document.querySelectorAll('.site-nav a').forEach(a=>a.setAttribute('aria-current',a.getAttribute('href')==='#'+view?'page':'false'));app.innerHTML='<p>Cargando…</p>';try{if(onboardingRequired)await googleOnboarding();else if(view==='completar-perfil'){history.replaceState(null,'','#foro');feed()}else if(['registro','ingresar','recuperar'].includes(view))authView(view);else if(view==='tematicas')categoryView();else if(view==='tematica')feed(id);else if(view==='tema')await topicView(id,child);else if(view==='crear')editor();else if(view==='editar')editor(id);else if(view==='multimedia')multimedia();else if(view==='galeria')await galeriaComunidad();else if(view==='hangar')await hangar(id);else if(view==='notificaciones')await notifications();else if(view==='moderacion')await moderation();else if(view==='almacenamiento')await storageDashboard();else if(view==='preferencias-correo')await emailPreferences();else if(view==='gestion')await administration(id==='comunicados'?'announcements':'topics');else if(view==='perfil')await profileEditor();else if(view==='normativa')rules();else if(view==='quienes-somos')about();else if(view==='integrantes')await membersView();else if(view==='contacto')await contact();else feed();app.querySelectorAll('input[type="password"]').forEach(input=>{const b=document.createElement('button');b.type='button';b.className='password-toggle';b.dataset.action='show-password';b.dataset.id=input.id;b.textContent='Mostrar contraseña';b.setAttribute('aria-pressed','false');input.after(b)});friendlyActions();contextualModeration();if(current===epoch)document.title=(app.querySelector('h1')?.textContent||'Foro')+' · Gente de Vuelo'}catch(e){if(current===epoch){app.innerHTML='<p>No se pudo cargar este apartado.</p>'+link('Volver al Foro','#foro');message(e.message,true)}}}
 async function adminDeleteContent(kind,id){
  if(!isAdmin)return;
  const isTopic=kind==='topic';
