@@ -8197,10 +8197,11 @@ async function cargarPublicacionesAeroShopParaVenta() {
     let foto = "";
     const adjunto = primerAdjuntoPorAporte.get(aporte.id);
     if (adjunto?.storage_path) {
-      const { data: firma, error: errorFirma } = await supabaseClient.storage
-        .from("aportes")
-        .createSignedUrl(adjunto.storage_path, 3600);
-      if (!errorFirma) foto = firma?.signedUrl || "";
+      if(window.GDV_R2_MEDIA.isR2(adjunto.storage_path))foto=adjunto.storage_path;
+      else {
+        const {data:firma,error:errorFirma}=await supabaseClient.storage.from("aportes").createSignedUrl(adjunto.storage_path,3600);
+        if(!errorFirma)foto=firma?.signedUrl||"";
+      }
     }
 
     publicaciones.push({
@@ -9618,10 +9619,11 @@ cargarTravesias();
       let primerAdjuntoUrl = "";
       if (aporte._adjuntos?.length) {
         primerAdjunto = aporte._adjuntos[0];
-        const { data: firma } = await supabaseClient.storage
-          .from("aportes")
-          .createSignedUrl(primerAdjunto.storage_path, 3600);
-        primerAdjuntoUrl = firma?.signedUrl || "";
+        if(window.GDV_R2_MEDIA.isR2(primerAdjunto.storage_path))primerAdjuntoUrl=primerAdjunto.storage_path;
+        else {
+          const {data:firma}=await supabaseClient.storage.from("aportes").createSignedUrl(primerAdjunto.storage_path,3600);
+          primerAdjuntoUrl=firma?.signedUrl||"";
+        }
 
         if (primerAdjuntoUrl && primerAdjunto.mime_type.startsWith("image/")) {
           const imagen = document.createElement("img");
@@ -9733,12 +9735,14 @@ cargarTravesias();
       if (aporte._adjuntos?.length > 1) {
         for (let i = 1; i < aporte._adjuntos.length; i++) {
           const archivo = aporte._adjuntos[i];
-          const { data: firma } = await supabaseClient.storage
-            .from("aportes")
-            .createSignedUrl(archivo.storage_path, 3600);
-          if (!firma?.signedUrl) continue;
+          let archivoUrl=archivo.storage_path;
+          if(!window.GDV_R2_MEDIA.isR2(archivoUrl)){
+            const {data:firma}=await supabaseClient.storage.from("aportes").createSignedUrl(archivo.storage_path,3600);
+            archivoUrl=firma?.signedUrl||"";
+          }
+          if(!archivoUrl)continue;
           const extra = document.createElement("a");
-          extra.href = firma.signedUrl;
+          extra.href = archivoUrl;
           extra.target = "_blank";
           extra.rel = "noopener noreferrer";
           extra.textContent = archivo.mime_type === "application/pdf" ? "Ver PDF " + (i + 1) : "Ver imagen " + (i + 1);
