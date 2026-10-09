@@ -931,11 +931,12 @@
       $("salir").hidden = false;
       const tablaDestino = location.hash.slice(1).split("/")[0];
       const modoComercio = tablaDestino === "comercio";
+      const modoFotos = tablaDestino === "galeria";
       const modoShimoda = tablaDestino === "shimoda_comentarios" || tablaDestino === "shimoda_publicaciones";
 
-      if ($("comunicadosAccesoModeracion")) $("comunicadosAccesoModeracion").hidden = modoComercio || moderador;
-      if ($("robertAdmin")) $("robertAdmin").hidden = modoComercio || moderador;
-      if ($("shimodaPublicarAdmin")) $("shimodaPublicarAdmin").hidden = modoComercio || moderador;
+      if ($("comunicadosAccesoModeracion")) $("comunicadosAccesoModeracion").hidden = modoComercio || modoFotos || moderador;
+      if ($("robertAdmin")) $("robertAdmin").hidden = modoComercio || modoFotos || moderador;
+      if ($("shimodaPublicarAdmin")) $("shimodaPublicarAdmin").hidden = modoComercio || modoFotos || moderador;
       if (moderador) {
         const tituloPanel = $("panel")?.querySelector("h1");
         if (tituloPanel) tituloPanel.textContent = "Panel de moderador";
@@ -943,6 +944,17 @@
         if (introPanel) introPanel.textContent = "Revisá publicaciones y comentarios pendientes. La configuración, las cuentas y los comunicados son exclusivos del administrador.";
       }
 
+      if (modoFotos) {
+        const tituloPanel = $("panel")?.querySelector("h1");
+        const introPanel = $("panel")?.querySelector(".intro");
+        if (tituloPanel) tituloPanel.textContent = "Moderación de fotografías de Mi Hangar";
+        if (introPanel) introPanel.textContent = "Revisá las fotografías pendientes y decidí si se publican en la Galería o se eliminan.";
+        // El panel de fotos ya ofrece la revisión con miniaturas: evitar duplicar la lista inferior.
+        for (const selector of [".pestanas", ".filtros", "#resumen", "#lista"]) {
+          const element = document.querySelector(selector);
+          if (element) element.style.display = "none";
+        }
+      }
       if (modoComercio) {
         const tituloPanel = $("panel")?.querySelector("h1");
         const introPanel = $("panel")?.querySelector(".intro");
@@ -957,7 +969,7 @@
         document.querySelectorAll("[data-filtro]").forEach(b => b.classList.toggle("activa", b.dataset.filtro === "pendientes"));
       }
 
-      if (modoComercio || moderador) {
+      if (modoComercio || modoFotos || moderador) {
         await cargar();
       } else {
         await Promise.all([cargar(), cargarRobertDocs()]);
