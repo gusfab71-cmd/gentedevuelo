@@ -17,10 +17,16 @@
   // A completed Google sign-in is not the same as a completed community registration.
   async function refreshOnboarding(account = verifiedUser) {
     if (!account) { onboardingRequired = false; return false; }
-    const result = await client.from('profiles').select('onboarding_completed').eq('id', account.id).maybeSingle();
+    const result = await client.from('profiles').select('onboarding_completed,username,full_name,aviation_role').eq('id', account.id).maybeSingle();
     if (result.error) throw result.error;
     // Fail closed if the profile has not been generated yet.
-    onboardingRequired = !result.data || result.data.onboarding_completed !== true;
+    const hasGoogle = account.app_metadata?.provider === 'google' ||
+      account.app_metadata?.providers?.includes('google') ||
+      account.identities?.some(identity => identity.provider === 'google');
+    const p = result.data;
+    onboardingRequired = !p || p.onboarding_completed !== true ||
+      (hasGoogle && (/^piloto[_-]/i.test(p.username || '') ||
+        !p.full_name?.trim() || !p.aviation_role?.trim()));
     return onboardingRequired;
   }
   function permittedDuringOnboarding() {
