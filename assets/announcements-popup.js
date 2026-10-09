@@ -156,7 +156,20 @@
 
   async function checkAnnouncements(user) {
     if (!user?.id || !user.email_confirmed_at || loading) return;
-    if (window.GDV_AUTH.recovery || /^#(?:ingresar|registro|recuperar)(?:$|\/)/.test(location.hash)) return;
+    if (auth.recovery || /^#(?:ingresar|registro|recuperar|completar-perfil)(?:$|\/)/.test(location.hash)) return;
+    // No abrir ventanas institucionales mientras se está terminando el alta
+    // con Google. Esperar el estado real del perfil, no solo la sesión Auth.
+    try {
+      await auth.ready;
+      const account = await auth.validate();
+      if (!account || account.id !== user.id) return;
+      if (await auth.refreshOnboarding(account)) return;
+      if (auth.needsOnboarding() || location.hash === '#completar-perfil') return;
+    } catch (error) {
+      // Si no podemos verificar el registro, no mostramos un modal que tape el alta.
+      console.warn('Se pospone el comunicado hasta verificar el registro.', error);
+      return;
+    }
     if (['#notificaciones', '#preferencias-correo'].includes(location.hash)) return;
     if (document.querySelector('dialog[open]')) return;
     loading = true;
