@@ -987,6 +987,8 @@ async function adminDeleteContent(kind,id){
    const storageResult=await db.storage.from('community-media').remove(paths);
    if(storageResult.error)console.warn('El contenido se eliminó, pero algún archivo no pudo limpiarse del almacenamiento.');
   }
+  // Tras borrar una publicación, el disparador SQL encola sus adjuntos de Cloudflare.
+  if(isTopic)await procesarLimpiezaR2Comunidad();
   dialog.close();
   await load();
   history.replaceState(null,'','#gestion');
@@ -1001,6 +1003,7 @@ async function adminDeleteMember(id,displayName){
  $('cancel-member-delete').onclick=()=>dialog.close();
  $('confirm-member-delete').onclick=()=>busy($('confirm-member-delete'),async()=>{
    checked(await db.rpc('gdv_admin_delete_member',{p_user:id}));
+   await procesarLimpiezaR2Comunidad();
    dialog.close();
    await load();
    await membersView();
