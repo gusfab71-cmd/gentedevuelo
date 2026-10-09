@@ -6399,7 +6399,7 @@ async function ingresarConGoogle() {
     const { error } = await supabaseClient.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: window.GDV_AUTH.homeURL
+        redirectTo: new URL("comunidad.html#foro", location.href).href
       }
     });
     if (error) {
