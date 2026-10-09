@@ -7149,39 +7149,29 @@ function esVideoArchivo(ruta) {
   return /\.(mp4|webm|mov)(?:$|[?#])/i.test(ruta || "");
 }
 async function enviarVideoGaleria(inputId, mensajeId) {
-  const input = document.getElementById(inputId);
-  const mensaje = document.getElementById(mensajeId);
-  const boton = document.getElementById(inputId === "videoGaleria" ? "subirVideoGaleria" : "subirVideoHangar");
-  const archivo = input.files[0];
-  if (!archivo) { mensaje.textContent = "Seleccioná un video."; return; }
-  let ruta = "";
-  boton.disabled = true;
+  const input=document.getElementById(inputId);
+  const mensaje=document.getElementById(mensajeId);
+  const boton=document.getElementById(inputId === "videoGaleria" ? "subirVideoGaleria" : "subirVideoHangar");
+  const archivo=input.files[0];
+  if(!archivo){mensaje.textContent="Seleccioná un video.";return}
+  boton.disabled=true;
   try {
-    const extension = extensionVideo(archivo);
-    const { data: { user }, error: errorUsuario } = await supabaseClient.auth.getUser();
-    if (errorUsuario || !user) throw new Error("Debés iniciar sesión para enviar un video.");
-    mensaje.textContent = "Subiendo video… Mantené abierta esta página.";
-    const { data: perfil } = await supabaseClient.from("profiles")
-      .select("full_name").eq("id", user.id).maybeSingle();
-    ruta = `${user.id}/${crypto.randomUUID()}.${extension}`;
-    const { error: errorSubida } = await supabaseClient.storage
-      .from("hangar-fotos").upload(ruta, archivo, { upsert: false, contentType: archivo.type || (extension === "mov" ? "video/quicktime" : "video/" + extension) });
-    if (errorSubida) throw errorSubida;
-    const { error: errorRegistro } = await supabaseClient.from("galeria").insert({
-      user_id: user.id, archivo: ruta,
-      nombre_usuario: perfil?.full_name || user.email, visible: false
+    extensionVideo(archivo);
+    const {data:{user},error}=await supabaseClient.auth.getUser();
+    if(error||!user)throw new Error("Iniciá sesión para enviar un video.");
+    mensaje.textContent="Subiendo video a Cloudflare R2…";
+    const subida=await window.GDV_R2_MEDIA.upload(archivo,supabaseClient,SUPABASE_URL,SUPABASE_KEY);
+    const {data:perfil}=await supabaseClient.from("profiles").select("full_name").eq("id",user.id).maybeSingle();
+    const registro=await supabaseClient.from("galeria").insert({
+      user_id:user.id,archivo:subida.url,nombre_usuario:perfil?.full_name||user.email,visible:false
     });
-    if (errorRegistro) throw errorRegistro;
-    ruta = "";
-    input.value = "";
-    mensaje.textContent = "Video enviado. Quedó pendiente de aprobación.";
+    if(registro.error)throw new Error("Video subido a R2, pero no se pudo registrar: "+registro.error.message);
+    input.value="";
+    mensaje.textContent="Video enviado. Quedó pendiente de aprobación.";
     await cargarMisFotosHangar();
-  } catch (error) {
-    if (ruta) await supabaseClient.storage.from("hangar-fotos").remove([ruta]);
-    mensaje.textContent = "No se pudo enviar el video: " + (error.message || "Intentá de nuevo.");
-  } finally {
-    boton.disabled = false;
-  }
+  }catch(error){
+    mensaje.textContent="No se pudo enviar el video: "+(error.message||"Intentá nuevamente.");
+  }finally{boton.disabled=false}
 }
 async function optimizarImagenParaSubir(archivo, maxDimension = 1920, calidad = 0.82) {
   if (!archivo || !archivo.type.startsWith("image/")) return archivo;
@@ -7472,7 +7462,7 @@ async function eliminarFotoHangar(rutaArchivo) {
 
   fotos.forEach(foto => {
     const url = typeof foto.archivo === "string" &&
-      foto.archivo.startsWith(GDV_R2_MEDIA_BASE) ?
+      foto.archivo.startsWith("https://media.gentedevuelo.com/") ?
       foto.archivo : supabaseClient.storage.from("hangar-fotos").getPublicUrl(foto.archivo || "").data.publicUrl;
 
     const contenedor = document.createElement("div");
@@ -9249,15 +9239,10 @@ cargarPublicacionShimoda();
       }
       const urlsVideos = [];
       if (archivoVideo) {
-        mensaje.textContent = "Subiendo video… Mantené abierta esta página.";
-        const extension = extensionVideo(archivoVideo);
-        const ruta = `${user.id}/${crypto.randomUUID()}.${extension}`;
-        const { error } = await supabaseClient.storage.from("travesias-fotos")
-          .upload(ruta, archivoVideo, { upsert: false, contentType: archivoVideo.type || (extension === "mov" ? "video/quicktime" : "video/" + extension) });
-        if (error) throw error;
-        rutasSubidas.push(ruta);
-        const { data } = supabaseClient.storage.from("travesias-fotos").getPublicUrl(ruta);
-        urlsVideos.push(data.publicUrl);
+        mensaje.textContent = "Subiendo video a Cloudflare R2…";
+        const videoSubido=await window.GDV_R2_MEDIA.upload(archivoVideo,supabaseClient,SUPABASE_URL,SUPABASE_KEY);
+        rutasCloudflare.push(videoSubido.path);
+        urlsVideos.push(videoSubido.url);
       }
       const { error } = await supabaseClient.from("travesias").insert({
         user_id: user.id, titulo, fecha, salida, destino,
@@ -9921,27 +9906,17 @@ cargarTravesias();
 
       for (const archivo of archivos) {
         mensaje.textContent = "Subiendo " + archivo.name + "…";
-        const nombreSeguro = limpiarNombreArchivo(archivo.name);
-        const ruta = user.id + "/" + aporteCreado.id + "/" + crypto.randomUUID() + "-" + nombreSeguro;
-
-        const { error: errorUpload } = await supabaseClient.storage
-          .from("aportes")
-          .upload(ruta, archivo, { cacheControl: "3600", upsert: false, contentType: archivo.type });
-        if (errorUpload) throw errorUpload;
-
+        const optimizado=archivo.type.startsWith("image/")?await optimizarImagenParaSubir(archivo,1920,0.82):archivo;
+        const subido=await window.GDV_R2_MEDIA.upload(optimizado,supabaseClient,SUPABASE_URL,SUPABASE_KEY);
         const { error: errorAdjunto } = await supabaseClient.from("aportes_adjuntos").insert({
           aporte_id: aporteCreado.id,
           user_id: user.id,
-          storage_path: ruta,
+          storage_path: subido.url,
           nombre_archivo: archivo.name.slice(0, 255),
-          mime_type: archivo.type,
-          tamano_bytes: archivo.size
+          mime_type: optimizado.type,
+          tamano_bytes: optimizado.size
         });
-
-        if (errorAdjunto) {
-          await supabaseClient.storage.from("aportes").remove([ruta]);
-          throw errorAdjunto;
-        }
+        if(errorAdjunto)throw new Error("Archivo guardado en Cloudflare, pero no se pudo asociar a la publicación: "+errorAdjunto.message);
       }
 
       destino.aviso.textContent = archivos.length
@@ -10401,30 +10376,21 @@ window.addEventListener('popstate',abrirAnexoDesdeURL);
         return;
       }
 
-      const extension=archivoLogo.type==="image/png"?"png":archivoLogo.type==="image/webp"?"webp":"jpg";
-      const ruta="logos/"+crypto.randomUUID()+"."+extension;
-      const subida=await supabaseClient.storage
-        .from("institution-logos")
-        .upload(ruta,archivoLogo,{contentType:archivoLogo.type,upsert:false});
-
-      if(subida.error){
-        console.error("Error al subir logo:",subida.error);
-        mensaje.textContent="No se pudo subir el logo.";
+      try{
+        const optimizado=await optimizarImagenParaSubir(archivoLogo,1200,0.82);
+        const subida=await window.GDV_R2_MEDIA.upload(optimizado,supabaseClient,SUPABASE_URL,SUPABASE_KEY);
+        payload.logo_path="";
+        payload.logo_url=subida.url;
+      }catch(error){
+        mensaje.textContent="No se pudo subir el logo a Cloudflare: "+error.message;
         return;
       }
-
-      const publica=supabaseClient.storage.from("institution-logos").getPublicUrl(ruta);
-      payload.logo_path=ruta;
-      payload.logo_url=publica.data.publicUrl||"";
     }
 
     const resultado=id
       ? await supabaseClient.from("gdv_friendly_institutions").update(payload).eq("id",id)
       : await supabaseClient.from("gdv_friendly_institutions").insert(payload);
 
-    if(resultado.error && archivoLogo && payload.logo_path){
-      await supabaseClient.storage.from("institution-logos").remove([payload.logo_path]);
-    }
 
     if(resultado.error){
       console.error("Error al guardar institución:",resultado.error);
@@ -10488,9 +10454,7 @@ window.addEventListener('popstate',abrirAnexoDesdeURL);
         .delete()
         .eq("id",id);
       if(error){console.error(error);return;}
-      if(item.logo_path){
-        await supabaseClient.storage.from("institution-logos").remove([item.logo_path]);
-      }
+      // Los logos antiguos quedan en Supabase como respaldo hasta auditar la migración.
       limpiarFormularioInstitucion();
       await cargarInstitucionesAmigas();
     }
