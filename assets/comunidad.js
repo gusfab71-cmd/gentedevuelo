@@ -1283,7 +1283,7 @@ async function adminDeleteMember(id,displayName){
  $('cancel-member-delete').onclick=()=>dialog.close();
  $('confirm-member-delete').onclick=()=>busy($('confirm-member-delete'),async()=>{
    if(!confirm('Confirmá la eliminación definitiva de '+nombre+' y TODO su contenido. No se podrá recuperar.'))return;
-   checked(await db.rpc('gdv_admin_delete_member',{p_user:id}));
+   checked(await db.rpc('gdv_admin_delete_member',{p_user:id,p_confirmation:'ELIMINAR CUENTA Y CONTENIDO'}));
    const mediaLimpios=await procesarLimpiezaR2Comunidad(25);
    dialog.close();
    await load();
