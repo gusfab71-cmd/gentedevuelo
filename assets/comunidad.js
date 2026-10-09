@@ -5,7 +5,7 @@ const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const safeURL=v=>{try{const u=new URL(v);return ['https:','http:'].includes(u.protocol)?u.href:''}catch{return ''}};
 const date=v=>v?new Date(v).toLocaleString('es-AR',{dateStyle:'medium',timeStyle:'short',hourCycle:'h23'}):'';
 const $=id=>document.getElementById(id);
-let user=null,isAdmin=false,categories=[],topics=[],comments=[],media=[],reactions=[],profiles=new Map(),legacyShimoda=[],legacyShimodaComments=[],epoch=0,replyParent=null,dirty=false,isOwnerAdmin=false;
+let user=null,isAdmin=false,categories=[],topics=[],comments=[],media=[],reactions=[],profiles=new Map(),legacyShimoda=[],legacyShimodaComments=[],epoch=0,replyParent=null,dirty=false,isOwnerAdmin=false,gdvWaTestTimer=null;
 const cat=s=>categories.find(c=>c.slug===s)||{name:'Otros',color:'#aab6c2'};
 const profile=id=>profiles.get(id)||{username:'Usuario eliminado'};
 const name=id=>profile(id).username||'Miembro de la comunidad';
@@ -664,7 +664,7 @@ async function administration(initialSection='topics'){
   }else if(section==='categories'){
    area.innerHTML=categories.map(c=>`<article class="card"><h3>${esc(c.name)}</h3><p>${esc(c.welcome)}</p><button data-manage-category="${c.slug}">Editar bienvenida y normas</button></article>`).join('');
   }else if(section==='announcements'){
-   area.innerHTML=`<section class="card announcement-admin"><h2>Enviar comunicado a todos</h2><p class="muted">El mensaje llegará a Notificaciones de los integrantes con correo confirmado, incluido el administrador. No se envían correos electrónicos.</p><form id="admin-announcement-form"><label for="admin-announcement-title">Título del comunicado</label><input id="admin-announcement-title" type="text" required minlength="5" maxlength="120" placeholder="Ej.: Novedades de Gente de Vuelo"><label for="admin-announcement-body">Mensaje</label><textarea id="admin-announcement-body" required minlength="10" maxlength="1200" rows="5" placeholder="Contales a los integrantes qué novedades se incorporaron."></textarea><p class="small muted">Antes de enviar se solicitará una confirmación. Máximo 1.200 caracteres.</p><button type="submit" class="primary">Enviar a todos los integrantes</button><p id="admin-announcement-status" class="small" role="status" aria-live="polite"></p></form></section><section class="card announcement-admin"><h2>Bienvenida por correo · Prueba</h2><p class="muted">Enviar una única prueba de bienvenida desde <strong>hola@gentedevuelo.com</strong> a <strong>gentedevuelo@gmail.com</strong>. Esta función no escribe a los integrantes ni activa envíos automáticos.</p><button type="button" id="gdv-welcome-test-button" class="primary">Enviar bienvenida de prueba</button><p id="gdv-welcome-test-status" class="small" role="status" aria-live="polite"></p></section><section class="card announcement-admin"><h2>Avisos de moderación por WhatsApp</h2><p>La detección de nuevas publicaciones pendientes ya está preparada para Foro, CompraVenta y AeroShop.</p><p><strong>Envío a WhatsApp: todavía no activado.</strong> Falta configurar un número emisor definitivo de Meta y la plantilla del aviso.</p><p id="gdv-whatsapp-queue-status" class="small" role="status" aria-live="polite">Consultando avisos preparados…</p></section>`;
+   area.innerHTML=`<section class="card announcement-admin"><h2>Enviar comunicado a todos</h2><p class="muted">El mensaje llegará a Notificaciones de los integrantes con correo confirmado, incluido el administrador. No se envían correos electrónicos.</p><form id="admin-announcement-form"><label for="admin-announcement-title">Título del comunicado</label><input id="admin-announcement-title" type="text" required minlength="5" maxlength="120" placeholder="Ej.: Novedades de Gente de Vuelo"><label for="admin-announcement-body">Mensaje</label><textarea id="admin-announcement-body" required minlength="10" maxlength="1200" rows="5" placeholder="Contales a los integrantes qué novedades se incorporaron."></textarea><p class="small muted">Antes de enviar se solicitará una confirmación. Máximo 1.200 caracteres.</p><button type="submit" class="primary">Enviar a todos los integrantes</button><p id="admin-announcement-status" class="small" role="status" aria-live="polite"></p></form></section><section class="card announcement-admin"><h2>Bienvenida por correo · Prueba</h2><p class="muted">Enviar una única prueba de bienvenida desde <strong>hola@gentedevuelo.com</strong> a <strong>gentedevuelo@gmail.com</strong>. Esta función no escribe a los integrantes ni activa envíos automáticos.</p><button type="button" id="gdv-welcome-test-button" class="primary">Enviar bienvenida de prueba</button><p id="gdv-welcome-test-status" class="small" role="status" aria-live="polite"></p></section><section class="card announcement-admin"><h2>Avisos de moderación por WhatsApp</h2><p>La detección de nuevas publicaciones pendientes ya está preparada para Foro, CompraVenta y AeroShop.</p><p><strong>Envío a WhatsApp: todavía no activado.</strong> Falta configurar un número emisor definitivo de Meta y la plantilla del aviso.</p><p id="gdv-whatsapp-queue-status" class="small" role="status" aria-live="polite">Consultando avisos preparados…</p><p id="gdv-wa-test-config" class="small" role="status" aria-live="polite">Comprobando configuración de Meta…</p><div class="toolbar"><button id="gdv-wa-send-test" type="button">Enviar mensaje de prueba a mi WhatsApp</button><button id="gdv-wa-run-test" type="button">Activar prueba temporal</button><button id="gdv-wa-stop-test" type="button" hidden>Detener prueba</button></div><p class="small muted">El modo temporal consulta las publicaciones nuevas cada minuto <strong>solo mientras este panel permanezca abierto</strong>, hasta 3 avisos por día. Meta utiliza su plantilla de prueba; todavía no es el aviso definitivo ni un servicio permanente.</p><p id="gdv-wa-test-output" class="small" role="status" aria-live="polite"></p></section>`;
    try{
      const pendingAlerts=await db.from('gdv_whatsapp_moderation_queue').select('id',{count:'exact',head:true}).eq('status','pending');
      const counter=$('gdv-whatsapp-queue-status');
@@ -673,6 +673,69 @@ async function administration(initialSection='topics'){
      const counter=$('gdv-whatsapp-queue-status');
      if(counter)counter.textContent='No se pudo consultar la cola de avisos en este momento.';
    }
+   if(gdvWaTestTimer){clearInterval(gdvWaTestTimer);gdvWaTestTimer=null}
+   const waStatus=$('gdv-wa-test-config'),waOutput=$('gdv-wa-test-output');
+   const waTestButton=$('gdv-wa-send-test'),waRun=$('gdv-wa-run-test'),waStop=$('gdv-wa-stop-test');
+   async function waInvoke(mode){
+     const response=await db.functions.invoke('gdv-whatsapp-test',{body:{mode}});
+     if(response.error){
+       let reason='No se pudo completar la prueba.';
+       try{
+         const payload=await response.error.context?.json();
+         if(payload?.error)reason=payload.error;
+       }catch{}
+       throw new Error(reason);
+     }
+     if(response.data?.error)throw new Error(response.data.error);
+     return response.data;
+   }
+   let waReady=false,waRunning=false;
+   try{
+     const config=await waInvoke('status');
+     waReady=Boolean(config?.ready);
+     waStatus.textContent=waReady
+       ?'Credenciales de Meta configuradas. Ya podés probar un envío.'
+       :'Falta completar Supabase → Edge Functions → Secrets: '+(config?.missing||[]).join(', ')+'. No compartas las claves por este chat.';
+   }catch(e){
+     waStatus.textContent='No se pudo comprobar la configuración: '+(e.message||'error desconocido');
+   }
+   waTestButton.disabled=!waReady;waRun.disabled=!waReady;
+   waTestButton.onclick=()=>busy(waTestButton,async()=>{
+     if(!confirm('¿Enviar a tu WhatsApp UN mensaje de prueba con el número de Meta?'))return;
+     const data=await waInvoke('test');
+     waOutput.textContent=data.accepted?'Meta aceptó la prueba. Revisá tu WhatsApp; la entrega puede tardar unos instantes.':'No se pudo confirmar la prueba.';
+   });
+   async function waProcess(){
+     if(waRunning)return;
+     if(!waRun.isConnected || !location.hash.startsWith('#gestion/comunicados')){
+       if(gdvWaTestTimer){clearInterval(gdvWaTestTimer);gdvWaTestTimer=null}
+       return;
+     }
+     waRunning=true;
+     try{
+       const data=await waInvoke('process');
+       waOutput.textContent=data.processed
+         ?'Meta aceptó 1 aviso de prueba para tu WhatsApp. Revisá tu celular.'
+         :(data.info||'Sin publicaciones nuevas para avisar.');
+     }catch(e){
+       waOutput.textContent='Error en la prueba: '+(e.message||'No se pudo enviar');
+       if(gdvWaTestTimer){clearInterval(gdvWaTestTimer);gdvWaTestTimer=null}
+       waRun.hidden=false;waStop.hidden=true;
+     }finally{waRunning=false}
+   }
+   waRun.onclick=()=>{
+     if(!waReady || gdvWaTestTimer)return;
+     if(!confirm('¿Activar la prueba temporal? Se enviará una plantilla de Meta por cada nueva publicación pendiente, con máximo 3 por día, solo mientras esta pantalla permanezca abierta.'))return;
+     waRun.hidden=true;waStop.hidden=false;
+     waOutput.textContent='Prueba temporal activa mientras mantengas abierta esta pantalla.';
+     gdvWaTestTimer=setInterval(waProcess,60000);
+     waProcess();
+   };
+   waStop.onclick=()=>{
+     if(gdvWaTestTimer){clearInterval(gdvWaTestTimer);gdvWaTestTimer=null}
+     waRun.hidden=false;waStop.hidden=true;
+     waOutput.textContent='Prueba temporal detenida.';
+   };
    const form=$('admin-announcement-form');
    form.onsubmit=e=>{
     e.preventDefault();
