@@ -4788,6 +4788,7 @@ img, video { max-width: 100%; }
 }
 </style>
 <style id="instagram-portada-20261006">
+.youtube-portada,
 .instagram-portada,
 .facebook-portada,
 .threads-portada{
@@ -4806,12 +4807,14 @@ img, video { max-width: 100%; }
   backdrop-filter:blur(8px);
   transition:transform .18s ease,border-color .18s ease,background .18s ease;
 }
+.youtube-portada,
 .instagram-portada svg,
 .facebook-portada svg,
 .threads-portada svg{
   width:21px;
   height:21px;
 }
+.youtube-portada,
 .instagram-portada:hover,
 .facebook-portada:hover,
 .threads-portada:hover{
@@ -4820,6 +4823,7 @@ img, video { max-width: 100%; }
   background:rgba(28,34,38,.92);
 }
 @media(max-width:700px){
+  .youtube-portada,
   .instagram-portada,
   .facebook-portada,
   .threads-portada{
@@ -4850,6 +4854,12 @@ img, video { max-width: 100%; }
 <body>
 <button type="button" id="volverPortada" aria-label="Volver a la portada">← VOLVER A PORTADA</button>
 <div class="controles-usuario" id="controlesUsuario">
+  <a class="youtube-portada" href="https://www.youtube.com/@gustavoarevalo2271" target="_blank" rel="noopener noreferrer" aria-label="YouTube: canal de Gustavo Arevalo" title="YouTube · Gustavo Arevalo">
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <rect x="1.5" y="4.4" width="21" height="15.2" rx="5.1" fill="#FF0033"></rect>
+      <path d="M10 8.25 16.4 12 10 15.75Z" fill="#fff"></path>
+    </svg>
+  </a>
   <a class="threads-portada" href="https://www.threads.com/@gentedevuelo" target="_blank" rel="noopener noreferrer" aria-label="Threads de Gente de Vuelo" title="Threads de Gente de Vuelo">
     <svg viewBox="0 0 24 24" aria-hidden="true">
       <circle cx="12" cy="12" r="10" fill="#000"></circle>
@@ -10621,7 +10631,8 @@ footer .contacto-pie-movil { display: none; }
   z-index: 1206 !important;
 }
 
-/* En móvil, Threads, Facebook e Instagram quedan debajo del acceso de cuenta. */
+/* En móvil, YouTube, Threads, Facebook e Instagram quedan debajo del acceso de cuenta. */
+.youtube-portada,
 .instagram-portada,
 .facebook-portada,
 .threads-portada {
@@ -10635,6 +10646,7 @@ footer .contacto-pie-movil { display: none; }
   border-radius: 12px !important;
   z-index: 1207 !important;
 }
+.youtube-portada svg,
 .instagram-portada svg,
 .facebook-portada svg,
 .threads-portada svg {
@@ -10646,6 +10658,9 @@ footer .contacto-pie-movil { display: none; }
 }
 .threads-portada {
   right: 84px !important;
+}
+.youtube-portada {
+  right: 126px !important;
 }
 
   .cuenta-ingresar,
