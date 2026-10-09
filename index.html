@@ -7215,6 +7215,12 @@ function esFotoR2DeUsuario(url, userId) {
     url.startsWith(GDV_R2_MEDIA_BASE + userId + "/") &&
     /^https:\/\/media\.gentedevuelo\.com\/imagenes\/[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|png|webp)$/i.test(url);
 }
+function esMediaR2DeUsuario(url,userId){
+  return typeof url==="string" &&
+    (url.startsWith(GDV_R2_MEDIA_BASE+userId+"/")||
+     url.startsWith("https://media.gentedevuelo.com/videos/"+userId+"/")) &&
+    /^https:\/\/media\.gentedevuelo\.com\/(imagenes|videos)\/[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|png|webp|mp4|webm|mov)$/i.test(url);
+}
 async function subirImagenPublicaR2(original, userId, maxDimension = 1800) {
   if (!original || !["image/jpeg","image/png","image/webp"].includes(original.type) ||
       original.size === 0 || original.size > 5 * 1024 * 1024) {
@@ -7357,8 +7363,8 @@ async function cargarMisFotosHangar() {
     archivos.push({ruta,url,video:esVideoArchivo(item.name),r2:false});
   }
   for (const item of nuevas.data || []) {
-    if (!esFotoR2DeUsuario(item.archivo,user.id)) continue;
-    archivos.push({ruta:item.archivo,url:item.archivo,video:false,r2:true});
+    if (!esMediaR2DeUsuario(item.archivo,user.id)) continue;
+    archivos.push({ruta:item.archivo,url:item.archivo,video:esVideoArchivo(item.archivo),r2:true});
   }
   for (const archivo of archivos) {
     const bloque = document.createElement("div");
@@ -7410,14 +7416,14 @@ async function procesarColaLimpiezaR2() {
 }
 async function eliminarFotoHangar(rutaArchivo) {
   const {data:{user}} = await supabaseClient.auth.getUser();
-  const enR2 = esFotoR2DeUsuario(rutaArchivo,user?.id);
+  const enR2 = esMediaR2DeUsuario(rutaArchivo,user?.id);
   if (!user || (!enR2 && !rutaArchivo.startsWith(user.id + "/"))) {
     alert("No tenés permiso para eliminar este archivo.");
     return;
   }
-  const video = !enR2 && esVideoArchivo(rutaArchivo);
+  const video = esVideoArchivo(rutaArchivo);
   const aviso = enR2
-    ? "¿Eliminar definitivamente esta fotografía de Mi Hangar y de Cloudflare R2?"
+    ? "¿Eliminar definitivamente este archivo de Mi Hangar y de Cloudflare R2?"
     : (video ? "¿Querés eliminar este video?" : "¿Querés eliminar esta foto?");
   if (!confirm(aviso)) return;
   const {data:eliminadas,error:errorGaleria} = await supabaseClient.from("galeria").delete()
@@ -7440,8 +7446,8 @@ async function eliminarFotoHangar(rutaArchivo) {
   await cargarGaleria();
   alert(enR2
     ? (limpiezaR2
-        ? "Foto eliminada del Hangar. La limpieza de Cloudflare R2 fue procesada."
-        : "Foto eliminada del Hangar. Su limpieza de Cloudflare R2 quedó registrada para reintentar.")
+        ? "Archivo eliminado del Hangar. La limpieza de Cloudflare R2 fue procesada."
+        : "Archivo eliminado del Hangar. Su limpieza de Cloudflare R2 quedó registrada para reintentar.")
     : (video ? "Video eliminado correctamente." : "Foto eliminada correctamente."));
 }
   async function cargarGaleria() {
