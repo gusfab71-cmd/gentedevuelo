@@ -16,6 +16,7 @@
   let channel = null;
   let onlineChannel = null;
   let onlineRequest = 0;
+  let heartbeatBusy = false;
   let loading = false;
   let refreshAgain = false;
   let initial = true;
@@ -46,49 +47,75 @@
     onlineUsers.replaceChildren(placeholder);
   }
 
-  async function updateOnlineList() {
-    if (!onlineChannel || !currentUser) return;
-    const request = ++onlineRequest;
-    // Multiple open tabs of one member count as one connected member.
-    const state = onlineChannel.presenceState();
-    const ids = [...new Set(Object.values(state).flatMap(
-      entries => Array.isArray(entries) ? entries.map(entry => entry.user_id) : []
-    ).filter(id => typeof id === 'string' && /^[0-9a-f-]{36}$/i.test(id)))];
+  async function heartbeat() {
+    if (!currentUser || document.hidden || heartbeatBusy) return;
+    heartbeatBusy = true;
+    try {
+      // The explicit timestamp updates an existing session as well as a new one.
+      const result = await db.from('gdv_member_presence').upsert({
+        user_id: currentUser.id,
+        last_seen: new Date().toISOString()
+      });
+      if (result.error) console.warn('No se pudo actualizar la presencia de AeroChat.');
+    } finally {
+      heartbeatBusy = false;
+    }
+  }
 
-    if (!ids.length) {
-      if (request !== onlineRequest) return;
-      onlineCount.textContent = '0 en línea';
-      const placeholder = document.createElement('li');
-      placeholder.className = 'online-placeholder';
-      placeholder.textContent = 'Todavía no hay integrantes conectados.';
-      onlineUsers.replaceChildren(placeholder);
+  async function updateOnlineList() {
+    if (!currentUser) return;
+    const request = ++onlineRequest;
+
+    // Realtime presence indicates who is actually INSIDE this room.
+    // Site presence indicates who is active anywhere in Gente de Vuelo.
+    const state = onlineChannel ? onlineChannel.presenceState() : {};
+    const roomIds = new Set(Object.values(state).flatMap(
+      entries => Array.isArray(entries) ? entries.map(entry => entry.user_id) : []
+    ).filter(id => typeof id === 'string' && /^[0-9a-f-]{36}$/i.test(id)));
+
+    const since = new Date(Date.now() - 90000).toISOString();
+    const recent = await db.from('gdv_member_presence').select('user_id').gt('last_seen',since);
+    if (request !== onlineRequest) return;
+    if (recent.error) {
+      onlineUnavailable('No se pudo consultar quién está conectado.');
       return;
     }
-
-    // Always resolve usernames from trusted profiles, not client-supplied presence names.
-    const result = await db.from('profiles').select('id,username').in('id',ids);
+    const siteIds = [...new Set([
+      ...(recent.data || []).map(person => person.user_id),
+      ...roomIds,
+      currentUser.id
+    ])];
+    const result = await db.from('profiles').select('id,username').in('id',siteIds);
     if (request !== onlineRequest) return;
     if (result.error) {
-      onlineUnavailable('No se pudo cargar el listado de conectados.');
+      onlineUnavailable('No se pudieron cargar los nombres de los integrantes.');
       return;
     }
-    const people = (result.data || []).filter(item => ids.includes(item.id)).sort((a,b) => {
+    const people = (result.data || []).sort((a,b) => {
       if (a.id === currentUser.id) return -1;
       if (b.id === currentUser.id) return 1;
       return (a.username || '').localeCompare(b.username || '', 'es');
     });
-    onlineCount.textContent = String(people.length) + ' en línea';
+
+    onlineCount.textContent = String(people.length) + ' conectados';
     const items = document.createDocumentFragment();
     for (const person of people) {
       const item = document.createElement('li');
       item.className = 'online-user';
-      const dot = document.createElement('span');
-      dot.className = 'online-indicator';
-      dot.setAttribute('aria-hidden','true');
+      const indicator = document.createElement('span');
+      indicator.className = 'online-indicator';
+      indicator.setAttribute('aria-hidden','true');
       const link = document.createElement('a');
       link.href = 'comunidad.html#hangar/' + encodeURIComponent(person.id);
       link.textContent = person.username || 'Integrante';
-      item.append(dot, link);
+      item.append(indicator,link);
+      if (roomIds.has(person.id)) {
+        const room = document.createElement('span');
+        room.className = 'online-in-room';
+        room.textContent = 'En sala';
+        room.title = 'Está conectado a AeroChat';
+        item.append(room);
+      }
       if (person.id === currentUser.id) {
         const you = document.createElement('span');
         you.className = 'online-you';
@@ -98,7 +125,7 @@
       items.append(item);
     }
     if (!people.length) {
-      onlineUnavailable('No hay integrantes visibles en la sala.');
+      onlineUnavailable('Todavía no hay integrantes conectados.');
       return;
     }
     onlineUsers.replaceChildren(items);
@@ -228,7 +255,13 @@
       form.requestSubmit();
     }
   });
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh(); });
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+      heartbeat().catch(() => {});
+      updateOnlineList().catch(() => onlineUnavailable('No se pudo actualizar la lista.'));
+      refresh();
+    }
+  });
   window.addEventListener('pagehide', () => {
     if (onlineChannel) {
       onlineChannel.untrack().catch(() => {});
@@ -236,7 +269,13 @@
     }
     if (channel) db.removeChannel(channel);
   });
-  setInterval(() => { if (!document.hidden) refresh(); }, 15000);
+  setInterval(() => {
+    if (!document.hidden) {
+      refresh();
+      updateOnlineList().catch(() => onlineUnavailable('No se pudo actualizar la lista.'));
+    }
+  }, 15000);
+  setInterval(() => { heartbeat().catch(() => {}); }, 30000);
 
   async function start() {
     await window.GDV_AUTH.ready;
@@ -249,6 +288,8 @@
     staff = roleResults.some(result => !result.error && result.data && result.data.length > 0);
     updateButton();
     await refresh();
+    await heartbeat();
+    await updateOnlineList();
     startOnlinePresence();
     channel = db.channel('gdv-aerochat-live')
       .on('postgres_changes',{event:'*',schema:'public',table:'gdv_chat_messages'},() => refresh())
