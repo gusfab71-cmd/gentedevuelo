@@ -462,7 +462,7 @@ async function uploadFiles(files,topicId){
   });
   const uploaded=await response.json().catch(()=>({}));
   if(!response.ok)throw new Error(uploaded.error||'No se pudo subir la fotografía a Cloudflare.');
-  if(typeof uploaded.path!=='string'||!uploaded.path.startsWith(user.id+'/')||
+  if(typeof uploaded.path!=='string'||!uploaded.path.startsWith('imagenes/'+user.id+'/')||
      uploaded.url!=='https://media.gentedevuelo.com/'+uploaded.path)
    throw new Error('Cloudflare devolvió una dirección de imagen inválida.');
   const result=await db.from('gdv_media').insert({topic_id:topicId,owner_id:user.id,legacy_url:uploaded.url,kind});
