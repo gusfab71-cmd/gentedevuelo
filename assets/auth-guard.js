@@ -153,7 +153,7 @@
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden) heartbeat().catch(() => {});
   });
-  client.auth.onAuthStateChange(event => {
+  client.auth.onAuthStateChange((event, session) => {
     if (event === 'SIGNED_OUT') {
       verifiedUser = null;
       onboardingRequired = false;
@@ -162,6 +162,17 @@
         document.documentElement.classList.add('auth-pending');
         goLogin();
       }
+    }
+    if (event === 'SIGNED_IN' && session?.user) {
+      // OAuth en celular puede resolver después de cargar la portada. Verificar otra vez
+      // fuera del callback de Supabase para no bloquear su proceso interno de Auth.
+      setTimeout(async () => {
+        const account = await validate().catch(() => null);
+        if (!account) return;
+        try { await refreshOnboarding(account); }
+        catch { onboardingRequired = true; } // Ante una falla, restringir acceso.
+        redirectOnboarding();
+      }, 0);
     }
   });
   window.addEventListener('pageshow', event => { if (event.persisted) requireRoute(); });
