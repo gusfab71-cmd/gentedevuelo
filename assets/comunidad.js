@@ -1091,7 +1091,7 @@ function authView(mode){
    googleRegister.onclick=()=>busy(googleRegister,async()=>{
      const r=await db.auth.signInWithOAuth({
        provider:'google',
-       options:{redirectTo:new URL('comunidad.html',location.href).href}
+       options:{redirectTo:'https://gentedevuelo.com/comunidad.html'}
      });
      if(r.error)throw r.error;
    });
@@ -1100,7 +1100,7 @@ function authView(mode){
  app.innerHTML=`<section class="card auth"><h1>${mode==='recuperar'?'Recuperar contraseña':'Ingresar'}</h1><form id="login"><label for="login-email">${mode==='recuperar'?'Correo electrónico privado':'Nombre de usuario o correo'}</label><input id="login-email" type="${mode==='recuperar'?'email':'text'}" required autocomplete="${mode==='recuperar'?'email':'username'}">${mode!=='recuperar'?'<label for="login-pass">Contraseña</label><input id="login-pass" type="password" required autocomplete="current-password">':''}<div class="toolbar"><button class="primary">${mode==='recuperar'?'Enviar enlace':'Ingresar'}</button></div></form><p id="auth-status" role="status"></p>${mode!=='recuperar'?`<button id="google-login">Continuar con Google</button><p>${link('Olvidé mi contraseña','#recuperar','')}</p>${link('Crear una cuenta','#registro','')}`:link('Volver a ingresar','#ingresar','')}</section>`;
  $('login').onsubmit=e=>{e.preventDefault();busy(e.submitter,async()=>{let r;if(mode==='recuperar'){r=await db.auth.resetPasswordForEmail($('login-email').value.trim(),{redirectTo:window.GDV_AUTH.recoveryURL});if(r.error)throw r.error;$('auth-status').textContent='Si existe una cuenta con ese correo, recibirás un enlace de recuperación.'}else{const identity=$('login-email').value.trim();if(identity.includes('@'))r=await db.auth.signInWithPassword({email:identity,password:$('login-pass').value,options:{}});else{const response=await fetch(cfg.url+'/functions/v1/username-login',{method:'POST',headers:{apikey:cfg.key,'Content-Type':'application/json'},body:JSON.stringify({username:identity,password:$('login-pass').value})});const session=await response.json();if(!response.ok)throw new Error(session.error||'No se pudo ingresar.');r=await db.auth.setSession({access_token:session.access_token,refresh_token:session.refresh_token})}if(r.error)throw r.error;await window.GDV_AUTH.afterLogin()}})};
  if($('google-login'))fetch(cfg.url+'/auth/v1/settings',{headers:{apikey:cfg.key}}).then(r=>r.json()).then(settings=>{const b=$('google-login');if(b&&!settings.external?.google){b.disabled=true;b.textContent='Google no está habilitado';}}).catch(()=>{});
- if($('google-login'))$('google-login').onclick=()=>busy($('google-login'),async()=>{const r=await db.auth.signInWithOAuth({provider:'google',options:{redirectTo:new URL('comunidad.html',location.href).href}});if(r.error)throw r.error});
+ if($('google-login'))$('google-login').onclick=()=>busy($('google-login'),async()=>{const r=await db.auth.signInWithOAuth({provider:'google',options:{redirectTo:'https://gentedevuelo.com/comunidad.html'}});if(r.error)throw r.error});
 }
 async function contact(){
  crumbs([['Contacto']]);
