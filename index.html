@@ -6413,7 +6413,7 @@ async function ingresarConGoogle() {
     const { error } = await supabaseClient.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: new URL("comunidad.html", location.href).href
+        redirectTo: "https://gentedevuelo.com/comunidad.html"
       }
     });
     if (error) {
