@@ -38,11 +38,14 @@ Deno.serve(async req=>{
  const auth=createClient(url,anon,{auth:{persistSession:false}});
  const {data:{user},error:ue}=await auth.auth.getUser(token);
  if(ue||!user)return reply(origin,401,{error:"Sesión inválida"});
- const {data:admin,error:ae}=await auth.from("site_admins").select("user_id").eq("user_id",user.id).maybeSingle();
- if(ae||!admin)return reply(origin,403,{error:"Solo el administrador puede migrar archivos"});
+ // La identidad viene del JWT verificado; la consulta de roles se hace con
+ // service_role solamente en el servidor, nunca desde el navegador.
+ const db=createClient(url,sr,{auth:{persistSession:false}});
+ const {data:admin,error:ae}=await db.from("site_admins").select("user_id").eq("user_id",user.id).maybeSingle();
+ if(ae)return reply(origin,503,{error:"No se pudieron verificar los permisos del administrador"});
+ if(!admin)return reply(origin,403,{error:"Solo el administrador puede migrar archivos"});
  let body:any;try{body=await req.json()}catch{return reply(origin,400,{error:"Solicitud inválida"})}
  if(body.action!=="migrate"&&body.action!=="inventory")return reply(origin,400,{error:"Acción inválida"});
- const db=createClient(url,sr,{auth:{persistSession:false}});
  const s3=s3client();
  const tasks:any[]=[];
  const errors:string[]=[];
