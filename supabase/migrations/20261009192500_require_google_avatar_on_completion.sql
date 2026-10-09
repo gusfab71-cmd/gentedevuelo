@@ -1,7 +1,7 @@
--- Activar esta migración únicamente después de que Vercel haya publicado
--- el formulario Google con selector de foto/avatar, para no bloquear a usuarios
--- que todavía estén cargando la interfaz anterior.
--- Solo se valida el paso de pendiente a registrado. No se modifican cuentas existentes.
+-- Activar después de publicar el formulario que exige UNA foto (sin avatares
+-- prediseñados) y verificar la URL de la versión desplegada en Vercel.
+-- Solo controla la transición de onboarding pendiente a completo.
+-- No cambia registros completados ni elimina cuentas.
 CREATE OR REPLACE FUNCTION gdv_private.validate_google_onboarding()
 RETURNS trigger
 LANGUAGE plpgsql
@@ -15,25 +15,14 @@ BEGIN
        OR char_length(btrim(coalesce(new.aviation_role,''))) < 3 THEN
       RAISE EXCEPTION 'Completá nombre visible, nombre de usuario y actividad aeronáutica antes de participar';
     END IF;
-    IF nullif(btrim(coalesce(new.avatar_url,'')),'') IS NULL
-       OR (
-         new.avatar_url NOT IN (
-          'https://gentedevuelo.com/assets/avatares/piloto.svg',
-          'https://gentedevuelo.com/assets/avatares/avion.svg',
-          'https://gentedevuelo.com/assets/avatares/brujula.svg'
-         )
-         AND new.avatar_url !~ (
-          '^https://media[.]gentedevuelo[.]com/imagenes/' ||
-          new.id::text ||
-          '/[0-9a-f-]{36}[.](jpg|png|webp)$'
-         )
-         AND NOT (
-           old.avatar_url = new.avatar_url
-           AND old.avatar_url ~ '^https://'
-         )
-       )
-    THEN
-      RAISE EXCEPTION 'Para completar el registro, elegí una foto o un avatar de perfil';
+    -- No aceptar avatares del sitio ni imágenes remotas/externas:
+    -- imagen subida a Cloudflare al directorio específico de este integrante.
+    IF coalesce(new.avatar_url, '') !~ (
+      '^https://media[.]gentedevuelo[.]com/imagenes/' ||
+      new.id::text ||
+      '/[0-9a-f-]{36}[.](jpg|png|webp)$'
+    ) THEN
+      RAISE EXCEPTION 'Para completar el registro, subí una fotografía personal o relacionada con la aviación';
     END IF;
   END IF;
   RETURN new;
