@@ -896,3 +896,28 @@
 .announcement-admin textarea{min-height:150px;resize:vertical}
 .announcement-admin .primary{margin-top:8px}
 @media(max-width:620px){.announcement-admin{padding:15px}.unread-notifications-badge{padding:1px 4px;font-size:10px}}
+
+
+/* Paso obligatorio de registro con Google: datos esenciales + campos aeronáuticos opcionales. */
+.google-onboarding{max-width:670px;margin:12px auto 35px;}
+.google-onboarding-heading{padding:18px 8px 15px;text-align:center;}
+.google-onboarding-heading h1{margin:10px 0;color:#fff;}
+.google-onboarding-heading p{color:#c8d2dd;line-height:1.65;}
+.google-onboarding-step{display:inline-flex;align-items:center;padding:5px 12px;border:1px solid #bb7b40;border-radius:999px;background:#302820;color:#ffc692;font-weight:700;font-size:12px;letter-spacing:.03em;}
+.google-onboarding .card{padding:24px 29px;border-color:#8b623d;background:linear-gradient(150deg,#293039,#1d232b 85%);box-shadow:0 12px 36px #0003;}
+.google-onboarding label{font-weight:700;color:#ecf0f5;}
+.google-onboarding label .google-onboarding-required{display:inline-block;margin-left:6px;font-size:11px;color:#f8bd7c;font-weight:600;}
+.google-onboarding .small{margin:5px 0 15px;line-height:1.45;color:#aebbc9;}
+.google-onboarding input,.google-onboarding select,.google-onboarding textarea{max-width:100%;}
+.google-onboarding-more{margin:23px 0;padding:13px 15px;border:1px solid #4c5663;border-radius:10px;background:#1a2028;}
+.google-onboarding-more summary{font-size:14px;font-weight:700;color:#f3c18c;}
+.google-onboarding-more[open] summary{margin-bottom:14px;}
+.google-onboarding-privacy{font-size:12px;color:#b9c4cf;line-height:1.6;margin:20px 0 16px;}
+.google-onboarding-save{width:100%;min-height:48px;font-weight:800;font-size:16px;}
+#google-onboarding-status:not(:empty){margin:13px 0 0;color:#ffc18f;font-size:13px;}
+@media(max-width:620px){
+ .google-onboarding{margin:0 auto 28px;}
+ .google-onboarding-heading{padding:12px 4px;}
+ .google-onboarding .card{padding:19px 16px;}
+ .google-onboarding-more{padding:12px;}
+}
