@@ -470,10 +470,9 @@ async function uploadFiles(files,topicId){
   const result=await db.from('gdv_media').insert({topic_id:topicId,owner_id:user.id,legacy_url:uploaded.url,kind});
   if(result.error)throw new Error('La foto se subió a Cloudflare, pero no se pudo asociar a la publicación: '+result.error.message);
  }else{
-  const path=user.id+'/'+crypto.randomUUID()+'.'+ext;
-  checked(await db.storage.from('community-media').upload(path,data,{contentType:data.type,upsert:false}));
-  const r=await db.from('gdv_media').insert({topic_id:topicId,owner_id:user.id,path,kind});
-  if(r.error){await db.storage.from('community-media').remove([path]);throw new Error(r.error.message)}
+  const uploaded=await window.GDV_R2_MEDIA.upload(data,db,cfg.url,cfg.key);
+  const r=await db.from('gdv_media').insert({topic_id:topicId,owner_id:user.id,legacy_url:uploaded.url,kind});
+  if(r.error)throw new Error('El archivo llegó a Cloudflare, pero no pudo asociarse a la publicación: '+r.error.message);
  }
  }
 }
@@ -491,8 +490,8 @@ function editor(editId){
 const URL_FOTOS_HANGAR_R2='https://media.gentedevuelo.com/imagenes/';
 function resolverFotoDeHangar(archivo,id){
  if(typeof archivo!=='string'||typeof id!=='string')return '';
- if(archivo.startsWith(URL_FOTOS_HANGAR_R2+id+'/')&&
-    /^https:\/\/media\.gentedevuelo\.com\/imagenes\/[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|png|webp)$/i.test(archivo))return archivo;
+ if((archivo.startsWith(URL_FOTOS_HANGAR_R2+id+'/')||archivo.startsWith('https://media.gentedevuelo.com/videos/'+id+'/'))&&
+    /^https:\/\/media\.gentedevuelo\.com\/(imagenes|videos)\/[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|png|webp|mp4|webm|mov)$/i.test(archivo))return archivo;
  if(archivo.startsWith(id+'/')&&/\.(jpg|jpeg|png|webp)$/i.test(archivo)&&
     !archivo.includes('..')&&/^[0-9a-zA-Z_.\/-]+$/.test(archivo))
    return db.storage.from('hangar-fotos').getPublicUrl(archivo).data.publicUrl;
@@ -548,7 +547,10 @@ async function listarFotosDeHangar(id,propio){
  if(!fotos.length){elemento.textContent='Todavía no hay fotografías en este Hangar.';return}
  for(const foto of fotos){
   const figura=document.createElement('figure');figura.className='hangar-galeria-foto';
-  const img=document.createElement('img');img.src=foto.url;img.alt='Fotografía compartida en Mi Hangar';img.loading='lazy';
+  const esVideo=/\.(mp4|webm|mov)$/i.test(foto.url);
+  const img=document.createElement(esVideo?'video':'img');img.src=foto.url;img.loading='lazy';
+  if(esVideo){img.controls=true;img.preload='metadata';img.playsInline=true}
+  else img.alt='Fotografía compartida en Mi Hangar';
   const descripcion=document.createElement('figcaption');
   descripcion.textContent=(foto.visible?'Publicada':'Pendiente de aprobación')+' · '+date(foto.created_at);
   figura.append(img,descripcion);
