@@ -100,8 +100,10 @@
   }
   async function afterLogin() {
     if (!await validate()) return;
-    await refreshOnboarding();
-    if (redirectOnboarding()) return;
+    if (await refreshOnboarding()) {
+      location.replace(onboardingURL.href);
+      return;
+    }
     let destination = new URL('comunidad.html#foro', base);
     try {
       const saved = sessionStorage.getItem('gdv-return-to');
