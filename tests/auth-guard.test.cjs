@@ -1,12 +1,12 @@
 const assert=require('node:assert/strict');const vm=require('node:vm');const fs=require('node:fs');
 const source=fs.readFileSync(require('node:path').join(__dirname,'../assets/auth-guard.js'),'utf8');
-async function scenario(path,{cached=false,exists=true,error=null,onboardingCompleted=true}={}){
+async function scenario(path,{cached=false,exists=true,error=null,onboardingCompleted=true,google=false,username='integrante',fullName='Nombre',aviationRole='Entusiasta'}={}){
  const url=new URL(path,'https://gusfab71-cmd.github.io/gentedevuelo/'),redirects=[],events={},storage=new Map();let signedOut=0,userChecks=0;
  const client={
   from: table=>table==='profiles'?
-   {select:()=>({eq:()=>({maybeSingle:async()=>({data:{onboarding_completed:onboardingCompleted},error:null})})})}:
+   {select:()=>({eq:()=>({maybeSingle:async()=>({data:{onboarding_completed:onboardingCompleted,username,full_name:fullName,aviation_role:aviationRole},error:null})})})}:
    {upsert:async()=>({error:null})},
-  auth:{getSession:async()=>({data:{session:cached?{user:{id:'cached'}}:null}}),getUser:async()=>{userChecks++;return{data:{user:exists?{id:'verified'}:null},error}},signOut:async()=>{signedOut++},onAuthStateChange:cb=>{events.auth=cb}}
+  auth:{getSession:async()=>({data:{session:cached?{user:{id:'cached'}}:null}}),getUser:async()=>{userChecks++;return{data:{user:exists?{id:'verified',app_metadata:{provider:google?'google':'email'}}:null},error}},signOut:async()=>{signedOut++},onAuthStateChange:cb=>{events.auth=cb}}
  };
  const ctx={URL,URLSearchParams,setInterval(){},GDV_CONFIG:{url:'https://example.supabase.co',key:'public'},supabase:{createClient:()=>client},document:{hidden:false,addEventListener(){},currentScript:{src:'https://gusfab71-cmd.github.io/gentedevuelo/assets/auth-guard.js'},documentElement:{classList:{add(){},remove(){}}}},location:{href:url.href,pathname:url.pathname,hash:url.hash,replace:u=>redirects.push(u)},sessionStorage:{setItem:(k,v)=>storage.set(k,v),getItem:k=>storage.get(k),removeItem:k=>storage.delete(k)}};
  ctx.window={addEventListener:(name,cb)=>events[name]=cb};vm.runInNewContext(source,ctx);await ctx.window.GDV_AUTH.ready;
@@ -34,5 +34,11 @@ async function scenario(path,{cached=false,exists=true,error=null,onboardingComp
  r=await scenario('comunidad.html#ingresar',{cached:true,onboardingCompleted:false});
  await r.ctx.window.GDV_AUTH.afterLogin();
  assert.equal(r.redirects.at(-1),'https://gusfab71-cmd.github.io/gentedevuelo/comunidad.html#completar-perfil');
+ r=await scenario('index.html',{cached:true,onboardingCompleted:true,google:true,username:'piloto_123456789',aviationRole:''});
+ assert.equal(r.redirects[0],'https://gusfab71-cmd.github.io/gentedevuelo/comunidad.html#completar-perfil');
+ r=await scenario('comunidad.html#foro',{cached:true,onboardingCompleted:true,google:true,username:'persona_real',aviationRole:''});
+ assert.equal(r.redirects[0],'https://gusfab71-cmd.github.io/gentedevuelo/comunidad.html#completar-perfil');
+ r=await scenario('comunidad.html#foro',{cached:true,onboardingCompleted:true,google:true,username:'persona_real',aviationRole:'Estudiante de piloto'});
+ assert.equal(r.redirects.length,0);
  console.log('PASS: public routes, authentication, Google registration lock across sections and safe returns');
 })().catch(e=>{console.error(e);process.exitCode=1});
