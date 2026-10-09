@@ -36,6 +36,70 @@
   popup.setAttribute('aria-labelledby', 'gdv-comunicado-titulo');
   document.body.appendChild(popup);
 
+
+  // Presentación institucional única por integrante y navegador.
+  // La visita no representa consentimiento para recibir correos.
+  const institutionalSeenFallback = new Set();
+  const institutionalKey = uid => 'gdv-presentacion-institucional-20261009:' + uid;
+  function institutionalWasSeen(uid) {
+    if (institutionalSeenFallback.has(uid)) return true;
+    try { return localStorage.getItem(institutionalKey(uid)) === '1'; }
+    catch { return false; }
+  }
+  function rememberInstitutional(uid) {
+    institutionalSeenFallback.add(uid);
+    try { localStorage.setItem(institutionalKey(uid), '1'); } catch {}
+  }
+  function renderInstitutional(uid) {
+    if (popup.open || document.querySelector('dialog[open]')) return false;
+    popup.classList.add('gdv-modo-institucional');
+    popup.dataset.institutionalUid = uid;
+    popup.innerHTML = `
+      <section class="gdv-comunicado-contenido gdv-presentacion-institucional">
+        <button type="button" class="gdv-comunicado-cerrar" aria-label="Cerrar presentación institucional">×</button>
+        <div class="gdv-institucional-cabecera">
+          <img class="gdv-institucional-logo" src="logo circular recortado gente de vuelo.png" alt="Logo de Gente de Vuelo" width="88" height="88">
+          <span class="gdv-institucional-sello">NUESTRA COMUNIDAD</span>
+          <h2 id="gdv-comunicado-titulo">Una comunidad construida con compromiso</h2>
+          <p>Bienvenido a <strong>Gente de Vuelo</strong>, un proyecto sin fines de lucro que reúne a quienes compartimos la pasión por la aviación.</p>
+        </div>
+        <div class="gdv-institucional-pilares" aria-label="Nuestros compromisos">
+          <div><span aria-hidden="true">01</span><p><strong>Respeto y seguridad.</strong> Moderamos las publicaciones según nuestra Normativa de Comunidad.</p></div>
+          <div><span aria-hidden="true">02</span><p><strong>Aprender y compartir.</strong> Foro, Mi Hangar, experiencias, eventos y recursos aeronáuticos.</p></div>
+          <div><span aria-hidden="true">03</span><p><strong>Información voluntaria.</strong> Vos elegís si querés recibir nuestras novedades por correo.</p></div>
+        </div>
+        <p class="gdv-institucional-cta-texto">Nos gustaría mantenerte al tanto de las mejoras, actividades y novedades de Gente de Vuelo.</p>
+        <div class="gdv-comunicado-acciones">
+          <button type="button" id="gdv-institucional-suscribirse" class="gdv-comunicado-principal">Quiero recibir novedades por correo</button>
+          <button type="button" id="gdv-institucional-omitir" class="gdv-comunicado-secundario">Ahora no, gracias</button>
+        </div>
+        <p class="gdv-comunicado-ayuda">La suscripción es gratuita y opcional. Este aviso no activa el envío de correos. Podés cambiar tu elección cuando quieras desde Mi cuenta.</p>
+      </section>`;
+    const end = () => {
+      rememberInstitutional(uid);
+      if (popup.open) popup.close();
+    };
+    popup.querySelector('.gdv-comunicado-cerrar').addEventListener('click', end);
+    popup.querySelector('#gdv-institucional-omitir').addEventListener('click', end);
+    popup.querySelector('#gdv-institucional-suscribirse').addEventListener('click', () => {
+      end();
+      location.href = new URL('comunidad.html#preferencias-correo', location.href).href;
+    });
+    try { popup.showModal(); } catch {
+      popup.classList.remove('gdv-modo-institucional');
+      delete popup.dataset.institutionalUid;
+      return false;
+    }
+    popup.querySelector('#gdv-institucional-suscribirse')?.focus();
+    return true;
+  }
+  popup.addEventListener('close', () => {
+    const uid = popup.dataset.institutionalUid;
+    if (uid) rememberInstitutional(uid); // Escape también cuenta como leído.
+    delete popup.dataset.institutionalUid;
+    popup.classList.remove('gdv-modo-institucional');
+  });
+
   function closePopup() { if (popup.open) popup.close(); }
   async function acknowledge(id, uid, button) {
     button.disabled = true;
@@ -52,6 +116,7 @@
   }
   function renderPopup(item, uid) {
     if (popup.open || document.querySelector('dialog[open]')) return false;
+    popup.classList.remove('gdv-modo-institucional');
     const raw = item.message.slice(prefix.length);
     const separator = raw.indexOf('\n');
     const title = separator === -1 ? 'Novedades de Gente de Vuelo' : raw.slice(0, separator);
@@ -92,11 +157,13 @@
   async function checkAnnouncements(user) {
     if (!user?.id || !user.email_confirmed_at || loading) return;
     if (window.GDV_AUTH.recovery || /^#(?:ingresar|registro|recuperar)(?:$|\/)/.test(location.hash)) return;
-    if (location.hash === '#notificaciones') return;
+    if (['#notificaciones', '#preferencias-correo'].includes(location.hash)) return;
     if (document.querySelector('dialog[open]')) return;
     loading = true;
     lastUserId = user.id;
     try {
+      // Una única presentación antes de avisos habituales: no obliga a suscribirse.
+      if (!institutionalWasSeen(user.id) && renderInstitutional(user.id)) return;
       const result = await db.from('gdv_notifications')
         .select('id,message,created_at')
         .eq('user_id', user.id)
@@ -106,6 +173,8 @@
         .limit(1);
       if (result.error || !result.data?.length) return;
       const item = result.data[0];
+      // No repetir el comunicado original de suscripción tras esta presentación.
+      if (institutionalWasSeen(user.id) && item.message.startsWith(prefix + 'Mantente informado sobre Gente de Vuelo')) return;
       if (alreadyDisplayed(user.id, item.id)) return;
       if (renderPopup(item, user.id)) rememberDisplayed(user.id, item.id);
     } catch (err) {
