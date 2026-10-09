@@ -1051,10 +1051,12 @@ async function googleOnboarding(){
  });
  avatarInput.onchange=()=>{
   const file=avatarInput.files?.[0];
+  $('google-onboarding-status').textContent='';
   if(!file)return;
   if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>5*1024*1024||!file.size){
    avatarInput.value='';
-   throw new Error('Seleccioná una fotografía JPG, PNG o WebP de hasta 5 MB.');
+   $('google-onboarding-status').textContent='Seleccioná una fotografía JPG, PNG o WebP de hasta 5 MB.';
+   return;
   }
   clearAvatarPreviewObject();
   avatarFile=file;
