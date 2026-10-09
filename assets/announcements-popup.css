@@ -76,3 +76,48 @@
   #gdv-comunicado-dialog .gdv-comunicado-acciones { flex-direction: column; }
   #gdv-comunicado-dialog .gdv-comunicado-acciones button { flex: 0 0 auto; }
 }
+
+
+/* Presentación institucional: una vez por integrante, adaptable a móvil y PC. */
+#gdv-comunicado-dialog.gdv-modo-institucional { width: min(580px, calc(100vw - 24px)); }
+#gdv-comunicado-dialog .gdv-institucional-cabecera { text-align:center; }
+#gdv-comunicado-dialog .gdv-institucional-logo {
+  display:block; margin: 0 auto 12px; width: 88px; height: 88px; object-fit:contain;
+  filter:drop-shadow(0 0 12px rgba(239,166,87,.23));
+}
+#gdv-comunicado-dialog .gdv-institucional-sello {
+  display:inline-block; border:1px solid #976c43; padding:5px 11px; border-radius:999px;
+  font-size:10px; font-weight:800; color:#edbe81; letter-spacing:.14em;
+}
+#gdv-comunicado-dialog .gdv-presentacion-institucional #gdv-comunicado-titulo {
+  margin: 13px auto 12px; max-width:480px; color:#f7e3c1; font-size:clamp(22px,4.5vw,28px);
+}
+#gdv-comunicado-dialog .gdv-institucional-cabecera > p {
+  margin:0 auto 20px; line-height:1.62; color:#e0e8ed; max-width:480px; font-size:14px;
+}
+#gdv-comunicado-dialog .gdv-institucional-pilares {
+  display:grid; gap:10px; margin:17px 0; text-align:left;
+}
+#gdv-comunicado-dialog .gdv-institucional-pilares > div {
+  display:flex; align-items:center; gap:13px; padding:11px 13px;
+  border:1px solid rgba(231,168,91,.26); background:rgba(255,255,255,.045);
+  border-radius:11px;
+}
+#gdv-comunicado-dialog .gdv-institucional-pilares span {
+  font:800 16px/1 Arial,sans-serif; color:#edb774; flex:none;
+}
+#gdv-comunicado-dialog .gdv-institucional-pilares p {
+  margin:0; font-size:13px; line-height:1.53; color:#dfe5e9;
+}
+#gdv-comunicado-dialog .gdv-institucional-pilares strong {color:#f8d9b0;}
+#gdv-comunicado-dialog .gdv-institucional-cta-texto {
+  text-align:center; line-height:1.58; margin:17px 0 15px; font-size:14px; color:#f3dfc5;
+}
+#gdv-comunicado-dialog .gdv-modo-institucional .gdv-comunicado-acciones {justify-content:center;}
+#gdv-comunicado-dialog #gdv-institucional-suscribirse {flex:2 1 245px;}
+#gdv-comunicado-dialog #gdv-institucional-omitir {flex:1 1 145px;}
+@media(max-width:550px) {
+  #gdv-comunicado-dialog .gdv-institucional-logo {width:70px; height:70px;}
+  #gdv-comunicado-dialog .gdv-institucional-pilares {gap:8px;}
+  #gdv-comunicado-dialog .gdv-institucional-pilares > div {padding:9px 11px;}
+}
