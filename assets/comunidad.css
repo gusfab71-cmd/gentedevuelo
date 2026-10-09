@@ -921,3 +921,11 @@
  .google-onboarding .card{padding:19px 16px;}
  .google-onboarding-more{padding:12px;}
 }
+
+/* Normativa de conservación: lectura clara en PC y móvil. */
+.gdv-retention-policy{margin:18px 0 24px;padding:22px 27px;border:1px solid #66533f;border-radius:13px;background:#252b31;line-height:1.62}
+.gdv-retention-policy h2{font-size:clamp(22px,2.8vw,28px);color:#ffc18d}
+.gdv-retention-policy h3{font-size:19px;margin:22px 0 8px;color:#f0bc8d}
+.gdv-retention-policy p{line-height:1.65}
+.gdv-retention-policy ul{padding-left:23px}.gdv-retention-policy li{margin:0 0 12px;overflow-wrap:anywhere}
+@media(max-width:620px){.gdv-retention-policy{padding:16px 14px}.gdv-retention-policy ul{padding-left:18px}}
