@@ -496,16 +496,19 @@
         const contenedorAdjuntos = nodo("div", "", "aporte-adjuntos-mod");
         articulo.append(contenedorAdjuntos);
         r._adjuntos.forEach(async archivoAdjunto => {
-          const { data: firma, error: errorFirma } = await client.storage.from("aportes")
-            .createSignedUrl(archivoAdjunto.storage_path, 3600);
-          if (errorFirma || !firma?.signedUrl) return;
+          let archivoUrl=archivoAdjunto.storage_path;
+          if(!/^https:\/\/media\.gentedevuelo\.com\//.test(archivoUrl)){
+            const {data:firma,error:errorFirma}=await client.storage.from("aportes").createSignedUrl(archivoAdjunto.storage_path,3600);
+            if(errorFirma||!firma?.signedUrl)return;
+            archivoUrl=firma.signedUrl;
+          }
           const enlaceAdjunto = nodo("a", "", "aporte-adjunto-mod");
-          enlaceAdjunto.href = firma.signedUrl;
+          enlaceAdjunto.href = archivoUrl;
           enlaceAdjunto.target = "_blank";
           enlaceAdjunto.rel = "noopener noreferrer";
           if (archivoAdjunto.mime_type?.startsWith("image/")) {
             const mini = document.createElement("img");
-            mini.src = firma.signedUrl;
+            mini.src = archivoUrl;
             mini.alt = "";
             enlaceAdjunto.append(mini);
           }
