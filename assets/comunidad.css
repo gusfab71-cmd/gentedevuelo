@@ -914,16 +914,9 @@
 .google-onboarding-avatar-preview{display:flex;align-items:center;gap:12px;margin:8px 0 17px;color:#e5edf3;font-size:13px;}
 .google-onboarding-avatar-preview[hidden]{display:none!important;}
 .google-onboarding-avatar-preview img{width:76px;height:76px;border-radius:50%;object-fit:cover;border:3px solid #dda25d;background:#253443;}
-.google-onboarding-avatars{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:11px 0 19px;}
-.google-onboarding-avatar-option{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:7px;padding:10px 5px 12px;border:1px solid #697786;border-radius:10px;background:#28323d;cursor:pointer;text-align:center;min-width:0;}
-.google-onboarding-avatar-option img{width:76px;height:76px;max-width:100%;aspect-ratio:1;object-fit:contain;border-radius:50%;}
-.google-onboarding-avatar-option span{font-size:12px;color:#eff5fa;}
-.google-onboarding-avatar-option input{accent-color:#e9a15c;margin:0;width:18px;height:18px;}
-.google-onboarding-avatar-option:has(input:checked){border-color:#ffa953;box-shadow:inset 0 0 0 1px #ffa953,0 0 0 1px #ffa953;background:#3a322c;}
-.google-onboarding-avatar-option:focus-within{outline:2px solid #ffc18d;outline-offset:2px;}
 #google-profile-avatar-file{display:block;width:100%;min-height:44px;margin-top:10px;color:#e5eaf0;font-size:13px;}
 #google-profile-avatar-file::file-selector-button{padding:10px 12px;margin-right:10px;background:#374656;color:#fff;border:1px solid #85919c;border-radius:8px;}
-@media(max-width:440px){.google-onboarding-avatar{padding:13px 10px}.google-onboarding-avatars{gap:7px}.google-onboarding-avatar-option img{width:64px}.google-onboarding-avatar-option{padding:9px 3px}}
+@media(max-width:440px){.google-onboarding-avatar{padding:13px 10px}}
 .google-onboarding-more{margin:23px 0;padding:13px 15px;border:1px solid #4c5663;border-radius:10px;background:#1a2028;}
 .google-onboarding-more summary{font-size:14px;font-weight:700;color:#f3c18c;}
 .google-onboarding-more[open] summary{margin-bottom:14px;}
