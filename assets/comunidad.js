@@ -451,7 +451,28 @@ function multimedia(){crumbs([['Foro','#foro'],['Multimedia']]);app.innerHTML=`<
 async function uploadFiles(files,topicId){
  for(const f of files){let data=f,kind,ext;const mimes={'image/jpeg':['image','jpg',10],'image/png':['image','png',10],'image/webp':['image','webp',10],'video/mp4':['video','mp4',40],'video/webm':['video','webm',40],'application/pdf':['pdf','pdf',15]};const rule=mimes[f.type];if(!rule||f.size>rule[2]*1024*1024)throw new Error('Formato o tamaño no permitido: '+f.name);[kind,ext]=rule;
  if(kind==='image'){const bitmap=await createImageBitmap(f);const scale=Math.min(1,2000/Math.max(bitmap.width,bitmap.height));const canvas=document.createElement('canvas');canvas.width=Math.round(bitmap.width*scale);canvas.height=Math.round(bitmap.height*scale);canvas.getContext('2d').drawImage(bitmap,0,0,canvas.width,canvas.height);bitmap.close();data=await new Promise(resolve=>canvas.toBlob(resolve,'image/webp',.85));if(!data)throw new Error('No se pudo preparar la imagen');ext='webp'}
- const path=user.id+'/'+crypto.randomUUID()+'.'+ext;checked(await db.storage.from('community-media').upload(path,data,{contentType:data.type,upsert:false}));const r=await db.from('gdv_media').insert({topic_id:topicId,owner_id:user.id,path,kind});if(r.error){await db.storage.from('community-media').remove([path]);throw new Error(r.error.message)}
+ if(kind==='image'){
+  const {data:sessionData,error:sessionError}=await db.auth.getSession();
+  if(sessionError||!sessionData.session?.access_token)throw new Error('Tu sesión venció. Volvé a ingresar.');
+  if(data.size>4*1024*1024)throw new Error('La foto optimizada supera los 4 MB permitidos.');
+  const response=await fetch(cfg.url+'/functions/v1/r2-upload-image',{
+   method:'POST',
+   headers:{Authorization:'Bearer '+sessionData.session.access_token,apikey:cfg.key,'Content-Type':'image/webp'},
+   body:data
+  });
+  const uploaded=await response.json().catch(()=>({}));
+  if(!response.ok)throw new Error(uploaded.error||'No se pudo subir la fotografía a Cloudflare.');
+  if(typeof uploaded.path!=='string'||!uploaded.path.startsWith(user.id+'/')||
+     uploaded.url!=='https://media.gentedevuelo.com/'+uploaded.path)
+   throw new Error('Cloudflare devolvió una dirección de imagen inválida.');
+  const result=await db.from('gdv_media').insert({topic_id:topicId,owner_id:user.id,legacy_url:uploaded.url,kind});
+  if(result.error)throw new Error('La foto se subió a Cloudflare, pero no se pudo asociar a la publicación: '+result.error.message);
+ }else{
+  const path=user.id+'/'+crypto.randomUUID()+'.'+ext;
+  checked(await db.storage.from('community-media').upload(path,data,{contentType:data.type,upsert:false}));
+  const r=await db.from('gdv_media').insert({topic_id:topicId,owner_id:user.id,path,kind});
+  if(r.error){await db.storage.from('community-media').remove([path]);throw new Error(r.error.message)}
+ }
  }
 }
 function editor(editId){
