@@ -1,6 +1,22 @@
 <!doctype html>
 <html lang="es">
 <head>
+<script id="gdv-github-pages-canonical">
+/* Este dominio es solo un alojamiento histórico. El acceso y Google OAuth
+   deben finalizar siempre en el dominio oficial antes de iniciar Supabase. */
+(function(){
+  if(location.hostname!=="gusfab71-cmd.github.io")return;
+  var suffix=location.pathname.replace(/^\/gentedevuelo\/?/,"");
+  var valid=/^(?:index\.html|comunidad\.html|aerochat\.html|moderacion\.html|utilidades(?:\/.*)?)$/.test(suffix);
+  var loginCallback=new URLSearchParams(location.search).has("code")
+    || /^(?:#access_token=|#error=)/.test(location.hash);
+  var destination=new URL("https://gentedevuelo.com/"+(loginCallback?"comunidad.html":valid&&suffix!=="index.html"?suffix:""));
+  destination.search=location.search;
+  destination.hash=location.hash;
+  location.replace(destination.href);
+})();
+</script>
+
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="referrer" content="strict-origin-when-cross-origin">
