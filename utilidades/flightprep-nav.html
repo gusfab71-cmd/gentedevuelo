@@ -121,7 +121,7 @@ function preparePrint(){document.querySelectorAll('.print-value').forEach(n=>n.r
 window.addEventListener('beforeprint',preparePrint);
 function printReport() { preparePrint();window.print(); }
 function exportJSON() {
-  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({navigation:S,wind:Object.fromEntries(['w_r','w_d','w_s','w_g','w_l'].map(id=>[id,$(id).value])),units:{speed:'kt',distance:'NM',fuel:'US gal'}}, null, 2));
+  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({navigation:S,wind:Object.fromEntries(['w_r','w_d','w_s','w_g','w_l'].map(id=>[id,$(id).value])),units:{speed:'kt',distance:'NM',fuel:'L'}}, null, 2));
   const downloadAnchor = document.createElement('a');
   downloadAnchor.setAttribute("href", dataStr);
   downloadAnchor.setAttribute("download", `FlightPrep_${S.org}_${S.dst}.json`);
@@ -155,10 +155,10 @@ function drawWind(hdg,wd,rn,ws){
  s+=`<g transform="rotate(${wd} 150 150)"><line x1="150" y1="14" x2="150" y2="104" stroke="#fbbf24" stroke-width="5" stroke-linecap="round"/><path d="M150 112 L137 90 L163 90Z" fill="#fbbf24"/><text x="150" y="9" fill="#fbbf24" font-size="11" font-weight="800" text-anchor="middle" transform="rotate(${-wd} 150 9)">${p3(wd)}°/${ws}kt</text></g>`;
  $('wsvg').innerHTML=s}
 
-const DEF={org:'Origen',dst:'Destino',tas:100,gph:7,taxi:1.5,cont:10,res:45,alt:0,fuel:40,etd:'10:00',
+const DEF={fuelUnit:'L',org:'Origen',dst:'Destino',tas:100,gph:26.5,taxi:5.7,cont:10,res:45,alt:0,fuel:151.4,etd:'10:00',
  legs:[{to:'Punto 1',tc:270,d:55,wd:230,ws:15,v:-8,dv:0},{to:'Punto 2',tc:300,d:48,wd:230,ws:18,v:-8,dv:0},{to:'Destino',tc:340,d:62,wd:240,ws:20,v:-7,dv:0}]};
-let S=JSON.parse(JSON.stringify(DEF));try{const x=JSON.parse(localStorage.getItem('fp_nav2'));if(x&&x.legs)S=x}catch(e){}
-const GF=[['org','Origen','text'],['dst','Destino','text'],['tas','TAS crucero (kt)'],['gph','Consumo (US gal/h)'],['taxi','Rodaje+ascenso (gal)'],['cont','Contingencia (%)'],['res','Reserva final (min)'],['alt','Alternativa (min)'],['fuel','Combustible a bordo (US gal)'],['etd','ETD (hh:mm)','time']];
+let S=JSON.parse(JSON.stringify(DEF));try{const x=JSON.parse(localStorage.getItem('fp_nav2'));if(x&&x.legs){S=x;if(x.fuelUnit!=='L'){for(const k of ['gph','taxi','fuel'])S[k]=Number(S[k])*3.785411784;S.fuelUnit='L'}}}catch(e){}
+const GF=[['org','Origen','text'],['dst','Destino','text'],['tas','TAS crucero (kt)'],['gph','Consumo (L/h)'],['taxi','Rodaje+ascenso (L)'],['cont','Contingencia (%)'],['res','Reserva final (min)'],['alt','Alternativa (min)'],['fuel','Combustible a bordo (L)'],['etd','ETD (hh:mm)','time']];
 function buildG(){$('g').innerHTML=GF.map(([k,l,t])=>`<label>${l}<input class="fld mt-0.5" type="${t||'number'}" step="any" value="${esc(S[k])}" oninput="G('${k}',this.value,'${t||''}')"></label>`).join('')}
 function G(k,v,t){S[k]=t?v:(v===''?NaN:Number(v));calcNav()}
 function buildLegs(){$('legs').innerHTML=S.legs.map((l,i)=>`<tr><td><input class="t" value="${esc(l.to)}" oninput="L(${i},'to',this.value)"></td>`+
@@ -191,11 +191,11 @@ function calcNav(){
  if(bad){$('tot').textContent='Cálculo no disponible: al menos una pierna no es realizable con estos datos.';$('nstatus').textContent='Revisá viento, TAS y velocidad de avance.';$('fchart').innerHTML='';return}
  const cont=trip*S.cont/100,res=S.res/60*S.gph,alt=S.alt/60*S.gph,req=trip+S.taxi+cont+res+alt,mar=S.fuel-req,endu=S.gph>0?S.fuel/S.gph*60:0;
  const row=(a,b,c='')=>`<div class="flex justify-between ${c}"><span class="text-slate-400">${a}</span><b>${b}</b></div>`;
- $('tot').innerHTML=row('Distancia total',dist.toFixed(0)+' NM')+row('Tiempo en ruta',fT(cum))+row('Combustible en ruta',trip.toFixed(1)+' gal')+row('Rodaje + ascenso',S.taxi.toFixed(1)+' gal')+row('Contingencia ('+S.cont+'%)',cont.toFixed(1)+' gal')+row('Reserva final ('+S.res+' min)',res.toFixed(1)+' gal')+(S.alt?row('Alternativa',alt.toFixed(1)+' gal'):'')+
-  `<hr class="border-white/10 my-1">`+row('Combustible requerido',req.toFixed(1)+' gal','text-sky-300')+row('Combustible a bordo',S.fuel.toFixed(1)+' gal')+row('Autonomía total',fT(endu))+row('ETA destino',clk(clock));
+ $('tot').innerHTML=row('Distancia total',dist.toFixed(0)+' NM')+row('Tiempo en ruta',fT(cum))+row('Combustible en ruta',trip.toFixed(1)+' L')+row('Rodaje + ascenso',S.taxi.toFixed(1)+' L')+row('Contingencia ('+S.cont+'%)',cont.toFixed(1)+' L')+row('Reserva final ('+S.res+' min)',res.toFixed(1)+' L')+(S.alt?row('Alternativa',alt.toFixed(1)+' L'):'')+
+  `<hr class="border-white/10 my-1">`+row('Combustible requerido',req.toFixed(1)+' L','text-sky-300')+row('Combustible a bordo',S.fuel.toFixed(1)+' L')+row('Autonomía total',fT(endu))+row('ETA destino',clk(clock));
  $('nstatus').innerHTML=bad?`<div class="rounded-xl p-3 bg-rose-500/15 border border-rose-500/40 text-rose-300 font-bold"> Revise datos: viento mayor que TAS o velocidad de tierra nula en alguna pierna.</div>`
-  :mar>=0?`<div class="rounded-xl p-3 bg-emerald-500/15 border border-emerald-500/40 text-emerald-300"><b> COMBUSTIBLE SUFICIENTE</b><div class="text-xs">Excedente ${mar.toFixed(1)} gal (${fT(mar/S.gph*60)} extra)</div></div>`
-  :`<div class="rounded-xl p-3 bg-rose-500/15 border border-rose-500/40 text-rose-300"><b> COMBUSTIBLE INSUFICIENTE</b><div class="text-xs">Faltan ${(-mar).toFixed(1)} gal para cumplir reservas</div></div>`;
+  :mar>=0?`<div class="rounded-xl p-3 bg-emerald-500/15 border border-emerald-500/40 text-emerald-300"><b> COMBUSTIBLE SUFICIENTE</b><div class="text-xs">Excedente ${mar.toFixed(1)} L (${fT(mar/S.gph*60)} extra)</div></div>`
+  :`<div class="rounded-xl p-3 bg-rose-500/15 border border-rose-500/40 text-rose-300"><b> COMBUSTIBLE INSUFICIENTE</b><div class="text-xs">Faltan ${(-mar).toFixed(1)} L para cumplir reservas</div></div>`;
  chartF(pts,res+alt)}
 function chartF(p,rsv){
  const W=460,H=230,Lm=46,Rm=38,T=16,B=34,xm=Math.max(...p.map(a=>a.t),1),ym=Math.max(S.fuel,1),sx=v=>Lm+v/xm*(W-Lm-Rm),sy=v=>H-B-Math.max(v,0)/ym*(H-B-T);
@@ -203,8 +203,8 @@ function chartF(p,rsv){
  s+=`<rect x="${Lm}" y="${sy(rsv)}" width="${W-Lm-Rm}" height="${H-B-sy(rsv)}" fill="#ef44441f"/><line x1="${Lm}" x2="${W-Rm}" y1="${sy(rsv)}" y2="${sy(rsv)}" stroke="#f87171" stroke-dasharray="5 4"/><text x="${W-Rm-3}" y="${sy(rsv)-4}" fill="#f87171" font-size="10" text-anchor="end">reserva ${rsv.toFixed(1)}</text>`;
  const pl=p.map(a=>sx(a.t)+','+sy(a.f)).join(' ');
  s+=`<polygon points="${sx(0)},${H-B} ${pl} ${sx(p[p.length-1].t)},${H-B}" fill="#10b9812e"/><polyline points="${pl}" fill="none" stroke="#34d399" stroke-width="3" stroke-linejoin="round"/>`;
- p.forEach((a,i)=>{const bad=a.f<rsv;s+=`<g><title>${esc(a.n)}: ${a.f.toFixed(1)} gal · ${fT(a.t)}</title><circle cx="${sx(a.t)}" cy="${sy(a.f)}" r="6" fill="${bad?'#f87171':'#34d399'}" stroke="#fff" stroke-width="1.5"/></g><text x="${sx(a.t)}" y="${H-B+14}" fill="#cbd5e1" font-size="9" text-anchor="middle">${esc(a.n.slice(0,9))}</text><text x="${sx(a.t)}" y="${sy(a.f)-10}" fill="#e2e8f0" font-size="10" font-weight="700" text-anchor="middle">${a.f.toFixed(1)}</text>`});
- s+=`<text x="${(Lm+W-Rm)/2}" y="${H-4}" fill="#64748b" font-size="10" text-anchor="middle">Progreso del vuelo (gal restantes en cada punto)</text>`;
+ p.forEach((a,i)=>{const bad=a.f<rsv;s+=`<g><title>${esc(a.n)}: ${a.f.toFixed(1)} L · ${fT(a.t)}</title><circle cx="${sx(a.t)}" cy="${sy(a.f)}" r="6" fill="${bad?'#f87171':'#34d399'}" stroke="#fff" stroke-width="1.5"/></g><text x="${sx(a.t)}" y="${H-B+14}" fill="#cbd5e1" font-size="9" text-anchor="middle">${esc(a.n.slice(0,9))}</text><text x="${sx(a.t)}" y="${sy(a.f)-10}" fill="#e2e8f0" font-size="10" font-weight="700" text-anchor="middle">${a.f.toFixed(1)}</text>`});
+ s+=`<text x="${(Lm+W-Rm)/2}" y="${H-4}" fill="#64748b" font-size="10" text-anchor="middle">Progreso del vuelo (L restantes en cada punto)</text>`;
  $('fchart').innerHTML=s}
 
 buildG();buildLegs();calcNav();calcWind();
