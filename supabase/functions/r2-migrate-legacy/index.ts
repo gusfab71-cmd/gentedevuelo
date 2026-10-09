@@ -106,7 +106,10 @@ Deno.serve(async req=>{
    }
   }
   tasks.sort((a,b)=>a.priority-b.priority);
-  if(body.action==="inventory")return reply(origin,200,{pending:tasks.length,bySection:tasks.reduce((o:any,t)=>{o[t.table]=(o[t.table]||0)+1;return o},{})});
+  if(body.action==="inventory"){
+   const audit=await db.from("r2_migration_log").select("id",{count:"exact",head:true});
+   return reply(origin,200,{pending:tasks.length,migratedTotal:audit.count||0,bySection:tasks.reduce((o:any,t)=>{o[t.table]=(o[t.table]||0)+1;return o},{})});
+  }
   let currentUrl="";
   let migrated=0;
   const completed:any[]=[];
