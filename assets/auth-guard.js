@@ -50,6 +50,15 @@
   }
   function redirectOnboarding() {
     if (!onboardingRequired || recovery || permittedDuringOnboarding()) return false;
+    // La pantalla de registro vive dentro de comunidad.html. En OAuth móvil,
+    // volver a cargar la misma página puede dejarla oculta hasta actualizar.
+    // Cambiar el hash permite renderizar el formulario inmediatamente.
+    if (location.pathname === loginURL.pathname) {
+      location.hash = '#completar-perfil';
+      document.documentElement.classList.remove('auth-pending');
+      return true;
+    }
+    // Desde Portada/AeroChat sí debemos abandonar el contenido restringido.
     document.documentElement.classList.add('auth-pending');
     location.replace(onboardingURL.href);
     return true;
