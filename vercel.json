@@ -1,0 +1,14 @@
+{
+  "redirects": [
+    {
+      "source": "/revision-comunidad",
+      "destination": "/comunidad.html",
+      "permanent": false
+    },
+    {
+      "source": "/revision-comunidad/:path*",
+      "destination": "/comunidad.html",
+      "permanent": false
+    }
+  ]
+}
