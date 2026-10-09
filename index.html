@@ -4879,7 +4879,7 @@ img, video { max-width: 100%; }
   </button>
 
   <div class="menu-desplegable" id="menuDesplegable">
-    <a href="comunidad.html#hangar" id="gdv-hangar-link" hidden>Mi Hangar</a><a href="comunidad.html#foro">Foro</a><a href="aerochat.html">AeroChat</a><a href="comunidad.html#galeria">Galería</a><a href="#tienda-seccion">AeroShop</a><a href="comunidad.html#integrantes">Integrantes</a><a href="utilidades/">Utilidades</a><a href="comunidad.html#contacto">Contacto</a>
+    <a href="comunidad.html#hangar" id="gdv-hangar-link">Mi Hangar</a><a href="comunidad.html#foro">Foro</a><a href="aerochat.html">AeroChat</a><a href="comunidad.html#galeria">Galería</a><a href="#tienda-seccion">AeroShop</a><a href="comunidad.html#integrantes">Integrantes</a><a href="utilidades/">Utilidades</a><a href="comunidad.html#contacto">Contacto</a>
   </div>
 
 </nav>
@@ -6571,7 +6571,6 @@ document.getElementById("hangarLicense").textContent = perfil?.aviation_license 
   controlesUsuario.style.display = "flex";
   boton.hidden = !!user;
 
-  document.getElementById("gdv-hangar-link").hidden = !user;
   menuCuenta.hidden = !user;
   if (user) {
     seccionIngresar.classList.remove("abierto");
