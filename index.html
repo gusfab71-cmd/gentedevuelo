@@ -6489,7 +6489,19 @@ async function recuperarPassword() {
       mensaje.textContent = "Ingresaste correctamente a Gente de Vuelo.";
     }
 async function actualizarBotonIngreso() {
-  
+  // Google Auth puede crear un perfil provisional. Nunca lo mostramos como cuenta habilitada.
+  // Esperar la validación centralizada antes de pintar datos del usuario en la portada.
+  const cuentaValidada = await window.GDV_AUTH.ready;
+  if (cuentaValidada) {
+    let perfilIncompleto = true;
+    try { perfilIncompleto = await window.GDV_AUTH.refreshOnboarding(cuentaValidada); }
+    catch (error) { console.warn("No se pudo comprobar el registro de Google:", error); }
+    if (perfilIncompleto) {
+      document.documentElement.classList.add("auth-pending");
+      location.replace("https://gentedevuelo.com/comunidad.html#completar-perfil");
+      return;
+    }
+  }
   const boton = document.getElementById("botonIngresar");
   const menuCuenta = document.getElementById("menuCuenta");
 const seccionIngresar = document.getElementById("ingresar");
