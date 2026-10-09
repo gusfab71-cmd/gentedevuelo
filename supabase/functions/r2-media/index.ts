@@ -31,9 +31,14 @@ function safePath(path:unknown,userId:string){
  if(typeof path!=="string")return false;
  return /^(imagenes|videos|documentos)\/[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|png|webp|mp4|webm|mov|pdf)$/.test(path)&&path.split("/")[1]===userId;
 }
-async function checkAdmin(client:any,userId:string){
- const {data,error}=await client.from("site_admins").select("user_id").eq("user_id",userId).maybeSingle();
- return !error&&Boolean(data);
+async function checkAdmin(userId:string){
+ const url=Deno.env.get("SUPABASE_URL")||"";
+ const serviceKey=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")||"";
+ if(!url||!serviceKey)throw new Error("No se puede verificar al administrador");
+ const adminClient=createClient(url,serviceKey,{auth:{persistSession:false}});
+ const {data,error}=await adminClient.from("site_admins").select("user_id").eq("user_id",userId).maybeSingle();
+ if(error)throw new Error("No se puede comprobar el permiso de administración");
+ return Boolean(data);
 }
 async function configureCors(s3:S3Client){
  let existing:any[]=[];
@@ -104,7 +109,7 @@ Deno.serve(async req=>{
    return reply(origin,200,{url:base+input.path,path:input.path,size});
   }
   if(action==="setup-cors"){
-   if(!await checkAdmin(auth,user.id))return reply(origin,403,{error:"Solo administración"});
+   if(!await checkAdmin(user.id))return reply(origin,403,{error:"Solo administración"});
    const result=await configureCors(s3);
    return reply(origin,200,{ok:true,detail:result});
   }
