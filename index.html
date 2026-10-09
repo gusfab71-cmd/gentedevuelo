@@ -4826,6 +4826,7 @@ img, video { max-width: 100%; }
   @media(max-width:650px){.gdv-retention-policy-card{padding:17px!important}.gdv-retention-policy ul{padding-left:18px}.gdv-retention-policy li{margin-bottom:12px}}
 </style>
 <script src="assets/r2-media.js?v=20261009cloudflare2"></script>
+<style>#gdvStorageLink[hidden]{display:none!important}</style>
 </head>
 
 <body>
@@ -4867,6 +4868,7 @@ img, video { max-width: 100%; }
     </summary>
     <div class="cuenta-opciones" id="opcionesCuenta">
       <a href="comunidad.html#hangar">Mi Hangar</a><a href="comunidad.html#perfil">Editar perfil</a>
+      <a href="comunidad.html#almacenamiento" id="gdvStorageLink" hidden>Almacenamiento</a>
       <button type="button" id="botonCerrarSesion">Cerrar sesión</button>
     </div>
   </details>
@@ -6565,6 +6567,8 @@ document.getElementById("hangarLicense").textContent = perfil?.aviation_license 
       window.gdvLegacyAdmin = true;
     }
   }
+  const storageLink = document.getElementById("gdvStorageLink");
+  if (storageLink) storageLink.hidden = !window.gdvLegacyAdmin;
   window.dispatchEvent(new CustomEvent("gdv-admin-ready", {
     detail: { isAdmin: !!window.gdvLegacyAdmin }
   }));
