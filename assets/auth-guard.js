@@ -10,6 +10,23 @@
     new URLSearchParams(location.hash.slice(1)).get('type') === 'recovery';
   let verifiedUser = null;
   let pendingValidation = null;
+  let presenceBusy = false;
+  let lastPresence = 0;
+  // A single heartbeat shared by Home, Foro, Galería and AeroChat.
+  // PostgreSQL sets its own authoritative last_seen timestamp.
+  async function heartbeat() {
+    if (!verifiedUser || document.hidden || presenceBusy || Date.now()-lastPresence<25000) return;
+    presenceBusy = true;
+    try {
+      const {error} = await client.from('gdv_member_presence').upsert({
+        user_id: verifiedUser.id,
+        last_seen: new Date().toISOString()
+      });
+      if (!error) lastPresence = Date.now();
+    } finally {
+      presenceBusy = false;
+    }
+  }
   function publicRoute() {
     const onCommunity = location.pathname === loginURL.pathname;
     const onHome = location.pathname === base.pathname || location.pathname === new URL('index.html', base).pathname;
@@ -74,10 +91,16 @@
     else document.documentElement.classList.remove('auth-pending');
     return user;
   });
-  window.GDV_AUTH = { client, ready, validate, requireRoute, afterLogin, homeURL, recoveryURL, recovery };
+  window.GDV_AUTH = { client, ready, validate, requireRoute, afterLogin, heartbeat, homeURL, recoveryURL, recovery };
+  ready.then(() => heartbeat()).catch(() => {});
+  setInterval(() => heartbeat().catch(() => {}), 30000);
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) heartbeat().catch(() => {});
+  });
   client.auth.onAuthStateChange(event => {
     if (event === 'SIGNED_OUT') {
       verifiedUser = null;
+      lastPresence = 0;
       if (!publicRoute()) {
         document.documentElement.classList.add('auth-pending');
         goLogin();
