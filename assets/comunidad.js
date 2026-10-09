@@ -89,7 +89,7 @@ async function load(){
  for(let start=0;start<privateMedia.length;start+=100){const batch=privateMedia.slice(start,start+100),result=await db.storage.from('community-media').createSignedUrls(batch.map(m=>m.path),3600);if(result.error)throw result.error;const urls=new Map(result.data.map(m=>[m.path,m.signedUrl]));batch.forEach(m=>m.url=urls.get(m.path)||'')}
 
 }
-function account(){ $('account').innerHTML=user?`<details class="account-menu"><summary aria-label="Abrir menú de cuenta">Mi cuenta <span id="unread-notifications-badge" class="unread-notifications-badge" hidden aria-label="Notificaciones sin leer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg><span id="unread-notifications-count"></span></span> <span id="admin-pending-badge" class="admin-pending-badge" hidden></span> <span aria-hidden="true">⌄</span></summary><div class="account-menu-panel">${link('Notificaciones','#notificaciones','')}${isAdmin?link(isOwnerAdmin?'Moderación':'Panel de moderador','#moderacion',''):''}${isOwnerAdmin?link('Comunicados','#gestion/comunicados',''):''}${link('Mi Hangar','#hangar','')}<button type="button" data-action="logout">Salir</button></div></details>`:`${link('Ingresar','#ingresar','button primary')}`; if(isAdmin)refreshAdminPendingBadge().catch(()=>{}); if(user)refreshUnreadNotificationsBadge().catch(()=>{}); }
+function account(){ $('account').innerHTML=user?`<details class="account-menu"><summary aria-label="Abrir menú de cuenta">Mi cuenta <span id="unread-notifications-badge" class="unread-notifications-badge" hidden aria-label="Notificaciones sin leer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg><span id="unread-notifications-count"></span></span> <span id="admin-pending-badge" class="admin-pending-badge" hidden></span> <span aria-hidden="true">⌄</span></summary><div class="account-menu-panel">${link('Notificaciones','#notificaciones','')}${isAdmin?link(isOwnerAdmin?'Moderación':'Panel de moderador','#moderacion',''):''}${isOwnerAdmin?link('Comunicados','#gestion/comunicados',''):''}${isOwnerAdmin?link('Almacenamiento','#almacenamiento',''):''}${link('Mi Hangar','#hangar','')}<button type="button" data-action="logout">Salir</button></div></details>`:`${link('Ingresar','#ingresar','button primary')}`; if(isAdmin)refreshAdminPendingBadge().catch(()=>{}); if(user)refreshUnreadNotificationsBadge().catch(()=>{}); }
 async function refreshUnreadNotificationsBadge(){
  if(!user)return;
  const response=await db.from('gdv_notifications').select('id',{count:'exact',head:true}).eq('user_id',user.id).eq('read',false);
@@ -973,7 +973,115 @@ async function contact(){
    });
  };
 }
-async function route(){if(!await window.GDV_AUTH.requireRoute())return;const current=++epoch;notice.textContent='';const onboardingRequired=Boolean(user&&profiles.get(user.id)?.onboarding_completed===false);if(onboardingRequired&&location.hash!=='#completar-perfil')history.replaceState(null,'','#completar-perfil');const [view='foro',id,child]=location.hash.slice(1).split('/');document.querySelectorAll('.site-nav a').forEach(a=>a.setAttribute('aria-current',a.getAttribute('href')==='#'+view?'page':'false'));app.innerHTML='<p>Cargando…</p>';try{if(onboardingRequired)await googleOnboarding();else if(view==='completar-perfil'){history.replaceState(null,'','#foro');feed()}else if(['registro','ingresar','recuperar'].includes(view))authView(view);else if(view==='tematicas')categoryView();else if(view==='tematica')feed(id);else if(view==='tema')await topicView(id,child);else if(view==='crear')editor();else if(view==='editar')editor(id);else if(view==='multimedia')multimedia();else if(view==='galeria')await galeriaComunidad();else if(view==='hangar')await hangar(id);else if(view==='notificaciones')await notifications();else if(view==='moderacion')await moderation();else if(view==='gestion')await administration(id==='comunicados'?'announcements':'topics');else if(view==='perfil')await profileEditor();else if(view==='normativa')rules();else if(view==='quienes-somos')about();else if(view==='integrantes')await membersView();else if(view==='contacto')await contact();else feed();app.querySelectorAll('input[type="password"]').forEach(input=>{const b=document.createElement('button');b.type='button';b.className='password-toggle';b.dataset.action='show-password';b.dataset.id=input.id;b.textContent='Mostrar contraseña';b.setAttribute('aria-pressed','false');input.after(b)});friendlyActions();contextualModeration();if(current===epoch)document.title=(app.querySelector('h1')?.textContent||'Foro')+' · Gente de Vuelo'}catch(e){if(current===epoch){app.innerHTML='<p>No se pudo cargar este apartado.</p>'+link('Volver al Foro','#foro');message(e.message,true)}}}
+
+const storageGB = 1000*1000*1000;
+const formatStoredSize = bytes => {
+ const value=Number(bytes);
+ if(!Number.isFinite(value)||value<0)return 'Sin datos';
+ if(value>=storageGB)return (value/storageGB).toLocaleString('es-AR',{maximumFractionDigits:2})+' GB';
+ if(value>=1e6)return (value/1e6).toLocaleString('es-AR',{maximumFractionDigits:2})+' MB';
+ if(value>=1e3)return (value/1e3).toLocaleString('es-AR',{maximumFractionDigits:1})+' KB';
+ return value.toLocaleString('es-AR')+' B';
+};
+const formatStoredCount = num => Number(num||0).toLocaleString('es-AR');
+function storageProgress(bytes,allowance){
+ const value=Math.max(0,Number(bytes)||0);
+ const fraction=Math.min(value/allowance*100,100);
+ const percent=(value/allowance*100).toLocaleString('es-AR',{maximumFractionDigits:2});
+ return '<div class="storage-meter"><progress max="100" value="'+fraction.toFixed(5)+'" aria-label="Ocupación respecto de la referencia indicada"></progress><span>'+percent+' %</span></div>';
+}
+function renderStorageRows(rows){
+ if(!rows.length)return '<p class="muted">No hay archivos almacenados.</p>';
+ const bucketLabels={
+  'hangar-fotos':'Hangar y galería (archivos anteriores)',
+  'community-media':'Adjuntos anteriores del Foro',
+  'institution-logos':'Logos anteriores de instituciones',
+  'travesias-fotos':'Travesías anteriores',
+  'clasificados-fotos':'CompraVenta anterior',
+  'aportes':'AeroShop anterior',
+  'robert-knowledge':'Documentos privados de Robert'
+ };
+ return '<div class="storage-row-list">'+rows.map(row=>{
+  const title=bucketLabels[row.name]||row.name;
+  return '<div class="storage-detail-row"><span>'+esc(title)+'</span><span class="storage-row-numbers"><strong>'+esc(formatStoredSize(row.bytes))+'</strong><small>'+esc(formatStoredCount(row.count))+' archivos</small></span></div>';
+ }).join('')+'</div>';
+}
+async function storageDashboard(){
+ if(!isOwnerAdmin||!user){
+  app.innerHTML='<h1>Acceso restringido</h1><p>Solo el administrador principal puede consultar el espacio de almacenamiento.</p>';
+  return;
+ }
+ crumbs([['Mi cuenta','#hangar'],['Almacenamiento']]);
+ app.innerHTML=`
+  <section class="storage-dashboard">
+   <div class="storage-dashboard-head">
+     <div>
+       <p class="storage-eyebrow">ADMINISTRACIÓN · RECURSOS</p>
+       <h1>Control de almacenamiento</h1>
+       <p class="muted">Consultá cuánto espacio ocupan los archivos de Gente de Vuelo en cada servicio.</p>
+     </div>
+     <button id="storage-update" type="button" class="primary">Actualizar datos</button>
+   </div>
+   <p id="storage-report-state" class="storage-status" role="status" aria-live="polite">Consultando Supabase y Cloudflare R2…</p>
+   <div id="storage-report-cards" class="storage-service-grid" aria-live="polite"></div>
+   <p id="storage-report-date" class="storage-report-date"></p>
+   <section class="card storage-help">
+    <h2>Cómo interpretar las cifras</h2>
+    <p><strong>Supabase Storage:</strong> muestra el espacio ocupado por los objetos en sus depósitos. Las copias antiguas siguen sumando hasta que decidas retirarlas, después de comprobar que existen en Cloudflare.</p>
+    <p><strong>Cloudflare R2:</strong> el indicador compara el tamaño actual de los archivos con la franquicia gratuita de <strong>10 GB-mes</strong> para almacenamiento estándar. No es un límite físico ni representa el promedio facturable del mes. Las operaciones también tienen su propia franquicia.</p>
+    <p>Estos valores no incluyen el espacio de la base de datos PostgreSQL de Supabase, que tiene una cuota independiente. Ningún archivo se elimina desde este panel.</p>
+    <p class="storage-doc-links"><a href="https://supabase.com/pricing" target="_blank" rel="noopener noreferrer">Cuotas Supabase</a> · <a href="https://developers.cloudflare.com/r2/pricing/" target="_blank" rel="noopener noreferrer">Precios Cloudflare R2</a></p>
+   </section>
+  </section>`;
+ const button=$('storage-update'),state=$('storage-report-state'),cards=$('storage-report-cards'),at=$('storage-report-date');
+ async function refresh(){
+  button.disabled=true;
+  state.textContent='Consultando el almacenamiento actual…';
+  try{
+   const {data,error}=await db.auth.getSession();
+   if(error||!data.session?.access_token)throw new Error('Tu sesión venció. Ingresá de nuevo.');
+   const response=await fetch(cfg.url+'/functions/v1/gdv-storage-usage',{
+    method:'POST',
+    headers:{Authorization:'Bearer '+data.session.access_token,apikey:cfg.key,'Content-Type':'application/json'},
+    body:JSON.stringify({action:'report'})
+   });
+   const result=await response.json().catch(()=>({}));
+   if(!response.ok)throw new Error(result.error||'No se pudo consultar el almacenamiento.');
+   if(!cards.isConnected)return;
+   const supa=result.supabase,cf=result.cloudflare;
+   let html='';
+   if(supa){
+    const used=Number(supa.totalBytes||0),quota=storageGB;
+    html+='<section class="card storage-service-card"><div class="storage-service-title"><h2>Supabase Storage</h2><span class="storage-provider-tag">1 GB incluido</span></div>'+
+     '<p class="storage-main-number">'+esc(formatStoredSize(used))+' <span>utilizados</span></p>'+
+     storageProgress(used,quota)+
+     '<div class="storage-stat-pair"><span>Disponible respecto de 1 GB <strong>'+esc(formatStoredSize(Math.max(0,quota-used)))+'</strong></span><span>Total <strong>'+esc(formatStoredCount(supa.totalFiles))+' archivos</strong></span></div>'+
+     '<h3>Uso por depósito</h3>'+renderStorageRows(Array.isArray(supa.buckets)?supa.buckets:[])+
+     '</section>';
+   }else html+='<section class="card storage-service-card"><h2>Supabase Storage</h2><p class="storage-fail">No se pudieron obtener las cifras. Intentá actualizar.</p></section>';
+   if(cf){
+    const used=Number(cf.totalBytes||0);
+    html+='<section class="card storage-service-card"><div class="storage-service-title"><h2>Cloudflare R2</h2><span class="storage-provider-tag">10 GB-mes gratis</span></div>'+
+     '<p class="storage-main-number">'+esc(formatStoredSize(used))+' <span>almacenados ahora</span></p>'+
+     storageProgress(used,10*storageGB)+
+     '<div class="storage-stat-pair"><span>Referencia de franquicia <strong>10 GB-mes</strong></span><span>Total <strong>'+esc(formatStoredCount(cf.totalFiles))+' archivos</strong></span></div>'+
+     '<h3>Uso por tipo de archivo</h3>'+renderStorageRows(Array.isArray(cf.groups)?cf.groups:[])+
+     (!cf.complete?'<p class="storage-fail">Inventario parcial: existen más objetos de los que se pudieron consultar. La cifra indicada es un mínimo.</p>':'')+
+     '</section>';
+   }else html+='<section class="card storage-service-card"><h2>Cloudflare R2</h2><p class="storage-fail">No se pudo consultar Cloudflare. Las cifras de Supabase siguen disponibles.</p></section>';
+   cards.innerHTML=html;
+   const warnings=Array.isArray(result.warnings)?result.warnings:[];
+   state.textContent=warnings.length?'Consulta parcial: '+warnings.join(' · '):'Consulta completada.';
+   at.textContent='Actualizado: '+(result.asOf?new Date(result.asOf).toLocaleString('es-AR',{dateStyle:'short',timeStyle:'short',hourCycle:'h23'}):'ahora')+'. Datos consultados al pulsar Actualizar; no son cifras de facturación.';
+  }catch(e){
+   if(cards.isConnected)state.textContent='No se pudo actualizar: '+(e.message||'Error de conexión');
+  }finally{if(button.isConnected)button.disabled=false}
+ }
+ button.onclick=refresh;
+ await refresh();
+}
+
+async function route(){if(!await window.GDV_AUTH.requireRoute())return;const current=++epoch;notice.textContent='';const onboardingRequired=Boolean(user&&profiles.get(user.id)?.onboarding_completed===false);if(onboardingRequired&&location.hash!=='#completar-perfil')history.replaceState(null,'','#completar-perfil');const [view='foro',id,child]=location.hash.slice(1).split('/');document.querySelectorAll('.site-nav a').forEach(a=>a.setAttribute('aria-current',a.getAttribute('href')==='#'+view?'page':'false'));app.innerHTML='<p>Cargando…</p>';try{if(onboardingRequired)await googleOnboarding();else if(view==='completar-perfil'){history.replaceState(null,'','#foro');feed()}else if(['registro','ingresar','recuperar'].includes(view))authView(view);else if(view==='tematicas')categoryView();else if(view==='tematica')feed(id);else if(view==='tema')await topicView(id,child);else if(view==='crear')editor();else if(view==='editar')editor(id);else if(view==='multimedia')multimedia();else if(view==='galeria')await galeriaComunidad();else if(view==='hangar')await hangar(id);else if(view==='notificaciones')await notifications();else if(view==='moderacion')await moderation();else if(view==='almacenamiento')await storageDashboard();else if(view==='gestion')await administration(id==='comunicados'?'announcements':'topics');else if(view==='perfil')await profileEditor();else if(view==='normativa')rules();else if(view==='quienes-somos')about();else if(view==='integrantes')await membersView();else if(view==='contacto')await contact();else feed();app.querySelectorAll('input[type="password"]').forEach(input=>{const b=document.createElement('button');b.type='button';b.className='password-toggle';b.dataset.action='show-password';b.dataset.id=input.id;b.textContent='Mostrar contraseña';b.setAttribute('aria-pressed','false');input.after(b)});friendlyActions();contextualModeration();if(current===epoch)document.title=(app.querySelector('h1')?.textContent||'Foro')+' · Gente de Vuelo'}catch(e){if(current===epoch){app.innerHTML='<p>No se pudo cargar este apartado.</p>'+link('Volver al Foro','#foro');message(e.message,true)}}}
 async function adminDeleteContent(kind,id){
  if(!isAdmin)return;
  const isTopic=kind==='topic';
