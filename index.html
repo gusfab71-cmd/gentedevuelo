@@ -6093,15 +6093,15 @@ img, video { max-width: 100%; }
 
   <dialog id="dialogoNuevaPassword" aria-labelledby="tituloNuevaPassword">
     <h2 id="tituloNuevaPassword">Elegí una contraseña nueva</h2>
-    <p>Escribí una contraseña de al menos 8 caracteres, con al menos una letra y un número.</p>
+    <p>Escribí una contraseña de al menos 9 caracteres, con letras, números y un símbolo (por ejemplo, !, @ o #).</p>
     <form id="formNuevaPassword">
       <div class="campo">
         <label for="nuevaPassword">Contraseña nueva</label>
-        <input id="nuevaPassword" type="password" autocomplete="new-password" minlength="8" pattern="(?=.*[A-Za-z])(?=.*[0-9]).{8,}" required>
+        <input id="nuevaPassword" type="password" autocomplete="new-password" minlength="9" required>
       </div>
       <div class="campo">
         <label for="confirmarNuevaPassword">Repetir contraseña</label>
-        <input id="confirmarNuevaPassword" type="password" autocomplete="new-password" minlength="8" pattern="(?=.*[A-Za-z])(?=.*[0-9]).{8,}" required>
+        <input id="confirmarNuevaPassword" type="password" autocomplete="new-password" minlength="9" required>
       </div>
       <button class="boton" id="botonGuardarNuevaPassword" type="submit">Guardar contraseña</button>
     </form>
@@ -6257,8 +6257,8 @@ img, video { max-width: 100%; }
       const mensaje = document.getElementById("mensajeUsuario");
       const boton = document.getElementById("botonAccesoPrincipal");
 
-      if (password.length < 6) {
-        mensaje.textContent = "La contraseña debe tener al menos 6 caracteres.";
+      if (!gdvValidarPasswordNueva(password)) {
+        mensaje.textContent = "La contraseña debe tener al menos 9 caracteres, una letra, un número y un símbolo.";
         return;
       }
 
@@ -6733,6 +6733,17 @@ document.addEventListener("keydown", function (event) {
   }
 });   
     
+// Reglas de nuevas contraseñas. No rechaza credenciales anteriores en el acceso.
+function gdvValidarPasswordNueva(password) {
+  if (typeof password !== "string" || password.length < 9 ||
+      !/[A-Za-z]/.test(password) || !/[0-9]/.test(password)) return false;
+  return [...password].some(caracter => {
+    const c = caracter.charCodeAt(0);
+    return (c >= 33 && c <= 47) || (c >= 58 && c <= 64) ||
+           (c >= 91 && c <= 96) || (c >= 123 && c <= 126);
+  });
+}
+
 const dialogoNuevaPassword = document.getElementById("dialogoNuevaPassword");
 document.getElementById("formNuevaPassword").addEventListener("submit", async event => {
   event.preventDefault();
@@ -6745,8 +6756,8 @@ document.getElementById("formNuevaPassword").addEventListener("submit", async ev
     mensaje.textContent = "Las contraseñas no coinciden.";
     return;
   }
-  if (!/^(?=.*[A-Za-z])(?=.*\d).{8,}$/.test(password)) {
-    mensaje.textContent = "La contraseña debe tener al menos 8 caracteres e incluir una letra y un número.";
+  if (!gdvValidarPasswordNueva(password)) {
+    mensaje.textContent = "La contraseña debe tener al menos 9 caracteres, una letra, un número y un símbolo.";
     return;
   }
 
