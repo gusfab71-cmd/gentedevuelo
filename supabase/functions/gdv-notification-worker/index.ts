@@ -24,15 +24,17 @@ const GDV_WELCOME_TEXT=[
  "Administración de Gente de Vuelo"
 ].join("\n\n");
 function gdvEmailTemplate(kind:string,subject:string,body:string,moderationLink?:string){
- const welcome=kind==="welcome",moderation=kind==="moderation",announcement=kind==="announcement";
+ const welcome=kind==="welcome",moderation=kind==="moderation",announcement=kind==="announcement",registration=kind==="registration";
  const safeSubject=gdvEscape(subject.slice(0,120));
  const heading=welcome?"¡Bienvenido a bordo!":moderation?"Nueva solicitud de moderación":subject;
- const eyebrow=welcome?"BIENVENIDA A LA COMUNIDAD":moderation?"AVISO PRIVADO DE ADMINISTRACIÓN":"COMUNICADO A LA COMUNIDAD";
- const actionUrl=moderation?(moderationLink||GDV_HOME+"/comunidad.html#moderacion"):GDV_FORUM;
- const actionLabel=welcome?"INGRESAR A GENTE DE VUELO":moderation?"REVISAR MODERACIÓN":"VISITAR GENTE DE VUELO";
+ const eyebrow=welcome?"BIENVENIDA A LA COMUNIDAD":moderation?"AVISO PRIVADO DE ADMINISTRACIÓN":registration?"NUEVA INSCRIPCIÓN CONFIRMADA":"COMUNICADO A LA COMUNIDAD";
+ const actionUrl=registration?(GDV_HOME+"/comunidad.html#integrantes"):moderation?(moderationLink||GDV_HOME+"/comunidad.html#moderacion"):GDV_FORUM;
+ const actionLabel=welcome?"INGRESAR A GENTE DE VUELO":moderation?"REVISAR MODERACIÓN":registration?"VER INTEGRANTES":"VISITAR GENTE DE VUELO";
  const content=welcome?GDV_WELCOME_TEXT.replace(/^¡Bienvenido a bordo!\n\n/,""):body;
  const paragraphs=content.split(/\n+/).map(s=>s.trim()).filter(Boolean).map(s=>'<p style="margin:0 0 15px;font:15px/1.65 Arial,Helvetica,sans-serif;color:#333c47">'+gdvEscape(s)+'</p>').join("");
- const footerNote=moderation
+ const footerNote=registration
+  ?"Aviso automático privado a la administración. Se envía únicamente al completar el registro y confirmar el correo."
+  :moderation
   ?"Aviso automático exclusivo de la administración. Las aprobaciones se realizan únicamente desde el panel."
   :announcement
   ?"Recibiste este comunicado porque activaste voluntariamente la suscripción a novedades por correo electrónico."
@@ -75,7 +77,7 @@ Deno.serve(async request=>{
  const db=createClient(url,secret,{auth:{persistSession:false}});
  const check=await db.rpc("gdv_worker_authorize",{p_secret:bearer});
  if(check.error||!check.data?.valid)return new Response("No autorizado",{status:403});
- const summary={whatsappAccepted:0,emailAccepted:0,moderationAccepted:0,moderationSkipped:0,errors:[] as string[]};
+ const summary={whatsappAccepted:0,emailAccepted:0,moderationAccepted:0,moderationSkipped:0,registrationAccepted:0,registrationSkipped:0,errors:[] as string[]};
  const waPhone=Deno.env.get("META_WA_PHONE_NUMBER_ID")||"";
  const waToken=Deno.env.get("META_WA_ACCESS_TOKEN")||"";
  const waRecipient=(Deno.env.get("META_WA_RECIPIENT")||"").replace(/\D/g,"");
@@ -195,6 +197,66 @@ Deno.serve(async request=>{
      else{summary.errors.push(failure);break}
     }
    }
+  }
+ }
+
+ // Notificación administrativa independiente por cada nuevo registro completo.
+ // No depende del consentimiento para recibir boletines: es un aviso interno.
+ if(resendKey){
+  const claimed=await db.rpc("gdv_email_claim_registration",{p_limit:5});
+  if(claimed.error){
+   summary.errors.push("No se pudo tomar la cola de inscripciones");
+  }else for(const item of claimed.data||[]){
+   let accepted=false,providerId="",failure="";
+   try{
+    const u=await db.auth.admin.getUserById(item.user_id);
+    const account=u.data?.user;
+    const p=await db.from("profiles").select("username,full_name,onboarding_completed").eq("id",item.user_id).maybeSingle();
+    if(!account?.email||!account.email_confirmed_at||account.deleted_at||p.error||!p.data?.onboarding_completed){
+     const skip=await db.from("gdv_email_outbox").update({
+       status:"skipped",last_error:"Registro no confirmado o perfil incompleto"
+     }).eq("id",item.id).eq("status","sending").select("id");
+     if(skip.error||!skip.data?.length)summary.errors.push("No se pudo descartar una inscripción no válida");
+     summary.registrationSkipped++;
+     continue;
+    }
+    const userName=String(p.data.username||"Sin usuario").slice(0,100);
+    const fullName=String(p.data.full_name||"").slice(0,120);
+    const memberEmail=String(account.email).slice(0,250);
+    const date=new Intl.DateTimeFormat("es-AR",{
+      timeZone:"America/Argentina/Buenos_Aires",dateStyle:"short",timeStyle:"short"
+    }).format(new Date());
+    const subject=String(item.subject).slice(0,120);
+    const body=[
+      "Un integrante completó correctamente su inscripción a Gente de Vuelo.",
+      "Nombre de usuario: "+userName,
+      ...(fullName?["Nombre visible: "+fullName]:[]),
+      "Correo electrónico: "+memberEmail,
+      "Aviso emitido: "+date+" (Argentina)"
+    ].join("\n");
+    const template=gdvEmailTemplate("registration",subject,body);
+    const response=await fetch("https://api.resend.com/emails",{
+      method:"POST",
+      headers:{"Authorization":"Bearer "+resendKey,"Content-Type":"application/json"},
+      body:JSON.stringify({
+        from:Deno.env.get("GDV_MAIL_SENDER")||"Gente de Vuelo <hola@gentedevuelo.com>",
+        to:["gentedevuelo@gmail.com"],reply_to:"gentedevuelo@gmail.com",
+        subject,html:template.html,text:template.text
+      })
+    });
+    const data=await response.json().catch(()=>({}));
+    if(response.ok&&data?.id){accepted=true;providerId=String(data.id)}
+    else failure="Resend rechazó el aviso de inscripción: "+String(data?.name||response.status).slice(0,80);
+   }catch{failure="Falló el envío del aviso de inscripción"}
+   const finish=await db.rpc("gdv_email_finish",{
+     p_id:item.id,p_sent:accepted,p_error:failure||null,p_provider_id:providerId||null
+   });
+   if(finish.error||finish.data!==true){
+    summary.errors.push("No se pudo guardar estado del aviso de inscripción");
+    break;
+   }
+   if(accepted)summary.registrationAccepted++;
+   else{summary.errors.push(failure);break}
   }
  }
 
