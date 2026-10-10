@@ -6093,7 +6093,7 @@ img, video { max-width: 100%; }
 
   <dialog id="dialogoNuevaPassword" aria-labelledby="tituloNuevaPassword">
     <h2 id="tituloNuevaPassword">Elegí una contraseña nueva</h2>
-    <p>Escribí una contraseña de al menos 9 caracteres, con letras, números y un símbolo (por ejemplo, !, @ o #).</p>
+    <p>Escribí una contraseña de al menos 9 caracteres, con una mayúscula, una minúscula, un número y un símbolo (por ejemplo, !, @ o #).</p>
     <form id="formNuevaPassword">
       <div class="campo">
         <label for="nuevaPassword">Contraseña nueva</label>
@@ -6258,7 +6258,7 @@ img, video { max-width: 100%; }
       const boton = document.getElementById("botonAccesoPrincipal");
 
       if (!gdvValidarPasswordNueva(password)) {
-        mensaje.textContent = "La contraseña debe tener al menos 9 caracteres, una letra, un número y un símbolo.";
+        mensaje.textContent = "La contraseña debe tener al menos 9 caracteres, una mayúscula, una minúscula, un número y un símbolo.";
         return;
       }
 
@@ -6736,7 +6736,7 @@ document.addEventListener("keydown", function (event) {
 // Reglas de nuevas contraseñas. No rechaza credenciales anteriores en el acceso.
 function gdvValidarPasswordNueva(password) {
   if (typeof password !== "string" || password.length < 9 ||
-      !/[A-Za-z]/.test(password) || !/[0-9]/.test(password)) return false;
+      !/[a-z]/.test(password) || !/[A-Z]/.test(password) || !/[0-9]/.test(password)) return false;
   return [...password].some(caracter => {
     const c = caracter.charCodeAt(0);
     return (c >= 33 && c <= 47) || (c >= 58 && c <= 64) ||
@@ -6757,7 +6757,7 @@ document.getElementById("formNuevaPassword").addEventListener("submit", async ev
     return;
   }
   if (!gdvValidarPasswordNueva(password)) {
-    mensaje.textContent = "La contraseña debe tener al menos 9 caracteres, una letra, un número y un símbolo.";
+    mensaje.textContent = "La contraseña debe tener al menos 9 caracteres, una mayúscula, una minúscula, un número y un símbolo.";
     return;
   }
 
