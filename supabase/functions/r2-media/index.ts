@@ -1,6 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.57.0";
-import { S3Client, PutObjectCommand, HeadObjectCommand, DeleteObjectCommand, GetBucketCorsCommand, PutBucketCorsCommand } from "npm:@aws-sdk/client-s3@3.821.0";
+import { S3Client, PutObjectCommand, HeadObjectCommand, GetObjectCommand, DeleteObjectCommand, GetBucketCorsCommand, PutBucketCorsCommand } from "npm:@aws-sdk/client-s3@3.821.0";
 import { getSignedUrl } from "npm:@aws-sdk/s3-request-presigner@3.821.0";
 
 const origins = ["https://gentedevuelo.com","https://www.gentedevuelo.com","https://gentedevuelo.vercel.app"];
@@ -30,6 +30,17 @@ function r2(){
 function safePath(path:unknown,userId:string){
  if(typeof path!=="string")return false;
  return /^(imagenes|videos|documentos)\/[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|png|webp|mp4|webm|mov|pdf)$/.test(path)&&path.split("/")[1]===userId;
+}
+// Verificar la firma real del archivo: los encabezados MIME pueden falsificarse.
+function hasValidMagic(type:string,bytes:Uint8Array):boolean {
+ const ascii=(from:number,to:number)=>new TextDecoder().decode(bytes.slice(from,to));
+ if(type==="image/jpeg")return bytes.length>=3&&bytes[0]===255&&bytes[1]===216&&bytes[2]===255;
+ if(type==="image/png")return bytes.length>=8&&[137,80,78,71,13,10,26,10].every((x,i)=>bytes[i]===x);
+ if(type==="image/webp")return bytes.length>=12&&ascii(0,4)==="RIFF"&&ascii(8,12)==="WEBP";
+ if(type==="application/pdf")return bytes.length>=5&&ascii(0,5)==="%PDF-";
+ if(type==="video/webm")return bytes.length>=4&&[26,69,223,163].every((x,i)=>bytes[i]===x);
+ if(type==="video/mp4"||type==="video/quicktime")return bytes.length>=8&&ascii(4,8)==="ftyp";
+ return false;
 }
 async function checkAdmin(userId:string){
  const url=Deno.env.get("SUPABASE_URL")||"";
@@ -70,14 +81,7 @@ Deno.serve(async req=>{
   try{
    const bytes=new Uint8Array(await req.arrayBuffer());
    if(!bytes.length||bytes.length>spec[2])return reply(origin,413,{error:"El archivo supera el máximo permitido"});
-   const head=(n:number)=>new TextDecoder().decode(bytes.slice(0,n));
-   const signature=ctype==="image/jpeg" ? bytes[0]===255&&bytes[1]===216&&bytes[2]===255 :
-      ctype==="image/png" ? bytes[0]===137&&bytes[1]===80&&bytes[2]===78&&bytes[3]===71 :
-      ctype==="image/webp" ? head(4)==="RIFF"&&new TextDecoder().decode(bytes.slice(8,12))==="WEBP" :
-      ctype==="application/pdf" ? head(5)==="%PDF-" :
-      ctype==="video/webm" ? bytes[0]===26&&bytes[1]===69&&bytes[2]===223&&bytes[3]===163 :
-      new TextDecoder().decode(bytes.slice(4,8))==="ftyp";
-   if(!signature)return reply(origin,415,{error:"El contenido no corresponde al tipo declarado"});
+   if(!hasValidMagic(ctype,bytes))return reply(origin,415,{error:"El contenido no corresponde al tipo declarado"});
    const key=spec[0]+"/"+user.id+"/"+crypto.randomUUID()+"."+spec[1];
    const client=r2();
    await client.send(new PutObjectCommand({Bucket:bucket,Key:key,Body:bytes,ContentType:ctype}));
@@ -106,6 +110,16 @@ Deno.serve(async req=>{
    const size=Number(head.ContentLength||0);
    if(size<1||size>rule[2]){await s3.send(new DeleteObjectCommand({Bucket:bucket,Key:input.path}));return reply(origin,413,{error:"El archivo excede el tamaño permitido"})}
    if(String(head.ContentType||"").split(";")[0]!==input.contentType)return reply(origin,415,{error:"El tipo del archivo no coincide"});
+   // La URL prefirmada permite subir directamente. Al finalizar, inspeccionar
+   // los primeros bytes DESDE R2 para impedir archivos falsificados.
+   const sample=await s3.send(new GetObjectCommand({
+      Bucket:bucket,Key:input.path,Range:"bytes=0-15"
+   }));
+   const magic=await sample.Body?.transformToByteArray();
+   if(!magic||!hasValidMagic(input.contentType,magic)){
+      await s3.send(new DeleteObjectCommand({Bucket:bucket,Key:input.path}));
+      return reply(origin,415,{error:"El archivo no corresponde al formato permitido"});
+   }
    return reply(origin,200,{url:base+input.path,path:input.path,size});
   }
   if(action==="setup-cors"){
