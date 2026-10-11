@@ -24,17 +24,23 @@
     return null;
   }
   async function home() {
-    const area=el('gdvStolPlayer'); if(!db||!area)return;
-    const {data,error}=await db.from('gdv_home_video').select('title,video_url,is_active').eq('id',1).maybeSingle();
-    if(error)return;
-    if(el('gdvStolTitle'))el('gdvStolTitle').textContent=data?.title||'STOL en acción';
-    if(data?.is_active===false){const card=el('stolEnAccion');if(card)card.hidden=true;return;}
-    const r=parseVideo(data?.video_url||''); if(!r)return;
-    const node=document.createElement(r.type==='video'?'video':'iframe');
-    node.src=r.src; node.setAttribute('title','Video STOL en acción');
-    if(r.type==='video'){node.controls=true;node.playsInline=true;node.preload='metadata';}
-    else {node.loading='lazy';node.allow='encrypted-media; picture-in-picture; web-share';node.allowFullscreen=true;}
-    area.replaceChildren(node);
+    const area=el('gdvStolPlayer'), card=el('stolEnAccion');
+    if(!db||!area||!card)return;
+    card.hidden=true; // No dejar un recuadro vacío mientras falta cargar el video.
+    try {
+      const {data,error}=await db.from('gdv_home_video')
+        .select('video_url,is_active').eq('id',1).maybeSingle();
+      if(error||data?.is_active===false)return;
+      const r=parseVideo(data?.video_url||'');
+      if(!r)return;
+      const node=document.createElement(r.type==='video'?'video':'iframe');
+      node.src=r.src;
+      node.setAttribute('title','Video de portada');
+      if(r.type==='video'){node.controls=true;node.playsInline=true;node.preload='metadata';}
+      else {node.loading='lazy';node.allow='encrypted-media; picture-in-picture; web-share';node.allowFullscreen=true;}
+      area.replaceChildren(node);
+      card.hidden=false;
+    } catch(err) { console.warn('No se pudo cargar el video de portada:',err); }
   }
   async function admin() {
     const box=el('gdvStolAdmin'); if(!box||!db)return;box.hidden=false;
@@ -58,7 +64,7 @@
     const r=parseVideo(el('gdvStolInputUrl').value.trim());
     if(!r){status.textContent='Agregá un enlace compatible para previsualizar.';area.hidden=true;return;}
     const node=document.createElement(r.type==='video'?'video':'iframe');
-    node.src=r.src;node.title='Vista previa del video STOL';node.style.cssText='width:100%;height:100%;border:0;display:block;';
+    node.src=r.src;node.title='Vista previa del video de portada';node.style.cssText='width:100%;height:100%;border:0;display:block;';
     if(r.type==='video'){node.controls=true;node.playsInline=true;node.preload='metadata';}
     else {node.allow='encrypted-media; picture-in-picture; web-share';node.allowFullscreen=true;}
     area.replaceChildren(node);area.hidden=false;
