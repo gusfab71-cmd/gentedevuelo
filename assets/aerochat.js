@@ -153,6 +153,7 @@
   function privateNotice(text) { dmNotice.textContent = text || ''; }
   function setChatMode(toPrivate) {
     dmActive = toPrivate;
+    window.GDV_AEROCHAT_ACTIVE_PEER = toPrivate ? (dmPeer?.id || null) : null;
     publicPanel.hidden = toPrivate;
     dmPanel.hidden = !toPrivate;
     publicTab.classList.toggle('selected', !toPrivate);
@@ -244,6 +245,7 @@
     const person=dmDirectory.find(p=>p.id===id);
     if(!person){privateNotice('Este integrante todavía no tiene un perfil habilitado.');return}
     dmPeer=person;
+    window.GDV_AEROCHAT_ACTIVE_PEER = person.id;
     dmPeerName.textContent=person.username||'Integrante';
     dmThread.replaceChildren();
     const loading=document.createElement('p');loading.className='empty';loading.textContent='Cargando conversación…';dmThread.append(loading);
