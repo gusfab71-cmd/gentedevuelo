@@ -19,6 +19,8 @@
   let channel = null;
   let host = null;
   let active = false;
+  let starting = false;
+  let seeded = false;
   let busy = false;
   let publicId = 0;
   let privateId = 0;
@@ -185,6 +187,7 @@
     if (!active || !user || busy || document.hidden) return;
     busy = true;
     try {
+      if (!seeded) { await seed(); seeded = true; return; }
       const [pub, priv] = await Promise.all([
         db.from('gdv_chat_messages').select('id,author_id,created_at')
           .gt('id', publicId).order('id', {ascending:true}).limit(50),
@@ -209,7 +212,9 @@
   }
 
   function stop() {
+    if (user) { try { sessionStorage.removeItem(key()); } catch {} }
     active = false;
+    seeded = false;
     if (channel) { db.removeChannel(channel); channel = null; }
     notifications = [];
     if (host) { host.remove(); host = null; }
@@ -217,7 +222,9 @@
   }
 
   async function start() {
-    if (active) return;
+    if (active || starting) return;
+    starting = true;
+    try {
     await auth.ready;
     const validated = await auth.validate().catch(() => null);
     if (!validated || auth.needsOnboarding() || !validated.email_confirmed_at) return;
@@ -228,8 +235,8 @@
     notifications = notifications.filter(n => !isOpen(n.type, n.sender));
     remember();
     if (notifications.length) render();
-    try { await seed(); }
-    catch { publicId = 0; privateId = 0; }
+    try { await seed(); seeded = true; }
+    catch { seeded = false; }
     if (!active) return;
     channel = db.channel('gdv-chat-alerts-' + user.id)
       .on('postgres_changes', {event:'INSERT', schema:'public',table:'gdv_chat_messages'},
@@ -240,12 +247,14 @@
       .subscribe(() => { if (active) void poll(); });
     // Respaldo ante desconexiones; las alertas previas al ingreso nunca aparecen de golpe.
     void poll();
+    } finally { starting = false; }
   }
 
   window.addEventListener('pagehide', () => {
     if (channel) { db.removeChannel(channel); channel = null; }
     active = false;
   });
+  window.addEventListener('pageshow', event => { if (event.persisted && !active) void start(); });
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden) {
       render();
