@@ -73,7 +73,13 @@
         user_id: verifiedUser.id,
         last_seen: new Date().toISOString()
       });
-      if (!error) lastPresence = Date.now();
+      if (!error) {
+        lastPresence = Date.now();
+        // La hora de la última actividad solo es pública para quien lo autorizó.
+        await client.from('gdv_activity_sharing')
+          .update({last_visit:new Date().toISOString()})
+          .eq('member_id',verifiedUser.id).eq('share_last_visit',true);
+      }
     } finally {
       presenceBusy = false;
     }
