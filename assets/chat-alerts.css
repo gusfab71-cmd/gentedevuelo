@@ -1,0 +1,115 @@
+/* Avisos discretos de mensajes de AeroChat: visibles en todas las páginas. */
+#gdv-chat-alert-host {
+  position: fixed !important;
+  right: max(14px, env(safe-area-inset-right, 0px));
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  width: min(338px, calc(100vw - 28px));
+  max-width: 338px;
+  z-index: 2147483000;
+  pointer-events: none;
+  box-sizing: border-box;
+  font: 14px/1.38 Arial, Helvetica, sans-serif;
+  color: #f4f7f8;
+}
+#gdv-chat-alert-host[hidden] { display:none !important; }
+#gdv-chat-alert-list { display:flex; flex-direction:column; gap:9px; }
+.gdv-chat-alert-card {
+  position:relative;
+  display:flex;
+  align-items:stretch;
+  width:100%;
+  min-width:0;
+  pointer-events:auto;
+  border:1px solid #c77b47;
+  border-left:4px solid #f6a45d;
+  border-radius:15px;
+  background:#20292e;
+  box-shadow:0 10px 30px rgba(0,0,0,.47);
+  overflow:hidden;
+  animation:gdv-chat-alert-enter .22s ease-out;
+}
+.gdv-chat-alert-link {
+  display:flex;
+  align-items:center;
+  gap:11px;
+  min-width:0;
+  flex:1;
+  padding:12px 6px 12px 12px;
+  color:#f5f7f8 !important;
+  text-decoration:none !important;
+  cursor:pointer;
+}
+.gdv-chat-alert-link:hover,.gdv-chat-alert-link:focus-visible {
+  background:#2c363a;
+  text-decoration:none !important;
+  outline-offset:-3px;
+}
+.gdv-chat-alert-symbol {
+  display:grid;
+  place-items:center;
+  width:40px;
+  height:40px;
+  flex:0 0 40px;
+  border-radius:12px;
+  color:#ffa966;
+  background:#48382c;
+  border:1px solid #8e6544;
+}
+.gdv-chat-alert-symbol svg { display:block; width:25px; height:25px; }
+.gdv-chat-alert-details {
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+  flex:1;
+  min-width:0;
+  color:#b7c8d0;
+  font-size:12px;
+  line-height:1.35;
+  text-align:left;
+}
+.gdv-chat-alert-details strong {
+  color:#fff;
+  font-size:14px;
+  font-weight:800;
+  overflow-wrap:anywhere;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+}
+.gdv-chat-alert-chevron { color:#ffbb85; font-size:24px; font-weight:700; line-height:1; }
+.gdv-chat-alert-dismiss {
+  align-self:flex-start;
+  flex:0 0 30px;
+  height:31px;
+  padding:0 !important;
+  margin:3px 3px 0 0 !important;
+  background:transparent !important;
+  border:0 !important;
+  box-shadow:none !important;
+  border-radius:7px;
+  color:#bed0d6 !important;
+  font:normal 22px/28px Arial,sans-serif !important;
+  text-align:center;
+  cursor:pointer;
+}
+.gdv-chat-alert-dismiss:hover,.gdv-chat-alert-dismiss:focus-visible {
+  background:#3b474c !important;
+  color:#fff !important;
+}
+@keyframes gdv-chat-alert-enter {
+  from{opacity:0;transform:translateX(14px);}
+  to{opacity:1;transform:translateX(0);}
+}
+@media(max-width:500px){
+  #gdv-chat-alert-host{
+    right:max(10px,env(safe-area-inset-right,0px));
+    bottom:calc(10px + env(safe-area-inset-bottom,0px));
+    width:min(320px,calc(100vw - 20px));
+  }
+  .gdv-chat-alert-link{padding:10px 4px 10px 9px;gap:8px;}
+  .gdv-chat-alert-symbol{width:36px;height:36px;flex-basis:36px;}
+}
+@media(prefers-reduced-motion:reduce){
+  .gdv-chat-alert-card{animation:none;}
+}
