@@ -141,6 +141,33 @@
   const dmCount = document.getElementById('dm-count');
   const dmBlock = document.getElementById('dm-block');
   const dmBadge = document.getElementById('dm-unread-badge');
+  const dmAcceptButton = document.getElementById('dm-accept-review');
+  const dmAcceptStatus = document.getElementById('dm-accept-status');
+  let dmConsentAccepted = false;
+  async function refreshDmConsent() {
+    if (!currentUser) return;
+    const result = await db.from('gdv_private_review_ack').select('accepted_at').eq('member_id',currentUser.id).maybeSingle();
+    if (result.error) {
+      dmAcceptStatus.textContent='No se pudo verificar la aceptación: '+result.error.message;
+      return;
+    }
+    dmConsentAccepted=Boolean(result.data?.accepted_at);
+    dmAcceptButton.hidden=dmConsentAccepted;
+    dmAcceptStatus.textContent=dmConsentAccepted
+      ? 'Aviso aceptado. Los nuevos mensajes que envíes están sujetos a revisión administrativa justificada.'
+      : 'Para enviar nuevos mensajes privados, leé y aceptá este aviso.';
+    updatePrivateComposer();
+  }
+  dmAcceptButton.addEventListener('click',async()=>{
+    if(!currentUser || dmConsentAccepted)return;
+    dmAcceptButton.disabled=true;
+    try{
+      const result=await db.from('gdv_private_review_ack').insert({member_id:currentUser.id});
+      if(result.error && result.error.code!=='23505')throw result.error;
+      await refreshDmConsent();
+    }catch(error){dmAcceptStatus.textContent='No se pudo registrar tu aceptación: '+(error.message||'Reintentá.')}
+    finally{dmAcceptButton.disabled=false}
+  });
   let dmDirectory = [];
   let dmRecent = [];
   let dmBlocks = new Set();
@@ -166,15 +193,16 @@
     dmCount.textContent = String(dmInput.value.length);
     const blocked = Boolean(dmPeer && dmBlocks.has(dmPeer.id));
     dmForm.hidden = false;
-    dmInput.disabled = !dmPeer || blocked;
+    dmInput.disabled = !dmPeer || blocked || !dmConsentAccepted;
     dmInput.placeholder = !dmPeer ? 'Seleccioná un integrante para escribir…' : blocked ? 'Integrante bloqueado' : 'Escribí un mensaje privado…';
     dmBlock.hidden = !dmPeer;
     dmBlock.textContent = blocked ? 'Desbloquear' : 'Bloquear';
-    dmSubmit.disabled = dmSending || !dmPeer || !dmInput.value.trim() || dmInput.value.trim().length > 1000;
+    dmSubmit.disabled = dmSending || !dmConsentAccepted || !dmPeer || !dmInput.value.trim() || dmInput.value.trim().length > 1000;
     dmPeerHint.textContent = !dmPeer
-      ? 'Solo vos y el destinatario pueden leer esta conversación.'
+      ? 'Elegí a quién escribir. Revisá el aviso de privacidad antes de enviar.'
       : blocked ? 'Bloqueaste a este integrante. Desbloquealo para poder responder.'
-      : 'Conversación privada · solo disponible para los dos participantes.';
+      : !dmConsentAccepted ? 'Aceptá el aviso de revisión administrativa antes de enviar.'
+      : 'Mensajes visibles para los participantes y sujetos a revisión administrativa justificada.';
   }
   function renderPrivateContacts() {
     const search = dmSearch.value.trim().toLocaleLowerCase('es');
@@ -322,7 +350,7 @@
     event.preventDefault();
     if(!dmPeer || dmSending || !currentUser)return;
     const target=dmPeer.id,content=dmInput.value.trim();
-    if(!content||content.length>1000||dmBlocks.has(target))return;
+    if(!content||content.length>1000||dmBlocks.has(target)||!dmConsentAccepted)return;
     dmSending=true;updatePrivateComposer();privateNotice('');
     try{
       const result=await db.from('gdv_private_messages').insert({sender_id:currentUser.id,recipient_id:target,content});
@@ -512,6 +540,7 @@
     await heartbeat();
     await updateOnlineList();
     await refreshPrivateInbox();
+    await refreshDmConsent();
     const initialPeer=new URLSearchParams(location.search).get('privado');
     if(initialPeer)await openPrivate(initialPeer);
     startOnlinePresence();
