@@ -97,3 +97,14 @@ footer{text-align:center;padding:20px;color:#899ca5;font-size:12px;border-top:1p
   .private-contacts{padding:10px}
   .dm-contacts{max-height:100px}
 }
+
+
+/* Consentimiento informado para supervisión prospectiva de mensajes privados */
+.dm-review-notice{border-bottom:1px solid #745a40;padding:12px 15px;background:#342d27}
+.dm-review-notice p{font-size:12px;line-height:1.6;color:#ecd5bf;margin:0 0 9px}
+.dm-review-notice strong{color:#ffe0b4}
+.dm-consent-controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+#dm-accept-review{font-size:12px;font-weight:800;background:#f0a161;color:#1d1a15;border:1px solid #ffbc83;padding:8px 12px;border-radius:8px;cursor:pointer}
+#dm-accept-review[hidden]{display:none}
+#dm-accept-status{font-size:11px;color:#d5c1b1;flex:1;min-width:155px}
+@media(max-width:550px){.dm-review-notice{padding:10px 12px}.dm-review-notice p{font-size:11px}.dm-consent-controls{gap:6px}}
