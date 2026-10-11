@@ -678,7 +678,7 @@ async function notifications(){
  crumbs([['Notificaciones']]);
  const rows=checked(await db.from('gdv_notifications').select('*').order('created_at',{ascending:false}).limit(100));
  app.innerHTML=`<div class="toolbar" style="justify-content:space-between;align-items:center;"><h1 style="margin:0;">Notificaciones</h1>${rows.length?'<button id="delete-all-notifications" type="button">Borrar todas</button>':''}</div>`+
-   (rows.map(n=>`<article class="card"><p class="notification-message">${esc(n.message)}</p><span class="meta">${date(n.created_at)}${n.read?'':' · Nueva'}</span> ${n.topic_id?link('Abrir','#tema/'+n.topic_id):''}</article>`).join('')||'<p>No tenés notificaciones.</p>');
+   (rows.map(n=>`<article class="card"><p class="notification-message">${esc(n.message)}</p><span class="meta">${date(n.created_at)}${n.read?'':' · Nueva'}</span> ${n.topic_id?link('Abrir','#tema/'+n.topic_id):''}${n.message.includes('https://gentedevuelo.com/evolucion-2026-10-11.html')?link('Leer informe completo','evolucion-2026-10-11.html','button'):''}</article>`).join('')||'<p>No tenés notificaciones.</p>');
  if(rows.length){
    const borrarTodas=$('delete-all-notifications');
    if(borrarTodas)borrarTodas.onclick=()=>busy(borrarTodas,async()=>{
