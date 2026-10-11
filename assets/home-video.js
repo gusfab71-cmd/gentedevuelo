@@ -64,6 +64,28 @@
     area.replaceChildren(node);area.hidden=false;
     status.textContent='Vista previa. Guardá para publicar el cambio.';
   }
+  async function validatePortrait(file) {
+    const blobUrl=URL.createObjectURL(file);
+    const video=document.createElement('video');
+    video.preload='metadata';
+    video.muted=true;
+    video.playsInline=true;
+    try {
+      const dimensions=await new Promise((resolve,reject)=>{
+        video.onloadedmetadata=()=>resolve({width:video.videoWidth,height:video.videoHeight});
+        video.onerror=()=>reject(new Error('No se pudieron leer las dimensiones del archivo.'));
+        video.src=blobUrl;
+      });
+      const ratio=dimensions.width/dimensions.height;
+      if (!Number.isFinite(ratio) || dimensions.height < dimensions.width || Math.abs(ratio-9/16)>0.045)
+        throw new Error('El video debe estar grabado en vertical 9:16 (por ejemplo, 1080 × 1920 píxeles).');
+      return dimensions;
+    } finally {
+      video.removeAttribute('src');
+      video.load();
+      URL.revokeObjectURL(blobUrl);
+    }
+  }
   async function upload() {
     const file=el('gdvStolUpload')?.files?.[0],status=el('gdvStolAdminStatus'),btn=el('gdvStolUploadBtn');
     if(!file){status.textContent='Elegí primero un video MP4 o WebM.';return;}
@@ -71,13 +93,15 @@
       status.textContent='Usá un video MP4 o WebM de hasta 40 MB.';return;
     }
     if(!window.GDV_R2_MEDIA?.upload){status.textContent='No está disponible el servicio de carga a Cloudflare.';return;}
-    btn.disabled=true;status.textContent='Subiendo video a Cloudflare R2…';
+    btn.disabled=true;status.textContent='Comprobando formato vertical 9:16…';
     try{
+      await validatePortrait(file);
+      status.textContent='Subiendo video vertical a Cloudflare R2…';
       const cfg=window.GDV_CONFIG;
       const uploaded=await window.GDV_R2_MEDIA.upload(file,db,cfg.url,cfg.key);
       el('gdvStolInputUrl').value=uploaded.url;
       preview();
-      status.textContent='Video cargado a Cloudflare. Guardá para publicarlo en la portada.';
+      status.textContent='Video vertical cargado en Cloudflare. Guardá para publicarlo en la portada.';
     }catch(err){status.textContent='Error al subir video: '+(err.message||'Reintentá.');}
     finally{btn.disabled=false;}
   }
