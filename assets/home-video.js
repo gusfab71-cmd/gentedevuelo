@@ -23,6 +23,24 @@
     if (/\.(mp4|webm|ogv)$/i.test(u.pathname)) return {type:'video',src:u.href};
     return null;
   }
+  // Iniciar la reproducción sin audio: los navegadores suelen bloquear el autoplay con sonido.
+  function autoplayIframeSrc(src) {
+    const url = new URL(src);
+    const host = url.hostname.toLowerCase();
+    if (host === 'www.youtube-nocookie.com') {
+      url.searchParams.set('autoplay','1');
+      url.searchParams.set('mute','1');
+      url.searchParams.set('playsinline','1');
+    } else if (host === 'player.vimeo.com') {
+      url.searchParams.set('autoplay','1');
+      url.searchParams.set('muted','1');
+      url.searchParams.set('playsinline','1');
+    } else if (host === 'iframe.videodelivery.net' || host.endsWith('.cloudflarestream.com')) {
+      url.searchParams.set('autoplay','true');
+      url.searchParams.set('muted','true');
+    }
+    return url.href;
+  }
   async function home() {
     const area=el('gdvStolPlayer'), card=el('stolEnAccion');
     if(!db||!area||!card)return;
@@ -34,12 +52,25 @@
       const r=parseVideo(data?.video_url||'');
       if(!r)return;
       const node=document.createElement(r.type==='video'?'video':'iframe');
-      node.src=r.src;
+      node.src=r.type==='iframe'?autoplayIframeSrc(r.src):r.src;
       node.setAttribute('title','Video de portada');
-      if(r.type==='video'){node.controls=true;node.playsInline=true;node.preload='metadata';}
-      else {node.loading='lazy';node.allow='encrypted-media; picture-in-picture; web-share';node.allowFullscreen=true;}
+      if(r.type==='video'){
+        node.controls=true;
+        node.autoplay=true;
+        node.muted=true;
+        node.defaultMuted=true;
+        node.setAttribute('muted','');
+        node.playsInline=true;
+        node.setAttribute('playsinline','');
+        node.preload='auto';
+      } else {
+        node.loading='eager';
+        node.allow='autoplay; encrypted-media; picture-in-picture; web-share';
+        node.allowFullscreen=true;
+      }
       area.replaceChildren(node);
       card.hidden=false;
+      if(r.type==='video')node.play().catch(()=>{});
     } catch(err) { console.warn('No se pudo cargar el video de portada:',err); }
   }
   async function admin() {
