@@ -167,12 +167,12 @@
       <p id="comunicadosAccesoModeracion" style="margin:0 0 24px;"><a class="link" href="comunidad.html#gestion/comunicados">Enviar comunicado a todos los integrantes</a></p>
 
       <section class="panel" id="gdvStolAdmin" hidden style="margin:0 0 24px;border-color:rgba(232,187,104,.75);">
-        <h2 style="margin-top:0;">Video vertical de portada · STOL en acción (9:16)</h2>
+        <h2 style="margin-top:0;">Video de portada</h2>
         <p><a href="moderacion.html" class="link">Volver al panel completo</a></p>
         <p class="intro">Este video se muestra en formato vertical 9:16 sobre el margen derecho de la portada (en celulares, al final). Podés subir un MP4/WebM vertical de hasta 40 MB a Cloudflare, o pegar un enlace de YouTube Shorts, Vimeo o Cloudflare Stream. Previsualizá antes de guardar. Para dejarlo pendiente, mantené vacío el enlace; para ocultar el recuadro, desmarcá «Mostrar».</p>
         <form id="gdvStolForm" style="display:grid;gap:12px;">
-          <label>Título del recuadro
-            <input id="gdvStolInputTitle" type="text" maxlength="90" value="STOL en acción" required>
+          <label>Nombre interno del video (no se muestra en la portada)
+            <input id="gdvStolInputTitle" type="text" maxlength="90" value="Video de portada" required>
           </label>
           <label>Enlace HTTPS del video
             <input id="gdvStolInputUrl" type="url" maxlength="2048" placeholder="https://www.youtube.com/watch?v=..." autocomplete="off">
@@ -188,7 +188,7 @@
             <input id="gdvStolActive" type="checkbox" checked style="width:auto;">
             Mostrar el video en la portada
           </label>
-          <div id="gdvStolPreview" hidden style="aspect-ratio:9/16;width:min(100%,270px);overflow:hidden;background:#060c11;border:1px solid #a88b50;border-radius:12px;"></div>
+          <div id="gdvStolPreview" hidden style="aspect-ratio:9/16;width:min(100%,270px);overflow:hidden;background:#060c11;border:0;border-radius:16px;"></div>
           <div class="acciones"><button type="submit" id="gdvStolSave">Guardar video</button></div>
           <p id="gdvStolAdminStatus" role="status" aria-live="polite" class="estado"></p>
         </form>
@@ -259,7 +259,7 @@
   </main>
 
   <script src="assets/r2-media.js"></script>
-  <script src="assets/home-video.js?v=20261011vertical2"></script>
+  <script src="assets/home-video.js?v=20261011frameless3"></script>
   <script>
     const client = window.GDV_AUTH.client;
     const secciones = [
@@ -1000,7 +1000,7 @@
       if (modoVideo && administrador) {
         const tituloPanel = $("panel")?.querySelector("h1");
         const introPanel = $("panel")?.querySelector(".intro");
-        if (tituloPanel) tituloPanel.textContent = "Administración · Video vertical 9:16";
+        if (tituloPanel) tituloPanel.textContent = "Administración · Video de portada";
         if (introPanel) introPanel.textContent = "Cargá o reemplazá el video cuando quieras. El video sigue pendiente mientras no guardes un enlace.";
         if ($("panelFotosHangar")) $("panelFotosHangar").hidden = true;
         for (const selector of [".pestanas", ".filtros", "#resumen", "#lista"]) {
