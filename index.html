@@ -11574,8 +11574,9 @@ body.modo-anexo-clasificados #clasificados-seccion {
 <style id="gdv-stol-portada-20261011">
 .gdv-stol-portada[hidden] {display:none!important;}
 .gdv-stol-portada {
-  position: absolute; z-index: 1001; right: 22px; bottom: 22px;
-  width: min(148px, calc(25% - 17px));
+  position: absolute; z-index: 1001; right: 22px; top: 50%; bottom: auto;
+  transform: translateY(-50%);
+  width: min(300px, calc(50% - 34px));
   box-sizing: border-box; padding: 0;
   border: 0; border-radius: 18px;
   background: transparent; color: inherit; box-shadow: none;
@@ -11617,11 +11618,12 @@ body.modo-anexo-clasificados #clasificados-seccion {
   .portada-accesos .clasificados-ultimo {margin-top:5px!important;padding-top:5px!important;}
 }
 @media (min-width:701px) and (max-width:850px) {
-  .gdv-stol-portada {right:12px;width:min(123px,calc(100% - 405px));}
+  .gdv-stol-portada {right:12px;width:min(274px,calc(100% - 405px));}
 }
 @media (max-width:700px) {
   .gdv-stol-portada {
-    order:4!important;position:static!important;right:auto!important;bottom:auto!important;
+    order:4!important;position:static!important;top:auto!important;right:auto!important;bottom:auto!important;
+    transform:none!important;
     width:calc(100% - 24px)!important;max-width:380px!important;margin:0 auto 18px!important;padding:0!important;
     border-radius:17px;
   }
