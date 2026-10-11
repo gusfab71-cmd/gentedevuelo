@@ -81,10 +81,10 @@
           </div>
           <div id="dm-messages" class="messages dm-messages" role="log" aria-label="Mensajes privados"><p class="empty">Seleccioná un integrante para iniciar una conversación.</p></div>
           <p id="dm-notice" class="dm-notice" role="status" aria-live="polite"></p>
-          <form id="dm-form" class="composer" hidden>
+          <form id="dm-form" class="composer">
             <label for="dm-content">Mensaje privado</label>
             <div class="composer-entry">
-              <textarea id="dm-content" maxlength="1000" rows="2" placeholder="Escribí un mensaje privado…" required></textarea>
+              <textarea id="dm-content" maxlength="1000" rows="2" placeholder="Seleccioná un integrante para escribir…" required disabled></textarea>
               <button type="submit" id="dm-submit" class="composer-send" disabled aria-label="Enviar mensaje privado"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg><span>Enviar</span></button>
             </div>
             <div class="composer-bottom"><span><span id="dm-count">0</span> / 1000 caracteres</span><span class="composer-help">Solo lo verá el destinatario</span></div>
@@ -115,7 +115,7 @@
   </div>
 </main>
 <footer>Gente de Vuelo · Pasión que nos une</footer>
-<script src="assets/aerochat.js?v=20261011enviarvisible2"></script>
+<script src="assets/aerochat.js?v=20261011enviarvisible3"></script>
 <script defer src="assets/chat-alerts.js?v=20261011alertas1"></script>
 </body>
 </html>
