@@ -11593,17 +11593,26 @@ body.modo-anexo-clasificados #clasificados-seccion {
     display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;
     gap:9px!important;flex-wrap:nowrap!important;align-items:stretch!important;
     left:22px!important;right:auto!important;bottom:22px!important;
-    width:min(555px,calc(100% - 360px))!important;
+    width:min(278px,calc(100% - 44px))!important;
   }
   .portada-accesos .acceso-shimoda,.portada-accesos .acceso-instituciones,.portada-accesos .acceso-clasificados {
     box-sizing:border-box!important;width:auto!important;min-width:0!important;
     min-height:0!important;flex:none!important;margin:0!important;
-    padding:10px!important;
+    padding:7px!important;
+    overflow-wrap:anywhere!important;
   }
-  .portada-accesos .acceso-shimoda img {width:58px!important;height:58px!important;flex-basis:58px!important;}
-  .portada-accesos .acceso-instituciones .instituciones-portada-banner {height:86px!important;}
+  /* Compactar el contenido sin cambiar la disposición de las tres tarjetas. */
+  .portada-accesos .acceso-instituciones h3 {font-size:13px!important;line-height:1.2!important;}
+  .portada-accesos .instituciones-portada-banner {height:75px!important;}
+  .portada-accesos .instituciones-portada-logo {height:55px!important;}
+  .portada-accesos .instituciones-portada-logo img {height:50px!important;max-height:50px!important;}
+  .portada-accesos .instituciones-portada-nombre {height:20px!important;font-size:8px!important;}
+  .portada-accesos .acceso-shimoda .shimoda-titulo {font-size:11px!important;line-height:1.2!important;}
+  .portada-accesos .acceso-shimoda .shimoda-subtitulo {font-size:9px!important;}
+  .portada-accesos .acceso-shimoda img {width:48px!important;height:48px!important;flex-basis:48px!important;}
+  .portada-accesos .acceso-instituciones .instituciones-portada-banner {height:75px!important;}
   .portada-accesos .acceso-clasificados {grid-column:1/-1!important;}
-  .portada-accesos .acceso-clasificados h3 {font-size:16px!important;margin-bottom:3px!important;}
+  .portada-accesos .acceso-clasificados h3 {font-size:14px!important;margin-bottom:3px!important;}
   .portada-accesos .acceso-clasificados > p {display:none!important;}
   .portada-accesos .clasificados-ultimo {margin-top:5px!important;padding-top:5px!important;}
 }
