@@ -1009,3 +1009,17 @@
 #gdv-mod-email-counters{font-variant-numeric:tabular-nums;line-height:1.8;color:#dbe6f0}
 #gdv-mod-email-output:not(:empty){padding:11px 14px;background:#2a3a37;border-radius:7px;border:1px solid #56756c;line-height:1.7}
 @media(max-width:650px){.gdv-moderation-mail .toolbar{display:flex;flex-direction:column;gap:10px}.gdv-moderation-mail .toolbar button{width:100%}}
+
+/* Seguimiento de integrantes y estadísticas sociales. */
+.members-follow-filters{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin:14px 0 23px}
+.members-follow-filters button[aria-pressed="true"]{background:#d68d50!important;color:#191a1d!important;border-color:#f2b17d!important;font-weight:800}
+.member-follower-total{font-weight:700;font-size:12px;color:#ffcca0;margin:6px 0 10px}
+.member-social-actions,.hangar-social{display:flex;flex-wrap:wrap;align-items:center;gap:9px;margin-top:10px}
+.member-social-actions button,.hangar-social button{margin:0}
+.member-follow-button{background:#f1a364;border:1px solid #ffbb83;border-radius:8px;color:#201b17;padding:8px 12px;font-size:12px;font-weight:800;cursor:pointer;line-height:1.35}
+.member-follow-button[aria-pressed="true"]{background:#33453e;border-color:#79a88c;color:#ceeadc}
+.member-follow-button:disabled{opacity:.65;cursor:wait}
+.member-private-link{font-size:12px!important;line-height:1.35;display:inline-flex;align-items:center;justify-content:center}
+.social-follow-count{color:#f4c496;font-size:13px;font-weight:800;margin-right:10px}
+.hangar-social{padding:12px 0;margin:13px 0;border-top:1px solid #3f4a55;border-bottom:1px solid #3f4a55}
+@media(max-width:550px){.member-social-actions{gap:5px}.member-private-link{font-size:11px!important}.member-follow-button{font-size:11px;padding:8px}}
