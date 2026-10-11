@@ -165,7 +165,9 @@
   function updatePrivateComposer() {
     dmCount.textContent = String(dmInput.value.length);
     const blocked = Boolean(dmPeer && dmBlocks.has(dmPeer.id));
-    dmForm.hidden = !dmPeer || blocked;
+    dmForm.hidden = false;
+    dmInput.disabled = !dmPeer || blocked;
+    dmInput.placeholder = !dmPeer ? 'Seleccioná un integrante para escribir…' : blocked ? 'Integrante bloqueado' : 'Escribí un mensaje privado…';
     dmBlock.hidden = !dmPeer;
     dmBlock.textContent = blocked ? 'Desbloquear' : 'Bloquear';
     dmSubmit.disabled = dmSending || !dmPeer || !dmInput.value.trim() || dmInput.value.trim().length > 1000;
@@ -255,6 +257,9 @@
     updatePrivateComposer();
     await refreshPrivateThread();
     await refreshPrivateInbox();
+    if (window.matchMedia('(max-width: 550px)').matches && dmActive && dmPeer?.id === id) {
+      dmForm.scrollIntoView({block:'nearest',behavior:'smooth'});
+    }
   }
   async function refreshPrivateThread(){
     if(!currentUser || !dmPeer || document.hidden)return;
