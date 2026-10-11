@@ -21,7 +21,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <title>AeroChat · Gente de Vuelo</title>
-  <link rel="stylesheet" href="assets/aerochat.css?v=20261011enviarvisible2">
+  <link rel="stylesheet" href="assets/aerochat.css?v=20261011politicaprivada1">
   <style id="auth-pending-style">html.auth-pending body{visibility:hidden}</style>
   <script>document.documentElement.classList.add('auth-pending')</script>
   <script src="assets/supabase-2.117.2.min.js"></script>
@@ -76,9 +76,13 @@
         </div>
         <div class="private-conversation">
           <div class="private-conversation-heading">
-            <div><h3 id="dm-peer-name">Elegí un integrante</h3><p id="dm-peer-hint">Solo vos y el destinatario pueden leer esta conversación.</p></div>
+            <div><h3 id="dm-peer-name">Elegí un integrante</h3><p id="dm-peer-hint">Los participantes pueden leer la conversación. Los mensajes nuevos pueden ser revisados por el administrador bajo la política aceptada.</p></div>
             <button type="button" id="dm-block" class="dm-block" hidden>Bloquear</button>
           </div>
+          <section id="dm-review-notice" class="dm-review-notice" aria-label="Aviso de revisión administrativa">
+            <p><strong>Privacidad y seguridad:</strong> desde esta actualización, los mensajes privados que envíes después de aceptar este aviso podrán ser consultados por el administrador de Gente de Vuelo si existe un motivo de moderación. Cada consulta requiere una justificación y queda registrada. <strong>Los mensajes anteriores a esta aceptación no se incluyen.</strong> No compartas información sensible.</p>
+            <div class="dm-consent-controls"><button type="button" id="dm-accept-review">Leí el aviso y acepto</button><span id="dm-accept-status" role="status">Tenés que aceptar este aviso para enviar nuevos mensajes privados.</span></div>
+          </section>
           <div id="dm-messages" class="messages dm-messages" role="log" aria-label="Mensajes privados"><p class="empty">Seleccioná un integrante para iniciar una conversación.</p></div>
           <p id="dm-notice" class="dm-notice" role="status" aria-live="polite"></p>
           <form id="dm-form" class="composer">
@@ -104,7 +108,7 @@
         </ul>
       </section>
       <h2>Antes de participar</h2>
-      <p>En Mensajes privados podés conversar directamente con otro integrante, sin que se publique en la sala general. Si alguien te incomoda, podés bloquearlo.</p>
+      <p>Los mensajes privados no aparecen en la sala general. Después de aceptar el aviso de seguridad, los mensajes nuevos podrán ser revisados exclusivamente por el administrador, con motivo registrado. Los mensajes anteriores no se incorporan a esta revisión. Podés bloquear integrantes.</p>
       <p>Esta sala es para conversar en forma cordial y respetuosa sobre aviación.</p>
       <p>No compartas datos privados ni información operativa sensible. Para consultas que deban conservarse, utilizá el foro.</p>
       <p>Los administradores y moderadores pueden retirar mensajes que incumplan las normas.</p>
@@ -115,7 +119,7 @@
   </div>
 </main>
 <footer>Gente de Vuelo · Pasión que nos une</footer>
-<script src="assets/aerochat.js?v=20261011enviarvisible3"></script>
+<script src="assets/aerochat.js?v=20261011politicaprivada1"></script>
 <script defer src="assets/chat-alerts.js?v=20261011alertas1"></script>
 </body>
 </html>
