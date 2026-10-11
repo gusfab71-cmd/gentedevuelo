@@ -168,7 +168,7 @@
 
       <section class="panel" id="gdvStolAdmin" hidden style="margin:0 0 24px;border-color:rgba(232,187,104,.75);">
         <h2 style="margin-top:0;">Video de portada · STOL en acción</h2>
-        <p class="intro">Cambiar el video sin editar GitHub. Pegá el enlace público de YouTube, Vimeo, Cloudflare Stream o de un archivo MP4/WebM. Para retirar el video, dejá el enlace vacío y guardá.</p>
+        <p class="intro">Cambiar el video sin editar GitHub. Pegá el enlace público de YouTube, Vimeo, Cloudflare Stream o de un archivo MP4/WebM. Podés subir un MP4/WebM (hasta 40 MB) o pegar un enlace. Usá Previsualizar antes de guardar. Para retirarlo, vaciá el enlace y guardá; para ocultar el recuadro, desmarcá «Mostrar».</p>
         <form id="gdvStolForm" style="display:grid;gap:12px;">
           <label>Título del recuadro
             <input id="gdvStolInputTitle" type="text" maxlength="90" value="STOL en acción" required>
@@ -176,6 +176,18 @@
           <label>Enlace HTTPS del video
             <input id="gdvStolInputUrl" type="url" maxlength="2048" placeholder="https://www.youtube.com/watch?v=..." autocomplete="off">
           </label>
+          <label>O subir un video a Cloudflare R2 (MP4 o WebM, máximo 40 MB)
+            <input id="gdvStolUpload" type="file" accept="video/mp4,video/webm,.mp4,.webm">
+          </label>
+          <div class="acciones" style="margin-top:0;flex-wrap:wrap;">
+            <button type="button" id="gdvStolUploadBtn" class="secundario">Subir archivo</button>
+            <button type="button" id="gdvStolPreviewBtn" class="secundario">Previsualizar</button>
+          </div>
+          <label style="display:flex;align-items:center;gap:8px;">
+            <input id="gdvStolActive" type="checkbox" checked style="width:auto;">
+            Mostrar el video en la portada
+          </label>
+          <div id="gdvStolPreview" hidden style="aspect-ratio:16/9;width:min(100%,520px);overflow:hidden;background:#060c11;border:1px solid #a88b50;border-radius:12px;"></div>
           <div class="acciones"><button type="submit" id="gdvStolSave">Guardar video</button></div>
           <p id="gdvStolAdminStatus" role="status" aria-live="polite" class="estado"></p>
         </form>
@@ -245,7 +257,8 @@
     </section>
   </main>
 
-  <script src="assets/home-video.js?v=20261011a"></script>
+  <script src="assets/r2-media.js"></script>
+  <script src="assets/home-video.js?v=20261011b"></script>
   <script>
     const client = window.GDV_AUTH.client;
     const secciones = [
