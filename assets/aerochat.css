@@ -108,3 +108,27 @@ footer{text-align:center;padding:20px;color:#899ca5;font-size:12px;border-top:1p
 #dm-accept-review[hidden]{display:none}
 #dm-accept-status{font-size:11px;color:#d5c1b1;flex:1;min-width:155px}
 @media(max-width:550px){.dm-review-notice{padding:10px 12px}.dm-review-notice p{font-size:11px}.dm-consent-controls{gap:6px}}
+
+
+/* AeroChat: panel lateral más angosto y compacto sin reducir la legibilidad. */
+@media(min-width:801px){
+  .shell{grid-template-columns:minmax(0,1fr) 220px;gap:13px}
+}
+.sidebar{padding:14px 13px;border-radius:13px}
+.sidebar h2,.sidebar .online-heading h2{font-size:16px;margin-bottom:9px}
+.online-panel{padding-bottom:11px;margin-bottom:12px}
+.sidebar .online-subtitle{font-size:11px;line-height:1.4;margin:6px 0 10px}
+.sidebar p{font-size:12px;line-height:1.48;margin:0 0 10px}
+.sidebar hr{margin:12px 0}
+.sidebar .hint{font-size:11px}
+.online-users{gap:5px;max-height:188px}
+.online-user{gap:6px;padding:6px 7px}
+.online-user a{font-size:12px}
+.online-count{font-size:11px;padding:3px 7px}
+.online-in-room{font-size:9px;padding:2px 5px}
+.online-user .dm-open{font-size:10px;padding:3px 5px}
+@media(max-width:800px){
+  .shell{grid-template-columns:1fr}
+  .sidebar{padding:13px 14px}
+  .online-users{max-height:150px}
+}
