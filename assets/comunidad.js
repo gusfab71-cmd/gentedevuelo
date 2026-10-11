@@ -593,14 +593,50 @@ async function listarFotosDeHangar(id,propio){
   elemento.appendChild(figura);
  }
 }
+
+let membersFilter='all';
+function socialCountLabel(n,word){return n+' '+(n===1?word:word+'s')}
+async function memberFollowTotals(id){
+ const [followers,following,mine]=await Promise.all([
+  db.from('gdv_member_follows').select('follower_id',{count:'exact',head:true}).eq('followed_id',id),
+  db.from('gdv_member_follows').select('followed_id',{count:'exact',head:true}).eq('follower_id',id),
+  user&&id!==user.id?db.from('gdv_member_follows').select('follower_id').eq('follower_id',user.id).eq('followed_id',id).maybeSingle():Promise.resolve({data:null})
+ ]);
+ if(followers.error||following.error||mine.error)throw new Error('No se pudieron consultar los seguidores.');
+ return {followers:followers.count||0,following:following.count||0,mine:!!mine.data};
+}
+async function updateHangarFollowers(id){
+ const node=document.getElementById('hangar-social');
+ if(!node||node.dataset.profileId!==id||!user)return;
+ try{
+  const data=await memberFollowTotals(id);
+  if(!node.isConnected||node.dataset.profileId!==id)return;
+  node.replaceChildren();
+  const counts=document.createElement('span');
+  counts.className='social-follow-count';
+  counts.textContent=socialCountLabel(data.followers,'seguidor')+' · '+data.following+' siguiendo';
+  node.append(counts);
+  if(id!==user.id){
+   const b=document.createElement('button');b.type='button';b.className='member-follow-button';
+   b.dataset.memberFollow=id;b.setAttribute('aria-pressed',String(data.mine));
+   b.textContent=data.mine?'Siguiendo · Dejar de seguir':'Seguir integrante';
+   node.append(b);
+   const msg=document.createElement('a');msg.className='button member-private-link';
+   msg.href='aerochat.html?privado='+encodeURIComponent(id);
+   msg.textContent='Mensaje privado';node.append(msg);
+  }
+ }catch(e){node.textContent='No se pudieron cargar los seguidores.'}
+}
+
 async function hangar(id){id=id||user?.id;if(!id){app.innerHTML=link('Ingresar a Mi Hangar','#ingresar','button primary');return}const p=profile(id),own=id===user?.id;crumbs([['Foro','#foro'],[own?'Mi Hangar':'Hangar de '+name(id)]]);const authored=topics.filter(t=>t.author_id===id),replied=comments.filter(c=>c.author_id===id);
- app.innerHTML=`<section class="card"><div class="post-row">${avatar(id)}<div class="post-body"><h1>${esc(name(id))}</h1><p>${esc(p.hangar_intro||p.bio||'Miembro de Gente de Vuelo.')}</p><p class="meta">Miembro desde ${date(p.created_at)}</p></div></div><dl class="profile-fields">${[['Actividad','aviation_role'],['Licencia','aviation_license'],['Horas de vuelo','flight_hours'],['Aeropuerto base','home_airfield'],['Aeronaves','aircraft_flown'],['Simulador de vuelo','flight_simulators']].filter(([,k])=>p[k]!==null&&p[k]!==undefined&&p[k]!=='').map(([n,k])=>`<div><dt>${n}</dt><dd>${esc(p[k])}</dd></div>`).join('')}</dl>${own?link('Editar perfil','#perfil'):''}</section><div class="toolbar"><button data-hangar="posts">Publicaciones</button><button data-hangar="comments">Respuestas</button><button data-hangar="media">Multimedia</button><button data-hangar="trips">Travesías</button>${own?'<button data-hangar="saved">Guardados privados</button>':''}${own&&isAdmin?link('Moderación privada','#moderacion'):''}</div><div id="hangar-content"></div>`;
+ app.innerHTML=`<section class="card"><div class="post-row">${avatar(id)}<div class="post-body"><h1>${esc(name(id))}</h1><p>${esc(p.hangar_intro||p.bio||'Miembro de Gente de Vuelo.')}</p><p class="meta">Miembro desde ${date(p.created_at)}</p></div></div><dl class="profile-fields">${[['Actividad','aviation_role'],['Licencia','aviation_license'],['Horas de vuelo','flight_hours'],['Aeropuerto base','home_airfield'],['Aeronaves','aircraft_flown'],['Simulador de vuelo','flight_simulators']].filter(([,k])=>p[k]!==null&&p[k]!==undefined&&p[k]!=='').map(([n,k])=>`<div><dt>${n}</dt><dd>${esc(p[k])}</dd></div>`).join('')}</dl>${user?`<div id="hangar-social" data-profile-id="${esc(id)}" class="hangar-social">Consultando seguidores…</div>`:''}${own?link('Editar perfil','#perfil'):''}</section><div class="toolbar"><button data-hangar="posts">Publicaciones</button><button data-hangar="comments">Respuestas</button><button data-hangar="media">Multimedia</button><button data-hangar="trips">Travesías</button>${own?'<button data-hangar="saved">Guardados privados</button>':''}${own&&isAdmin?link('Moderación privada','#moderacion'):''}</div><div id="hangar-content"></div>`;
 
  const fotosPanel=document.createElement('section');
  fotosPanel.className='card hangar-fotos-panel';
  fotosPanel.innerHTML='<h2>'+(own?'Fotografías de Mi Hangar':'Fotografías del Hangar')+'</h2>'+
    (own?'<p class="meta">Subí una fotografía de tus vuelos o aeronaves. Se publicará después de la aprobación.</p><form id="hangar-galeria-form"><label for="hangar-galeria-archivo">Fotografía (JPG, PNG o WebP, hasta 5 MB)</label><input id="hangar-galeria-archivo" type="file" accept="image/jpeg,image/png,image/webp" required><div class="toolbar"><button type="submit" class="primary">Subir foto a Mi Hangar</button></div><p id="hangar-galeria-estado" role="status" aria-live="polite"></p></form>':'<p class="meta">Fotografías aprobadas de este integrante.</p>')+
    '<div id="hangar-fotos-galeria" class="hangar-fotos-galeria">Cargando fotografías…</div>';
+ if(user)void updateHangarFollowers(id);
  app.querySelector('.toolbar').before(fotosPanel);
  await listarFotosDeHangar(id,own);
  // Reintenta tareas R2 pendientes al entrar al Hangar propio, sin bloquear la pantalla.
@@ -1394,6 +1430,17 @@ async function adminDeleteMember(id,displayName){
 
 async function toggleOwned(table,topicId){const r=await db.from(table).select('topic_id').eq('user_id',user.id).eq('topic_id',topicId).maybeSingle();if(r.error)throw r.error;checked(r.data?await db.from(table).delete().eq('user_id',user.id).eq('topic_id',topicId):await db.from(table).insert({user_id:user.id,topic_id:topicId}));await route()}
 document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const action=b.dataset.action;
+ if(b.dataset.membersFilter){membersFilter=b.dataset.membersFilter==='following'?'following':'all';busy(b,()=>membersView());return}
+ if(b.dataset.memberFollow){
+  if(!user||b.dataset.memberFollow===user.id)return;
+  busy(b,async()=>{
+   const target=b.dataset.memberFollow;
+   const existing=checked(await db.from('gdv_member_follows').select('followed_id').eq('follower_id',user.id).eq('followed_id',target));
+   checked(existing.length?await db.from('gdv_member_follows').delete().eq('follower_id',user.id).eq('followed_id',target):await db.from('gdv_member_follows').insert({follower_id:user.id,followed_id:target}));
+   if(location.hash.startsWith('#integrantes'))await membersView();else if(location.hash.startsWith('#hangar'))await updateHangarFollowers(target);
+   message(existing.length?'Dejaste de seguir a este integrante.':'Ahora seguís a este integrante.');
+  });return;
+ }
  if(b.dataset.manageTopic){manageTopic(b.dataset.manageTopic);return}if(b.dataset.manageCategory){manageCategory(b.dataset.manageCategory);return}if(b.dataset.manageMember){manageMember(b.dataset.manageMember);return}if(b.dataset.adminDeleteMember){adminDeleteMember(b.dataset.adminDeleteMember,b.dataset.memberName);return}if(b.dataset.adminDelete){adminDeleteContent(b.dataset.adminDelete,b.dataset.id);return}
  if(b.dataset.review){reviewContent(b.dataset.review,b.dataset.id,b.dataset.status);return}
  if(!action)return;
@@ -1437,7 +1484,25 @@ async function loadRole(){isOwnerAdmin=false;isAdmin=false;if(!user)return;isOwn
 async function heartbeat(){await window.GDV_AUTH.heartbeat()}
 
 
-async function membersView(){crumbs([['Integrantes']]);const online=new Set(checked(await db.from('gdv_member_presence').select('user_id').gt('last_seen',new Date(Date.now()-90000).toISOString())).map(p=>p.user_id));app.innerHTML='<h1>Integrantes</h1><p>Miembros más recientes primero. La presencia se actualiza cada 30 segundos.</p><div class="grid integrantes-grid">'+[...profiles.values()].filter(p=>p.onboarding_completed===true).sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)).map(p=>`<article class="card integrante-card"><div class="post-row">${avatar(p.id)}<div class="integrante-info"><h2>${link(p.full_name||p.username||'Miembro','#hangar/'+p.id,'')}</h2><p class="meta">Registro: ${date(p.created_at)}</p><p class="${online.has(p.id)?'online':'muted'}">${online.has(p.id)?'● En línea':'○ Desconectado'}</p>${isOwnerAdmin&&p.id!==user.id?`<button type="button" class="member-delete-button" data-admin-delete-member="${p.id}" data-member-name="${esc(p.full_name||p.username||'Miembro')}">Eliminar</button>`:''}</div></div></article>`).join('')+'</div>';}
+async function membersView(){
+ crumbs([['Integrantes']]);
+ const [presenceResult,followResult]=await Promise.all([
+  db.from('gdv_member_presence').select('user_id').gt('last_seen',new Date(Date.now()-90000).toISOString()),
+  user?db.from('gdv_member_follows').select('follower_id,followed_id'):Promise.resolve({data:[]})
+ ]);
+ const online=new Set(checked(presenceResult).map(p=>p.user_id));
+ const follows=checked(followResult);
+ const following=new Set(user?follows.filter(f=>f.follower_id===user.id).map(f=>f.followed_id):[]);
+ const counts=new Map();
+ follows.forEach(f=>counts.set(f.followed_id,(counts.get(f.followed_id)||0)+1));
+ const people=[...profiles.values()].filter(p=>p.onboarding_completed===true)
+  .sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+ const shown=membersFilter==='following'?people.filter(p=>following.has(p.id)):people;
+ app.innerHTML='<h1>Integrantes</h1><p>Conocé a quienes forman parte de nuestra comunidad aeronáutica. La presencia se actualiza periódicamente.</p>'+
+  (user?'<div class="toolbar members-follow-filters"><button type="button" data-members-filter="all" aria-pressed="'+(membersFilter==='all')+'">Todos ('+people.length+')</button><button type="button" data-members-filter="following" aria-pressed="'+(membersFilter==='following')+'">Siguiendo ('+following.size+')</button></div>':'')+
+  '<div class="grid integrantes-grid">'+shown.map(p=>`<article class="card integrante-card"><div class="post-row">${avatar(p.id)}<div class="integrante-info"><h2>${link(p.full_name||p.username||'Miembro','#hangar/'+p.id,'')}</h2><p class="meta">Registro: ${date(p.created_at)}</p><p class="${online.has(p.id)?'online':'muted'}">${online.has(p.id)?'● En línea':'○ Desconectado'}</p><p class="member-follower-total">${socialCountLabel(counts.get(p.id)||0,'seguidor')}</p>${user&&p.id!==user.id?`<div class="member-social-actions"><button type="button" class="member-follow-button" data-member-follow="${p.id}" aria-pressed="${following.has(p.id)}">${following.has(p.id)?'Siguiendo · Dejar de seguir':'Seguir'}</button><a class="button member-private-link" href="aerochat.html?privado=${encodeURIComponent(p.id)}">Mensaje privado</a></div>`:''}${isOwnerAdmin&&p.id!==user?.id?`<button type="button" class="member-delete-button" data-admin-delete-member="${p.id}" data-member-name="${esc(p.full_name||p.username||'Miembro')}">Eliminar</button>`:''}</div></div></article>`).join('')+'</div>'+
+  (!shown.length?'<p class="muted">Todavía no seguís a ningún integrante. Podés comenzar desde esta sección.</p>':'');
+}
 async function reviewContent(table,id,status){
  if(!isAdmin)return;
  if(table!=='gdv_reports'&&(status==='approved'||status==='rejected')){
