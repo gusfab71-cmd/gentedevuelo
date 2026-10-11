@@ -18,6 +18,8 @@
     }
     if (h === 'iframe.videodelivery.net' && /^[a-zA-Z0-9]+$/.test(p[0] || ''))
       return {type:'iframe',src:'https://iframe.videodelivery.net/'+p[0]};
+    if (/^customer-[a-z0-9]+\.cloudflarestream\.com$/.test(h) && /^[a-zA-Z0-9]+$/.test(p[0] || ''))
+      return {type:'iframe',src:'https://'+h+'/'+p[0]+'/iframe'};
     if (/\.(mp4|webm|ogv)$/i.test(u.pathname)) return {type:'video',src:u.href};
     return null;
   }
