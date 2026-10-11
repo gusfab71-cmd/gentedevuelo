@@ -21,7 +21,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <title>AeroChat · Gente de Vuelo</title>
-  <link rel="stylesheet" href="assets/aerochat.css?v=20261008presencia2">
+  <link rel="stylesheet" href="assets/aerochat.css?v=20261011mensajes-privados1">
   <style id="auth-pending-style">html.auth-pending body{visibility:hidden}</style>
   <script>document.documentElement.classList.add('auth-pending')</script>
   <script src="assets/supabase-2.117.2.min.js"></script>
@@ -51,6 +51,11 @@
   <div class="shell">
     <section class="room" aria-label="Sala de AeroChat">
       <div class="room-top"><div><h2>Sala general</h2><p>Mensajes recientes · horario argentino</p></div><span class="room-badge">Solo integrantes</span></div>
+      <div class="chat-mode-tabs" role="group" aria-label="Tipo de conversación">
+        <button type="button" id="chat-mode-general" class="chat-mode-button selected" aria-pressed="true">Sala general</button>
+        <button type="button" id="chat-mode-private" class="chat-mode-button" aria-pressed="false">Mensajes privados <span id="dm-unread-badge" class="dm-unread-badge" hidden></span></button>
+      </div>
+      <div id="chat-public-panel">
       <div id="chat-messages" class="messages" role="log" aria-label="Mensajes de la sala" aria-live="off"><p class="empty">Cargando mensajes…</p></div>
       <div id="chat-notice" class="notice" role="status" aria-live="polite"></div>
       <form id="chat-form" class="composer">
@@ -58,6 +63,28 @@
         <textarea id="chat-content" name="content" rows="2" maxlength="500" minlength="1" placeholder="Escribí tu mensaje…" required></textarea>
         <div class="composer-bottom"><span><span id="chat-count">0</span> / 500 caracteres</span><button type="submit" id="chat-submit" disabled>Enviar mensaje</button></div>
       </form>
+      </div>
+      <section id="chat-private-panel" class="private-panel" aria-label="Conversaciones privadas" hidden>
+        <div class="private-contacts">
+          <h3>Conversaciones privadas</h3>
+          <label for="dm-search">Buscar integrante</label>
+          <input id="dm-search" type="search" maxlength="60" autocomplete="off" placeholder="Buscar por usuario…">
+          <div id="dm-contacts" class="dm-contacts" aria-label="Elegir destinatario"><p class="empty">Cargando integrantes…</p></div>
+        </div>
+        <div class="private-conversation">
+          <div class="private-conversation-heading">
+            <div><h3 id="dm-peer-name">Elegí un integrante</h3><p id="dm-peer-hint">Solo vos y el destinatario pueden leer esta conversación.</p></div>
+            <button type="button" id="dm-block" class="dm-block" hidden>Bloquear</button>
+          </div>
+          <div id="dm-messages" class="messages dm-messages" role="log" aria-label="Mensajes privados"><p class="empty">Seleccioná un integrante para iniciar una conversación.</p></div>
+          <p id="dm-notice" class="dm-notice" role="status" aria-live="polite"></p>
+          <form id="dm-form" class="composer" hidden>
+            <label for="dm-content">Mensaje privado</label>
+            <textarea id="dm-content" maxlength="1000" rows="2" placeholder="Escribí un mensaje privado…" required></textarea>
+            <div class="composer-bottom"><span><span id="dm-count">0</span> / 1000 caracteres</span><button type="submit" id="dm-submit">Enviar privado</button></div>
+          </form>
+        </div>
+      </section>
     </section>
     <aside class="sidebar" aria-label="Información de la sala">
       <section class="online-panel" aria-label="Integrantes conectados a Gente de Vuelo">
@@ -71,6 +98,7 @@
         </ul>
       </section>
       <h2>Antes de participar</h2>
+      <p>En Mensajes privados podés conversar directamente con otro integrante, sin que se publique en la sala general. Si alguien te incomoda, podés bloquearlo.</p>
       <p>Esta sala es para conversar en forma cordial y respetuosa sobre aviación.</p>
       <p>No compartas datos privados ni información operativa sensible. Para consultas que deban conservarse, utilizá el foro.</p>
       <p>Los administradores y moderadores pueden retirar mensajes que incumplan las normas.</p>
@@ -81,6 +109,6 @@
   </div>
 </main>
 <footer>Gente de Vuelo · Pasión que nos une</footer>
-<script src="assets/aerochat.js?v=20261008presencia3"></script>
+<script src="assets/aerochat.js?v=20261011mensajes-privados1"></script>
 </body>
 </html>
