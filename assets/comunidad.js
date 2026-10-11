@@ -1486,6 +1486,55 @@ async function loadRole(){isOwnerAdmin=false;isAdmin=false;if(!user)return;isOwn
 async function heartbeat(){await window.GDV_AUTH.heartbeat()}
 
 
+
+async function adminPrivateReview(){
+ if(!isOwnerAdmin || !user){app.innerHTML='<h1>Acceso restringido</h1>';return}
+ crumbs([['Moderación','#moderacion'],['Revisión de AeroChat']]);
+ const all=[...profiles.values()].filter(p=>p.onboarding_completed===true)
+  .sort((a,b)=>(a.username||'').localeCompare(b.username||'','es'));
+ const opts='<option value="">Seleccionar integrante…</option>'+all.map(p=>'<option value="'+esc(p.id)+'">'+esc(p.username||p.full_name||'Integrante')+'</option>').join('');
+ app.innerHTML='<h1>Revisión administrativa de AeroChat</h1>'+
+  '<section class="card chat-review-info"><h2>Acceso restringido y registrado</h2><p>La revisión permite consultar únicamente mensajes privados enviados <strong>después de aceptar expresamente el aviso de supervisión</strong>. No se habilita la lectura de mensajes anteriores. Cada consulta queda registrada con fecha, cuenta administradora, integrantes y motivo.</p>'+
+  '<p>Usá esta herramienta exclusivamente ante indicios de incumplimiento de la Normativa de Comunidad. Los mensajes son personales y no deben difundirse.</p></section>'+
+  '<section class="card chat-review-form"><h2>Consultar una conversación</h2><form id="private-review-form">'+
+  '<label for="chat-review-a">Primer integrante</label><select id="chat-review-a" required>'+opts+'</select>'+
+  '<label for="chat-review-b">Segundo integrante</label><select id="chat-review-b" required>'+opts+'</select>'+
+  '<label for="chat-review-reason">Motivo obligatorio de revisión (15–500 caracteres)</label><textarea id="chat-review-reason" minlength="15" maxlength="500" required placeholder="Describí el incidente o motivo de seguridad…"></textarea>'+
+  '<button class="primary" type="submit">Consultar historial autorizado</button></form>'+
+  '<p id="private-review-status" role="status"></p></section>'+
+  '<section id="private-review-result"></section>'+
+  '<section class="card"><h2>Registro de revisiones</h2><div id="private-review-audit">Cargando registros…</div></section>';
+ const fmt=t=>new Date(t).toLocaleString('es-AR',{timeZone:'America/Argentina/Buenos_Aires',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',hourCycle:'h23'});
+ const who=id=>esc(profiles.get(id)?.username||'Integrante');
+ async function showAudit(){
+  const res=await db.from('gdv_chat_review_log').select('first_member,second_member,reason,message_count,reviewed_at')
+    .eq('admin_id',user.id).order('reviewed_at',{ascending:false}).limit(20);
+  const audit=$('private-review-audit');
+  if(!audit)return;
+  if(res.error){audit.textContent='No se pudo cargar el registro de revisiones.';return}
+  audit.innerHTML=res.data?.length?'<div class="chat-review-audit-list">'+res.data.map(r=>
+   '<article><strong>'+who(r.first_member)+' / '+who(r.second_member)+'</strong><span>'+esc(fmt(r.reviewed_at))+' · '+r.message_count+' mensajes consultados</span><p>'+esc(r.reason)+'</p></article>'
+  ).join('')+'</div>':'<p class="muted">Todavía no hay revisiones registradas.</p>';
+ }
+ await showAudit();
+ $('private-review-form').onsubmit=event=>{
+  event.preventDefault();
+  const first=$('chat-review-a').value,second=$('chat-review-b').value,reason=$('chat-review-reason').value.trim();
+  if(!first||!second||first===second){$('private-review-status').textContent='Elegí dos integrantes distintos.';return}
+  if(reason.length<15){$('private-review-status').textContent='Detallá el motivo de revisión (mínimo 15 caracteres).';return}
+  busy(event.submitter,async()=>{
+   $('private-review-status').textContent='Consultando mensajes y registrando el acceso…';
+   $('private-review-result').replaceChildren();
+   const messages=checked(await db.rpc('gdv_admin_review_private_thread',{p_first:first,p_second:second,p_reason:reason}));
+   $('private-review-status').textContent='Consulta registrada. '+messages.length+' mensajes disponibles en esta revisión.';
+   const out=$('private-review-result');
+   out.innerHTML='<section class="card chat-review-results"><h2>Mensajes autorizados para revisión</h2><p class="muted">Se muestran hasta los 100 mensajes más recientes enviados después de la aceptación del aviso de supervisión.</p>'+
+    (messages.length?messages.slice().reverse().map(m=>'<article class="chat-review-message"><div><strong>'+who(m.sender_id)+'</strong><time>'+esc(fmt(m.sent_at))+'</time></div><p>'+esc(m.content)+'</p></article>').join(''):'<p>No hay mensajes que puedan revisarse bajo la nueva política.</p>')+'</section>';
+   await showAudit();
+  });
+ };
+}
+
 async function membersView(){
  crumbs([['Integrantes']]);
  const [presenceResult,followResult,activityResult]=await Promise.all([
