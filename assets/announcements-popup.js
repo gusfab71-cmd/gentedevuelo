@@ -121,6 +121,8 @@
     const separator = raw.indexOf('\n');
     const title = separator === -1 ? 'Novedades de Gente de Vuelo' : raw.slice(0, separator);
     const content = separator === -1 ? raw : raw.slice(separator + 1);
+    // Acceso directo solo al informe oficial; no crear enlaces con URLs ingresadas por terceros.
+    const hasEvolutionReport = content.includes('https://gentedevuelo.com/evolucion-2026-10-11.html');
     const date = item.created_at
       ? new Date(item.created_at).toLocaleString('es-AR', { dateStyle: 'medium', timeStyle: 'short', hourCycle: 'h23' })
       : '';
@@ -136,6 +138,7 @@
         <p class="gdv-comunicado-mensaje">${htmlEscape(content)}</p>
         <p class="gdv-comunicado-fecha">${htmlEscape(date)}</p>
         <div class="gdv-comunicado-acciones">
+          ${hasEvolutionReport ? '<a href="https://gentedevuelo.com/evolucion-2026-10-11.html" class="gdv-comunicado-principal">Leer informe completo</a>' : ''}
           <button type="button" id="gdv-comunicado-entendido" class="gdv-comunicado-principal">Entendido</button>
           <button type="button" id="gdv-comunicado-ver-todas" class="gdv-comunicado-secundario">Ver notificaciones</button>
         </div>
