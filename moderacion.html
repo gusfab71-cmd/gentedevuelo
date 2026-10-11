@@ -166,6 +166,21 @@
       <p id="mensaje" class="estado" role="status"></p>
       <p id="comunicadosAccesoModeracion" style="margin:0 0 24px;"><a class="link" href="comunidad.html#gestion/comunicados">Enviar comunicado a todos los integrantes</a></p>
 
+      <section class="panel" id="gdvStolAdmin" hidden style="margin:0 0 24px;border-color:rgba(232,187,104,.75);">
+        <h2 style="margin-top:0;">Video de portada · STOL en acción</h2>
+        <p class="intro">Cambiar el video sin editar GitHub. Pegá el enlace público de YouTube, Vimeo, Cloudflare Stream o de un archivo MP4/WebM. Para retirar el video, dejá el enlace vacío y guardá.</p>
+        <form id="gdvStolForm" style="display:grid;gap:12px;">
+          <label>Título del recuadro
+            <input id="gdvStolInputTitle" type="text" maxlength="90" value="STOL en acción" required>
+          </label>
+          <label>Enlace HTTPS del video
+            <input id="gdvStolInputUrl" type="url" maxlength="2048" placeholder="https://www.youtube.com/watch?v=..." autocomplete="off">
+          </label>
+          <div class="acciones"><button type="submit" id="gdvStolSave">Guardar video</button></div>
+          <p id="gdvStolAdminStatus" role="status" aria-live="polite" class="estado"></p>
+        </form>
+      </section>
+
       <section class="robert-admin" id="robertAdmin">
         <h2>Conocimiento de Robert Shimoda</h2>
         <p>Subí documentos para incorporar información al RAG. Formatos admitidos: PDF, TXT, Markdown y DOCX.</p>
@@ -230,6 +245,7 @@
     </section>
   </main>
 
+  <script src="assets/home-video.js?v=20261011a"></script>
   <script>
     const client = window.GDV_AUTH.client;
     const secciones = [
@@ -956,6 +972,8 @@
 
       if ($("comunicadosAccesoModeracion")) $("comunicadosAccesoModeracion").hidden = modoComercio || modoFotos || moderador;
       if ($("robertAdmin")) $("robertAdmin").hidden = modoComercio || modoFotos || moderador;
+      if ($("gdvStolAdmin")) $("gdvStolAdmin").hidden = modoComercio || modoFotos || moderador;
+      if (administrador && !modoComercio && !modoFotos) window.GDV_STOL_VIDEO?.admin();
       if ($("shimodaPublicarAdmin")) $("shimodaPublicarAdmin").hidden = modoComercio || modoFotos || moderador;
       if (moderador) {
         const tituloPanel = $("panel")?.querySelector("h1");
