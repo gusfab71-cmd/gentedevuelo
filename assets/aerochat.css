@@ -61,3 +61,39 @@ footer{text-align:center;padding:20px;color:#899ca5;font-size:12px;border-top:1p
 .dm-open{background:#3a3028;color:#ffcb9b;border:1px solid #765537;border-radius:6px;padding:3px 6px;font-size:10px;font-weight:700;cursor:pointer}
 .online-user .dm-open{flex:none}
 @media(max-width:550px){.private-panel{grid-template-columns:1fr}.private-contacts{border-right:0;border-bottom:1px solid #46545b}.dm-contacts{max-height:125px}.dm-contact{padding:8px 10px}.private-contacts h3{margin-bottom:8px}.dm-messages{height:45vh;min-height:270px}.chat-mode-button{font-size:12px;padding:8px 9px}}
+
+
+/* Botón Enviar siempre junto al campo de escritura (PC y móvil). */
+.composer{background:#1e272b}
+.composer-entry{display:flex;align-items:stretch;gap:10px;width:100%;min-width:0}
+.composer-entry textarea{flex:1 1 auto;min-width:0;width:auto;resize:vertical;min-height:72px}
+.composer-entry .composer-send{
+  display:flex;align-items:center;justify-content:center;flex-direction:column;gap:5px;
+  flex:0 0 104px;min-height:72px;margin:0;padding:10px 12px;
+  background:#f28c3e;border:1px solid #ffb879;color:#22160e;
+  border-radius:10px;box-shadow:0 3px 10px rgba(0,0,0,.24);
+  font-weight:900;font-size:14px;white-space:nowrap;cursor:pointer
+}
+.composer-entry .composer-send svg{display:block;width:23px;height:23px;flex:none}
+.composer-entry .composer-send:hover:not(:disabled){background:#ffae69;border-color:#ffd6a5}
+.composer-entry .composer-send:focus-visible{outline:3px solid #ffdda3;outline-offset:2px}
+.composer-entry .composer-send:disabled{opacity:.6;cursor:not-allowed}
+.composer-bottom{margin-top:8px;gap:8px;flex-wrap:wrap}
+.composer-help{font-size:11px;color:#9dacb4}
+#chat-public-panel .messages{height:clamp(240px,39vh,455px)}
+.dm-messages{height:clamp(225px,36vh,390px);min-height:225px;flex:0 1 auto}
+.private-conversation .composer{border-top:2px solid #c78c58;background:#242e32}
+@media(max-width:800px){
+  #chat-public-panel .messages{height:clamp(230px,36vh,360px);min-height:230px}
+  .dm-messages{height:clamp(200px,30vh,290px);min-height:200px}
+}
+@media(max-width:550px){
+  .composer{padding:12px 10px 14px}
+  .composer-entry{gap:7px}
+  .composer-entry textarea{min-height:68px;padding:10px;font-size:14px}
+  .composer-entry .composer-send{flex-basis:84px;min-height:68px;padding:8px 5px;font-size:13px;gap:3px}
+  .composer-entry .composer-send svg{height:21px;width:21px}
+  .composer-help{display:none}
+  .private-contacts{padding:10px}
+  .dm-contacts{max-height:100px}
+}
