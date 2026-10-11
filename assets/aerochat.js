@@ -96,6 +96,11 @@
       link.href = 'comunidad.html#hangar/' + encodeURIComponent(person.id);
       link.textContent = person.username || 'Integrante';
       item.append(indicator,link);
+      if (person.id !== currentUser.id) {
+        const dmButton=document.createElement('button');dmButton.type='button';dmButton.className='dm-open';
+        dmButton.textContent='Privado';dmButton.setAttribute('aria-label','Enviar mensaje privado a '+(person.username||'Integrante'));
+        dmButton.addEventListener('click',()=>openPrivate(person.id));item.append(dmButton);
+      }
       if (roomIds.has(person.id)) {
         const room = document.createElement('span');
         room.className = 'online-in-room';
@@ -117,6 +122,223 @@
     }
     onlineUsers.replaceChildren(items);
   }
+
+
+  // Mensajería directa: separada de la sala pública y con control de acceso en Postgres.
+  const privateTab = document.getElementById('chat-mode-private');
+  const publicTab = document.getElementById('chat-mode-general');
+  const publicPanel = document.getElementById('chat-public-panel');
+  const dmPanel = document.getElementById('chat-private-panel');
+  const dmContacts = document.getElementById('dm-contacts');
+  const dmSearch = document.getElementById('dm-search');
+  const dmThread = document.getElementById('dm-messages');
+  const dmPeerName = document.getElementById('dm-peer-name');
+  const dmPeerHint = document.getElementById('dm-peer-hint');
+  const dmNotice = document.getElementById('dm-notice');
+  const dmForm = document.getElementById('dm-form');
+  const dmInput = document.getElementById('dm-content');
+  const dmSubmit = document.getElementById('dm-submit');
+  const dmCount = document.getElementById('dm-count');
+  const dmBlock = document.getElementById('dm-block');
+  const dmBadge = document.getElementById('dm-unread-badge');
+  let dmDirectory = [];
+  let dmRecent = [];
+  let dmBlocks = new Set();
+  let dmPeer = null;
+  let dmActive = false;
+  let dmInboxBusy = false;
+  let dmSending = false;
+  let dmThreadRequest = 0;
+
+  function privateNotice(text) { dmNotice.textContent = text || ''; }
+  function setChatMode(toPrivate) {
+    dmActive = toPrivate;
+    publicPanel.hidden = toPrivate;
+    dmPanel.hidden = !toPrivate;
+    publicTab.classList.toggle('selected', !toPrivate);
+    privateTab.classList.toggle('selected', toPrivate);
+    publicTab.setAttribute('aria-pressed', String(!toPrivate));
+    privateTab.setAttribute('aria-pressed', String(toPrivate));
+    if (!toPrivate) refresh();
+  }
+  function updatePrivateComposer() {
+    dmCount.textContent = String(dmInput.value.length);
+    const blocked = Boolean(dmPeer && dmBlocks.has(dmPeer.id));
+    dmForm.hidden = !dmPeer || blocked;
+    dmBlock.hidden = !dmPeer;
+    dmBlock.textContent = blocked ? 'Desbloquear' : 'Bloquear';
+    dmSubmit.disabled = dmSending || !dmPeer || !dmInput.value.trim() || dmInput.value.trim().length > 1000;
+    dmPeerHint.textContent = !dmPeer
+      ? 'Solo vos y el destinatario pueden leer esta conversación.'
+      : blocked ? 'Bloqueaste a este integrante. Desbloquealo para poder responder.'
+      : 'Conversación privada · solo disponible para los dos participantes.';
+  }
+  function renderPrivateContacts() {
+    const search = dmSearch.value.trim().toLocaleLowerCase('es');
+    const latest = new Map();
+    const unread = new Map();
+    for (const msg of dmRecent) {
+      const id = msg.sender_id === currentUser.id ? msg.recipient_id : msg.sender_id;
+      if (!latest.has(id)) latest.set(id,new Date(msg.created_at).getTime());
+      if (msg.recipient_id === currentUser.id && !msg.read_at) unread.set(id,(unread.get(id)||0)+1);
+    }
+    const people = dmDirectory.filter(p=>p.id !== currentUser.id && (p.username||'Integrante').toLocaleLowerCase('es').includes(search))
+      .sort((a,b)=>(latest.get(b.id)||0)-(latest.get(a.id)||0) || (a.username||'').localeCompare(b.username||'','es'));
+    const fragment = document.createDocumentFragment();
+    for (const person of people) {
+      const item = document.createElement('button');
+      item.type = 'button';
+      item.className = 'dm-contact' + (dmPeer?.id === person.id ? ' active' : '');
+      item.setAttribute('aria-pressed',String(dmPeer?.id===person.id));
+      item.addEventListener('click', () => openPrivate(person.id));
+      const label = document.createElement('span');
+      label.textContent = person.username || 'Integrante';
+      item.append(label);
+      if(unread.has(person.id)){
+        const pill = document.createElement('span');pill.className='dm-contact-unread';
+        pill.textContent=String(unread.get(person.id));
+        pill.setAttribute('aria-label',unread.get(person.id)+' mensajes sin leer');item.append(pill);
+      }
+      fragment.append(item);
+    }
+    if (!people.length) {
+      const empty=document.createElement('p');empty.className='online-placeholder';
+      empty.textContent=search?'No hay integrantes con ese nombre.':'Todavía no hay integrantes disponibles.';
+      fragment.append(empty);
+    }
+    dmContacts.replaceChildren(fragment);
+  }
+  async function refreshPrivateInbox(){
+    if (!currentUser || dmInboxBusy || document.hidden) return;
+    dmInboxBusy=true;
+    try{
+      if(!dmDirectory.length){
+        const users=await db.from('profiles').select('id,username').eq('onboarding_completed',true).order('username');
+        if(users.error)throw users.error;
+        dmDirectory=users.data||[];
+      }
+      const [messages,blocks]=await Promise.all([
+        db.from('gdv_private_messages').select('sender_id,recipient_id,created_at,read_at')
+          .or('sender_id.eq.'+currentUser.id+',recipient_id.eq.'+currentUser.id)
+          .order('created_at',{ascending:false}).limit(500),
+        db.from('gdv_member_blocks').select('blocked_id').eq('blocker_id',currentUser.id)
+      ]);
+      if(messages.error)throw messages.error;
+      if(blocks.error)throw blocks.error;
+      dmRecent=messages.data||[];
+      dmBlocks=new Set((blocks.data||[]).map(b=>b.blocked_id));
+      const unread=dmRecent.filter(m=>m.recipient_id===currentUser.id && !m.read_at).length;
+      dmBadge.hidden=unread===0;
+      dmBadge.textContent=unread>99?'99+':String(unread);
+      dmBadge.setAttribute('aria-label',unread+' mensajes privados sin leer');
+      renderPrivateContacts();
+      updatePrivateComposer();
+    }catch(error){
+      if(dmActive)privateNotice('No se pudo actualizar la bandeja privada. '+(error.message||'Reintentá.'));
+    }finally{dmInboxBusy=false}
+  }
+  async function openPrivate(id){
+    if(!currentUser || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id) || id===currentUser.id)return;
+    setChatMode(true);
+    if(!dmDirectory.length)await refreshPrivateInbox();
+    const person=dmDirectory.find(p=>p.id===id);
+    if(!person){privateNotice('Este integrante todavía no tiene un perfil habilitado.');return}
+    dmPeer=person;
+    dmPeerName.textContent=person.username||'Integrante';
+    dmThread.replaceChildren();
+    const loading=document.createElement('p');loading.className='empty';loading.textContent='Cargando conversación…';dmThread.append(loading);
+    dmInput.value='';
+    privateNotice('');
+    renderPrivateContacts();
+    updatePrivateComposer();
+    await refreshPrivateThread();
+    await refreshPrivateInbox();
+  }
+  async function refreshPrivateThread(){
+    if(!currentUser || !dmPeer || document.hidden)return;
+    const peer=dmPeer;
+    const request=++dmThreadRequest;
+    try{
+      // Ambas direcciones; la RLS en Supabase impide leer mensajes de terceros.
+      const msgs=await db.from('gdv_private_messages')
+        .select('id,sender_id,recipient_id,content,created_at,read_at')
+        .or('and(sender_id.eq.'+currentUser.id+',recipient_id.eq.'+peer.id+'),and(sender_id.eq.'+peer.id+',recipient_id.eq.'+currentUser.id+')')
+        .order('created_at',{ascending:false}).limit(100);
+      if(msgs.error)throw msgs.error;
+      if(request!==dmThreadRequest||dmPeer?.id!==peer.id)return;
+      const previousBottom=dmThread.scrollHeight-dmThread.scrollTop-dmThread.clientHeight<95;
+      const fragment=document.createDocumentFragment();
+      const all=[...(msgs.data||[])].reverse();
+      if(!all.length){
+        const empty=document.createElement('p');empty.className='empty';
+        empty.textContent='Todavía no hay mensajes privados. Podés iniciar la conversación.';
+        fragment.append(empty);
+      }
+      for(const msg of all){
+        const own=msg.sender_id===currentUser.id;
+        const article=document.createElement('article');article.className='msg'+(own?' own':'');
+        const head=document.createElement('div');head.className='msg-head';
+        const who=document.createElement('span');who.className='msg-author';
+        who.textContent=own?'Vos':(peer.username||'Integrante');
+        const time=document.createElement('time');time.className='msg-time';
+        time.dateTime=msg.created_at;time.textContent=timeLabel(msg.created_at);
+        head.append(who,time);
+        const body=document.createElement('p');body.className='msg-content';body.textContent=msg.content;
+        article.append(head,body);
+        if(own){
+          const receipt=document.createElement('span');receipt.className='msg-time';
+          receipt.textContent=msg.read_at?'Leído':'Enviado';
+          article.append(receipt);
+        }
+        fragment.append(article);
+      }
+      dmThread.replaceChildren(fragment);
+      if(previousBottom)dmThread.scrollTop=dmThread.scrollHeight;
+      const unread=all.filter(m=>m.recipient_id===currentUser.id && !m.read_at);
+      if(unread.length){
+        const res=await db.from('gdv_private_messages').update({read_at:new Date().toISOString()})
+          .eq('recipient_id',currentUser.id).eq('sender_id',peer.id).is('read_at',null);
+        if(!res.error)void refreshPrivateInbox();
+      }
+    }catch(error){
+      if(request===dmThreadRequest)privateNotice('No se pudo cargar la conversación. '+(error.message||'Reintentá.'));
+    }
+  }
+  publicTab.addEventListener('click',()=>setChatMode(false));
+  privateTab.addEventListener('click',async()=>{setChatMode(true);await refreshPrivateInbox();});
+  dmSearch.addEventListener('input',()=>renderPrivateContacts());
+  dmInput.addEventListener('input',updatePrivateComposer);
+  dmInput.addEventListener('keydown',event=>{
+    if(event.key==='Enter'&&!event.shiftKey&&!event.isComposing){event.preventDefault();dmForm.requestSubmit()}
+  });
+  dmForm.addEventListener('submit',async event=>{
+    event.preventDefault();
+    if(!dmPeer || dmSending || !currentUser)return;
+    const target=dmPeer.id,content=dmInput.value.trim();
+    if(!content||content.length>1000||dmBlocks.has(target))return;
+    dmSending=true;updatePrivateComposer();privateNotice('');
+    try{
+      const result=await db.from('gdv_private_messages').insert({sender_id:currentUser.id,recipient_id:target,content});
+      if(result.error)throw result.error;
+      if(dmPeer?.id===target){dmInput.value='';await refreshPrivateThread();dmInput.focus()}
+      await refreshPrivateInbox();
+    }catch(error){privateNotice('No se pudo enviar el mensaje. '+(error.message||'Reintentá.'))}
+    finally{dmSending=false;updatePrivateComposer()}
+  });
+  dmBlock.addEventListener('click',async()=>{
+    if(!dmPeer||!currentUser)return;
+    const target=dmPeer.id,isBlocked=dmBlocks.has(target);
+    if(!isBlocked&&!confirm('¿Bloquear a este integrante? No podrán enviarse mensajes privados entre ambos.'))return;
+    dmBlock.disabled=true;
+    try{
+      const r=isBlocked?await db.from('gdv_member_blocks').delete().eq('blocker_id',currentUser.id).eq('blocked_id',target)
+        :await db.from('gdv_member_blocks').insert({blocker_id:currentUser.id,blocked_id:target});
+      if(r.error)throw r.error;
+      privateNotice(isBlocked?'Integrante desbloqueado.':'Integrante bloqueado. No recibirá mensajes nuevos.');
+      await refreshPrivateInbox();
+    }catch(e){privateNotice('No se pudo cambiar el bloqueo. '+(e.message||''))}
+    finally{dmBlock.disabled=false}
+  });
 
   function startOnlinePresence() {
     // Private channel: PostgreSQL realtime.messages policies permit authenticated members only.
@@ -248,6 +470,8 @@
       heartbeat().catch(() => {});
       updateOnlineList().catch(() => onlineUnavailable('No se pudo actualizar la lista.'));
       refresh();
+      refreshPrivateInbox().catch(()=>{});
+      if(dmActive&&dmPeer)refreshPrivateThread().catch(()=>{});
     }
   });
   window.addEventListener('pagehide', () => {
@@ -261,6 +485,8 @@
     if (!document.hidden) {
       refresh();
       updateOnlineList().catch(() => onlineUnavailable('No se pudo actualizar la lista.'));
+      refreshPrivateInbox().catch(()=>{});
+      if(dmActive&&dmPeer)refreshPrivateThread().catch(()=>{});
     }
   }, 15000);
 
@@ -278,7 +504,15 @@
     await refresh();
     await heartbeat();
     await updateOnlineList();
+    await refreshPrivateInbox();
+    const initialPeer=new URLSearchParams(location.search).get('privado');
+    if(initialPeer)await openPrivate(initialPeer);
     startOnlinePresence();
+    db.channel('gdv-aerochat-private-inbox')
+      .on('postgres_changes',{event:'*',schema:'public',table:'gdv_private_messages'},()=>{
+        refreshPrivateInbox().catch(()=>{});
+        if(dmActive&&dmPeer)refreshPrivateThread().catch(()=>{});
+      }).subscribe();
     channel = db.channel('gdv-aerochat-live')
       .on('postgres_changes',{event:'*',schema:'public',table:'gdv_chat_messages'},() => refresh())
       .subscribe(state => {
