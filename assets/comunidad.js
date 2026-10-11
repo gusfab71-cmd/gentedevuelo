@@ -595,7 +595,7 @@ async function listarFotosDeHangar(id,propio){
 }
 
 let membersFilter='all';
-function socialCountLabel(n,word){return n+' '+(n===1?word:word+'s')}
+function socialCountLabel(n,word){return n+' '+(n===1?word:word==='seguidor'?'seguidores':word+'s')}
 async function memberFollowTotals(id){
  const [followers,following,mine]=await Promise.all([
   db.from('gdv_member_follows').select('follower_id',{count:'exact',head:true}).eq('followed_id',id),
