@@ -167,3 +167,52 @@ footer{text-align:center;padding:20px;color:#899ca5;font-size:12px;border-top:1p
   .composer .emoji-choice{font-size:19px}
   .composer .emoji-toggle{gap:4px;padding:4px 7px;font-size:10px}
 }
+
+
+/* Identidad visual diferenciada para conversaciones individuales.
+   La sala general conserva sus acentos naranjas tradicionales. */
+.dm-private-context{display:block;margin:0 0 4px;color:#a9d8d7;font-size:10px;font-weight:800;letter-spacing:1.65px}
+.room.private-mode{border-color:#456b70;border-top:3px solid #8fcfcd;background:#19292e}
+.room.private-mode .room-top{
+  background:linear-gradient(110deg,#223c43 0%,#1b3036 72%,#1b292d 100%);
+  border-bottom-color:#46686e
+}
+.room.private-mode .room-top h2{color:#e7fbf9}
+.room.private-mode .room-top p{color:#b8d5d7}
+.room.private-mode .room-badge{color:#d1f8f1;border:1px solid #5d9b9f;background:#26474c}
+.room.private-mode .chat-mode-tabs{background:#192d32;border-bottom-color:#42666b}
+.room.private-mode #chat-mode-private[aria-pressed="true"]{
+  background:#a4ddd5;color:#133136;border-color:#c6f4ec
+}
+.room.private-mode #chat-mode-general:not([aria-pressed="true"]){
+  background:#24383c;border-color:#466368;color:#c2d6d8
+}
+.room.private-mode .private-contacts{background:#1b3036;border-right-color:#3f6269}
+.room.private-mode .private-contacts h3{color:#e6f6f6}
+.room.private-mode .dm-contact.active{background:#2d4b4f;border-color:#9bd0ca;color:#f0fffd}
+.room.private-mode .private-conversation-heading{
+  background:#22393f;border-bottom:1px solid #456971
+}
+.room.private-mode .private-conversation-heading h3{color:#f3ffff}
+.room.private-mode .private-conversation-heading p{color:#b9d0d3}
+.room.private-mode .dm-messages{background-color:#1b2d32;
+  background-image:radial-gradient(circle at 20% 10%,rgba(150,218,210,.04),transparent 58%)
+}
+.room.private-mode .dm-messages .msg{background:#304449;border-color:#4b6970}
+.room.private-mode .dm-messages .msg.own{background:#28504f;border-color:#70aaa5}
+.room.private-mode .dm-messages .msg-author{color:#c4eae5}
+.room.private-mode .private-conversation .composer{border-top-color:#78aba9;background:#22373b}
+.room.private-mode .private-conversation .composer textarea{background:#15262b;border-color:#5b7c80}
+.room.private-mode .private-conversation .composer textarea:focus{
+  border-color:#a1ddd4;outline-color:rgba(161,221,212,.25)
+}
+.room.private-mode .private-conversation .composer-send:not(:disabled){
+  background:#99d7cc;border-color:#c4f3e8;color:#183136
+}
+.room.private-mode .private-conversation .composer-send:hover:not(:disabled){background:#bbede0}
+.room.private-mode .private-conversation .composer-send:focus-visible{outline-color:#ddfdf4}
+@media(max-width:550px){
+  .room.private-mode .private-contacts{border-right:0;border-bottom:1px solid #4d7376}
+  .room.private-mode .room-top{padding:13px}
+  .room.private-mode .private-conversation-heading{padding:12px}
+}
