@@ -14,6 +14,8 @@
   document.head.append(css);
 
   const MAX_ALERTS = 3;
+  const ALERT_LIFETIME_MS = 7000;
+  const MAX_SEEN_MESSAGES = 600;
   const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   let user = null;
   let channel = null;
@@ -25,26 +27,43 @@
   let publicId = 0;
   let privateId = 0;
   let notifications = [];
+  let expiryTimer = null;
   const handled = new Set();
   const names = new Map();
 
-  function key() { return 'gdv-aerochat-alertas-v1:' + user.id; }
-
-  function savedAlerts() {
+  // Guardamos solamente los identificadores ya avisados, nunca las alertas
+  // visuales ni el contenido de los mensajes. Esto evita repeticiones al
+  // cambiar de página, recargar o tener varias pestañas abiertas.
+  function seenStorageKey() { return 'gdv-aerochat-avisados-v2:' + user.id; }
+  function readSeen() {
+    if (!user) return [];
     try {
-      const value = JSON.parse(sessionStorage.getItem(key()) || '[]');
-      if (!Array.isArray(value)) return [];
-      return value.filter(n => n && UUID.test(n.sender) &&
-        (n.type === 'private' || n.type === 'public') &&
-        typeof n.id === 'number' && Number.isSafeInteger(n.id) && n.id > 0 &&
-        typeof n.name === 'string' && n.name.length <= 100 &&
-        typeof n.count === 'number' && n.count >= 1 &&
-        Date.now() - Number(n.at) < 3600000).slice(0, MAX_ALERTS);
+      const value = JSON.parse(localStorage.getItem(seenStorageKey()) || '[]');
+      return Array.isArray(value)
+        ? value.filter(v => typeof v === 'string' && /^(?:public|private):[1-9]\\d*$/.test(v))
+          .slice(-MAX_SEEN_MESSAGES)
+        : [];
     } catch { return []; }
   }
-  function remember() {
-    if (!user) return;
-    try { sessionStorage.setItem(key(), JSON.stringify(notifications)); } catch {}
+  function markSeen(id) {
+    if (handled.has(id)) return false;
+    // Sincronizar lo visto en otras pestañas antes de mostrar otro aviso.
+    for (const previous of readSeen()) handled.add(previous);
+    if (handled.has(id)) return false;
+    handled.add(id);
+    while (handled.size > MAX_SEEN_MESSAGES) handled.delete(handled.values().next().value);
+    try { localStorage.setItem(seenStorageKey(), JSON.stringify([...handled])); } catch {}
+    return true;
+  }
+
+  function closeBrowserAlerts() {
+    if (!('serviceWorker' in navigator)) return;
+    void navigator.serviceWorker.getRegistration('/aerochat-push-sw.js')
+      .then(async reg => {
+        if (!reg?.active?.scriptURL.includes('/aerochat-push-sw.js')) return;
+        const notices = await reg.getNotifications();
+        for (const notice of notices) notice.close();
+      }).catch(() => {});
   }
 
   function isOpen(type, sender) {
@@ -77,6 +96,8 @@
   }
   function render() {
     if (!user) return;
+    if (expiryTimer !== null) { clearTimeout(expiryTimer); expiryTimer = null; }
+    notifications = notifications.filter(n => Date.now() - n.at < ALERT_LIFETIME_MS);
     mount();
     const list = host.querySelector('#gdv-chat-alert-list');
     const fragment = document.createDocumentFragment();
@@ -108,7 +129,7 @@
       link.append(symbol, details, chevron);
       link.addEventListener('click', () => {
         notifications = notifications.filter(v => v !== n);
-        remember();
+        render();
       });
       const close = document.createElement('button');
       close.type = 'button';
@@ -118,7 +139,6 @@
       close.title = 'Cerrar aviso';
       close.addEventListener('click', () => {
         notifications = notifications.filter(v => v !== n);
-        remember();
         render();
       });
       card.append(link, close);
@@ -126,6 +146,10 @@
     }
     list.replaceChildren(fragment);
     host.hidden = !list.childElementCount;
+    if (notifications.length) {
+      const remaining = Math.min(...notifications.map(n => n.at + ALERT_LIFETIME_MS - Date.now()));
+      expiryTimer = setTimeout(render, Math.max(1, remaining + 10));
+    }
   }
 
   async function nameOf(id) {
@@ -149,13 +173,11 @@
     if (!Number.isSafeInteger(id) || id < 1 || !UUID.test(sender) ||
         sender === user.id ||
         (type === 'private' && row.recipient_id !== user.id)) return;
-    const seenKey = type + ':' + id;
-    if (handled.has(seenKey)) return;
-    handled.add(seenKey);
-    if (handled.size > 500) handled.delete(handled.values().next().value);
+    const viewer = user.id;
+    if (!markSeen(type + ':' + id)) return;
     if (isOpen(type, sender)) return;
     const label = await nameOf(sender);
-    if (!active || !user || isOpen(type, sender)) return;
+    if (!active || !user || user.id !== viewer || isOpen(type, sender)) return;
     // Agregar mensajes sucesivos del mismo integrante en una sola alerta.
     const existing = notifications.find(n => n.type === type && n.sender === sender);
     if (existing) {
@@ -168,7 +190,6 @@
       notifications.unshift({type, sender, name:label, id, count:1, at:Date.now()});
     }
     notifications = notifications.slice(0, MAX_ALERTS);
-    remember();
     render();
   }
 
@@ -212,11 +233,12 @@
   }
 
   function stop() {
-    if (user) { try { sessionStorage.removeItem(key()); } catch {} }
+    if (expiryTimer !== null) { clearTimeout(expiryTimer); expiryTimer = null; }
     active = false;
     seeded = false;
     if (channel) { db.removeChannel(channel); channel = null; }
     notifications = [];
+    handled.clear();
     if (host) { host.remove(); host = null; }
     user = null;
   }
@@ -230,11 +252,10 @@
     if (!validated || auth.needsOnboarding() || !validated.email_confirmed_at) return;
     user = validated;
     active = true;
-    notifications = savedAlerts();
-    // Verificar si estamos en la conversación que originó el aviso.
-    notifications = notifications.filter(n => !isOpen(n.type, n.sender));
-    remember();
-    if (notifications.length) render();
+    notifications = [];
+    handled.clear();
+    for (const seen of readSeen()) handled.add(seen);
+    closeBrowserAlerts();
     try { await seed(); seeded = true; }
     catch { seeded = false; }
     if (!active) return;
@@ -250,19 +271,23 @@
     } finally { starting = false; }
   }
 
-  window.addEventListener('pagehide', () => {
-    if (channel) { db.removeChannel(channel); channel = null; }
-    active = false;
-  });
+  window.addEventListener('pagehide', stop);
   window.addEventListener('pageshow', event => { if (event.persisted && !active) void start(); });
   document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) {
+    if (!document.hidden && active) {
+      closeBrowserAlerts();
       render();
       void poll();
     }
   });
   window.addEventListener('hashchange', () => { if (active) render(); });
-  setInterval(() => { if (active) void poll(); }, 20000);
+  window.addEventListener('focus', () => { if (active) closeBrowserAlerts(); });
+  setInterval(() => {
+    if (active && !document.hidden) {
+      closeBrowserAlerts();
+      void poll();
+    }
+  }, 20000);
   db.auth.onAuthStateChange((event) => {
     if (event === 'SIGNED_OUT') {
       stop();
