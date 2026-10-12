@@ -27,6 +27,17 @@
   <script src="assets/supabase-2.117.2.min.js"></script>
   <script src="assets/community-config.js"></script>
   <script src="assets/auth-guard.js?v=20261011actividadavisos1"></script>
+  <style>
+    .push-panel{background:#292f32;border:1px solid #b46e2e;border-radius:11px;padding:12px;margin:0 0 16px}
+    .push-panel h2{font-size:15px;margin:0 0 8px;color:#ffd09a}
+    .push-panel p{font-size:11px;line-height:1.45;color:#e3d5cb;margin:0 0 9px}
+    .push-panel .push-option{display:flex;align-items:center;gap:7px;font-size:12px;color:#eee;margin:7px 0;cursor:pointer}
+    .push-panel .push-option input{accent-color:#ed912c;width:16px;height:16px;flex-shrink:0}
+    .push-panel button{width:100%;margin:9px 0 7px;background:#efa44d;border:0;border-radius:8px;color:#241b13;font-weight:800;font-size:12px;padding:9px;cursor:pointer}
+    .push-panel button:disabled{opacity:.55;cursor:not-allowed}
+    .push-panel #push-status{font-size:11px;margin:2px 0 0}
+    .push-panel #push-status.push-error{color:#ffc1ae}
+  </style>
 </head>
 <body>
 <a class="skip" href="#chat-main">Saltar al chat</a>
@@ -107,6 +118,14 @@
           <li class="online-placeholder">Consultando integrantes conectados…</li>
         </ul>
       </section>
+      <section class="push-panel" aria-label="Notificaciones fuera de Gente de Vuelo">
+        <h2>Notificaciones fuera de la página</h2>
+        <p>Recibí avisos de AeroChat aunque no tengas la página abierta. Elegí qué mensajes querés recibir en este dispositivo.</p>
+        <label class="push-option"><input id="push-private" type="checkbox" checked disabled> Mensajes privados</label>
+        <label class="push-option"><input id="push-general" type="checkbox" disabled> Sala general</label>
+        <button id="push-toggle" type="button">Activar notificaciones</button>
+        <p id="push-status" role="status" aria-live="polite">Comprobando compatibilidad…</p>
+      </section>
       <h2>Antes de participar</h2>
       <p>Los mensajes privados no aparecen en la sala general. Después de aceptar el aviso de seguridad, los mensajes nuevos podrán ser revisados exclusivamente por el administrador, con motivo registrado. Los mensajes anteriores no se incorporan a esta revisión. Podés bloquear integrantes.</p>
       <p>Esta sala es para conversar en forma cordial y respetuosa sobre aviación.</p>
@@ -119,7 +138,8 @@
   </div>
 </main>
 <footer>Gente de Vuelo · Pasión que nos une</footer>
-<script src="assets/aerochat.js?v=20261011actividadrevision2"></script>
-<script defer src="assets/chat-alerts.js?v=20261011alertas1"></script>
+<script src="assets/aerochat.js?v=20261012push1"></script>
+<script defer src="assets/chat-alerts.js?v=20261012alertaspush1"></script>
+<script defer src="assets/aerochat-push.js?v=20261012push1"></script>
 </body>
 </html>
