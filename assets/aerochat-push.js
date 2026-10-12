@@ -24,8 +24,9 @@
   function sync() {
     button.disabled = busy;
     button.textContent = subscription ? 'Desactivar en este dispositivo' : 'Activar notificaciones';
-    privateOption.disabled = !subscription || busy;
-    generalOption.disabled = !subscription || busy;
+    // Las preferencias se eligen antes de activar; después se pueden modificar.
+    privateOption.disabled = busy;
+    generalOption.disabled = busy;
   }
   async function invoke(action, extra = {}) {
     const { data, error } = await auth.client.functions.invoke('gdv-aerochat-push', {
@@ -36,7 +37,39 @@
     return data;
   }
   async function registration() {
-    return navigator.serviceWorker.register('/aerochat-push-sw.js', { scope: '/' });
+    const reg = await navigator.serviceWorker.register('/aerochat-push-sw.js', { scope: '/' });
+    // register() puede terminar mientras el worker aún está instalándose.
+    // PushManager.subscribe() requiere un Service Worker completamente activado.
+    if (reg.active?.state === 'activated') return reg;
+    await new Promise((resolve, reject) => {
+      const watched = new Set();
+      let timeoutId;
+      const cleanup = () => {
+        clearTimeout(timeoutId);
+        reg.removeEventListener('updatefound', check);
+        for (const worker of watched) worker.removeEventListener('statechange', check);
+      };
+      const check = () => {
+        if (reg.active?.state === 'activated') {
+          cleanup();
+          resolve();
+          return;
+        }
+        for (const worker of [reg.installing, reg.waiting, reg.active]) {
+          if (worker && !watched.has(worker)) {
+            watched.add(worker);
+            worker.addEventListener('statechange', check);
+          }
+        }
+      };
+      reg.addEventListener('updatefound', check);
+      timeoutId = setTimeout(() => {
+        cleanup();
+        reject(new Error('El servicio de notificaciones no terminó de activarse. Recargá la página e intentá nuevamente.'));
+      }, 20000);
+      check();
+    });
+    return reg;
   }
   function bytesFromBase64(value) {
     const raw = atob(value.replace(/-/g,'+').replace(/_/g,'/') +
@@ -76,6 +109,8 @@
           throw new Error('Tenés que permitir las notificaciones en el navegador.');
         const user = await auth.validate();
         if (!user || auth.needsOnboarding()) throw new Error('Completá tu registro para activar avisos.');
+        if (!privateOption.checked && !generalOption.checked)
+          throw new Error('Seleccioná al menos un tipo de mensaje para recibir avisos.');
         const key = await invoke('key');
         if (!key?.publicKey) throw new Error('No se obtuvo la clave pública de notificaciones.');
         const reg = await registration();
@@ -96,7 +131,7 @@
           subscription = null;
           throw e;
         }
-        say('Avisos activados. Los recibirás cuando no estés en la página.');
+        say('Avisos activados y registrados en este dispositivo.');
       }
     } catch(error) { say(error.message || 'No fue posible cambiar las notificaciones.', true); }
     finally { busy = false; sync(); }
