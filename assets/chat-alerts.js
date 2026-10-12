@@ -40,7 +40,7 @@
     try {
       const value = JSON.parse(localStorage.getItem(seenStorageKey()) || '[]');
       return Array.isArray(value)
-        ? value.filter(v => typeof v === 'string' && /^(?:public|private):[1-9]\\d*$/.test(v))
+        ? value.filter(v => typeof v === 'string' && /^(?:public|private):[1-9]\d*$/.test(v))
           .slice(-MAX_SEEN_MESSAGES)
         : [];
     } catch { return []; }
