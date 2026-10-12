@@ -3,6 +3,38 @@
 import { createClient } from "npm:@supabase/supabase-js@2.117.2";
 import { generateVapidKey, vapidPublicKey, send } from "jsr:@daaku/webpush@0.2.0";
 
+// Supabase Edge runtime may not expose the newer Uint8Array Base64 methods.
+// @daaku/webpush uses both methods for VAPID and payload encryption.
+// Provide narrowly scoped standards-compatible fallbacks; never log key material.
+if (typeof (Uint8Array as unknown as { fromBase64?: unknown }).fromBase64 !== "function") {
+  Object.defineProperty(Uint8Array, "fromBase64", {
+    configurable: true,
+    value: (input: string, options: { alphabet?: string } = {}) => {
+      if (typeof input !== "string") throw new TypeError("Invalid Base64 input");
+      const normalized = options.alphabet === "base64url"
+        ? input.replace(/-/g, "+").replace(/_/g, "/") : input;
+      const binary = atob(normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "="));
+      return Uint8Array.from(binary, ch => ch.charCodeAt(0));
+    }
+  });
+}
+if (typeof (Uint8Array.prototype as unknown as { toBase64?: unknown }).toBase64 !== "function") {
+  Object.defineProperty(Uint8Array.prototype, "toBase64", {
+    configurable: true,
+    value: function (this: Uint8Array, options: { alphabet?: string; omitPadding?: boolean } = {}) {
+      let binary = "";
+      for (let i = 0; i < this.length; i += 8192) {
+        binary += String.fromCharCode(...this.subarray(i, i + 8192));
+      }
+      let encoded = btoa(binary);
+      if (options.alphabet === "base64url") {
+        encoded = encoded.replace(/\+/g, "-").replace(/\//g, "_");
+      }
+      return options.omitPadding ? encoded.replace(/=+$/, "") : encoded;
+    }
+  });
+}
+
 const allowedOrigins = new Set([
   "https://gentedevuelo.com",
   "https://www.gentedevuelo.com",
