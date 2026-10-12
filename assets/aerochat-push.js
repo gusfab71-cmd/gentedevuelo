@@ -121,9 +121,16 @@
       }
       if (subscription) {
         const preferences = await invoke('settings', { endpoint: subscription.endpoint });
-        privateOption.checked = preferences.private_enabled !== false;
-        generalOption.checked = preferences.general_enabled === true;
-        say('Avisos activados en este dispositivo.');
+        if (preferences.registered !== true) {
+          // Puede existir un permiso local sin registro vigente en el servidor.
+          // Nunca presentarlo como una suscripción activa.
+          subscription = null;
+          say('El permiso del navegador está disponible, pero falta registrar este dispositivo. Tocá Activar notificaciones.');
+        } else {
+          privateOption.checked = preferences.private_enabled !== false;
+          generalOption.checked = preferences.general_enabled === true;
+          say('Avisos activados y registrados en este dispositivo.');
+        }
       } else {
         say('Elegí activar para recibir avisos incluso al cerrar la página.');
       }
