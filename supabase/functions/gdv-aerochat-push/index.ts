@@ -203,7 +203,8 @@ Deno.serve(async req => {
         .select("private_enabled,general_enabled").eq("user_id",user.id)
         .eq("endpoint",data.endpoint).maybeSingle();
       if (current.error) throw current.error;
-      return reply({ private_enabled: current.data?.private_enabled ?? true,
+      return reply({ registered: Boolean(current.data),
+        private_enabled: current.data?.private_enabled ?? true,
         general_enabled: current.data?.general_enabled ?? false }, 200, origin);
     }
     if (data.action === "unsubscribe") {
