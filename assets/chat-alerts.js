@@ -264,7 +264,17 @@
   window.addEventListener('hashchange', () => { if (active) render(); });
   setInterval(() => { if (active) void poll(); }, 20000);
   db.auth.onAuthStateChange((event) => {
-    if (event === 'SIGNED_OUT') stop();
+    if (event === 'SIGNED_OUT') {
+      stop();
+      // El navegador compartido deja de recibir avisos de la sesión anterior.
+      if ('serviceWorker' in navigator) {
+        void navigator.serviceWorker.getRegistration('/aerochat-push-sw.js')
+          .then(reg => reg?.active?.scriptURL.includes('/aerochat-push-sw.js')
+            ? reg.pushManager.getSubscription() : null)
+          .then(subscription => subscription?.unsubscribe())
+          .catch(() => {});
+      }
+    }
     else if (event === 'SIGNED_IN' && !active) setTimeout(() => { void start(); }, 800);
   });
   void start();
