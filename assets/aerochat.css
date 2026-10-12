@@ -274,11 +274,10 @@ body:has(.room.private-mode) .online-user a:hover{color:#f2f2f2}
 body:has(.room.private-mode) .online-user .dm-open{background:#3b3b3b;border-color:#777;color:#eee}
 
 /* AeroChat: ajuste gris azulado y sidebar compacto */
-/* Las alturas se limitan solamente en escritorio. Todo el contenido sigue accesible. */
-@media(min-width:801px){
- .sidebar{max-height:350px;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;scrollbar-color:#64737c #212a30}
- .online-users{max-height:110px}
-}
+/* Recuadro derecho completo y sin desplazamiento interno.
+   Las instrucciones extensas permanecen plegadas en "Antes de participar". */
+.sidebar{max-height:none;overflow:visible}
+.sidebar .online-users{max-height:none;overflow:visible}
 .sidebar-guidance{margin:3px 0 10px;border:1px solid #45535b;background:#243037;border-radius:9px}
 .sidebar-guidance summary{padding:9px 10px;font-size:12px;font-weight:800;color:#e5edf1;cursor:pointer;list-style-position:inside}
 .sidebar-guidance[open] summary{border-bottom:1px solid #45535b}
