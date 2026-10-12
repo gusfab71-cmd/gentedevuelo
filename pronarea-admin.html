@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PRONAREA Ezeiza · Administración · Gente de Vuelo</title>
+<style>
+:root{color-scheme:dark;font-family:Arial,sans-serif;background:#161b1e;color:#eef2f4}*{box-sizing:border-box}
+body{margin:0}header{padding:20px;background:#222b30;border-bottom:2px solid #6a8293}
+main{max-width:900px;margin:28px auto;padding:0 18px}a{color:#b4cbd8}form{display:grid;gap:14px}
+label{display:grid;gap:6px;font-size:14px}input,textarea,button{font:inherit;padding:12px;border-radius:9px;border:1px solid #62717b;background:#242e34;color:#fff}
+textarea{min-height:320px;resize:vertical;line-height:1.5}button{cursor:pointer;background:#586f80;font-weight:700}
+button:disabled{opacity:.5;cursor:wait}p{line-height:1.5;color:#c5d0d7}
+#editor{display:none}.status{white-space:pre-wrap;padding:12px;border-radius:8px;background:#253037}
+small{color:#bac8d0}
+</style>
+<script src="assets/supabase-2.117.2.min.js"></script>
+<script src="assets/community-config.js"></script>
+<script src="assets/auth-guard.js?v=20261011actividadavisos1"></script>
+</head><body><header><strong>Gente de Vuelo · PRONAREA Ezeiza</strong> · <a href="moderacion.html">Volver a administración</a></header>
+<main><h1>Carga manual de PRONAREA</h1><p>Uso interno de prueba. Copiá el texto completo del SMN. Ingresá las horas UTC de emisión y de finalización de validez conforme al boletín original; el sistema no las infiere.</p>
+<div id="status" class="status" role="status">Comprobando acceso…</div>
+<section id="editor">
+<form id="form">
+<label>FIR <input value="Ezeiza (EZE)" readonly></label>
+<label>Emisión del boletín (UTC) <input id="issued" type="datetime-local" required></label>
+<label>Fin de validez (UTC) <input id="until" type="datetime-local" required></label>
+<label>Texto PRONAREA del SMN<textarea id="bulletin" required maxlength="20000" minlength="100" placeholder="PRONAREA FIR EZE ... SIGFENOM: ... WIND/T: ... FCST: ..."></textarea></label>
+<small>Las fechas se expresan en UTC, no en horario argentino. Se conserva el boletín original sin modificar.</small>
+<button id="save" type="submit">Guardar boletín de prueba</button>
+</form><h2>Último boletín cargado</h2><pre id="last" class="status"></pre>
+</section></main>
+<script>
+(async()=>{
+ const status=document.getElementById('status'),editor=document.getElementById('editor'),form=document.getElementById('form');
+ const client=window.GDV_AUTH?.client;
+ if(!client){status.textContent='No se encontró la configuración de autenticación.';return;}
+ const {data:{user},error:authError}=await client.auth.getUser();
+ if(authError||!user){status.textContent='Ingresá con tu cuenta de administrador en Gente de Vuelo.';return;}
+ const {data:admin,error:adminError}=await client.from('site_admins').select('user_id').eq('user_id',user.id).maybeSingle();
+ if(adminError||!admin){status.textContent='Acceso exclusivo para administración.';return;}
+ editor.style.display='block';status.textContent='Acceso autorizado. Modo de prueba, sin publicación para integrantes.';
+ const reload=async()=>{
+  const {data,error}=await client.from('gdv_pronarea_bulletins').select('issued_at,valid_until,created_at,raw_text').eq('fir','EZE').order('issued_at',{ascending:false}).limit(1);
+  document.getElementById('last').textContent=error?'La tabla aún no está instalada: '+error.message:!data?.length?'Todavía no hay boletines.':'Emisión UTC: '+data[0].issued_at+'\nFin UTC: '+data[0].valid_until+'\nRegistrado: '+data[0].created_at+'\n\n'+data[0].raw_text.slice(0,1600)+(data[0].raw_text.length>1600?'…':'');
+ }; await reload();
+ form.addEventListener('submit',async e=>{
+  e.preventDefault();const button=document.getElementById('save'),text=document.getElementById('bulletin').value.trim();
+  if(!/PRONAREA\s+FIR\s+EZE/i.test(text)||!/SIGFENOM\s*:/i.test(text)||!/WIND\/T\s*:/i.test(text)||!/FCST\s*:/i.test(text)){status.textContent='El boletín debe contener PRONAREA FIR EZE, SIGFENOM, WIND/T y FCST.';return;}
+  const issuedValue=document.getElementById('issued').value,untilValue=document.getElementById('until').value;
+  const issued=new Date(issuedValue+'Z'),until=new Date(untilValue+'Z');
+  if(!Number.isFinite(issued.getTime())||!Number.isFinite(until.getTime())||until<=issued||until-issued>86400000){status.textContent='Revisá las fechas UTC y el período de validez.';return;}
+  button.disabled=true;status.textContent='Guardando…';
+  const {error}=await client.from('gdv_pronarea_bulletins').insert({fir:'EZE',raw_text:text,issued_at:issued.toISOString(),valid_until:until.toISOString(),source:'manual_smn',created_by:user.id});
+  button.disabled=false;status.textContent=error?'No se guardó: '+error.message:'Boletín almacenado para pruebas. No se publicó a integrantes.';
+  if(!error){form.reset();await reload();}
+ });
+})();
+</script></body></html>
