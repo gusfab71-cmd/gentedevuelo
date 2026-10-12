@@ -1,4 +1,6 @@
 /* Service worker exclusivo para notificaciones de AeroChat. No almacena conversaciones. */
+self.addEventListener('install', () => { void self.skipWaiting(); });
+self.addEventListener('activate', event => { event.waitUntil(self.clients.claim()); });
 self.addEventListener('push', event => {
   let value = {};
   try { value = event.data ? event.data.json() : {}; } catch {}
