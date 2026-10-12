@@ -15,7 +15,11 @@ self.addEventListener('push', event => {
   event.waitUntil(self.registration.showNotification(title, {
     body,
     icon: '/logo%20circular%20recortado%20gente%20de%20vuelo.png',
-    tag: typeof value.tag === 'string' ? value.tag : 'gdv-aerochat',
+    // Una sola notificación visible: las nuevas reemplazan a la anterior.
+    // Sin interacción obligatoria, el navegador puede retirarla automáticamente.
+    tag: 'gdv-aerochat',
+    renotify: false,
+    requireInteraction: false,
     data: { url }
   }));
 });
