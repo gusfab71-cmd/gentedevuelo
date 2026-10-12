@@ -129,6 +129,10 @@
   const publicTab = document.getElementById('chat-mode-general');
   const publicPanel = document.getElementById('chat-public-panel');
   const dmPanel = document.getElementById('chat-private-panel');
+  const chatRoom = document.querySelector('.room');
+  const roomTitle = document.getElementById('chat-room-title');
+  const roomSubtitle = document.getElementById('chat-room-subtitle');
+  const roomBadge = document.getElementById('chat-room-badge');
   const dmContacts = document.getElementById('dm-contacts');
   const dmSearch = document.getElementById('dm-search');
   const dmThread = document.getElementById('dm-messages');
@@ -183,6 +187,13 @@
     window.GDV_AEROCHAT_ACTIVE_PEER = toPrivate ? (dmPeer?.id || null) : null;
     publicPanel.hidden = toPrivate;
     dmPanel.hidden = !toPrivate;
+    chatRoom.classList.toggle('private-mode', toPrivate);
+    roomTitle.textContent = toPrivate ? 'Mensajes privados' : 'Sala general';
+    roomSubtitle.textContent = toPrivate
+      ? 'Conversaciones individuales · horario argentino'
+      : 'Mensajes recientes · horario argentino';
+    roomBadge.textContent = toPrivate ? 'Modo privado' : 'Solo integrantes';
+    document.title = (toPrivate ? 'Mensajes privados' : 'AeroChat') + ' · Gente de Vuelo';
     publicTab.classList.toggle('selected', !toPrivate);
     privateTab.classList.toggle('selected', toPrivate);
     publicTab.setAttribute('aria-pressed', String(!toPrivate));
