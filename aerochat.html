@@ -21,7 +21,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <title>AeroChat · Gente de Vuelo</title>
-  <link rel="stylesheet" href="assets/aerochat.css?v=20261012privadogris3">
+  <link rel="stylesheet" href="assets/aerochat.css?v=20261012azulgriscompacto1">
   <style id="auth-pending-style">html.auth-pending body{visibility:hidden}</style>
   <script>document.documentElement.classList.add('auth-pending')</script>
   <script src="assets/supabase-2.117.2.min.js"></script>
@@ -126,12 +126,14 @@
         <button id="push-toggle" type="button">Activar notificaciones</button>
         <p id="push-status" role="status" aria-live="polite">Comprobando compatibilidad…</p>
       </section>
-      <h2>Antes de participar</h2>
-      <p>Los mensajes privados no aparecen en la sala general. Después de aceptar el aviso de seguridad, los mensajes nuevos podrán ser revisados exclusivamente por el administrador, con motivo registrado. Los mensajes anteriores no se incorporan a esta revisión. Podés bloquear integrantes.</p>
+      <details class="sidebar-guidance">
+        <summary>Antes de participar</summary>
+        <p>Los mensajes privados no aparecen en la sala general. Después de aceptar el aviso de seguridad, los mensajes nuevos podrán ser revisados exclusivamente por el administrador, con motivo registrado. Los mensajes anteriores no se incorporan a esta revisión. Podés bloquear integrantes.</p>
       <p>Esta sala es para conversar en forma cordial y respetuosa sobre aviación.</p>
       <p>No compartas datos privados ni información operativa sensible. Para consultas que deban conservarse, utilizá el foro.</p>
       <p>Los administradores y moderadores pueden retirar mensajes que incumplan las normas.</p>
-      <a href="comunidad.html#normativa">Leer la Normativa de Comunidad</a>
+        <a href="comunidad.html#normativa">Leer la Normativa de Comunidad</a>
+      </details>
       <hr>
       <p class="hint">AeroChat no admite archivos adjuntos: no consume el almacenamiento destinado a las fotos y videos.</p>
     </aside>
