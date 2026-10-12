@@ -165,6 +165,15 @@ Deno.serve(async req => {
       if (saved.error) throw saved.error;
       return reply({ ok: true }, 200, origin);
     }
+    if (data.action === "settings") {
+      if (!endpointAllowed(data.endpoint)) return reply({ error: "Endpoint inválido" }, 400, origin);
+      const current = await admin.from("gdv_webpush_subscriptions")
+        .select("private_enabled,general_enabled").eq("user_id",user.id)
+        .eq("endpoint",data.endpoint).maybeSingle();
+      if (current.error) throw current.error;
+      return reply({ private_enabled: current.data?.private_enabled ?? true,
+        general_enabled: current.data?.general_enabled ?? false }, 200, origin);
+    }
     if (data.action === "unsubscribe") {
       if (!endpointAllowed(data.endpoint)) return reply({ error: "Endpoint inválido" }, 400, origin);
       const removed = await admin.from("gdv_webpush_subscriptions")
