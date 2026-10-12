@@ -133,33 +133,37 @@ footer{text-align:center;padding:20px;color:#899ca5;font-size:12px;border-top:1p
   .online-users{max-height:150px}
 }
 
-/* Selector compacto de emojis básicos (sala general y mensajes privados). */
+/* AeroChat: selector de emojis discreto y compacto, PC y móvil. */
 .emoji-picker{position:relative;flex:0 0 auto}
 .composer .emoji-toggle{
-  display:inline-flex;align-items:center;justify-content:center;gap:7px;
-  padding:5px 10px;min-height:34px;background:#303b40;color:#ffd1a2;
-  border:1px solid #816445;border-radius:8px;font-size:12px;font-weight:700
+  display:inline-flex;align-items:center;justify-content:center;gap:5px;
+  min-height:30px;padding:4px 8px;
+  background:#2c363a;color:#f0c697;border:1px solid #79583c;
+  border-radius:7px;font-size:11px;font-weight:700;
+  transition:background-color .15s,border-color .15s
 }
-.composer .emoji-toggle svg{width:19px;height:19px;flex:none}
+.composer .emoji-toggle svg{width:16px;height:16px;flex:none}
 .composer .emoji-toggle:hover:not(:disabled),
-.composer .emoji-toggle[aria-expanded="true"]{background:#434039;border-color:#efa44d}
+.composer .emoji-toggle[aria-expanded="true"]{background:#3a3d3b;border-color:#dc9657}
 .composer .emoji-toggle:disabled{opacity:.4;cursor:not-allowed}
 .emoji-menu{
-  position:absolute;z-index:25;left:0;bottom:calc(100% + 8px);
-  width:min(284px, calc(100vw - 38px));padding:10px;background:#283338;
-  border:1px solid #9f6a40;border-radius:12px;
-  box-shadow:0 14px 32px rgba(0,0,0,.58)
+  position:absolute;z-index:25;left:0;bottom:calc(100% + 6px);
+  width:min(220px,calc(100vw - 38px));padding:8px;background:#252f33;
+  border:1px solid #806044;border-radius:10px;
+  box-shadow:0 10px 24px rgba(0,0,0,.42)
 }
 .emoji-menu[hidden]{display:none}
-.emoji-menu-title{font-size:12px;font-weight:800;color:#ffd2a7;margin:1px 3px 8px}
-.emoji-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:3px}
+.emoji-menu-title{font-size:11px;font-weight:700;color:#eec49b;margin:0 2px 6px}
+.emoji-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:2px}
 .composer .emoji-choice{
   display:grid;place-items:center;width:100%;aspect-ratio:1;padding:0;
-  min-width:0;background:transparent;border:0;border-radius:7px;
-  font-size:23px;font-weight:400;line-height:1.2;color:#fff
+  min-width:0;background:transparent;border:0;border-radius:6px;
+  font-size:21px;font-weight:400;line-height:1;color:#fff
 }
-.composer .emoji-choice:hover,.composer .emoji-choice:focus-visible{background:#475057}
+.composer .emoji-choice:hover,.composer .emoji-choice:focus-visible{background:#414b50}
 @media(max-width:420px){
-  .composer .emoji-toggle{gap:5px;padding:5px 8px;font-size:11px}
-  .emoji-grid{gap:2px}
+  .emoji-menu{width:min(200px,calc(100vw - 38px));padding:7px}
+  .emoji-menu-title{font-size:10px;margin-bottom:5px}
+  .composer .emoji-choice{font-size:19px}
+  .composer .emoji-toggle{gap:4px;padding:4px 7px;font-size:10px}
 }
