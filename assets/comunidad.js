@@ -1461,6 +1461,14 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)r
  else if(action==='save')await toggleOwned('gdv_saved',b.dataset.id);else if(action==='follow')await toggleOwned('gdv_follows',b.dataset.id);
  else if(action==='delete-comment'){showDialog('<h2>Retirar comentario</h2><p>El texto será reemplazado por «Comentario eliminado por su autor», conservando el hilo.</p><button id="confirm-delete" class="primary">Confirmar</button>');$('confirm-delete').onclick=()=>busy($('confirm-delete'),async()=>{checked(await db.from('gdv_comments').update({deleted:true}).eq('id',b.dataset.id));dialog.close();await load();await route()})}});
 });
+// Volver arriba funciona incluso cuando ya estamos en la vista #foro.
+// El router utiliza #foro como ruta, pero no existe un ancla HTML con ese id.
+document.querySelector('.foro-volver-arriba')?.addEventListener('click',e=>{
+ if(e.defaultPrevented||e.button!==0||e.metaKey||e.ctrlKey||e.shiftKey||e.altKey)return;
+ e.preventDefault();
+ if(location.hash!=='#foro')location.hash='#foro';
+ window.scrollTo({top:0,behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
+});
 window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue=''}});
 let lastHash=location.hash,restoringHash=false;
 document.addEventListener('click',e=>{const anchor=e.target.closest('a[href]');if(dirty&&anchor&&anchor.target!=='_blank'&&anchor.getAttribute('href')!==location.hash){if(!confirm('Tu borrador está guardado en este dispositivo. ¿Querés salir del editor?')){e.preventDefault();e.stopImmediatePropagation()}else dirty=false}},true);
