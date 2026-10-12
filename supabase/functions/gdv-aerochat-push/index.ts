@@ -91,13 +91,9 @@ async function dispatch(user, data) {
   const subscriptions = subscribed.data || [];
   if (!subscriptions.length) return { status: 200, result: { ok: true, recipients: 0 } };
 
-  // An active site tab displays AeroChat's in-app alerts instead of a duplicate push.
-  const ids = [...new Set(subscriptions.map(s => s.user_id))];
-  const online = await admin.from("gdv_member_presence").select("user_id")
-    .in("user_id", ids).gte("last_seen", new Date(Date.now() - 90000).toISOString());
-  const activeUsers = new Set(online.error ? [] : (online.data || []).map(p => p.user_id));
-  const offline = subscriptions.filter(s => !activeUsers.has(s.user_id));
-  if (!offline.length) return { status: 200, result: { ok: true, recipients: 0 } };
+  // No reliance on a stale "last seen" heartbeat: a user who just closed
+  // the site must receive the next notification immediately.
+  const offline = subscriptions;
 
   const vapid = await getVapid();
   const payload = JSON.stringify({
