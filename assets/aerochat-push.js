@@ -119,8 +119,14 @@
       if (reg?.active?.scriptURL.includes('/aerochat-push-sw.js')) {
         subscription = await reg.pushManager.getSubscription();
       }
-      if (subscription) say('Avisos activados en este dispositivo.');
-      else say('Elegí activar para recibir avisos incluso al cerrar la página.');
+      if (subscription) {
+        const preferences = await invoke('settings', { endpoint: subscription.endpoint });
+        privateOption.checked = preferences.private_enabled !== false;
+        generalOption.checked = preferences.general_enabled === true;
+        say('Avisos activados en este dispositivo.');
+      } else {
+        say('Elegí activar para recibir avisos incluso al cerrar la página.');
+      }
     } catch { say('No se pudo consultar el permiso de notificaciones.', true); }
     sync();
   })();
