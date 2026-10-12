@@ -169,50 +169,99 @@ footer{text-align:center;padding:20px;color:#899ca5;font-size:12px;border-top:1p
 }
 
 
-/* Identidad visual diferenciada para conversaciones individuales.
-   La sala general conserva sus acentos naranjas tradicionales. */
-.dm-private-context{display:block;margin:0 0 4px;color:#a9d8d7;font-size:10px;font-weight:800;letter-spacing:1.65px}
-.room.private-mode{border-color:#456b70;border-top:3px solid #8fcfcd;background:#19292e}
+/* Tema monocromático del AeroChat privado: los mensajes propios se diferencian
+   por luminosidad, no por colores. La sala general conserva su apariencia. */
+.dm-private-context{display:block;margin:0 0 4px;color:#c4c4c4;font-size:10px;font-weight:800;letter-spacing:1.65px}
+.room.private-mode{border-color:#535353;border-top:3px solid #999;background:#242424}
 .room.private-mode .room-top{
-  background:linear-gradient(110deg,#223c43 0%,#1b3036 72%,#1b292d 100%);
-  border-bottom-color:#46686e
+  background:linear-gradient(110deg,#323232 0%,#2b2b2b 72%,#242424 100%);
+  border-bottom-color:#515151
 }
-.room.private-mode .room-top h2{color:#e7fbf9}
-.room.private-mode .room-top p{color:#b8d5d7}
-.room.private-mode .room-badge{color:#d1f8f1;border:1px solid #5d9b9f;background:#26474c}
-.room.private-mode .chat-mode-tabs{background:#192d32;border-bottom-color:#42666b}
+.room.private-mode .room-top h2{color:#f5f5f5}
+.room.private-mode .room-top p{color:#bdbdbd}
+.room.private-mode .room-badge{color:#e3e3e3;border:1px solid #696969;background:#383838}
+.room.private-mode .chat-mode-tabs{background:#292929;border-bottom-color:#505050}
 .room.private-mode #chat-mode-private[aria-pressed="true"]{
-  background:#a4ddd5;color:#133136;border-color:#c6f4ec
+  background:#c2c2c2;color:#1c1c1c;border-color:#e4e4e4
 }
 .room.private-mode #chat-mode-general:not([aria-pressed="true"]){
-  background:#24383c;border-color:#466368;color:#c2d6d8
+  background:#363636;border-color:#626262;color:#ddd
 }
-.room.private-mode .private-contacts{background:#1b3036;border-right-color:#3f6269}
-.room.private-mode .private-contacts h3{color:#e6f6f6}
-.room.private-mode .dm-contact.active{background:#2d4b4f;border-color:#9bd0ca;color:#f0fffd}
+.room.private-mode .dm-unread-badge{background:#d0d0d0;color:#1f1f1f}
+.room.private-mode .private-panel{background:#252525}
+.room.private-mode .private-contacts{background:#2a2a2a;border-right-color:#555}
+.room.private-mode .private-contacts h3{color:#f1f1f1}
+.room.private-mode .private-contacts label{color:#c9c9c9}
+.room.private-mode .private-contacts input{background:#1e1e1e;border-color:#626262;color:#f5f5f5}
+.room.private-mode .dm-contact{background:#373737;border-color:#555;color:#e9e9e9}
+.room.private-mode .dm-contact.active,.room.private-mode .dm-contact:hover{
+  background:#505050;border-color:#b7b7b7;color:#fff
+}
+.room.private-mode .dm-contact-unread{background:#d0d0d0;color:#1b1b1b}
+.room.private-mode .private-conversation{background:#252525}
 .room.private-mode .private-conversation-heading{
-  background:#22393f;border-bottom:1px solid #456971
+  background:#303030;border-bottom:1px solid #555
 }
-.room.private-mode .private-conversation-heading h3{color:#f3ffff}
-.room.private-mode .private-conversation-heading p{color:#b9d0d3}
-.room.private-mode .dm-messages{background-color:#1b2d32;
-  background-image:radial-gradient(circle at 20% 10%,rgba(150,218,210,.04),transparent 58%)
+.room.private-mode .private-conversation-heading h3{color:#f5f5f5}
+.room.private-mode .private-conversation-heading p{color:#c3c3c3}
+.room.private-mode .dm-messages{background:#222;
+  background-image:radial-gradient(circle at 20% 10%,rgba(255,255,255,.025),transparent 58%)
 }
-.room.private-mode .dm-messages .msg{background:#304449;border-color:#4b6970}
-.room.private-mode .dm-messages .msg.own{background:#28504f;border-color:#70aaa5}
-.room.private-mode .dm-messages .msg-author{color:#c4eae5}
-.room.private-mode .private-conversation .composer{border-top-color:#78aba9;background:#22373b}
-.room.private-mode .private-conversation .composer textarea{background:#15262b;border-color:#5b7c80}
+.room.private-mode .dm-messages .msg{background:#373737;border-color:#585858}
+.room.private-mode .dm-messages .msg.own{background:#505050;border-color:#898989}
+.room.private-mode .dm-messages .msg-author{color:#e4e4e4}
+.room.private-mode .dm-messages .msg-time{color:#c4c4c4}
+.room.private-mode .dm-messages .msg-actions button{color:#dbdbdb}
+.room.private-mode .dm-notice{color:#dedede}
+.room.private-mode .dm-block{background:#383838;border-color:#737373;color:#eee}
+.room.private-mode .dm-review-notice{background:#303030;border-bottom-color:#606060}
+.room.private-mode .dm-review-notice p{color:#d4d4d4}
+.room.private-mode .dm-review-notice strong{color:#f2f2f2}
+.room.private-mode #dm-accept-review{background:#bdbdbd;border-color:#e3e3e3;color:#1d1d1d}
+.room.private-mode #dm-accept-status{color:#cbcbcb}
+.room.private-mode .private-conversation .composer{border-top:2px solid #777;background:#2d2d2d}
+.room.private-mode .private-conversation .composer label{color:#eee}
+.room.private-mode .private-conversation .composer textarea{background:#1c1c1c;border-color:#696969}
 .room.private-mode .private-conversation .composer textarea:focus{
-  border-color:#a1ddd4;outline-color:rgba(161,221,212,.25)
+  border-color:#d1d1d1;outline-color:rgba(215,215,215,.25)
 }
-.room.private-mode .private-conversation .composer-send:not(:disabled){
-  background:#99d7cc;border-color:#c4f3e8;color:#183136
+.room.private-mode .private-conversation .composer-entry .composer-send:not(:disabled){
+  background:#c4c4c4;border-color:#e6e6e6;color:#1d1d1d
 }
-.room.private-mode .private-conversation .composer-send:hover:not(:disabled){background:#bbede0}
-.room.private-mode .private-conversation .composer-send:focus-visible{outline-color:#ddfdf4}
+.room.private-mode .private-conversation .composer-entry .composer-send:hover:not(:disabled){
+  background:#e1e1e1;border-color:#fff
+}
+.room.private-mode .private-conversation .composer-entry .composer-send:focus-visible{outline-color:#f0f0f0}
+.room.private-mode .private-conversation .composer-bottom{color:#bdbdbd}
+.room.private-mode .private-conversation .composer .emoji-toggle{
+  background:#3a3a3a;border-color:#747474;color:#e0e0e0
+}
+.room.private-mode .private-conversation .composer .emoji-toggle:hover:not(:disabled),
+.room.private-mode .private-conversation .composer .emoji-toggle[aria-expanded="true"]{
+  background:#505050;border-color:#bababa
+}
+.room.private-mode .emoji-menu{background:#303030;border-color:#737373}
+.room.private-mode .emoji-menu-title{color:#e0e0e0}
+.room.private-mode .composer .emoji-choice:hover,
+.room.private-mode .composer .emoji-choice:focus-visible{background:#515151}
+.room.private-mode button:focus-visible,.room.private-mode input:focus-visible,
+.room.private-mode textarea:focus-visible{outline-color:#d1d1d1}
 @media(max-width:550px){
-  .room.private-mode .private-contacts{border-right:0;border-bottom:1px solid #4d7376}
+  .room.private-mode .private-contacts{border-right:0;border-bottom:1px solid #606060}
   .room.private-mode .room-top{padding:13px}
   .room.private-mode .private-conversation-heading{padding:12px}
 }
+
+/* En modo privado, el único acento cromático es el estado de presencia en vivo.
+   El color no se muestra cuando se pierde la conexión. */
+body:has(.room.private-mode) .dot.live{
+  background:#00e65c;box-shadow:0 0 0 3px rgba(0,230,92,.16),0 0 12px rgba(0,230,92,.35)
+}
+body:has(.room.private-mode) .online-indicator{
+  background:#00e65c;box-shadow:0 0 0 3px rgba(0,230,92,.16),0 0 9px rgba(0,230,92,.3)
+}
+body:has(.room.private-mode) .online-count{background:#363636;border-color:#626262;color:#ededed}
+body:has(.room.private-mode) .online-in-room{background:#373737;border-color:#676767;color:#ddd}
+body:has(.room.private-mode) .online-you{color:#d2d2d2}
+body:has(.room.private-mode) .online-user a:hover{color:#f2f2f2}
+body:has(.room.private-mode) .online-user .dm-open{background:#3b3b3b;border-color:#777;color:#eee}
