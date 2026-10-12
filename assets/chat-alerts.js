@@ -28,6 +28,7 @@
   let privateId = 0;
   let notifications = [];
   let expiryTimer = null;
+  let workerUpdateChecked = false;
   const handled = new Set();
   const names = new Map();
 
@@ -61,6 +62,10 @@
     void navigator.serviceWorker.getRegistration('/aerochat-push-sw.js')
       .then(async reg => {
         if (!reg?.active?.scriptURL.includes('/aerochat-push-sw.js')) return;
+        if (!workerUpdateChecked) {
+          workerUpdateChecked = true;
+          void reg.update().catch(() => {});
+        }
         const notices = await reg.getNotifications();
         for (const notice of notices) notice.close();
       }).catch(() => {});
