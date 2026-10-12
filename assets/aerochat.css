@@ -272,3 +272,55 @@ body:has(.room.private-mode) .online-in-room{background:#373737;border-color:#67
 body:has(.room.private-mode) .online-you{color:#d2d2d2}
 body:has(.room.private-mode) .online-user a:hover{color:#f2f2f2}
 body:has(.room.private-mode) .online-user .dm-open{background:#3b3b3b;border-color:#777;color:#eee}
+
+/* AeroChat: ajuste gris azulado y sidebar compacto */
+/* Las alturas se limitan solamente en escritorio. Todo el contenido sigue accesible. */
+@media(min-width:801px){
+ .sidebar{max-height:350px;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;scrollbar-color:#64737c #212a30}
+ .online-users{max-height:110px}
+}
+.sidebar-guidance{margin:3px 0 10px;border:1px solid #45535b;background:#243037;border-radius:9px}
+.sidebar-guidance summary{padding:9px 10px;font-size:12px;font-weight:800;color:#e5edf1;cursor:pointer;list-style-position:inside}
+.sidebar-guidance[open] summary{border-bottom:1px solid #45535b}
+.sidebar-guidance p{padding:0 10px}
+.sidebar-guidance p:first-of-type{margin-top:10px}
+.sidebar-guidance a{display:inline-block;padding:0 10px 10px;font-size:12px;color:#c3d7e4}
+@media(max-width:800px){.sidebar{max-height:none;overflow:visible}}
+
+/* Azul grisáceo desaturado, sin perder el fondo exterior gris carbón. */
+.room.private-mode{background:#25313a;border-color:#556672;border-top-color:#9baeba}
+.room.private-mode .room-top{background:linear-gradient(110deg,#35454f,#2b3a44 68%,#26343d);border-bottom-color:#556772}
+.room.private-mode .room-top p{color:#c5d1d8}
+.room.private-mode .room-badge{background:#394a55;border-color:#6a7c86;color:#ecf1f4}
+.room.private-mode .chat-mode-tabs{background:#2a3842;border-bottom-color:#53656e}
+.room.private-mode #chat-mode-private[aria-pressed="true"]{background:#b5c4ce;color:#19242a;border-color:#d5e0e6}
+.room.private-mode #chat-mode-general:not([aria-pressed="true"]){background:#35434c;border-color:#667984;color:#d6e0e5}
+.room.private-mode .private-panel{background:#27353f}
+.room.private-mode .private-contacts{background:#2c3a44;border-right-color:#566974}
+.room.private-mode .private-contacts input{background:#202d35;border-color:#62747e;color:#f0f4f7}
+.room.private-mode .dm-contact{background:#37464f;border-color:#546570;color:#eaf0f4}
+.room.private-mode .dm-contact.active,.room.private-mode .dm-contact:hover{background:#4b5d68;border-color:#9aafbc;color:#fff}
+.room.private-mode .private-conversation{background:#293640}
+.room.private-mode .private-conversation-heading{background:#33434d;border-bottom-color:#5c6f7b}
+.room.private-mode .private-conversation-heading p{color:#c8d4dc}
+.room.private-mode .dm-messages{background-color:#25323b;background-image:radial-gradient(circle at 20% 10%,rgba(201,219,231,.045),transparent 58%)}
+.room.private-mode .dm-messages .msg{background:#374955;border-color:#566d7b;color:#f2f6f8}
+.room.private-mode .dm-messages .msg.own{background:#4b606c;border-color:#8fa6b3}
+.room.private-mode .dm-messages .msg-author{color:#e0eaf0}
+.room.private-mode .private-conversation .composer{background:#303f49;border-top-color:#7f949f}
+.room.private-mode .private-conversation .composer textarea{background:#202b33;border-color:#70818c;color:#f5f7f9}
+.room.private-mode .private-conversation .composer textarea:focus{border-color:#c1d0d9;outline-color:rgba(193,208,217,.25)}
+.room.private-mode .private-conversation .composer-entry .composer-send:not(:disabled){background:#c5cfd5;border-color:#dce5e9;color:#1c292f}
+.room.private-mode .private-conversation .composer-entry .composer-send:hover:not(:disabled){background:#e0e7eb;border-color:#fff}
+.room.private-mode .private-conversation .composer-entry .composer-send:disabled{background:#aebdc6;border-color:#c0cbd2;color:#263239;opacity:.82}
+.room.private-mode .private-conversation .composer .emoji-toggle{background:#3c4c56;border-color:#82949e;color:#e8eff3}
+.room.private-mode .private-conversation .composer .emoji-toggle:hover:not(:disabled),
+.room.private-mode .private-conversation .composer .emoji-toggle[aria-expanded="true"]{background:#536570;border-color:#bdcbd2}
+.room.private-mode .emoji-menu{background:#34444d;border-color:#7c909a}
+.room.private-mode .emoji-menu-title{color:#e2eaf0}
+.room.private-mode .dm-review-notice{background:#35434c;border-bottom-color:#667883}
+.room.private-mode .dm-review-notice p{color:#e0e6ea}
+.room.private-mode .dm-block{background:#3b4b55;border-color:#8395a0;color:#edf2f5}
+@media(max-width:550px){
+ .room.private-mode .private-contacts{border-bottom-color:#617580}
+}
