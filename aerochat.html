@@ -21,7 +21,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <title>AeroChat · Gente de Vuelo</title>
-  <link rel="stylesheet" href="assets/aerochat.css?v=20261012emojiscompact2">
+  <link rel="stylesheet" href="assets/aerochat.css?v=20261012modoprivado1">
   <style id="auth-pending-style">html.auth-pending body{visibility:hidden}</style>
   <script>document.documentElement.classList.add('auth-pending')</script>
   <script src="assets/supabase-2.117.2.min.js"></script>
@@ -61,7 +61,7 @@
   </div>
   <div class="shell">
     <section class="room" aria-label="Sala de AeroChat">
-      <div class="room-top"><div><h2>Sala general</h2><p>Mensajes recientes · horario argentino</p></div><span class="room-badge">Solo integrantes</span></div>
+      <div class="room-top"><div><h2 id="chat-room-title">Sala general</h2><p id="chat-room-subtitle">Mensajes recientes · horario argentino</p></div><span class="room-badge" id="chat-room-badge">Solo integrantes</span></div>
       <div class="chat-mode-tabs" role="group" aria-label="Tipo de conversación">
         <button type="button" id="chat-mode-general" class="chat-mode-button selected" aria-pressed="true">Sala general</button>
         <button type="button" id="chat-mode-private" class="chat-mode-button" aria-pressed="false">Mensajes privados <span id="dm-unread-badge" class="dm-unread-badge" hidden></span></button>
@@ -87,7 +87,7 @@
         </div>
         <div class="private-conversation">
           <div class="private-conversation-heading">
-            <div><h3 id="dm-peer-name">Elegí un integrante</h3><p id="dm-peer-hint">Los participantes pueden leer la conversación. Los mensajes nuevos pueden ser revisados por el administrador bajo la política aceptada.</p></div>
+            <div><span class="dm-private-context">MENSAJE DIRECTO</span><h3 id="dm-peer-name">Elegí un integrante</h3><p id="dm-peer-hint">Los participantes pueden leer la conversación. Los mensajes nuevos pueden ser revisados por el administrador bajo la política aceptada.</p></div>
             <button type="button" id="dm-block" class="dm-block" hidden>Bloquear</button>
           </div>
           <section id="dm-review-notice" class="dm-review-notice" aria-label="Aviso de revisión administrativa">
@@ -138,7 +138,7 @@
   </div>
 </main>
 <footer>Gente de Vuelo · Pasión que nos une</footer>
-<script src="assets/aerochat.js?v=20261012push1"></script>
+<script src="assets/aerochat.js?v=20261012modoprivado1"></script>
 <script defer src="assets/aerochat-emojis.js?v=20261012emojis1"></script>
 <script defer src="assets/chat-alerts.js?v=20261012avisosunavez1"></script>
 <script defer src="assets/aerochat-push.js?v=20261012swactive3"></script>
