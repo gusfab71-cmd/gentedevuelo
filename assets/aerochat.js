@@ -353,8 +353,9 @@
     if(!content||content.length>1000||dmBlocks.has(target)||!dmConsentAccepted)return;
     dmSending=true;updatePrivateComposer();privateNotice('');
     try{
-      const result=await db.from('gdv_private_messages').insert({sender_id:currentUser.id,recipient_id:target,content});
+      const result=await db.from('gdv_private_messages').insert({sender_id:currentUser.id,recipient_id:target,content}).select('id').single();
       if(result.error)throw result.error;
+      void db.functions.invoke('gdv-aerochat-push',{body:{action:'dispatch',kind:'private',message_id:result.data.id}}).catch(()=>{});
       if(dmPeer?.id===target){dmInput.value='';await refreshPrivateThread();dmInput.focus()}
       await refreshPrivateInbox();
     }catch(error){privateNotice('No se pudo enviar el mensaje. '+(error.message||'Reintentá.'))}
@@ -480,8 +481,9 @@
     updateButton();
     report('');
     try {
-      const response = await db.from('gdv_chat_messages').insert({author_id:currentUser.id,content});
+      const response = await db.from('gdv_chat_messages').insert({author_id:currentUser.id,content}).select('id').single();
       if (response.error) throw response.error;
+      void db.functions.invoke('gdv-aerochat-push',{body:{action:'dispatch',kind:'general',message_id:response.data.id}}).catch(()=>{});
       input.value = '';
       report('');
       await refresh();
