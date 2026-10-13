@@ -16,7 +16,7 @@ const cat=s=>categories.find(c=>c.slug===s)||{name:'Otros',color:'#aab6c2'};
 const profile=id=>profiles.get(id)||{username:'Usuario eliminado'};
 const name=id=>profile(id).username||'Miembro de la comunidad';
 const avatar=id=>safeURL(profile(id).avatar_url)?`<img class="avatar" src="${esc(safeURL(profile(id).avatar_url))}" alt="Foto de ${esc(name(id))}" loading="lazy">`:`<span class="avatar no-avatar" aria-label="${esc(name(id))}">${esc(name(id).slice(0,1).toUpperCase())}</span>`;
-const shimodaAvatar=()=>`<img class="avatar shimoda-avatar" src="LOGO SE ROBERT SHIMODA MEJORADO.png" alt="Foto de Robert Shimoda" loading="lazy">`;
+const shimodaAvatar=()=>`<img class="avatar shimoda-avatar" src="https://cdn.shopify.com/s/files/1/0982/6317/1345/files/robert-shimoda-asistente-aeronautico.png?v=1791913252" alt="Foto de Robert Shimoda" loading="lazy">`;
 const message=(text,error=false)=>{notice.textContent=text;notice.classList.toggle('error',error)};
 const checked=r=>{if(r.error)throw new Error(r.error.message);return r.data||[]};
 const link=(label,hash,cls='button')=>`<a class="${cls}" href="${esc(hash)}">${esc(label)}</a>`;
