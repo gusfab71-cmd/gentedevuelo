@@ -20,6 +20,26 @@ pre{white-space:pre-wrap;word-break:break-word;max-height:220px;overflow:auto;fo
 .shimoda-form button{justify-self:start}.shimoda-form button:disabled{opacity:.6;cursor:wait}
 .shimoda-answer{white-space:pre-wrap;line-height:1.55;overflow-wrap:anywhere;background:#1d2931;padding:14px;border-radius:10px;border:1px solid #4b5f6e}
 .shimoda-answer:empty{display:none}
+
+/* Consulta METAR/TAF integrada a Utilidades */
+.meteo-query{margin-top:18px}
+.meteo-form{display:grid;grid-template-columns:minmax(170px,230px) minmax(180px,1fr);gap:14px;align-items:end;margin:15px 0}
+.meteo-form label{display:grid;gap:7px;font-size:14px;font-weight:600}
+.meteo-form input{font:inherit;padding:11px 13px;color:#f3f6f7;background:#202a31;border:1px solid #607681;border-radius:9px;min-width:0;width:100%;box-sizing:border-box}
+.meteo-form button{justify-self:start;grid-column:1/-1;background:#bcced9;color:#18242c;font-weight:700}
+.meteo-form button:disabled{opacity:.6;cursor:wait}
+.meteo-report-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:14px 0}
+.meteo-report-grid article{background:#1e2b34;border:1px solid #526977;border-radius:12px;padding:15px;min-width:0}
+.meteo-report-grid h3{margin:0 0 9px}
+.meteo-report-grid pre{background:#16232b;border:1px solid #3d5260;border-radius:9px;padding:12px;margin:10px 0;max-height:unset;line-height:1.65;font-size:14px;overflow-wrap:anywhere}
+.meteo-meta{font-size:13px;line-height:1.55;color:#c4d0da}
+.meteo-interpretacion{background:#172c38;border-left:3px solid #bed5e2;border-radius:9px;padding:14px;margin:13px 0;line-height:1.6}
+.meteo-official{display:flex;flex-wrap:wrap;gap:9px;margin:13px 0}
+.meteo-official a{display:inline-block;padding:10px 12px;background:#334650;border:1px solid #657e8b;border-radius:9px;color:#e8f2f7;text-decoration:none;font-size:14px}
+.meteo-official a:hover{background:#455e6d}
+.meteo-shortcut{display:inline-block;color:inherit;text-decoration:none}
+.meteo-shortcut:hover{text-decoration:underline}
+@media(max-width:680px){.meteo-form,.meteo-report-grid{grid-template-columns:1fr}.meteo-form button{grid-column:1}}
 </style>
 <script>document.documentElement.classList.add('auth-pending')</script>
 <style>html.auth-pending body{visibility:hidden}</style>
@@ -30,12 +50,48 @@ pre{white-space:pre-wrap;word-break:break-word;max-height:220px;overflow:auto;fo
 <main><h1>Meteorología Aeronáutica</h1><p class="muted">Robert Shimoda — Asistente Aeronáutico de Gente de Vuelo</p>
 <div class="cards">
 <section class="tile"><h3 class="accent">PRONAREA</h3><p>Vientos y temperaturas en altura · FIR Ezeiza</p></section>
-<section class="tile"><h3>METAR</h3><p>Próximamente</p></section>
-<section class="tile"><h3>TAF</h3><p>Próximamente</p></section>
-<section class="tile"><h3>SIGMET</h3><p>Próximamente</p></section>
+<section class="tile"><h3><a class="meteo-shortcut" href="#meteo-actual">METAR</a></h3><p>Consulta automática · observaciones</p></section>
+<section class="tile"><h3><a class="meteo-shortcut" href="#meteo-actual">TAF</a></h3><p>Consulta automática · pronósticos de aeródromo</p></section>
+<section class="tile"><h3><a class="meteo-shortcut" href="#meteo-enlaces">SIGMET</a></h3><p>Consulta al SMN · fuente externa</p></section>
 <section class="tile"><h3>Viento en pista</h3><p><a href="flightprep-nav.html">Abrir FlightPrep NAV</a></p></section>
 <section class="tile"><h3>Aeródromos</h3><p>Próximamente</p></section>
 </div>
+
+<section class="panel meteo-query" id="meteo-actual" aria-labelledby="meteo-title">
+<h2 id="meteo-title">METAR y TAF · Consulta con Robert Shimoda</h2>
+<p class="muted">Ingresá un aeródromo argentino por su código OACI. Shimoda interpreta los boletines en hasta 20 palabras, mostrando también el texto original. La consulta no equivale a un briefing oficial completo.</p>
+<form id="meteo-consulta" class="meteo-form">
+<label for="meteo-oaci">Código OACI
+<input id="meteo-oaci" name="icao" type="text" required minlength="4" maxlength="4" pattern="[sS][aA][a-zA-Z]{2}" value="SAEZ" placeholder="SAEZ" autocomplete="off" autocapitalize="characters"></label>
+<label for="meteo-pregunta">Pregunta a Shimoda (opcional)
+<input id="meteo-pregunta" name="question" type="text" maxlength="220" placeholder="¿Qué informa sobre viento y visibilidad?"></label>
+<button id="meteo-enviar" type="submit">Consultar METAR y TAF</button>
+</form>
+<p class="meteo-meta">Ejemplos: SAEZ (Ezeiza), SABE (Aeroparque), SACO (Córdoba), SAAR (Rosario). Cada estación puede tener disponibilidad diferente.</p>
+<p id="meteo-estado" role="status" aria-live="polite">Para consultar, iniciá sesión en Gente de Vuelo.</p>
+<div id="meteo-resultado" hidden>
+<p id="meteo-fecha" class="meteo-meta"></p>
+<div class="meteo-interpretacion">
+<strong>Interpretación de Robert Shimoda</strong>
+<p id="meteo-resumen"></p>
+<p class="meteo-meta" id="meteo-resumen-nota"></p>
+</div>
+<div class="meteo-report-grid">
+<article><h3>METAR · Observación</h3><pre id="meteo-metar"></pre><p id="meteo-metar-nota" class="meteo-meta"></p></article>
+<article><h3>TAF · Pronóstico</h3><pre id="meteo-taf"></pre><p id="meteo-taf-nota" class="meteo-meta"></p></article>
+</div>
+<p class="meteo-meta">Origen de los reportes: NOAA Aviation Weather Center (redistribución). No es una integración directa con una API del Servicio Meteorológico Nacional. La hora de consulta no es la hora de emisión.</p>
+</div>
+<p class="notice">Para preparar un vuelo verificá emisión y validez de cada boletín. Además, consultá PRONAREA y SIGMET oficiales, cartas de tiempo significativo, NOTAM y el briefing ARO-AIS. Shimoda no certifica condiciones seguras ni autoriza la operación.</p>
+<div id="meteo-enlaces" class="meteo-official" aria-label="Fuentes oficiales de meteorología e información aeronáutica">
+<a href="https://www.smn.gob.ar/pronarea" target="_blank" rel="noopener noreferrer">PRONAREA · SMN</a>
+<a href="https://www.smn.gob.ar/metar" target="_blank" rel="noopener noreferrer">METAR · SMN</a>
+<a href="https://www.smn.gob.ar/taf" target="_blank" rel="noopener noreferrer">TAF · SMN</a>
+<a href="https://www.smn.gob.ar/mensajes-sigmet" target="_blank" rel="noopener noreferrer">SIGMET · SMN</a>
+<a href="https://www.smn.gob.ar/cartas-de-tiempo-significativo-sfcfl250" target="_blank" rel="noopener noreferrer">Cartas meteorológicas · SMN</a>
+<a href="https://ais.anac.gob.ar/notam" target="_blank" rel="noopener noreferrer">NOTAM · ANAC</a>
+</div>
+</section>
 <section class="panel"><h2>PRONAREA · FIR Ezeiza</h2>
 <p class="notice">Prueba privada. El boletín almacenado no tiene fecha de vigencia confirmada. No utilizar para planificar ni realizar vuelos.</p>
 <p id="status" role="status">Comprobando acceso…</p>
@@ -122,4 +178,61 @@ document.getElementById('consultar').addEventListener('click',()=>{
 });
 document.getElementById('consultas').hidden=false;
 })();
-</script></body></html>
+</script>
+<script>
+/* Consola meteorológica: consulta independiente del PRONAREA de pruebas privadas. */
+(()=>{
+  'use strict';
+  const form=document.getElementById('meteo-consulta');
+  const state=document.getElementById('meteo-estado');
+  const button=document.getElementById('meteo-enviar');
+  const result=document.getElementById('meteo-resultado');
+  const formatUTC=(value)=>{
+    const date=new Date(value);
+    return Number.isFinite(date.getTime())
+      ? date.toLocaleString('es-AR',{timeZone:'UTC',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:false})+' UTC'
+      : 'fecha de consulta no disponible';
+  };
+  form.addEventListener('submit',async event=>{
+    event.preventDefault();
+    const client=window.GDV_AUTH?.client;
+    if(!client){state.textContent='No se pudo iniciar la conexión segura de Gente de Vuelo.';return;}
+    button.disabled=true;state.textContent='Comprobando tu sesión…';result.hidden=true;
+    try{
+      const {data:auth,error:authError}=await client.auth.getUser();
+      if(authError||!auth?.user)throw new Error('Iniciá sesión en Gente de Vuelo y volvé a consultar.');
+      state.textContent='Consultando METAR y TAF…';
+      const {data,error}=await client.functions.invoke('robert-meteo',{
+        body:{
+          icao:document.getElementById('meteo-oaci').value.trim().toUpperCase(),
+          question:document.getElementById('meteo-pregunta').value.trim()
+        }
+      });
+      if(error||!data?.ok){
+        let message=data?.error||error?.message||'No se pudo obtener el reporte.';
+        if(error?.context?.json){
+          try{const detail=await error.context.json();if(detail?.error)message=detail.error;}catch(_){}
+        }
+        throw new Error(message);
+      }
+      document.getElementById('meteo-fecha').textContent='Aeródromo '+data.icao+' · consultado el '+formatUTC(data.consulted_at_utc);
+      document.getElementById('meteo-resumen').textContent=data.answer||'No hay interpretación disponible.';
+      document.getElementById('meteo-resumen-nota').textContent=data.interpretation_available
+        ? 'Respuesta educativa de hasta 20 palabras; leé ambos boletines originales.'
+        : 'La interpretación automática no estuvo disponible; consultá los boletines originales.';
+      for(const id of ['metar','taf']){
+        const bulletin=data[id]||{};
+        document.getElementById('meteo-'+id).textContent=bulletin.available?bulletin.raw:'No disponible.';
+        document.getElementById('meteo-'+id+'-nota').textContent=bulletin.available
+          ? 'Verificá la hora de emisión y el período de vigencia antes de usarlo.'
+          : bulletin.error||'No se recibió información para este aeródromo.';
+      }
+      result.hidden=false;
+      state.textContent='Consulta realizada. Verificá vigencia y fuentes oficiales antes de la planificación.';
+    }catch(error){
+      state.textContent='La consulta no se completó: '+(error?.message||'Error de conexión.');
+    }finally{button.disabled=false;}
+  });
+})();
+</script>
+</body></html>
