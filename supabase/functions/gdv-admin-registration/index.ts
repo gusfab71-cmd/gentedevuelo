@@ -28,10 +28,15 @@ Deno.serve(async(req:Request)=>{
  let body:Record<string,unknown>;
  try{const raw=await req.text();if(raw.length>5000)throw Error();body=JSON.parse(raw);if(!body||Array.isArray(body)||typeof body!=="object")throw Error()}
  catch{return respond(origin,400,{error:"Solicitud inválida."})}
- if(body.action==="complete_initial_password"){
+ if(body.action==="change_initial_password"){
    if(user.app_metadata?.gdv_initial_password!==true)return respond(origin,403,{error:"No tenés un cambio de contraseña pendiente."});
-   const {error}=await admin.auth.admin.updateUserById(user.id,{app_metadata:{...user.app_metadata,gdv_initial_password:false}});
-   if(error)return respond(origin,503,{error:"No se pudo finalizar el cambio. Volvé a intentar."});
+   const newPassword=typeof body.password==="string"?body.password:"";
+   if(!passwordOK(newPassword))return respond(origin,400,{error:"La nueva contraseña no cumple los requisitos."});
+   // The password and the mandatory-change flag are updated together on the trusted server.
+   const {error}=await admin.auth.admin.updateUserById(user.id,{
+     password:newPassword,app_metadata:{...user.app_metadata,gdv_initial_password:false}
+   });
+   if(error)return respond(origin,503,{error:"No se pudo guardar la nueva contraseña. Volvé a intentar."});
    return respond(origin,200,{ok:true});
  }
  if(body.action!=="create_manual")return respond(origin,400,{error:"Acción desconocida."});
