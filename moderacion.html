@@ -774,6 +774,35 @@
         .trim();
     }
 
+    function actualizarAvanceRobert(documentId, procesadas, total, fragmentos, trabajando = true) {
+      const card = [...document.querySelectorAll("#robertDocs .robert-doc")]
+        .find(el => el.dataset.robertId === documentId);
+      if (!card || !Number.isFinite(procesadas) || !Number.isFinite(total) || total <= 0) return;
+      const done = Math.max(0, Math.min(total, procesadas));
+      const pct = Math.round(done * 100 / total);
+      let text = card.querySelector("[data-robert-avance]");
+      if (!text) {
+        text = nodo("p", "", "robert-doc-meta");
+        text.dataset.robertAvance = "1";
+        text.style.margin = "9px 0 4px";
+        card.querySelector(".robert-doc-top")?.after(text);
+      }
+      text.textContent = "Avance confirmado: " + done + " de " + total
+        + " páginas (" + pct + "%)" + (Number.isFinite(fragmentos) ? " · " + fragmentos + " fragmentos" : "")
+        + (trabajando && done < total ? " · procesando el siguiente lote…" : "");
+      let progress = card.querySelector("progress");
+      if (!progress) {
+        progress = document.createElement("progress");
+        progress.style.cssText = "width:100%;height:12px;accent-color:#48bd82;";
+        text.after(progress);
+      }
+      progress.max = total;
+      progress.value = done;
+      progress.setAttribute("aria-label", "Progreso del manual: " + pct + "%");
+      const badge = card.querySelector(".robert-status");
+      if (badge && trabajando) badge.textContent = "PROCESANDO " + pct + "%";
+    }
+
     async function procesarDocumentoRobert(documentId, boton, titulo, reiniciar = false) {
       if (robertProcesando.has(documentId)) return;
       robertProcesando.add(documentId);
@@ -795,6 +824,9 @@
               if (detail?.error) descripcion = detail.error;
             }
             throw new Error(descripcion);
+          }
+          if (data.pages && typeof data.processed_pages === "number") {
+            actualizarAvanceRobert(documentId, data.processed_pages, data.pages, data.chunks);
           }
           if (data.complete !== false) {
             resultado = "Manual incorporado correctamente a Robert Shimoda. "
@@ -843,6 +875,7 @@
 
       for (const doc of data) {
         const card = nodo("article", "", "robert-doc");
+        card.dataset.robertId = doc.id;
         const top = nodo("div", "", "robert-doc-top");
         const left = nodo("div", "");
         left.append(
@@ -870,6 +903,7 @@
           const line = nodo("p", "Avance guardado: " + savedPages + " de " + doc.page_count
             + " páginas (" + percentage + "%). Si el proceso se interrumpió, usá «Continuar procesamiento».", "robert-doc-meta");
           line.style.margin = "9px 0 4px";
+          line.dataset.robertAvance = "1";
           const bar = document.createElement("progress");
           bar.value = savedPages;
           bar.max = doc.page_count;
@@ -887,6 +921,8 @@
         reprocesar.type = "button";
         reprocesar.disabled = processingHere;
         reprocesar.addEventListener("click", () => {
+          const badgeNow = card.querySelector(".robert-status");
+          if (badgeNow) badgeNow.textContent = "PROCESANDO…";
           procesarDocumentoRobert(doc.id, reprocesar, doc.title || doc.original_filename || "documento", doc.status === "ready");
         });
 
