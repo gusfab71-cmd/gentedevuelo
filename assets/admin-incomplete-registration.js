@@ -51,6 +51,70 @@
    try{await navigator.clipboard.writeText(value);output.textContent=success;}
    catch{output.textContent='No se pudo copiar. Revisá los permisos del navegador e intentá de nuevo.';}
  }
+
+ function regularization(item, actionState){
+   const toggle=node('button','secundario','Regularizar perfil');
+   toggle.type='button';
+   const panel=node('div','gdv-regularize');
+   panel.hidden=true;
+   panel.style.cssText='padding:12px 0;max-width:610px';
+   panel.append(node('p','intro','Corregí únicamente datos confirmados por el integrante. La foto y la aceptación de la normativa deben completarse desde su propia cuenta. No habilita el acceso anticipadamente.'));
+   const usernameLabel=node('label','', 'Nombre de usuario definitivo');
+   const username=node('input','');
+   username.type='text'; username.maxLength=25;username.minLength=3;
+   username.autocomplete='off';username.value=item.username||'';
+   usernameLabel.append(username);panel.append(usernameLabel);
+   const roleLabel=node('label','', 'Actividad aeronáutica');
+   const role=node('select','');
+   const roles=['Entusiasta de la aviación','Estudiante de piloto','Piloto privado','Piloto comercial','Instructor de vuelo','Aeromodelista','Piloto de planeador','Piloto de ultraliviano','Piloto de helicóptero','Piloto de paramotor','Constructor de experimentales','Simulador de vuelo','Otro'];
+   const placeholder=node('option','','Dejar sin cambios / elegir actividad');placeholder.value='';role.append(placeholder);
+   roles.forEach(value=>{const option=node('option','',value);option.value=value;role.append(option)});
+   if(roles.includes(item.aviation_role))role.value=item.aviation_role;
+   roleLabel.append(role);panel.append(roleLabel);
+   const checkLabel=node('label','');
+   checkLabel.style.cssText='display:flex;gap:10px;align-items:flex-start;font-weight:400;margin-top:12px';
+   const checkbox=node('input','');checkbox.type='checkbox';checkbox.style.cssText='width:auto;min-width:18px;min-height:18px';
+   checkLabel.append(checkbox,document.createTextNode('Confirmé con el integrante que estos datos son correctos y que autorizó su actualización.'));
+   panel.append(checkLabel);
+   const submit=node('button','','Guardar correcciones');
+   submit.type='button';submit.style.marginTop='10px';panel.append(submit);
+   toggle.onclick=()=>{
+     panel.hidden=!panel.hidden;
+     toggle.textContent=panel.hidden?'Regularizar perfil':'Cerrar corrección';
+   };
+   submit.onclick=async()=>{
+     const proposed=username.value.trim(), selected=role.value;
+     if(!checkbox.checked){actionState.textContent='Confirmá que el integrante autorizó estos cambios.';return;}
+     const nextUsername=proposed!==item.username?proposed:null;
+     const nextRole=selected&&selected!==item.aviation_role?selected:null;
+     if(nextUsername!==null&&!/^[A-Za-z0-9_-]{3,25}$/.test(nextUsername)){
+       actionState.textContent='Nombre de usuario inválido: 3 a 25 caracteres, letras, números o guiones.';return;
+     }
+     if(!nextUsername&&!nextRole){actionState.textContent='No hay cambios para guardar.';return;}
+     if(!confirm('¿Guardar los datos confirmados por el integrante? El registro seguirá incompleto hasta que suba su fotografía y acepte la normativa.'))return;
+     submit.disabled=true;actionState.textContent='Guardando correcciones…';
+     try{
+       const db=auth();
+       const response=await db.rpc('gdv_admin_regularizar_registro',{
+         p_user_id:item.id,p_username:nextUsername,p_aviation_role:nextRole
+       });
+       if(response.error)throw Error(response.error.message);
+       const updated=Array.isArray(response.data)?response.data[0]:response.data;
+       if(!updated||updated.out_onboarding_completed!==false)throw Error('La base no confirmó la corrección pendiente.');
+       item.username=updated.out_username;
+       item.aviation_role=updated.out_aviation_role||'';
+       actionState.textContent='Correcciones guardadas. El integrante todavía debe subir su foto y finalizar el registro.';
+       checkbox.checked=false;
+       submit.disabled=false;
+       await load();
+       status.textContent+=' · Correcciones guardadas; la aprobación del perfil sigue pendiente.';
+     }catch(e){
+       actionState.textContent='No se pudo guardar: '+(e.message||'Error desconocido');
+       submit.disabled=false;
+     }
+   };
+   return {toggle,panel};
+ }
  function row(item){
    const card=node('article','panel gdv-incomplete-card');
    card.style.cssText='margin:12px 0;padding:16px;background:rgba(255,255,255,.025);border-color:rgba(255,255,255,.14)';
@@ -76,6 +140,8 @@
    actionState.setAttribute('role','status');
    instructionsButton.onclick=()=>copy(instructions(item),actionState,'Instrucciones copiadas. Podés enviarlas al integrante por privado.');
    actions.append(instructionsButton);
+   const regularize=!item.profile_completed?regularization(item,actionState):null;
+   if(regularize)actions.append(regularize.toggle);
    if(item.email_confirmed&&!item.profile_completed){
      const open=node('button','secundario','Asignar clave temporal');
      open.type='button';actions.append(open);
@@ -114,8 +180,14 @@
          item.initial_password_pending=true;
        }catch(e){actionState.textContent='No se pudo recuperar: '+(e.message||'Error desconocido');submit.disabled=false;}
      };
-     card.append(actions,recover,actionState);
-   }else card.append(actions,actionState);
+     card.append(actions);
+     if(regularize)card.append(regularize.panel);
+     card.append(recover,actionState);
+   }else{
+     card.append(actions);
+     if(regularize)card.append(regularize.panel);
+     card.append(actionState);
+   }
    return card;
  }
  async function load(){
