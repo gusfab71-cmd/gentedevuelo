@@ -46,7 +46,7 @@
   function bounds(x,y,width){
     const geo=pxGeometry();
     if(!geo)return {x:0,y:0,width:224};
-    const w=clamp(width,160,Math.min(360,geo.w-24));
+    const w=clamp(width,160,Math.min(360,geo.w-24,Math.max(160,(geo.h-84)*9/16)));
     return {x:clamp(x,12,Math.max(12,geo.w-w-12)),
       y:clamp(y,70,Math.max(70,geo.h-w*16/9-12)),width:w};
   }
@@ -111,24 +111,21 @@
   }
   function closeEditor(){
     dragging=null;draftPosition=null;editPanel?.remove();editPanel=null;resizeHandle?.remove();resizeHandle=null;
-    el('stolEnAccion')?.classList.remove('gdv-video-editing');
+    const card=el('stolEnAccion');
+    card?.removeEventListener('pointerdown',onVideoPointerDown);
+    card?.removeEventListener('pointermove',pointerMove);
+    card?.removeEventListener('pointerup',pointerEnd);
+    card?.removeEventListener('pointercancel',pointerEnd);
+    card?.classList.remove('gdv-video-editing');
     applyPosition();
     const url=new URL(location.href);url.searchParams.delete('editar-video');
     history.replaceState(history.state,'',url.pathname+url.search+url.hash);
-  }
-  function pointerStart(evt,type) {
-    if(evt.button!==0||!draftPosition)return;
-    evt.preventDefault();
-    const card=el('stolEnAccion');if(!card)return;
-    dragging={type,id:evt.pointerId,x:evt.clientX,y:evt.clientY,...draftPosition};
-    card.setPointerCapture(evt.pointerId);
-    editorStatus(type==='resize'?'Arrastrá la esquina para cambiar el tamaño.':'Arrastrá el recuadro a una zona libre.');
   }
   function pointerMove(evt){
     if(!dragging||evt.pointerId!==dragging.id)return;
     const dx=evt.clientX-dragging.x,dy=evt.clientY-dragging.y;
     const candidate=dragging.type==='resize'
-      ?bounds(dragging.x===undefined?draftPosition.x:dragging.xpos,dragging.ypos,dragging.width+dx)
+      ?bounds(dragging.xpos,dragging.ypos,dragging.width+dx)
       :bounds(dragging.xpos+dx,dragging.ypos+dy,dragging.width);
     if(isFree(candidate)){
       draftPosition=candidate;setPixels(candidate);
@@ -208,7 +205,7 @@
     editorStatus('Mové el video con el mouse y guardá. En celulares no se modifica la posición.');
   }
   function onVideoPointerDown(evt){
-    if(!editPanel||evt.target.closest('#gdvVideoLayoutTools'))return;
+    if(!editPanel||evt.button!==0||!evt.target?.closest||evt.target.closest('#gdvVideoLayoutTools'))return;
     if(!dragging){
       const p=draftPosition||rawCardPosition();
       draftPosition=p;
@@ -224,7 +221,7 @@
   }
   function syncEditor(){
     if(new URLSearchParams(location.search).get('editar-video')!=='1')return;
-    if(isMobile()){showToast('Para mover el video, abrí la portada en una PC. En celular permanece al final.');return;}
+    if(isMobile())return;
     if(window.gdvLegacyAdmin)openEditor();
   }
   window.addEventListener('gdv-admin-ready',e=>{if(e.detail?.isAdmin)syncEditor();});
