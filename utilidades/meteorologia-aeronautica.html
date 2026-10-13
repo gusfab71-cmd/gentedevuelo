@@ -165,6 +165,34 @@
 <input id="flight-dest-other" aria-label="Código OACI de destino" type="text" pattern="[sS][aA][A-Za-z]{2}" minlength="4" maxlength="4" placeholder="Ej.: SAXX" autocomplete="off" autocapitalize="characters" hidden disabled>
 </label>
 <label class="field full">Ruta prevista y puntos principales<input id="flight-route" required maxlength="280" placeholder="Describí la ruta, puntos y aeródromos alternativos"></label>
+
+<details id="nav-legs-panel" class="report full" style="margin:0;background:#172326">
+<summary><strong>Calcular piernas de vuelo · FlightPrep NAV</strong><span>Desplegar calculadora gratuita</span></summary>
+<div class="content">
+<p class="sub">Planificá tramos entre aeródromos y puntos intermedios. La distancia y el rumbo verdadero se calculan en línea ortodrómica a partir de coordenadas aproximadas. Cada pierna requiere <strong>viento de altura</strong> (dirección verdadera desde donde sopla y velocidad en kt). Para 6.500 pies, ingresá el viento pronosticado para ese sector, nivel y horario; no utilices viento de superficie METAR.</p>
+<div class="form" style="margin:15px 0">
+<label class="field">Velocidad verdadera TAS (kt)<input id="nav-tas" type="number" min="1" max="600" step=".1" placeholder="Ej.: 110"></label>
+<label class="field">Consumo en crucero (L/h, opcional)<input id="nav-fuel-flow" type="number" min="0" max="1000" step=".1" placeholder="Ej.: 33"></label>
+<label class="field">Combustible rodaje y ascenso (L, opcional)<input id="nav-taxi" type="number" min="0" max="500" step=".1" placeholder="Ej.: 6"></label>
+<label class="field">Reserva prevista (min, opcional)<input id="nav-reserve" type="number" min="0" max="360" step="1" placeholder="Según plan y normativa aplicable"></label>
+</div>
+<div id="nav-origin-manual" hidden class="form" style="margin:12px 0"><p class="full sub">El aeródromo de salida no tiene coordenadas precargadas. Cargalas desde la AIP.</p><label class="field">Latitud salida (° decimal; S−)<input id="nav-origin-lat" type="number" min="-90" max="90" step=".000001"></label><label class="field">Longitud salida (° decimal; O−)<input id="nav-origin-lon" type="number" min="-180" max="180" step=".000001"></label></div>
+<div id="nav-dest-manual" hidden class="form" style="margin:12px 0"><p class="full sub">El aeródromo de destino no tiene coordenadas precargadas. Cargalas desde la AIP.</p><label class="field">Latitud destino (° decimal; S−)<input id="nav-dest-lat" type="number" min="-90" max="90" step=".000001"></label><label class="field">Longitud destino (° decimal; O−)<input id="nav-dest-lon" type="number" min="-180" max="180" step=".000001"></label></div>
+<div class="card-header"><h3>Puntos intermedios (orden de vuelo)</h3><button type="button" class="secondary" id="nav-add-waypoint">Agregar punto</button></div>
+<div id="nav-waypoints" class="stack" style="gap:9px"></div>
+<div class="actions"><button type="button" class="secondary" id="nav-build">Preparar piernas</button><button type="button" class="secondary" id="nav-send-route">Pasar ruta al formulario</button></div>
+<p id="nav-status" class="feedback" role="status" aria-live="polite">Indicá origen, destino y TAS; podés añadir puntos intermedios.</p>
+<div id="nav-table-block" hidden>
+<div style="overflow-x:auto;margin-top:14px"><table id="nav-legs-table" style="width:100%;min-width:950px;border-collapse:separate;border-spacing:0 7px;font-size:12px">
+<thead><tr><th scope="col">Pierna</th><th scope="col">Dist NM*</th><th scope="col">TC° V</th><th scope="col">Viento de altura° V</th><th scope="col">Kt</th><th scope="col">Var° E+/O−</th><th scope="col">Desv° E+/O−</th><th scope="col">WCA°</th><th scope="col">RM°</th><th scope="col">RC°</th><th scope="col">GS kt</th><th scope="col">ETE</th><th scope="col">ETA local</th><th scope="col">Comb. L</th></tr></thead>
+<tbody id="nav-legs-body"></tbody>
+</table></div>
+<div id="nav-totals" class="metric-grid" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr));margin:12px 0"></div>
+<p class="source-notes">* Distancia y rumbo inicial aproximados entre puntos; no representan aerovías, circuito, virajes, restricciones, ascenso ni descenso. RM = rumbo magnético; RC = rumbo de compás. Variación y desvío, E positivo y O negativo, deben ser conocidos para obtener RM y RC. El cálculo sigue las ecuaciones de viento de FlightPrep NAV. ETA depende de la hora de partida declarada. Los consumos de rodaje y reserva no sustituyen el cálculo reglamentario.</p>
+</div>
+</div>
+</details>
+
 <label class="field">Fecha y hora de salida previstas (hora del equipo)<input id="flight-time" type="datetime-local" required></label>
 <label class="field">Altitud prevista (pies AMSL)<input id="flight-alt" type="number" required min="500" max="45000" step="100" placeholder="6500"></label>
 <label class="field">Reglas de vuelo<select id="flight-rules" required><option value="VFR">VFR</option><option value="IFR">IFR</option></select></label>
@@ -343,6 +371,200 @@ el('calc-sun').addEventListener('click',()=>{
 });
 })();
 
+
+(function(){
+ 'use strict';
+ const $=id=>document.getElementById(id), D=Math.PI/180;
+ const GEO={"SAEZ":[-34.8222,-58.5358],"SABE":[-34.5589,-58.4164],"SAZM":[-37.9342,-57.5733],"SAZB":[-38.7203,-62.1575],"SACO":[-31.31,-64.2083],"SAAR":[-32.9036,-60.7844],"SAAV":[-31.7117,-60.8067],"SAAP":[-31.7792,-60.4672],"SAOC":[-33.0867,-64.2617],"SAOU":[-33.2772,-66.3522],"SAAC":[-31.3033,-58.0081],"SAME":[-32.8317,-68.7928],"SAMR":[-34.5883,-68.4033],"SANU":[-31.5683,-68.4183],"SAMM":[-35.4797,-69.585],"SASA":[-24.86,-65.4767],"SASJ":[-24.3928,-65.0978],"SANT":[-26.8408,-65.1047],"SANC":[-28.5864,-65.7533],"SANE":[-27.7556,-64.2997],"SANL":[-29.3892,-66.8025],"SARI":[-25.7372,-54.4733],"SARE":[-27.45,-59.0561],"SARC":[-27.4456,-58.7619],"SARF":[-26.2128,-58.2281],"SARP":[-27.3858,-55.9706],"SAZN":[-38.9489,-68.1558],"SAZS":[-41.1511,-71.1578],"SAZY":[-40.0819,-71.1458],"SAVC":[-45.7853,-67.4656],"SAVT":[-43.2106,-65.2703],"SAVE":[-42.9333,-71.1442],"SAWC":[-50.2803,-72.0531],"SAWG":[-51.6089,-69.3128],"SAWE":[-53.7775,-67.75],"SAWH":[-54.8433,-68.2956],"SAZR":[-36.5914,-64.2786],"SAZT":[-37.2367,-59.23]};
+ const points=[];let prepared=[],settings=[],lastPlan=null;
+ const fmt=v=>Math.round(v).toString().padStart(2,'0');
+ const minutes=m=>Math.floor(m/60)+'h '+fmt(m%60)+'m';
+ const angle=v=>(Math.round(((v%360)+360)%360*10)/10).toFixed(1);
+ const numeric=id=>{const v=$(id).value.trim();return v===''?null:Number(v);};
+ const valid=(n,a,b)=>typeof n==='number'&&Number.isFinite(n)&&n>=a&&n<=b;
+ const airport=id=>{
+   const val=$(id).value;
+   return (val==='OTHER'?$(id+'-other').value:val).trim().toUpperCase();
+ };
+ function place(id,kind){
+   const code=airport(id);
+   if(!/^SA[A-Z]{2}$/.test(code))throw Error('Seleccioná un '+kind+' con código OACI válido.');
+   if(GEO[code])return {code,lat:GEO[code][0],lon:GEO[code][1]};
+   const lat=numeric('nav-'+(kind==='salida'?'origin':'dest')+'-lat');
+   const lon=numeric('nav-'+(kind==='salida'?'origin':'dest')+'-lon');
+   if(!valid(lat,-90,90)||!valid(lon,-180,180))throw Error('Cargá coordenadas válidas de '+kind+' desde AIP.');
+   return {code,lat,lon};
+ }
+ function refreshManual(){
+   const origin=airport('flight-origin'),dest=airport('flight-dest');
+   $('nav-origin-manual').hidden=!!GEO[origin];
+   $('nav-dest-manual').hidden=!!GEO[dest];
+ }
+ const options=[...$('flight-origin').options].filter(o=>GEO[o.value]).map(o=>({value:o.value,label:o.textContent}));
+ function createPoint(){
+   if(points.length>=8){$('nav-status').textContent='Máximo ocho puntos intermedios.';return;}
+   const point={id:Date.now().toString(36)+Math.random().toString(36).slice(2,7)};
+   points.push(point);
+   const row=document.createElement('div');row.className='form';row.style.cssText='padding:12px;border:1px solid #51605a;border-radius:12px';
+   row.dataset.point=point.id;
+   const label=document.createElement('label');label.className='field';label.textContent='Punto '+points.length;
+   const select=document.createElement('select');select.className='nav-waypoint-select';
+   select.add(new Option('Elegí un aeródromo o punto', '', true,true));select.options[0].disabled=true;
+   for(const opt of options)select.add(new Option(opt.label,opt.value));
+   select.add(new Option('Punto con coordenadas manuales','CUSTOM'));
+   label.append(select);row.append(label);
+   const custom=document.createElement('div');custom.className='form';custom.style.cssText='gap:8px';
+   custom.hidden=true;
+   custom.innerHTML='<label class="field">Nombre / referencia<input class="nav-point-name" maxlength="32" placeholder="Punto 1"></label><label class="field">Latitud decimal (S−)<input class="nav-point-lat" type="number" min="-90" max="90" step=".000001"></label><label class="field">Longitud decimal (O−)<input class="nav-point-lon" type="number" min="-180" max="180" step=".000001"></label>';
+   const controls=document.createElement('div');controls.style.cssText='display:flex;align-items:end;justify-content:flex-end';
+   const remove=document.createElement('button');remove.className='secondary';remove.type='button';remove.textContent='Eliminar punto';
+   controls.append(remove);row.append(custom,controls);
+   $('nav-waypoints').append(row);
+   const invalidate=()=>{lastPlan=null;prepared=[];$('nav-table-block').hidden=true;$('nav-status').textContent='La ruta cambió. Volvé a preparar las piernas.';};
+   select.addEventListener('change',()=>{custom.hidden=select.value!=='CUSTOM';invalidate();});
+   custom.addEventListener('input',invalidate);
+   remove.addEventListener('click',()=>{points.splice(points.indexOf(point),1);row.remove();invalidate();});
+   invalidate();
+ }
+ function middlePoint(point){
+   const row=$('nav-waypoints').querySelector('[data-point="'+point.id+'"]'),select=row.querySelector('select'),code=select.value;
+   if(!code)throw Error('Seleccioná todos los puntos intermedios.');
+   if(code!=='CUSTOM')return {code,lat:GEO[code][0],lon:GEO[code][1]};
+   const latText=row.querySelector('.nav-point-lat').value,lonText=row.querySelector('.nav-point-lon').value;
+   const lat=latText.trim()===''?null:Number(latText),lon=lonText.trim()===''?null:Number(lonText);
+   const name=row.querySelector('.nav-point-name').value.trim();
+   if(!name||!valid(lat,-90,90)||!valid(lon,-180,180))throw Error('Completá nombre y coordenadas del punto intermedio.');
+   return {code:name.slice(0,32),lat,lon};
+ }
+ function geometry(a,b){
+   const p1=a.lat*D,p2=b.lat*D,dp=(b.lat-a.lat)*D,dl=(b.lon-a.lon)*D;
+   const hav=Math.sin(dp/2)**2+Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)**2;
+   const nm=2*3440.065*Math.atan2(Math.sqrt(hav),Math.sqrt(Math.max(0,1-hav)));
+   const y=Math.sin(dl)*Math.cos(p2),x=Math.cos(p1)*Math.sin(p2)-Math.sin(p1)*Math.cos(p2)*Math.cos(dl);
+   return {nm,tc:(Math.atan2(y,x)/D+360)%360};
+ }
+ function renderLegs(){
+   const tbody=$('nav-legs-body');tbody.replaceChildren();
+   prepared.forEach((leg,i)=>{
+     const tr=document.createElement('tr');tr.style.background='#213033';
+     function cell(text){const td=document.createElement('td');td.style.cssText='padding:7px 5px;text-align:center;white-space:nowrap';td.textContent=text;tr.append(td);return td;}
+     cell((i+1)+'. '+leg.from.code+' → '+leg.to.code);
+     cell(leg.nm.toFixed(1));cell(angle(leg.tc));
+     for(const [key,label,min,max,step] of [['wd','desde °',0,360,1],['ws','kt',0,300,1],['variation','var.',-30,30,.1],['deviation','desv.',-30,30,.1]]){
+       const td=document.createElement('td');td.style.cssText='padding:5px;width:80px';
+       const input=document.createElement('input');input.type='number';input.min=String(min);input.max=String(max);input.step=String(step);input.placeholder=label;
+       input.style.cssText='width:76px;padding:7px;font-size:12px;text-align:center';
+       input.value=settings[i]?.[key]??'';
+       input.setAttribute('aria-label',key+' pierna '+(i+1));
+       input.addEventListener('input',()=>{
+         settings[i]={...settings[i],[key]:input.value};
+         recalc();
+       });
+       td.append(input);tr.append(td);
+     }
+     for(const key of ['wca','mh','ch','gs','ete','eta','fuel']){const td=cell('—');td.dataset.out=key;}
+     tr.dataset.idx=String(i);
+     tbody.append(tr);
+   });
+   $('nav-table-block').hidden=false;
+   recalc();
+ }
+ function planForAnalysis(){
+   if(!lastPlan)throw Error('Prepará todas las piernas con viento, variación y desvío válidos antes de enviar cálculos a Shimoda.');
+   return lastPlan;
+ }
+ function recalc(){
+   lastPlan=null;
+   if(!prepared.length)return;
+   const tas=numeric('nav-tas'),flow=numeric('nav-fuel-flow'),taxi=numeric('nav-taxi'),reserve=numeric('nav-reserve');
+   if(!valid(tas,1,600)){ $('nav-status').textContent='Ingresá una TAS válida (1 a 600 kt).';return;}
+   if((flow!==null&&!valid(flow,0,1000))||(taxi!==null&&!valid(taxi,0,500))||(reserve!==null&&!valid(reserve,0,360))){
+     $('nav-status').textContent='Revisá valores de combustible y reserva.';return;
+   }
+   let totalNm=0,totalMinutes=0,totalFuel=0;
+   const navLegs=[];
+   for(let i=0;i<prepared.length;i++){
+     const leg=prepared[i],row=$('nav-legs-body').querySelector('[data-idx="'+i+'"]');
+     const out=key=>row.querySelector('[data-out="'+key+'"]');
+     for(const key of ['wca','mh','ch','gs','ete','eta','fuel'])out(key).textContent='—';
+     const val=key=>{const t=settings[i]?.[key];return t===undefined||t===''?null:Number(t);};
+     const wd=val('wd'),ws=val('ws'),variation=val('variation'),deviation=val('deviation');
+     if(!valid(wd,0,360)||!valid(ws,0,300)||!valid(variation,-30,30)||!valid(deviation,-30,30)){
+       $('nav-status').textContent='Completá por pierna viento de altura, intensidad, variación y desvío (incluí 0 solamente si corresponde).';
+       $('nav-totals').replaceChildren();return;
+     }
+     const rel=(wd-leg.tc)*D,sine=ws*Math.sin(rel)/tas;
+     if(Math.abs(sine)>=1){$('nav-status').textContent='No se puede mantener el trayecto con TAS y viento ingresados en la pierna '+(i+1)+'.';$('nav-totals').replaceChildren();return;}
+     const wca=Math.asin(sine)/D;
+     const gs=tas*Math.cos(wca*D)-ws*Math.cos(rel);
+     if(!Number.isFinite(gs)||gs<=0){$('nav-status').textContent='GS no positiva en pierna '+(i+1)+'. Revisá los datos.';$('nav-totals').replaceChildren();return;}
+     const min=leg.nm/gs*60;
+     const mh=((leg.tc+wca-variation)%360+360)%360,ch=((mh-deviation)%360+360)%360;
+     totalNm+=leg.nm;totalMinutes+=min;
+     const consumption=flow!==null?min/60*flow:null;
+     if(consumption!==null)totalFuel+=consumption;
+     const tm=$('flight-time').value;let eta='—';
+     if(tm){const d=new Date(tm);if(Number.isFinite(d.getTime()))eta=new Date(d.getTime()+totalMinutes*60000).toLocaleString('es-AR',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit'});}
+     const output={
+       wca:(wca>=0?'+':'')+wca.toFixed(1)+'°',mh:angle(mh)+'°',ch:angle(ch)+'°',
+       gs:gs.toFixed(1),ete:minutes(min),eta,
+       fuel:consumption===null?'—':consumption.toFixed(1)
+     };
+     for(const [k,v] of Object.entries(output))out(k).textContent=v;
+     navLegs.push({from_code:leg.from.code,to_code:leg.to.code,
+       from_lat:leg.from.lat,from_lon:leg.from.lon,to_lat:leg.to.lat,to_lon:leg.to.lon,
+       wind_direction_true:wd,wind_speed_kt:ws,variation_deg_east:variation,deviation_deg_east:deviation});
+   }
+   $('nav-totals').replaceChildren();
+   const totals=[
+     ['Distancia total',totalNm.toFixed(1)+' NM'],
+     ['Tiempo en ruta',minutes(totalMinutes)],
+     ['ETA destino',(()=>{const tm=$('flight-time').value;if(!tm)return 'Sin hora';const d=new Date(tm);return Number.isFinite(d.getTime())?new Date(d.getTime()+totalMinutes*60000).toLocaleString('es-AR',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit'}):'Sin hora';})()],
+     ['Combustible crucero',flow===null?'Sin dato':totalFuel.toFixed(1)+' L'],
+     ['Rodaje/ascenso',taxi===null?'Sin dato':taxi.toFixed(1)+' L'],
+     ['Reserva estimada',flow===null||reserve===null?'Sin dato':(reserve/60*flow).toFixed(1)+' L']
+   ];
+   for(const [name,value] of totals){
+     const box=document.createElement('div');box.className='metric';
+     const strong=document.createElement('strong');strong.textContent=value;const span=document.createElement('span');span.textContent=name;
+     box.append(span,strong);$('nav-totals').append(box);
+   }
+   lastPlan={tas_kt:tas,fuel_flow_lph:flow,taxi_fuel_l:taxi,reserve_minutes:reserve,legs:navLegs};
+   $('nav-status').textContent='Piernas calculadas sin consumir tokens. Rumbo y distancia geométricos; viento ingresado manualmente. Confirmá la navegación sobre cartas oficiales.';
+ }
+ function prepare(){
+   try{
+     const route=[place('flight-origin','salida'),...points.map(middlePoint),place('flight-dest','destino')];
+     if(route.length>10)throw Error('Máximo ocho puntos intermedios.');
+     const legs=[];
+     for(let i=1;i<route.length;i++){
+       const info=geometry(route[i-1],route[i]);
+       if(!Number.isFinite(info.nm)||info.nm<.1)throw Error('Revisá puntos repetidos o coordenadas: pierna sin distancia.');
+       legs.push({from:route[i-1],to:route[i],...info});
+     }
+     prepared=legs;settings=prepared.map(()=>({wd:'',ws:'',variation:'',deviation:''}));
+     $('nav-status').textContent='Ahora ingresá viento de altura por pierna (dirección verdadera y nudos), variación y desvío.';
+     renderLegs();
+   }catch(e){lastPlan=null;prepared=[];$('nav-table-block').hidden=true;$('nav-status').textContent=e.message||'No se pudo calcular la ruta.';}
+ }
+ $('nav-add-waypoint').addEventListener('click',createPoint);
+ $('nav-build').addEventListener('click',prepare);
+ $('nav-send-route').addEventListener('click',()=>{
+   if(!prepared.length){$('nav-status').textContent='Primero prepará las piernas.';return;}
+   const names=[prepared[0].from.code,...prepared.map(l=>l.to.code)];
+   const joined=names.join(' → ');
+   if(joined.length>280){$('nav-status').textContent='Hay demasiados puntos para el campo de ruta.';return;}
+   $('flight-route').value=joined;
+   $('nav-status').textContent='Ruta transferida al formulario del piloto. Revisá FIR y alternativos antes de consultar Shimoda.';
+ });
+ ['flight-origin','flight-dest','flight-origin-other','flight-dest-other','nav-origin-lat','nav-origin-lon','nav-dest-lat','nav-dest-lon'].forEach(id=>{
+   $(id).addEventListener('change',()=>{refreshManual();lastPlan=null;prepared=[];$('nav-table-block').hidden=true;$('nav-status').textContent='Modificaste un punto: volvé a preparar las piernas.';});
+ });
+ ['nav-tas','nav-fuel-flow','nav-taxi','nav-reserve','flight-time'].forEach(id=>$(id).addEventListener('input',recalc));
+ refreshManual();
+ window.GDV_FLIGHT_LEGS={getPlan:()=>lastPlan,getPrepared:()=>prepared.length>0};
+})();
+
 (function(){
  'use strict';
  const $=id=>document.getElementById(id);
@@ -396,6 +618,7 @@ el('calc-sun').addEventListener('click',()=>{
      question:$('flight-question').value.trim(),
      pronarea_text:$('flight-pronarea').value.trim(),
      notam_text:$('flight-notam').value.trim(),
+     nav_plan:window.GDV_FLIGHT_LEGS?.getPlan()||null,
      confirm_ai_cost:true
    };
    // Después de confirmar, ninguna llamada previa a consultar boletines implica gasto.
