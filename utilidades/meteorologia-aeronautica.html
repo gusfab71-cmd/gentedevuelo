@@ -37,6 +37,14 @@
 .manual-source-heading a{text-decoration:none;text-align:center}
 .manual-source textarea{width:100%;font-family:ui-monospace,Consolas,monospace;font-size:13px;line-height:1.55}
 @media(max-width:620px){.manual-source{padding:12px}.manual-source-heading a{width:100%}}
+
+.cloud-current{display:flex;gap:14px;align-items:center;padding:13px;border:1px solid #4d6060;border-radius:14px;background:#132024}
+.cloud-current .cloud-symbol{flex:none}
+.cloud-current .cloud-code{font-size:19px}
+.cloud-current .cloud-amount{margin-top:2px}
+.cloud-current .cloud-desc{margin-top:4px}
+.cloud-legend p{margin:6px 0;font-size:12px}
+@media(max-width:390px){.cloud-current{gap:10px}.cloud-current .cloud-symbol{width:50px;height:50px}}
 </style>
 <script>document.documentElement.classList.add('auth-pending')</script>
 <style>html.auth-pending body{visibility:hidden}</style>
@@ -104,16 +112,29 @@
 </div>
 <aside class="stack">
 <section class="card" id="nubosidad">
-<div class="card-header"><div><span class="card-kicker">05 / Interpretación</span><h2>Lectura de nubosidad</h2></div></div>
-<p class="sub">Cobertura de nubes expresada en octas. Las cifras corresponden al código observado; el techo depende de la altura de BKN, OVC o visibilidad vertical.</p>
-<div class="cloud-list">
-<div class="cloud-item"><div class="cloud-symbol" style="--fill:0deg"></div><div><div class="cloud-code">SKC</div><div class="cloud-amount">0/8</div></div><div class="cloud-desc">Cielo despejado</div></div>
-<div class="cloud-item"><div class="cloud-symbol" style="--fill:65deg"></div><div><div class="cloud-code">FEW</div><div class="cloud-amount">1–2/8</div></div><div class="cloud-desc">Pocas nubes</div></div>
-<div class="cloud-item"><div class="cloud-symbol" style="--fill:160deg"></div><div><div class="cloud-code">SCT</div><div class="cloud-amount">3–4/8</div></div><div class="cloud-desc">Nubes dispersas</div></div>
-<div class="cloud-item"><div class="cloud-symbol" style="--fill:265deg"></div><div><div class="cloud-code">BKN</div><div class="cloud-amount">5–7/8</div></div><div class="cloud-desc">Fragmentado · puede definir techo</div></div>
-<div class="cloud-item"><div class="cloud-symbol" style="--fill:360deg"></div><div><div class="cloud-code">OVC</div><div class="cloud-amount">8/8</div></div><div class="cloud-desc">Cubierto · puede definir techo</div></div>
+<div class="card-header"><div><span class="card-kicker">05 / Observación METAR</span><h2>Lectura de nubosidad</h2></div><span class="sub">Símbolo de la observación disponible</span></div>
+<div class="cloud-current" role="status" aria-live="polite">
+  <div class="cloud-symbol" id="current-cloud-symbol" style="--fill:0deg" aria-hidden="true"></div>
+  <div><div class="cloud-code" id="current-cloud-code">—</div>
+  <div class="cloud-amount" id="current-cloud-amount">Sin consulta</div>
+  <div class="cloud-desc" id="current-cloud-desc">Consultá el METAR para mostrar la nubosidad reportada.</div></div>
 </div>
-<p class="source-notes">1 octa = 1/8 del cielo. <strong>Ceiling:</strong> altura AGL de la capa BKN/OVC más baja o visibilidad vertical cuando corresponda. NSC, NCD y CAVOK tienen significados particulares; no son automáticamente sinónimos de SKC.</p>
+<p class="sub" id="current-cloud-source">Es una observación del aeródromo seleccionado, no un pronóstico para la ruta ni la altitud de crucero.</p>
+<details class="report">
+  <summary><strong>Significado de los símbolos</strong><span>Detalle de nubosidad</span></summary>
+  <div class="content">
+    <div class="cloud-legend">
+      <p><strong>SKC:</strong> cielo despejado (0/8).</p>
+      <p><strong>FEW:</strong> pocas nubes (1–2/8).</p>
+      <p><strong>SCT:</strong> nubes dispersas (3–4/8).</p>
+      <p><strong>BKN:</strong> fragmentado (5–7/8).</p>
+      <p><strong>OVC:</strong> cubierto (8/8).</p>
+      <p><strong>VV:</strong> visibilidad vertical; no expresa octas de cobertura.</p>
+      <p><strong>NSC, NCD y CAVOK:</strong> no equivalen a cielo despejado; sus significados operacionales difieren.</p>
+      <p>Un METAR puede incluir varias capas: el símbolo muestra una sola condición representativa. Revisá todas las capas y alturas en el texto original. El techo se define por la capa BKN/OVC más baja o visibilidad vertical, cuando corresponda. Las alturas de capa METAR son AGL.</p>
+    </div>
+  </div>
+</details>
 </section>
 <section class="card" id="fuentes">
 <div class="card-header"><div><span class="card-kicker">06 / Enlaces</span><h2>Directorio aeronáutico</h2></div></div>
@@ -125,16 +146,6 @@
 <a href="https://www.smn.gob.ar/mensajes-sigmet" target="_blank" rel="noopener noreferrer"><strong>SIGMET</strong><span>Fenómenos significativos del SMN</span></a>
 <a href="https://www.smn.gob.ar/cartas-de-tiempo-significativo-sfcfl250" target="_blank" rel="noopener noreferrer"><strong>Cartas meteorológicas</strong><span>Análisis del tiempo significativo</span></a>
 </div>
-</section>
-<section class="card">
-<div class="card-header"><div><span class="card-kicker">07 / Control previo</span><h2>Antes de volar</h2></div></div>
-<div class="checks">
-<p><span class="bullet"></span><span>Comprobar METAR y TAF de salida, destino y alternativa.</span></p>
-<p><span class="bullet"></span><span>Consultar PRONAREA y SIGMET sobre la ruta y nivel de vuelo.</span></p>
-<p><span class="bullet"></span><span>Revisar NOTAM, AIP, rutas, pistas y limitaciones aplicables.</span></p>
-<p><span class="bullet"></span><span>Confirmar combustible, performance y márgenes de la aeronave.</span></p>
-</div>
-<p class="source-notes">Las alertas visuales de esta página no son notificaciones automáticas ni vigilancia meteorológica en segundo plano.</p>
 </section>
 </aside>
 </div>
@@ -296,6 +307,50 @@ const parseMetar=raw=>{
           vis:cavok?'CAVOK':vis?(vis[1]==='9999'?'≥10 km':vis[1]+' m'):'No identificada',
           clouds:cloud.length?cloud.join(' · '):'Sin capas decodificadas'};
 };
+// La indicación de nubosidad usa exclusivamente el METAR más reciente consultado.
+function showObservedCloud(report,icao){
+  const badge=el('current-cloud-symbol');
+  const code=el('current-cloud-code');
+  const amount=el('current-cloud-amount');
+  const desc=el('current-cloud-desc');
+  const source=el('current-cloud-source');
+  let layer=null;
+  if(report?.available&&typeof report.raw==='string'){
+    const raw=report.raw.toUpperCase().split(/\bRMK\b/)[0];
+    const layers=[...raw.matchAll(/\b(FEW|SCT|BKN|OVC|VV)(\d{3}|\/\/\/)(?:CB|TCU)?\b/g)]
+      .map(m=>({code:m[1],height:m[2]==='///'?null:Number(m[2])*100}));
+    // Si hay techo observable se muestra la capa de techo más baja; de lo contrario,
+    // la mayor cobertura, sin afirmar que representa todas las capas del METAR.
+    const ceil=layers.filter(p=>['BKN','OVC','VV'].includes(p.code));
+    if(ceil.length)layer=ceil.sort((a,b)=>(a.height??Infinity)-(b.height??Infinity))[0];
+    else if(layers.length){
+      const weight={FEW:1,SCT:2,BKN:3,OVC:4};
+      layer=layers.sort((a,b)=>(weight[b.code]||0)-(weight[a.code]||0))[0];
+    }else if(/\bSKC\b|\bCLR\b/.test(raw))layer={code:'SKC',height:null};
+    else if(/\bCAVOK\b/.test(raw))layer={code:'CAVOK',height:null};
+    else if(/\bNSC\b/.test(raw))layer={code:'NSC',height:null};
+    else if(/\bNCD\b/.test(raw))layer={code:'NCD',height:null};
+  }
+  const legend={
+    SKC:['0/8','Cielo despejado reportado',0],
+    FEW:['1–2/8','Pocas nubes',65],
+    SCT:['3–4/8','Nubes dispersas',160],
+    BKN:['5–7/8','Fragmentado; puede definir el techo',265],
+    OVC:['8/8','Cubierto; puede definir el techo',360],
+    VV:['Visibilidad vertical','Obscuración: visibilidad vertical, sin cobertura en octas',0],
+    CAVOK:['Condición CAVOK','No equivale a cielo despejado',0],
+    NSC:['Sin nubes significativas','No equivale a cielo despejado',0],
+    NCD:['Sin nubes detectadas','No equivale a cielo despejado',0]
+  };
+  const item=layer?legend[layer.code]:null;
+  badge.style.setProperty('--fill',(item?item[2]:0)+'deg');
+  code.textContent=layer?layer.code:'—';
+  amount.textContent=item?item[0]:'Sin datos';
+  desc.textContent=item?item[1]+(layer.height!==null?' · '+layer.height+' ft AGL':''):'No se pudo identificar una condición de nubosidad en el METAR.';
+  source.textContent=report?.available
+    ?'Observación METAR · '+icao+'. Símbolo indicativo: verificá todas las capas y la vigencia del parte original.'
+    :'No hay METAR recuperado. Consultá la fuente oficial; no se puede determinar nubosidad actual.';
+}
 let lastCopied='';
 el('brief-form').addEventListener('submit',async e=>{
   e.preventDefault();
@@ -318,6 +373,7 @@ el('brief-form').addEventListener('submit',async e=>{
 
     for(const id of ['metar','taf','sigmet'])setReport(id,data[id]);
     const metar=data.metar?.available?parseMetar(data.metar.raw):null;
+    showObservedCloud(data.metar,data.icao);
     el('metar-metrics').hidden=!metar;
     if(metar){el('wind-metric').textContent=metar.wind;el('vis-metric').textContent=metar.vis;el('cloud-metric').textContent=metar.clouds;}
     makeStatus('pronarea','Consulta oficial','pending');makeStatus('notam','Consulta oficial','pending');
@@ -334,7 +390,7 @@ el('brief-form').addEventListener('submit',async e=>{
       'NOTAM: verificar AIS ANAC',
       'Consulta informativa parcial; no constituye briefing operacional.'
     ].join('\n\n');
-  }catch(err){el('status').textContent='No se completó la consulta: '+(err?.message||'Error inesperado');}
+  }catch(err){showObservedCloud(null,'');el('status').textContent='No se completó la consulta: '+(err?.message||'Error inesperado');}
   finally{button.disabled=false;}
 });
 
