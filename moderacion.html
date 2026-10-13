@@ -167,7 +167,7 @@
       <p id="comunicadosAccesoModeracion" style="margin:0 0 24px;"><a class="link" href="comunidad.html#gestion/comunicados">Enviar comunicado a todos los integrantes</a></p>
 
 <section class="panel" id="gdvManualRegistration" hidden style="margin:0 0 24px">
-<h2>Registro manual de integrantes</h2>
+<h2>Registro manual de integrantes</h2><p><a class="link" href="moderacion.html#registros-incompletos">Ver registros incompletos y recuperar cuentas existentes</a></p>
 <p class="intro">Para quienes no pudieron completar el registro habitual. Verificá por un canal confiable que el correo pertenece a la persona y que autorizó crear su cuenta. La contraseña temporal se comparte en privado y deberá cambiarse al primer ingreso.</p>
 <form id="gdvManualRegistrationForm" style="display:grid;gap:12px;max-width:650px">
 <label>Nombre de usuario<input id="gdvManualUsername" required minlength="3" maxlength="25" pattern="[A-Za-z0-9_-]{3,25}" autocomplete="off"></label>
@@ -179,6 +179,17 @@
 <div class="acciones"><button type="submit" id="gdvManualCreate">Crear cuenta manualmente</button></div>
 <p class="estado" id="gdvManualStatus" role="status" aria-live="polite"></p>
 </form></section>
+
+<section class="panel" id="gdvIncompleteRegistration" hidden style="margin:0 0 24px">
+  <h2>Registros incompletos · Recuperación de cuentas</h2>
+  <p class="intro">Consultá quiénes empezaron a registrarse pero todavía no terminaron, identificá el paso pendiente y copiales las indicaciones adecuadas. No se eliminarán cuentas ni se cambiarán perfiles. La contraseña temporal solo se asigna cuando confirmás la identidad y autorización del titular.</p>
+  <div class="acciones" style="margin-bottom:14px;flex-wrap:wrap">
+    <button id="gdvIncompleteRefresh" class="secundario" type="button">Consultar / Actualizar pendientes</button>
+    <a class="link" href="moderacion.html#registro-manual">Ir a registro manual</a>
+  </div>
+  <p id="gdvIncompleteStatus" class="estado" role="status" aria-live="polite">Seleccioná Consultar para ver los registros pendientes.</p>
+  <div id="gdvIncompleteList"></div>
+</section>
 
       <section class="panel" id="gdvStolAdmin" hidden style="margin:0 0 24px;border-color:rgba(232,187,104,.75);">
         <h2 style="margin-top:0;">Video de portada</h2>
@@ -1004,14 +1015,32 @@
       const modoFotos = tablaDestino === "galeria";
       const modoVideo = tablaDestino === "video-portada";
       const modoRegistro = tablaDestino === "registro-manual";
+      const modoRecuperacion = tablaDestino === "registros-incompletos";
       const modoShimoda = tablaDestino === "shimoda_comentarios" || tablaDestino === "shimoda_publicaciones";
 
       if ($("comunicadosAccesoModeracion")) $("comunicadosAccesoModeracion").hidden = modoComercio || modoFotos || modoVideo || moderador;
-      if ($("gdvManualRegistration")) $("gdvManualRegistration").hidden = !administrador || modoComercio || modoFotos || modoVideo;
+      if ($("gdvManualRegistration")) $("gdvManualRegistration").hidden = !administrador || modoComercio || modoFotos || modoVideo || modoRecuperacion;
+      if ($("gdvIncompleteRegistration")) $("gdvIncompleteRegistration").hidden = !administrador || modoComercio || modoFotos || modoVideo || modoRegistro;
        if ($("robertAdmin")) $("robertAdmin").hidden = modoComercio || modoFotos || modoVideo || moderador;
       if ($("gdvStolAdmin")) $("gdvStolAdmin").hidden = modoComercio || modoFotos || moderador;
       if (administrador && !modoComercio && !modoFotos) window.GDV_STOL_VIDEO?.admin();
       if ($("shimodaPublicarAdmin")) $("shimodaPublicarAdmin").hidden = modoComercio || modoFotos || modoVideo || moderador;
+      if (modoRecuperacion && administrador) {
+        const tituloPanel = $("panel")?.querySelector("h1");
+        const introPanel = $("panel")?.querySelector(".intro");
+        if (tituloPanel) tituloPanel.textContent = "Administración · Registros incompletos";
+        if (introPanel) introPanel.textContent = "Revisá las cuentas pendientes y ayudá a sus titulares a completar el registro, sin perder sus datos.";
+        for (const id of ["comunicadosAccesoModeracion", "gdvStolAdmin", "pronareaAdminAccess", "robertAdmin", "shimodaPublicarAdmin", "panelFotosHangar"]) {
+          const element = $(id);
+          if (element) element.hidden = true;
+        }
+        for (const selector of [".pestanas", ".filtros", "#resumen", "#lista"]) {
+          const element = document.querySelector(selector);
+          if (element) element.style.display = "none";
+        }
+        window.GDV_INCOMPLETE?.load();
+        return;
+      }
       if (modoRegistro && administrador) {
         const tituloPanel = $("panel")?.querySelector("h1");
         const introPanel = $("panel")?.querySelector(".intro");
@@ -1119,6 +1148,7 @@
     iniciar();
   </script>
 <script src="assets/admin-manual-registration.js?v=20261013manual1"></script>
+<script src="assets/admin-incomplete-registration.js?v=20261013incompletos1"></script>
  <script defer src="assets/chat-alerts.js?v=20261012avisosunavez1"></script>
 </body>
 </html>
