@@ -20,6 +20,16 @@
 .quicklinks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.quicklinks a{display:block;text-decoration:none;padding:15px;border-radius:12px;border:1px solid #586365;background:#172024}.quicklinks a strong{font-size:14px;color:#ffca98;display:block}.quicklinks a span{display:block;font-size:12px;color:var(--muted);margin-top:5px}
 .checks{display:grid;gap:8px}.checks p{display:flex;gap:10px;align-items:flex-start;margin:0;color:var(--muted);font-size:13px}.bullet{height:8px;width:8px;border-radius:50%;background:var(--accent);margin-top:8px;flex:none}.sitefoot{margin-top:25px;color:#a9b4b0;font-size:12px;border-top:1px solid #3e4a49;padding-top:20px}
 @media(max-width:870px){.layout,.hero{grid-template-columns:1fr}.hero-side{display:none}}@media(max-width:620px){.wrap{padding:16px 12px 50px}.top-inner{padding:12px}.toplinks{gap:9px}.hero-main{padding:23px 20px}.card{padding:18px}.form,.math-grid,.metric-grid{grid-template-columns:1fr 1fr}.status-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.quicklinks{grid-template-columns:1fr}.cloud-item{grid-template-columns:55px 54px 1fr;gap:8px}.cloud-symbol{width:52px;height:52px}.cloud-code{font-size:15px}}@media(max-width:390px){.form,.metric-grid,.math-grid{grid-template-columns:1fr}.status-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.flight-step{background:#172123;border:1px solid #3e5553;border-radius:16px;padding:17px;margin:17px 0 20px;min-width:0}
+.flight-step-head{display:flex;align-items:center;gap:11px;margin-bottom:7px}
+.flight-step-head h3{margin:0;color:var(--text);font-size:18px}
+.flight-step-number{display:grid;place-items:center;width:34px;height:34px;border:1px solid #b9784a;color:var(--accent2);border-radius:10px;font-size:12px;font-weight:850;flex-shrink:0}
+.flight-data-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,185px),1fr));gap:13px;margin-top:15px}
+.flight-data-grid .field{min-width:0}
+#flight-legs .form{margin:12px 0}
+#flight-legs #nav-legs-panel{margin-top:15px}
+@media(max-width:620px){.flight-step{padding:12px}.flight-step-head h3{font-size:16px}.flight-data-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}}
+@media(max-width:420px){.flight-data-grid{grid-template-columns:1fr}}
 </style>
 <script>document.documentElement.classList.add('auth-pending')</script>
 <style>html.auth-pending body{visibility:hidden}</style>
@@ -140,7 +150,10 @@
 </div>
 <p class="sub">Este es el paso final. Primero consultá gratuitamente los boletines. Después indicá tu vuelo y pegá PRONAREA y NOTAM vigentes desde SMN y AIS. Shimoda combinará todo para señalar condiciones relevantes, riesgos y datos faltantes. No emite autorización de vuelo.</p>
 <form id="flight-analysis-form">
-<div class="form" style="margin-top:17px">
+<section class="flight-step" id="flight-data" aria-labelledby="flight-data-title">
+<div class="flight-step-head"><span class="flight-step-number">01</span><h3 id="flight-data-title">Datos del vuelo y la aeronave</h3></div>
+<p class="sub">Completá los datos de partida, velocidad y combustible de tu aeronave antes de preparar las piernas. Los campos de combustible son opcionales, pero si faltan no se mostrará un cálculo completo de reservas.</p>
+<div class="flight-data-grid">
 <label class="field" for="flight-origin">Aeródromo de salida
 <select id="flight-origin" required>
 <optgroup label="Buenos Aires y alrededores"><option value="SAEZ">Ezeiza · Ministro Pistarini · SAEZ</option><option value="SABE">Aeroparque · Jorge Newbery · SABE</option><option value="SADF">San Fernando · SADF</option><option value="SADM">Morón · SADM</option><option value="SADP">El Palomar · SADP</option><option value="SAZM">Mar del Plata · SAZM</option><option value="SAZB">Bahía Blanca · SAZB</option></optgroup>
@@ -164,13 +177,6 @@
 </select>
 <input id="flight-dest-other" aria-label="Código OACI de destino" type="text" pattern="[sS][aA][A-Za-z]{2}" minlength="4" maxlength="4" placeholder="Ej.: SAXX" autocomplete="off" autocapitalize="characters" hidden disabled>
 </label>
-<label class="field full">Ruta prevista y puntos principales<input id="flight-route" required maxlength="800" placeholder="Describí la ruta, puntos y aeródromos alternativos"></label>
-
-<details id="nav-legs-panel" class="report full" style="margin:0;background:#172326">
-<summary><strong>Navegación por piernas · FlightPrep NAV</strong><span>Hasta 16 piernas · Todas las columnas</span></summary>
-<div class="content">
-<p class="sub">Planificá tramos entre aeródromos y puntos intermedios. La distancia y el rumbo verdadero se calculan en línea ortodrómica a partir de coordenadas aproximadas. Cada pierna requiere <strong>viento de altura</strong> (dirección verdadera desde donde sopla y velocidad en kt). Para 6.500 pies, ingresá el viento pronosticado para ese sector, nivel y horario; no utilices viento de superficie METAR.</p>
-<div class="form" style="margin:15px 0">
 <label class="field">Velocidad verdadera TAS (kt)<input id="nav-tas" type="number" min="1" max="600" step=".1" placeholder="Ej.: 110"></label>
 <label class="field">Consumo en crucero (L/h, opcional)<input id="nav-fuel-flow" type="number" min=".1" max="1000" step=".1" placeholder="Ej.: 33"></label>
 <label class="field">Combustible rodaje y ascenso (L, opcional)<input id="nav-taxi" type="number" min="0" max="500" step=".1" placeholder="Ej.: 6"></label>
@@ -178,7 +184,21 @@
 <label class="field">Contingencia prevista (% del consumo crucero)<input id="nav-contingency" type="number" min="0" max="100" step=".1" placeholder="Ej.: 10"></label>
 <label class="field">Tiempo a alternativa (min, opcional)<input id="nav-alternate" type="number" min="0" max="720" step="1" placeholder="Tiempo previsto"></label>
 <label class="field">Combustible a bordo (L, opcional)<input id="nav-onboard" type="number" min="0" max="4000" step=".1" placeholder="Ej.: 150"></label>
+<label class="field">Fecha y hora de salida previstas (hora del equipo)<input id="flight-time" type="datetime-local" required></label>
+<label class="field">Altitud prevista (pies AMSL)<input id="flight-alt" type="number" required min="500" max="45000" step="100" placeholder="6500"></label>
+<label class="field">Reglas de vuelo<select id="flight-rules" required><option value="VFR">VFR</option><option value="IFR">IFR</option></select></label>
+<label class="field">Aeronave (opcional)<input id="flight-aircraft" maxlength="100" placeholder="Ej.: Cessna 172"></label>
 </div>
+</section>
+<section class="flight-step" id="flight-legs" aria-labelledby="flight-legs-title">
+<div class="flight-step-head"><span class="flight-step-number">02</span><h3 id="flight-legs-title">Piernas (Origen → Destino)</h3></div>
+<p class="sub">Definí los puntos del recorrido y prepará cada pierna. Se conservan todas las columnas y los totales de FlightPrep NAV; el cálculo no consume tokens.</p>
+<div class="form"><label class="field full">Ruta prevista y puntos principales<input id="flight-route" required maxlength="800" placeholder="Describí la ruta, puntos y aeródromos alternativos"></label></div>
+<details id="nav-legs-panel" class="report full" open style="margin:0;background:#172326">
+<summary><strong>Tabla de piernas y puntos · FlightPrep NAV</strong><span>Mostrar u ocultar · Hasta 16 piernas</span></summary>
+<div class="content">
+<p class="sub">Planificá tramos entre aeródromos y puntos intermedios. La distancia y el rumbo verdadero se calculan en línea ortodrómica a partir de coordenadas aproximadas. Cada pierna requiere <strong>viento de altura</strong> (dirección verdadera desde donde sopla y velocidad en kt). Para 6.500 pies, ingresá el viento pronosticado para ese sector, nivel y horario; no utilices viento de superficie METAR.</p>
+
 <div id="nav-origin-manual" hidden class="form" style="margin:12px 0"><p class="full sub">El aeródromo de salida no tiene coordenadas precargadas. Cargalas desde la AIP.</p><label class="field">Latitud salida (° decimal; S−)<input id="nav-origin-lat" type="number" min="-90" max="90" step=".000001"></label><label class="field">Longitud salida (° decimal; O−)<input id="nav-origin-lon" type="number" min="-180" max="180" step=".000001"></label></div>
 <div id="nav-dest-manual" hidden class="form" style="margin:12px 0"><p class="full sub">El aeródromo de destino no tiene coordenadas precargadas. Cargalas desde la AIP.</p><label class="field">Latitud destino (° decimal; S−)<input id="nav-dest-lat" type="number" min="-90" max="90" step=".000001"></label><label class="field">Longitud destino (° decimal; O−)<input id="nav-dest-lon" type="number" min="-180" max="180" step=".000001"></label></div>
 <div class="card-header"><h3>Piernas (salida → puntos → destino)</h3><button type="button" class="secondary" id="nav-add-waypoint">+ Agregar pierna / punto</button></div>
@@ -201,11 +221,8 @@
 </div>
 </div>
 </details>
-
-<label class="field">Fecha y hora de salida previstas (hora del equipo)<input id="flight-time" type="datetime-local" required></label>
-<label class="field">Altitud prevista (pies AMSL)<input id="flight-alt" type="number" required min="500" max="45000" step="100" placeholder="6500"></label>
-<label class="field">Reglas de vuelo<select id="flight-rules" required><option value="VFR">VFR</option><option value="IFR">IFR</option></select></label>
-<label class="field">Aeronave (opcional)<input id="flight-aircraft" maxlength="100" placeholder="Ej.: Cessna 172"></label>
+</section>
+<div class="form" style="margin-top:17px">
 <fieldset class="full" style="margin:0;border:1px solid #58645e;border-radius:12px;padding:12px 16px">
 <legend style="padding:0 5px;font-weight:700">FIR que atraviesa tu ruta</legend>
 <div style="display:flex;gap:10px 20px;flex-wrap:wrap">
