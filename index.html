@@ -4916,6 +4916,7 @@ img, video { max-width: 100%; }
       <a href="comunidad.html#hangar">Mi Hangar</a><a href="comunidad.html#perfil">Editar perfil</a><a href="comunidad.html#preferencias-correo">Correos y avisos</a>
       <a href="comunidad.html#almacenamiento" id="gdvStorageLink" hidden>Almacenamiento</a>
        <a href="moderacion.html#video-portada" id="gdvStolAdminLink" hidden>Video de portada</a>
+       <a href="moderacion.html#registro-manual" id="gdvManualRegistrationLink" hidden>Registro manual</a>
       <button type="button" id="botonCerrarSesion">Cerrar sesión</button>
     </div>
   </details>
@@ -6605,6 +6606,8 @@ document.getElementById("hangarLicense").textContent = perfil?.aviation_license 
   if (storageLink) storageLink.hidden = !window.gdvLegacyAdmin;
   const videoAdminLink = document.getElementById("gdvStolAdminLink");
   if (videoAdminLink) videoAdminLink.hidden = !window.gdvLegacyAdmin;
+   const manualRegistrationLink = document.getElementById("gdvManualRegistrationLink");
+   if (manualRegistrationLink) manualRegistrationLink.hidden = !window.gdvLegacyAdmin;
   window.dispatchEvent(new CustomEvent("gdv-admin-ready", {
     detail: { isAdmin: !!window.gdvLegacyAdmin }
   }));
