@@ -4,8 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#11191c">
+<meta name="robots" content="noindex,nofollow">
 <meta name="description" content="Mesa de consulta aeronáutica de Robert Shimoda: METAR, TAF, SIGMET, PRONAREA, NOTAM, viento, crepúsculo y guía de nubosidad.">
-<title>Mesa de vuelo | Robert Shimoda | Gente de Vuelo</title>
+<title>Mesa de vuelo · Prueba privada | Robert Shimoda | Gente de Vuelo</title>
 <style>
 :root{color-scheme:dark;--bg:#101719;--surface:#1a2426;--surface2:#212d2f;--surface3:#2b3739;--line:#3c4a4b;--text:#edf0ee;--muted:#b4c0bd;--accent:#ff994b;--accent2:#ffbc78;--mint:#8cddc4;--white:#f3efe7;--radius:18px}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.55 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}button,input,select,textarea{font:inherit}a{color:var(--accent2)}a:hover{color:#ffe0bb}button{cursor:pointer}button:disabled{cursor:wait;opacity:.65}input,select,textarea{width:100%;background:#121a1d;border:1px solid #65716e;border-radius:11px;color:var(--text);padding:11px 12px;min-width:0}input:focus,select:focus,textarea:focus,button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:3px}input[type=number]{font-variant-numeric:tabular-nums}p{margin:9px 0}h1,h2,h3{line-height:1.22}h2{font-size:22px;letter-spacing:-.025em;margin:0 0 10px}h3{font-size:16px;margin:0 0 7px}strong{font-weight:710}small{font-size:12px}pre{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.65;font:13px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace;margin:12px 0 0;padding:14px;border:1px solid #4b5d60;border-radius:12px;background:#111b1e;color:#e2e9e8}[hidden]{display:none!important}
@@ -28,8 +29,8 @@
 </head>
 <body>
 <header class="top"><div class="top-inner"><a class="brand" href="../index.html"><span class="mark">GDV</span><span class="brand-name">GENTE DE VUELO<span>Centro de consulta aeronáutica</span></span></a><nav class="toplinks"><a href="index.html">Utilidades</a><a href="../index.html#shimoda">Shimoda</a><a href="../index.html">Portada</a></nav></div></header>
-<main class="wrap">
-<section class="hero"><div class="hero-main"><span class="eyebrow">Robert Shimoda / herramienta de consulta</span><h1>Tu mesa de <em>vuelo</em>.</h1><p>Datos meteorológicos, lectura de boletines y herramientas de cálculo en un único espacio. Diseñado para consultar con criterio, no para reemplazar la información oficial.</p></div><aside class="hero-side"><div class="dial" aria-hidden="true">RS</div><div><span class="eyebrow">Información crítica</span><p>Verificá siempre <strong>emisión, vigencia, ruta y fuentes oficiales</strong> antes de planificar una operación.</p></div></aside></section>
+<main class="wrap" id="gdv-meteo-private" hidden>
+<section class="hero"><div class="hero-main"><span class="eyebrow">Robert Shimoda / pruebas privadas de administración</span><h1>Tu mesa de <em>vuelo</em>.</h1><p>Datos meteorológicos, lectura de boletines y herramientas de cálculo en un único espacio. Diseñado para consultar con criterio, no para reemplazar la información oficial.</p></div><aside class="hero-side"><div class="dial" aria-hidden="true">RS</div><div><span class="eyebrow">Información crítica</span><p>Verificá siempre <strong>emisión, vigencia, ruta y fuentes oficiales</strong> antes de planificar una operación.</p></div></aside></section>
 <nav class="jump" aria-label="Secciones"><a href="#consultar">Consultar</a><a href="#boletines">Boletines</a><a href="#viento">Viento en pista</a><a href="#nubosidad">Nubosidad</a><a href="#crepusculo">Crepúsculo</a><a href="#fuentes">Fuentes oficiales</a></nav>
 <div class="layout">
 <div class="stack">
@@ -131,8 +132,17 @@
 </section>
 </aside>
 </div>
-<footer class="sitefoot">Gente de Vuelo · Robert Shimoda, asistente de carácter educativo. Toda decisión aeronáutica requiere verificación oficial vigente y responsabilidad del piloto al mando.</footer>
+<footer class="sitefoot">MODO PRUEBA PRIVADA · Solo administración. Gente de Vuelo · Robert Shimoda, asistente de carácter educativo. Toda decisión aeronáutica requiere verificación oficial vigente y responsabilidad del piloto al mando.</footer>
 </main>
+<section class="wrap" id="gdv-meteo-gate" role="status" aria-live="polite">
+<div class="card" style="max-width:670px;margin:28px auto">
+<span class="card-kicker">Área de administración</span>
+<h1 style="font-size:28px;margin:12px 0">Mesa de Vuelo · Prueba privada</h1>
+<p class="sub" id="gdv-meteo-gate-state">Comprobando permisos de acceso…</p>
+<p class="sub">Esta aplicación está reservada a las cuentas administradoras de Gente de Vuelo hasta nuevo aviso.</p>
+<a href="index.html">Volver a Utilidades</a>
+</div>
+</section>
 <script>
 (function(){
 'use strict';
@@ -251,6 +261,39 @@ el('calc-sun').addEventListener('click',()=>{
   for(let i=0;i<3;i++)el(['sunrise','sunset','civil-dusk'][i]).textContent=values[i]?localTime(values[i]):'No calculable';
   el('sun-state').textContent='Horarios aproximados en hora argentina (UTC−03). No sustituyen las tablas oficiales ni las definiciones reglamentarias.';
 });
+})();
+</script>
+
+<script>
+(async()=>{
+  'use strict';
+  const page=document.getElementById('gdv-meteo-private');
+  const notice=document.getElementById('gdv-meteo-gate');
+  const status=document.getElementById('gdv-meteo-gate-state');
+  // Cerrado por defecto: solo se muestra después de confirmar el rol en Supabase.
+  try{
+    const client=window.GDV_AUTH?.client;
+    if(!client){status.textContent='No se pudo comprobar la sesión. Volvé a ingresar.';return;}
+    const {data:identity,error:identityError}=await client.auth.getUser();
+    if(identityError||!identity?.user){
+      status.textContent='Iniciá sesión con una cuenta administradora para acceder.';
+      return;
+    }
+    const {data:admin,error:permissionError}=await client.from('site_admins')
+      .select('user_id').eq('user_id',identity.user.id).maybeSingle();
+    if(permissionError){
+      status.textContent='No se pudo validar el permiso de administrador. Acceso bloqueado.';
+      return;
+    }
+    if(!admin){
+      status.textContent='Acceso restringido: esta prueba no está disponible para los integrantes.';
+      return;
+    }
+    page.hidden=false;
+    notice.hidden=true;
+  }catch(error){
+    status.textContent='No fue posible comprobar los permisos. Acceso bloqueado.';
+  }
 })();
 </script>
 </body>
