@@ -1,0 +1,111 @@
+/* Gente de Vuelo: editor independiente de las tres tarjetas de portada.
+   Solo PC: el diseño móvil permanece exactamente como antes. */
+@media(min-width:701px){
+  .portada-completa #portadaAccesos.gdv-cards-layout {
+    position:absolute!important;
+    inset:0!important;
+    width:100%!important;
+    height:100%!important;
+    min-height:0!important;
+    padding:0!important;
+    margin:0!important;
+    display:block!important;
+    box-sizing:border-box!important;
+    transform:none!important;
+    pointer-events:none!important;
+    z-index:1000!important;
+  }
+  .portada-completa #portadaAccesos.gdv-cards-layout > a {
+    position:absolute!important;
+    top:var(--gdv-card-y)!important;
+    left:var(--gdv-card-x)!important;
+    right:auto!important;
+    bottom:auto!important;
+    width:var(--gdv-card-w)!important;
+    height:var(--gdv-card-h)!important;
+    min-height:0!important;
+    max-height:none!important;
+    min-width:0!important;
+    flex:none!important;
+    grid-column:auto!important;
+    margin:0!important;
+    box-sizing:border-box!important;
+    transform:none!important;
+    transition:none!important;
+    overflow:hidden!important;
+    pointer-events:auto!important;
+  }
+  #portadaAccesos.gdv-cards-editing > a {
+    cursor:grab!important;
+    touch-action:none;
+    outline:2px dashed rgba(245,196,111,.74);
+    outline-offset:3px;
+    z-index:2;
+  }
+  #portadaAccesos.gdv-cards-editing > a.gdv-card-selected {
+    outline:3px solid #ffd590;
+    box-shadow:0 0 0 5px #0007,0 0 25px #ffc76c88!important;
+    z-index:5;
+  }
+  #portadaAccesos.gdv-cards-editing > a:active{cursor:grabbing!important;}
+  #portadaAccesos.gdv-cards-editing .gdv-card-handle {
+    display:block;
+    position:absolute;
+    bottom:2px;right:2px;
+    width:25px;height:25px;
+    border:2px solid #ffd18a;
+    border-radius:8px;
+    background:#1d2a33;
+    box-shadow:0 2px 8px #0009;
+    cursor:nwse-resize;
+    z-index:10;
+  }
+  #portadaAccesos.gdv-cards-editing .gdv-card-handle::before{
+    content:"↘";
+    position:absolute;
+    top:0;left:4px;
+    color:#ffe1aa;font:bold 18px/20px system-ui,sans-serif;
+  }
+}
+#gdvCardEditor{
+  position:fixed;z-index:100060;
+  top:8px;left:50%;transform:translateX(-50%);
+  width:min(1120px,calc(100vw - 24px));
+  max-height:calc(100vh - 16px);
+  overflow:auto;
+  box-sizing:border-box;
+  padding:12px 14px;
+  display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:9px;
+  border:1px solid #dab578;border-radius:13px;
+  background:#17222bf5;
+  box-shadow:0 10px 35px #000a;
+  color:#f6f7f8;
+  font:12px/1.45 system-ui,sans-serif;
+}
+#gdvCardEditor strong{font-size:12px;letter-spacing:.4px;color:#ffe1b1;}
+#gdvCardEditor label{display:flex;align-items:center;gap:5px;color:#e9edf1;}
+#gdvCardEditor label span{min-width:38px;text-align:right;font-variant-numeric:tabular-nums;}
+#gdvCardEditor select,#gdvCardEditor button{
+  min-height:35px;box-sizing:border-box;
+  padding:6px 9px;
+  border-radius:8px;border:1px solid #738494;
+  background:#2c3943;color:white;
+  font:600 12px system-ui,sans-serif;
+  cursor:pointer;
+}
+#gdvCardEditor select{max-width:178px;}
+#gdvCardEditor input[type=range]{width:88px;accent-color:#f1bd75;cursor:pointer;}
+#gdvCardEditor button:hover{background:#425362;}
+#gdvCardEditor button:disabled{opacity:.55;cursor:not-allowed;}
+#gdvCardEditor .gdv-card-save{background:#d7a969;color:#211b16;border-color:#f0c992;}
+#gdvCardEditor .gdv-card-arrows{display:flex;align-items:center;gap:3px;}
+#gdvCardEditor .gdv-card-arrows button{min-width:31px;padding:6px;font-size:16px;}
+#gdvCardStatus{
+  flex:1 0 100%;text-align:center;color:#f7ddaa;
+  font-size:11px;
+}
+#gdvCardStatus.gdv-card-error{color:#ffafa1;}
+@media(max-width:700px){#gdvCardEditor{display:none!important;}}
+@media(prefers-reduced-motion:reduce){
+  #portadaAccesos.gdv-cards-editing > a {transition:none!important;}
+}
