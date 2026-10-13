@@ -21,6 +21,7 @@
   const onboardingURL = new URL('comunidad.html#completar-perfil', base);
   const homeURL = new URL('index.html', base).href;
   const recoveryURL = new URL('index.html?gdv_recovery=1', base).href;
+  const initialPasswordURL = new URL('cambiar-clave-inicial.html', base).href;
   const recovery =
     new URLSearchParams(location.search).get('gdv_recovery') === '1' ||
     new URLSearchParams(location.hash.slice(1)).get('type') === 'recovery';
@@ -29,9 +30,10 @@
   let presenceBusy = false;
   let lastPresence = 0;
   let onboardingRequired = false;
+  let initialPasswordRequired = false;
   // A completed Google sign-in is not the same as a completed community registration.
   async function refreshOnboarding(account = verifiedUser) {
-    if (!account) { onboardingRequired = false; return false; }
+    if (!account) { onboardingRequired = false; initialPasswordRequired = false; return false; }
     const result = await client.from('profiles').select('onboarding_completed,username,full_name,aviation_role').eq('id', account.id).maybeSingle();
     if (result.error) throw result.error;
     // Fail closed if the profile has not been generated yet.
@@ -39,6 +41,7 @@
       account.app_metadata?.providers?.includes('google') ||
       account.identities?.some(identity => identity.provider === 'google');
     const p = result.data;
+    initialPasswordRequired = account.app_metadata?.gdv_initial_password === true;
     onboardingRequired = !p || p.onboarding_completed !== true ||
       (hasGoogle && (/^piloto[_-]/i.test(p.username || '') ||
         !p.full_name?.trim() || !p.aviation_role?.trim()));
@@ -49,6 +52,11 @@
       ['#completar-perfil', '#normativa'].includes(location.hash);
   }
   function redirectOnboarding() {
+    if (initialPasswordRequired && !recovery) {
+      document.documentElement.classList.add('auth-pending');
+      location.replace(initialPasswordURL);
+      return true;
+    }
     if (!onboardingRequired || recovery || permittedDuringOnboarding()) return false;
     // La pantalla de registro vive dentro de comunidad.html. En OAuth móvil,
     // volver a cargar la misma página puede dejarla oculta hasta actualizar.
@@ -124,6 +132,7 @@
   }
   async function requireRoute() {
     await ready;
+    if (initialPasswordRequired && !recovery) { redirectOnboarding(); return false; }
     if (onboardingRequired && !recovery) {
       if (!permittedDuringOnboarding()) { redirectOnboarding(); return false; }
       return true;
@@ -136,10 +145,9 @@
   }
   async function afterLogin() {
     if (!await validate()) return;
-    if (await refreshOnboarding()) {
-      location.replace(onboardingURL.href);
-      return;
-    }
+    const needsProfile = await refreshOnboarding();
+    if (initialPasswordRequired) { location.replace(initialPasswordURL); return; }
+    if (needsProfile) { location.replace(onboardingURL.href); return; }
     let destination = new URL('comunidad.html#foro', base);
     try {
       const saved = sessionStorage.getItem('gdv-return-to');
@@ -172,6 +180,7 @@
     if (event === 'SIGNED_OUT') {
       verifiedUser = null;
       onboardingRequired = false;
+      initialPasswordRequired = false;
       lastPresence = 0;
       if (!publicRoute()) {
         document.documentElement.classList.add('auth-pending');
