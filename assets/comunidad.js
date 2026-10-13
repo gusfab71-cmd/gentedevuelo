@@ -108,6 +108,7 @@ function account(){
    (isOwnerAdmin?'<a href="pronarea-admin.html">PRONAREA FIR Ezeiza</a>':'')+
    (isOwnerAdmin?link('Revisión de AeroChat','#revision-privados',''):'')+
    (isOwnerAdmin?link('Video de portada','moderacion.html#video-portada',''):'')+
+   (isOwnerAdmin?link('Editar tarjetas de portada','index.html?editar-tarjetas=1#inicio',''):'')+
    (isOwnerAdmin?link('Registro manual','moderacion.html#registro-manual',''):'')+
    (isOwnerAdmin?link('Registros incompletos','moderacion.html#registros-incompletos',''):'');
  const group=(label,links,section)=>`<details class="account-submenu" data-account-group="${section}">
