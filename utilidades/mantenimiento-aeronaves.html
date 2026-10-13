@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+
+<html lang="es"><head><meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Mantenimiento de Aeronaves</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<style id="auth-pending-style">html.auth-pending body{visibility:hidden}</style>
+<script>document.documentElement.classList.add('auth-pending')</script>
+<script src="../assets/supabase-2.117.2.min.js"></script>
+<script src="../assets/community-config.js"></script>
+<script src="../assets/auth-guard.js?v=20261011actividadavisos1"></script>
+
+<style>
+
+:root{color-scheme:dark}
+
+body{background:radial-gradient(1000px 500px at 0 -10%,#0e749055,transparent),radial-gradient(900px 500px at 100% 0,#f59e0b30,transparent),#070b14;color:#e2e8f0;font-family:system-ui,sans-serif}
+
+.card{background:rgba(17,25,45,.88);border:1px solid rgba(255,255,255,.08);border-radius:1rem}
+
+.fld{background:#0f172a;border:1px solid #334155;border-radius:.5rem;padding:.35rem .5rem;width:100%;font-weight:600}
+
+.btn{border-radius:.6rem;padding:.4rem .8rem;font-weight:700;font-size:.8rem}
+
+.tab{padding:.7rem 1rem;font-size:.85rem;font-weight:600;color:#94a3b8;border-bottom:3px solid transparent;white-space:nowrap}
+
+.tab.on{color:#fbbf24;border-color:#fbbf24;background:#fbbf2414}
+
+th{font-size:10px;text-transform:uppercase;color:#94a3b8;padding:.35rem;text-align:left;white-space:nowrap}td{padding:.35rem;white-space:nowrap;font-size:.8rem}
+
+</style></head>
+
+<body class="min-h-screen">
+
+<header class="px-5 py-3 border-b border-white/10 flex flex-wrap gap-3 items-center"><a href="index.html" class="text-sm font-semibold text-slate-200 border border-slate-600 rounded-lg px-3 py-2">Volver a Utilidades</a><a href="../comunidad.html#hangar" class="text-sm text-amber-300">Mi Hangar</a>
+
+  <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-600 grid place-items-center text-xl"></div>
+
+  <div><h1 class="font-extrabold text-white leading-tight">MANTENIMIENTO DE AERONAVES</h1><p class="text-[11px] text-slate-400">Controles · Horas y ciclos · Proyección de vuelo</p></div>
+
+  <div class="ml-auto flex flex-wrap gap-2 items-center"><select id="sel" class="fld !w-auto" onchange="S.sel=this.value;save();R()"></select>
+
+  <button class="btn bg-slate-700" onclick="expo()">⬇ Respaldo</button><label class="btn bg-slate-800 cursor-pointer">⬆ Importar<input type="file" accept=".json" class="hidden" onchange="impo(this)"></label></div>
+
+</header>
+
+<nav id="nav" class="flex overflow-x-auto border-b border-white/10 px-3"></nav>
+
+<div class="max-w-7xl mx-auto px-4 pt-3"><p id="sync" role="status" class="text-sm text-slate-300">Cargando tu información...</p><p class="text-xs text-slate-400 mt-1">Registro orientativo. No reemplaza las libretas oficiales de aeronave, motor y hélice, los programas aprobados, ni las verificaciones por personal aeronáutico habilitado.</p></div>
+<main id="app" class="max-w-7xl mx-auto p-4"></main>
+
+
+
+<script>
+
+const $=i=>document.getElementById(i),uid=()=>crypto.randomUUID(),today=()=>{const d=new Date();return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')},v=i=>$(i).value,n=i=>Math.min(1e6,Math.max(0,parseFloat($(i).value)||0));
+
+let S={ac:[],sv:[],ct:[],lg:[],rc:[],sel:null,tab:'a',hz:12};
+
+let db=null,currentUser=null,hangarAircraft='',saveQueue=Promise.resolve();
+const showStatus=message=>{const x=$('sync');if(x)x.textContent=message};
+const validData=d=>d&&typeof d==='object'&&['ac','sv','ct','lg','rc'].every(k=>Array.isArray(d[k])&&d[k].length<=({ac:50,sv:300,ct:2000,lg:6000,rc:200}[k]))&&
+ ['ac','sv','ct','lg','rc'].every(k=>d[k].every(x=>x&&typeof x==='object'&&typeof x.id==='string'&&/^[a-zA-Z0-9_-]{1,64}$/.test(x.id)))&&
+ d.ac.every(a=>typeof a.reg==='string'&&a.reg.length<=50);
+function save(){
+ if(!currentUser||!db){showStatus('Sin conexión: los cambios no están guardados.');return}
+ const payload=JSON.parse(JSON.stringify(S));
+ showStatus('Guardando mantenimiento...');
+ saveQueue=saveQueue.catch(()=>{}).then(async()=>{
+   const {error}=await db.from('gdv_aircraft_maintenance').upsert({user_id:currentUser.id,payload,updated_at:new Date().toISOString()},{onConflict:'user_id'});
+   if(error){showStatus('Error al guardar: '+error.message);return}
+   showStatus('Mantenimiento guardado en tu cuenta.');
+ });
+ return saveQueue;
+}
+async function loadApp(){
+ db=window.GDV_AUTH?.client;
+ if(!db){showStatus('No se pudo iniciar la conexión con Gente de Vuelo.');return}
+ const {data:{user},error:authError}=await db.auth.getUser();
+ if(authError||!user){showStatus('Ingresá a Gente de Vuelo para usar esta utilidad.');return}
+ currentUser=user;
+ const [stored,profile]=await Promise.all([
+   db.from('gdv_aircraft_maintenance').select('payload').eq('user_id',user.id).maybeSingle(),
+   db.from('profiles').select('aircraft_flown').eq('id',user.id).maybeSingle()
+ ]);
+ hangarAircraft=String(profile.data?.aircraft_flown||'').slice(0,200);
+ if(stored.error){showStatus('No fue posible cargar tus registros: '+stored.error.message);return}
+ if(stored.data?.payload&&validData(stored.data.payload))S={...S,...stored.data.payload};
+ else if(stored.data?.payload&&Object.keys(stored.data.payload).length)showStatus('El respaldo almacenado no tiene el formato esperado.');
+ if(!S.ac.some(a=>a.id===S.sel))S.sel=S.ac[0]?.id||null;
+ R();
+ if(!stored.data?.payload||validData(stored.data.payload))showStatus('Tus registros de mantenimiento son privados.');
+}
+function fromHangar(){const input=$('a_t');if(input)input.value=hangarAircraft}
+
+
+const A=()=>S.ac.find(a=>a.id==S.sel),esc=t=>String(t??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+const F=(id,l,t='number',val='',x='')=>`<label class="text-[11px] text-slate-400">${l}<input id="${id}" type="${t}" step="any" ${t==='number'?'min="0"':''} value="${val}" class="fld mt-0.5" ${x}></label>`;
+
+const SEL=(id,l,o)=>`<label class="text-[11px] text-slate-400">${l}<select id="${id}" class="fld mt-0.5">${o}</select></label>`;
+
+const fd=t=>isFinite(t)?new Date(t).toLocaleDateString('es-AR'):'—',f1=x=>(+x).toFixed(1);
+
+const TABS=[['a',' Aeronaves'],['s',' Servicios y controles'],['b',' Bitácora'],['r',' Recurrentes'],['p',' Proyección']];
+
+
+
+// ---------- LÓGICA ----------
+
+function info(c,a){const t0=Date.now(),D=30.44*864e5,d=[];
+
+ const remH=c.ivH?c.lastH+c.ivH-a.h:null,remC=c.ivC?c.lastC+c.ivC-a.c:null;let calD=null;
+
+ if(c.ivM&&c.lastDate){const x=new Date(c.lastDate+'T12:00:00');x.setMonth(x.getMonth()+c.ivM);calD=x.getTime();d.push([calD,'calendario'])}
+
+ if(remH!=null)d.push([remH<=0?t0:a.hpm>0?t0+remH/a.hpm*D:Infinity,'horas']);
+
+ if(remC!=null)d.push([remC<=0?t0:a.cpm>0?t0+remC/a.cpm*D:Infinity,'ciclos']);
+
+ const m=d.length?d.reduce((x,y)=>y[0]<x[0]?y:x):[Infinity,'—'],days=(m[0]-t0)/864e5,over=(remH!=null&&remH<=0)||(remC!=null&&remC<=0)||(calD&&calD<t0);
+
+ return{remH,remC,calD,due:m[0],by:m[1],days,st:over?2:days<=45?1:0}}
+
+const ST=[['OK','emerald'],['PRÓXIMO','amber'],['VENCIDO','rose']];
+
+function entry(a,e){S.lg.push({id:uid(),ac:a.id,...e});a.h+=e.h;a.c+=e.c}
+
+const adv=(d,e)=>{const x=new Date(d+'T12:00:00');e=='d'?x.setDate(x.getDate()+1):e=='w'?x.setDate(x.getDate()+7):x.setMonth(x.getMonth()+1);return x.toISOString().slice(0,10)};
+
+function applyRc(){
+ const pending=S.rc.filter(r=>r.next<=today());
+ if(!pending.length){alert('No hay recurrentes pendientes.');return 0}
+ if(!confirm('¿Confirmás que se realizaron realmente las actividades pendientes? Se incorporará un registro por cada actividad al día de hoy.'))return 0;
+ for(const r of pending){const a=S.ac.find(x=>x.id===r.ac);if(!a)continue;
+  entry(a,{kind:r.kind,date:today(),h:r.h,c:r.c,from:r.from,to:r.to,pilot:'',note:(r.note||'')+' (registro confirmado)'});
+  r.next=adv(today(),r.every);
+ }
+ save();return pending.length;
+}
+
+
+
+// ---------- ACCIONES ----------
+
+function addAc(){const r=v('a_r').trim().toUpperCase();if(!r)return alert('Ingrese la matrícula.');if(S.ac.some(a=>a.reg===r))return alert('Esa matrícula ya está registrada.');const a={id:uid(),reg:r,type:v('a_t'),h:n('a_h'),c:n('a_c'),hpm:n('a_hm'),cpm:n('a_cm')};S.ac.push(a);S.sel=a.id;save();R()}
+
+function delAc(id){if(!confirm('¿Borrar la aeronave y todos sus datos?'))return;S.ac=S.ac.filter(a=>a.id!=id);const sv=S.sv.filter(s=>s.ac==id).map(s=>s.id);S.sv=S.sv.filter(s=>s.ac!=id);S.ct=S.ct.filter(c=>!sv.includes(c.sv));S.lg=S.lg.filter(l=>l.ac!=id);S.rc=S.rc.filter(r=>r.ac!=id);S.sel=S.ac[0]?.id||null;save();R()}
+
+function addManual(){const a=A(),h=n('m_h'),c=n('m_c');if(!h&&!c)return alert('Ingrese horas y/o ciclos.');entry(a,{kind:'m',date:v('m_d')||today(),h,c,from:'',to:'',pilot:'',note:v('m_n')||'Control manual'});save();R()}
+
+function addSv(){const nm=v('s_n').trim();if(!nm)return;S.sv.push({id:uid(),ac:S.sel,name:nm});save();R()}
+
+function delSv(id){if(confirm('¿Borrar el servicio y sus controles?')){S.sv=S.sv.filter(s=>s.id!=id);S.ct=S.ct.filter(c=>c.sv!=id);save();R()}}
+
+function addCt(){const nm=v('c_n').trim();if(!nm||!v('c_s'))return alert('Elija un servicio e ingrese el nombre del control.');S.ct.push({id:uid(),sv:v('c_s'),name:nm,ivH:n('c_ih'),ivC:n('c_ic'),ivM:n('c_im'),lastDate:v('c_ld'),lastH:n('c_lh'),lastC:n('c_lc')});save();R()}
+
+function delCt(id){S.ct=S.ct.filter(c=>c.id!=id);save();R()}
+
+function renew(id){if(!confirm('¿Este control fue realizado efectivamente hoy?'))return;const c=S.ct.find(x=>x.id==id),a=A();c.lastDate=today();c.lastH=a.h;c.lastC=a.c;save();R()}
+
+function addLog(){const a=A(),h=n('l_h'),c=n('l_c');if(!h&&!c)return alert('Ingrese horas de vuelo y/o ciclos.');entry(a,{kind:'f',date:v('l_d')||today(),h,c,from:v('l_f').toUpperCase(),to:v('l_t').toUpperCase(),pilot:v('l_p'),note:v('l_n')});save();R()}
+
+function delLog(id){const l=S.lg.find(x=>x.id==id),a=S.ac.find(x=>x.id==l.ac);if(a){a.h-=l.h;a.c-=l.c}S.lg=S.lg.filter(x=>x.id!=id);save();R()}
+
+function addRc(){const h=n('r_h'),c=n('r_c');if(!h&&!c)return alert('Ingrese horas y/o ciclos.');S.rc.push({id:uid(),ac:S.sel,kind:v('r_k'),every:v('r_e'),next:v('r_s')||today(),h,c,from:v('r_f').toUpperCase(),to:v('r_t').toUpperCase(),note:v('r_n')});save();R();alert('Recurrente programado. No se suman horas sin confirmar su realización.')}
+
+function delRc(id){S.rc=S.rc.filter(r=>r.id!=id);save();R()}
+
+function runRc(){const k=applyRc();R();if(k)alert(k+' registro(s) confirmados.')}
+
+function setProj(){const a=A();a.hpm=n('p_h');a.cpm=n('p_c');S.hz=n('p_z')||12;save();R()}
+
+function expo(){const x=document.createElement('a');x.href=URL.createObjectURL(new Blob([JSON.stringify(S,null,1)],{type:'application/json'}));x.download='mantenimiento-respaldo.json';x.click()}
+
+function impo(i){const f=i.files[0];if(!f)return;
+ if(f.size>500000){alert('El respaldo supera el tamaño permitido.');i.value='';return}
+ const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!validData(d))throw 0;
+ if(!confirm('¿Reemplazar tus registros actuales por este respaldo?'))return;
+ S={ac:d.ac,sv:d.sv,ct:d.ct,lg:d.lg,rc:d.rc,sel:d.sel||null,tab:'a',hz:d.hz||12};
+ if(!S.ac.some(a=>a.id===S.sel))S.sel=S.ac[0]?.id||null;save();R();
+ }catch(e){alert('Archivo no válido.')}};r.readAsText(f);i.value=''}
+
+
+
+// ---------- VISTAS ----------
+
+function tabA(){const a=A();return`<div class="grid lg:grid-cols-2 gap-4"><div class="card p-4 space-y-2"><h2 class="font-bold text-amber-300">1 · Crear aeronave</h2>${hangarAircraft?`<div class="text-xs text-slate-300 bg-slate-900/70 p-2 rounded-lg">En Mi Hangar figura: <b>${esc(hangarAircraft)}</b><button class="btn bg-slate-700 ml-2" onclick="fromHangar()">Usar como modelo</button></div>`:''}<div class="grid grid-cols-2 gap-2">${F('a_r','Matrícula','text')}${F('a_t','Tipo / modelo','text')}${F('a_h','Horas totales (TTAF)','number',0)}${F('a_c','Ciclos / aterrizajes totales','number',0)}${F('a_hm','Proyección: horas/mes','number',20)}${F('a_cm','Proyección: ciclos/mes','number',20)}</div><button class="btn bg-amber-600 w-full" onclick="addAc()">Crear aeronave</button></div>
+
+<div class="space-y-3">${S.ac.map(x=>`<div class="card p-3 flex items-center gap-3 ${x.id==S.sel?'!border-amber-400':''}"><div class="flex-1"><b class="text-lg">${esc(x.reg)}</b> <span class="text-xs text-slate-400">${esc(x.type)}</span><div class="text-sm text-sky-300 font-bold">${f1(x.h)} h · ${Math.round(x.c)} ciclos</div></div><button class="btn bg-sky-700" onclick="S.sel='${x.id}';save();R()">Seleccionar</button><button class="btn bg-rose-800" onclick="delAc('${x.id}')">✕</button></div>`).join('')||'<div class="text-slate-500 text-sm">Aún no hay aeronaves.</div>'}
+
+${a?`<div class="card p-4 space-y-2"><h2 class="font-bold text-amber-300">4 · Horas y ciclos de control manual — ${esc(a.reg)}</h2><p class="text-[11px] text-slate-500">Se suman a los totales de la aeronave y quedan registrados.</p><div class="grid grid-cols-3 gap-2">${F('m_d','Fecha','date',today())}${F('m_h','Horas')}${F('m_c','Ciclos')}</div>${F('m_n','Motivo / nota','text')}<button class="btn bg-emerald-600 w-full" onclick="addManual()">Agregar</button></div>`:''}</div></div>`}
+
+
+
+function tabS(){const a=A(),sv=S.sv.filter(s=>s.ac==a.id);return`<div class="grid lg:grid-cols-3 gap-4"><div class="space-y-4"><div class="card p-4 space-y-2"><h2 class="font-bold text-amber-300">2 · Crear servicio de mantenimiento</h2>${F('s_n','Nombre (ej. Inspección 100 h, Anual)','text')}<button class="btn bg-amber-600 w-full" onclick="addSv()">Crear servicio</button></div>
+
+<div class="card p-4 space-y-2"><h2 class="font-bold text-amber-300">3 · Crear control</h2>${SEL('c_s','Servicio',sv.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join(''))}${F('c_n','Control (ej. Cambio de aceite)','text')}<div class="text-[11px] text-slate-500">Intervalo (deje 0 lo que no aplique)</div><div class="grid grid-cols-3 gap-2">${F('c_ih','Horas',"number",0)}${F('c_ic','Ciclos','number',0)}${F('c_im','Meses','number',0)}</div><div class="text-[11px] text-slate-500">Última aplicación</div><div class="grid grid-cols-3 gap-2">${F('c_ld','Fecha','date',today())}${F('c_lh','Horas aeron.','number',a.h)}${F('c_lc','Ciclos aeron.','number',a.c)}</div><button class="btn bg-amber-600 w-full" onclick="addCt()">Crear control</button></div></div>
+
+<div class="lg:col-span-2 space-y-3">${sv.map(s=>{const cs=S.ct.filter(c=>c.sv==s.id);return`<div class="card p-3"><div class="flex justify-between"><b class="text-amber-300">${esc(s.name)}</b><button class="text-rose-400 text-xs" onclick="delSv('${s.id}')">Borrar servicio</button></div><div class="overflow-x-auto"><table class="w-full"><thead><tr><th>Control</th><th>Intervalo</th><th>Última</th><th>Resta h</th><th>Resta ciclos</th><th>Vence (proy.)</th><th>Estado</th><th></th></tr></thead><tbody class="divide-y divide-white/5">${cs.map(c=>{const i=info(c,a),[tx,co]=ST[i.st];return`<tr><td class="font-semibold">${esc(c.name)}</td><td class="text-slate-400">${[c.ivH&&c.ivH+' h',c.ivC&&c.ivC+' c',c.ivM&&c.ivM+' m'].filter(Boolean).join(' / ')}</td><td class="text-slate-400">${c.lastDate||'—'} · ${f1(c.lastH)}h/${c.lastC}c</td><td>${i.remH==null?'—':f1(i.remH)}</td><td>${i.remC==null?'—':Math.round(i.remC)}</td><td>${fd(i.due)} <span class="text-[10px] text-slate-500">(${i.by})</span></td><td><span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-${co}-500/20 text-${co}-300">${tx}</span></td><td><button class="text-emerald-400 text-xs" title="Registrar cumplimiento hoy" onclick="renew('${c.id}')"> Cumplido hoy</button> <button class="text-rose-400 px-1" onclick="delCt('${c.id}')">✕</button></td></tr>`}).join('')||'<tr><td colspan="8" class="text-slate-500">Sin controles.</td></tr>'}</tbody></table></div></div>`}).join('')||'<div class="text-slate-500 text-sm">Cree primero un servicio de mantenimiento.</div>'}</div></div>`}
+
+
+
+function tabB(){const a=A(),L=S.lg.filter(l=>l.ac==a.id).sort((x,y)=>y.date.localeCompare(x.date)).slice(0,60);return`<div class="grid lg:grid-cols-3 gap-4"><div class="card p-4 space-y-2 h-fit"><h2 class="font-bold text-amber-300">Hoja de vuelo (bitácora)</h2><div class="grid grid-cols-2 gap-2">${F('l_d','Fecha','date',today())}${F('l_p','Piloto','text')}${F('l_f','Desde','text')}${F('l_t','Hasta','text')}${F('l_h','Horas de vuelo')}${F('l_c','Ciclos / aterrizajes','number',1)}</div>${F('l_n','Observaciones','text')}<button class="btn bg-amber-600 w-full" onclick="addLog()">Registrar vuelo</button></div>
+
+<div class="lg:col-span-2 card p-3 overflow-x-auto"><table class="w-full"><thead><tr><th>Fecha</th><th>Tipo</th><th>Ruta</th><th>Piloto</th><th>Horas</th><th>Ciclos</th><th>Nota</th><th></th></tr></thead><tbody class="divide-y divide-white/5">${L.map(l=>`<tr><td>${l.date}</td><td>${l.kind=='m'?'Manual':'Vuelo'}</td><td>${esc(l.from)}${l.to?' → '+esc(l.to):''}</td><td>${esc(l.pilot)}</td><td>${f1(l.h)}</td><td>${l.c}</td><td class="text-slate-400">${esc(l.note)}</td><td><button class="text-rose-400" onclick="delLog('${l.id}')">✕</button></td></tr>`).join('')||'<tr><td colspan="8" class="text-slate-500">Sin registros.</td></tr>'}</tbody></table></div></div>`}
+
+
+
+function tabR(){const a=A(),L=S.rc.filter(r=>r.ac==a.id);return`<div class="grid lg:grid-cols-3 gap-4"><div class="card p-4 space-y-2 h-fit"><h2 class="font-bold text-amber-300">6 · Crear recurrente</h2><p class="text-[11px] text-slate-500">Programa actividades diarias, semanales o mensuales. Las horas y ciclos se incorporan únicamente cuando confirmás que ocurrieron.</p><div class="grid grid-cols-2 gap-2">${SEL('r_k','Tipo','<option value="f">Hoja de vuelo</option><option value="m">Horas/ciclos manual</option>')}${SEL('r_e','Frecuencia','<option value="d">Diaria</option><option value="w" selected>Semanal</option><option value="m">Mensual</option>')}${F('r_s','Próxima fecha','date',today())}${F('r_h','Horas')}${F('r_c','Ciclos','number',1)}${F('r_f','Desde (opc.)','text')}${F('r_t','Hasta (opc.)','text')}</div>${F('r_n','Nota','text')}<button class="btn bg-amber-600 w-full" onclick="addRc()">Crear recurrente</button></div>
+
+<div class="lg:col-span-2 card p-3 space-y-2"><div class="flex justify-between"><b class="text-amber-300">Recurrentes de ${esc(a.reg)}</b><button class="btn bg-sky-700" onclick="runRc()">Confirmar actividades realizadas</button></div>${L.map(r=>`<div class="flex items-center gap-3 bg-slate-900/60 rounded-lg p-2 text-sm"><div class="flex-1">${r.kind=='f'?' Vuelo':' Manual'} · ${{d:'diaria',w:'semanal',m:'mensual'}[r.every]} · <b>${f1(r.h)} h / ${r.c} c</b> ${esc(r.from)}${r.to?'→'+esc(r.to):''}<div class="text-[11px] text-slate-400">Próxima: ${r.next} ${esc(r.note)}</div></div><button class="text-rose-400" onclick="delRc('${r.id}')">✕</button></div>`).join('')||'<div class="text-slate-500 text-sm">Sin recurrentes.</div>'}</div></div>`}
+
+
+
+function tabP(){const a=A(),H=S.hz||12,D=30.44*864e5,t0=Date.now(),all=S.sv.filter(s=>s.ac==a.id).flatMap(s=>S.ct.filter(c=>c.sv==s.id).map(c=>({c,s,i:info(c,a)}))).filter(x=>isFinite(x.i.due)).sort((x,y)=>x.i.due-y.i.due);
+
+ const W=560,Ht=250,L=46,Rr=12,T=22,B=30,ymax=a.h+a.hpm*H||1,ymin=a.h,sx=m=>L+m/H*(W-L-Rr),sy=y=>Ht-B-(y-ymin)/Math.max(ymax-ymin,1)*(Ht-B-T);let s='';
+
+ for(let i=0;i<=H;i+=H>12?6:1)s+=`<line x1="${sx(i)}" x2="${sx(i)}" y1="${T}" y2="${Ht-B}" stroke="#fff1"/><text x="${sx(i)}" y="${Ht-B+13}" fill="#94a3b8" font-size="9" text-anchor="middle">+${i}m</text>`;
+
+ for(let i=0;i<=4;i++){const y=ymin+(ymax-ymin)*i/4;s+=`<line x1="${L}" x2="${W-Rr}" y1="${sy(y)}" y2="${sy(y)}" stroke="#fff1"/><text x="${L-5}" y="${sy(y)+3}" fill="#94a3b8" font-size="9" text-anchor="end">${y.toFixed(0)}</text>`}
+
+ s+=`<line x1="${sx(0)}" y1="${sy(a.h)}" x2="${sx(H)}" y2="${sy(a.h+a.hpm*H)}" stroke="#38bdf8" stroke-width="3"/>`;
+
+ const mk=all.filter(x=>(x.i.due-t0)/D<=H).slice(0,15);
+
+ mk.forEach((x,k)=>{const m=Math.max(0,(x.i.due-t0)/D),co=['#34d399','#fbbf24','#f87171'][x.i.st];s+=`<line x1="${sx(m)}" x2="${sx(m)}" y1="${T}" y2="${Ht-B}" stroke="${co}" stroke-dasharray="3 3"/><circle cx="${sx(m)}" cy="${T-6}" r="8" fill="${co}"/><text x="${sx(m)}" y="${T-3}" fill="#000" font-size="9" font-weight="800" text-anchor="middle">${k+1}</text>`});
+
+ return`<div class="grid lg:grid-cols-3 gap-4"><div class="card p-4 space-y-2 h-fit"><h2 class="font-bold text-amber-300">5 · Proyección de vuelo — ${esc(a.reg)}</h2><div class="text-sm">Actual: <b class="text-sky-300">${f1(a.h)} h · ${Math.round(a.c)} ciclos</b></div>${F('p_h','Horas proyectadas por mes','number',a.hpm)}${F('p_c','Ciclos proyectados por mes','number',a.cpm)}${SEL('p_z','Horizonte','<option value="12">12 meses</option><option value="24">24 meses</option><option value="36">36 meses</option>')}<button class="btn bg-amber-600 w-full" onclick="setProj()">Aplicar proyección</button><div class="text-[11px] text-slate-500">En ${H} meses: ${f1(a.h+a.hpm*H)} h · ${Math.round(a.c+a.cpm*H)} ciclos.</div></div>
+
+<div class="lg:col-span-2 space-y-3"><div class="card p-3"><svg viewBox="0 0 ${W} ${Ht}" class="w-full rounded-xl bg-[#050810]">${s}<text x="${W/2}" y="${Ht-3}" fill="#64748b" font-size="9" text-anchor="middle">Horas totales proyectadas y vencimientos de controles (números = tabla)</text></svg></div>
+
+<div class="card p-3 overflow-x-auto"><b class="text-amber-300 text-sm">Próximos vencimientos</b><table class="w-full mt-1"><thead><tr><th>#</th><th>Control</th><th>Servicio</th><th>Vence</th><th>Por</th><th>Estado</th></tr></thead><tbody class="divide-y divide-white/5">${all.slice(0,40).map((x,k)=>{const[tx,co]=ST[x.i.st];return`<tr><td>${k<15&&(x.i.due-t0)/D<=H?k+1:''}</td><td class="font-semibold">${esc(x.c.name)}</td><td class="text-slate-400">${esc(x.s.name)}</td><td>${fd(x.i.due)}</td><td class="text-slate-400">${x.i.by}</td><td><span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-${co}-500/20 text-${co}-300">${tx}</span></td></tr>`}).join('')||'<tr><td colspan="6" class="text-slate-500">Sin vencimientos calculables: cargue intervalos y la proyección.</td></tr>'}</tbody></table></div></div></div>`}
+
+
+
+function R(){
+
+ $('sel').innerHTML=S.ac.map(a=>`<option value="${a.id}" ${a.id==S.sel?'selected':''}>${esc(a.reg)}</option>`).join('')||'<option>Sin aeronaves</option>';
+
+ $('nav').innerHTML=TABS.map(([k,l])=>`<button class="tab ${S.tab==k?'on':''}" onclick="S.tab='${k}';R()">${l}</button>`).join('');
+
+ if(!S.sel&&S.ac[0])S.sel=S.ac[0].id;
+
+ const f={a:tabA,s:tabS,b:tabB,r:tabR,p:tabP}[S.tab];
+
+ $('app').innerHTML=!currentUser?'<div class="card p-6">Iniciando sesión y recuperando tus datos...</div>':S.tab=='a'||A()?f():'<div class="card p-6 text-center text-slate-400">Primero cree una aeronave en la pestaña “Aeronaves”.</div>';
+
+ if(S.tab=='p'&&$('p_z'))$('p_z').value=S.hz}
+
+R();loadApp();
+
+</script><script defer src="../assets/chat-alerts.js?v=20261012avisosunavez1"></script></body></html>
