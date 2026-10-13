@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Historiales de mantenimiento · Administración · Gente de Vuelo</title>
+<style id="auth-pending-style">html.auth-pending body{visibility:hidden}</style>
+<script>document.documentElement.classList.add('auth-pending')</script>
+<script src="../assets/supabase-2.117.2.min.js"></script>
+<script src="../assets/community-config.js"></script>
+<script src="../assets/auth-guard.js?v=20261011actividadavisos1"></script>
+<style>
+:root{color-scheme:dark;font-family:system-ui,Segoe UI,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:#171e23;color:#f2f4f5}
+header{padding:18px 5%;background:#252c32;border-bottom:1px solid #49535b;display:flex;flex-wrap:wrap;gap:15px;align-items:center}
+header a{color:#f6b579;text-decoration:none}
+header strong{font-size:1.05rem}
+main{max-width:1150px;margin:0 auto;padding:24px 16px 64px}
+h1{font-size:1.7rem;margin:0 0 8px}
+h2{font-size:1.15rem;margin:0 0 12px;color:#f1b780}
+h3{font-size:1rem;margin:18px 0 7px;color:#e9edf0}
+p{line-height:1.5}
+.muted{color:#bcc6ce}
+.card{background:#252e35;border:1px solid #485660;border-radius:14px;padding:20px;margin:14px 0}
+label{display:block;margin:12px 0 7px;font-weight:600}
+select{width:100%;max-width:650px;padding:11px;color:#f5f6f8;background:#111c24;border:1px solid #5a6a76;border-radius:9px}
+table{border-collapse:collapse;width:100%;font-size:.9rem;margin:9px 0}
+th,td{padding:9px 11px;text-align:left;border-bottom:1px solid #44515c;vertical-align:top}
+th{color:#e1b48b}
+.table-wrap{overflow-x:auto}
+.warning{border-left:3px solid #d99d66;padding:10px 14px;background:#302d2c}
+#status{min-height:24px}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<header><strong>GENTE DE VUELO</strong><a href="../comunidad.html#moderacion">Moderación</a><a href="../comunidad.html#hangar">Mi Hangar</a><a href="index.html">Utilidades</a></header>
+<main>
+<h1>Historiales de mantenimiento</h1>
+<p class="muted">Consulta privada para la administración principal de Gente de Vuelo. Cada integrante es el único que puede modificar los registros de su aeronave.</p>
+<p id="status" role="status">Verificando acceso…</p>
+<section class="card" id="browse" hidden>
+<label for="member">Seleccionar integrante con historial de mantenimiento</label>
+<select id="member"><option value="">Seleccioná un integrante</option></select>
+<div id="detail" aria-live="polite"></div>
+</section>
+<p class="warning">Estos registros son orientativos. No sustituyen las libretas oficiales, registros técnicos, inspecciones o documentación exigida por la autoridad aeronáutica.</p>
+</main>
+<script>
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const el=(tag,value)=>{const n=document.createElement(tag);if(value!==undefined&&value!==null)n.textContent=String(value);return n};
+const safeArray=x=>Array.isArray(x)?x:[];
+const n=x=>Number.isFinite(Number(x))?String(Number(x)):'—';
+const date=x=>{if(!x)return '—';const d=new Date(x);return Number.isFinite(d.getTime())?d.toLocaleDateString('es-AR'):'—'};
+function section(parent,title){const s=el('section');s.className='card';s.append(el('h2',title));parent.append(s);return s}
+function table(parent,heads,rows){
+ if(!rows.length){parent.append(el('p','Sin registros.'));return}
+ const wrap=el('div');wrap.className='table-wrap';const t=el('table');const hd=el('thead'),tr=el('tr');
+ heads.forEach(h=>tr.append(el('th',h)));hd.append(tr);t.append(hd);
+ const body=el('tbody');
+ rows.forEach(values=>{const row=el('tr');values.forEach(v=>row.append(el('td',v??'—')));body.append(row)});
+ t.append(body);wrap.append(t);parent.append(wrap)
+}
+let rows=[],labels=new Map();
+function render(userId){
+ const container=$('detail');container.replaceChildren();
+ if(!userId)return;
+ const record=rows.find(x=>x.user_id===userId);
+ if(!record)return;
+ const p=record.payload||{};
+ container.append(el('h3',(labels.get(userId)||'Integrante')+' · Última actualización: '+date(record.updated_at)));
+ const planes=safeArray(p.ac),sv=safeArray(p.sv),ct=safeArray(p.ct),lg=safeArray(p.lg),rc=safeArray(p.rc);
+ const acSection=section(container,'Aeronaves');
+ table(acSection,['Matrícula','Modelo','Horas totales','Ciclos','Horas/mes previstas'],planes.map(a=>[a.reg,a.type,n(a.h),n(a.c),n(a.hpm)]));
+ for(const a of planes){
+  const title=(a.reg||'Aeronave')+' · '+(a.type||'');
+  const cs=sv.filter(x=>x.ac===a.id);
+  const controls=cs.flatMap(service=>ct.filter(c=>c.sv===service.id).map(c=>({service,c})));
+  const block=section(container,'Servicios y controles · '+title);
+  table(block,['Servicio','Control','Intervalo','Última aplicación','Últimas horas/ciclos'],controls.map(x=>[
+   x.service.name,x.c.name,[x.c.ivH?n(x.c.ivH)+' h':'',x.c.ivC?n(x.c.ivC)+' ciclos':'',x.c.ivM?n(x.c.ivM)+' meses':''].filter(Boolean).join(' / ')||'—',
+   date(x.c.lastDate),n(x.c.lastH)+' h / '+n(x.c.lastC)+' c'
+  ]));
+  const bit=section(container,'Bitácora · '+title);
+  table(bit,['Fecha','Tipo','Desde','Hasta','Piloto','Horas','Ciclos','Observaciones'],
+   lg.filter(x=>x.ac===a.id).slice().sort((x,y)=>String(y.date||'').localeCompare(String(x.date||'')))
+     .map(x=>[date(x.date),x.kind==='m'?'Carga manual':'Vuelo',x.from,x.to,x.pilot,n(x.h),n(x.c),x.note]));
+  const recurrent=rc.filter(x=>x.ac===a.id);
+  if(recurrent.length){
+   const recSection=section(container,'Registros recurrentes · '+title);
+   table(recSection,['Frecuencia','Siguiente fecha','Horas','Ciclos','Observaciones'],
+     recurrent.map(x=>[{d:'Diaria',w:'Semanal',m:'Mensual'}[x.every]||x.every,date(x.next),n(x.h),n(x.c),x.note]));
+  }
+ }
+}
+async function load(){
+ const status=$('status');
+ try{
+  const db=window.GDV_AUTH?.client;
+  if(!db)throw Error('No se pudo iniciar la sesión de Gente de Vuelo.');
+  const {data:auth,error:authError}=await db.auth.getUser();
+  if(authError||!auth?.user)throw Error('Ingresá con tu cuenta para continuar.');
+  const user=auth.user;
+  const check=await db.from('site_admins').select('user_id').eq('user_id',user.id).maybeSingle();
+  if(check.error||!check.data)throw Error('Acceso reservado al administrador principal.');
+  const result=await db.from('gdv_aircraft_maintenance').select('user_id,payload,updated_at').order('updated_at',{ascending:false}).limit(300);
+  if(result.error)throw result.error;
+  rows=result.data||[];
+  if(rows.length){
+   const users=await db.from('profiles').select('id,username,full_name').in('id',rows.map(x=>x.user_id));
+   if(users.error)throw users.error;
+   (users.data||[]).forEach(p=>labels.set(p.id,p.username||p.full_name||'Integrante'));
+  }
+  const select=$('member');
+  rows.forEach(r=>{const opt=el('option',(labels.get(r.user_id)||'Integrante')+' · '+date(r.updated_at));opt.value=r.user_id;select.append(opt)});
+  select.addEventListener('change',()=>render(select.value));
+  $('browse').hidden=false;
+  status.textContent=rows.length?'Historiales disponibles: '+rows.length+'. Acceso de solo lectura.':'Todavía ningún integrante cargó un historial de mantenimiento.';
+ }catch(error){status.textContent=error.message||'No se pudieron consultar los historiales.'}
+}
+load();
+})();
+</script>
+</body>
+</html>
