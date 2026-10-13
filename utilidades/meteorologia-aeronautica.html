@@ -172,7 +172,7 @@
 <p class="sub">Planificá tramos entre aeródromos y puntos intermedios. La distancia y el rumbo verdadero se calculan en línea ortodrómica a partir de coordenadas aproximadas. Cada pierna requiere <strong>viento de altura</strong> (dirección verdadera desde donde sopla y velocidad en kt). Para 6.500 pies, ingresá el viento pronosticado para ese sector, nivel y horario; no utilices viento de superficie METAR.</p>
 <div class="form" style="margin:15px 0">
 <label class="field">Velocidad verdadera TAS (kt)<input id="nav-tas" type="number" min="1" max="600" step=".1" placeholder="Ej.: 110"></label>
-<label class="field">Consumo en crucero (L/h, opcional)<input id="nav-fuel-flow" type="number" min="0" max="1000" step=".1" placeholder="Ej.: 33"></label>
+<label class="field">Consumo en crucero (L/h, opcional)<input id="nav-fuel-flow" type="number" min=".1" max="1000" step=".1" placeholder="Ej.: 33"></label>
 <label class="field">Combustible rodaje y ascenso (L, opcional)<input id="nav-taxi" type="number" min="0" max="500" step=".1" placeholder="Ej.: 6"></label>
 <label class="field">Reserva prevista (min, opcional)<input id="nav-reserve" type="number" min="0" max="360" step="1" placeholder="Según plan y normativa aplicable"></label>
 <label class="field">Contingencia prevista (% del consumo crucero)<input id="nav-contingency" type="number" min="0" max="100" step=".1" placeholder="Ej.: 10"></label>
@@ -197,7 +197,7 @@
 <h3>Combustible remanente por pierna</h3>
 <div id="nav-fuel-plot" aria-label="Estimación de combustible por pierna"><p class="sub">Ingresá consumo, combustible a bordo y rodaje/ascenso para visualizar la evolución estimada.</p></div>
 </div>
-<p class="source-notes">* Distancia y rumbo inicial aproximados entre puntos; no representan aerovías, circuito, virajes, restricciones, ascenso ni descenso. RM = rumbo magnético; RC = rumbo de compás. Variación y desvío, E positivo y O negativo, deben ser conocidos para obtener RM y RC. El cálculo sigue las ecuaciones de viento de FlightPrep NAV. ETA depende de la hora de partida declarada. Los consumos de rodaje y reserva no sustituyen el cálculo reglamentario.</p>
+<p class="source-notes">* Distancia y rumbo inicial aproximados entre puntos; no representan aerovías, circuito, virajes, restricciones, ascenso ni descenso. RM = rumbo magnético; RC = rumbo de compás. Variación y desvío, E positivo y O negativo, deben ser conocidos para obtener RM y RC. El cálculo sigue las ecuaciones de viento de FlightPrep NAV. ETA expresada en hora argentina cuando ingresás la hora de partida. Completá con 0 únicamente lo que corresponda; los campos vacíos indican datos faltantes. Los totales no acreditan suficiencia reglamentaria del combustible.</p>
 </div>
 </div>
 </details>
@@ -485,12 +485,18 @@ el('calc-sun').addEventListener('click',()=>{
  function recalc(){
    lastPlan=null;
    if(!prepared.length)return;
-   const tas=numeric('nav-tas'),flow=numeric('nav-fuel-flow'),taxi=numeric('nav-taxi'),reserve=numeric('nav-reserve');
+   const tas=numeric('nav-tas'),flow=numeric('nav-fuel-flow'),taxi=numeric('nav-taxi'),reserve=numeric('nav-reserve'),
+         contingency=numeric('nav-contingency'),alternate=numeric('nav-alternate'),onboard=numeric('nav-onboard');
    if(!valid(tas,1,600)){ $('nav-status').textContent='Ingresá una TAS válida (1 a 600 kt).';return;}
-   if((flow!==null&&!valid(flow,0,1000))||(taxi!==null&&!valid(taxi,0,500))||(reserve!==null&&!valid(reserve,0,360))){
-     $('nav-status').textContent='Revisá valores de combustible y reserva.';return;
+   if((flow!==null&&!valid(flow,.1,1000))||(taxi!==null&&!valid(taxi,0,500))||(reserve!==null&&!valid(reserve,0,360))||
+      (contingency!==null&&!valid(contingency,0,100))||(alternate!==null&&!valid(alternate,0,720))||
+      (onboard!==null&&!valid(onboard,0,4000))){
+     $('nav-status').textContent='Revisá los datos de combustible, contingencia, alternativa y reserva.';return;
    }
+   $('nav-totals').replaceChildren();
+   $('nav-fuel-plot').replaceChildren();
    let totalNm=0,totalMinutes=0,totalFuel=0;
+   const chartPoints=[];
    const navLegs=[];
    for(let i=0;i<prepared.length;i++){
      const leg=prepared[i],row=$('nav-legs-body').querySelector('[data-idx="'+i+'"]');
@@ -513,7 +519,11 @@ el('calc-sun').addEventListener('click',()=>{
      const consumption=flow!==null?min/60*flow:null;
      if(consumption!==null)totalFuel+=consumption;
      const tm=$('flight-time').value;let eta='—';
-     if(tm){const d=new Date(tm);if(Number.isFinite(d.getTime()))eta=new Date(d.getTime()+totalMinutes*60000).toLocaleString('es-AR',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit'});}
+     if(tm){const d=new Date(tm);if(Number.isFinite(d.getTime()))eta=new Date(d.getTime()+totalMinutes*60000).toLocaleString('es-AR',{timeZone:'America/Argentina/Buenos_Aires',hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit'});}
+     if(onboard!==null&&taxi!==null&&flow!==null){
+       if(chartPoints.length===0)chartPoints.push({label:leg.from.code,fuel:onboard-taxi});
+       chartPoints.push({label:leg.to.code,fuel:onboard-taxi-totalFuel});
+     }
      const output={
        wca:(wca>=0?'+':'')+wca.toFixed(1)+'°',mh:angle(mh)+'°',ch:angle(ch)+'°',
        gs:gs.toFixed(1),ete:minutes(min),eta,
@@ -525,21 +535,71 @@ el('calc-sun').addEventListener('click',()=>{
        wind_direction_true:wd,wind_speed_kt:ws,variation_deg_east:variation,deviation_deg_east:deviation});
    }
    $('nav-totals').replaceChildren();
+   const contingencyFuel=flow===null||contingency===null?null:totalFuel*contingency/100;
+   const reserveFuel=flow===null||reserve===null?null:reserve/60*flow;
+   const altFuel=flow===null||alternate===null?null:alternate/60*flow;
+   const completeFuel=flow!==null&&taxi!==null&&contingencyFuel!==null&&reserveFuel!==null&&altFuel!==null;
+   const requiredFuel=completeFuel?totalFuel+taxi+contingencyFuel+reserveFuel+altFuel:null;
+   const margin=onboard!==null&&requiredFuel!==null?onboard-requiredFuel:null;
    const totals=[
      ['Distancia total',totalNm.toFixed(1)+' NM'],
      ['Tiempo en ruta',minutes(totalMinutes)],
-     ['ETA destino',(()=>{const tm=$('flight-time').value;if(!tm)return 'Sin hora';const d=new Date(tm);return Number.isFinite(d.getTime())?new Date(d.getTime()+totalMinutes*60000).toLocaleString('es-AR',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit'}):'Sin hora';})()],
-     ['Combustible crucero',flow===null?'Sin dato':totalFuel.toFixed(1)+' L'],
+     ['ETA destino',(()=>{const tm=$('flight-time').value;if(!tm)return 'Sin hora';const d=new Date(tm);return Number.isFinite(d.getTime())?new Date(d.getTime()+totalMinutes*60000).toLocaleString('es-AR',{timeZone:'America/Argentina/Buenos_Aires',hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit'}):'Sin hora';})()],
+     ['Combustible en ruta',flow===null?'Sin dato':totalFuel.toFixed(1)+' L'],
      ['Rodaje/ascenso',taxi===null?'Sin dato':taxi.toFixed(1)+' L'],
-     ['Reserva estimada',flow===null||reserve===null?'Sin dato':(reserve/60*flow).toFixed(1)+' L']
+     ['Contingencia',contingencyFuel===null?'Sin dato':contingencyFuel.toFixed(1)+' L'],
+     ['Reserva final',reserveFuel===null?'Sin dato':reserveFuel.toFixed(1)+' L'],
+     ['Alternativa',altFuel===null?'Sin dato':altFuel.toFixed(1)+' L'],
+     ['Combustible requerido*',requiredFuel===null?'Incompleto':requiredFuel.toFixed(1)+' L'],
+     ['Combustible a bordo',onboard===null?'Sin dato':onboard.toFixed(1)+' L'],
+     ['Diferencia aritmética*',margin===null?'Sin dato':(margin>=0?'+':'')+margin.toFixed(1)+' L'],
+     ['Autonomía crucero',flow===null||onboard===null?'Sin dato':minutes(onboard/flow*60)]
    ];
    for(const [name,value] of totals){
      const box=document.createElement('div');box.className='metric';
      const strong=document.createElement('strong');strong.textContent=value;const span=document.createElement('span');span.textContent=name;
      box.append(span,strong);$('nav-totals').append(box);
    }
-   lastPlan={tas_kt:tas,fuel_flow_lph:flow,taxi_fuel_l:taxi,reserve_minutes:reserve,legs:navLegs};
-   $('nav-status').textContent='Piernas calculadas sin consumir tokens. Rumbo y distancia geométricos; viento ingresado manualmente. Confirmá la navegación sobre cartas oficiales.';
+   lastPlan={tas_kt:tas,fuel_flow_lph:flow,taxi_fuel_l:taxi,reserve_minutes:reserve,
+       contingency_percent:contingency,alternate_minutes:alternate,fuel_onboard_l:onboard,legs:navLegs};
+   renderFuelChart(chartPoints,onboard,reserveFuel===null||altFuel===null?null:reserveFuel+altFuel);
+   $('nav-status').textContent='Todas las piernas calculadas sin tokens. Verificá viento, tramos, tiempos y combustible contra la planificación oficial. *Los totales no certifican suficiencia ni cumplimiento normativo.';
+ }
+
+ function renderFuelChart(pts,onboard,reserveThreshold){
+   const host=$('nav-fuel-plot');host.replaceChildren();
+   if(!pts.length||onboard===null){
+     const p=document.createElement('p');p.className='sub';p.textContent='Para graficar, ingresá consumo por hora, combustible a bordo y rodaje/ascenso. No se calcula suficiencia operacional.';host.append(p);return;
+   }
+   const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+   svg.setAttribute('viewBox','0 0 720 240');svg.setAttribute('width','100%');svg.setAttribute('role','img');
+   svg.setAttribute('aria-label','Gráfico de combustible estimado remanente por pierna');
+   const NS='http://www.w3.org/2000/svg';
+   const make=(tag,props)=>{const n=document.createElementNS(NS,tag);for(const [k,v] of Object.entries(props))n.setAttribute(k,String(v));svg.append(n);return n;};
+   const padL=56,padR=22,top=14,bottom=48,w=720-padL-padR,height=240-top-bottom;
+   const yMax=Math.max(1,onboard,...pts.map(p=>p.fuel),reserveThreshold||0)*1.05;
+   const y=v=>top+height-(Math.max(0,v)/yMax)*height;
+   const x=i=>padL+(pts.length===1?0:(i/(pts.length-1))*w);
+   for(let i=0;i<=4;i++){
+     const v=yMax*i/4;
+     make('line',{x1:padL,x2:720-padR,y1:y(v),y2:y(v),stroke:'#405458','stroke-width':1});
+     const t=make('text',{x:padL-7,y:y(v)+4,'text-anchor':'end',fill:'#c0cfca','font-size':11});t.textContent=v.toFixed(0);
+   }
+   if(reserveThreshold!==null){
+     make('line',{x1:padL,x2:720-padR,y1:y(reserveThreshold),y2:y(reserveThreshold),stroke:'#ffb774','stroke-width':1.6,'stroke-dasharray':'6 4'});
+     const t=make('text',{x:718,y:y(reserveThreshold)-5,'text-anchor':'end',fill:'#ffc994','font-size':11});
+     t.textContent='Reserva + alternativa (referencia)';
+   }
+   const path=pts.map((p,i)=>(i===0?'M':'L')+x(i).toFixed(2)+' '+y(p.fuel).toFixed(2)).join(' ');
+   make('path',{d:path,fill:'none',stroke:'#8cddc4','stroke-width':3});
+   pts.forEach((p,i)=>{
+     make('circle',{cx:x(i),cy:y(p.fuel),r:5,fill:p.fuel<0?'#f19c85':'#8cddc4'});
+     const v=make('text',{x:x(i),y:Math.max(10,y(p.fuel)-10),'text-anchor':'middle',fill:'#e4ebe8','font-size':10});v.textContent=p.fuel.toFixed(1);
+     const l=make('text',{x:x(i),y:225,'text-anchor':'middle',fill:'#c4d1cb','font-size':10});
+     l.textContent=p.label.length>8?p.label.slice(0,7)+'…':p.label;
+   });
+   host.append(svg);
+   const p=document.createElement('p');p.className='sub';p.textContent='Gráfico ilustrativo. Consumo constante en crucero: no contempla cambios de régimen, espera, viento variable, combustible no utilizable ni reservas legales.';host.append(p);
  }
  function prepare(){
    try{
@@ -569,7 +629,7 @@ el('calc-sun').addEventListener('click',()=>{
  ['flight-origin','flight-dest','flight-origin-other','flight-dest-other','nav-origin-lat','nav-origin-lon','nav-dest-lat','nav-dest-lon'].forEach(id=>{
    $(id).addEventListener('change',()=>{refreshManual();lastPlan=null;prepared=[];$('nav-table-block').hidden=true;$('nav-status').textContent='Modificaste un punto: volvé a preparar las piernas.';});
  });
- ['nav-tas','nav-fuel-flow','nav-taxi','nav-reserve','flight-time'].forEach(id=>$(id).addEventListener('input',recalc));
+ ['nav-tas','nav-fuel-flow','nav-taxi','nav-reserve','nav-contingency','nav-alternate','nav-onboard','flight-time'].forEach(id=>$(id).addEventListener('input',recalc));
  refreshManual();
  window.GDV_FLIGHT_LEGS={getPlan:()=>lastPlan,getPrepared:()=>prepared.length>0};
 })();
