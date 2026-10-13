@@ -28,7 +28,7 @@ Diseño y reglas: `docs/arquitectura-comunidad.md`.
 
 La URL de recuperación se deriva de la raíz del sitio (`index.html`), también cuando se solicita desde una subcarpeta. En producción es `https://gusfab71-cmd.github.io/gentedevuelo/index.html`; debe estar autorizada en Supabase Auth. No hay bloqueos específicos por correo en el frontend.
 
-`utilidades/calculo-sustentacion.html` contiene el simulador NACA provisto, junto a FlightPrep NAV y Peso y Balance. Los colores de las 13 temáticas se fijan en `assets/comunidad.js` según la paleta solicitada, sin modificar registros de Supabase.
+`utilidades/calculo-sustentacion.html` contiene el simulador NACA provisto, junto a FlightPrep NAV, Rodaje con viento y Mantenimiento de Aeronaves. Los colores de las 13 temáticas se fijan en `assets/comunidad.js` según la paleta solicitada, sin modificar registros de Supabase.
 
 Pruebas: `node tests/auth-guard.test.cjs` y `node tests/utilities.test.cjs`. La navegación, la recuperación y el simulador también se comprobaron en un DOM con respuestas Auth simuladas; no se realizó una prueba de entrega de correo ni una revisión visual en navegador.
 
