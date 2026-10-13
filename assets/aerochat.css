@@ -101,6 +101,8 @@ footer{text-align:center;padding:20px;color:#899ca5;font-size:12px;border-top:1p
 
 /* Consentimiento informado para supervisión prospectiva de mensajes privados */
 .dm-review-notice{border-bottom:1px solid #745a40;padding:12px 15px;background:#342d27}
+/* El recuadro deja de ocupar espacio luego de aceptar el aviso. */
+.dm-review-notice[hidden],.private-conversation-heading #dm-peer-hint[hidden]{display:none!important}
 .dm-review-notice p{font-size:12px;line-height:1.6;color:#ecd5bf;margin:0 0 9px}
 .dm-review-notice strong{color:#ffe0b4}
 .dm-consent-controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
