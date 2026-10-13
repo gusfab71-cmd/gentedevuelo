@@ -46,7 +46,7 @@
 <div id="brief-result" class="report-summary" hidden>
 <div class="card-header"><h3 id="fetched-title">Consulta</h3><div class="actions" style="margin:0"><button class="secondary" type="button" id="ask-ai" title="El análisis inteligente puede consumir créditos de OpenAI">Analizar con Shimoda IA · consume tokens</button><button class="secondary" type="button" id="copy-report">Copiar informe</button></div></div>
 <p class="sub" id="fetched-at"></p>
-<div class="assistant"><strong>Robert Shimoda · interpretación breve</strong><p id="assistant-text"></p><small id="assistant-note"></small></div>
+<div class="assistant" id="ai-analysis" hidden><strong>Robert Shimoda · análisis con IA</strong><p id="assistant-text"></p><small id="assistant-note"></small></div>
 <div class="metric-grid" id="metar-metrics" hidden>
 <div class="metric"><span>Viento observado</span><strong id="wind-metric">—</strong></div>
 <div class="metric"><span>Visibilidad informada</span><strong id="vis-metric">—</strong></div>
@@ -189,8 +189,11 @@ el('brief-form').addEventListener('submit',async e=>{
     state.data=data;
     el('fetched-title').textContent=data.icao+' · '+data.fir_name;
     el('fetched-at').textContent='Consultado '+utcStamp(data.consulted_at_utc)+' · La fecha de consulta no certifica vigencia.';
-    el('assistant-text').textContent=data.answer||'Sin interpretación disponible.';
-    el('assistant-note').textContent=data.ai_used?'Análisis de IA solicitado expresamente: puede consumir tokens. No incluye PRONAREA ni NOTAM.':'Resumen automático de datos disponibles, sin gasto de tokens de OpenAI. No incluye PRONAREA ni NOTAM.';
+    // El resumen automático repite las mismas cifras de las tarjetas METAR.
+    // Mostramos el panel de Shimoda únicamente al pedir voluntariamente un análisis con IA.
+    el('ai-analysis').hidden=!data.ai_used;
+    el('assistant-text').textContent=data.ai_used?(data.answer||'Sin interpretación disponible.'):'';
+    el('assistant-note').textContent=data.ai_used?'Interpretación con IA solicitada voluntariamente; no reemplaza la comprobación oficial.':'';
     for(const id of ['metar','taf','sigmet'])setReport(id,data[id]);
     const metar=data.metar?.available?parseMetar(data.metar.raw):null;
     el('metar-metrics').hidden=!metar;
@@ -202,7 +205,6 @@ el('brief-form').addEventListener('submit',async e=>{
       'Gente de Vuelo · Mesa de vuelo',
       'Aeródromo: '+data.icao+' | FIR: '+data.fir+' · '+data.fir_name,
       'Consulta: '+utcStamp(data.consulted_at_utc),
-      'Shimoda: '+(data.answer||'No disponible'),
       'METAR: '+(data.metar?.raw||'No confirmado'),
       'TAF: '+(data.taf?.raw||'No confirmado'),
       'SIGMET: '+(data.sigmet?.raw||'Sin datos confirmados; no implica ausencia'),
@@ -228,6 +230,7 @@ el('ask-ai').addEventListener('click',async()=>{
     });
     if(error||!data?.ok)throw new Error(data?.error||error?.message||'No se pudo completar el análisis.');
     if(data.ai_used){
+      el('ai-analysis').hidden=false;
       el('assistant-text').textContent=data.answer;
       el('assistant-note').textContent='Interpretación con IA activada voluntariamente; puede consumir tokens. Verificá los boletines originales.';
       el('status').textContent='Análisis de IA disponible. No constituye briefing operacional.';
