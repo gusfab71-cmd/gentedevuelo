@@ -37,11 +37,20 @@
     const box=hero()?.getBoundingClientRect();
     return box?{rect:box,w:box.width,h:box.height}:null;
   };
-  function blocks() {
-    return ['.portada-accesos','.atajos-portada','.menu-principal','.logo-emblema','.hero-titulo']
-      .map(selector=>document.querySelector('.portada-completa '+selector))
-      .filter(node=>node&&getComputedStyle(node).display!=='none'&&getComputedStyle(node).visibility!=='hidden')
-      .map(node=>node.getBoundingClientRect());
+  // Avisar si se tapa un acceso, pero no impedir el movimiento: algunos
+  // contenedores transparentes ocupan toda la portada y daban falsos bloqueos.
+  function overlapsAccess(location) {
+    const geo=pxGeometry();if(!geo)return false;
+    const left=geo.rect.left+location.x,top=geo.rect.top+location.y,
+      right=left+location.width,bottom=top+location.width*16/9,pad=5;
+    const items=hero()?.querySelectorAll(
+      '.portada-accesos a,.atajos-portada a,.menu-principal button,.menu-principal a,.portada-nav-mobile a,.cuenta-menu'
+    )||[];
+    return Array.from(items).some(node=>{
+      const style=getComputedStyle(node),b=node.getBoundingClientRect();
+      if(style.display==='none'||style.visibility==='hidden'||b.width<5||b.height<5)return false;
+      return !(right+pad<=b.left||left-pad>=b.right||bottom+pad<=b.top||top-pad>=b.bottom);
+    });
   }
   function bounds(x,y,width){
     const geo=pxGeometry();
@@ -49,26 +58,6 @@
     const w=clamp(width,160,Math.min(360,geo.w-24,Math.max(160,(geo.h-84)*9/16)));
     return {x:clamp(x,12,Math.max(12,geo.w-w-12)),
       y:clamp(y,70,Math.max(70,geo.h-w*16/9-12)),width:w};
-  }
-  function isFree(location) {
-    const geo=pxGeometry();if(!geo)return false;
-    const pad=8, cx=geo.rect.left+location.x, cy=geo.rect.top+location.y,
-      right=cx+location.width, bottom=cy+location.width*16/9;
-    return blocks().every(b=>right+pad<=b.left||cx-pad>=b.right||bottom+pad<=b.top||cy-pad>=b.bottom);
-  }
-  function locateUnobstructed(location){
-    if(isFree(location))return location;
-    const geo=pxGeometry();if(!geo)return location;
-    let best=null,score=Infinity;
-    for(let yy=72;yy<=Math.max(72,geo.h-location.width*16/9-12);yy+=18){
-      for(let xx=12;xx<=Math.max(12,geo.w-location.width-12);xx+=18){
-        const c=bounds(xx,yy,location.width);
-        if(!isFree(c))continue;
-        const distance=(c.x-location.x)**2+(c.y-location.y)**2;
-        if(distance<score){best=c;score=distance;}
-      }
-    }
-    return best||null;
   }
   function rawCardPosition(){
     const card=el('stolEnAccion'),geo=pxGeometry();
@@ -101,8 +90,8 @@
     if(isMobile()){resetPosition();return;}
     if(draftPosition){setPixels(bounds(draftPosition.x,draftPosition.y,draftPosition.width));return;}
     if(isValidLayout(savedPosition)){
-      const p=locateUnobstructed(pctToPixels(savedPosition));
-      if(p){setPixels(p);return;}
+      setPixels(pctToPixels(savedPosition));
+      return;
     }
     resetPosition();
   }
@@ -127,11 +116,11 @@
     const candidate=dragging.type==='resize'
       ?bounds(dragging.xpos,dragging.ypos,dragging.width+dx)
       :bounds(dragging.xpos+dx,dragging.ypos+dy,dragging.width);
-    if(isFree(candidate)){
-      draftPosition=candidate;setPixels(candidate);
-      const slider=el('gdvVideoWidth');if(slider)slider.value=String(Math.round(candidate.width));
-      editorStatus('Vista previa. Para publicar esta ubicación, pulsá Guardar posición.');
-    } else editorStatus('Esa posición tapa otro elemento de la portada. Elegí un espacio libre.');
+    draftPosition=candidate;setPixels(candidate);
+    const slider=el('gdvVideoWidth');if(slider)slider.value=String(Math.round(candidate.width));
+    editorStatus(overlapsAccess(candidate)
+      ?'Podés moverlo aquí. Atención: esta ubicación se superpone con un botón o tarjeta de acceso.'
+      :'Vista previa. Pulsá Guardar posición para publicar el cambio.');
   }
   function pointerEnd(evt){
     if(!dragging||evt.pointerId!==dragging.id)return;
@@ -148,16 +137,17 @@
     if(!canEdit()||!card||card.hidden||editPanel)return;
     // Primero usar la ubicación visible; cancelar restaura los valores de Supabase.
     draftPosition=rawCardPosition();
-    if(!isFree(draftPosition)){
-      const nearest=locateUnobstructed(draftPosition);
-      if(nearest)draftPosition=nearest;
-    }
     setPixels(draftPosition);
     card.classList.add('gdv-video-editing');
     const tools=document.createElement('div');
     tools.id='gdvVideoLayoutTools';tools.setAttribute('role','toolbar');tools.setAttribute('aria-label','Editor del video de portada');
     tools.innerHTML='<strong>EDITAR VIDEO DE PORTADA</strong><span>Arrastrá el recuadro. Cambiá el tamaño desde la esquina o con el control.</span>'+
-       '<label> Tamaño <input id="gdvVideoWidth" aria-label="Ancho del video" type="range" min="160" max="360" step="4"></label>'+
+       '<label> Tamaño <input id="gdvVideoWidth" aria-label="Ancho del video" type="range" min="160" max="360" step="4"></label>'+ 
+       '<div id="gdvVideoNudges" aria-label="Mover con botones" title="También podés moverlo con las flechas">'+
+       '<button type="button" data-step="left" aria-label="Mover a la izquierda">←</button>'+
+       '<button type="button" data-step="up" aria-label="Mover hacia arriba">↑</button>'+
+       '<button type="button" data-step="down" aria-label="Mover hacia abajo">↓</button>'+
+       '<button type="button" data-step="right" aria-label="Mover a la derecha">→</button></div>'+
        '<button type="button" id="gdvVideoSave">Guardar posición</button>'+
        '<button type="button" id="gdvVideoReset">Restaurar original</button>'+
        '<button type="button" id="gdvVideoCancel">Cancelar</button>'+
@@ -171,15 +161,28 @@
     card.addEventListener('pointermove',pointerMove);
     card.addEventListener('pointerup',pointerEnd);
     card.addEventListener('pointercancel',pointerEnd);
+    el('gdvVideoNudges').addEventListener('click',event=>{
+      const dir=event.target.closest('button[data-step]')?.dataset.step;
+      if(!dir||!draftPosition)return;
+      const delta=24;
+      const p=bounds(draftPosition.x+(dir==='right'?delta:dir==='left'?-delta:0),
+        draftPosition.y+(dir==='down'?delta:dir==='up'?-delta:0),draftPosition.width);
+      draftPosition=p;setPixels(p);
+      editorStatus(overlapsAccess(p)
+        ?'Posición cambiada. Atención: se superpone con un acceso. Podés seguir moviéndolo.'
+        :'Posición cambiada. Guardá para que se vea en la portada.');
+    });
     el('gdvVideoWidth').addEventListener('input',evt=>{
       if(!draftPosition)return;
       const p=bounds(draftPosition.x,draftPosition.y,Number(evt.target.value));
-      if(isFree(p)){draftPosition=p;setPixels(p);editorStatus('Tamaño ajustado. Pulsá Guardar posición para publicarlo.');}
-      else {evt.target.value=String(Math.round(draftPosition.width));editorStatus('Ese tamaño se superpone con otro elemento.');}
+      draftPosition=p;setPixels(p);
+      editorStatus(overlapsAccess(p)
+        ?'Tamaño ajustado. Advertencia: el video se superpone con un acceso.'
+        :'Tamaño ajustado. Pulsá Guardar posición para publicarlo.');
     });
     el('gdvVideoSave').addEventListener('click',async()=>{
       const btn=el('gdvVideoSave');if(!draftPosition)return;
-      if(!isFree(draftPosition)){editorStatus('Mové el video a una zona libre antes de guardar.');return;}
+      if(overlapsAccess(draftPosition)&&!confirm('Esta ubicación tapa un botón o tarjeta de acceso. ¿Querés guardarla igual?'))return;
       btn.disabled=true;editorStatus('Guardando ubicación en Supabase…');
       const payload=asStored(draftPosition);
       try{
@@ -202,7 +205,7 @@
       }catch(e){btn.disabled=false;editorStatus('No se pudo restaurar: '+(e.message||'Error de conexión'));}
     });
     el('gdvVideoCancel').addEventListener('click',closeEditor);
-    editorStatus('Mové el video con el mouse y guardá. En celulares no se modifica la posición.');
+    editorStatus('Arrastrá el video con el mouse o usá las flechas. Guardá cuando esté como querés.');
   }
   function onVideoPointerDown(evt){
     if(!editPanel||evt.button!==0||!evt.target?.closest||evt.target.closest('#gdvVideoLayoutTools'))return;
