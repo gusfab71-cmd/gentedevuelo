@@ -4920,6 +4920,7 @@ img, video { max-width: 100%; }
        <a href="index.html?editar-marca=1#inicio" id="gdvBrandEditLink" hidden>Mover logo y textos</a>
        <a href="moderacion.html#registro-manual" id="gdvManualRegistrationLink" hidden>Registro manual</a>
        <a href="moderacion.html#registros-incompletos" id="gdvIncompleteRegistrationLink" hidden>Registros incompletos</a>
+       <a href="moderacion.html#conocimiento-robert" id="gdvRobertKnowledgeLink" hidden>Conocimiento de Robert Shimoda</a>
       <button type="button" id="botonCerrarSesion">Cerrar sesión</button>
     </div>
   </details>
@@ -6618,6 +6619,8 @@ document.getElementById("hangarLicense").textContent = perfil?.aviation_license 
    if (manualRegistrationLink) manualRegistrationLink.hidden = !window.gdvLegacyAdmin;
    const incompleteRegistrationLink = document.getElementById("gdvIncompleteRegistrationLink");
    if (incompleteRegistrationLink) incompleteRegistrationLink.hidden = !window.gdvLegacyAdmin;
+    const robertKnowledgeLink = document.getElementById("gdvRobertKnowledgeLink");
+    if (robertKnowledgeLink) robertKnowledgeLink.hidden = !window.gdvLegacyAdmin;
   window.dispatchEvent(new CustomEvent("gdv-admin-ready", {
     detail: { isAdmin: !!window.gdvLegacyAdmin }
   }));
