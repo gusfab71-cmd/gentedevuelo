@@ -100,7 +100,8 @@ async function extractPdf(arrayBuffer: ArrayBuffer, startPage = 1, limit = PDF_P
     pages.push({ text: normalizeText(text), page: pageNumber });
   }
   const total = pdf.numPages;
-  await pdf.destroy();
+  // unpdf puede devolver un proxy sin destroy(); liberar solo si el método existe.
+  if (typeof pdf.destroy === "function") await pdf.destroy();
   return { pages, pageCount: total, endPage };
 }
 
