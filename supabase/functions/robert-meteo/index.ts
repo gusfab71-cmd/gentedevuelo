@@ -136,6 +136,13 @@ Deno.serve(async (request: Request) => {
   if (identityError || !identity?.user?.id) return send({ error: "Tu sesión venció. Volvé a ingresar." }, 401);
 
   const adminClient = createClient(supabaseUrl, privateKey, { auth: { persistSession: false, autoRefreshToken: false } });
+
+  // Mesa de Vuelo: acceso reservado al administrador también del lado del servidor.
+  const { data: admin, error: adminError } = await adminClient.from("site_admins")
+    .select("user_id").eq("user_id", identity.user.id).maybeSingle();
+  if (adminError) return send({ error: "No se pudo validar el permiso de administrador." }, 503);
+  if (!admin) return send({ error: "La Mesa de Vuelo está reservada para pruebas privadas del administrador." }, 403);
+
   const { data: state, error: stateError } = await adminClient.from("robert_daily_config")
     .select("chat_enabled").eq("singleton", true).maybeSingle();
   if (stateError) return send({ error: "No se pudo comprobar el estado de Shimoda." }, 503);
