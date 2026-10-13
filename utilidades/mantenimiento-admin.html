@@ -54,6 +54,8 @@ const $=id=>document.getElementById(id);
 const el=(tag,value)=>{const n=document.createElement(tag);if(value!==undefined&&value!==null)n.textContent=String(value);return n};
 const safeArray=x=>Array.isArray(x)?x:[];
 const n=x=>Number.isFinite(Number(x))?String(Number(x)):'—';
+const comp=k=>({f:'Fuselaje',m:'Motor',p:'Hélice'}[k]||'Fuselaje');
+const compApply=t=>t==='mp'?'Motor + Hélice':!t||t==='fmp'?'Todos':comp(t);
 const date=x=>{if(!x)return '—';const d=new Date(x);return Number.isFinite(d.getTime())?d.toLocaleDateString('es-AR'):'—'};
 function section(parent,title){const s=el('section');s.className='card';s.append(el('h2',title));parent.append(s);return s}
 function table(parent,heads,rows){
@@ -77,22 +79,32 @@ function render(userId){
  table(acSection,['Matrícula','Modelo','Horas totales','Ciclos','Horas/mes previstas'],planes.map(a=>[a.reg,a.type,n(a.h),n(a.c),n(a.hpm)]));
  for(const a of planes){
   const title=(a.reg||'Aeronave')+' · '+(a.type||'');
+  const cp=a.cp||{};
+  const cmpSection=section(container,'Componentes · '+title);
+  table(cmpSection,['Componente','Modelo','N° de serie','Horas totales','Ciclos','TSO','TBO horas','TBO años','Última recorrida'],[
+   ['f',cp.f||{}],['m',cp.m||{}],['p',cp.p||{}]
+  ].map(([k,z])=>[comp(k),z.mod||'—',z.ser||'—',n(k==='f'?a.h:(z.h??a.h)),n(k==='f'?a.c:(z.c??a.c)),k==='f'?'—':n(z.tso??a.h),k==='f'?'—':n(z.tbo??0),k==='f'?'—':n(z.tboY??0),k==='f'?'—':date(z.oh)]));
+  const events=safeArray(a.hist);
+  if(events.length){
+   const histSection=section(container,'Historial de componentes · '+title);
+   table(histSection,['Fecha','Componente','Intervención'],events.slice().reverse().map(h=>[date(h.d),comp(h.k),h.tx]));
+  }
   const cs=sv.filter(x=>x.ac===a.id);
   const controls=cs.flatMap(service=>ct.filter(c=>c.sv===service.id).map(c=>({service,c})));
   const block=section(container,'Servicios y controles · '+title);
-  table(block,['Servicio','Control','Intervalo','Última aplicación','Últimas horas/ciclos'],controls.map(x=>[
-   x.service.name,x.c.name,[x.c.ivH?n(x.c.ivH)+' h':'',x.c.ivC?n(x.c.ivC)+' ciclos':'',x.c.ivM?n(x.c.ivM)+' meses':''].filter(Boolean).join(' / ')||'—',
+  table(block,['Servicio','Componente','Control','Intervalo','Última aplicación','Últimas horas/ciclos'],controls.map(x=>[
+   x.service.name,comp(x.c.cp),x.c.name,[x.c.ivH?n(x.c.ivH)+' h':'',x.c.ivC?n(x.c.ivC)+' ciclos':'',x.c.ivM?n(x.c.ivM)+' meses':''].filter(Boolean).join(' / ')||'—',
    date(x.c.lastDate),n(x.c.lastH)+' h / '+n(x.c.lastC)+' c'
   ]));
   const bit=section(container,'Bitácora · '+title);
-  table(bit,['Fecha','Tipo','Desde','Hasta','Piloto','Horas','Ciclos','Observaciones'],
+  table(bit,['Fecha','Tipo','Componentes','Desde','Hasta','Piloto','Horas','Ciclos','Observaciones'],
    lg.filter(x=>x.ac===a.id).slice().sort((x,y)=>String(y.date||'').localeCompare(String(x.date||'')))
-     .map(x=>[date(x.date),x.kind==='m'?'Carga manual':'Vuelo',x.from,x.to,x.pilot,n(x.h),n(x.c),x.note]));
+     .map(x=>[date(x.date),x.kind==='m'?'Carga manual':'Vuelo',compApply(x.t),x.from,x.to,x.pilot,n(x.h),n(x.c),x.note]));
   const recurrent=rc.filter(x=>x.ac===a.id);
   if(recurrent.length){
    const recSection=section(container,'Registros recurrentes · '+title);
-   table(recSection,['Frecuencia','Siguiente fecha','Horas','Ciclos','Observaciones'],
-     recurrent.map(x=>[{d:'Diaria',w:'Semanal',m:'Mensual'}[x.every]||x.every,date(x.next),n(x.h),n(x.c),x.note]));
+   table(recSection,['Frecuencia','Componentes','Siguiente fecha','Horas','Ciclos','Observaciones'],
+     recurrent.map(x=>[{d:'Diaria',w:'Semanal',m:'Mensual'}[x.every]||x.every,compApply(x.t),date(x.next),n(x.h),n(x.c),x.note]));
   }
  }
 }
