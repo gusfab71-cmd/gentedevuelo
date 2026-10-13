@@ -137,4 +137,5 @@
  }
  refresh.addEventListener('click',load);
  window.GDV_INCOMPLETE={load};
+ if(location.hash==="#registros-incompletos")window.addEventListener("load",()=>{if(!root.hidden)load();});
 })();
