@@ -41,7 +41,7 @@
 <header class="top"><div class="top-inner"><a class="brand" href="../index.html"><span class="mark">GDV</span><span class="brand-name">GENTE DE VUELO<span>Centro de consulta aeronáutica</span></span></a><nav class="toplinks"><a href="index.html">Utilidades</a><a href="../index.html#shimoda">Shimoda</a><a href="../index.html">Portada</a></nav></div></header>
 <main class="wrap" id="gdv-meteo-private" hidden>
 <section class="hero"><div class="hero-main"><span class="eyebrow">Robert Shimoda / pruebas privadas de administración</span><h1>Tu mesa de <em>vuelo</em>.</h1><p>Datos meteorológicos, lectura de boletines y herramientas de cálculo en un único espacio. Diseñado para consultar con criterio, no para reemplazar la información oficial.</p></div><aside class="hero-side"><div class="dial" aria-hidden="true">RS</div><div><span class="eyebrow">Información crítica</span><p>Verificá siempre <strong>emisión, vigencia, ruta y fuentes oficiales</strong> antes de planificar una operación.</p></div></aside></section>
-<nav class="jump" aria-label="Secciones"><a href="#consultar">Datos gratis</a><a href="#boletines">Boletines</a><a href="#viento">Viento en pista</a><a href="#nubosidad">Nubosidad</a><a href="#crepusculo">Crepúsculo</a><a href="#fuentes">Fuentes oficiales</a><a href="#shimoda-brief" style="border-color:var(--accent);color:var(--accent2)">Informe con Shimoda IA</a></nav>
+<nav class="jump" aria-label="Secciones"><a href="#consultar">Datos gratis</a><a href="#boletines">Boletines</a><a href="#viento">Viento en pista</a><a href="#nubosidad">Nubosidad</a><a href="#crepusculo">Crepúsculo</a><a href="#fuentes">Fuentes oficiales</a><a href="#shimoda-brief" style="border-color:var(--accent);color:var(--accent2)">Informe con Shimoda IA</a><a href="#navigation-inline" style="border-color:#72928b">FlightPrep · Navegación</a></nav>
 <div class="layout">
 <div class="stack">
 <section class="card" id="consultar">
@@ -227,11 +227,6 @@
 <span id="flight-status" class="feedback" role="status" aria-live="polite">Sin ejecutar. Las consultas anteriores no consumen tokens de IA.</span>
 </div>
 </form>
-<div class="source-notes" style="margin-top:16px">
-<strong>Después del informe: navegación en FlightPrep NAV.</strong>
-Usá allí el viento de altura, dirección e intensidad que el PRONAREA realmente informe para tu nivel, zona y horario. En FlightPrep NAV podrás calcular piernas, deriva, GS, tiempos y combustible.
-<div class="actions"><a class="secondary" style="display:inline-block;text-decoration:none" href="flightprep-nav.html">Abrir FlightPrep NAV · Calculadora de navegación →</a></div>
-</div>
 <div id="flight-result" hidden style="margin-top:20px;border-top:1px solid #605951;padding-top:18px">
 <div class="card-header"><h3>Informe meteorológico y operacional de Robert Shimoda</h3><button class="secondary" id="flight-copy" type="button">Copiar análisis</button></div>
 <p class="sub" id="flight-analysis-time"></p>
@@ -239,6 +234,27 @@ Usá allí el viento de altura, dirección e intensidad que el PRONAREA realment
 <p class="source-notes" id="flight-warning"></p>
 </div>
 </section>
+
+<section class="card" id="navigation-inline" style="margin-top:24px;border-color:#57736c;background:#172224">
+<div class="card-header">
+  <div>
+    <span class="card-kicker">09 / Navegación · cálculos gratuitos</span>
+    <h2>FlightPrep NAV · Planificación de navegación</h2>
+  </div>
+  <span class="sub">Integrado dentro de la Mesa de Vuelo</span>
+</div>
+<p class="sub">Después de consultar la meteorología y, si lo necesitás, el informe de Shimoda, completá la navegación aquí mismo. Este módulo conserva los <strong>datos de aeronave, piernas, rumbos, WCA, GS, tiempos, totales y combustible</strong> originales de FlightPrep NAV. No utiliza IA ni consume tokens.</p>
+<p class="source-notes">El viento de cada pierna debe corresponder al sector, altitud y horario del vuelo: no uses el viento de superficie del METAR como viento en altura. Las distancias y demás datos deben comprobarse con cartas, performance y fuentes aeronáuticas vigentes. Las reservas reglamentarias son responsabilidad del piloto.</p>
+<iframe
+  id="gdv-flightprep-frame"
+  src="flightprep-nav.html?embed=navigation"
+  title="FlightPrep NAV · Datos de vuelo, navegación por piernas, totales y combustible"
+  loading="lazy"
+  style="display:block;width:100%;height:1170px;border:1px solid #3f615b;border-radius:13px;background:#111c1e;margin-top:16px"
+></iframe>
+<p class="sub">La navegación permanece dentro de esta Mesa. Si deseás usar la versión independiente, también podés <a href="flightprep-nav.html">abrir FlightPrep NAV por separado</a>.</p>
+</section>
+
 <footer class="sitefoot">MODO PRUEBA PRIVADA · Solo administración. Gente de Vuelo · Robert Shimoda, asistente de carácter educativo. Toda decisión aeronáutica requiere verificación oficial vigente y responsabilidad del piloto al mando.</footer>
 </main>
 <section class="wrap" id="gdv-meteo-gate" role="status" aria-live="polite">
@@ -250,6 +266,18 @@ Usá allí el viento de altura, dirección e intensidad que el PRONAREA realment
 <a href="index.html">Volver a Utilidades</a>
 </div>
 </section>
+<script>
+// Ajusta la altura de FlightPrep para evitar dos barras verticales en una sola Mesa.
+window.addEventListener('message',event=>{
+  const frame=document.getElementById('gdv-flightprep-frame');
+  if(!frame||event.origin!==location.origin||event.source!==frame.contentWindow)return;
+  if(event.data?.type!=='gdv-flightprep-resize')return;
+  const height=Number(event.data.height);
+  if(Number.isFinite(height)&&height>=400&&height<=9000){
+    frame.style.height=Math.ceil(height)+'px';
+  }
+});
+</script>
 <script>
 (function(){
 'use strict';
