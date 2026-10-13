@@ -184,14 +184,14 @@
 <textarea id="flight-question" required minlength="8" maxlength="500" rows="2" style="resize:vertical" placeholder="Por ejemplo: quiero volar a Mendoza a 6500 pies, ¿qué fenómenos y restricciones debo analizar?"></textarea></label>
 </div>
 <div class="form" style="margin-top:18px;padding-top:18px;border-top:1px solid #55534d">
-<div class="full"><h3 style="color:var(--accent2)">Documentos oficiales pegados manualmente</h3><p class="sub">Pegá el texto de los boletines completos y verificá su validez. La aplicación no puede certificar que el texto copiado sea auténtico ni que abarque toda la ruta.</p></div>
+<div class="full"><h3 style="color:var(--accent2)">Documentos oficiales pegados manualmente</h3><p class="sub">Pegá los boletines completos, incluyendo sus períodos de validez. No hace falta escribir cuándo los consultaste: el servidor registrará automáticamente cuándo recibe el texto para el análisis. Ese registro no garantiza autenticidad ni vigencia; revisá las fechas de los boletines y su correspondencia con el vuelo.</p></div>
 <label class="field full">PRONAREA · Texto del SMN
 <textarea id="flight-pronarea" required minlength="40" maxlength="12000" rows="6" style="resize:vertical;min-height:125px" placeholder="Pegá el PRONAREA oficial, incluyendo FIR, fecha, período de validez, niveles y fenómenos."></textarea></label>
-<label class="field">Verificado en SMN (fecha y hora de tu equipo)<input id="flight-pronarea-checked" type="datetime-local" required></label>
+
 <div class="field"><span>Fuente de PRONAREA</span><a href="https://www.smn.gob.ar/pronarea" target="_blank" rel="noopener noreferrer">Abrir PRONAREA en SMN</a></div>
 <label class="field full">NOTAM · Textos del AIS / ANAC
 <textarea id="flight-notam" required minlength="30" maxlength="12000" rows="6" style="resize:vertical;min-height:125px" placeholder="Pegá los NOTAM correspondientes a salida, ruta, destino y alternativa, incluyendo validez y códigos."></textarea></label>
-<label class="field">Verificado en AIS (fecha y hora de tu equipo)<input id="flight-notam-checked" type="datetime-local" required></label>
+
 <div class="field"><span>Fuente de NOTAM</span><a href="https://ais.anac.gob.ar/notam" target="_blank" rel="noopener noreferrer">Abrir NOTAM oficiales</a></div>
 </div>
 <div class="warning" style="margin:17px 0">
@@ -396,8 +396,6 @@ el('calc-sun').addEventListener('click',()=>{
      question:$('flight-question').value.trim(),
      pronarea_text:$('flight-pronarea').value.trim(),
      notam_text:$('flight-notam').value.trim(),
-     pronarea_checked_at_utc:iso('flight-pronarea-checked'),
-     notam_checked_at_utc:iso('flight-notam-checked'),
      confirm_ai_cost:true
    };
    // Después de confirmar, ninguna llamada previa a consultar boletines implica gasto.
@@ -417,7 +415,7 @@ el('calc-sun').addEventListener('click',()=>{
      if(response.ai_used!==true||!response.analysis)throw new Error('No se recibió una interpretación completa.');
      latest=response.analysis;
      $('flight-analysis').textContent=latest;
-     $('flight-analysis-time').textContent='Generado: '+new Date(response.generated_at_utc).toLocaleString('es-AR',{timeZone:'America/Argentina/Buenos_Aires'})+' (hora argentina)';
+     $('flight-analysis-time').textContent='Generado: '+new Date(response.generated_at_utc).toLocaleString('es-AR',{timeZone:'America/Argentina/Buenos_Aires'})+' (hora argentina). Documentos manuales recibidos por el servidor sin verificación de vigencia.';
      $('flight-warning').textContent=response.warning||'Documentos manuales sin verificación automática. No reemplaza el briefing oficial.';
      $('flight-result').hidden=false;
      status.textContent='Análisis generado con IA. Revisá especialmente los datos faltantes y las advertencias.';
