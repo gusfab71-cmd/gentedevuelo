@@ -1,265 +1,257 @@
 <!doctype html>
-<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Meteorología Aeronáutica · Gente de Vuelo</title>
-<link rel="stylesheet" href="../assets/comunidad.css?v=20261004">
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#11191c">
+<meta name="description" content="Mesa de consulta aeronáutica de Robert Shimoda: METAR, TAF, SIGMET, PRONAREA, NOTAM, viento, crepúsculo y guía de nubosidad.">
+<title>Mesa de vuelo | Robert Shimoda | Gente de Vuelo</title>
 <style>
-:root{color-scheme:dark}body{background:#171e23;color:#e9edf1}main{max-width:1050px;margin:auto;padding:24px 16px 64px}
-header{background:#222a30;padding:16px;display:flex;gap:20px;align-items:center;flex-wrap:wrap}
-header a{color:#eee}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:12px;margin:20px 0}
-.tile,.panel{border:1px solid #475a65;background:#26343d;border-radius:14px;padding:17px}
-.tile h3{margin:0 0 10px}.tile p{margin:0;color:#b8c6d0;font-size:14px}
-small,.muted{color:#b7c5d0}select,button{font:inherit;padding:10px 13px;color:#f3f6f7;background:#354751;border:1px solid #607681;border-radius:9px;cursor:pointer}
-.controls{display:flex;flex-wrap:wrap;gap:12px;align-items:end;margin:16px 0}.controls label{display:grid;gap:7px}
-table{width:100%;border-collapse:collapse;margin:15px 0}th,td{text-align:left;padding:9px;border-bottom:1px solid #41525e}
-.notice{padding:12px;border-radius:9px;background:#39434a;color:#f5e5ba}
-pre{white-space:pre-wrap;word-break:break-word;max-height:220px;overflow:auto;font-size:12px}
-[hidden]{display:none!important}.accent{color:#f9ac70}
-.shimoda-form{display:grid;gap:12px;margin:14px 0}
-.shimoda-form label{display:grid;gap:7px;font-size:14px}
-.shimoda-form textarea{font:inherit;line-height:1.5;color:#f3f6f7;background:#202a31;border:1px solid #607681;border-radius:9px;padding:12px;min-height:82px;resize:vertical;width:100%;box-sizing:border-box}
-.shimoda-form button{justify-self:start}.shimoda-form button:disabled{opacity:.6;cursor:wait}
-.shimoda-answer{white-space:pre-wrap;line-height:1.55;overflow-wrap:anywhere;background:#1d2931;padding:14px;border-radius:10px;border:1px solid #4b5f6e}
-.shimoda-answer:empty{display:none}
-
-/* Consulta METAR/TAF integrada a Utilidades */
-.meteo-query{margin-top:18px}
-.meteo-form{display:grid;grid-template-columns:minmax(170px,230px) minmax(180px,1fr);gap:14px;align-items:end;margin:15px 0}
-.meteo-form label{display:grid;gap:7px;font-size:14px;font-weight:600}
-.meteo-form input{font:inherit;padding:11px 13px;color:#f3f6f7;background:#202a31;border:1px solid #607681;border-radius:9px;min-width:0;width:100%;box-sizing:border-box}
-.meteo-form button{justify-self:start;grid-column:1/-1;background:#bcced9;color:#18242c;font-weight:700}
-.meteo-form button:disabled{opacity:.6;cursor:wait}
-.meteo-report-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:14px 0}
-.meteo-report-grid article{background:#1e2b34;border:1px solid #526977;border-radius:12px;padding:15px;min-width:0}
-.meteo-report-grid h3{margin:0 0 9px}
-.meteo-report-grid pre{background:#16232b;border:1px solid #3d5260;border-radius:9px;padding:12px;margin:10px 0;max-height:unset;line-height:1.65;font-size:14px;overflow-wrap:anywhere}
-.meteo-meta{font-size:13px;line-height:1.55;color:#c4d0da}
-.meteo-interpretacion{background:#172c38;border-left:3px solid #bed5e2;border-radius:9px;padding:14px;margin:13px 0;line-height:1.6}
-.meteo-official{display:flex;flex-wrap:wrap;gap:9px;margin:13px 0}
-.meteo-official a{display:inline-block;padding:10px 12px;background:#334650;border:1px solid #657e8b;border-radius:9px;color:#e8f2f7;text-decoration:none;font-size:14px}
-.meteo-official a:hover{background:#455e6d}
-.meteo-shortcut{display:inline-block;color:inherit;text-decoration:none}
-.meteo-shortcut:hover{text-decoration:underline}
-@media(max-width:680px){.meteo-form,.meteo-report-grid{grid-template-columns:1fr}.meteo-form button{grid-column:1}}
-
-.meteo-form select{font:inherit;padding:11px 13px;color:#f3f6f7;background:#202a31;border:1px solid #607681;border-radius:9px;min-width:0;width:100%;box-sizing:border-box}
-.meteo-report-grid{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
-.meteo-report-grid article.meteo-unconnected{border-style:dashed}
-.meteo-report-grid a{color:#d0e8f6}
-.meteo-source-note{font-size:13px;color:#c5d2db;line-height:1.55}
+:root{color-scheme:dark;--bg:#101719;--surface:#1a2426;--surface2:#212d2f;--surface3:#2b3739;--line:#3c4a4b;--text:#edf0ee;--muted:#b4c0bd;--accent:#ff994b;--accent2:#ffbc78;--mint:#8cddc4;--white:#f3efe7;--radius:18px}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.55 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}button,input,select,textarea{font:inherit}a{color:var(--accent2)}a:hover{color:#ffe0bb}button{cursor:pointer}button:disabled{cursor:wait;opacity:.65}input,select,textarea{width:100%;background:#121a1d;border:1px solid #65716e;border-radius:11px;color:var(--text);padding:11px 12px;min-width:0}input:focus,select:focus,textarea:focus,button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:3px}input[type=number]{font-variant-numeric:tabular-nums}p{margin:9px 0}h1,h2,h3{line-height:1.22}h2{font-size:22px;letter-spacing:-.025em;margin:0 0 10px}h3{font-size:16px;margin:0 0 7px}strong{font-weight:710}small{font-size:12px}pre{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.65;font:13px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace;margin:12px 0 0;padding:14px;border:1px solid #4b5d60;border-radius:12px;background:#111b1e;color:#e2e9e8}[hidden]{display:none!important}
+.top{border-bottom:1px solid #465054;background:#141d20}.top-inner{max-width:1270px;padding:14px 24px;margin:auto;display:flex;justify-content:space-between;gap:18px;align-items:center}.brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--text)}.mark{height:43px;width:43px;display:grid;place-items:center;background:var(--accent);border-radius:13px;color:#171b1b;font-size:18px;font-weight:900;letter-spacing:-.06em}.brand-name{display:grid;line-height:1.15;font-weight:850;letter-spacing:.04em;font-size:14px}.brand-name span{font-weight:550;font-size:11px;color:var(--muted);letter-spacing:.015em;margin-top:5px}.toplinks{display:flex;gap:18px;font-size:13px}.toplinks a{text-decoration:none;color:#d2dad7}
+.wrap{max-width:1270px;margin:0 auto;padding:25px 24px 70px}.eyebrow{font-size:11px;color:var(--accent2);font-weight:800;letter-spacing:.18em;text-transform:uppercase}.hero{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(240px,.65fr);gap:20px;align-items:stretch;margin-bottom:21px}.hero-main{padding:32px 36px 33px;border:1px solid #485354;border-radius:23px;background:radial-gradient(80% 90% at 100% 0%,#4c352a 0%,#22292b 45%,#1a2426 100%);position:relative;overflow:hidden}.hero-main:after{content:"";position:absolute;width:340px;height:340px;right:-145px;top:-165px;border:1px solid #be8e69;border-radius:100%;box-shadow:0 0 0 38px #eea66a0b,0 0 0 86px #eea66a09;pointer-events:none}.hero h1{font-size:clamp(31px,4.5vw,52px);letter-spacing:-.055em;margin:10px 0 10px;max-width:720px}.hero h1 em{font-style:normal;color:var(--accent)}.hero p{color:#cbd5d0;max-width:630px}.hero-side{border:1px solid #495858;border-radius:23px;padding:27px;background:#222d2d;display:flex;flex-direction:column;justify-content:space-between;gap:15px}.dial{width:100%;max-width:165px;aspect-ratio:1;border:1px solid #78817c;border-radius:50%;background:repeating-radial-gradient(circle,transparent 0px,transparent 28px,#ffffff0f 29px,#ffffff0f 30px),linear-gradient(90deg,transparent 49.7%,#ffffff24 50%,transparent 50.3%),linear-gradient(transparent 49.7%,#ffffff24 50%,transparent 50.3%);display:grid;place-items:center;color:var(--accent);font-size:33px;font-weight:900}.hero-side p{font-size:12px;margin:0}.hero-side strong{color:var(--accent2)}
+.jump{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:22px}.jump a{border:1px solid #52605f;padding:10px 15px;text-decoration:none;border-radius:30px;color:#e4eae6;font-size:13px}.jump a:hover{border-color:var(--accent);background:#342821}.layout{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(295px,.85fr);gap:18px;align-items:start}.stack{display:grid;gap:18px}.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:23px;min-width:0}.card-header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:15px}.card-kicker{font-size:11px;letter-spacing:.13em;text-transform:uppercase;font-weight:800;color:var(--accent2)}.sub{color:var(--muted);font-size:13px;line-height:1.55}.field{display:grid;gap:6px;font-size:13px;font-weight:650}.form{display:grid;grid-template-columns:1fr 1fr;gap:13px}.full{grid-column:1/-1}.actions{display:flex;align-items:center;gap:13px;flex-wrap:wrap;margin-top:15px}.primary{background:var(--accent);color:#1d1b19;border:0;border-radius:12px;font-weight:830;padding:12px 19px}.secondary{background:transparent;color:var(--text);border:1px solid #72807b;border-radius:12px;padding:11px 15px}.feedback{color:#dbd4cb;font-size:13px;line-height:1.5}.report-summary{margin-top:20px;border-top:1px solid #4a5453;padding-top:17px}.report-summary h3{font-size:17px;margin-bottom:9px}.assistant{border-left:4px solid var(--accent);padding:15px 16px;background:#302d29;border-radius:3px 10px 10px 3px}.assistant p{font-size:16px;color:#f2e7d9}.status-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:9px}.status-tile{border:1px solid #536061;border-radius:12px;background:#172023;padding:12px 10px;min-width:0}.status-tile strong{display:block;color:#f0f2eb;font-size:13px}.status-tile span{display:block;color:var(--muted);font-size:11px;margin-top:5px}.status-tile.good{border-color:#4f8e77}.status-tile.pending{border-color:#956b48}.status-tile.bad{border-color:#957263}.status-tile.good span{color:var(--mint)}.status-tile.pending span{color:var(--accent2)}
+.report{border:1px solid #4b5c5c;border-radius:13px;background:#182326;margin:11px 0;overflow:hidden}.report summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:15px;gap:12px}.report summary::-webkit-details-marker{display:none}.report summary:after{content:"+";font-size:22px;color:var(--accent2)}.report[open] summary:after{content:"−"}.report summary span{color:var(--muted);font-size:12px}.report .content{border-top:1px solid #425052;padding:14px 15px}.report .content p{font-size:13px;color:#c8d1ce}.report a{font-size:13px}.source-notes{border:1px dashed #745f4e;padding:13px 14px;border-radius:12px;color:#d8cabe;font-size:12px;margin-top:14px}
+.metric-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:13px}.metric{background:#121d1f;border-radius:12px;padding:13px;border:1px solid #3e4a4b}.metric strong{display:block;font-size:19px;letter-spacing:-.02em}.metric span{font-size:12px;color:var(--muted)}
+.cloud-list{display:grid;gap:11px}.cloud-item{display:grid;grid-template-columns:65px 62px 1fr;align-items:center;gap:11px;padding:8px 0;border-bottom:1px solid #354345}.cloud-item:last-child{border:0}.cloud-symbol{width:62px;height:62px;border-radius:50%;border:2px solid #a8bab7;display:grid;place-items:center;background:conic-gradient(var(--accent) 0deg var(--fill),#25373b var(--fill) 360deg);position:relative}.cloud-symbol:after{content:"";position:absolute;inset:4px;border:1px dashed #dbe1df70;border-radius:50%}.cloud-code{font-size:18px;font-weight:900;color:var(--accent2);letter-spacing:.02em}.cloud-desc{font-size:12px;color:var(--muted)}.cloud-amount{color:#f2f1ed;font-weight:700;font-size:14px}
+.math-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.math-out{background:#121d1f;border:1px solid #435653;border-radius:12px;padding:15px}.math-out strong{font-size:24px;display:block}.math-out span{color:var(--muted);font-size:12px}.warning{padding:12px 14px;background:#302b25;border:1px solid #775940;border-radius:12px;color:#ecdfd2;font-size:12px}
+.quicklinks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.quicklinks a{display:block;text-decoration:none;padding:15px;border-radius:12px;border:1px solid #586365;background:#172024}.quicklinks a strong{font-size:14px;color:#ffca98;display:block}.quicklinks a span{display:block;font-size:12px;color:var(--muted);margin-top:5px}
+.checks{display:grid;gap:8px}.checks p{display:flex;gap:10px;align-items:flex-start;margin:0;color:var(--muted);font-size:13px}.bullet{height:8px;width:8px;border-radius:50%;background:var(--accent);margin-top:8px;flex:none}.sitefoot{margin-top:25px;color:#a9b4b0;font-size:12px;border-top:1px solid #3e4a49;padding-top:20px}
+@media(max-width:870px){.layout,.hero{grid-template-columns:1fr}.hero-side{display:none}}@media(max-width:620px){.wrap{padding:16px 12px 50px}.top-inner{padding:12px}.toplinks{gap:9px}.hero-main{padding:23px 20px}.card{padding:18px}.form,.math-grid,.metric-grid{grid-template-columns:1fr 1fr}.status-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.quicklinks{grid-template-columns:1fr}.cloud-item{grid-template-columns:55px 54px 1fr;gap:8px}.cloud-symbol{width:52px;height:52px}.cloud-code{font-size:15px}}@media(max-width:390px){.form,.metric-grid,.math-grid{grid-template-columns:1fr}.status-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
 <script>document.documentElement.classList.add('auth-pending')</script>
 <style>html.auth-pending body{visibility:hidden}</style>
-<script src="../assets/supabase-2.117.2.min.js"></script><script src="../assets/community-config.js"></script>
-<script src="../assets/auth-guard.js?v=20261011actividadavisos1"></script>
-</head><body>
-<header><strong>GENTE DE VUELO</strong><a href="index.html">Utilidades</a><a href="../index.html">Portada</a></header>
-<main><h1>Meteorología Aeronáutica</h1><p class="muted">Robert Shimoda — Asistente Aeronáutico de Gente de Vuelo</p>
-<div class="cards">
-<section class="tile"><h3 class="accent">PRONAREA</h3><p>Vientos y temperaturas en altura · FIR Ezeiza</p></section>
-<section class="tile"><h3><a class="meteo-shortcut" href="#meteo-actual">METAR</a></h3><p>Consulta automática · observaciones</p></section>
-<section class="tile"><h3><a class="meteo-shortcut" href="#meteo-actual">TAF</a></h3><p>Consulta automática · pronósticos de aeródromo</p></section>
-<section class="tile"><h3><a class="meteo-shortcut" href="#meteo-enlaces">SIGMET</a></h3><p>Consulta al SMN · fuente externa</p></section>
-<section class="tile"><h3>Viento en pista</h3><p><a href="flightprep-nav.html">Abrir FlightPrep NAV</a></p></section>
-<section class="tile"><h3>Aeródromos</h3><p>Próximamente</p></section>
-</div>
-
-<section class="panel meteo-query" id="meteo-actual" aria-labelledby="meteo-title">
-<h2 id="meteo-title">Consulta integrada · Robert Shimoda</h2>
-<p class="muted">Consultá METAR, TAF y posibles SIGMET internacionales de la FIR elegida. PRONAREA y NOTAM aparecen como fuentes pendientes de integración automática, con enlace oficial para verificarlos. Shimoda responde en hasta 20 palabras.</p>
-<form id="meteo-consulta" class="meteo-form">
-<label for="meteo-oaci">Código OACI
-<input id="meteo-oaci" name="icao" type="text" required minlength="4" maxlength="4" pattern="[sS][aA][a-zA-Z]{2}" value="SAEZ" placeholder="SAEZ" autocomplete="off" autocapitalize="characters"></label>
-<label for="meteo-fir">FIR que corresponde a la consulta
-<select id="meteo-fir" name="fir" required>
-<option value="SAEF">Ezeiza · SAEF</option>
-<option value="SACF">Córdoba · SACF</option>
-<option value="SAMF">Mendoza · SAMF</option>
-<option value="SARR">Resistencia · SARR</option>
-<option value="SAVF">Comodoro Rivadavia · SAVF</option>
-</select></label>
-<label for="meteo-pregunta">Pregunta a Shimoda (opcional)
-<input id="meteo-pregunta" name="question" type="text" maxlength="220" placeholder="¿Qué informa sobre viento y visibilidad?"></label>
-<button id="meteo-enviar" type="submit">Consultar información disponible</button>
+<script src="../assets/supabase-2.117.2.min.js"></script>
+<script src="../assets/community-config.js"></script>
+<script src="../assets/auth-guard.js?v=20261013registro2"></script>
+</head>
+<body>
+<header class="top"><div class="top-inner"><a class="brand" href="../index.html"><span class="mark">GDV</span><span class="brand-name">GENTE DE VUELO<span>Centro de consulta aeronáutica</span></span></a><nav class="toplinks"><a href="index.html">Utilidades</a><a href="../index.html#shimoda">Shimoda</a><a href="../index.html">Portada</a></nav></div></header>
+<main class="wrap">
+<section class="hero"><div class="hero-main"><span class="eyebrow">Robert Shimoda / herramienta de consulta</span><h1>Tu mesa de <em>vuelo</em>.</h1><p>Datos meteorológicos, lectura de boletines y herramientas de cálculo en un único espacio. Diseñado para consultar con criterio, no para reemplazar la información oficial.</p></div><aside class="hero-side"><div class="dial" aria-hidden="true">✈</div><div><span class="eyebrow">Información crítica</span><p>Verificá siempre <strong>emisión, vigencia, ruta y fuentes oficiales</strong> antes de planificar una operación.</p></div></aside></section>
+<nav class="jump" aria-label="Secciones"><a href="#consultar">Consultar</a><a href="#boletines">Boletines</a><a href="#viento">Viento en pista</a><a href="#nubosidad">Nubosidad</a><a href="#crepusculo">Crepúsculo</a><a href="#fuentes">Fuentes oficiales</a></nav>
+<div class="layout">
+<div class="stack">
+<section class="card" id="consultar">
+<div class="card-header"><div><span class="card-kicker">01 / Consulta</span><h2>Información aeronáutica</h2></div><span class="sub">Argentina · Selección manual</span></div>
+<p class="sub">Se recuperan METAR, TAF y posibles SIGMET internacionales. PRONAREA y NOTAM deben verificarse en sus sitios oficiales mientras no haya conexión automática certificada.</p>
+<form id="brief-form" class="form">
+<label class="field">Aeródromo (OACI)<input id="icao" required minlength="4" maxlength="4" pattern="[sS][aA][A-Za-z]{2}" autocomplete="off" value="SAEZ" placeholder="SAEZ"></label>
+<label class="field">FIR <select id="fir" required><option value="SAEF">Ezeiza · SAEF</option><option value="SACF">Córdoba · SACF</option><option value="SAMF">Mendoza · SAMF</option><option value="SARR">Resistencia · SARR</option><option value="SAVF">Comodoro Rivadavia · SAVF</option></select></label>
+<label class="field full">Consulta para Robert (opcional)<input id="question" maxlength="220" placeholder="¿Qué informa sobre viento, visibilidad y nubes?"></label>
+<div class="full"><button class="primary" id="ask" type="submit">Obtener informe disponible</button><p id="status" class="feedback" role="status" aria-live="polite">Iniciá sesión para consultar los datos.</p></div>
 </form>
-<p class="meteo-meta">Ejemplos: SAEZ (Ezeiza), SABE (Aeroparque), SACO (Córdoba), SAAR (Rosario). Confirmá la FIR seleccionada; un aeródromo aislado no describe toda la ruta.</p>
-<p id="meteo-estado" role="status" aria-live="polite">Para consultar, iniciá sesión en Gente de Vuelo.</p>
-<div id="meteo-resultado" hidden>
-<p id="meteo-fecha" class="meteo-meta"></p>
-<div class="meteo-interpretacion">
-<strong>Interpretación de Robert Shimoda</strong>
-<p id="meteo-resumen"></p>
-<p class="meteo-meta" id="meteo-resumen-nota"></p>
+<div id="brief-result" class="report-summary" hidden>
+<div class="card-header"><h3 id="fetched-title">Consulta</h3><button class="secondary" type="button" id="copy-report">Copiar informe</button></div>
+<p class="sub" id="fetched-at"></p>
+<div class="assistant"><strong>Robert Shimoda · interpretación breve</strong><p id="assistant-text"></p><small id="assistant-note"></small></div>
+<div class="metric-grid" id="metar-metrics" hidden>
+<div class="metric"><span>Viento observado</span><strong id="wind-metric">—</strong></div>
+<div class="metric"><span>Visibilidad informada</span><strong id="vis-metric">—</strong></div>
+<div class="metric"><span>Capas de nubes</span><strong id="cloud-metric">—</strong></div>
 </div>
-<div class="meteo-report-grid">
-<article><h3>METAR · Observación</h3><pre id="meteo-metar"></pre><p id="meteo-metar-nota" class="meteo-meta"></p></article>
-<article><h3>TAF · Pronóstico</h3><pre id="meteo-taf"></pre><p id="meteo-taf-nota" class="meteo-meta"></p></article>
-<article><h3>SIGMET · FIR seleccionada</h3><pre id="meteo-sigmet">Pendiente de consulta.</pre><p id="meteo-sigmet-nota" class="meteo-meta"></p><a href="https://www.smn.gob.ar/mensajes-sigmet" target="_blank" rel="noopener noreferrer">Verificar SIGMET en el SMN</a></article>
-<article class="meteo-unconnected"><h3>PRONAREA · SMN</h3><p id="meteo-pronarea">Integración automática pendiente.</p><p id="meteo-pronarea-nota" class="meteo-meta">No se utilizará el boletín cargado manualmente.</p><a href="https://www.smn.gob.ar/pronarea" target="_blank" rel="noopener noreferrer">Consultar PRONAREA oficial</a></article>
-<article class="meteo-unconnected"><h3>NOTAM · ANAC / EANA</h3><p id="meteo-notam">Integración automática pendiente.</p><p id="meteo-notam-nota" class="meteo-meta">La consulta oficial es indispensable para operaciones reales.</p><a href="https://ais.anac.gob.ar/notam" target="_blank" rel="noopener noreferrer">Consultar NOTAM oficiales</a></article>
-</div>
-<p class="meteo-meta">Los METAR, TAF y posibles SIGMET internacionales provienen de NOAA Aviation Weather Center. Los SIGMET recuperados no forman una búsqueda completa de la FIR. La hora de consulta no acredita vigencia; PRONAREA y NOTAM aún no se descargan automáticamente.</p>
-</div>
-<p class="notice">Esta consulta es parcial y educativa. Para planificar un vuelo real necesitás ruta, fecha, altitud y verificación oficial de PRONAREA, METAR, TAF, SIGMET, NOTAM y cartas de tiempo significativo. No sustituye el briefing ARO-AIS ni la decisión del piloto.</p>
-<div id="meteo-enlaces" class="meteo-official" aria-label="Fuentes oficiales de meteorología e información aeronáutica">
-<a href="https://www.smn.gob.ar/pronarea" target="_blank" rel="noopener noreferrer">PRONAREA · SMN</a>
-<a href="https://www.smn.gob.ar/metar" target="_blank" rel="noopener noreferrer">METAR · SMN</a>
-<a href="https://www.smn.gob.ar/taf" target="_blank" rel="noopener noreferrer">TAF · SMN</a>
-<a href="https://www.smn.gob.ar/mensajes-sigmet" target="_blank" rel="noopener noreferrer">SIGMET · SMN</a>
-<a href="https://www.smn.gob.ar/cartas-de-tiempo-significativo-sfcfl250" target="_blank" rel="noopener noreferrer">Cartas meteorológicas · SMN</a>
-<a href="https://ais.anac.gob.ar/notam" target="_blank" rel="noopener noreferrer">NOTAM · ANAC</a>
 </div>
 </section>
-<section class="panel"><h2>PRONAREA · FIR Ezeiza</h2>
-<p class="notice">Prueba privada. El boletín almacenado no tiene fecha de vigencia confirmada. No utilizar para planificar ni realizar vuelos.</p>
-<p id="status" role="status">Comprobando acceso…</p>
-<div id="consultas" hidden>
-<p id="boletinInfo"></p>
-<div class="controls"><label>Sector del pronóstico<select id="zona"></select></label>
-<label>Nivel de vuelo<select id="nivel"></select></label><button id="consultar" type="button">Consultar</button></div>
-<div id="resultado" aria-live="polite"></div>
-<details><summary>Fenómenos significativos del boletín</summary><p id="sigfenom"></p></details>
-<details><summary>Texto original</summary><pre id="textoOriginal"></pre></details>
+<section class="card" id="boletines">
+<div class="card-header"><div><span class="card-kicker">02 / Fuentes consultadas</span><h2>Boletines y vigencia</h2></div></div>
+<div class="status-grid" aria-label="Estado por fuente">
+<div class="status-tile" id="s-metar"><strong>METAR</strong><span>Sin consultar</span></div>
+<div class="status-tile" id="s-taf"><strong>TAF</strong><span>Sin consultar</span></div>
+<div class="status-tile" id="s-sigmet"><strong>SIGMET</strong><span>Sin consultar</span></div>
+<div class="status-tile pending" id="s-pronarea"><strong>PRONAREA</strong><span>Consulta oficial</span></div>
+<div class="status-tile pending" id="s-notam"><strong>NOTAM</strong><span>Consulta oficial</span></div>
+</div>
+<details class="report" id="r-metar"><summary><strong>METAR · Observación</strong><span id="label-metar">Sin consultar</span></summary><div class="content"><p>Reportes recuperados desde Aviation Weather Center. Verificá la emisión; no todos los aeródromos informan continuamente.</p><pre id="raw-metar">Todavía no hay datos.</pre><a href="https://www.smn.gob.ar/metar" target="_blank" rel="noopener noreferrer">Verificar METAR en SMN</a></div></details>
+<details class="report" id="r-taf"><summary><strong>TAF · Pronóstico</strong><span id="label-taf">Sin consultar</span></summary><div class="content"><p>Comprobá período de validez y grupos TEMPO, BECMG y PROB cuando existan.</p><pre id="raw-taf">Todavía no hay datos.</pre><a href="https://www.smn.gob.ar/taf" target="_blank" rel="noopener noreferrer">Verificar TAF en SMN</a></div></details>
+<details class="report" id="r-sigmet"><summary><strong>SIGMET · Fenómenos significativos</strong><span id="label-sigmet">Sin consultar</span></summary><div class="content"><p>La búsqueda de SIGMET internacionales es complementaria y no necesariamente exhaustiva. Sin coincidencias no significa ausencia de SIGMET.</p><pre id="raw-sigmet">Todavía no hay datos.</pre><a href="https://www.smn.gob.ar/mensajes-sigmet" target="_blank" rel="noopener noreferrer">Verificar todos los SIGMET oficiales</a></div></details>
+<details class="report"><summary><strong>PRONAREA · Pronóstico por FIR</strong><span>Pendiente de conexión directa</span></summary><div class="content"><p>El pronóstico de área debe obtenerse del SMN y verificarse para el sector, altura, hora y ruta. No se utilizan datos manuales antiguos.</p><a href="https://www.smn.gob.ar/pronarea" target="_blank" rel="noopener noreferrer">Abrir PRONAREA oficial</a></div></details>
+<details class="report"><summary><strong>NOTAM · Avisos operacionales</strong><span>Pendiente de conexión directa</span></summary><div class="content"><p>Consultá los NOTAM de salida, ruta, destino y alternativa en el AIS oficial. Esta aplicación no confirma cierres de pista.</p><a href="https://ais.anac.gov.ar/notam" target="_blank" rel="noopener noreferrer">Abrir NOTAM en ANAC</a></div></details>
+<p class="source-notes">La hora de consulta no equivale a la de emisión. Los textos se presentan sin certificación operacional; comprobá todas las fuentes oficiales.</p>
+</section>
+<section class="card" id="viento">
+<div class="card-header"><div><span class="card-kicker">03 / Cálculo</span><h2>Viento en pista</h2></div><span class="sub">Cálculo educativo</span></div>
+<p class="sub">Introducí dirección del viento, velocidad y rumbo del eje de pista en la <strong>misma referencia angular</strong> (verdadero o magnético). El METAR suele expresar dirección verdadera; el número de pista es magnético.</p>
+<div class="form">
+<label class="field">Rumbo del eje de pista (°)<input id="runway" type="number" min="0" max="360" step="1" value="130"></label>
+<label class="field">Viento desde (°)<input id="wind-dir" type="number" min="0" max="360" step="1" value="180"></label>
+<label class="field">Velocidad (kt)<input id="wind-speed" type="number" min="0" max="250" step=".1" value="12"></label>
+<label class="field">Ráfaga (kt, opcional)<input id="wind-gust" type="number" min="0" max="250" step=".1" placeholder="Sin dato"></label>
+</div>
+<div class="math-grid" style="margin:15px 0"><div class="math-out"><strong id="headwind">—</strong><span>Frente / cola</span></div><div class="math-out"><strong id="crosswind">—</strong><span>Viento cruzado</span></div><div class="math-out"><strong id="gust-result">—</strong><span>Con ráfagas</span></div></div>
+<p id="wind-warning" class="warning" role="status">Valores ilustrativos. No se compara contra limitaciones de la aeronave.</p>
+<a href="flightprep-nav.html">Abrir FlightPrep NAV para navegación y cálculos adicionales</a>
+</section>
+<section class="card" id="crepusculo">
+<div class="card-header"><div><span class="card-kicker">04 / Luz diurna</span><h2>Sol y crepúsculo</h2></div><span class="sub">Estimación astronómica</span></div>
+<p class="sub">Ingresá coordenadas y fecha para estimar amanecer, puesta de sol y fin de crepúsculo civil. No utilices este cálculo aproximado como hora reglamentaria de operación.</p>
+<div class="form">
+<label class="field">Latitud (°; sur negativa)<input id="latitude" type="number" min="-90" max="90" step=".0001" placeholder="Ej.: -34.8"></label>
+<label class="field">Longitud (°; oeste negativa)<input id="longitude" type="number" min="-180" max="180" step=".0001" placeholder="Ej.: -58.5"></label>
+<label class="field">Fecha<input type="date" id="sun-date"></label>
+<div class="field"><span>Zona horaria de referencia</span><p class="sub">Argentina · UTC−03 (hora oficial)</p></div>
+</div><div class="actions"><button class="secondary" id="calc-sun" type="button">Calcular estimación</button></div>
+<div class="math-grid" style="margin:15px 0"><div class="math-out"><strong id="sunrise">—</strong><span>Amanecer</span></div><div class="math-out"><strong id="sunset">—</strong><span>Puesta de sol</span></div><div class="math-out"><strong id="civil-dusk">—</strong><span>Fin crepúsculo civil</span></div></div>
+<p id="sun-state" class="sub" role="status">Se requiere una ubicación. Consultá la AIP y datos oficiales para operaciones.</p>
+</section>
+</div>
+<aside class="stack">
+<section class="card" id="nubosidad">
+<div class="card-header"><div><span class="card-kicker">05 / Interpretación</span><h2>Lectura de nubosidad</h2></div></div>
+<p class="sub">Cobertura de nubes expresada en octas. Las cifras corresponden al código observado; el techo depende de la altura de BKN, OVC o visibilidad vertical.</p>
+<div class="cloud-list">
+<div class="cloud-item"><div class="cloud-symbol" style="--fill:0deg"></div><div><div class="cloud-code">SKC</div><div class="cloud-amount">0/8</div></div><div class="cloud-desc">Cielo despejado</div></div>
+<div class="cloud-item"><div class="cloud-symbol" style="--fill:65deg"></div><div><div class="cloud-code">FEW</div><div class="cloud-amount">1–2/8</div></div><div class="cloud-desc">Pocas nubes</div></div>
+<div class="cloud-item"><div class="cloud-symbol" style="--fill:160deg"></div><div><div class="cloud-code">SCT</div><div class="cloud-amount">3–4/8</div></div><div class="cloud-desc">Nubes dispersas</div></div>
+<div class="cloud-item"><div class="cloud-symbol" style="--fill:265deg"></div><div><div class="cloud-code">BKN</div><div class="cloud-amount">5–7/8</div></div><div class="cloud-desc">Fragmentado · puede definir techo</div></div>
+<div class="cloud-item"><div class="cloud-symbol" style="--fill:360deg"></div><div><div class="cloud-code">OVC</div><div class="cloud-amount">8/8</div></div><div class="cloud-desc">Cubierto · puede definir techo</div></div>
+</div>
+<p class="source-notes">1 octa = 1/8 del cielo. <strong>Ceiling:</strong> altura AGL de la capa BKN/OVC más baja o visibilidad vertical cuando corresponda. NSC, NCD y CAVOK tienen significados particulares; no son automáticamente sinónimos de SKC.</p>
+</section>
+<section class="card" id="fuentes">
+<div class="card-header"><div><span class="card-kicker">06 / Enlaces</span><h2>Directorio aeronáutico</h2></div></div>
+<div class="quicklinks">
+<a href="https://ais.anac.gov.ar/" target="_blank" rel="noopener noreferrer"><strong>AIP y cartas</strong><span>Publicaciones, fichas, procedimientos y cartas de aeródromo</span></a>
+<a href="https://ais.anac.gov.ar/notam" target="_blank" rel="noopener noreferrer"><strong>NOTAM</strong><span>Información operacional oficial</span></a>
+<a href="https://www.smn.gob.ar/pronarea" target="_blank" rel="noopener noreferrer"><strong>PRONAREA</strong><span>Pronóstico de área oficial por FIR</span></a>
+<a href="https://www.smn.gob.ar/metar" target="_blank" rel="noopener noreferrer"><strong>AEROMET / METAR</strong><span>Buscar información de otra estación, si falta un METAR</span></a>
+<a href="https://www.smn.gob.ar/mensajes-sigmet" target="_blank" rel="noopener noreferrer"><strong>SIGMET</strong><span>Fenómenos significativos del SMN</span></a>
+<a href="https://www.smn.gob.ar/cartas-de-tiempo-significativo-sfcfl250" target="_blank" rel="noopener noreferrer"><strong>Cartas meteorológicas</strong><span>Análisis del tiempo significativo</span></a>
 </div>
 </section>
-<section class="panel" style="margin-top:16px"><h2>Preguntale a Robert Shimoda</h2>
-<p class="notice"><strong>Prueba privada para administración.</strong> El PRONAREA de esta sección no tiene vigencia confirmada. Las respuestas son educativas y no deben utilizarse para decidir ni planificar vuelos.</p>
-<form id="shimoda-form" class="shimoda-form" hidden>
-<label for="shimoda-pregunta">Tu consulta sobre el boletín cargado
-<textarea id="shimoda-pregunta" required minlength="3" maxlength="900" placeholder="Por ejemplo: ¿Qué significa SIGFENOM en este boletín?"></textarea></label>
-<button id="shimoda-enviar" type="submit">Preguntar a Shimoda</button>
-</form>
-<p id="shimoda-estado" role="status" aria-live="polite">El asistente estará disponible cuando se compruebe el acceso y se cargue el boletín.</p>
-<div id="shimoda-respuesta" class="shimoda-answer" aria-live="polite"></div>
-<a href="../index.html#shimoda">Ir al Rincón de Robert Shimoda</a>
-</section></main>
+<section class="card">
+<div class="card-header"><div><span class="card-kicker">07 / Control previo</span><h2>Antes de volar</h2></div></div>
+<div class="checks">
+<p><span class="bullet"></span><span>Comprobar METAR y TAF de salida, destino y alternativa.</span></p>
+<p><span class="bullet"></span><span>Consultar PRONAREA y SIGMET sobre la ruta y nivel de vuelo.</span></p>
+<p><span class="bullet"></span><span>Revisar NOTAM, AIP, rutas, pistas y limitaciones aplicables.</span></p>
+<p><span class="bullet"></span><span>Confirmar luz diurna, combustible y márgenes de la aeronave.</span></p>
+</div>
+<p class="source-notes">Las alertas visuales de esta página no son notificaciones automáticas ni vigilancia meteorológica en segundo plano.</p>
+</section>
+</aside>
+</div>
+<footer class="sitefoot">Gente de Vuelo · Robert Shimoda, asistente de carácter educativo. Toda decisión aeronáutica requiere verificación oficial vigente y responsabilidad del piloto al mando.</footer>
+</main>
 <script>
-(async()=>{
-const status=document.getElementById('status'),client=window.GDV_AUTH?.client;
-if(!client){status.textContent='No se encontró la configuración de acceso.';return}
-const {data:{user}}=await client.auth.getUser();
-if(!user){status.textContent='Ingresá a Gente de Vuelo para continuar.';return}
-const {data:admin}=await client.from('site_admins').select('user_id').eq('user_id',user.id).maybeSingle();
-if(!admin){status.textContent='El módulo PRONAREA está reservado para pruebas de administración.';return}
-const {data,error}=await client.from('gdv_pronarea_bulletins').select('raw_text,issued_at,valid_until,validity_raw,verification_status,created_at').eq('fir','EZE').order('created_at',{ascending:false}).limit(1);
-if(error||!data?.length){status.textContent=error?'No fue posible consultar el boletín.':'Todavía no hay un boletín cargado.';return}
-const b=data[0],raw=b.raw_text||'';
-const shimodaForm=document.getElementById('shimoda-form'),shimodaEstado=document.getElementById('shimoda-estado');
-const shimodaRespuesta=document.getElementById('shimoda-respuesta'),shimodaBoton=document.getElementById('shimoda-enviar');
-shimodaForm.hidden=false;
-shimodaEstado.textContent='Podés realizar consultas didácticas sobre este boletín de prueba. Robert no confirmará condiciones para volar.';
-shimodaForm.addEventListener('submit',async event=>{
- event.preventDefault();
- const question=document.getElementById('shimoda-pregunta').value.trim();
- if(question.length<3||question.length>900){shimodaEstado.textContent='La consulta debe tener entre 3 y 900 caracteres.';return;}
- shimodaBoton.disabled=true;
- shimodaEstado.textContent='Consultando a Robert Shimoda…';
- shimodaRespuesta.textContent='';
- try {
-   const {data:response,error:requestError}=await client.functions.invoke('robert-pronarea-test',{body:{question}});
-   if(requestError||!response?.ok) {
-     let message=response?.error||requestError?.message||'La consulta no pudo completarse.';
-     if(requestError?.context?.json) {
-       const details=await requestError.context.json().catch(()=>null);
-       if(details?.error)message=details.error;
-     }
-     throw new Error(message);
-   }
-   shimodaRespuesta.textContent=response.answer;
-   shimodaEstado.textContent='Respuesta experimental basada únicamente en el PRONAREA cargado manualmente. Fuente sin vigencia confirmada.';
- } catch(error) {
-   shimodaEstado.textContent='No se pudo obtener la respuesta: '+(error?.message||'Error de conexión.');
- } finally {
-   shimodaBoton.disabled=false;
- }
-});
-status.textContent='Boletín de prueba disponible (vigencia sin verificar).';
-document.getElementById('boletinInfo').textContent='Referencia: '+(b.validity_raw||'sin datos')+' · Cargado: '+new Date(b.created_at).toLocaleString('es-AR');
-document.getElementById('textoOriginal').textContent=raw;
-const sig=raw.match(/SIGFENOM:\s*([\s\S]*?)\s+WIND\/T:/i);
-document.getElementById('sigfenom').textContent=sig?.[1]||'No disponible';
-const wind=raw.match(/WIND\/T:\s*([\s\S]*?)\s+FCST:/i);
-if(!wind){status.textContent='No se encontró la sección WIND/T.';return}
-const groups=[...wind[1].matchAll(/\b([A-Z]{2,}(?:-[A-Z]{2,})*)\s+((?:FL\d{3}\/\d{3}\d{2,3}[PM]\d{2}\s*)+)/gi)];
-const sections=groups.map(g=>({name:g[1],levels:[...g[2].matchAll(/FL(\d{3})\/(\d{3})(\d{2,3})([PM])(\d{2})/gi)].map(m=>({level:'FL'+m[1],dir:Number(m[2]),kt:Number(m[3]),temp:(m[4]==='M'?-1:1)*Number(m[5])}))})).filter(z=>z.levels.length);
-if(!sections.length){status.textContent='No fue posible identificar los niveles de viento.';return}
-const zona=document.getElementById('zona'),nivel=document.getElementById('nivel'),resultado=document.getElementById('resultado');
-sections.forEach((s,i)=>zona.add(new Option(s.name,String(i))));
-function levels(){nivel.replaceChildren();sections[Number(zona.value)].levels.forEach((v,i)=>nivel.add(new Option(v.level+' · '+Number(v.level.slice(2))*100+' pies',String(i))))}
-zona.addEventListener('change',()=>{levels();resultado.textContent=''});levels();
-document.getElementById('consultar').addEventListener('click',()=>{
- const g=sections[Number(zona.value)],x=g.levels[Number(nivel.value)];
- resultado.replaceChildren();
- const h=document.createElement('h3');h.textContent=g.name+' · '+x.level;
- const p=document.createElement('p');p.textContent='Viento: '+String(x.dir).padStart(3,'0')+'° a '+x.kt+' nudos · Temperatura: '+(x.temp>0?'+':'')+x.temp+' °C';
- resultado.append(h,p);
-});
-document.getElementById('consultas').hidden=false;
-})();
-</script>
-<script>
-/* Consola meteorológica: consulta independiente del PRONAREA de pruebas privadas. */
-(()=>{
-  'use strict';
-  const form=document.getElementById('meteo-consulta');
-  const state=document.getElementById('meteo-estado');
-  const button=document.getElementById('meteo-enviar');
-  const result=document.getElementById('meteo-resultado');
-  const formatUTC=(value)=>{
-    const date=new Date(value);
-    return Number.isFinite(date.getTime())
-      ? date.toLocaleString('es-AR',{timeZone:'UTC',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:false})+' UTC'
-      : 'fecha de consulta no disponible';
-  };
-  form.addEventListener('submit',async event=>{
-    event.preventDefault();
+(function(){
+'use strict';
+const el=id=>document.getElementById(id);
+const state={data:null};
+const n=(id)=>Number(el(id).value);
+const validNumber=id=>el(id).value.trim()!==''&&Number.isFinite(n(id));
+const localTime=(date)=>new Intl.DateTimeFormat('es-AR',{timeZone:'America/Argentina/Buenos_Aires',hour:'2-digit',minute:'2-digit',hour12:false}).format(date);
+const utcStamp=(value)=>{const d=new Date(value);return Number.isFinite(d.getTime())?d.toLocaleString('es-AR',{timeZone:'UTC',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false})+' UTC':'no confirmada';};
+const makeStatus=(id,text,kind)=>{const node=el('s-'+id);node.className='status-tile '+kind;node.querySelector('span').textContent=text;};
+const setReport=(id,report)=>{
+  const raw=report&&report.available?report.raw:'No disponible. '+(report&&report.error?report.error:'Consultá la fuente oficial.');
+  el('raw-'+id).textContent=raw;
+  el('label-'+id).textContent=report&&report.available?'Datos recuperados':report&&report.error?'Fuente no disponible':'No se confirmó boletín';
+  makeStatus(id,report&&report.available?'Recuperado':report&&report.error?'No disponible':'No confirmado',report&&report.available?'good':'bad');
+};
+const parseMetar=raw=>{
+  if(!raw)return null;
+  // Se trata únicamente del METAR: nunca toma grupos del TAF.
+  const wind=raw.match(/\b(\d{3}|VRB)(\d{2,3})(?:G(\d{2,3}))?KT\b/i);
+  const vis=raw.match(/\b(9999|\d{4})\b(?=\s|$)/);
+  const cavok=/\bCAVOK\b/.test(raw);
+  const cloud=[...raw.matchAll(/\b(FEW|SCT|BKN|OVC|VV)(\d{3}|\/\/\/)(?:CB|TCU)?\b/g)].map(m=>m[1]+' '+(m[2]==='///'?'altura no disponible':(Number(m[2])*100)+' ft')).slice(0,5);
+  return {wind:wind?(wind[1]==='VRB'?'variable':wind[1]+'°')+' / '+wind[2]+' kt'+(wind[3]?' G'+wind[3]:''):'No identificado',
+          vis:cavok?'CAVOK':vis?(vis[1]==='9999'?'≥10 km':vis[1]+' m'):'No identificada',
+          clouds:cloud.length?cloud.join(' · '):'Sin capas decodificadas'};
+};
+let lastCopied='';
+el('brief-form').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const button=el('ask');button.disabled=true;el('status').textContent='Comprobando sesión…';el('brief-result').hidden=true;
+  try{
     const client=window.GDV_AUTH?.client;
-    if(!client){state.textContent='No se pudo iniciar la conexión segura de Gente de Vuelo.';return;}
-    button.disabled=true;state.textContent='Comprobando tu sesión…';result.hidden=true;
-    try{
-      const {data:auth,error:authError}=await client.auth.getUser();
-      if(authError||!auth?.user)throw new Error('Iniciá sesión en Gente de Vuelo y volvé a consultar.');
-      state.textContent='Consultando los servicios meteorológicos disponibles…';
-      const {data,error}=await client.functions.invoke('robert-meteo',{
-        body:{
-          icao:document.getElementById('meteo-oaci').value.trim().toUpperCase(),
-          fir:document.getElementById('meteo-fir').value,
-          question:document.getElementById('meteo-pregunta').value.trim()
-        }
-      });
-      if(error||!data?.ok){
-        let message=data?.error||error?.message||'No se pudo obtener el reporte.';
-        if(error?.context?.json){
-          try{const detail=await error.context.json();if(detail?.error)message=detail.error;}catch(_){}
-        }
-        throw new Error(message);
-      }
-      document.getElementById('meteo-fecha').textContent='Aeródromo '+data.icao+' · FIR '+data.fir_name+' ('+data.fir+') · consultado el '+formatUTC(data.consulted_at_utc);
-      document.getElementById('meteo-resumen').textContent=data.answer||'No hay interpretación disponible.';
-      document.getElementById('meteo-resumen-nota').textContent=data.interpretation_available
-        ? 'Respuesta educativa de hasta 20 palabras basada solo en los boletines obtenidos; no incluye PRONAREA ni NOTAM.'
-        : 'La interpretación automática no estuvo disponible; consultá los boletines originales.';
-      for(const id of ['metar','taf']){
-        const bulletin=data[id]||{};
-        document.getElementById('meteo-'+id).textContent=bulletin.available?bulletin.raw:'No disponible.';
-        document.getElementById('meteo-'+id+'-nota').textContent=bulletin.available
-          ? 'Verificá la hora de emisión y el período de vigencia antes de usarlo.'
-          : bulletin.error||'No se recibió información para este aeródromo.';
-      }
-
-      const sigmet=data.sigmet||{};
-      document.getElementById('meteo-sigmet').textContent=sigmet.available?sigmet.raw:'Sin coincidencias verificadas en la fuente internacional; NO significa que no existan SIGMET.';
-      document.getElementById('meteo-sigmet-nota').textContent=(sigmet.error?sigmet.error+'. ':'')+(sigmet.warning||'Cobertura SIGMET no exhaustiva; comprobá el SMN.');
-      for(const id of ['pronarea','notam']){
-        const product=data[id]||{};
-        document.getElementById('meteo-'+id).textContent=product.available?'Datos recuperados':'Sin conexión automática verificada.';
-        document.getElementById('meteo-'+id+'-nota').textContent=product.note||'Consultá la fuente oficial antes del vuelo.';
-      }
-      result.hidden=false;
-      state.textContent='Consulta realizada. Verificá vigencia y fuentes oficiales antes de la planificación.';
-    }catch(error){
-      state.textContent='La consulta no se completó: '+(error?.message||'Error de conexión.');
-    }finally{button.disabled=false;}
-  });
+    if(!client)throw new Error('No se pudo inicializar la sesión de Gente de Vuelo.');
+    const auth=await client.auth.getUser();
+    if(auth.error||!auth.data?.user)throw new Error('Ingresá a tu cuenta y volvé a consultar.');
+    el('status').textContent='Consultando las fuentes disponibles…';
+    const {data,error}=await client.functions.invoke('robert-meteo',{body:{icao:el('icao').value.trim().toUpperCase(),fir:el('fir').value,question:el('question').value.trim()}});
+    if(error||!data?.ok){
+      let reason=data?.error||error?.message||'Servicio no disponible';
+      if(error?.context?.json){try{const detail=await error.context.json();if(detail?.error)reason=detail.error;}catch(_){}}
+      throw new Error(reason);
+    }
+    state.data=data;
+    el('fetched-title').textContent=data.icao+' · '+data.fir_name;
+    el('fetched-at').textContent='Consultado '+utcStamp(data.consulted_at_utc)+' · La fecha de consulta no certifica vigencia.';
+    el('assistant-text').textContent=data.answer||'Sin interpretación disponible.';
+    el('assistant-note').textContent=data.interpretation_available?'Respuesta breve generada con boletines recuperados. Sin PRONAREA ni NOTAM.':'La interpretación automática no estuvo disponible; verificá los originales.';
+    for(const id of ['metar','taf','sigmet'])setReport(id,data[id]);
+    const metar=data.metar?.available?parseMetar(data.metar.raw):null;
+    el('metar-metrics').hidden=!metar;
+    if(metar){el('wind-metric').textContent=metar.wind;el('vis-metric').textContent=metar.vis;el('cloud-metric').textContent=metar.clouds;}
+    makeStatus('pronarea','Consulta oficial','pending');makeStatus('notam','Consulta oficial','pending');
+    el('brief-result').hidden=false;
+    el('status').textContent='Consulta parcial completada. Faltan PRONAREA y NOTAM automáticos; verificá el SMN y AIS.';
+    lastCopied=[
+      'Gente de Vuelo · Mesa de vuelo',
+      'Aeródromo: '+data.icao+' | FIR: '+data.fir+' · '+data.fir_name,
+      'Consulta: '+utcStamp(data.consulted_at_utc),
+      'Shimoda: '+(data.answer||'No disponible'),
+      'METAR: '+(data.metar?.raw||'No confirmado'),
+      'TAF: '+(data.taf?.raw||'No confirmado'),
+      'SIGMET: '+(data.sigmet?.raw||'Sin datos confirmados; no implica ausencia'),
+      'PRONAREA: verificar SMN',
+      'NOTAM: verificar AIS ANAC',
+      'Consulta informativa parcial; no constituye briefing operacional.'
+    ].join('\n\n');
+  }catch(err){el('status').textContent='No se completó la consulta: '+(err?.message||'Error inesperado');}
+  finally{button.disabled=false;}
+});
+el('copy-report').addEventListener('click',async()=>{
+  if(!lastCopied)return;
+  try{await navigator.clipboard.writeText(lastCopied);el('status').textContent='Informe parcial copiado.';}
+  catch{el('status').textContent='El navegador no permitió copiar el informe.';}
+});
+function updateWind(){
+  if(!['runway','wind-dir','wind-speed'].every(validNumber)||n('runway')<0||n('runway')>360||n('wind-dir')<0||n('wind-dir')>360||n('wind-speed')<0||n('wind-speed')>250){
+    for(const id of ['headwind','crosswind','gust-result'])el(id).textContent='—';
+    el('wind-warning').textContent='Completá grados entre 0 y 360 y una velocidad válida.';
+    return;
+  }
+  const diff=(n('wind-dir')-n('runway'))*Math.PI/180,v=n('wind-speed');
+  const head=v*Math.cos(diff),cross=v*Math.sin(diff);
+  el('headwind').textContent=Math.abs(head).toFixed(1)+' kt '+(head>=0?'frente':'cola');
+  el('crosswind').textContent=Math.abs(cross).toFixed(1)+' kt '+(cross>=0?'derecha':'izquierda');
+  if(validNumber('wind-gust')&&n('wind-gust')>=v&&n('wind-gust')<=250)el('gust-result').textContent=(Math.abs(n('wind-gust')*Math.sin(diff))).toFixed(1)+' kt cruz.';
+  else el('gust-result').textContent=el('wind-gust').value.trim()===''?'Sin dato':'Ráfaga inválida';
+  el('wind-warning').textContent='Cálculo trigonométrico ilustrativo. Verificá declinación magnética, ráfagas, viento variable y límites de la aeronave.';
+}
+for(const id of ['runway','wind-dir','wind-speed','wind-gust'])el(id).addEventListener('input',updateWind);
+updateWind();
+const nowAR=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Argentina/Buenos_Aires',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+el('sun-date').value=nowAR;
+function solarTime(lat,lon,ymd,zenith,afterNoon){
+  const [year,month,day]=ymd.split('-').map(Number);
+  const date=Date.UTC(year,month-1,day,12);
+  const begin=Date.UTC(year,0,1);
+  const dayN=Math.floor((date-begin)/86400000)+1;
+  const g=2*Math.PI/365*(dayN-1);
+  const eq=229.18*(0.000075+0.001868*Math.cos(g)-0.032077*Math.sin(g)-0.014615*Math.cos(2*g)-0.040849*Math.sin(2*g));
+  const decl=.006918-.399912*Math.cos(g)+.070257*Math.sin(g)-.006758*Math.cos(2*g)+.000907*Math.sin(2*g)-.002697*Math.cos(3*g)+.00148*Math.sin(3*g);
+  const r=Math.PI/180;
+  const cosH=(Math.cos(zenith*r)-Math.sin(lat*r)*Math.sin(decl))/(Math.cos(lat*r)*Math.cos(decl));
+  if(cosH>1||cosH< -1)return null;
+  const h=Math.acos(cosH)/r;
+  const minutes=720-4*lon-eq+(afterNoon?1:-1)*4*h;
+  return new Date(Date.UTC(year,month-1,day,0,0,0)+minutes*60000);
+}
+el('calc-sun').addEventListener('click',()=>{
+  if(!validNumber('latitude')||!validNumber('longitude')||!el('sun-date').value||Math.abs(n('latitude'))>90||Math.abs(n('longitude'))>180){
+    el('sun-state').textContent='Ingresá latitud, longitud y fecha válidas.';
+    return;
+  }
+  const lat=n('latitude'),lon=n('longitude'),date=el('sun-date').value;
+  const values=[solarTime(lat,lon,date,90.833,false),solarTime(lat,lon,date,90.833,true),solarTime(lat,lon,date,96,true)];
+  for(let i=0;i<3;i++)el(['sunrise','sunset','civil-dusk'][i]).textContent=values[i]?localTime(values[i]):'No calculable';
+  el('sun-state').textContent='Horarios aproximados en hora argentina (UTC−03). No sustituyen las tablas oficiales ni las definiciones reglamentarias.';
+});
 })();
 </script>
-</body></html>
+</body>
+</html>
