@@ -190,8 +190,6 @@
 </div>
 <p class="sub">Marcá todas las FIR implicadas y corroboralas con cartas AIP; el sistema no determina automáticamente el trazado de tu ruta.</p>
 </fieldset>
-<label class="field full">Consulta adicional para Shimoda (opcional)
-<textarea id="flight-question" maxlength="500" rows="2" style="resize:vertical" placeholder="Ej.: ¿Qué viento y turbulencia se prevén a 6.500 pies para esta ruta?"></textarea></label>
 </div>
 <div class="form" style="margin-top:18px;padding-top:18px;border-top:1px solid #55534d">
 <div class="full"><h3 style="color:var(--accent2)">Documentos oficiales pegados manualmente</h3><p class="sub">Pegá los boletines completos, incluyendo sus períodos de validez. No hace falta escribir cuándo los consultaste: el servidor registrará automáticamente cuándo recibe el texto para el análisis. Ese registro no garantiza autenticidad ni vigencia; revisá las fechas de los boletines y su correspondencia con el vuelo.</p></div>
@@ -203,6 +201,11 @@
 <textarea id="flight-notam" required minlength="30" maxlength="12000" rows="6" style="resize:vertical;min-height:125px" placeholder="Pegá los NOTAM correspondientes a salida, ruta, destino y alternativa, incluyendo validez y códigos."></textarea></label>
 
 <div class="field"><span>Fuente de NOTAM</span><a href="https://ais.anac.gob.ar/notam" target="_blank" rel="noopener noreferrer">Abrir NOTAM oficiales</a></div>
+</div>
+<div style="margin:19px 0 16px;padding:17px;border:1px solid #745c45;border-radius:14px;background:#1c2526">
+<label class="field" for="flight-question">¿Qué querés consultar a Shimoda sobre las condiciones en altura? (opcional)
+<textarea id="flight-question" maxlength="500" rows="3" style="resize:vertical" placeholder="Ej.: Para mi vuelo a 6.500 pies, ¿qué viento, nubosidad, turbulencia, engelamiento o fenómenos relevantes hay en la ruta?"></textarea></label>
+<p class="sub" style="margin:9px 0 0">Primero cargá PRONAREA y NOTAM. Si dejás este campo vacío, Shimoda elaborará el informe general con la información disponible cuando solicites el análisis.</p>
 </div>
 <div class="warning" style="margin:17px 0">
 <strong>Antes de usar tokens:</strong> verificá que los boletines cubran el vuelo previsto. Si no indicaste ruta exacta, Shimoda no podrá determinar qué sectores atravesás. El resultado es orientación educativa, no un briefing oficial ni una evaluación de aptitud VFR/IFR.
