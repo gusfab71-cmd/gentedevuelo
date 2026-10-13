@@ -4931,7 +4931,7 @@ img, video { max-width: 100%; }
   </button>
 
   <div class="menu-desplegable" id="menuDesplegable">
-    <a href="comunidad.html#hangar" id="gdv-hangar-link">Mi Hangar</a><a href="comunidad.html#foro">Foro</a><a href="aerochat.html">AeroChat</a><a href="comunidad.html#galeria">Galería</a><a href="#tienda-seccion">AeroShop</a><a href="comunidad.html#integrantes">Integrantes</a><a href="utilidades/">Utilidades</a><a href="comunidad.html#contacto">Contacto</a>
+    <a href="comunidad.html#hangar" id="gdv-hangar-link">Mi Hangar</a><a href="comunidad.html#foro">Foro</a><a href="aerochat.html">AeroChat</a><a href="comunidad.html#galeria">Galería</a><a href="#tienda-seccion">AeroShop</a><a href="comunidad.html#integrantes" class="gdv-online-link">Integrantes <span class="gdv-online-badge" data-gdv-online-badge hidden aria-live="off"><i class="gdv-online-dot" aria-hidden="true"></i><span data-gdv-online-number></span></span></a><a href="utilidades/">Utilidades</a><a href="comunidad.html#contacto">Contacto</a>
   </div>
 
 </nav>
@@ -5012,6 +5012,7 @@ img, video { max-width: 100%; }
   <a href="comunidad.html#integrantes">
     <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20a6 6 0 0 1 12 0M14 20a5 5 0 0 1 7 0"/></svg>
     <span>Integrantes</span>
+    <span class="gdv-online-badge" data-gdv-online-badge hidden aria-live="off"><i class="gdv-online-dot" aria-hidden="true"></i><span data-gdv-online-number></span></span>
   </a>
 </nav>
  <section class="gdv-stol-portada" id="stolEnAccion" aria-label="Video de portada" hidden>
@@ -11781,6 +11782,31 @@ body.modo-anexo-clasificados #clasificados-seccion {
   #gdvVideoLayoutTools,#gdvVideoResizeHandle{display:none!important;}
 }
 </style>
+<style id="gdv-conectados-portada-20261013">
+/* Indicador de integrantes conectados, 90 s de actividad en cualquier sección. */
+.menu-desplegable a.gdv-online-link {
+  display:inline-flex!important; align-items:center; justify-content:center; gap:7px;
+}
+.gdv-online-badge {
+  display:inline-flex;align-items:center;justify-content:center;gap:5px;
+  white-space:nowrap; padding:2px 6px;border-radius:999px;
+  color:#d5f8e5;background:rgba(10,54,39,.74);
+  border:1px solid rgba(101,206,152,.65);
+  font:800 11px/1.2 system-ui,sans-serif; font-variant-numeric:tabular-nums;
+  text-shadow:none;letter-spacing:0; flex:none;
+}
+.gdv-online-badge[hidden] {display:none!important;}
+.gdv-online-dot {
+  display:inline-block; width:6px; height:6px; flex:none;
+  border-radius:50%;background:#48e59a;box-shadow:0 0 5px #48e59a88;
+}
+.atajos-portada .gdv-online-badge {font-size:10px; padding:1px 5px; min-width:26px;}
+@media(max-width:560px){
+  .menu-desplegable a.gdv-online-link {gap:5px;}
+  .menu-desplegable .gdv-online-badge {font-size:10px;padding:2px 5px;}
+}
+</style>
+<script src="assets/home-online-count.js?v=20261013conectados1"></script>
 <script src="assets/home-video.js?v=20261013dragfix2"></script>
 <script defer src="assets/chat-alerts.js?v=20261012avisosunavez1"></script>
 </body>
