@@ -1,0 +1,75 @@
+/* Portada: logos de Instituciones Amigas a todo el ancho disponible.
+   Respeta el archivo original sin deformarlo ni recortarlo. */
+@media(min-width:701px){
+  #portadaAccesos > a.acceso-instituciones{
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:stretch!important;
+    justify-content:flex-start!important;
+  }
+  #portadaAccesos > a.acceso-instituciones > h3{
+    flex:0 0 auto!important;
+    margin:0 0 4px!important;
+  }
+  #portadaAccesos > a.acceso-instituciones .instituciones-portada-banner{
+    display:flex!important;
+    flex-direction:column!important;
+    flex:1 1 auto!important;
+    width:calc(100% + 10px)!important;
+    max-width:none!important;
+    height:auto!important;
+    min-height:0!important;
+    margin:0 -5px -5px!important;
+    padding:0!important;
+    box-sizing:border-box!important;
+  }
+  #portadaAccesos > a.acceso-instituciones .instituciones-portada-logo{
+    display:flex!important;
+    flex:1 1 auto!important;
+    align-items:center!important;
+    justify-content:center!important;
+    width:100%!important;
+    height:auto!important;
+    min-height:0!important;
+    padding:0!important;
+    overflow:hidden!important;
+    box-sizing:border-box!important;
+  }
+  #portadaAccesos > a.acceso-instituciones .instituciones-portada-logo img{
+    display:block!important;
+    width:100%!important;
+    max-width:100%!important;
+    height:100%!important;
+    max-height:100%!important;
+    object-fit:contain!important;
+    object-position:center!important;
+  }
+  #portadaAccesos > a.acceso-instituciones .instituciones-portada-nombre{
+    flex:0 0 18px!important;
+    height:18px!important;
+    min-height:18px!important;
+    box-sizing:border-box!important;
+    padding:2px 3px!important;
+    text-overflow:ellipsis!important;
+    white-space:nowrap!important;
+  }
+}
+/* En celulares se mantiene la distribución actual, ampliando la imagen
+   al máximo espacio disponible del contenedor. */
+@media(max-width:700px){
+  #portadaAccesos > a.acceso-instituciones .instituciones-portada-logo{
+    width:100%!important;
+    padding:0!important;
+    box-sizing:border-box!important;
+    overflow:hidden!important;
+  }
+  #portadaAccesos > a.acceso-instituciones .instituciones-portada-logo img{
+    display:block!important;
+    width:100%!important;
+    max-width:100%!important;
+    height:100%!important;
+    max-height:100%!important;
+    object-fit:contain!important;
+    object-position:center!important;
+  }
+}
