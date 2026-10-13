@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Meteorología Aeronáutica · Gente de Vuelo</title>
+<link rel="stylesheet" href="../assets/comunidad.css?v=20261004">
+<style>
+:root{color-scheme:dark}body{background:#171e23;color:#e9edf1}main{max-width:1050px;margin:auto;padding:24px 16px 64px}
+header{background:#222a30;padding:16px;display:flex;gap:20px;align-items:center;flex-wrap:wrap}
+header a{color:#eee}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:12px;margin:20px 0}
+.tile,.panel{border:1px solid #475a65;background:#26343d;border-radius:14px;padding:17px}
+.tile h3{margin:0 0 10px}.tile p{margin:0;color:#b8c6d0;font-size:14px}
+small,.muted{color:#b7c5d0}select,button{font:inherit;padding:10px 13px;color:#f3f6f7;background:#354751;border:1px solid #607681;border-radius:9px;cursor:pointer}
+.controls{display:flex;flex-wrap:wrap;gap:12px;align-items:end;margin:16px 0}.controls label{display:grid;gap:7px}
+table{width:100%;border-collapse:collapse;margin:15px 0}th,td{text-align:left;padding:9px;border-bottom:1px solid #41525e}
+.notice{padding:12px;border-radius:9px;background:#39434a;color:#f5e5ba}
+pre{white-space:pre-wrap;word-break:break-word;max-height:220px;overflow:auto;font-size:12px}
+[hidden]{display:none!important}.accent{color:#f9ac70}
+</style>
+<script>document.documentElement.classList.add('auth-pending')</script>
+<style>html.auth-pending body{visibility:hidden}</style>
+<script src="../assets/supabase-2.117.2.min.js"></script><script src="../assets/community-config.js"></script>
+<script src="../assets/auth-guard.js?v=20261011actividadavisos1"></script>
+</head><body>
+<header><strong>GENTE DE VUELO</strong><a href="index.html">Utilidades</a><a href="../index.html">Portada</a></header>
+<main><h1>Meteorología Aeronáutica</h1><p class="muted">Robert Shimoda — Asistente Aeronáutico de Gente de Vuelo</p>
+<div class="cards">
+<section class="tile"><h3 class="accent">PRONAREA</h3><p>Vientos y temperaturas en altura · FIR Ezeiza</p></section>
+<section class="tile"><h3>METAR</h3><p>Próximamente</p></section>
+<section class="tile"><h3>TAF</h3><p>Próximamente</p></section>
+<section class="tile"><h3>SIGMET</h3><p>Próximamente</p></section>
+<section class="tile"><h3>Viento en pista</h3><p><a href="flightprep-nav.html">Abrir FlightPrep NAV</a></p></section>
+<section class="tile"><h3>Aeródromos</h3><p>Próximamente</p></section>
+</div>
+<section class="panel"><h2>PRONAREA · FIR Ezeiza</h2>
+<p class="notice">Prueba privada. El boletín almacenado no tiene fecha de vigencia confirmada. No utilizar para planificar ni realizar vuelos.</p>
+<p id="status" role="status">Comprobando acceso…</p>
+<div id="consultas" hidden>
+<p id="boletinInfo"></p>
+<div class="controls"><label>Sector del pronóstico<select id="zona"></select></label>
+<label>Nivel de vuelo<select id="nivel"></select></label><button id="consultar" type="button">Consultar</button></div>
+<div id="resultado" aria-live="polite"></div>
+<details><summary>Fenómenos significativos del boletín</summary><p id="sigfenom"></p></details>
+<details><summary>Texto original</summary><pre id="textoOriginal"></pre></details>
+</div>
+</section>
+<section class="panel" style="margin-top:16px"><h2>Robert Shimoda</h2>
+<p>La integración de las respuestas de Shimoda con esta herramienta está en preparación. Su chat habitual sigue disponible por separado.</p>
+<a href="../index.html#shimoda">Ir al Rincón de Robert Shimoda</a>
+</section></main>
+<script>
+(async()=>{
+const status=document.getElementById('status'),client=window.GDV_AUTH?.client;
+if(!client){status.textContent='No se encontró la configuración de acceso.';return}
+const {data:{user}}=await client.auth.getUser();
+if(!user){status.textContent='Ingresá a Gente de Vuelo para continuar.';return}
+const {data:admin}=await client.from('site_admins').select('user_id').eq('user_id',user.id).maybeSingle();
+if(!admin){status.textContent='El módulo PRONAREA está reservado para pruebas de administración.';return}
+const {data,error}=await client.from('gdv_pronarea_bulletins').select('raw_text,issued_at,valid_until,validity_raw,verification_status,created_at').eq('fir','EZE').order('created_at',{ascending:false}).limit(1);
+if(error||!data?.length){status.textContent=error?'No fue posible consultar el boletín.':'Todavía no hay un boletín cargado.';return}
+const b=data[0],raw=b.raw_text||'';
+status.textContent='Boletín de prueba disponible (vigencia sin verificar).';
+document.getElementById('boletinInfo').textContent='Referencia: '+(b.validity_raw||'sin datos')+' · Cargado: '+new Date(b.created_at).toLocaleString('es-AR');
+document.getElementById('textoOriginal').textContent=raw;
+const sig=raw.match(/SIGFENOM:\s*([\s\S]*?)\s+WIND\/T:/i);
+document.getElementById('sigfenom').textContent=sig?.[1]||'No disponible';
+const wind=raw.match(/WIND\/T:\s*([\s\S]*?)\s+FCST:/i);
+if(!wind){status.textContent='No se encontró la sección WIND/T.';return}
+const groups=[...wind[1].matchAll(/\b([A-Z]{2,}(?:-[A-Z]{2,})*)\s+((?:FL\d{3}\/\d{3}\d{2,3}[PM]\d{2}\s*)+)/gi)];
+const sections=groups.map(g=>({name:g[1],levels:[...g[2].matchAll(/FL(\d{3})\/(\d{3})(\d{2,3})([PM])(\d{2})/gi)].map(m=>({level:'FL'+m[1],dir:Number(m[2]),kt:Number(m[3]),temp:(m[4]==='M'?-1:1)*Number(m[5])}))})).filter(z=>z.levels.length);
+if(!sections.length){status.textContent='No fue posible identificar los niveles de viento.';return}
+const zona=document.getElementById('zona'),nivel=document.getElementById('nivel'),resultado=document.getElementById('resultado');
+sections.forEach((s,i)=>zona.add(new Option(s.name,String(i))));
+function levels(){nivel.replaceChildren();sections[Number(zona.value)].levels.forEach((v,i)=>nivel.add(new Option(v.level+' · '+Number(v.level.slice(2))*100+' pies',String(i))))}
+zona.addEventListener('change',()=>{levels();resultado.textContent=''});levels();
+document.getElementById('consultar').addEventListener('click',()=>{
+ const g=sections[Number(zona.value)],x=g.levels[Number(nivel.value)];
+ resultado.replaceChildren();
+ const h=document.createElement('h3');h.textContent=g.name+' · '+x.level;
+ const p=document.createElement('p');p.textContent='Viento: '+String(x.dir).padStart(3,'0')+'° a '+x.kt+' nudos · Temperatura: '+(x.temp>0?'+':'')+x.temp+' °C';
+ resultado.append(h,p);
+});
+document.getElementById('consultas').hidden=false;
+})();
+</script></body></html>
