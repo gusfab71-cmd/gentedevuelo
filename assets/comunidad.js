@@ -106,6 +106,7 @@ function account(){
    (isOwnerAdmin?link('Almacenamiento','#almacenamiento',''):'')+
    (isOwnerAdmin?'<a href="utilidades/mantenimiento-admin.html">Historiales de mantenimiento</a>':'')+
    (isOwnerAdmin?'<a href="pronarea-admin.html">PRONAREA FIR Ezeiza</a>':'')+
+   (isOwnerAdmin?'<a href="moderacion.html#conocimiento-robert">Conocimiento de Robert Shimoda</a>':'')+
    (isOwnerAdmin?link('Revisión de AeroChat','#revision-privados',''):'')+
    (isOwnerAdmin?link('Video de portada','moderacion.html#video-portada',''):'')+
    (isOwnerAdmin?link('Editar tarjetas de portada','index.html?editar-tarjetas=1#inicio',''):'')+
