@@ -25,8 +25,15 @@
   }
   function warning(){
     if(!isDesktop())return '';
-    const hr=hero.getBoundingClientRect(), els=[logo,heading.querySelector('h1'),heading.querySelector('p'),heading.querySelector('.hero-lema')].filter(Boolean);
-    const rects=els.map(el=>el.getBoundingClientRect());
+    const hr=hero.getBoundingClientRect();
+    // El bloque de título ocupa 100% de ancho. Medir el texto real evita falsos
+    // avisos de superposición o salida de pantalla por sus áreas transparentes.
+    const texts=[heading.querySelector('h1'),heading.querySelector('p'),heading.querySelector('.hero-lema')].filter(Boolean);
+    const rects=[logo.getBoundingClientRect(),...texts.map(el=>{
+      const range=document.createRange();range.selectNodeContents(el);
+      const rect=range.getBoundingClientRect();
+      return rect.width>0?rect:el.getBoundingClientRect();
+    })];
     const edges={left:Math.min(...rects.map(r=>r.left)),right:Math.max(...rects.map(r=>r.right)),top:Math.min(...rects.map(r=>r.top)),bottom:Math.max(...rects.map(r=>r.bottom))};
     if(edges.left<hr.left-4||edges.right>hr.right+4||edges.top<hr.top-4||edges.bottom>hr.bottom+4)
       return 'Atención: una parte del conjunto queda fuera de la portada.';
@@ -34,10 +41,8 @@
       for(const el of document.querySelectorAll(selector)){
         if(el.hidden||getComputedStyle(el).display==='none')continue;
         const r=el.getBoundingClientRect();
-        if(els.some(t=>{
-          const b=t.getBoundingClientRect();
-          return b.left<r.right-6&&b.right>r.left+6&&b.top<r.bottom-6&&b.bottom>r.top+6;
-        }))return 'Atención: el logo o los textos se superponen con otra tarjeta de portada.';
+        if(rects.some(b=>b.left<r.right-6&&b.right>r.left+6&&b.top<r.bottom-6&&b.bottom>r.top+6))
+          return 'Atención: el logo o los textos se superponen con otra tarjeta de portada.';
       }
     }
     return '';
