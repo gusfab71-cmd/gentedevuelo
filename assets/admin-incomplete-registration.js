@@ -125,9 +125,13 @@
    const small=node('p','',item.email_confirmed?'Correo confirmado':'Correo pendiente de confirmación');
    small.style.margin='5px 0';
    card.append(small);
-   const missing=node('p','',item.missing.length?'Pendiente: '+item.missing.join(' · '):'Sin pasos pendientes detectados');
+   const missing=node('p','',item.missing.length?'Pendiente: '+item.missing.filter(t=>t!=='Completar perfil').join(' · ')+(item.profile_completed?'':' · Finalizar el registro desde su cuenta'):'Sin pasos pendientes detectados');
    missing.style.margin='5px 0 12px';
    card.append(missing);
+   if(!item.profile_completed&&item.aviation_role&&item.username&&!/^piloto_[0-9a-f]{12}$/i.test(item.username)){
+     const confirmation=node('p','', 'Nombre de usuario y actividad: guardados correctamente. El titular debe subir su foto y aceptar la normativa para finalizar.');
+     confirmation.style.cssText='margin:6px 0 12px;color:#b8cfcd';card.append(confirmation);
+   }
    if(item.initial_password_pending){
      const pending=node('p','estado','Ya tiene una contraseña temporal asignada y debe cambiarla al ingresar.');
      card.append(pending);
