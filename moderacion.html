@@ -165,6 +165,7 @@
       <p class="intro">Revisá los aportes de la comunidad y decidí qué se muestra en Gente de Vuelo. Los cambios se reflejan en la página al actualizarla.</p>
       <p id="mensaje" class="estado" role="status"></p>
       <p id="comunicadosAccesoModeracion" style="margin:0 0 24px;"><a class="link" href="comunidad.html#gestion/comunicados">Enviar comunicado a todos los integrantes</a></p>
+      <p id="gdvRobertShortcut" hidden style="margin:0 0 24px;"><a class="link" href="moderacion.html#conocimiento-robert">Conocimiento de Robert Shimoda · Subir manuales PDF</a></p>
 
 <section class="panel" id="gdvManualRegistration" hidden style="margin:0 0 24px">
 <h2>Registro manual de integrantes</h2><p><a class="link" href="moderacion.html#registros-incompletos">Ver registros incompletos y recuperar cuentas existentes</a></p>
@@ -1031,16 +1032,35 @@
       const modoFotos = tablaDestino === "galeria";
       const modoVideo = tablaDestino === "video-portada";
       const modoRegistro = tablaDestino === "registro-manual";
+      const modoConocimiento = tablaDestino === "conocimiento-robert";
       const modoRecuperacion = tablaDestino === "registros-incompletos";
       const modoShimoda = tablaDestino === "shimoda_comentarios" || tablaDestino === "shimoda_publicaciones";
 
-      if ($("comunicadosAccesoModeracion")) $("comunicadosAccesoModeracion").hidden = modoComercio || modoFotos || modoVideo || moderador;
+      if ($("comunicadosAccesoModeracion")) $("comunicadosAccesoModeracion").hidden = modoComercio || modoFotos || modoVideo || modoConocimiento || moderador;
+      if ($("gdvRobertShortcut")) $("gdvRobertShortcut").hidden = !administrador || modoConocimiento || modoComercio || modoFotos || modoVideo;
       if ($("gdvManualRegistration")) $("gdvManualRegistration").hidden = !administrador || modoComercio || modoFotos || modoVideo || modoRecuperacion;
       if ($("gdvIncompleteRegistration")) $("gdvIncompleteRegistration").hidden = !administrador || modoComercio || modoFotos || modoVideo || modoRegistro;
        if ($("robertAdmin")) $("robertAdmin").hidden = modoComercio || modoFotos || modoVideo || moderador;
       if ($("gdvStolAdmin")) $("gdvStolAdmin").hidden = modoComercio || modoFotos || moderador;
-      if (administrador && !modoComercio && !modoFotos) window.GDV_STOL_VIDEO?.admin();
+      if (administrador && !modoComercio && !modoFotos && !modoConocimiento) window.GDV_STOL_VIDEO?.admin();
       if ($("shimodaPublicarAdmin")) $("shimodaPublicarAdmin").hidden = modoComercio || modoFotos || modoVideo || moderador;
+      if (modoConocimiento && administrador) {
+        const tituloPanel = $("panel")?.querySelector("h1");
+        const introPanel = $("panel")?.querySelector(".intro");
+        if (tituloPanel) tituloPanel.textContent = "Administración · Conocimiento de Robert Shimoda";
+        if (introPanel) introPanel.textContent = "Subí el Manual de Piloto Privado en PDF u otros documentos para que Robert pueda responder preguntas con sus fuentes.";
+        for (const id of ["gdvManualRegistration", "gdvIncompleteRegistration", "comunicadosAccesoModeracion", "gdvRobertShortcut", "gdvStolAdmin", "pronareaAdminAccess", "shimodaPublicarAdmin", "panelFotosHangar"]) {
+          const element = $(id);
+          if (element) element.hidden = true;
+        }
+        for (const selector of [".pestanas", ".filtros", "#resumen", "#lista"]) {
+          const element = document.querySelector(selector);
+          if (element) element.style.display = "none";
+        }
+        $("robertAdmin").hidden = false;
+        await cargarRobertDocs();
+        return;
+      }
       if (modoRecuperacion && administrador) {
         const tituloPanel = $("panel")?.querySelector("h1");
         const introPanel = $("panel")?.querySelector(".intro");
