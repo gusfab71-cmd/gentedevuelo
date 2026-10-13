@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meteorología aeronáutica · Robert Shimoda · Gente de Vuelo</title>
+<meta name="description" content="Consultá METAR, TAF y fuentes oficiales para preparar un briefing meteorológico aeronáutico.">
+<style>
+:root{color-scheme:dark;font-family:Arial,Helvetica,sans-serif;background:#151b1f;color:#ecf1f4}*{box-sizing:border-box}body{margin:0;background:linear-gradient(#1d272f,#131a20);min-height:100vh}
+a{color:#bed8e5}a:hover{color:white}header{padding:20px max(16px,calc((100vw - 1000px)/2));background:#1a242b;border-bottom:1px solid #708392;display:flex;justify-content:space-between;align-items:center;gap:18px}
+.brand{font-size:21px;letter-spacing:.05em;font-weight:700;color:white}header small{display:block;margin-top:4px;color:#b8c8d2;font-size:12px;letter-spacing:normal}
+main{max-width:1000px;margin:28px auto;padding:0 18px 45px}h1{font-size:clamp(24px,4vw,34px);margin:0 0 12px}h2{font-size:22px;margin:0 0 14px}h3{font-size:17px;margin:0 0 12px}
+.lead{color:#d4dfe5;line-height:1.6;max-width:780px}.panel{background:#263039;border:1px solid #5c6b76;border-radius:14px;padding:22px;margin:18px 0;box-shadow:0 5px 18px #0002}
+.formgrid{display:grid;grid-template-columns:minmax(170px,230px) 1fr;gap:14px;align-items:end}label{font-weight:700;font-size:14px;display:block}input{display:block;width:100%;margin-top:8px;padding:12px 14px;border-radius:9px;background:#111a20;color:white;border:1px solid #899fac;font:inherit}input:focus{outline:2px solid #bbd5e4}
+button{border:1px solid #b2c6d2;background:#dae5ea;color:#172029;border-radius:9px;font-size:15px;font-weight:700;padding:11px 20px;cursor:pointer}button:disabled{opacity:.6;cursor:wait}
+.actions{display:flex;align-items:center;gap:16px;margin-top:17px;flex-wrap:wrap}#status{font-size:14px;color:#cadbe5;line-height:1.4}
+.meta{font-size:13px;color:#b6c8d3}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#111b21;color:#f1f5f7;border:1px solid #50616c;padding:15px;border-radius:9px;font:14px/1.7 Consolas,Monaco,monospace;min-height:65px}
+.reports{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.brief{background:#15232d;padding:16px;border-radius:10px;border-left:4px solid #a7c3d4;line-height:1.65}
+.links{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.links a{padding:13px 14px;background:#1a252c;border:1px solid #607783;border-radius:9px;text-decoration:none;font-size:14px}
+.links a strong{display:block;color:white;margin-bottom:4px}.links a span{color:#c2d4de}.warning{font-size:14px;line-height:1.6;border-top:1px solid #617580;margin-top:18px;padding-top:14px;color:#d5e2e9}
+.hidden{display:none!important}
+@media(max-width:650px){header{padding:17px;flex-wrap:wrap}main{margin-top:20px}.panel{padding:16px}.formgrid,.reports,.links{grid-template-columns:1fr}.brand{font-size:17px}}
+</style>
+<script src="assets/supabase-2.117.2.min.js"></script>
+<script src="assets/community-config.js"></script>
+<script src="assets/auth-guard.js?v=20261013registro2"></script>
+</head>
+<body>
+<header><div class="brand">GENTE DE VUELO <small>Robert Shimoda · Asistente Aeronáutico</small></div><nav><a href="index.html#shimoda">Volver a Shimoda</a></nav></header>
+<main>
+<h1>Meteorología aeronáutica para planificar un vuelo</h1>
+<p class="lead">Consultá METAR y TAF por código OACI argentino. Shimoda ofrece una interpretación breve, mientras el mensaje original queda a la vista para verificarlo. Este módulo no emite un pronóstico propio ni certifica la aptitud de vuelo.</p>
+<section class="panel" aria-labelledby="consulta-title">
+<h2 id="consulta-title">Consultar aeródromo</h2>
+<form id="meteo-form">
+<div class="formgrid">
+<label for="icao">Código OACI <input id="icao" name="icao" required minlength="4" maxlength="4" pattern="[sS][aA][a-zA-Z]{2}" autocapitalize="characters" autocomplete="off" placeholder="SAEZ" value="SAEZ"></label>
+<label for="question">Pregunta para Shimoda (opcional)<input id="question" name="question" maxlength="220" placeholder="Ejemplo: ¿Qué viento y visibilidad informa?"></label>
+</div>
+<div class="actions"><button type="submit" id="ask">Consultar METAR y TAF</button><span id="status" role="status" aria-live="polite">Se requiere ingresar a Gente de Vuelo.</span></div>
+</form>
+<p class="meta">Ejemplos: SAEZ (Ezeiza), SABE (Aeroparque), SACO (Córdoba), SAAR (Rosario). La disponibilidad depende de cada estación.</p>
+</section>
+<section class="panel hidden" id="result" aria-live="polite">
+<h2>Resultado de la consulta</h2>
+<p class="meta" id="stamp"></p>
+<div class="brief"><strong>Interpretación de Robert Shimoda</strong><p id="answer"></p><p class="meta" id="answerNote"></p></div>
+<div class="reports">
+<div><h3>METAR · observación</h3><pre id="metar">—</pre><p class="meta" id="metar-note"></p></div>
+<div><h3>TAF · pronóstico</h3><pre id="taf">—</pre><p class="meta" id="taf-note"></p></div>
+</div>
+<p class="meta">Datos retransmitidos por NOAA Aviation Weather Center; no son obtenidos directamente de una API del SMN. La hora de consulta no equivale a hora de emisión ni a período de validez.</p>
+<p class="warning">Para cualquier planificación real, verificá el período de validez de los boletines y completá el briefing con PRONAREA, SIGMET, cartas significativas, NOTAM y asesoramiento meteorológico oficial.</p>
+</section>
+<section class="panel" aria-labelledby="official-title">
+<h2 id="official-title">Fuentes oficiales argentinas</h2>
+<p class="lead">Acceso directo a productos del Servicio Meteorológico Nacional y a información aeronáutica de ANAC. PRONAREA y SIGMET todavía no se descargan automáticamente dentro de Shimoda.</p>
+<div class="links">
+<a href="https://www.smn.gob.ar/pronarea" target="_blank" rel="noopener noreferrer"><strong>PRONAREA</strong><span>Pronóstico por FIR</span></a>
+<a href="https://www.smn.gob.ar/metar" target="_blank" rel="noopener noreferrer"><strong>METAR / SPECI</strong><span>Observaciones del SMN</span></a>
+<a href="https://www.smn.gob.ar/taf" target="_blank" rel="noopener noreferrer"><strong>TAF</strong><span>Pronósticos de aeródromo</span></a>
+<a href="https://www.smn.gob.ar/mensajes-sigmet" target="_blank" rel="noopener noreferrer"><strong>SIGMET</strong><span>Fenómenos meteorológicos significativos</span></a>
+<a href="https://www.smn.gob.ar/cartas-de-tiempo-significativo-sfcfl250" target="_blank" rel="noopener noreferrer"><strong>Cartas de tiempo significativo</strong><span>Condiciones previstas por niveles</span></a>
+<a href="https://ais.anac.gob.ar/notam" target="_blank" rel="noopener noreferrer"><strong>NOTAM · ANAC</strong><span>Restricciones y avisos aeronáuticos</span></a>
+</div>
+<p class="warning">Esta herramienta es informativa y no reemplaza el briefing de las oficinas meteorológicas o ARO-AIS ni el criterio del piloto al mando.</p>
+</section>
+</main>
+<script>
+(function(){
+  "use strict";
+  const form = document.getElementById("meteo-form"), icao = document.getElementById("icao");
+  const button = document.getElementById("ask"), status = document.getElementById("status");
+  const result = document.getElementById("result");
+  const label = document.getElementById("stamp"), answer = document.getElementById("answer");
+  const answerNote = document.getElementById("answerNote");
+  const fmt = function(date) {
+    const d = new Date(date);
+    return Number.isFinite(d.getTime()) ? d.toLocaleString("es-AR", { timeZone:"UTC", day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit",hour12:false }) + " UTC" : "sin hora confirmada";
+  };
+  form.addEventListener("submit", async function(event) {
+    event.preventDefault();
+    const client = window.GDV_AUTH && window.GDV_AUTH.client;
+    if (!client) { status.textContent="No se pudo inicializar la sesión."; return; }
+    const {data:auth,error:authError} = await client.auth.getUser();
+    if (authError || !auth || !auth.user) { status.textContent="Iniciá sesión para consultar a Shimoda."; return; }
+    button.disabled=true; status.textContent="Consultando los servicios meteorológicos…"; result.classList.add("hidden");
+    try{
+      const {data,error} = await client.functions.invoke("robert-meteo", {
+        body:{icao:icao.value.trim().toUpperCase(),question:document.getElementById("question").value.trim()}
+      });
+      if (error) {
+        let message=error.message || "Error al consultar el servicio.";
+        if (error.context && typeof error.context.json==="function") {
+          try { const detail=await error.context.json(); if (detail && detail.error) message=detail.error; } catch(e){}
+        }
+        throw new Error(message);
+      }
+      if (!data || !data.ok) throw new Error(data && data.error || "No se pudo recuperar el reporte.");
+      label.textContent = "Aeródromo "+data.icao+" · consulta realizada "+fmt(data.consulted_at_utc);
+      answer.textContent = data.answer || "No hay interpretación disponible.";
+      answerNote.textContent = data.interpretation_available ? "Respuesta limitada a 20 palabras. Revisá también el boletín completo." : "Interpretación automática no disponible; consultá el boletín original.";
+      for (const product of ["metar","taf"]) {
+        const item=data[product] || {};
+        document.getElementById(product).textContent=item.available ? item.raw : "No disponible";
+        document.getElementById(product+"-note").textContent=item.available ? "Comprobá hora de emisión y vigencia antes de utilizarlo." : item.error || "No se recibió información.";
+      }
+      result.classList.remove("hidden");
+      status.textContent="Consulta finalizada. Comprobá los boletines y su vigencia.";
+    }catch(err){ status.textContent=err && err.message || "No se pudo completar la consulta."; }
+    finally{ button.disabled=false; }
+  });
+})();
+</script>
+</body>
+</html>
