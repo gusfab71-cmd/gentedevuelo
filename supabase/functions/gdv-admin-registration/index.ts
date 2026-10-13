@@ -39,6 +39,73 @@ Deno.serve(async(req:Request)=>{
    if(error)return respond(origin,503,{error:"No se pudo guardar la nueva contraseña. Volvé a intentar."});
    return respond(origin,200,{ok:true});
  }
+
+ if(body.action==="list_incomplete"||body.action==="recover_existing"){
+   const permission=await admin.from("site_admins").select("user_id").eq("user_id",user.id).maybeSingle();
+   if(permission.error)return respond(origin,503,{error:"No se pudo verificar tu autorización."});
+   if(!permission.data)return respond(origin,403,{error:"Función exclusiva del administrador."});
+   if(body.action==="list_incomplete"){
+     // Read Auth only on the trusted server; return only incomplete/unconfirmed accounts.
+     const accounts:Array<{id:string,email?:string,email_confirmed_at?:string|null,last_sign_in_at?:string|null,created_at:string,app_metadata?:Record<string,unknown>}>=[]; 
+     for(let page=1;page<=30;page++){
+       const result=await admin.auth.admin.listUsers({page,perPage:200});
+       if(result.error)return respond(origin,503,{error:"No se pudo consultar Auth."});
+       const batch=result.data?.users||[];
+       accounts.push(...batch);
+       if(batch.length<200)break;
+       if(page===30)return respond(origin,503,{error:"Demasiados registros para esta consulta. Contactá al soporte."});
+     }
+     const profileData=await admin.from("profiles").select("id,username,full_name,aviation_role,avatar_url,onboarding_completed");
+     if(profileData.error)return respond(origin,503,{error:"No se pudo consultar el estado de los perfiles."});
+     const profiles=new Map((profileData.data||[]).map(p=>[p.id,p]));
+     const entries=accounts.flatMap(account=>{
+       const p=profiles.get(account.id);
+       if(p?.onboarding_completed===true&&account.email_confirmed_at)return [];
+       const providers=Array.isArray(account.app_metadata?.providers)?account.app_metadata.providers.filter(v=>typeof v==="string"):[];
+       const viaGoogle=account.app_metadata?.provider==="google"||providers.includes("google");
+       const pending:string[]=[];
+       if(!account.email_confirmed_at)pending.push("Confirmar correo");
+       if(!p||p.onboarding_completed!==true)pending.push("Completar perfil");
+       if(!p?.username||/^piloto[_-]/i.test(p.username))pending.push("Elegir nombre de usuario");
+       if(!p?.aviation_role)pending.push("Actividad aeronáutica");
+       if(!p?.avatar_url)pending.push("Subir fotografía");
+       return [{
+         id:account.id,email:account.email||"",username:p?.username||"",
+         full_name:p?.full_name||"",google:viaGoogle,
+         email_confirmed:!!account.email_confirmed_at,
+         profile_completed:p?.onboarding_completed===true,
+         initial_password_pending:account.app_metadata?.gdv_initial_password===true,
+         created_at:account.created_at,last_sign_in_at:account.last_sign_in_at||null,
+         missing:pending
+       }];
+     });
+     entries.sort((a,b)=>a.created_at>b.created_at?-1:1);
+     return respond(origin,200,{ok:true,total:accounts.length,pending:entries.length,entries});
+   }
+   // Changing an existing account is a privileged, opt-in recovery operation.
+   const id=typeof body.user_id==="string"?body.user_id:"";
+   const password=typeof body.password==="string"?body.password:"";
+   if(!/^[0-9a-f-]{36}$/i.test(id))return respond(origin,400,{error:"Cuenta inválida."});
+   if(body.identity_verified_by_admin!==true)return respond(origin,400,{error:"Verificá identidad, titularidad del correo y autorización expresa."});
+   if(!passwordOK(password))return respond(origin,400,{error:"Contraseña temporal: 9 caracteres, mayúscula, minúscula, número y símbolo."});
+   if(id===user.id)return respond(origin,403,{error:"No podés recuperar tu propia cuenta desde este panel."});
+   const targetAdmin=await admin.from("site_admins").select("user_id").eq("user_id",id).maybeSingle();
+   if(targetAdmin.error)return respond(origin,503,{error:"No se pudo comprobar la cuenta."});
+   if(targetAdmin.data)return respond(origin,403,{error:"No se puede modificar una cuenta administradora."});
+   const target=await admin.auth.admin.getUserById(id);
+   if(target.error||!target.data?.user)return respond(origin,404,{error:"La cuenta ya no existe."});
+   const existing=target.data.user;
+   if(!existing.email_confirmed_at)return respond(origin,400,{error:"El correo no está confirmado. Primero completá la verificación de correo."});
+   const profile=await admin.from("profiles").select("onboarding_completed").eq("id",id).maybeSingle();
+   if(profile.error)return respond(origin,503,{error:"No se pudo consultar el perfil del integrante."});
+   if(profile.data?.onboarding_completed===true)return respond(origin,409,{error:"El registro ya está completo. Usá la recuperación habitual de contraseña."});
+   const updated=await admin.auth.admin.updateUserById(id,{
+     password,app_metadata:{...existing.app_metadata,gdv_initial_password:true}
+   });
+   if(updated.error)return respond(origin,503,{error:"No se pudo asignar la contraseña temporal."});
+   console.info("gdv_recover_incomplete",JSON.stringify({actor:user.id,member:id}));
+   return respond(origin,200,{ok:true,email:existing.email});
+ }
  if(body.action!=="create_manual")return respond(origin,400,{error:"Acción desconocida."});
  const permission=await admin.from("site_admins").select("user_id").eq("user_id",user.id).maybeSingle();
  if(permission.error)return respond(origin,503,{error:"No se pudo verificar la autorización."});
