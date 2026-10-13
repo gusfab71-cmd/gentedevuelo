@@ -48,6 +48,11 @@
     z-index:5;
   }
   #portadaAccesos.gdv-cards-editing > a:active{cursor:grabbing!important;}
+  #portadaAccesos.gdv-cards-editing > a,
+  #portadaAccesos.gdv-cards-editing > a img {
+    user-select:none!important;
+    -webkit-user-drag:none!important;
+  }
   #portadaAccesos.gdv-cards-editing .gdv-card-handle {
     display:block;
     position:absolute;
