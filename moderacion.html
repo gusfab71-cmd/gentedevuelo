@@ -1007,6 +1007,14 @@
       }
       administrador = esAdministrador;
       moderador = !esAdministrador;
+      const tituloBase = $("panel")?.querySelector("h1");
+      const introBase = $("panel")?.querySelector(".intro");
+      if (tituloBase) tituloBase.textContent = "Panel de moderación";
+      if (introBase) introBase.textContent = "Revisá los aportes de la comunidad y decidí qué se muestra en Gente de Vuelo.";
+      for (const selector of [".pestanas", ".filtros", "#resumen", "#lista"]) {
+        const element = document.querySelector(selector);
+        if (element) element.style.display = "";
+      }
       $("acceso").hidden = true;
       $("panel").hidden = false;
       $("salir").hidden = false;
@@ -1145,10 +1153,11 @@
     client.auth.onAuthStateChange(event => {
       if (event === "SIGNED_OUT") setTimeout(iniciar, 0);
     });
+    window.addEventListener("hashchange", () => iniciar().catch(error => console.error("Cambio de sección:", error)));
     iniciar();
   </script>
 <script src="assets/admin-manual-registration.js?v=20261013manual1"></script>
-<script src="assets/admin-incomplete-registration.js?v=20261013incompletos1"></script>
+<script src="assets/admin-incomplete-registration.js?v=20261013incompletos2"></script>
  <script defer src="assets/chat-alerts.js?v=20261012avisosunavez1"></script>
 </body>
 </html>
