@@ -95,10 +95,18 @@
 </section>
 <section class="card" id="crepusculo">
 <div class="card-header"><div><span class="card-kicker">04 / Luz diurna</span><h2>Sol y crepúsculo</h2></div><span class="sub">Estimación astronómica</span></div>
-<p class="sub">Ingresá coordenadas y fecha para estimar amanecer, puesta de sol y fin de crepúsculo civil. No utilices este cálculo aproximado como hora reglamentaria de operación.</p>
+<p class="sub">Buscá una localidad o aeródromo argentino para completar las coordenadas. También podés ingresarlas manualmente. Los horarios son aproximados: no sustituyen la información aeronáutica oficial.</p>
+<div class="form" style="margin:14px 0">
+<label class="field" for="sun-place-search">Buscar lugar (Argentina)
+<input id="sun-place-search" type="search" maxlength="80" placeholder="Ej.: Morón, Bariloche, Córdoba o SADM" autocomplete="off">
+</label>
+<div class="field"><span>Seleccionar ubicación</span><button class="secondary" id="sun-place-find" type="button" style="width:100%">Buscar ubicación</button></div>
+</div>
+<div id="sun-place-results" role="group" aria-label="Resultados de búsqueda de lugares" hidden style="display:grid;gap:8px;margin:8px 0"></div>
+<p id="sun-place-status" class="sub" role="status" aria-live="polite">Ingresá un lugar y elegí el resultado correcto. Para aeródromos, verificá las coordenadas en la AIP vigente.</p>
 <div class="form">
-<label class="field">Latitud (°; sur negativa)<input id="latitude" type="number" min="-90" max="90" step=".0001" placeholder="Ej.: -34.8"></label>
-<label class="field">Longitud (°; oeste negativa)<input id="longitude" type="number" min="-180" max="180" step=".0001" placeholder="Ej.: -58.5"></label>
+<label class="field">Latitud (°; sur negativa)<input id="latitude" type="number" min="-90" max="90" step=".000001" placeholder="Ej.: -34.679167"></label>
+<label class="field">Longitud (°; oeste negativa)<input id="longitude" type="number" min="-180" max="180" step=".000001" placeholder="Ej.: -58.643611"></label>
 <label class="field">Fecha<input type="date" id="sun-date"></label>
 <div class="field"><span>Zona horaria de referencia</span><p class="sub">Argentina · UTC−03 (hora oficial)</p></div>
 </div><div class="actions"><button class="secondary" id="calc-sun" type="button">Calcular estimación</button></div>
@@ -334,6 +342,104 @@ for(const id of ['runway','wind-dir','wind-speed','wind-gust'])el(id).addEventLi
 updateWind();
 const nowAR=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Argentina/Buenos_Aires',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
 el('sun-date').value=nowAR;
+// Búsqueda explícita: no hay consultas de red mientras el piloto escribe.
+// Morón/SADM: coordenadas oficiales del aeródromo (no del centro urbano).
+// Referencia: servicios.transporte.gob.ar/gobierno_abierto/detalle.php?d=detalle&t=aeropuertos
+const moronAirport=Object.freeze({
+  name:'Aeródromo Morón (SADM)',latitude:-34.67916667,longitude:-58.64361111,
+  description:'Aeródromo · coordenadas oficiales de referencia (verificá AIP)'
+});
+let placeSearchController=null;
+const placeSearchInput=el('sun-place-search');
+const placeResults=el('sun-place-results');
+const placeStatus=el('sun-place-status');
+const removeAccents=text=>text.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+function assignSunPlace(item){
+  if(!Number.isFinite(item.latitude)||!Number.isFinite(item.longitude)||
+     Math.abs(item.latitude)>90||Math.abs(item.longitude)>180)return;
+  el('latitude').value=item.latitude.toFixed(6);
+  el('longitude').value=item.longitude.toFixed(6);
+  el('sunrise').textContent='—';
+  el('sunset').textContent='—';
+  el('civil-dusk').textContent='—';
+  el('sun-state').textContent='Coordenadas seleccionadas. Presioná «Calcular estimación» para obtener los horarios.';
+  placeStatus.textContent=item.name+' · Latitud '+el('latitude').value+'°, longitud '+el('longitude').value+'°. '+item.description;
+  placeResults.hidden=true;
+}
+function renderSunPlaces(places){
+  placeResults.replaceChildren();
+  placeResults.hidden=places.length===0;
+  places.forEach((place)=>{
+    const button=document.createElement('button');
+    button.type='button';button.className='secondary';
+    button.style.cssText='text-align:left;display:block;width:100%;white-space:normal';
+    const title=document.createElement('strong');title.textContent=place.name;
+    const subtitle=document.createElement('small');subtitle.style.cssText='display:block;color:var(--muted);font-weight:400';
+    subtitle.textContent=place.description+' · '+place.latitude.toFixed(5)+'°, '+place.longitude.toFixed(5)+'°';
+    button.append(title,subtitle);
+    button.addEventListener('click',()=>assignSunPlace(place));
+    placeResults.append(button);
+  });
+}
+async function findSunPlace(){
+  const query=placeSearchInput.value.trim();
+  if(placeSearchController){placeSearchController.abort();placeSearchController=null;}
+  const key=removeAccents(query);
+  placeResults.replaceChildren();placeResults.hidden=true;
+  if(query.length<2){placeStatus.textContent='Escribí al menos dos caracteres de una localidad o código de aeródromo.';return;}
+  const presets=[];
+  if(key.includes('moron')||key==='sadm'||(key.length>=3&&('aerodromo moron'.includes(key)||'sadm'.includes(key)))){
+    presets.push(moronAirport);
+  }
+  // Para localidades, GeoNames vía Open-Meteo: no es fuente de coordenadas AIP.
+  const ctrl=new AbortController();placeSearchController=ctrl;
+  el('sun-place-find').disabled=true;
+  placeStatus.textContent='Buscando localidades argentinas…';
+  let places=[...presets],warning='';
+  try{
+    const endpoint=new URL('https://geocoding-api.open-meteo.com/v1/search');
+    endpoint.searchParams.set('name',query);
+    endpoint.searchParams.set('count','8');
+    endpoint.searchParams.set('language','es');
+    endpoint.searchParams.set('format','json');
+    endpoint.searchParams.set('countryCode','AR');
+    const response=await fetch(endpoint.toString(),{signal:ctrl.signal,headers:{Accept:'application/json'}});
+    if(!response.ok)throw new Error('La búsqueda de localidades no respondió.');
+    const data=await response.json();
+    if(data?.error)throw new Error('El proveedor no encontró ubicaciones.');
+    const cities=(Array.isArray(data?.results)?data.results:[])
+      .filter(p=>p?.country_code==='AR'&&Number.isFinite(p.latitude)&&Number.isFinite(p.longitude)&&
+        Math.abs(p.latitude)<=90&&Math.abs(p.longitude)<=180)
+      .slice(0,8)
+      .map(p=>({
+        name:[p.name,p.admin1].filter(Boolean).join(' · '),
+        latitude:p.latitude,longitude:p.longitude,
+        description:'Localidad · centro aproximado (Open-Meteo / GeoNames; no es un aeródromo)'
+      }));
+    places=places.concat(cities);
+  }catch(err){
+    if(err?.name==='AbortError')return;
+    warning='No se pudo consultar el buscador externo. Podés elegir un aeródromo disponible o ingresar coordenadas.';
+  }finally{
+    if(placeSearchController===ctrl){
+      placeSearchController=null;el('sun-place-find').disabled=false;
+    }
+  }
+  if(ctrl.signal.aborted)return;
+  renderSunPlaces(places);
+  placeStatus.textContent=places.length
+    ?'Elegí el lugar correcto para completar latitud y longitud. '+warning
+    :(warning||'No se encontraron lugares. Probá con otra localidad o ingresá coordenadas manualmente.');
+}
+el('sun-place-find').addEventListener('click',findSunPlace);
+placeSearchInput.addEventListener('keydown',event=>{
+  if(event.key==='Enter'){event.preventDefault();findSunPlace();}
+});
+placeSearchInput.addEventListener('input',()=>{
+  if(placeSearchController){placeSearchController.abort();placeSearchController=null;el('sun-place-find').disabled=false;}
+  placeResults.replaceChildren();placeResults.hidden=true;
+  placeStatus.textContent='Presioná «Buscar ubicación» y elegí el lugar correcto.';
+});
 function solarTime(lat,lon,ymd,zenith,afterNoon){
   const [year,month,day]=ymd.split('-').map(Number);
   const date=Date.UTC(year,month-1,day,12);
