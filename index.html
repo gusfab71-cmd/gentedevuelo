@@ -5095,36 +5095,35 @@ img, video { max-width: 100%; }
 
   </div>
 </section>
-  <section class="contenedor solo-seccion" id="meteorologia-seccion">
+  
+<section class="contenedor solo-seccion" id="meteorologia-seccion">
   <h2 class="titulo-seccion">Meteorología Aeronáutica</h2>
-
-  <p class="subtitulo">
-    Información meteorológica útil para la planificación y realización del vuelo.
-  </p>
-
+  <p class="subtitulo">Boletines y fuentes para estudiar las condiciones meteorológicas antes de planificar un vuelo.</p>
   <div class="tarjetas">
-
+    <a href="meteorologia-shimoda.html" class="tarjeta">
+      <h3>Consultar con Robert Shimoda</h3>
+      <p>METAR y TAF por aeródromo, datos originales e interpretación breve. No reemplaza el briefing oficial.</p>
+    </a>
+    <a href="https://www.smn.gob.ar/pronarea" target="_blank" rel="noopener noreferrer" class="tarjeta">
+      <h3>PRONAREA · SMN</h3><p>Pronóstico de área por FIR y condiciones meteorológicas significativas.</p>
+    </a>
     <a href="https://www.smn.gob.ar/metar" target="_blank" rel="noopener noreferrer" class="tarjeta">
-  <h3>METAR</h3>
-  <p>Información meteorológica actual de los aeródromos.</p>
-</a>
-
-   <a href="https://ws2.smn.gob.ar/pron%C3%B3stico-de-aer%C3%B3dromo-taf"
-   target="_blank"
-   rel="noopener noreferrer"
-   class="tarjeta">
-  <h3>TAF</h3>
-  <p>Pronósticos meteorológicos aeronáuticos para la planificación del vuelo.</p>
-</a>
-   <a href="https://ws2.smn.gob.ar/meteorologia-espacio"
-   target="_blank"
-   rel="noopener noreferrer"
-   class="tarjeta">
-  <h3>Información meteorológica</h3>
-  <p>Acceso a información meteorológica aeronáutica oficial.</p>
-</a>
-
+      <h3>METAR / SPECI · SMN</h3><p>Observaciones meteorológicas de aeródromos argentinos.</p>
+    </a>
+    <a href="https://www.smn.gob.ar/taf" target="_blank" rel="noopener noreferrer" class="tarjeta">
+      <h3>TAF · SMN</h3><p>Pronósticos de aeródromo y períodos de validez.</p>
+    </a>
+    <a href="https://www.smn.gob.ar/mensajes-sigmet" target="_blank" rel="noopener noreferrer" class="tarjeta">
+      <h3>SIGMET · SMN</h3><p>Alertas por fenómenos meteorológicos significativos para la aviación.</p>
+    </a>
+    <a href="https://www.smn.gob.ar/cartas-de-tiempo-significativo-sfcfl250" target="_blank" rel="noopener noreferrer" class="tarjeta">
+      <h3>Cartas significativas · SMN</h3><p>Productos gráficos de apoyo para el análisis meteorológico.</p>
+    </a>
+    <a href="https://ais.anac.gob.ar/notam" target="_blank" rel="noopener noreferrer" class="tarjeta">
+      <h3>NOTAM · ANAC</h3><p>Avisos aeronáuticos que deben verificarse antes del vuelo.</p>
+    </a>
   </div>
+  <p class="subtitulo">Consultá siempre la emisión y validez. Los datos meteorológicos y el asistente no autorizan vuelos.</p>
 </section>
   <section class="contenedor solo-seccion" id="normativas-seccion">
   <h2 class="titulo-seccion">Actualizaciones Normativas</h2>
@@ -11362,9 +11361,11 @@ footer .contacto-pie-movil { display: none; }
           <p>Consultá la base documental aeronáutica de Gente de Vuelo. Robert responde en un máximo de 20 palabras y muestra las fuentes por separado.</p>
         </div>
       </div>
+
       <div role="status" style="margin:12px 0;padding:14px 16px;border:1px solid #70818b;border-radius:12px;background:#263039;color:#e9eff2">
-        <strong>Próximamente: Información meteorológica aeronáutica</strong>
-        <p style="margin:6px 0 0;font-size:14px;line-height:1.5">PRONAREA de FIR Ezeiza, viento y temperatura por nivel de vuelo, fenómenos significativos, METAR y TAF. En pruebas privadas; todavía no disponible para consultas operacionales.</p>
+        <strong>Meteorología aeronáutica con Shimoda</strong>
+        <p style="margin:6px 0 10px;font-size:14px;line-height:1.5">Consultá METAR y TAF de aeródromos argentinos con interpretación breve y boletines originales. PRONAREA, SIGMET y cartas se consultan directamente en el SMN.</p>
+        <a href="meteorologia-shimoda.html" style="display:inline-block;padding:9px 14px;border-radius:9px;background:#c5d6e1;color:#15222c;font-weight:700;text-decoration:none">Abrir consulta meteorológica</a>
       </div>
       <form id="robertRagForm" class="robert-rag-form">
         <label for="robertPregunta" style="font-weight:700;color:#fff;">Tu pregunta</label>
