@@ -757,6 +757,7 @@
       mensaje(fallidas.length ? "No se pudieron cargar: " + fallidas.join(", ") + "." : "Lista actualizada.");
       pintar();
     }
+    const robertProcesando = new Set();
     function robertEstadoEtiqueta(status) {
       if (status === "ready") return "LISTO";
       if (status === "processing") return "PROCESANDO";
@@ -774,6 +775,8 @@
     }
 
     async function procesarDocumentoRobert(documentId, boton, titulo, reiniciar = false) {
+      if (robertProcesando.has(documentId)) return;
+      robertProcesando.add(documentId);
       const estadoPanel = $("robertAdminEstado");
       boton.disabled = true;
       let resultado = "";
@@ -808,6 +811,7 @@
         resultado = "No se pudo finalizar: " + (error?.message || "Error inesperado.")
           + " Podés pulsar Reprocesar para continuar desde el último lote guardado.";
       } finally {
+        robertProcesando.delete(documentId);
         boton.disabled = false;
         await cargarRobertDocs();
         estadoPanel.textContent = resultado;
@@ -853,17 +857,35 @@
             "robert-doc-meta")
         );
 
-        const badge = nodo("span", robertEstadoEtiqueta(doc.status), "robert-status " + (doc.status || ""));
+        const nextPage = Number(doc.metadata?.ingest_next_page);
+        const isResumable = Number.isInteger(nextPage) && nextPage > 1 && doc.status !== "ready";
+        const savedPages = isResumable ? nextPage - 1 : 0;
+        const processingHere = robertProcesando.has(doc.id);
+        const badgeLabel = isResumable && !processingHere ? "PARA CONTINUAR" : robertEstadoEtiqueta(doc.status);
+        const badge = nodo("span", badgeLabel, "robert-status " + (doc.status || ""));
         top.append(left, badge);
         card.append(top);
+        if (isResumable && doc.page_count) {
+          const percentage = Math.min(100, Math.round(savedPages / doc.page_count * 100));
+          const line = nodo("p", "Avance guardado: " + savedPages + " de " + doc.page_count
+            + " páginas (" + percentage + "%). Si el proceso se interrumpió, usá «Continuar procesamiento».", "robert-doc-meta");
+          line.style.margin = "9px 0 4px";
+          const bar = document.createElement("progress");
+          bar.value = savedPages;
+          bar.max = doc.page_count;
+          bar.setAttribute("aria-label", "Progreso del manual: " + percentage + "%");
+          bar.style.cssText = "width:100%;height:12px;accent-color:#48bd82;";
+          card.append(line, bar);
+        }
 
         const lastError = doc.metadata?.last_error;
         if (lastError) card.append(nodo("div", String(lastError), "robert-doc-error"));
 
         const actions = nodo("div", "", "robert-doc-actions");
 
-        const reprocesar = nodo("button", "Reprocesar", "secundario");
+        const reprocesar = nodo("button", isResumable ? "Continuar procesamiento" : "Reprocesar", "secundario");
         reprocesar.type = "button";
+        reprocesar.disabled = processingHere;
         reprocesar.addEventListener("click", () => {
           procesarDocumentoRobert(doc.id, reprocesar, doc.title || doc.original_filename || "documento", doc.status === "ready");
         });
