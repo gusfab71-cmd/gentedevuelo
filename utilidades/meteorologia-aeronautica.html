@@ -167,7 +167,7 @@
 <label class="field full">Ruta prevista y puntos principales<input id="flight-route" required maxlength="280" placeholder="Describí la ruta, puntos y aeródromos alternativos"></label>
 
 <details id="nav-legs-panel" class="report full" style="margin:0;background:#172326">
-<summary><strong>Calcular piernas de vuelo · FlightPrep NAV</strong><span>Desplegar calculadora gratuita</span></summary>
+<summary><strong>Navegación por piernas · FlightPrep NAV</strong><span>Hasta 16 piernas · Todas las columnas</span></summary>
 <div class="content">
 <p class="sub">Planificá tramos entre aeródromos y puntos intermedios. La distancia y el rumbo verdadero se calculan en línea ortodrómica a partir de coordenadas aproximadas. Cada pierna requiere <strong>viento de altura</strong> (dirección verdadera desde donde sopla y velocidad en kt). Para 6.500 pies, ingresá el viento pronosticado para ese sector, nivel y horario; no utilices viento de superficie METAR.</p>
 <div class="form" style="margin:15px 0">
@@ -175,19 +175,28 @@
 <label class="field">Consumo en crucero (L/h, opcional)<input id="nav-fuel-flow" type="number" min="0" max="1000" step=".1" placeholder="Ej.: 33"></label>
 <label class="field">Combustible rodaje y ascenso (L, opcional)<input id="nav-taxi" type="number" min="0" max="500" step=".1" placeholder="Ej.: 6"></label>
 <label class="field">Reserva prevista (min, opcional)<input id="nav-reserve" type="number" min="0" max="360" step="1" placeholder="Según plan y normativa aplicable"></label>
+<label class="field">Contingencia prevista (% del consumo crucero)<input id="nav-contingency" type="number" min="0" max="100" step=".1" placeholder="Ej.: 10"></label>
+<label class="field">Tiempo a alternativa (min, opcional)<input id="nav-alternate" type="number" min="0" max="720" step="1" placeholder="Tiempo previsto"></label>
+<label class="field">Combustible a bordo (L, opcional)<input id="nav-onboard" type="number" min="0" max="4000" step=".1" placeholder="Ej.: 150"></label>
 </div>
 <div id="nav-origin-manual" hidden class="form" style="margin:12px 0"><p class="full sub">El aeródromo de salida no tiene coordenadas precargadas. Cargalas desde la AIP.</p><label class="field">Latitud salida (° decimal; S−)<input id="nav-origin-lat" type="number" min="-90" max="90" step=".000001"></label><label class="field">Longitud salida (° decimal; O−)<input id="nav-origin-lon" type="number" min="-180" max="180" step=".000001"></label></div>
 <div id="nav-dest-manual" hidden class="form" style="margin:12px 0"><p class="full sub">El aeródromo de destino no tiene coordenadas precargadas. Cargalas desde la AIP.</p><label class="field">Latitud destino (° decimal; S−)<input id="nav-dest-lat" type="number" min="-90" max="90" step=".000001"></label><label class="field">Longitud destino (° decimal; O−)<input id="nav-dest-lon" type="number" min="-180" max="180" step=".000001"></label></div>
-<div class="card-header"><h3>Puntos intermedios (orden de vuelo)</h3><button type="button" class="secondary" id="nav-add-waypoint">Agregar punto</button></div>
+<div class="card-header"><h3>Piernas (salida → puntos → destino)</h3><button type="button" class="secondary" id="nav-add-waypoint">+ Agregar pierna / punto</button></div>
+<p class="sub">Cada punto agregado crea una nueva pierna. La última siempre termina en el aeródromo de destino. Podés añadir hasta 15 puntos intermedios (16 piernas en total).</p>
 <div id="nav-waypoints" class="stack" style="gap:9px"></div>
 <div class="actions"><button type="button" class="secondary" id="nav-build">Preparar piernas</button><button type="button" class="secondary" id="nav-send-route">Pasar ruta al formulario</button></div>
 <p id="nav-status" class="feedback" role="status" aria-live="polite">Indicá origen, destino y TAS; podés añadir puntos intermedios.</p>
 <div id="nav-table-block" hidden>
-<div style="overflow-x:auto;margin-top:14px"><table id="nav-legs-table" style="width:100%;min-width:950px;border-collapse:separate;border-spacing:0 7px;font-size:12px">
-<thead><tr><th scope="col">Pierna</th><th scope="col">Dist NM*</th><th scope="col">TC° V</th><th scope="col">Viento de altura° V</th><th scope="col">Kt</th><th scope="col">Var° E+/O−</th><th scope="col">Desv° E+/O−</th><th scope="col">WCA°</th><th scope="col">RM°</th><th scope="col">RC°</th><th scope="col">GS kt</th><th scope="col">ETE</th><th scope="col">ETA local</th><th scope="col">Comb. L</th></tr></thead>
+<div style="overflow-x:auto;margin-top:14px;padding-bottom:6px" role="region" aria-label="Tabla de piernas, desplazamiento horizontal" tabindex="0"><table id="nav-legs-table" style="width:100%;min-width:1140px;border-collapse:separate;border-spacing:0 7px;font-size:12px">
+<thead><tr><th scope="col">Hasta / pierna</th><th scope="col">TC° V</th><th scope="col">Dist NM*</th><th scope="col">Viento° V</th><th scope="col">Vel kt</th><th scope="col">Var° E+/O−</th><th scope="col">Desvío° E+/O−</th><th scope="col">WCA°</th><th scope="col">RM°</th><th scope="col">RC°</th><th scope="col">GS kt</th><th scope="col">ETE</th><th scope="col">ETA Arg.</th><th scope="col">Consumo L</th></tr></thead>
 <tbody id="nav-legs-body"></tbody>
 </table></div>
+<h3 style="margin:18px 0 8px">Totales, combustible y autonomía</h3>
 <div id="nav-totals" class="metric-grid" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr));margin:12px 0"></div>
+<div class="card" style="padding:14px;background:#141e21;margin-top:12px">
+<h3>Combustible remanente por pierna</h3>
+<div id="nav-fuel-plot" aria-label="Estimación de combustible por pierna"><p class="sub">Ingresá consumo, combustible a bordo y rodaje/ascenso para visualizar la evolución estimada.</p></div>
+</div>
 <p class="source-notes">* Distancia y rumbo inicial aproximados entre puntos; no representan aerovías, circuito, virajes, restricciones, ascenso ni descenso. RM = rumbo magnético; RC = rumbo de compás. Variación y desvío, E positivo y O negativo, deben ser conocidos para obtener RM y RC. El cálculo sigue las ecuaciones de viento de FlightPrep NAV. ETA depende de la hora de partida declarada. Los consumos de rodaje y reserva no sustituyen el cálculo reglamentario.</p>
 </div>
 </div>
@@ -402,12 +411,12 @@ el('calc-sun').addEventListener('click',()=>{
  }
  const options=[...$('flight-origin').options].filter(o=>GEO[o.value]).map(o=>({value:o.value,label:o.textContent}));
  function createPoint(){
-   if(points.length>=8){$('nav-status').textContent='Máximo ocho puntos intermedios.';return;}
+   if(points.length>=15){$('nav-status').textContent='Máximo 15 puntos intermedios (16 piernas).';return;}
    const point={id:Date.now().toString(36)+Math.random().toString(36).slice(2,7)};
    points.push(point);
    const row=document.createElement('div');row.className='form';row.style.cssText='padding:12px;border:1px solid #51605a;border-radius:12px';
    row.dataset.point=point.id;
-   const label=document.createElement('label');label.className='field';label.textContent='Punto '+points.length;
+   const label=document.createElement('label');label.className='field';label.textContent='Pierna '+points.length+' · Hasta (punto intermedio)';
    const select=document.createElement('select');select.className='nav-waypoint-select';
    select.add(new Option('Elegí un aeródromo o punto', '', true,true));select.options[0].disabled=true;
    for(const opt of options)select.add(new Option(opt.label,opt.value));
@@ -448,8 +457,8 @@ el('calc-sun').addEventListener('click',()=>{
    prepared.forEach((leg,i)=>{
      const tr=document.createElement('tr');tr.style.background='#213033';
      function cell(text){const td=document.createElement('td');td.style.cssText='padding:7px 5px;text-align:center;white-space:nowrap';td.textContent=text;tr.append(td);return td;}
-     cell((i+1)+'. '+leg.from.code+' → '+leg.to.code);
-     cell(leg.nm.toFixed(1));cell(angle(leg.tc));
+     cell((i+1)+'. '+leg.to.code+(i===prepared.length-1?' · DESTINO':''));
+     cell(angle(leg.tc));cell(leg.nm.toFixed(1));
      for(const [key,label,min,max,step] of [['wd','desde °',0,360,1],['ws','kt',0,300,1],['variation','var.',-30,30,.1],['deviation','desv.',-30,30,.1]]){
        const td=document.createElement('td');td.style.cssText='padding:5px;width:80px';
        const input=document.createElement('input');input.type='number';input.min=String(min);input.max=String(max);input.step=String(step);input.placeholder=label;
@@ -535,7 +544,7 @@ el('calc-sun').addEventListener('click',()=>{
  function prepare(){
    try{
      const route=[place('flight-origin','salida'),...points.map(middlePoint),place('flight-dest','destino')];
-     if(route.length>10)throw Error('Máximo ocho puntos intermedios.');
+     if(route.length>17)throw Error('Máximo 15 puntos intermedios.');
      const legs=[];
      for(let i=1;i<route.length;i++){
        const info=geometry(route[i-1],route[i]);
