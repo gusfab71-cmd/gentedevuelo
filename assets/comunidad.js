@@ -133,10 +133,22 @@ async function getLegacyPendingCounts(){
   fotosHangar:fotosResp.error?0:(fotosResp.count||0)
  };
 }
+// Las respuestas corrientes del Foro se publican automáticamente.
+ // Solo se contabilizan publicaciones realmente pendientes y respuestas
+ // de cuentas restringidas; nunca respuestas antiguas de cuentas comunes.
+function countForumPending(restrictedIds){
+ return topics.filter(t=>t.status==='pending').length+
+   comments.filter(c=>c.status==='pending'&&restrictedIds.has(c.author_id)).length;
+}
 async function refreshAdminPendingBadge(){
  if(!isAdmin)return;
- const legacy=await getLegacyPendingCounts();
- const forum=topics.filter(t=>t.status==='pending').length+comments.filter(c=>c.status==='pending').length;
+ const [legacy,restrictedResult]=await Promise.all([
+   getLegacyPendingCounts(),db.from('gdv_members').select('user_id').eq('restricted',true)
+ ]);
+ // Ante un fallo de consulta no ocultar pendientes sujetos a moderación.
+ const forum=restrictedResult.error
+   ?topics.filter(t=>t.status==='pending').length+comments.filter(c=>c.status==='pending').length
+   :countForumPending(new Set((restrictedResult.data||[]).map(m=>m.user_id)));
  const total=forum+legacy.shimoda+legacy.compraVenta+legacy.aeroShop+legacy.fotosHangar;
  const badge=$('admin-pending-badge');
  if(!badge)return;
@@ -1780,7 +1792,7 @@ async function initR2MigrationPanel(reference){
 const basicModeration=moderation;
 moderation=async function(){await basicModeration();if(!isAdmin)return;const reports=checked(await db.from('gdv_reports').select('*').eq('status','pending')),members=checked(await db.from('gdv_members').select('*')),legacy=await getLegacyPendingCounts();const counts=new Map();reports.forEach(r=>{const key=r.comment_id||r.topic_id;const set=counts.get(key)||new Set();set.add(r.user_id);counts.set(key,set)});const urgent=[...counts].filter(([,users])=>users.size>=3);const panel=document.createElement('section');panel.className='moderation-overview';panel.innerHTML=`<div class="grid">${[
 ['Reportes pendientes',reports.length,'Denuncias enviadas por usuarios que todavía deben revisarse.'],
-['Foro pendientes',topics.filter(t=>t.status==='pending').length+comments.filter(c=>c.status==='pending').length,'Publicaciones y comentarios del foro que esperan aprobación.','#gestion'],
+['Foro pendientes',countForumPending(new Set(members.filter(m=>m.restricted).map(m=>m.user_id))),'Solo publicaciones que requieren aprobación previa y respuestas de cuentas restringidas. Las respuestas habituales se publican inmediatamente.','#gestion'],
 ['Cuentas restringidas',members.filter(m=>m.restricted||new Date(m.suspended_until)>new Date()).length,'Usuarios con revisión previa o suspensión actualmente activa.'],
 ['Alertas prioritarias',urgent.length,'Contenido denunciado por tres usuarios distintos y que requiere atención prioritaria.']
 ].map(([label,n,detail,href])=>href?`<a class="card moderation-metric-link ${n?'has-pending':''}" href="${href}"><strong class="metric-value">${n}</strong><span>${label}</span><small class="moderation-card-help">${detail}</small></a>`:`<div class="card"><strong class="metric-value">${n}</strong><span>${label}</span><small class="moderation-card-help">${detail}</small></div>`).join('')}</div><div class="legacy-pending-grid"><a class="card legacy-pending-card ${legacy.shimoda?'has-pending':''}" href="moderacion.html#shimoda_comentarios"><strong class="metric-value">${legacy.shimoda}</strong><span>Rincón Shimoda pendientes</span><small class="moderation-card-help">Comentarios del Rincón Shimoda que todavía esperan moderación.</small></a><a class="card legacy-pending-card ${(legacy.compraVenta+legacy.aeroShop)?'has-pending':''}" href="moderacion.html#comercio"><strong class="metric-value">${legacy.compraVenta+legacy.aeroShop}</strong><span>CompraVenta / AeroShop pendientes</span><small>CompraVenta: ${legacy.compraVenta} · AeroShop: ${legacy.aeroShop}</small><small class="moderation-card-help">Avisos de CompraVenta y publicaciones de AeroShop que todavía deben aprobarse.</small></a><a class="card legacy-pending-card ${legacy.fotosHangar?'has-pending':''}" href="moderacion.html#galeria"><strong class="metric-value">${legacy.fotosHangar}</strong><span>Fotos de Mi Hangar pendientes</span><small class="moderation-card-help">Fotografías enviadas por integrantes que esperan tu aprobación para aparecer en la Galería. Abrir para revisar, aprobar o eliminar.</small></a></div><p>Prioridad alta: tres denunciantes distintos sobre el mismo contenido. La decisión sigue siendo humana.</p>${urgent.map(([id,users])=>{const r=reports.find(r=>(r.comment_id||r.topic_id)===id);return `<p class="priority">⚑ ${users.size} denunciantes · ${link('Revisar contenido','#tema/'+r.topic_id+(r.comment_id?'/'+r.comment_id:''))}</p>`}).join('')}`;app.querySelector('h1').after(panel);
