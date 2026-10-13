@@ -147,6 +147,7 @@
     if(!editing||saving||!dirty.size)return;
     if(collisionHint().startsWith('Atención')&&!confirm('Hay una superposición con otra tarjeta o el video. ¿Guardar igualmente?'))return;
     saving=true;updatePanel();info('Guardando las tarjetas en Supabase…');
+    let resultMessage='',failed=false;
     try {
       const rows=[...dirty].map(id=>draft.get(id)).filter(Boolean);
       const {data,error}=await db.from('gdv_home_card_layout')
@@ -154,14 +155,15 @@
       if(error||!data||data.length!==rows.length)throw Error(error?.message||'No se pudieron confirmar todos los cambios');
       data.forEach(row=>saved.set(row.card_id,row));
       dirty.clear();
-      info('Tarjetas guardadas. La posición nueva ya está disponible para todos.');
-    }catch(error){info('No se pudo guardar: '+(error.message||'Error de conexión'),true);}
-    finally{saving=false;draw();updatePanel();}
+      resultMessage='Tarjetas guardadas. La posición nueva ya está disponible para todos.';
+    }catch(error){resultMessage='No se pudo guardar: '+(error.message||'Error de conexión');failed=true;}
+    finally{saving=false;draw();updatePanel();info(resultMessage,failed);}
   }
   async function resetCard(){
     if(!editing||saving)return;
     if(!confirm('¿Restaurar el tamaño y ubicación originales de esta tarjeta?'))return;
     saving=true;updatePanel();info('Restaurando el diseño original…');
+    let resultMessage='',failed=false;
     try {
       const id=selected;
       if(saved.has(id)){
@@ -169,9 +171,9 @@
         if(error)throw error;
       }
       saved.delete(id);draft.delete(id);dirty.delete(id);
-      measureBase();draw();info('Tarjeta restaurada a su posición original.');
-    }catch(error){info('No se pudo restaurar: '+(error.message||'Error de conexión'),true);}
-    finally{saving=false;updatePanel();}
+      measureBase();draw();resultMessage='Tarjeta restaurada a su posición original.';
+    }catch(error){resultMessage='No se pudo restaurar: '+(error.message||'Error de conexión');failed=true;}
+    finally{saving=false;updatePanel();info(resultMessage,failed);}
   }
   function openPanel(){
     if(editing||!desktop()||!window.gdvLegacyAdmin||loading)return;
@@ -221,6 +223,7 @@
     draw();updatePanel();
   }
   for(const [id,card] of cards){
+    card.addEventListener('dragstart',evt=>{if(editing)evt.preventDefault();});
     card.addEventListener('click',evt=>{
       if(!editing)return;
       evt.preventDefault();evt.stopImmediatePropagation();selectCard(id);
