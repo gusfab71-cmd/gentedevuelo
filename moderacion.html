@@ -86,6 +86,18 @@
       box-shadow: 0 10px 28px rgba(0,0,0,.18);
     }
     .robert-admin h2 { margin: 0 0 6px; color: #fff; }
+    .robert-control-panel { border:1px solid #546a79;border-radius:12px;background:#13212b;padding:16px;margin:18px 0 22px; }
+    .robert-control-panel h3 { font-size:17px;margin:0 0 10px;color:#fff; }
+    .robert-control-row { display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;flex-wrap:wrap; }
+    .robert-control-row + .robert-control-row { border-top:1px solid #445969; }
+    .robert-control-row strong { display:block;color:#fff;font-size:15px; }
+    .robert-control-row p {margin:5px 0 0;font-size:13px;color:#c4d2d9; }
+    .robert-control-row button { flex:0 0 auto;min-width:155px; }
+    .robert-control-row button.is-on {border-color:#8cc9a8;color:#e9fff2;background:#275641;}
+    .robert-control-row button.is-on:hover {background:#316a51;}
+    .robert-control-row button.is-off {border-color:#e9a06c;color:#fff;background:#d65b2a;}
+    .robert-control-state { font-weight:750;color:#d8e4e9; }
+    .robert-control-panel .estado {margin:10px 0 0;font-size:13px;}
     .robert-admin p { color: #b8cad8; line-height: 1.5; }
     .robert-admin-form {
       display: grid;
@@ -236,6 +248,26 @@
 
       <section class="robert-admin" id="robertAdmin">
         <h2>Conocimiento de Robert Shimoda</h2>
+        <section class="robert-control-panel" id="robertControlPanel" aria-label="Activar o desactivar Robert Shimoda">
+          <h3>Controles del Asistente Aeronáutico</h3>
+          <div class="robert-control-row">
+            <div>
+              <strong>Chat de Robert Shimoda</strong>
+              <p>Estado: <span id="robertChatEstado" class="robert-control-state" aria-live="polite">Consultando…</span></p>
+              <p>Al activarlo, Robert podrá responder a los integrantes y se consumirán tokens en cada consulta.</p>
+            </div>
+            <button id="robertChatBoton" type="button" disabled>Comprobando…</button>
+          </div>
+          <div class="robert-control-row">
+            <div>
+              <strong>Publicaciones automáticas de Robert</strong>
+              <p>Estado: <span id="robertDiarioEstado" class="robert-control-state" aria-live="polite">Consultando…</span></p>
+              <p>Control independiente del chat. Los borradores automáticos también pueden consumir tokens.</p>
+            </div>
+            <button id="robertDiarioBoton" type="button" disabled>Comprobando…</button>
+          </div>
+          <p id="robertControlMensaje" class="estado" role="status" aria-live="polite">Los dos interruptores solo pueden modificarse desde una cuenta administradora.</p>
+        </section>
         <p>Subí documentos para incorporar información al RAG. Formatos admitidos: PDF, TXT, Markdown y DOCX. Los PDF pueden tener hasta <strong>60 MB y 900 páginas</strong>; los manuales grandes se procesan por partes y se pueden continuar con «Reprocesar». Los PDF escaneados sin texto pueden requerir OCR.</p>
 
         <form id="robertUploadForm" class="robert-admin-form">
@@ -758,6 +790,68 @@
       pintar();
     }
     const robertProcesando = new Set();
+    let robertConfigActual = null;
+    let robertControlPendiente = false;
+    async function cargarControlesRobert() {
+      if (!administrador || !$("robertControlPanel")) return;
+      const mensaje = $("robertControlMensaje");
+      const chat = $("robertChatBoton"), diario = $("robertDiarioBoton");
+      chat.disabled = true; diario.disabled = true;
+      $("robertChatEstado").textContent = "Consultando…";
+      $("robertDiarioEstado").textContent = "Consultando…";
+      const { data, error } = await client.from("robert_daily_config")
+        .select("enabled,chat_enabled").eq("singleton", true).maybeSingle();
+      if (error || !data) {
+        robertConfigActual = null;
+        chat.textContent = "No disponible";
+        diario.textContent = "No disponible";
+        $("robertChatEstado").textContent = "No disponible";
+        $("robertDiarioEstado").textContent = "No disponible";
+        mensaje.textContent = "No se pudo consultar el estado de Robert: " + (error?.message || "sin datos.");
+        return;
+      }
+      robertConfigActual = { chat: data.chat_enabled === true, diario: data.enabled === true };
+      for (const [tipo, boton, texto] of [
+        ["chat", chat, $("robertChatEstado")],
+        ["diario", diario, $("robertDiarioEstado")]
+      ]) {
+        const activo = robertConfigActual[tipo];
+        texto.textContent = activo ? "ACTIVADO" : "DESACTIVADO";
+        boton.textContent = activo ? "Desactivar" : "Activar";
+        boton.classList.toggle("is-on", activo);
+        boton.classList.toggle("is-off", !activo);
+        boton.disabled = robertControlPendiente;
+      }
+      mensaje.textContent = "Estos controles son independientes. Activá únicamente la función que quieras probar.";
+    }
+    async function cambiarControlRobert(tipo) {
+      if (!administrador || !robertConfigActual || robertControlPendiente) return;
+      const activo = robertConfigActual[tipo];
+      const etiqueta = tipo === "chat" ? "el chat de Robert Shimoda" : "las publicaciones automáticas de Robert";
+      if (!activo && !window.confirm("¿Activar " + etiqueta + "? Esta opción puede consumir tokens de la API.")) return;
+      robertControlPendiente = true;
+      const boton = $(tipo === "chat" ? "robertChatBoton" : "robertDiarioBoton");
+      const mensaje = $("robertControlMensaje");
+      $("robertChatBoton").disabled = true;
+      $("robertDiarioBoton").disabled = true;
+      mensaje.textContent = (activo ? "Desactivando " : "Activando ") + etiqueta + "…";
+      try {
+        const rpc = tipo === "chat" ? "set_robert_chat_enabled" : "set_robert_daily_enabled";
+        const { error } = await client.rpc(rpc, { p_enabled: !activo });
+        if (error) throw error;
+        await cargarControlesRobert();
+        mensaje.textContent = etiqueta + (activo ? " desactivado." : " activado.") + " Estado confirmado en Supabase.";
+      } catch (error) {
+        mensaje.textContent = "No se pudo cambiar el estado: " + (error?.message || "Error desconocido.");
+        boton.disabled = false;
+      } finally {
+        robertControlPendiente = false;
+        if (robertConfigActual) {
+          $("robertChatBoton").disabled = false;
+          $("robertDiarioBoton").disabled = false;
+        }
+      }
+    }
     function robertEstadoEtiqueta(status) {
       if (status === "ready") return "LISTO";
       if (status === "processing") return "PROCESANDO";
@@ -1136,7 +1230,7 @@
           if (element) element.style.display = "none";
         }
         $("robertAdmin").hidden = false;
-        await cargarRobertDocs();
+        await Promise.all([cargarRobertDocs(), cargarControlesRobert()]);
         return;
       }
       if (modoRecuperacion && administrador) {
@@ -1217,7 +1311,7 @@
       if (modoComercio || modoFotos || moderador) {
         await cargar();
       } else {
-        await Promise.all([cargar(), cargarRobertDocs()]);
+        await Promise.all([cargar(), cargarRobertDocs(), cargarControlesRobert()]);
       }
     }
     $("loginForm").addEventListener("submit", async event => {
@@ -1255,6 +1349,8 @@
     $("buscar").addEventListener("input", pintar);
     $("recargar").addEventListener("click", cargar);
     $("robertUploadForm")?.addEventListener("submit", subirDocumentoRobert);
+    $("robertChatBoton")?.addEventListener("click", () => cambiarControlRobert("chat"));
+    $("robertDiarioBoton")?.addEventListener("click", () => cambiarControlRobert("diario"));
     $("shimodaPublicarForm")?.addEventListener("submit", publicarShimodaDirecto);
     client.auth.onAuthStateChange(event => {
       if (event === "SIGNED_OUT") setTimeout(iniciar, 0);
