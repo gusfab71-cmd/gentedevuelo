@@ -9,6 +9,12 @@ const cors = {
 const reply = (body: unknown, status = 200) => new Response(JSON.stringify(body), {
   status, headers: { ...cors, "Content-Type": "application/json; charset=utf-8" },
 });
+const MAX_ANSWER_WORDS = 20;
+function limitAnswer(text: string): string {
+  const words = text.trim().split(/\s+/u).filter(Boolean);
+  if (words.length <= MAX_ANSWER_WORDS) return words.join(" ");
+  return words.slice(0, MAX_ANSWER_WORDS).join(" ").replace(/[,:;—–-]+$/u, "").trim() + "…";
+}
 function secret(name: string): string {
   try { return JSON.parse(Deno.env.get(name) || "{}")?.default || ""; }
   catch { return ""; }
@@ -90,8 +96,9 @@ Deno.serve(async (request: Request) => {
     "Si piden evaluar un vuelo real o próximo, explicá que esta prueba no puede hacerlo y remití a PRONAREA, METAR, TAF, SIGMET y NOTAM oficiales vigentes, más criterio del piloto.",
     "Si falta fecha de validez o ubicación/altura precisa, decilo expresamente.",
     "Respondé en español rioplatense, con claridad y sin inventar experiencias personales.",
-    "Comenzá con 'PRUEBA · BOLETÍN SIN VIGENCIA VERIFICADA'. Citá al final 'Fuente: PRONAREA FIR EZE, carga manual no verificada'.",
-    "Sé breve, educativo y explicá las abreviaturas solo cuando el boletín alcance para hacerlo."
+    "Comenzá con 'PRUEBA · Sin vigencia confirmada'. Las fuentes se muestran por separado, no hace falta repetirlas.",
+    "Respondé en una sola frase de 12 a 17 palabras. Límite estricto de 20 palabras, incluidos números y advertencias, incluso si piden más detalle.",
+    "Priorizá precisión y seguridad por encima de la amplitud. Evitá listas, explicaciones extensas y afirmaciones no verificadas."
   ].join("\n");
 
   try {
@@ -102,14 +109,14 @@ Deno.serve(async (request: Request) => {
         model: "gpt-5.4-mini", instructions,
         input: "CONSULTA DEL ADMINISTRADOR:\n" + question + "\n\n" + context,
         reasoning: { effort: "low" },
-        max_output_tokens: 450
+        max_output_tokens: 160
       })
     });
     if (!upstream.ok) {
       console.error("Robert PRONAREA: respuesta del modelo", upstream.status);
       return reply({ error: "El asistente no pudo procesar la consulta. Revisá la disponibilidad y el saldo de la API." }, 502);
     }
-    const answer = answerText(await upstream.json());
+    const answer = limitAnswer(answerText(await upstream.json()));
     if (!answer) return reply({ error: "El asistente no devolvió una respuesta." }, 502);
     return reply({
       ok: true, answer,
