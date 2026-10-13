@@ -115,7 +115,15 @@
     pendingValidation = (async () => {
       const { data, error } = await client.auth.getSession();
       verifiedUser = null;
-      if (error || !data?.session) return null;
+      if (error) {
+        // Si una sesión antigua quedó con un refresh token revocado, limpiar
+        // solamente la sesión local para que el integrante pueda volver a ingresar.
+        if (/refresh[_ ]token|invalid refresh token/i.test((error.code || '') + ' ' + (error.message || ''))) {
+          await client.auth.signOut({ scope: 'local' }).catch(() => {});
+        }
+        return null;
+      }
+      if (!data?.session) return null;
       // A cached JWT can outlive a deleted account: verify it with Auth.
       const result = await client.auth.getUser();
       if (result.error || !result.data?.user) {
