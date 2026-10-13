@@ -1,0 +1,59 @@
+/* Editor de marca de la portada: desplaza juntos el logo y el bloque tipográfico
+   sin sustituir sus transformaciones ni alterar la ubicación en celulares. */
+@media(min-width:701px){
+  .portada-completa .hero .logo-emblema,
+  .portada-completa .hero .hero-titulo {
+    translate:var(--gdv-brand-shift-x,0px) var(--gdv-brand-shift-y,0px)!important;
+  }
+  .portada-completa .hero.gdv-brand-editing .logo-emblema,
+  .portada-completa .hero.gdv-brand-editing .hero-titulo {
+    cursor:grab!important;
+    touch-action:none!important;
+    user-select:none!important;
+    -webkit-user-select:none!important;
+  }
+  .portada-completa .hero.gdv-brand-editing .logo-emblema{
+    outline:2px dashed #ffe0a5!important;
+    outline-offset:7px!important;
+  }
+  .portada-completa .hero.gdv-brand-editing .hero-titulo h1 {
+    outline:2px dashed #ffe0a5!important;
+    outline-offset:2px!important;
+  }
+  .portada-completa .hero.gdv-brand-editing :is(.logo-emblema,.hero-titulo):active{cursor:grabbing!important;}
+  .portada-completa .hero.gdv-brand-editing img {-webkit-user-drag:none!important;}
+}
+#gdvBrandEditor{
+  position:fixed;
+  z-index:100080;
+  top:10px;left:50%;
+  transform:translateX(-50%);
+  display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:8px;
+  box-sizing:border-box;
+  width:min(1020px,calc(100vw - 24px));
+  max-height:calc(100vh - 20px);overflow:auto;
+  border:1px solid #d9b37b;border-radius:12px;
+  padding:12px 14px;
+  background:#18242cf7;color:white;
+  box-shadow:0 10px 32px #000b;
+  font:12px/1.4 system-ui,sans-serif;
+}
+#gdvBrandEditor strong{color:#ffe1ab;font-size:12px;letter-spacing:.4px;}
+#gdvBrandEditor .gdv-brand-arrows{display:flex;gap:3px;align-items:center;}
+#gdvBrandEditor button{
+  padding:7px 10px;min-height:34px;
+  font:600 12px system-ui,sans-serif;
+  border:1px solid #8594a1;border-radius:8px;
+  background:#2d3c48;color:white;
+  cursor:pointer;
+}
+#gdvBrandEditor button:hover{background:#415463;}
+#gdvBrandEditor button:disabled{opacity:.55;cursor:not-allowed;}
+#gdvBrandEditor button[data-move]{min-width:32px;padding:5px;font-size:18px;}
+#gdvBrandEditor .gdv-brand-save{background:#ddb06d;color:#202029;border-color:#edc58d;}
+#gdvBrandEditor label{display:flex;align-items:center;gap:4px;white-space:nowrap;}
+#gdvBrandEditor input[type=range]{width:100px;accent-color:#efbf76;}
+#gdvBrandEditor label output{min-width:37px;text-align:right;font-variant-numeric:tabular-nums;}
+#gdvBrandStatus{flex:0 0 100%;text-align:center;color:#f0dcac;min-height:1.4em;}
+#gdvBrandStatus.gdv-brand-error{color:#ffc0ad;}
+@media(max-width:700px){#gdvBrandEditor{display:none!important;}}
