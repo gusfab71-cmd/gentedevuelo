@@ -166,6 +166,20 @@
       <p id="mensaje" class="estado" role="status"></p>
       <p id="comunicadosAccesoModeracion" style="margin:0 0 24px;"><a class="link" href="comunidad.html#gestion/comunicados">Enviar comunicado a todos los integrantes</a></p>
 
+<section class="panel" id="gdvManualRegistration" hidden style="margin:0 0 24px">
+<h2>Registro manual de integrantes</h2>
+<p class="intro">Para quienes no pudieron completar el registro habitual. Verificá por un canal confiable que el correo pertenece a la persona y que autorizó crear su cuenta. La contraseña temporal se comparte en privado y deberá cambiarse al primer ingreso.</p>
+<form id="gdvManualRegistrationForm" style="display:grid;gap:12px;max-width:650px">
+<label>Nombre de usuario<input id="gdvManualUsername" required minlength="3" maxlength="25" pattern="[A-Za-z0-9_-]{3,25}" autocomplete="off"></label>
+<label>Correo electrónico<input id="gdvManualEmail" type="email" required maxlength="254" autocomplete="off"></label>
+<label>Nombre visible (opcional)<input id="gdvManualFullName" maxlength="80" autocomplete="off"></label>
+<label>Contraseña temporal<input id="gdvManualPassword" type="password" required minlength="9" maxlength="128" autocomplete="new-password"></label>
+<div class="acciones" style="margin-top:0"><button type="button" class="secundario" id="gdvGeneratePassword">Generar contraseña</button><button type="button" class="secundario" id="gdvCopyPassword">Copiar contraseña</button><button type="button" class="secundario" id="gdvShowPassword">Mostrar / ocultar</button></div>
+<label style="display:flex;gap:10px;align-items:flex-start;font-weight:400"><input id="gdvManualVerify" type="checkbox" required style="min-height:18px;min-width:18px;margin-top:3px"> Confirmé la titularidad del correo y la autorización de la persona para crear la cuenta.</label>
+<div class="acciones"><button type="submit" id="gdvManualCreate">Crear cuenta manualmente</button></div>
+<p class="estado" id="gdvManualStatus" role="status" aria-live="polite"></p>
+</form></section>
+
       <section class="panel" id="gdvStolAdmin" hidden style="margin:0 0 24px;border-color:rgba(232,187,104,.75);">
         <h2 style="margin-top:0;">Video de portada</h2>
         <p><a href="moderacion.html" class="link">Volver al panel completo</a></p>
@@ -992,7 +1006,8 @@
       const modoShimoda = tablaDestino === "shimoda_comentarios" || tablaDestino === "shimoda_publicaciones";
 
       if ($("comunicadosAccesoModeracion")) $("comunicadosAccesoModeracion").hidden = modoComercio || modoFotos || modoVideo || moderador;
-      if ($("robertAdmin")) $("robertAdmin").hidden = modoComercio || modoFotos || modoVideo || moderador;
+      if ($("gdvManualRegistration")) $("gdvManualRegistration").hidden = !administrador || modoComercio || modoFotos || modoVideo;
+       if ($("robertAdmin")) $("robertAdmin").hidden = modoComercio || modoFotos || modoVideo || moderador;
       if ($("gdvStolAdmin")) $("gdvStolAdmin").hidden = modoComercio || modoFotos || moderador;
       if (administrador && !modoComercio && !modoFotos) window.GDV_STOL_VIDEO?.admin();
       if ($("shimodaPublicarAdmin")) $("shimodaPublicarAdmin").hidden = modoComercio || modoFotos || modoVideo || moderador;
@@ -1086,6 +1101,7 @@
     });
     iniciar();
   </script>
-<script defer src="assets/chat-alerts.js?v=20261012avisosunavez1"></script>
+<script src="assets/admin-manual-registration.js?v=20261013manual1"></script>
+ <script defer src="assets/chat-alerts.js?v=20261012avisosunavez1"></script>
 </body>
 </html>
