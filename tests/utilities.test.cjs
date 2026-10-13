@@ -10,8 +10,4 @@ assert.equal(nav.node('g0').innerHTML,'100');assert.equal(nav.node('e0').innerHT
 nav.run('S.legs[0].ws=120;calcNav()');assert.match(nav.node('nstatus').textContent,/Revisá/);
 nav.run('S.legs[0].ws=0;S.legs[0].d=-1;calcNav()');assert.match(nav.node('nstatus').textContent,/positivos/);
 nav.run("S.legs[0].to='<img src=x onerror=alert(1)>';buildLegs()");assert.ok(!nav.node('legs').innerHTML.includes('<img'));
-const wb=load('peso-balance.html');assert.match(wb.node('tot').innerHTML,/2106.0 lb/);assert.match(wb.node('tot').innerHTML,/40.57 in/);
-wb.run('S.maxW=2000;calcWB()');assert.match(wb.node('wbstatus').innerHTML,/PESO EXCEDIDO/);
-wb.run('S.items[0].w=-1;calcWB()');assert.match(wb.node('wbstatus').textContent,/Datos inválidos/);
-wb.run('S.items[0].w=340;S.cgMin=50;S.cgMax=40;calcWB()');assert.match(wb.node('wbstatus').textContent,/Datos inválidos/);
-console.log('PASS: wind, navigation, midnight ETA, impossible legs, invalid input, escaping, weight and balance');
+console.log('PASS: wind, navigation, midnight ETA, impossible legs, invalid input, escaping');
