@@ -236,7 +236,7 @@
 
       <section class="robert-admin" id="robertAdmin">
         <h2>Conocimiento de Robert Shimoda</h2>
-        <p>Subí documentos para incorporar información al RAG. Formatos admitidos: PDF, TXT, Markdown y DOCX.</p>
+        <p>Subí documentos para incorporar información al RAG. Formatos admitidos: PDF, TXT, Markdown y DOCX. Los PDF pueden tener hasta <strong>60 MB y 900 páginas</strong>; los manuales grandes se procesan por partes y se pueden continuar con «Reprocesar». Los PDF escaneados sin texto pueden requerir OCR.</p>
 
         <form id="robertUploadForm" class="robert-admin-form">
           <label>
@@ -773,6 +773,47 @@
         .trim();
     }
 
+    async function procesarDocumentoRobert(documentId, boton, titulo, reiniciar = false) {
+      const estadoPanel = $("robertAdminEstado");
+      boton.disabled = true;
+      let resultado = "";
+      try {
+        for (let lote = 0; lote < 50; lote++) {
+          estadoPanel.textContent = lote === 0
+            ? "Preparando " + titulo + "…"
+            : "Continuando el procesamiento de " + titulo + "…";
+          const { data, error } = await client.functions.invoke("robert-ingest", {
+            body: { document_id: documentId, reset: reiniciar && lote === 0 }
+          });
+          if (error || !data?.ok) {
+            let descripcion = data?.error || error?.message || "Error inesperado.";
+            if (error?.context?.json) {
+              const detail = await error.context.json().catch(() => null);
+              if (detail?.error) descripcion = detail.error;
+            }
+            throw new Error(descripcion);
+          }
+          if (data.complete !== false) {
+            resultado = "Manual incorporado correctamente a Robert Shimoda. "
+              + (data.pages ? data.pages + " páginas · " : "")
+              + (data.chunks || 0) + " fragmentos de conocimiento.";
+            break;
+          }
+          estadoPanel.textContent = "Procesadas " + data.processed_pages + " de " + data.pages
+            + " páginas de " + titulo + ". Podés dejar esta ventana abierta para completar el manual.";
+          if (lote === 49) throw new Error("Se alcanzó el límite de lotes; presioná Reprocesar para continuar.");
+          // Se conserva el progreso después de cada lote, incluso si se cierra la pestaña.
+        }
+      } catch (error) {
+        resultado = "No se pudo finalizar: " + (error?.message || "Error inesperado.")
+          + " Podés pulsar Reprocesar para continuar desde el último lote guardado.";
+      } finally {
+        boton.disabled = false;
+        await cargarRobertDocs();
+        estadoPanel.textContent = resultado;
+      }
+    }
+
     async function cargarRobertDocs() {
       const contenedor = $("robertDocs");
       const estadoPanel = $("robertAdminEstado");
@@ -823,20 +864,8 @@
 
         const reprocesar = nodo("button", "Reprocesar", "secundario");
         reprocesar.type = "button";
-        reprocesar.addEventListener("click", async () => {
-          reprocesar.disabled = true;
-          estadoPanel.textContent = "Reprocesando " + (doc.title || doc.original_filename) + "…";
-          const { data: respuesta, error: invokeError } = await client.functions.invoke("robert-ingest", {
-            body: { document_id: doc.id }
-          });
-          reprocesar.disabled = false;
-
-          if (invokeError || !respuesta?.ok) {
-            estadoPanel.textContent = "No se pudo reprocesar el documento.";
-          } else {
-            estadoPanel.textContent = "Documento reprocesado correctamente.";
-          }
-          await cargarRobertDocs();
+        reprocesar.addEventListener("click", () => {
+          procesarDocumentoRobert(doc.id, reprocesar, doc.title || doc.original_filename || "documento", doc.status === "ready");
         });
 
         const eliminar = nodo("button", "Eliminar", "peligro");
@@ -888,6 +917,10 @@
         estadoPanel.textContent = "Formato no admitido. Usá PDF, TXT, Markdown o DOCX.";
         return;
       }
+      if (archivo.size > 60 * 1024 * 1024) {
+        estadoPanel.textContent = "El archivo supera 60 MB. Reducí su tamaño antes de subirlo.";
+        return;
+      }
 
       boton.disabled = true;
       estadoPanel.textContent = "Subiendo " + archivo.name + "…";
@@ -922,21 +955,8 @@
         return;
       }
 
-      estadoPanel.textContent = "Procesando documento…";
-      const proceso = await client.functions.invoke("robert-ingest", {
-        body: { document_id: registro.data.id }
-      });
-
-      boton.disabled = false;
       archivoInput.value = "";
-
-      if (proceso.error || !proceso.data?.ok) {
-        estadoPanel.textContent = "El archivo se subió, pero ocurrió un error al procesarlo. Podés usar Reprocesar.";
-      } else {
-        estadoPanel.textContent = "Documento incorporado correctamente a Robert Shimoda.";
-      }
-
-      await cargarRobertDocs();
+      await procesarDocumentoRobert(registro.data.id, boton, robertTituloArchivo(archivo.name));
     }
 
     async function publicarShimodaDirecto(event) {
