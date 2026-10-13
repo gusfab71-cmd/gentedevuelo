@@ -102,8 +102,8 @@ Deno.serve(async request=>{
   const aircraft=asString(input?.aircraft,100);
   const pronarea=asString(input?.pronarea_text,12000);
   const notam=asString(input?.notam_text,12000);
-  const pronareaChecked=asString(input?.pronarea_checked_at_utc,40);
-  const notamChecked=asString(input?.notam_checked_at_utc,40);
+  // La recepción se registra en el servidor; no es fecha de emisión ni certificación de vigencia.
+  const documentsReceivedAtUtc = new Date().toISOString();
   const firs=input?.firs;
   if(!/^SA[A-Z]{2}$/.test(origin)||!/^SA[A-Z]{2}$/.test(destination))
     return json({error:"Ingresá aeródromo de salida y destino (OACI argentinos de 4 letras)."},400);
@@ -116,11 +116,6 @@ Deno.serve(async request=>{
     return json({error:"Seleccioná las FIR que atraviesa la ruta (máximo cinco)."},400);
   if(!pronarea||pronarea.length<40||!notam||notam.length<30)
     return json({error:"Pegá PRONAREA y NOTAM completos y vigentes antes de solicitar el análisis con IA."},400);
-  if(!pronareaChecked||!notamChecked||!Number.isFinite(Date.parse(pronareaChecked))||!Number.isFinite(Date.parse(notamChecked)))
-    return json({error:"Ingresá cuándo verificaste manualmente PRONAREA y NOTAM."},400);
-  const checkFuture=Date.now()+2*60*60000;
-  if(Date.parse(pronareaChecked)>checkFuture||Date.parse(notamChecked)>checkFuture)
-    return json({error:"La fecha de verificación de los documentos no puede ser futura."},400);
   const now=Date.now(),plannedMs=Date.parse(planned);
   if(plannedMs<now-12*3600000)return json({error:"La hora prevista ya pasó. Actualizá el plan antes de gastar tokens."},400);
   if(!question)return json({error:"Especificá qué necesita saber el piloto."},400);
@@ -140,7 +135,7 @@ Deno.serve(async request=>{
     "Tu tarea: sintetizar información de interés PARA LA RUTA, ALTITUD Y HORA declaradas, no recitar fuentes.",
     "Responde en español argentino, conciso pero útil, con secciones: Resumen para el piloto; Salida; En ruta a la altitud indicada; Llegada; Riesgos y NOTAM; Datos faltantes y verificaciones.",
     "Interpretá con precisión METAR y TAF separadamente; si el vuelo es posterior al horizonte de pronóstico aclaralo. La hora de consulta no acredita vigencia.",
-    "PRONAREA y NOTAM son TEXTO PEGADO POR EL USUARIO, no verificados por servidor. La fecha de control también fue declarada por el usuario. Si falta validez explícita o ya venció, indicalo; nunca los presentes como oficiales verificados.",
+    "PRONAREA y NOTAM son TEXTO PEGADO POR EL USUARIO, no verificados por servidor. El servidor registra solamente la recepción del texto, NO la emisión, autenticidad ni vigencia. Buscá fechas de emisión, inicio y fin de validez DENTRO del propio boletín; si faltan, son ambiguas, vencieron o son incompatibles con la hora prevista del vuelo, señalalo explícitamente. Nunca presentes estos documentos como oficiales verificados.",
     "SIGMET del servicio internacional: búsqueda PARCIAL por FIR; no garantiza cobertura. Un SIGMET de una FIR NO necesariamente afecta la ruta ni los aeródromos; comprobá geografía, niveles y horario antes de sugerir relevancia.",
     "Relacioná la altitud declarada con fenómenos por niveles SOLO donde existan datos. Nunca deduzcas márgenes respecto al terreno, montaña, MEA, obstáculos ni performance a partir de METAR/TAF. Reclamá cartas AIP y altitudes mínimas de seguridad, especialmente en zonas montañosas.",
     "No supongas que las FIR elegidas cubren completamente la ruta. No inventes bases, viento en altura, engelamiento, turbulencia, icing, altitudes mínimas ni cierre de pistas.",
@@ -162,8 +157,8 @@ Deno.serve(async request=>{
     "METAR DESTINO ("+destination+"): "+(reports.destination_metar.available?reports.destination_metar.raw:noData),
     "TAF DESTINO ("+destination+"): "+(reports.destination_taf.available?reports.destination_taf.raw:noData),
     "SIGMET NOAA por FIR, cobertura parcial: "+(sigmet.available?sigmet.raw:"Sin coincidencias CONFIRMADAS: NO significa ausencia de SIGMET."),
-    "PRONAREA PEGADO MANUALMENTE (NO VERIFICADO POR SERVIDOR), fecha declarada de consulta UTC "+pronareaChecked+":\n"+pronarea,
-    "NOTAM PEGADOS MANUALMENTE (NO VERIFICADOS POR SERVIDOR), fecha declarada de consulta UTC "+notamChecked+":\n"+notam
+    "PRONAREA PEGADO MANUALMENTE (NO VERIFICADO POR SERVIDOR), recepción UTC "+documentsReceivedAtUtc+" (NO acredita validez):\n"+pronarea,
+    "NOTAM PEGADOS MANUALMENTE (NO VERIFICADOS POR SERVIDOR), recepción UTC "+documentsReceivedAtUtc+" (NO acredita validez):\n"+notam
   ].join("\n\n");
   try{
     const response=await fetch("https://api.openai.com/v1/responses",{
@@ -183,6 +178,7 @@ Deno.serve(async request=>{
       ok:true,analysis:report,ai_used:true,
       generated_at_utc:new Date().toISOString(),
       checked_at_utc:fetched,
+      documents_received_at_utc:documentsReceivedAtUtc,
       origin,destination,firs,cruise_altitude_ft:level,
       source_status:{
         metar_taf_origin:reports.origin_metar.available||reports.origin_taf.available,
