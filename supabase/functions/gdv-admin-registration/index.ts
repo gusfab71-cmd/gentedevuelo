@@ -71,7 +71,7 @@ Deno.serve(async(req:Request)=>{
        if(!p?.avatar_url)pending.push("Subir fotografía");
        return [{
          id:account.id,email:account.email||"",username:p?.username||"",
-         full_name:p?.full_name||"",google:viaGoogle,
+         full_name:p?.full_name||"",aviation_role:p?.aviation_role||"",google:viaGoogle,
          email_confirmed:!!account.email_confirmed_at,
          profile_completed:p?.onboarding_completed===true,
          initial_password_pending:account.app_metadata?.gdv_initial_password===true,
