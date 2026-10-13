@@ -11784,7 +11784,33 @@ body.modo-anexo-clasificados #clasificados-seccion {
 </style>
 <style id="gdv-conectados-portada-20261013">
 /* Indicador de integrantes conectados, 90 s de actividad en cualquier sección. */
-.menu-desplegable a.gdv-online-link,
+/* El texto se alinea con Foro, AeroChat y el resto del menú.
+   El contador se posiciona debajo, fuera del flujo del enlace. */
+#menuDesplegable {
+  padding-bottom:24px!important;
+}
+#menuDesplegable a.gdv-online-link {
+  position:relative;
+  display:inline-flex!important;
+  flex-direction:row!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:0!important;
+  padding:8px 11px!important;
+  line-height:normal!important;
+  text-align:center;
+}
+#menuDesplegable a.gdv-online-link .gdv-online-label {
+  display:inline;
+  line-height:inherit;
+}
+#menuDesplegable a.gdv-online-link .gdv-online-badge {
+  position:absolute;
+  top:calc(100% - 1px);
+  left:50%;
+  transform:translateX(-50%);
+}
+/* En los accesos compactos de celular el número continúa debajo. */
 .atajos-portada a.gdv-online-link {
   display:flex!important;
   flex-direction:column!important;
@@ -11793,13 +11819,9 @@ body.modo-anexo-clasificados #clasificados-seccion {
   gap:3px!important;
   text-align:center;
 }
-.gdv-online-label {
+.atajos-portada a.gdv-online-link .gdv-online-label {
   display:block;
-  text-align:center;
   line-height:1.15;
-}
-.atajos-portada a.gdv-online-link {
-  min-height:65px;
 }
 .gdv-online-badge {
   display:inline-flex;align-items:center;justify-content:center;gap:5px;
@@ -11816,10 +11838,10 @@ body.modo-anexo-clasificados #clasificados-seccion {
 }
 .atajos-portada .gdv-online-badge {font-size:10px; padding:1px 5px; min-width:26px;}
 @media(max-width:560px){
-  .menu-desplegable a.gdv-online-link,
+  #menuDesplegable {padding-bottom:22px!important;}
+  #menuDesplegable a.gdv-online-link {gap:0!important;}
+  #menuDesplegable .gdv-online-badge {font-size:10px;padding:2px 5px;}
   .atajos-portada a.gdv-online-link {gap:3px!important;}
-  .menu-desplegable .gdv-online-badge {font-size:10px;padding:2px 5px;}
-  .atajos-portada a.gdv-online-link {min-height:61px;}
   .atajos-portada .gdv-online-badge {padding:1px 4px;}
 }
 </style>
