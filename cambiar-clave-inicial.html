@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cambiar contraseña temporal · Gente de Vuelo</title>
+<style>
+:root{color-scheme:dark;font-family:Arial,Helvetica,sans-serif;background:#14191c;color:#f4f5f6}
+*{box-sizing:border-box}body{margin:0;padding:24px;min-height:100vh;display:grid;place-items:center}
+main{width:min(100%,510px);background:#1d2529;border:1px solid #ff642e;border-radius:18px;padding:28px;box-shadow:0 12px 34px #0005}
+h1{margin-top:0}p{line-height:1.5;color:#c6d1d5}form{display:grid;gap:14px}label{display:grid;gap:6px;font-weight:700}
+input{padding:12px;border-radius:9px;background:#11191d;color:#fff;border:1px solid #63767d;min-width:0}
+button{background:#ff642e;color:#fff;border:0;border-radius:9px;padding:12px;font-weight:800;cursor:pointer}button:disabled{opacity:.6}
+a{color:#ffc19a}#status{min-height:26px;color:#ffdbbb}
+</style><script src="assets/supabase-2.117.2.min.js"></script><script src="assets/community-config.js"></script></head>
+<body><main><h1>Cambiá tu contraseña temporal</h1>
+<p>Administración registró tu cuenta manualmente. Por seguridad, elegí tu propia contraseña antes de utilizar Gente de Vuelo.</p>
+<form id="change" hidden><label>Nueva contraseña<input id="password" type="password" autocomplete="new-password" minlength="9" maxlength="128" required></label>
+<label>Repetir contraseña<input id="confirm" type="password" autocomplete="new-password" minlength="9" maxlength="128" required></label>
+<p>Mínimo 9 caracteres, con mayúscula, minúscula, número y un símbolo.</p>
+<button id="save" type="submit">Guardar mi contraseña</button></form>
+<p id="status" role="status" aria-live="polite">Comprobando cuenta…</p>
+<p><a href="comunidad.html#ingresar">Volver al ingreso</a></p></main>
+<script>
+'use strict';
+(async()=>{
+ const client=supabase.createClient(GDV_CONFIG.url,GDV_CONFIG.key);
+ const form=document.getElementById('change'),status=document.getElementById('status');
+ const {data:{user},error}=await client.auth.getUser();
+ if(error||!user){status.textContent='Iniciá sesión con tu contraseña temporal para continuar.';return}
+ if(user.app_metadata?.gdv_initial_password!==true){location.replace('comunidad.html#foro');return}
+ form.hidden=false;status.textContent='';
+ form.addEventListener('submit',async event=>{
+  event.preventDefault();const button=document.getElementById('save');
+  const pw=document.getElementById('password').value;
+  const valid=pw.length>=9&&pw.length<=128&&/[a-z]/.test(pw)&&/[A-Z]/.test(pw)&&/[0-9]/.test(pw)&&/[!-/:-@[-\x60{-~]/.test(pw);
+  if(!valid){status.textContent='La contraseña no cumple los requisitos.';return}
+  if(pw!==document.getElementById('confirm').value){status.textContent='Las contraseñas no coinciden.';return}
+  button.disabled=true;
+  try{
+   const updated=await client.auth.updateUser({password:pw});
+   if(updated.error)throw updated.error;
+   document.getElementById('password').value='';
+   document.getElementById('confirm').value='';
+   status.textContent='Contraseña cambiada. Terminando habilitación…';
+   const {data:{session}}=await client.auth.getSession();
+   if(!session?.access_token)throw Error('Tu sesión expiró. Volvé a ingresar.');
+   const response=await fetch(GDV_CONFIG.url+'/functions/v1/gdv-admin-registration',{method:'POST',
+    headers:{apikey:GDV_CONFIG.key,Authorization:'Bearer '+session.access_token,'Content-Type':'application/json'},
+    body:JSON.stringify({action:'complete_initial_password'})});
+   const payload=await response.json().catch(()=>({}));
+   if(!response.ok)throw Error(payload.error||'No se pudo finalizar el registro.');
+   await client.auth.refreshSession();
+   location.replace('comunidad.html#foro');
+  }catch(err){status.textContent='No se completó el proceso: '+(err.message||'Volvé a intentar.');}
+  finally{button.disabled=false}
+ });
+})().catch(()=>{document.getElementById('status').textContent='No se pudo comprobar la sesión. Volvé a ingresar.'});
+</script></body></html>
