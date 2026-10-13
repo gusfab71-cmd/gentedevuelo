@@ -2,6 +2,7 @@
 <html lang="es"><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>FlightPrep - Viento y Navegación por piernas</title>
+<script>if(new URLSearchParams(location.search).get('embed')==='navigation')document.documentElement.classList.add('flightprep-embedded');</script>
 <link rel="stylesheet" href="utilities.css">
 <style>
 :root{box-sizing:border-box;color-scheme:dark}
@@ -38,6 +39,21 @@ td{padding:.35rem .3rem;white-space:nowrap}
 .print-value{display:none}@media print{@page{size:A4;margin:12mm}main{padding:0!important}table{min-width:0!important;width:100%!important;table-layout:fixed;font-size:8px!important}th,td{white-space:normal!important;overflow-wrap:anywhere;padding:3px!important}table th:first-child{width:15%}input{display:none!important}.print-value{display:block!important;white-space:normal;overflow-wrap:anywhere;color:#000}.overflow-x-auto{overflow:visible!important}.card{margin-bottom:10px}svg{max-width:100%}#g,#cfg{display:grid;grid-template-columns:repeat(3,1fr)!important}.disclaimer{margin:8px 0}}
 
 @media print{html,body{color-scheme:light!important;background:#fff!important;min-height:0!important}section{break-inside:auto!important;page-break-inside:auto!important}.card,.card label,.card p,.card span,.card div,.card h2{color:#000!important}.validation:empty{display:none}#v-w{display:grid!important;grid-template-columns:1fr 1fr!important;gap:10px}#v-w>div:last-child{grid-column:1/-1}#v-w #w_main{grid-template-columns:repeat(4,1fr)}#v-n{break-before:page}#v-n>.grid,main>.grid{grid-template-columns:1fr 1fr!important}.card{padding:10px!important}#tot{font-size:10px!important}#w_main .text-3xl{font-size:20px}#items .print-value{font-size:10px}#items td:first-child{width:35%}}
+
+/* Versión embebida en Mesa de Vuelo: comparte las mismas fórmulas del FlightPrep independiente. */
+html.flightprep-embedded body{background:#111c1e!important;min-height:0!important;overflow-x:hidden}
+html.flightprep-embedded header,
+html.flightprep-embedded nav,
+html.flightprep-embedded .back,
+html.flightprep-embedded .disclaimer,
+html.flightprep-embedded #v-w,
+html.flightprep-embedded .print-header,
+html.flightprep-embedded .print-footer{display:none!important}
+html.flightprep-embedded #v-n{display:block!important}
+html.flightprep-embedded main{max-width:none!important;margin:0!important;padding:10px 8px 20px!important}
+html.flightprep-embedded .card{background:#1a272b;border-color:#435256}
+html.flightprep-embedded .embedded-nav-actions{display:flex!important;gap:10px;flex-wrap:wrap;margin:0 0 12px}
+@media print{html.flightprep-embedded #v-w{display:none!important}}
 </style><style id="auth-pending-style">html.auth-pending body{visibility:hidden}</style><script>document.documentElement.classList.add("auth-pending")</script><script src="../assets/supabase-2.117.2.min.js"></script><script src="../assets/community-config.js"></script><script src="../assets/auth-guard.js?v=20261011actividadavisos1"></script></head>
 <body class="min-h-screen"><a class="no-print back" href="./">← Utilidades</a>
 
@@ -85,6 +101,10 @@ td{padding:.35rem .3rem;white-space:nowrap}
   </div>
 </section>
 
+<div class="embedded-nav-actions no-print" style="display:none">
+<button type="button" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-2 rounded-lg font-bold border border-white/10" onclick="exportJSON()">Guardar navegación (JSON)</button>
+<button type="button" class="text-xs bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-2 rounded-lg font-bold" onclick="printReport()">Imprimir / Guardar PDF</button>
+</div>
 <section id="v-n" class="hidden space-y-5">
   <div class="card p-4"><h2 class="font-bold text-sky-300 mb-3">Datos del vuelo y la aeronave</h2><div id="g" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 text-xs text-slate-400"></div></div>
   <div class="card p-4">
@@ -208,5 +228,27 @@ function chartF(p,rsv){
  $('fchart').innerHTML=s}
 
 buildG();buildLegs();calcNav();calcWind();
+// En la Mesa solo se muestra navegación, sin duplicar la calculadora de viento en pista.
+// Altura del iframe adaptativa: no requiere barra vertical interna.
+if(document.documentElement.classList.contains('flightprep-embedded')){
+  tab('n');
+  const main=document.querySelector('main');
+  let lastSent=0;
+  const measure=()=>{
+    if(window.parent===window||!main)return;
+    const pixels=Math.min(9000,Math.max(480,Math.ceil(main.getBoundingClientRect().bottom+28)));
+    if(pixels!==lastSent){
+      lastSent=pixels;
+      window.parent.postMessage({type:'gdv-flightprep-resize',height:pixels},location.origin);
+    }
+  };
+  const queue=()=>requestAnimationFrame(measure);
+  if(typeof ResizeObserver!=='undefined')new ResizeObserver(queue).observe(main);
+  window.addEventListener('load',queue);
+  window.addEventListener('resize',queue);
+  main.addEventListener('input',queue);
+  main.addEventListener('click',queue);
+  queue();
+}
 </script><script defer src="../assets/chat-alerts.js?v=20261012avisosunavez1"></script>
 </body></html>
