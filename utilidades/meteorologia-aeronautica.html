@@ -141,8 +141,29 @@
 <p class="sub">Este es el paso final. Primero consultá gratuitamente los boletines. Después indicá tu vuelo y pegá PRONAREA y NOTAM vigentes desde SMN y AIS. Shimoda combinará todo para señalar condiciones relevantes, riesgos y datos faltantes. No emite autorización de vuelo.</p>
 <form id="flight-analysis-form">
 <div class="form" style="margin-top:17px">
-<label class="field">Aeródromo de salida (OACI)<input id="flight-origin" required minlength="4" maxlength="4" pattern="[sS][aA][A-Za-z]{2}" value="SAEZ" placeholder="SAEZ"></label>
-<label class="field">Aeródromo de destino (OACI)<input id="flight-dest" required minlength="4" maxlength="4" pattern="[sS][aA][A-Za-z]{2}" placeholder="SAME"></label>
+<label class="field" for="flight-origin">Aeródromo de salida
+<select id="flight-origin" required>
+<optgroup label="Buenos Aires y alrededores"><option value="SAEZ">Ezeiza · Ministro Pistarini · SAEZ</option><option value="SABE">Aeroparque · Jorge Newbery · SABE</option><option value="SADF">San Fernando · SADF</option><option value="SADM">Morón · SADM</option><option value="SADP">El Palomar · SADP</option><option value="SAZM">Mar del Plata · SAZM</option><option value="SAZB">Bahía Blanca · SAZB</option></optgroup>
+<optgroup label="Centro y Litoral"><option value="SACO">Córdoba · SACO</option><option value="SAAR">Rosario · SAAR</option><option value="SAAV">Santa Fe · Sauce Viejo · SAAV</option><option value="SAAP">Paraná · SAAP</option><option value="SAOC">Río Cuarto · SAOC</option><option value="SAOU">San Luis · SAOU</option><option value="SAAC">Concordia · SAAC</option></optgroup>
+<optgroup label="Cuyo"><option value="SAME">Mendoza · El Plumerillo · SAME</option><option value="SAMR">San Rafael · SAMR</option><option value="SANU">San Juan · SANU</option><option value="SAMM">Malargüe · SAMM</option></optgroup>
+<optgroup label="Norte"><option value="SASA">Salta · SASA</option><option value="SASJ">Jujuy · SASJ</option><option value="SANT">Tucumán · SANT</option><option value="SANC">Catamarca · SANC</option><option value="SANE">Santiago del Estero · SANE</option><option value="SANL">La Rioja · SANL</option><option value="SARI">Puerto Iguazú · SARI</option><option value="SARE">Resistencia · SARE</option><option value="SARC">Corrientes · SARC</option><option value="SARF">Formosa · SARF</option><option value="SARP">Posadas · SARP</option></optgroup>
+<optgroup label="Patagonia"><option value="SAZN">Neuquén · SAZN</option><option value="SAZS">Bariloche · SAZS</option><option value="SAZY">San Martín de los Andes · SAZY</option><option value="SAVC">Comodoro Rivadavia · SAVC</option><option value="SAVT">Trelew · SAVT</option><option value="SAVE">Esquel · SAVE</option><option value="SAWC">El Calafate · SAWC</option><option value="SAWG">Río Gallegos · SAWG</option><option value="SAWE">Río Grande · SAWE</option><option value="SAWH">Ushuaia · SAWH</option><option value="SAZR">Santa Rosa · SAZR</option><option value="SAZT">Tandil · SAZT</option></optgroup>
+<option value="OTHER">Otro aeródromo (ingresar código OACI)</option>
+</select>
+<input id="flight-origin-other" aria-label="Código OACI de salida" type="text" pattern="[sS][aA][A-Za-z]{2}" minlength="4" maxlength="4" placeholder="Ej.: SAXX" autocomplete="off" autocapitalize="characters" hidden disabled>
+</label>
+<label class="field" for="flight-dest">Aeródromo de destino
+<select id="flight-dest" required>
+<option value="" selected disabled>Seleccioná un aeródromo de destino</option>
+<optgroup label="Buenos Aires y alrededores"><option value="SAEZ">Ezeiza · Ministro Pistarini · SAEZ</option><option value="SABE">Aeroparque · Jorge Newbery · SABE</option><option value="SADF">San Fernando · SADF</option><option value="SADM">Morón · SADM</option><option value="SADP">El Palomar · SADP</option><option value="SAZM">Mar del Plata · SAZM</option><option value="SAZB">Bahía Blanca · SAZB</option></optgroup>
+<optgroup label="Centro y Litoral"><option value="SACO">Córdoba · SACO</option><option value="SAAR">Rosario · SAAR</option><option value="SAAV">Santa Fe · Sauce Viejo · SAAV</option><option value="SAAP">Paraná · SAAP</option><option value="SAOC">Río Cuarto · SAOC</option><option value="SAOU">San Luis · SAOU</option><option value="SAAC">Concordia · SAAC</option></optgroup>
+<optgroup label="Cuyo"><option value="SAME">Mendoza · El Plumerillo · SAME</option><option value="SAMR">San Rafael · SAMR</option><option value="SANU">San Juan · SANU</option><option value="SAMM">Malargüe · SAMM</option></optgroup>
+<optgroup label="Norte"><option value="SASA">Salta · SASA</option><option value="SASJ">Jujuy · SASJ</option><option value="SANT">Tucumán · SANT</option><option value="SANC">Catamarca · SANC</option><option value="SANE">Santiago del Estero · SANE</option><option value="SANL">La Rioja · SANL</option><option value="SARI">Puerto Iguazú · SARI</option><option value="SARE">Resistencia · SARE</option><option value="SARC">Corrientes · SARC</option><option value="SARF">Formosa · SARF</option><option value="SARP">Posadas · SARP</option></optgroup>
+<optgroup label="Patagonia"><option value="SAZN">Neuquén · SAZN</option><option value="SAZS">Bariloche · SAZS</option><option value="SAZY">San Martín de los Andes · SAZY</option><option value="SAVC">Comodoro Rivadavia · SAVC</option><option value="SAVT">Trelew · SAVT</option><option value="SAVE">Esquel · SAVE</option><option value="SAWC">El Calafate · SAWC</option><option value="SAWG">Río Gallegos · SAWG</option><option value="SAWE">Río Grande · SAWE</option><option value="SAWH">Ushuaia · SAWH</option><option value="SAZR">Santa Rosa · SAZR</option><option value="SAZT">Tandil · SAZT</option></optgroup>
+<option value="OTHER">Otro aeródromo (ingresar código OACI)</option>
+</select>
+<input id="flight-dest-other" aria-label="Código OACI de destino" type="text" pattern="[sS][aA][A-Za-z]{2}" minlength="4" maxlength="4" placeholder="Ej.: SAXX" autocomplete="off" autocapitalize="characters" hidden disabled>
+</label>
 <label class="field full">Ruta prevista y puntos principales<input id="flight-route" required maxlength="280" placeholder="Describí la ruta, puntos y aeródromos alternativos"></label>
 <label class="field">Fecha y hora de salida previstas (hora del equipo)<input id="flight-time" type="datetime-local" required></label>
 <label class="field">Altitud prevista (pies AMSL)<input id="flight-alt" type="number" required min="500" max="45000" step="100" placeholder="6500"></label>
@@ -329,8 +350,34 @@ el('calc-sun').addEventListener('click',()=>{
  const iso=id=>new Date($(id).value).toISOString();
  const once=[];let latest='';
  const saved=$('icao'),origin=$('flight-origin');
- saved.addEventListener('change',()=>{if(!origin.dataset.edited)origin.value=saved.value.toUpperCase().slice(0,4);});
- origin.addEventListener('input',()=>{origin.dataset.edited='1';});
+ const selections=['flight-origin','flight-dest'];
+ const knownCodes=new Set([...origin.options].map(option=>option.value).filter(code=>/^SA[A-Z]{2}$/.test(code)));
+ function updateCustomField(id){
+   const manual=$(id).value==='OTHER',field=$(id+'-other');
+   field.hidden=!manual;
+   field.disabled=!manual;
+   field.required=manual;
+   if(!manual)field.value='';
+ }
+ function airportCode(id){
+   const val=$(id).value;
+   return (val==='OTHER'?$(id+'-other').value:val).trim().toUpperCase();
+ }
+ for(const id of selections){
+   $(id).addEventListener('change',()=>{
+     if(id==='flight-origin')origin.dataset.edited='1';
+     updateCustomField(id);
+   });
+   updateCustomField(id);
+ }
+ saved.addEventListener('change',()=>{
+   if(origin.dataset.edited)return;
+   const code=saved.value.trim().toUpperCase();
+   if(knownCodes.has(code))origin.value=code;
+   else if(/^SA[A-Z]{2}$/.test(code)){origin.value='OTHER';updateCustomField('flight-origin');$('flight-origin-other').value=code;}
+   else return;
+   if(origin.value!=='OTHER')updateCustomField('flight-origin');
+ });
  form.addEventListener('submit',async event=>{
    event.preventDefault();
    if(!form.reportValidity())return;
@@ -338,8 +385,8 @@ el('calc-sun').addEventListener('click',()=>{
    if(!firs.length){status.textContent='Seleccioná por lo menos una FIR.';return;}
    if(!document.getElementById('flight-confirm-cost').checked){status.textContent='Confirmá expresamente el consumo de tokens.';return;}
    const data={
-     origin:origin.value.trim().toUpperCase(),
-     destination:$('flight-dest').value.trim().toUpperCase(),
+     origin:airportCode('flight-origin'),
+     destination:airportCode('flight-dest'),
      route:$('flight-route').value.trim(),
      planned_at_utc:iso('flight-time'),
      cruise_altitude_ft:Number($('flight-alt').value),
