@@ -194,7 +194,13 @@
       <section class="panel" id="gdvStolAdmin" hidden style="margin:0 0 24px;border-color:rgba(232,187,104,.75);">
         <h2 style="margin-top:0;">Video de portada</h2>
         <p><a href="moderacion.html" class="link">Volver al panel completo</a></p>
-        <p class="intro">Este video se muestra en formato vertical 9:16 sobre el margen derecho de la portada (en celulares, al final). Podés subir un MP4/WebM vertical de hasta 40 MB a Cloudflare, o pegar un enlace de YouTube Shorts, Vimeo o Cloudflare Stream. Previsualizá antes de guardar. Para dejarlo pendiente, mantené vacío el enlace; para ocultar el recuadro, desmarcá «Mostrar».</p>
+        <p class="intro">Administrá el video de la portada sin editar código. Podés subir un MP4/WebM vertical 9:16 de hasta 40 MB a Cloudflare, o pegar un enlace de YouTube Shorts, Vimeo o Cloudflare Stream. En celulares el recuadro sigue al final de la portada. Para ocultarlo, desmarcá «Mostrar».</p>
+         <div class="panel" style="margin:14px 0 20px;background:#1a242b;border:1px solid #a88655;padding:18px;border-radius:14px;">
+           <h3 style="margin:0 0 8px">Ubicación y tamaño del video</h3>
+           <p style="margin:0 0 12px;">Abrí la portada en la computadora, arrastrá el video con el mouse y ajustá su tamaño desde la esquina o el control. Después pulsá <strong>Guardar posición</strong>. El cambio se verá para todos y no modificará su ubicación en celulares.</p>
+           <a class="button" href="index.html?editar-video=1#inicio" style="display:inline-flex;background:#d6a75b;color:#172028;border-radius:10px;padding:11px 17px;font-weight:750;text-decoration:none;">Editar ubicación y tamaño en la portada</a>
+           <p style="margin:10px 0 0;font-size:12px;color:#b9c6d1">Para cambiar el video, usá el formulario de esta sección. Para volver a la ubicación original, seleccioná «Restaurar original» en la portada.</p>
+         </div>
         <form id="gdvStolForm" style="display:grid;gap:12px;">
           <label>Nombre interno del video (no se muestra en la portada)
             <input id="gdvStolInputTitle" type="text" maxlength="90" value="Video de portada" required>
@@ -290,7 +296,7 @@
   </main>
 
   <script src="assets/r2-media.js"></script>
-  <script src="assets/home-video.js?v=20261011frameless3"></script>
+  <script src="assets/home-video.js?v=20261013drag1"></script>
   <script>
     const client = window.GDV_AUTH.client;
     const secciones = [
