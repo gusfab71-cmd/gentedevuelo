@@ -41,6 +41,6 @@ Se reutilizan `gdv_topics`, `gdv_comments`, `gdv_reports`, `gdv_members`, `gdv_a
 
 El historial es de lectura exclusiva del personal autorizado y no puede alterarse mediante la API pública. La presencia usa un latido de treinta segundos y caduca tras noventa: indica actividad reciente, no garantiza que la persona esté mirando la pantalla.
 
-Las herramientas FlightPrep usan código local, exportan JSON y abren el diálogo de impresión para guardar PDF. Peso y Balance usa exclusivamente libras y pulgadas y compara un rango rectangular ingresado; no sustituye la envolvente real del manual. NAV exige referencias coherentes de viento y rumbo; las reservas son valores elegidos por quien calcula, no requisitos reglamentarios automáticos.
+Las herramientas FlightPrep usan código local, exportan JSON y abren el diálogo de impresión para guardar PDF. NAV exige referencias coherentes de viento y rumbo; las reservas son valores elegidos por quien calcula, no requisitos reglamentarios automáticos.
 
 Documentación técnica consultada: https://supabase.com/docs/guides/database/postgres/row-level-security y https://supabase.com/docs/guides/api/securing-your-api.
