@@ -4917,6 +4917,7 @@ img, video { max-width: 100%; }
       <a href="comunidad.html#almacenamiento" id="gdvStorageLink" hidden>Almacenamiento</a>
        <a href="moderacion.html#video-portada" id="gdvStolAdminLink" hidden>Video de portada</a>
        <a href="index.html?editar-tarjetas=1#inicio" id="gdvCardsEditLink" hidden>Editar tarjetas de portada</a>
+       <a href="index.html?editar-marca=1#inicio" id="gdvBrandEditLink" hidden>Mover logo y textos</a>
        <a href="moderacion.html#registro-manual" id="gdvManualRegistrationLink" hidden>Registro manual</a>
        <a href="moderacion.html#registros-incompletos" id="gdvIncompleteRegistrationLink" hidden>Registros incompletos</a>
       <button type="button" id="botonCerrarSesion">Cerrar sesión</button>
@@ -6611,6 +6612,8 @@ document.getElementById("hangarLicense").textContent = perfil?.aviation_license 
   if (videoAdminLink) videoAdminLink.hidden = !window.gdvLegacyAdmin;
   const cardsEditorLink = document.getElementById("gdvCardsEditLink");
   if (cardsEditorLink) cardsEditorLink.hidden = !window.gdvLegacyAdmin;
+  const brandEditorLink = document.getElementById("gdvBrandEditLink");
+  if (brandEditorLink) brandEditorLink.hidden = !window.gdvLegacyAdmin;
    const manualRegistrationLink = document.getElementById("gdvManualRegistrationLink");
    if (manualRegistrationLink) manualRegistrationLink.hidden = !window.gdvLegacyAdmin;
    const incompleteRegistrationLink = document.getElementById("gdvIncompleteRegistrationLink");
@@ -11853,6 +11856,8 @@ body.modo-anexo-clasificados #clasificados-seccion {
 <link rel="stylesheet" href="assets/home-instituciones-logo.css?v=20261013marcos-unificados1">
 <script src="assets/home-video.js?v=20261013loop1"></script>
 <script src="assets/home-card-editor.js?v=20261013cards2"></script>
+<link rel="stylesheet" href="assets/home-brand-editor.css?v=20261013marca1">
+<script src="assets/home-brand-editor.js?v=20261013marca2"></script>
 <script defer src="assets/chat-alerts.js?v=20261012avisosunavez1"></script>
 </body>
 </html>
