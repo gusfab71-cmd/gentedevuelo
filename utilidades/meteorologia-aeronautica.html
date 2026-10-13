@@ -14,6 +14,12 @@ table{width:100%;border-collapse:collapse;margin:15px 0}th,td{text-align:left;pa
 .notice{padding:12px;border-radius:9px;background:#39434a;color:#f5e5ba}
 pre{white-space:pre-wrap;word-break:break-word;max-height:220px;overflow:auto;font-size:12px}
 [hidden]{display:none!important}.accent{color:#f9ac70}
+.shimoda-form{display:grid;gap:12px;margin:14px 0}
+.shimoda-form label{display:grid;gap:7px;font-size:14px}
+.shimoda-form textarea{font:inherit;line-height:1.5;color:#f3f6f7;background:#202a31;border:1px solid #607681;border-radius:9px;padding:12px;min-height:82px;resize:vertical;width:100%;box-sizing:border-box}
+.shimoda-form button{justify-self:start}.shimoda-form button:disabled{opacity:.6;cursor:wait}
+.shimoda-answer{white-space:pre-wrap;line-height:1.55;overflow-wrap:anywhere;background:#1d2931;padding:14px;border-radius:10px;border:1px solid #4b5f6e}
+.shimoda-answer:empty{display:none}
 </style>
 <script>document.documentElement.classList.add('auth-pending')</script>
 <style>html.auth-pending body{visibility:hidden}</style>
@@ -42,8 +48,15 @@ pre{white-space:pre-wrap;word-break:break-word;max-height:220px;overflow:auto;fo
 <details><summary>Texto original</summary><pre id="textoOriginal"></pre></details>
 </div>
 </section>
-<section class="panel" style="margin-top:16px"><h2>Robert Shimoda</h2>
-<p>La integración de las respuestas de Shimoda con esta herramienta está en preparación. Su chat habitual sigue disponible por separado.</p>
+<section class="panel" style="margin-top:16px"><h2>Preguntale a Robert Shimoda</h2>
+<p class="notice"><strong>Prueba privada para administración.</strong> El PRONAREA de esta sección no tiene vigencia confirmada. Las respuestas son educativas y no deben utilizarse para decidir ni planificar vuelos.</p>
+<form id="shimoda-form" class="shimoda-form" hidden>
+<label for="shimoda-pregunta">Tu consulta sobre el boletín cargado
+<textarea id="shimoda-pregunta" required minlength="3" maxlength="900" placeholder="Por ejemplo: ¿Qué significa SIGFENOM en este boletín?"></textarea></label>
+<button id="shimoda-enviar" type="submit">Preguntar a Shimoda</button>
+</form>
+<p id="shimoda-estado" role="status" aria-live="polite">El asistente estará disponible cuando se compruebe el acceso y se cargue el boletín.</p>
+<div id="shimoda-respuesta" class="shimoda-answer" aria-live="polite"></div>
 <a href="../index.html#shimoda">Ir al Rincón de Robert Shimoda</a>
 </section></main>
 <script>
@@ -57,6 +70,35 @@ if(!admin){status.textContent='El módulo PRONAREA está reservado para pruebas 
 const {data,error}=await client.from('gdv_pronarea_bulletins').select('raw_text,issued_at,valid_until,validity_raw,verification_status,created_at').eq('fir','EZE').order('created_at',{ascending:false}).limit(1);
 if(error||!data?.length){status.textContent=error?'No fue posible consultar el boletín.':'Todavía no hay un boletín cargado.';return}
 const b=data[0],raw=b.raw_text||'';
+const shimodaForm=document.getElementById('shimoda-form'),shimodaEstado=document.getElementById('shimoda-estado');
+const shimodaRespuesta=document.getElementById('shimoda-respuesta'),shimodaBoton=document.getElementById('shimoda-enviar');
+shimodaForm.hidden=false;
+shimodaEstado.textContent='Podés realizar consultas didácticas sobre este boletín de prueba. Robert no confirmará condiciones para volar.';
+shimodaForm.addEventListener('submit',async event=>{
+ event.preventDefault();
+ const question=document.getElementById('shimoda-pregunta').value.trim();
+ if(question.length<3||question.length>900){shimodaEstado.textContent='La consulta debe tener entre 3 y 900 caracteres.';return;}
+ shimodaBoton.disabled=true;
+ shimodaEstado.textContent='Consultando a Robert Shimoda…';
+ shimodaRespuesta.textContent='';
+ try {
+   const {data:response,error:requestError}=await client.functions.invoke('robert-pronarea-test',{body:{question}});
+   if(requestError||!response?.ok) {
+     let message=response?.error||requestError?.message||'La consulta no pudo completarse.';
+     if(requestError?.context?.json) {
+       const details=await requestError.context.json().catch(()=>null);
+       if(details?.error)message=details.error;
+     }
+     throw new Error(message);
+   }
+   shimodaRespuesta.textContent=response.answer;
+   shimodaEstado.textContent='Respuesta experimental basada únicamente en el PRONAREA cargado manualmente. Fuente sin vigencia confirmada.';
+ } catch(error) {
+   shimodaEstado.textContent='No se pudo obtener la respuesta: '+(error?.message||'Error de conexión.');
+ } finally {
+   shimodaBoton.disabled=false;
+ }
+});
 status.textContent='Boletín de prueba disponible (vigencia sin verificar).';
 document.getElementById('boletinInfo').textContent='Referencia: '+(b.validity_raw||'sin datos')+' · Cargado: '+new Date(b.created_at).toLocaleString('es-AR');
 document.getElementById('textoOriginal').textContent=raw;
