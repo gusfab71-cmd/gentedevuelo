@@ -238,13 +238,19 @@
       url.searchParams.set('autoplay','1');
       url.searchParams.set('mute','1');
       url.searchParams.set('playsinline','1');
+      // YouTube exige playlist con el mismo video para repetir uno solo.
+      const id = url.pathname.split('/').filter(Boolean).pop();
+      if (id && /^[a-zA-Z0-9_-]{11}$/.test(id)) url.searchParams.set('playlist',id);
+      url.searchParams.set('loop','1');
     } else if (host === 'player.vimeo.com') {
       url.searchParams.set('autoplay','1');
       url.searchParams.set('muted','1');
       url.searchParams.set('playsinline','1');
+      url.searchParams.set('loop','1');
     } else if (host === 'iframe.videodelivery.net' || host.endsWith('.cloudflarestream.com')) {
       url.searchParams.set('autoplay','true');
       url.searchParams.set('muted','true');
+      url.searchParams.set('loop','true');
     }
     return url.href;
   }
@@ -265,6 +271,8 @@
       if(r.type==='video'){
         node.controls=true;
         node.autoplay=true;
+        node.loop=true;
+        node.setAttribute('loop','');
         node.muted=true;
         node.defaultMuted=true;
         node.setAttribute('muted','');
