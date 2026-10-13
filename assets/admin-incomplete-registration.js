@@ -107,7 +107,7 @@
        checkbox.checked=false;
        submit.disabled=false;
        await load();
-       status.textContent+=' · Correcciones guardadas; la aprobación del perfil sigue pendiente.';
+       status.textContent='Datos guardados en Supabase para '+(item.full_name||item.username)+'. El perfil sigue pendiente: el titular debe subir su fotografia, aceptar la normativa y finalizar el registro.';
      }catch(e){
        actionState.textContent='No se pudo guardar: '+(e.message||'Error desconocido');
        submit.disabled=false;
