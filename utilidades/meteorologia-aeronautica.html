@@ -30,6 +30,13 @@
 #flight-legs #nav-legs-panel{margin-top:15px}
 @media(max-width:620px){.flight-step{padding:12px}.flight-step-head h3{font-size:16px}.flight-data-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}}
 @media(max-width:420px){.flight-data-grid{grid-template-columns:1fr}}
+
+.manual-source{padding:17px;border:1px solid #536463;border-radius:14px;background:#172225;margin:14px 0}
+.manual-source-heading{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:13px}
+.manual-source-heading strong{color:var(--accent2);font-size:16px}
+.manual-source-heading a{text-decoration:none;text-align:center}
+.manual-source textarea{width:100%;font-family:ui-monospace,Consolas,monospace;font-size:13px;line-height:1.55}
+@media(max-width:620px){.manual-source{padding:12px}.manual-source-heading a{width:100%}}
 </style>
 <script>document.documentElement.classList.add('auth-pending')</script>
 <style>html.auth-pending body{visibility:hidden}</style>
@@ -41,7 +48,7 @@
 <header class="top"><div class="top-inner"><a class="brand" href="../index.html"><span class="mark">GDV</span><span class="brand-name">GENTE DE VUELO<span>Centro de consulta aeronáutica</span></span></a><nav class="toplinks"><a href="index.html">Utilidades</a><a href="../index.html#shimoda">Shimoda</a><a href="../index.html">Portada</a></nav></div></header>
 <main class="wrap" id="gdv-meteo-private" hidden>
 <section class="hero"><div class="hero-main"><span class="eyebrow">Robert Shimoda / pruebas privadas de administración</span><h1>Tu mesa de <em>vuelo</em>.</h1><p>Datos meteorológicos, lectura de boletines y herramientas de cálculo en un único espacio. Diseñado para consultar con criterio, no para reemplazar la información oficial.</p></div><aside class="hero-side"><div class="dial" aria-hidden="true">RS</div><div><span class="eyebrow">Información crítica</span><p>Verificá siempre <strong>emisión, vigencia, ruta y fuentes oficiales</strong> antes de planificar una operación.</p></div></aside></section>
-<nav class="jump" aria-label="Secciones"><a href="#consultar">Datos gratis</a><a href="#boletines">Boletines</a><a href="#viento">Viento en pista</a><a href="#nubosidad">Nubosidad</a><a href="#crepusculo">Crepúsculo</a><a href="#fuentes">Fuentes oficiales</a><a href="#shimoda-brief" style="border-color:var(--accent);color:var(--accent2)">Informe con Shimoda IA</a><a href="#navigation-inline" style="border-color:#72928b">FlightPrep · Navegación</a></nav>
+<nav class="jump" aria-label="Secciones"><a href="#consultar">METAR · TAF · SIGMET</a><a href="#shimoda-brief" style="border-color:var(--accent);color:var(--accent2)">PRONAREA · NOTAM · Shimoda</a><a href="#navigation-inline" style="border-color:#72928b">Navegación FlightPrep</a><a href="#fuentes">Fuentes oficiales</a><a href="#viento">Viento en pista</a><a href="#nubosidad">Nubosidad</a></nav>
 <div class="layout">
 <div class="stack">
 <section class="card" id="consultar">
@@ -93,26 +100,7 @@
 <p id="wind-warning" class="warning" role="status">Valores ilustrativos. No se compara contra limitaciones de la aeronave.</p>
 <a href="flightprep-nav.html">Abrir FlightPrep NAV para navegación y cálculos adicionales</a>
 </section>
-<section class="card" id="crepusculo">
-<div class="card-header"><div><span class="card-kicker">04 / Luz diurna</span><h2>Sol y crepúsculo</h2></div><span class="sub">Estimación astronómica</span></div>
-<p class="sub">Buscá una localidad o aeródromo argentino para completar las coordenadas. También podés ingresarlas manualmente. Los horarios son aproximados: no sustituyen la información aeronáutica oficial.</p>
-<div class="form" style="margin:14px 0">
-<label class="field" for="sun-place-search">Buscar lugar (Argentina)
-<input id="sun-place-search" type="search" maxlength="80" placeholder="Ej.: Morón, Bariloche, Córdoba o SADM" autocomplete="off">
-</label>
-<div class="field"><span>Seleccionar ubicación</span><button class="secondary" id="sun-place-find" type="button" style="width:100%">Buscar ubicación</button></div>
-</div>
-<div id="sun-place-results" role="group" aria-label="Resultados de búsqueda de lugares" hidden style="display:grid;gap:8px;margin:8px 0"></div>
-<p id="sun-place-status" class="sub" role="status" aria-live="polite">Ingresá un lugar y elegí el resultado correcto. Para aeródromos, verificá las coordenadas en la AIP vigente.</p>
-<div class="form">
-<label class="field">Latitud (°; sur negativa)<input id="latitude" type="number" min="-90" max="90" step=".000001" placeholder="Ej.: -34.679167"></label>
-<label class="field">Longitud (°; oeste negativa)<input id="longitude" type="number" min="-180" max="180" step=".000001" placeholder="Ej.: -58.643611"></label>
-<label class="field">Fecha<input type="date" id="sun-date"></label>
-<div class="field"><span>Zona horaria de referencia</span><p class="sub">Argentina · UTC−03 (hora oficial)</p></div>
-</div><div class="actions"><button class="secondary" id="calc-sun" type="button">Calcular estimación</button></div>
-<div class="math-grid" style="margin:15px 0"><div class="math-out"><strong id="sunrise">—</strong><span>Amanecer</span></div><div class="math-out"><strong id="sunset">—</strong><span>Puesta de sol</span></div><div class="math-out"><strong id="civil-dusk">—</strong><span>Fin crepúsculo civil</span></div></div>
-<p id="sun-state" class="sub" role="status">Se requiere una ubicación. Consultá la AIP y datos oficiales para operaciones.</p>
-</section>
+
 </div>
 <aside class="stack">
 <section class="card" id="nubosidad">
@@ -144,7 +132,7 @@
 <p><span class="bullet"></span><span>Comprobar METAR y TAF de salida, destino y alternativa.</span></p>
 <p><span class="bullet"></span><span>Consultar PRONAREA y SIGMET sobre la ruta y nivel de vuelo.</span></p>
 <p><span class="bullet"></span><span>Revisar NOTAM, AIP, rutas, pistas y limitaciones aplicables.</span></p>
-<p><span class="bullet"></span><span>Confirmar luz diurna, combustible y márgenes de la aeronave.</span></p>
+<p><span class="bullet"></span><span>Confirmar combustible, performance y márgenes de la aeronave.</span></p>
 </div>
 <p class="source-notes">Las alertas visuales de esta página no son notificaciones automáticas ni vigilancia meteorológica en segundo plano.</p>
 </section>
@@ -199,16 +187,19 @@
 <p class="sub">Marcá todas las FIR implicadas y corroboralas con cartas AIP; el sistema no determina automáticamente el trazado de tu ruta.</p>
 </fieldset>
 </div>
-<div class="form" style="margin-top:18px;padding-top:18px;border-top:1px solid #55534d">
-<div class="full"><h3 style="color:var(--accent2)">Documentos oficiales pegados manualmente</h3><p class="sub">Pegá los boletines completos, incluyendo sus períodos de validez. No hace falta escribir cuándo los consultaste: el servidor registrará automáticamente cuándo recibe el texto para el análisis. Ese registro no garantiza autenticidad ni vigencia; revisá las fechas de los boletines y su correspondencia con el vuelo.</p></div>
-<label class="field full">PRONAREA · Texto del SMN
-<textarea id="flight-pronarea" required minlength="40" maxlength="12000" rows="6" style="resize:vertical;min-height:125px" placeholder="Pegá el PRONAREA oficial, incluyendo FIR, fecha, período de validez, niveles y fenómenos."></textarea></label>
-
-<div class="field"><span>Fuente de PRONAREA</span><a href="https://www.smn.gob.ar/pronarea" target="_blank" rel="noopener noreferrer">Abrir PRONAREA en SMN</a></div>
-<label class="field full">NOTAM · Textos del AIS / ANAC
-<textarea id="flight-notam" required minlength="30" maxlength="12000" rows="6" style="resize:vertical;min-height:125px" placeholder="Pegá los NOTAM correspondientes a salida, ruta, destino y alternativa, incluyendo validez y códigos."></textarea></label>
-
-<div class="field"><span>Fuente de NOTAM</span><a href="https://ais.anac.gob.ar/notam" target="_blank" rel="noopener noreferrer">Abrir NOTAM oficiales</a></div>
+<div style="margin-top:20px;padding-top:18px;border-top:1px solid #55534d">
+<h3 style="color:var(--accent2)">Boletines oficiales · Copiar y pegar</h3>
+<p class="sub">Primero abrí cada fuente, copiá el texto completo con emisión y vigencia, volvé a esta Mesa y pegalo inmediatamente debajo. No se requiere escribir la hora de carga. La aplicación no certifica que un texto pegado sea auténtico ni esté vigente.</p>
+<div class="manual-source">
+  <div class="manual-source-heading"><strong>1 · PRONAREA</strong><a class="secondary" href="https://www.smn.gob.ar/pronarea" target="_blank" rel="noopener noreferrer">Abrir PRONAREA · SMN <span aria-hidden="true">↗</span></a></div>
+  <label class="field" for="flight-pronarea">Pegá aquí el PRONAREA oficial
+  <textarea id="flight-pronarea" required minlength="40" maxlength="12000" rows="7" style="resize:vertical;min-height:145px" placeholder="Copiá desde el SMN el PRONAREA de las FIR correspondientes, incluyendo emisión, validez, niveles y fenómenos."></textarea></label>
+</div>
+<div class="manual-source">
+  <div class="manual-source-heading"><strong>2 · NOTAM</strong><a class="secondary" href="https://ais.anac.gob.ar/notam" target="_blank" rel="noopener noreferrer">Abrir NOTAM · AIS / ANAC <span aria-hidden="true">↗</span></a></div>
+  <label class="field" for="flight-notam">Pegá aquí los NOTAM oficiales
+  <textarea id="flight-notam" required minlength="30" maxlength="12000" rows="7" style="resize:vertical;min-height:145px" placeholder="Copiá desde AIS / ANAC los NOTAM aplicables a salida, ruta, destino y alternativas, incluyendo sus períodos de vigencia."></textarea></label>
+</div>
 </div>
 <div style="margin:19px 0 16px;padding:17px;border:1px solid #745c45;border-radius:14px;background:#1c2526">
 <label class="field" for="flight-question">¿Qué querés consultar a Shimoda sobre las condiciones en altura? (opcional)
@@ -368,131 +359,7 @@ function updateWind(){
 }
 for(const id of ['runway','wind-dir','wind-speed','wind-gust'])el(id).addEventListener('input',updateWind);
 updateWind();
-const nowAR=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Argentina/Buenos_Aires',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
-el('sun-date').value=nowAR;
-// Búsqueda explícita: no hay consultas de red mientras el piloto escribe.
-// Morón/SADM: coordenadas oficiales del aeródromo (no del centro urbano).
-// Referencia: servicios.transporte.gob.ar/gobierno_abierto/detalle.php?d=detalle&t=aeropuertos
-const moronAirport=Object.freeze({
-  name:'Aeródromo Morón (SADM)',latitude:-34.67916667,longitude:-58.64361111,
-  description:'Aeródromo · coordenadas oficiales de referencia (verificá AIP)'
-});
-let placeSearchController=null;
-const placeSearchInput=el('sun-place-search');
-const placeResults=el('sun-place-results');
-const placeStatus=el('sun-place-status');
-const removeAccents=text=>text.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
-function assignSunPlace(item){
-  if(!Number.isFinite(item.latitude)||!Number.isFinite(item.longitude)||
-     Math.abs(item.latitude)>90||Math.abs(item.longitude)>180)return;
-  el('latitude').value=item.latitude.toFixed(6);
-  el('longitude').value=item.longitude.toFixed(6);
-  el('sunrise').textContent='—';
-  el('sunset').textContent='—';
-  el('civil-dusk').textContent='—';
-  el('sun-state').textContent='Coordenadas seleccionadas. Presioná «Calcular estimación» para obtener los horarios.';
-  placeStatus.textContent=item.name+' · Latitud '+el('latitude').value+'°, longitud '+el('longitude').value+'°. '+item.description;
-  placeResults.hidden=true;
-}
-function renderSunPlaces(places){
-  placeResults.replaceChildren();
-  placeResults.hidden=places.length===0;
-  places.forEach((place)=>{
-    const button=document.createElement('button');
-    button.type='button';button.className='secondary';
-    button.style.cssText='text-align:left;display:block;width:100%;white-space:normal';
-    const title=document.createElement('strong');title.textContent=place.name;
-    const subtitle=document.createElement('small');subtitle.style.cssText='display:block;color:var(--muted);font-weight:400';
-    subtitle.textContent=place.description+' · '+place.latitude.toFixed(5)+'°, '+place.longitude.toFixed(5)+'°';
-    button.append(title,subtitle);
-    button.addEventListener('click',()=>assignSunPlace(place));
-    placeResults.append(button);
-  });
-}
-async function findSunPlace(){
-  const query=placeSearchInput.value.trim();
-  if(placeSearchController){placeSearchController.abort();placeSearchController=null;}
-  const key=removeAccents(query);
-  placeResults.replaceChildren();placeResults.hidden=true;
-  if(query.length<2){placeStatus.textContent='Escribí al menos dos caracteres de una localidad o código de aeródromo.';return;}
-  const presets=[];
-  if(key.includes('moron')||key==='sadm'||(key.length>=3&&('aerodromo moron'.includes(key)||'sadm'.includes(key)))){
-    presets.push(moronAirport);
-  }
-  // Para localidades, GeoNames vía Open-Meteo: no es fuente de coordenadas AIP.
-  const ctrl=new AbortController();placeSearchController=ctrl;
-  el('sun-place-find').disabled=true;
-  placeStatus.textContent='Buscando localidades argentinas…';
-  let places=[...presets],warning='';
-  try{
-    const endpoint=new URL('https://geocoding-api.open-meteo.com/v1/search');
-    endpoint.searchParams.set('name',query);
-    endpoint.searchParams.set('count','8');
-    endpoint.searchParams.set('language','es');
-    endpoint.searchParams.set('format','json');
-    endpoint.searchParams.set('countryCode','AR');
-    const response=await fetch(endpoint.toString(),{signal:ctrl.signal,headers:{Accept:'application/json'}});
-    if(!response.ok)throw new Error('La búsqueda de localidades no respondió.');
-    const data=await response.json();
-    if(data?.error)throw new Error('El proveedor no encontró ubicaciones.');
-    const cities=(Array.isArray(data?.results)?data.results:[])
-      .filter(p=>p?.country_code==='AR'&&Number.isFinite(p.latitude)&&Number.isFinite(p.longitude)&&
-        Math.abs(p.latitude)<=90&&Math.abs(p.longitude)<=180)
-      .slice(0,8)
-      .map(p=>({
-        name:[p.name,p.admin1].filter(Boolean).join(' · '),
-        latitude:p.latitude,longitude:p.longitude,
-        description:'Localidad · centro aproximado (Open-Meteo / GeoNames; no es un aeródromo)'
-      }));
-    places=places.concat(cities);
-  }catch(err){
-    if(err?.name==='AbortError')return;
-    warning='No se pudo consultar el buscador externo. Podés elegir un aeródromo disponible o ingresar coordenadas.';
-  }finally{
-    if(placeSearchController===ctrl){
-      placeSearchController=null;el('sun-place-find').disabled=false;
-    }
-  }
-  if(ctrl.signal.aborted)return;
-  renderSunPlaces(places);
-  placeStatus.textContent=places.length
-    ?'Elegí el lugar correcto para completar latitud y longitud. '+warning
-    :(warning||'No se encontraron lugares. Probá con otra localidad o ingresá coordenadas manualmente.');
-}
-el('sun-place-find').addEventListener('click',findSunPlace);
-placeSearchInput.addEventListener('keydown',event=>{
-  if(event.key==='Enter'){event.preventDefault();findSunPlace();}
-});
-placeSearchInput.addEventListener('input',()=>{
-  if(placeSearchController){placeSearchController.abort();placeSearchController=null;el('sun-place-find').disabled=false;}
-  placeResults.replaceChildren();placeResults.hidden=true;
-  placeStatus.textContent='Presioná «Buscar ubicación» y elegí el lugar correcto.';
-});
-function solarTime(lat,lon,ymd,zenith,afterNoon){
-  const [year,month,day]=ymd.split('-').map(Number);
-  const date=Date.UTC(year,month-1,day,12);
-  const begin=Date.UTC(year,0,1);
-  const dayN=Math.floor((date-begin)/86400000)+1;
-  const g=2*Math.PI/365*(dayN-1);
-  const eq=229.18*(0.000075+0.001868*Math.cos(g)-0.032077*Math.sin(g)-0.014615*Math.cos(2*g)-0.040849*Math.sin(2*g));
-  const decl=.006918-.399912*Math.cos(g)+.070257*Math.sin(g)-.006758*Math.cos(2*g)+.000907*Math.sin(2*g)-.002697*Math.cos(3*g)+.00148*Math.sin(3*g);
-  const r=Math.PI/180;
-  const cosH=(Math.cos(zenith*r)-Math.sin(lat*r)*Math.sin(decl))/(Math.cos(lat*r)*Math.cos(decl));
-  if(cosH>1||cosH< -1)return null;
-  const h=Math.acos(cosH)/r;
-  const minutes=720-4*lon-eq+(afterNoon?1:-1)*4*h;
-  return new Date(Date.UTC(year,month-1,day,0,0,0)+minutes*60000);
-}
-el('calc-sun').addEventListener('click',()=>{
-  if(!validNumber('latitude')||!validNumber('longitude')||!el('sun-date').value||Math.abs(n('latitude'))>90||Math.abs(n('longitude'))>180){
-    el('sun-state').textContent='Ingresá latitud, longitud y fecha válidas.';
-    return;
-  }
-  const lat=n('latitude'),lon=n('longitude'),date=el('sun-date').value;
-  const values=[solarTime(lat,lon,date,90.833,false),solarTime(lat,lon,date,90.833,true),solarTime(lat,lon,date,96,true)];
-  for(let i=0;i<3;i++)el(['sunrise','sunset','civil-dusk'][i]).textContent=values[i]?localTime(values[i]):'No calculable';
-  el('sun-state').textContent='Horarios aproximados en hora argentina (UTC−03). No sustituyen las tablas oficiales ni las definiciones reglamentarias.';
-});
+
 })();
 
 
