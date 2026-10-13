@@ -66,7 +66,7 @@ td{padding:.35rem .3rem;white-space:nowrap}
   <button class="tab" id="t-n" onclick="tab('n')">Navegación por piernas</button>
 </nav>
 
-<p class="disclaimer">Herramienta orientativa. Cargá datos verificados del manual y de la hoja de peso y balance de tu aeronave. Los resultados no certifican aeronavegabilidad ni autorizan un vuelo.</p><div id="validation" class="validation" role="alert"></div><main class="max-w-7xl mx-auto p-4 sm:p-6">
+<p class="disclaimer">Herramienta orientativa para planificar viento, navegación y combustible. Verificá los datos de performance y consumo de tu aeronave, la meteorología vigente y las reservas aplicables antes de volar. Los resultados no reemplazan la planificación de vuelo ni las verificaciones reglamentarias.</p><div id="validation" class="validation" role="alert"></div><main class="max-w-7xl mx-auto p-4 sm:p-6">
 <section id="v-w" class="grid lg:grid-cols-12 gap-5">
   <div class="lg:col-span-4 card p-4 space-y-3">
     <h2 class="font-bold text-sky-300">Datos</h2>
@@ -98,7 +98,7 @@ td{padding:.35rem .3rem;white-space:nowrap}
     <p class="text-[11px] text-slate-500 mb-2 no-print">TC = curso verdadero · Viento verdadero DE donde sopla · Variación y desvío: Este (+) / Oeste (−)</p>
     <div class="overflow-x-auto"><table class="w-full text-sm min-w-[900px]"><thead><tr class="border-b border-white/10">
       <th>Hasta</th><th>TC°</th><th>Dist NM</th><th>Viento°</th><th>Vel kt</th><th>Var</th><th>Desvío</th>
-      <th class="text-amber-300">WCA</th><th class="text-emerald-300">RM (mag)</th><th class="text-emerald-300">RC (comp)</th><th class="text-cyan-300">GS kt</th><th class="text-cyan-300">ETE</th><th class="text-cyan-300">ETA</th><th class="text-fuchsia-300">Comb gal</th><th class="no-print"></th></tr></thead>
+      <th class="text-amber-300">WCA</th><th class="text-emerald-300">RM (mag)</th><th class="text-emerald-300">RC (comp)</th><th class="text-cyan-300">GS kt</th><th class="text-cyan-300">ETE</th><th class="text-cyan-300">ETA</th><th class="text-fuchsia-300" title="Combustible consumido por pierna, en litros">Consumo (L)</th><th class="no-print"></th></tr></thead>
     <tbody id="legs" class="divide-y divide-white/5"></tbody></table></div>
   </div>
   <div class="grid lg:grid-cols-12 gap-5">
@@ -121,7 +121,7 @@ function preparePrint(){document.querySelectorAll('.print-value').forEach(n=>n.r
 window.addEventListener('beforeprint',preparePrint);
 function printReport() { preparePrint();window.print(); }
 function exportJSON() {
-  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({navigation:S,wind:Object.fromEntries(['w_r','w_d','w_s','w_g','w_l'].map(id=>[id,$(id).value])),units:{speed:'kt',distance:'NM',fuel:'L'}}, null, 2));
+  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({navigation:S,wind:Object.fromEntries(['w_r','w_d','w_s','w_g','w_l'].map(id=>[id,$(id).value])),units:{speed:'kt',distance:'NM',fuel:'L',fuelFlow:'L/h'}}, null, 2));
   const downloadAnchor = document.createElement('a');
   downloadAnchor.setAttribute("href", dataStr);
   downloadAnchor.setAttribute("download", `FlightPrep_${S.org}_${S.dst}.json`);
