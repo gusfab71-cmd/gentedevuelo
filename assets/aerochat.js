@@ -147,6 +147,7 @@
   const dmBadge = document.getElementById('dm-unread-badge');
   const dmAcceptButton = document.getElementById('dm-accept-review');
   const dmAcceptStatus = document.getElementById('dm-accept-status');
+  const dmReviewNotice = document.getElementById('dm-review-notice');
   let dmConsentAccepted = false;
   async function refreshDmConsent() {
     if (!currentUser) return;
@@ -156,9 +157,12 @@
       return;
     }
     dmConsentAccepted=Boolean(result.data?.accepted_at);
+    // Una vez aceptado, retirar todo el aviso visual. El consentimiento y
+    // los controles de revisión permanecen registrados en Supabase.
+    dmReviewNotice.hidden=dmConsentAccepted;
     dmAcceptButton.hidden=dmConsentAccepted;
     dmAcceptStatus.textContent=dmConsentAccepted
-      ? 'Aviso aceptado. Los nuevos mensajes que envíes están sujetos a revisión administrativa justificada.'
+      ? ''
       : 'Para enviar nuevos mensajes privados, leé y aceptá este aviso.';
     updatePrivateComposer();
   }
@@ -209,11 +213,13 @@
     dmBlock.hidden = !dmPeer;
     dmBlock.textContent = blocked ? 'Desbloquear' : 'Bloquear';
     dmSubmit.disabled = dmSending || !dmConsentAccepted || !dmPeer || !dmInput.value.trim() || dmInput.value.trim().length > 1000;
+    // Evitar leyendas repetidas encima del chat después de aceptar el aviso.
+    dmPeerHint.hidden=dmConsentAccepted&&!blocked;
     dmPeerHint.textContent = !dmPeer
-      ? 'Elegí a quién escribir. Revisá el aviso de privacidad antes de enviar.'
+      ? (dmConsentAccepted?'':'Elegí a quién escribir. Revisá el aviso de privacidad antes de enviar.')
       : blocked ? 'Bloqueaste a este integrante. Desbloquealo para poder responder.'
       : !dmConsentAccepted ? 'Aceptá el aviso de revisión administrativa antes de enviar.'
-      : 'Mensajes visibles para los participantes y sujetos a revisión administrativa justificada.';
+      : '';
   }
   function renderPrivateContacts() {
     const search = dmSearch.value.trim().toLocaleLowerCase('es');
