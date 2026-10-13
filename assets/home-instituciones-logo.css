@@ -28,6 +28,7 @@
     flex:1 1 auto!important;
     align-items:center!important;
     justify-content:center!important;
+    position:relative!important;
     width:100%!important;
     height:auto!important;
     min-height:0!important;
@@ -36,6 +37,8 @@
     box-sizing:border-box!important;
   }
   #portadaAccesos > a.acceso-instituciones .instituciones-portada-logo img{
+    position:absolute!important;
+    inset:0!important;
     display:block!important;
     width:100%!important;
     max-width:100%!important;
@@ -58,12 +61,15 @@
    al máximo espacio disponible del contenedor. */
 @media(max-width:700px){
   #portadaAccesos > a.acceso-instituciones .instituciones-portada-logo{
+    position:relative!important;
     width:100%!important;
     padding:0!important;
     box-sizing:border-box!important;
     overflow:hidden!important;
   }
   #portadaAccesos > a.acceso-instituciones .instituciones-portada-logo img{
+    position:absolute!important;
+    inset:0!important;
     display:block!important;
     width:100%!important;
     max-width:100%!important;
