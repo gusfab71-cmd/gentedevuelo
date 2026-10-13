@@ -35,19 +35,18 @@ a{color:#ffc19a}#status{min-height:26px;color:#ffdbbb}
   if(pw!==document.getElementById('confirm').value){status.textContent='Las contraseñas no coinciden.';return}
   button.disabled=true;
   try{
-   const updated=await client.auth.updateUser({password:pw});
-   if(updated.error)throw updated.error;
-   document.getElementById('password').value='';
-   document.getElementById('confirm').value='';
-   status.textContent='Contraseña cambiada. Terminando habilitación…';
    const {data:{session}}=await client.auth.getSession();
    if(!session?.access_token)throw Error('Tu sesión expiró. Volvé a ingresar.');
    const response=await fetch(GDV_CONFIG.url+'/functions/v1/gdv-admin-registration',{method:'POST',
     headers:{apikey:GDV_CONFIG.key,Authorization:'Bearer '+session.access_token,'Content-Type':'application/json'},
-    body:JSON.stringify({action:'complete_initial_password'})});
+    body:JSON.stringify({action:'change_initial_password',password:pw})});
    const payload=await response.json().catch(()=>({}));
-   if(!response.ok)throw Error(payload.error||'No se pudo finalizar el registro.');
-   await client.auth.refreshSession();
+   if(!response.ok)throw Error(payload.error||'No se pudo guardar la contraseña.');
+   document.getElementById('password').value='';
+   document.getElementById('confirm').value='';
+   status.textContent='Contraseña guardada. Habilitando cuenta…';
+   const refreshed=await client.auth.refreshSession();
+   if(refreshed.error){await client.auth.signOut({scope:'local'});location.replace('comunidad.html#ingresar');return}
    location.replace('comunidad.html#foro');
   }catch(err){status.textContent='No se completó el proceso: '+(err.message||'Volvé a intentar.');}
   finally{button.disabled=false}
