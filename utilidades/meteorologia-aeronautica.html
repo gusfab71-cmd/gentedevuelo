@@ -44,7 +44,7 @@
 <div class="full"><button class="primary" id="ask" type="submit">Obtener informe disponible</button><p id="status" class="feedback" role="status" aria-live="polite">Iniciá sesión para consultar los datos.</p></div>
 </form>
 <div id="brief-result" class="report-summary" hidden>
-<div class="card-header"><h3 id="fetched-title">Consulta</h3><button class="secondary" type="button" id="copy-report">Copiar informe</button></div>
+<div class="card-header"><h3 id="fetched-title">Consulta</h3><div class="actions" style="margin:0"><button class="secondary" type="button" id="ask-ai" title="El análisis inteligente puede consumir créditos de OpenAI">Analizar con Shimoda IA · consume tokens</button><button class="secondary" type="button" id="copy-report">Copiar informe</button></div></div>
 <p class="sub" id="fetched-at"></p>
 <div class="assistant"><strong>Robert Shimoda · interpretación breve</strong><p id="assistant-text"></p><small id="assistant-note"></small></div>
 <div class="metric-grid" id="metar-metrics" hidden>
@@ -190,7 +190,7 @@ el('brief-form').addEventListener('submit',async e=>{
     el('fetched-title').textContent=data.icao+' · '+data.fir_name;
     el('fetched-at').textContent='Consultado '+utcStamp(data.consulted_at_utc)+' · La fecha de consulta no certifica vigencia.';
     el('assistant-text').textContent=data.answer||'Sin interpretación disponible.';
-    el('assistant-note').textContent=data.interpretation_available?'Respuesta breve generada con boletines recuperados. Sin PRONAREA ni NOTAM.':'La interpretación automática no estuvo disponible; verificá los originales.';
+    el('assistant-note').textContent=data.ai_used?'Análisis de IA solicitado expresamente: puede consumir tokens. No incluye PRONAREA ni NOTAM.':'Resumen automático de datos disponibles, sin gasto de tokens de OpenAI. No incluye PRONAREA ni NOTAM.';
     for(const id of ['metar','taf','sigmet'])setReport(id,data[id]);
     const metar=data.metar?.available?parseMetar(data.metar.raw):null;
     el('metar-metrics').hidden=!metar;
@@ -211,6 +211,30 @@ el('brief-form').addEventListener('submit',async e=>{
       'Consulta informativa parcial; no constituye briefing operacional.'
     ].join('\n\n');
   }catch(err){el('status').textContent='No se completó la consulta: '+(err?.message||'Error inesperado');}
+  finally{button.disabled=false;}
+});
+
+el('ask-ai').addEventListener('click',async()=>{
+  if(!state.data)return;
+  const button=el('ask-ai');
+  button.disabled=true;
+  el('status').textContent='Analizando con Shimoda IA… Esta acción puede consumir tokens.';
+  try{
+    const client=window.GDV_AUTH?.client;
+    if(!client)throw new Error('La sesión no está disponible.');
+    const {data,error}=await client.functions.invoke('robert-meteo',{
+      body:{icao:el('icao').value.trim().toUpperCase(),fir:el('fir').value,
+        question:el('question').value.trim(),use_ai:true}
+    });
+    if(error||!data?.ok)throw new Error(data?.error||error?.message||'No se pudo completar el análisis.');
+    if(data.ai_used){
+      el('assistant-text').textContent=data.answer;
+      el('assistant-note').textContent='Interpretación con IA activada voluntariamente; puede consumir tokens. Verificá los boletines originales.';
+      el('status').textContent='Análisis de IA disponible. No constituye briefing operacional.';
+    }else{
+      el('status').textContent='La IA no entregó una interpretación: se mantiene el resumen automático.';
+    }
+  }catch(err){el('status').textContent='Falló el análisis IA: '+(err?.message||'Error de conexión.');}
   finally{button.disabled=false;}
 });
 el('copy-report').addEventListener('click',async()=>{
