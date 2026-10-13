@@ -1003,6 +1003,7 @@
       const modoComercio = tablaDestino === "comercio";
       const modoFotos = tablaDestino === "galeria";
       const modoVideo = tablaDestino === "video-portada";
+      const modoRegistro = tablaDestino === "registro-manual";
       const modoShimoda = tablaDestino === "shimoda_comentarios" || tablaDestino === "shimoda_publicaciones";
 
       if ($("comunicadosAccesoModeracion")) $("comunicadosAccesoModeracion").hidden = modoComercio || modoFotos || modoVideo || moderador;
@@ -1011,6 +1012,22 @@
       if ($("gdvStolAdmin")) $("gdvStolAdmin").hidden = modoComercio || modoFotos || moderador;
       if (administrador && !modoComercio && !modoFotos) window.GDV_STOL_VIDEO?.admin();
       if ($("shimodaPublicarAdmin")) $("shimodaPublicarAdmin").hidden = modoComercio || modoFotos || modoVideo || moderador;
+      if (modoRegistro && administrador) {
+        const tituloPanel = $("panel")?.querySelector("h1");
+        const introPanel = $("panel")?.querySelector(".intro");
+        if (tituloPanel) tituloPanel.textContent = "Administración · Registro manual";
+        if (introPanel) introPanel.textContent = "Registrá integrantes que no pudieron completar el alta habitual. Esta opción es exclusiva del administrador.";
+        for (const id of ["comunicadosAccesoModeracion", "gdvStolAdmin", "pronareaAdminAccess", "robertAdmin", "shimodaPublicarAdmin", "panelFotosHangar"]) {
+          const element = $(id);
+          if (element) element.hidden = true;
+        }
+        for (const selector of [".pestanas", ".filtros", "#resumen", "#lista"]) {
+          const element = document.querySelector(selector);
+          if (element) element.style.display = "none";
+        }
+        $("gdvManualRegistration")?.scrollIntoView({block: "start"});
+        return;
+      }
       if (moderador) {
         const tituloPanel = $("panel")?.querySelector("h1");
         if (tituloPanel) tituloPanel.textContent = "Panel de moderador";
