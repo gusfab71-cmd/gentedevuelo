@@ -1084,3 +1084,92 @@
     line-height:1.25;
   }
 }
+
+/* Menú Mi cuenta agrupado: Mi espacio / Administración · 2026-10-13 */
+.account-menu-panel{
+  box-sizing:border-box;
+  width:240px;
+  max-width:calc(100vw - 24px);
+  max-height:min(72vh,590px);
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  padding:8px;
+}
+.account-menu-panel .account-submenu{
+  border:1px solid #414a55;
+  border-radius:9px;
+  background:#252d36;
+  margin:0 0 7px;
+  overflow:hidden;
+}
+.account-menu-panel .account-submenu>summary{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  list-style:none;
+  cursor:pointer;
+  padding:12px 11px;
+  min-height:43px;
+  box-sizing:border-box;
+  color:#f4f6f8;
+  font-size:13px;
+  font-weight:750;
+  user-select:none;
+}
+.account-menu-panel .account-submenu>summary::-webkit-details-marker{display:none;}
+.account-menu-panel .account-submenu>summary:hover,
+.account-menu-panel .account-submenu[open]>summary{background:#35414c;}
+.account-menu-panel .account-submenu>summary:focus-visible,
+.account-menu-panel .account-submenu-links a:focus-visible{
+  outline:2px solid #e7b671;
+  outline-offset:-2px;
+}
+.account-menu-panel .account-submenu-chevron{
+  width:8px;height:8px;flex:none;
+  border:solid #d5b080;border-width:0 2px 2px 0;
+  transform:translateY(-2px) rotate(45deg);
+  transition:transform .16s ease;
+}
+.account-menu-panel .account-submenu[open] .account-submenu-chevron{
+  transform:translateY(2px) rotate(225deg);
+}
+.account-menu-panel .account-submenu-links{
+  display:grid;
+  gap:1px;
+  border-top:1px solid #44505d;
+  padding:5px;
+  background:#1f262e;
+}
+.account-menu-panel .account-submenu-links>a{
+  display:block;
+  text-decoration:none;
+  box-sizing:border-box;
+  padding:9px 10px;
+  color:#e6ebf0;
+  line-height:1.35;
+  font-size:12.5px;
+  border-radius:6px;
+}
+.account-menu-panel>button[data-action="logout"]{
+  font-size:13px;
+  padding:11px;
+  margin-top:3px;
+}
+@media(max-width:620px){
+  .account-menu .account-menu-panel{
+    left:auto!important;
+    right:0!important;
+    width:min(240px,calc(100vw - 24px))!important;
+    max-width:calc(100vw - 24px)!important;
+    max-height:min(68dvh,550px);
+  }
+  .account-menu-panel .account-submenu>summary{
+    min-height:42px;
+    padding:11px;
+  }
+  .account-menu-panel .account-submenu-links>a{font-size:12px;min-height:36px;}
+}
+@media(prefers-reduced-motion:reduce){
+  .account-menu-panel .account-submenu-chevron{transition:none;}
+}
