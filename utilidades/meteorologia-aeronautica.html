@@ -164,7 +164,7 @@
 </select>
 <input id="flight-dest-other" aria-label="Código OACI de destino" type="text" pattern="[sS][aA][A-Za-z]{2}" minlength="4" maxlength="4" placeholder="Ej.: SAXX" autocomplete="off" autocapitalize="characters" hidden disabled>
 </label>
-<label class="field full">Ruta prevista y puntos principales<input id="flight-route" required maxlength="280" placeholder="Describí la ruta, puntos y aeródromos alternativos"></label>
+<label class="field full">Ruta prevista y puntos principales<input id="flight-route" required maxlength="800" placeholder="Describí la ruta, puntos y aeródromos alternativos"></label>
 
 <details id="nav-legs-panel" class="report full" style="margin:0;background:#172326">
 <summary><strong>Navegación por piernas · FlightPrep NAV</strong><span>Hasta 16 piernas · Todas las columnas</span></summary>
@@ -432,7 +432,13 @@ el('calc-sun').addEventListener('click',()=>{
    const invalidate=()=>{lastPlan=null;prepared=[];$('nav-table-block').hidden=true;$('nav-status').textContent='La ruta cambió. Volvé a preparar las piernas.';};
    select.addEventListener('change',()=>{custom.hidden=select.value!=='CUSTOM';invalidate();});
    custom.addEventListener('input',invalidate);
-   remove.addEventListener('click',()=>{points.splice(points.indexOf(point),1);row.remove();invalidate();});
+   remove.addEventListener('click',()=>{
+      const at=points.indexOf(point);
+      if(at>=0)points.splice(at,1);
+      row.remove();
+      [...$('nav-waypoints').children].forEach((el,i)=>{const label=el.querySelector('label');if(label)label.firstChild.textContent='Pierna '+(i+1)+' · Hasta (punto intermedio)';});
+      invalidate();
+    });
    invalidate();
  }
  function middlePoint(point){
@@ -622,7 +628,7 @@ el('calc-sun').addEventListener('click',()=>{
    if(!prepared.length){$('nav-status').textContent='Primero prepará las piernas.';return;}
    const names=[prepared[0].from.code,...prepared.map(l=>l.to.code)];
    const joined=names.join(' → ');
-   if(joined.length>280){$('nav-status').textContent='Hay demasiados puntos para el campo de ruta.';return;}
+   if(joined.length>800){$('nav-status').textContent='Hay demasiados puntos para el campo de ruta; reducilo o dividí el itinerario.';return;}
    $('flight-route').value=joined;
    $('nav-status').textContent='Ruta transferida al formulario del piloto. Revisá FIR y alternativos antes de consultar Shimoda.';
  });
