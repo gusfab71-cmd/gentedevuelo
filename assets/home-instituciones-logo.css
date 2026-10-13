@@ -79,3 +79,18 @@
     object-position:center!important;
   }
 }
+
+/* Marcos unificados de las tres tarjetas: referencia Instituciones Amigas.
+   Solo el contorno; se conservan fondos, tipografía, contenido y geometría. */
+#portadaAccesos > a:is(.acceso-shimoda,.acceso-instituciones,.acceso-clasificados) {
+  border:2px solid #d6a84b!important;
+  border-radius:14px!important;
+  box-shadow:0 4px 14px rgba(0,0,0,.35)!important;
+}
+@media(max-width:700px){
+  #portadaAccesos > a:is(.acceso-shimoda,.acceso-instituciones,.acceso-clasificados) {
+    border:2px solid #d9ae56!important;
+    border-radius:18px!important;
+    box-shadow:0 10px 28px rgba(0,0,0,.30)!important;
+  }
+}
