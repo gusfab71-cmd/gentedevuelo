@@ -31,22 +31,22 @@
 <header class="top"><div class="top-inner"><a class="brand" href="../index.html"><span class="mark">GDV</span><span class="brand-name">GENTE DE VUELO<span>Centro de consulta aeronáutica</span></span></a><nav class="toplinks"><a href="index.html">Utilidades</a><a href="../index.html#shimoda">Shimoda</a><a href="../index.html">Portada</a></nav></div></header>
 <main class="wrap" id="gdv-meteo-private" hidden>
 <section class="hero"><div class="hero-main"><span class="eyebrow">Robert Shimoda / pruebas privadas de administración</span><h1>Tu mesa de <em>vuelo</em>.</h1><p>Datos meteorológicos, lectura de boletines y herramientas de cálculo en un único espacio. Diseñado para consultar con criterio, no para reemplazar la información oficial.</p></div><aside class="hero-side"><div class="dial" aria-hidden="true">RS</div><div><span class="eyebrow">Información crítica</span><p>Verificá siempre <strong>emisión, vigencia, ruta y fuentes oficiales</strong> antes de planificar una operación.</p></div></aside></section>
-<nav class="jump" aria-label="Secciones"><a href="#consultar">Consultar</a><a href="#boletines">Boletines</a><a href="#viento">Viento en pista</a><a href="#nubosidad">Nubosidad</a><a href="#crepusculo">Crepúsculo</a><a href="#fuentes">Fuentes oficiales</a></nav>
+<nav class="jump" aria-label="Secciones"><a href="#consultar">Datos gratis</a><a href="#boletines">Boletines</a><a href="#viento">Viento en pista</a><a href="#nubosidad">Nubosidad</a><a href="#crepusculo">Crepúsculo</a><a href="#fuentes">Fuentes oficiales</a><a href="#shimoda-brief" style="border-color:var(--accent);color:var(--accent2)">Informe con Shimoda IA</a></nav>
 <div class="layout">
 <div class="stack">
 <section class="card" id="consultar">
-<div class="card-header"><div><span class="card-kicker">01 / Consulta</span><h2>Información aeronáutica</h2></div><span class="sub">Argentina · Selección manual</span></div>
-<p class="sub">Se recuperan METAR, TAF y posibles SIGMET internacionales. PRONAREA y NOTAM deben verificarse en sus sitios oficiales mientras no haya conexión automática certificada.</p>
+<div class="card-header"><div><span class="card-kicker">01 / Datos gratuitos</span><h2>Consultar información meteorológica</h2></div><span class="sub">Argentina · Selección manual</span></div>
+<p class="sub">Consultá METAR, TAF y posibles SIGMET internacionales gratuitamente y sin consumir tokens. PRONAREA y NOTAM deben obtenerse de fuentes oficiales; más abajo podrás pegarlos para el análisis final.</p>
 <form id="brief-form" class="form">
 <label class="field">Aeródromo (OACI)<input id="icao" required minlength="4" maxlength="4" pattern="[sS][aA][A-Za-z]{2}" autocomplete="off" value="SAEZ" placeholder="SAEZ"></label>
 <label class="field">FIR <select id="fir" required><option value="SAEF">Ezeiza · SAEF</option><option value="SACF">Córdoba · SACF</option><option value="SAMF">Mendoza · SAMF</option><option value="SARR">Resistencia · SARR</option><option value="SAVF">Comodoro Rivadavia · SAVF</option></select></label>
-<label class="field full">Consulta para Robert (opcional)<input id="question" maxlength="220" placeholder="¿Qué informa sobre viento, visibilidad y nubes?"></label>
-<div class="full"><button class="primary" id="ask" type="submit">Obtener informe disponible</button><p id="status" class="feedback" role="status" aria-live="polite">Iniciá sesión para consultar los datos.</p></div>
+<p class="sub full" style="margin:0">Este botón solo obtiene datos. Para solicitar una interpretación del vuelo, utilizá el formulario de Robert Shimoda al final de la página.</p>
+<div class="full"><button class="primary" id="ask" type="submit">Consultar boletines gratis</button><p id="status" class="feedback" role="status" aria-live="polite">Iniciá sesión para consultar los datos.</p></div>
 </form>
 <div id="brief-result" class="report-summary" hidden>
-<div class="card-header"><h3 id="fetched-title">Consulta</h3><div class="actions" style="margin:0"><button class="secondary" type="button" id="ask-ai" title="El análisis inteligente puede consumir créditos de OpenAI">Analizar con Shimoda IA · consume tokens</button><button class="secondary" type="button" id="copy-report">Copiar informe</button></div></div>
+<div class="card-header"><h3 id="fetched-title">Boletines consultados</h3><button class="secondary" type="button" id="copy-report">Copiar boletines</button></div>
 <p class="sub" id="fetched-at"></p>
-<div class="assistant" id="ai-analysis" hidden><strong>Robert Shimoda · análisis con IA</strong><p id="assistant-text"></p><small id="assistant-note"></small></div>
+
 <div class="metric-grid" id="metar-metrics" hidden>
 <div class="metric"><span>Viento observado</span><strong id="wind-metric">—</strong></div>
 <div class="metric"><span>Visibilidad informada</span><strong id="vis-metric">—</strong></div>
@@ -132,6 +132,66 @@
 </section>
 </aside>
 </div>
+
+<section class="card" id="shimoda-brief" style="margin-top:22px;border-color:#97643c;background:linear-gradient(145deg,#242827,#171e20)">
+<div class="card-header">
+ <div><span class="card-kicker">08 / Evaluación contextual · solo administrador</span><h2>Robert Shimoda · Análisis para el piloto</h2></div>
+ <span style="border:1px solid #b87745;border-radius:99px;padding:7px 11px;color:var(--accent2);font-size:12px;font-weight:700">Usa tokens solo al confirmar</span>
+</div>
+<p class="sub">Este es el paso final. Primero consultá gratuitamente los boletines. Después indicá tu vuelo y pegá PRONAREA y NOTAM vigentes desde SMN y AIS. Shimoda combinará todo para señalar condiciones relevantes, riesgos y datos faltantes. No emite autorización de vuelo.</p>
+<form id="flight-analysis-form">
+<div class="form" style="margin-top:17px">
+<label class="field">Aeródromo de salida (OACI)<input id="flight-origin" required minlength="4" maxlength="4" pattern="[sS][aA][A-Za-z]{2}" value="SAEZ" placeholder="SAEZ"></label>
+<label class="field">Aeródromo de destino (OACI)<input id="flight-dest" required minlength="4" maxlength="4" pattern="[sS][aA][A-Za-z]{2}" placeholder="SAME"></label>
+<label class="field full">Ruta prevista y puntos principales<input id="flight-route" required maxlength="280" placeholder="Describí la ruta, puntos y aeródromos alternativos"></label>
+<label class="field">Fecha y hora de salida previstas (hora del equipo)<input id="flight-time" type="datetime-local" required></label>
+<label class="field">Altitud prevista (pies AMSL)<input id="flight-alt" type="number" required min="500" max="45000" step="100" placeholder="6500"></label>
+<label class="field">Reglas de vuelo<select id="flight-rules" required><option value="VFR">VFR</option><option value="IFR">IFR</option></select></label>
+<label class="field">Aeronave (opcional)<input id="flight-aircraft" maxlength="100" placeholder="Ej.: Cessna 172"></label>
+<fieldset class="full" style="margin:0;border:1px solid #58645e;border-radius:12px;padding:12px 16px">
+<legend style="padding:0 5px;font-weight:700">FIR que atraviesa tu ruta</legend>
+<div style="display:flex;gap:10px 20px;flex-wrap:wrap">
+<label><input class="flight-fir" type="checkbox" value="SAEF" checked style="width:auto"> Ezeiza</label>
+<label><input class="flight-fir" type="checkbox" value="SACF" style="width:auto"> Córdoba</label>
+<label><input class="flight-fir" type="checkbox" value="SAMF" style="width:auto"> Mendoza</label>
+<label><input class="flight-fir" type="checkbox" value="SARR" style="width:auto"> Resistencia</label>
+<label><input class="flight-fir" type="checkbox" value="SAVF" style="width:auto"> Comodoro Rivadavia</label>
+</div>
+<p class="sub">Marcá todas las FIR implicadas y corroboralas con cartas AIP; el sistema no determina automáticamente el trazado de tu ruta.</p>
+</fieldset>
+<label class="field full">¿Qué necesitás saber para el vuelo?
+<textarea id="flight-question" required minlength="8" maxlength="500" rows="2" style="resize:vertical" placeholder="Por ejemplo: quiero volar a Mendoza a 6500 pies, ¿qué fenómenos y restricciones debo analizar?"></textarea></label>
+</div>
+<div class="form" style="margin-top:18px;padding-top:18px;border-top:1px solid #55534d">
+<div class="full"><h3 style="color:var(--accent2)">Documentos oficiales pegados manualmente</h3><p class="sub">Pegá el texto de los boletines completos y verificá su validez. La aplicación no puede certificar que el texto copiado sea auténtico ni que abarque toda la ruta.</p></div>
+<label class="field full">PRONAREA · Texto del SMN
+<textarea id="flight-pronarea" required minlength="40" maxlength="12000" rows="6" style="resize:vertical;min-height:125px" placeholder="Pegá el PRONAREA oficial, incluyendo FIR, fecha, período de validez, niveles y fenómenos."></textarea></label>
+<label class="field">Verificado en SMN (fecha y hora de tu equipo)<input id="flight-pronarea-checked" type="datetime-local" required></label>
+<div class="field"><span>Fuente de PRONAREA</span><a href="https://www.smn.gob.ar/pronarea" target="_blank" rel="noopener noreferrer">Abrir PRONAREA en SMN</a></div>
+<label class="field full">NOTAM · Textos del AIS / ANAC
+<textarea id="flight-notam" required minlength="30" maxlength="12000" rows="6" style="resize:vertical;min-height:125px" placeholder="Pegá los NOTAM correspondientes a salida, ruta, destino y alternativa, incluyendo validez y códigos."></textarea></label>
+<label class="field">Verificado en AIS (fecha y hora de tu equipo)<input id="flight-notam-checked" type="datetime-local" required></label>
+<div class="field"><span>Fuente de NOTAM</span><a href="https://ais.anac.gob.ar/notam" target="_blank" rel="noopener noreferrer">Abrir NOTAM oficiales</a></div>
+</div>
+<div class="warning" style="margin:17px 0">
+<strong>Antes de usar tokens:</strong> confirmá que tenés la ruta completa, altitudes mínimas del terreno, NOTAM aplicables y boletines vigentes. El resultado es orientación educativa, no decisión de aptitud VFR/IFR ni briefing oficial.
+</div>
+<label style="display:flex;align-items:flex-start;gap:10px;font-size:13px">
+<input id="flight-confirm-cost" required type="checkbox" style="width:20px;height:20px;flex:none">
+<span>Entiendo que al solicitar el análisis completo se consumirán tokens de OpenAI. Acepto iniciar una consulta privada de prueba.</span>
+</label>
+<div class="actions">
+<button class="primary" id="flight-ask" type="submit">Obtener informe disponible · Shimoda IA</button>
+<span id="flight-status" class="feedback" role="status" aria-live="polite">Sin ejecutar. Las consultas anteriores no consumen tokens de IA.</span>
+</div>
+</form>
+<div id="flight-result" hidden style="margin-top:20px;border-top:1px solid #605951;padding-top:18px">
+<div class="card-header"><h3>Análisis contextual de Robert Shimoda</h3><button class="secondary" id="flight-copy" type="button">Copiar análisis</button></div>
+<p class="sub" id="flight-analysis-time"></p>
+<div id="flight-analysis" style="white-space:pre-wrap;line-height:1.76;background:#172125;padding:18px;border:1px solid #755f50;border-radius:12px;color:#f1ebe2"></div>
+<p class="source-notes" id="flight-warning"></p>
+</div>
+</section>
 <footer class="sitefoot">MODO PRUEBA PRIVADA · Solo administración. Gente de Vuelo · Robert Shimoda, asistente de carácter educativo. Toda decisión aeronáutica requiere verificación oficial vigente y responsabilidad del piloto al mando.</footer>
 </main>
 <section class="wrap" id="gdv-meteo-gate" role="status" aria-live="polite">
@@ -180,7 +240,7 @@ el('brief-form').addEventListener('submit',async e=>{
     const auth=await client.auth.getUser();
     if(auth.error||!auth.data?.user)throw new Error('Ingresá a tu cuenta y volvé a consultar.');
     el('status').textContent='Consultando las fuentes disponibles…';
-    const {data,error}=await client.functions.invoke('robert-meteo',{body:{icao:el('icao').value.trim().toUpperCase(),fir:el('fir').value,question:el('question').value.trim()}});
+    const {data,error}=await client.functions.invoke('robert-meteo',{body:{icao:el('icao').value.trim().toUpperCase(),fir:el('fir').value,question:''}});
     if(error||!data?.ok){
       let reason=data?.error||error?.message||'Servicio no disponible';
       if(error?.context?.json){try{const detail=await error.context.json();if(detail?.error)reason=detail.error;}catch(_){}}
@@ -189,11 +249,7 @@ el('brief-form').addEventListener('submit',async e=>{
     state.data=data;
     el('fetched-title').textContent=data.icao+' · '+data.fir_name;
     el('fetched-at').textContent='Consultado '+utcStamp(data.consulted_at_utc)+' · La fecha de consulta no certifica vigencia.';
-    // El resumen automático repite las mismas cifras de las tarjetas METAR.
-    // Mostramos el panel de Shimoda únicamente al pedir voluntariamente un análisis con IA.
-    el('ai-analysis').hidden=!data.ai_used;
-    el('assistant-text').textContent=data.ai_used?(data.answer||'Sin interpretación disponible.'):'';
-    el('assistant-note').textContent=data.ai_used?'Interpretación con IA solicitada voluntariamente; no reemplaza la comprobación oficial.':'';
+
     for(const id of ['metar','taf','sigmet'])setReport(id,data[id]);
     const metar=data.metar?.available?parseMetar(data.metar.raw):null;
     el('metar-metrics').hidden=!metar;
@@ -216,30 +272,6 @@ el('brief-form').addEventListener('submit',async e=>{
   finally{button.disabled=false;}
 });
 
-el('ask-ai').addEventListener('click',async()=>{
-  if(!state.data)return;
-  const button=el('ask-ai');
-  button.disabled=true;
-  el('status').textContent='Analizando con Shimoda IA… Esta acción puede consumir tokens.';
-  try{
-    const client=window.GDV_AUTH?.client;
-    if(!client)throw new Error('La sesión no está disponible.');
-    const {data,error}=await client.functions.invoke('robert-meteo',{
-      body:{icao:el('icao').value.trim().toUpperCase(),fir:el('fir').value,
-        question:el('question').value.trim(),use_ai:true}
-    });
-    if(error||!data?.ok)throw new Error(data?.error||error?.message||'No se pudo completar el análisis.');
-    if(data.ai_used){
-      el('ai-analysis').hidden=false;
-      el('assistant-text').textContent=data.answer;
-      el('assistant-note').textContent='Interpretación con IA activada voluntariamente; puede consumir tokens. Verificá los boletines originales.';
-      el('status').textContent='Análisis de IA disponible. No constituye briefing operacional.';
-    }else{
-      el('status').textContent='La IA no entregó una interpretación: se mantiene el resumen automático.';
-    }
-  }catch(err){el('status').textContent='Falló el análisis IA: '+(err?.message||'Error de conexión.');}
-  finally{button.disabled=false;}
-});
 el('copy-report').addEventListener('click',async()=>{
   if(!lastCopied)return;
   try{await navigator.clipboard.writeText(lastCopied);el('status').textContent='Informe parcial copiado.';}
@@ -288,6 +320,67 @@ el('calc-sun').addEventListener('click',()=>{
   for(let i=0;i<3;i++)el(['sunrise','sunset','civil-dusk'][i]).textContent=values[i]?localTime(values[i]):'No calculable';
   el('sun-state').textContent='Horarios aproximados en hora argentina (UTC−03). No sustituyen las tablas oficiales ni las definiciones reglamentarias.';
 });
+})();
+
+(function(){
+ 'use strict';
+ const $=id=>document.getElementById(id);
+ const form=$('flight-analysis-form'),button=$('flight-ask'),status=$('flight-status');
+ const iso=id=>new Date($(id).value).toISOString();
+ const once=[];let latest='';
+ const saved=$('icao'),origin=$('flight-origin');
+ saved.addEventListener('change',()=>{if(!origin.dataset.edited)origin.value=saved.value.toUpperCase().slice(0,4);});
+ origin.addEventListener('input',()=>{origin.dataset.edited='1';});
+ form.addEventListener('submit',async event=>{
+   event.preventDefault();
+   if(!form.reportValidity())return;
+   const firs=[...document.querySelectorAll('.flight-fir:checked')].map(x=>x.value);
+   if(!firs.length){status.textContent='Seleccioná por lo menos una FIR.';return;}
+   if(!document.getElementById('flight-confirm-cost').checked){status.textContent='Confirmá expresamente el consumo de tokens.';return;}
+   const data={
+     origin:origin.value.trim().toUpperCase(),
+     destination:$('flight-dest').value.trim().toUpperCase(),
+     route:$('flight-route').value.trim(),
+     planned_at_utc:iso('flight-time'),
+     cruise_altitude_ft:Number($('flight-alt').value),
+     flight_rules:$('flight-rules').value,
+     aircraft:$('flight-aircraft').value.trim(),
+     firs,
+     question:$('flight-question').value.trim(),
+     pronarea_text:$('flight-pronarea').value.trim(),
+     notam_text:$('flight-notam').value.trim(),
+     pronarea_checked_at_utc:iso('flight-pronarea-checked'),
+     notam_checked_at_utc:iso('flight-notam-checked'),
+     confirm_ai_cost:true
+   };
+   // Después de confirmar, ninguna llamada previa a consultar boletines implica gasto.
+   button.disabled=true;$('flight-result').hidden=true;
+   status.textContent='Solicitando interpretación contextual a Shimoda. Se consumirán tokens si se procesa la solicitud…';
+   try{
+     const client=window.GDV_AUTH?.client;
+     if(!client)throw new Error('Iniciá sesión como administrador.');
+     const {data:auth,error:authError}=await client.auth.getUser();
+     if(authError||!auth?.user)throw new Error('Sesión no disponible.');
+     const {data:response,error}=await client.functions.invoke('robert-flight-brief',{body:data});
+     if(error||!response?.ok){
+       let message=response?.error||error?.message||'No se pudo analizar el vuelo.';
+       if(error?.context?.json){try{const details=await error.context.json();if(details?.error)message=details.error;}catch(_){}}
+       throw new Error(message);
+     }
+     if(response.ai_used!==true||!response.analysis)throw new Error('No se recibió una interpretación completa.');
+     latest=response.analysis;
+     $('flight-analysis').textContent=latest;
+     $('flight-analysis-time').textContent='Generado: '+new Date(response.generated_at_utc).toLocaleString('es-AR',{timeZone:'America/Argentina/Buenos_Aires'})+' (hora argentina)';
+     $('flight-warning').textContent=response.warning||'Documentos manuales sin verificación automática. No reemplaza el briefing oficial.';
+     $('flight-result').hidden=false;
+     status.textContent='Análisis generado con IA. Revisá especialmente los datos faltantes y las advertencias.';
+   }catch(err){status.textContent='No se completó: '+(err?.message||'Error de conexión.');}
+   finally{button.disabled=false;$('flight-confirm-cost').checked=false;}
+ });
+ $('flight-copy').addEventListener('click',async()=>{
+   if(!latest)return;
+   try{await navigator.clipboard.writeText(latest);status.textContent='Análisis copiado.';}catch{status.textContent='El navegador no permitió copiar.';}
+ });
 })();
 </script>
 
