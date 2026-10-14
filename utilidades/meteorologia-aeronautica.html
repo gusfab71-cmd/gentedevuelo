@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#11191c">
 <meta name="robots" content="noindex,nofollow">
-<meta name="description" content="Mesa de consulta aeronáutica de Robert Shimoda: METAR, TAF, SIGMET, PRONAREA, NOTAM, viento, crepúsculo y guía de nubosidad.">
-<title>Mesa de vuelo · Prueba privada | Robert Shimoda | Gente de Vuelo</title>
+<meta name="description" content="Mesa de Vuelo de Gente de Vuelo: METAR, TAF, SIGMET, PRONAREA, NOTAM, análisis meteorológico, navegación y nubosidad.">
+<title>Mesa de Vuelo · Gente de Vuelo</title>
 <style>
 :root{color-scheme:dark;--bg:#101719;--surface:#1a2426;--surface2:#212d2f;--surface3:#2b3739;--line:#3c4a4b;--text:#edf0ee;--muted:#b4c0bd;--accent:#ff994b;--accent2:#ffbc78;--mint:#8cddc4;--white:#f3efe7;--radius:18px}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.55 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}button,input,select,textarea{font:inherit}a{color:var(--accent2)}a:hover{color:#ffe0bb}button{cursor:pointer}button:disabled{cursor:wait;opacity:.65}input,select,textarea{width:100%;background:#121a1d;border:1px solid #65716e;border-radius:11px;color:var(--text);padding:11px 12px;min-width:0}input:focus,select:focus,textarea:focus,button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:3px}input[type=number]{font-variant-numeric:tabular-nums}p{margin:9px 0}h1,h2,h3{line-height:1.22}h2{font-size:22px;letter-spacing:-.025em;margin:0 0 10px}h3{font-size:16px;margin:0 0 7px}strong{font-weight:710}small{font-size:12px}pre{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.65;font:13px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace;margin:12px 0 0;padding:14px;border:1px solid #4b5d60;border-radius:12px;background:#111b1e;color:#e2e9e8}[hidden]{display:none!important}
@@ -53,10 +53,10 @@
 <script src="../assets/auth-guard.js?v=20261013registro2"></script>
 </head>
 <body>
-<header class="top"><div class="top-inner"><a class="brand" href="../index.html"><span class="mark">GDV</span><span class="brand-name">GENTE DE VUELO<span>Centro de consulta aeronáutica</span></span></a><nav class="toplinks"><a href="index.html">Utilidades</a><a href="../index.html#shimoda">Shimoda</a><a href="../index.html">Portada</a></nav></div></header>
+<header class="top"><div class="top-inner"><a class="brand" href="../index.html"><span class="mark">GDV</span><span class="brand-name">GENTE DE VUELO<span>Centro de consulta aeronáutica</span></span></a><nav class="toplinks"><a href="index.html">Utilidades</a><a href="../index.html">Portada</a></nav></div></header>
 <main class="wrap" id="gdv-meteo-private" hidden>
-<section class="hero"><div class="hero-main"><span class="eyebrow">Robert Shimoda / pruebas privadas de administración</span><h1>Tu mesa de <em>vuelo</em>.</h1><p>Datos meteorológicos, lectura de boletines y herramientas de cálculo en un único espacio. Diseñado para consultar con criterio, no para reemplazar la información oficial.</p></div><aside class="hero-side"><div class="dial" aria-hidden="true">RS</div><div><span class="eyebrow">Información crítica</span><p>Verificá siempre <strong>emisión, vigencia, ruta y fuentes oficiales</strong> antes de planificar una operación.</p></div></aside></section>
-<nav class="jump" aria-label="Secciones"><a href="#consultar">METAR · TAF · SIGMET</a><a href="#shimoda-brief" style="border-color:var(--accent);color:var(--accent2)">PRONAREA · NOTAM · Shimoda</a><a href="#navigation-inline" style="border-color:#72928b">Navegación FlightPrep</a><a href="#fuentes">Fuentes oficiales</a><a href="#viento">Viento en pista</a><a href="#nubosidad">Nubosidad</a></nav>
+<section class="hero"><div class="hero-main"><span class="eyebrow">Mesa de Vuelo / acceso de administración</span><h1>Tu mesa de <em>vuelo</em>.</h1><p>Datos meteorológicos, lectura de boletines y herramientas de cálculo en un único espacio. Diseñado para consultar con criterio, no para reemplazar la información oficial.</p></div><aside class="hero-side"><div class="dial" aria-hidden="true">MV</div><div><span class="eyebrow">Información crítica</span><p>Verificá siempre <strong>emisión, vigencia, ruta y fuentes oficiales</strong> antes de planificar una operación.</p></div></aside></section>
+<nav class="jump" aria-label="Secciones"><a href="#consultar">METAR · TAF · SIGMET</a><a href="#analisis-altura" style="border-color:var(--accent);color:var(--accent2)">PRONAREA · NOTAM · Análisis</a><a href="#navigation-inline" style="border-color:#72928b">Navegación FlightPrep</a><a href="#fuentes">Fuentes oficiales</a><a href="#nubosidad">Nubosidad</a></nav>
 <div class="layout">
 <div class="stack">
 <section class="card" id="consultar">
@@ -65,7 +65,7 @@
 <form id="brief-form" class="form">
 <label class="field">Aeródromo (OACI)<input id="icao" required minlength="4" maxlength="4" pattern="[sS][aA][A-Za-z]{2}" autocomplete="off" value="SAEZ" placeholder="SAEZ"></label>
 <label class="field">FIR <select id="fir" required><option value="SAEF">Ezeiza · SAEF</option><option value="SACF">Córdoba · SACF</option><option value="SAMF">Mendoza · SAMF</option><option value="SARR">Resistencia · SARR</option><option value="SAVF">Comodoro Rivadavia · SAVF</option></select></label>
-<p class="sub full" style="margin:0">Este botón solo obtiene datos. Para solicitar una interpretación del vuelo, utilizá el formulario de Robert Shimoda al final de la página.</p>
+<p class="sub full" style="margin:0">Este botón solo obtiene datos. Para solicitar una interpretación del vuelo, utilizá el formulario de análisis meteorológico más abajo.</p>
 <div class="full"><button class="primary" id="ask" type="submit">Consultar boletines gratis</button><p id="status" class="feedback" role="status" aria-live="polite">Iniciá sesión para consultar los datos.</p></div>
 </form>
 <div id="brief-result" class="report-summary" hidden>
@@ -95,24 +95,11 @@
 <details class="report"><summary><strong>NOTAM · Avisos operacionales</strong><span>Pendiente de conexión directa</span></summary><div class="content"><p>Consultá los NOTAM de salida, ruta, destino y alternativa en el AIS oficial. Esta aplicación no confirma cierres de pista.</p><a href="https://ais.anac.gob.ar/notam" target="_blank" rel="noopener noreferrer">Abrir NOTAM en ANAC</a></div></details>
 <p class="source-notes">La hora de consulta no equivale a la de emisión. Los textos se presentan sin certificación operacional; comprobá todas las fuentes oficiales.</p>
 </section>
-<section class="card" id="viento">
-<div class="card-header"><div><span class="card-kicker">03 / Cálculo</span><h2>Viento en pista</h2></div><span class="sub">Cálculo educativo</span></div>
-<p class="sub">Introducí dirección del viento, velocidad y rumbo del eje de pista en la <strong>misma referencia angular</strong> (verdadero o magnético). El METAR suele expresar dirección verdadera; el número de pista es magnético.</p>
-<div class="form">
-<label class="field">Rumbo del eje de pista (°)<input id="runway" type="number" min="0" max="360" step="1" value="130"></label>
-<label class="field">Viento desde (°)<input id="wind-dir" type="number" min="0" max="360" step="1" value="180"></label>
-<label class="field">Velocidad (kt)<input id="wind-speed" type="number" min="0" max="250" step=".1" value="12"></label>
-<label class="field">Ráfaga (kt, opcional)<input id="wind-gust" type="number" min="0" max="250" step=".1" placeholder="Sin dato"></label>
-</div>
-<div class="math-grid" style="margin:15px 0"><div class="math-out"><strong id="headwind">—</strong><span>Frente / cola</span></div><div class="math-out"><strong id="crosswind">—</strong><span>Viento cruzado</span></div><div class="math-out"><strong id="gust-result">—</strong><span>Con ráfagas</span></div></div>
-<p id="wind-warning" class="warning" role="status">Valores ilustrativos. No se compara contra limitaciones de la aeronave.</p>
-<a href="flightprep-nav.html">Abrir FlightPrep NAV para navegación y cálculos adicionales</a>
-</section>
 
 </div>
 <aside class="stack">
 <section class="card" id="nubosidad">
-<div class="card-header"><div><span class="card-kicker">05 / Observación METAR</span><h2>Lectura de nubosidad</h2></div><span class="sub">Símbolo de la observación disponible</span></div>
+<div class="card-header"><div><span class="card-kicker">03 / Observación METAR</span><h2>Lectura de nubosidad</h2></div><span class="sub">Símbolo de la observación disponible</span></div>
 <div class="cloud-current" role="status" aria-live="polite">
   <div class="cloud-symbol" id="current-cloud-symbol" style="--fill:0deg" aria-hidden="true"></div>
   <div><div class="cloud-code" id="current-cloud-code">—</div>
@@ -137,7 +124,7 @@
 </details>
 </section>
 <section class="card" id="fuentes">
-<div class="card-header"><div><span class="card-kicker">06 / Enlaces</span><h2>Directorio aeronáutico</h2></div></div>
+<div class="card-header"><div><span class="card-kicker">04 / Enlaces</span><h2>Directorio aeronáutico</h2></div></div>
 <div class="quicklinks">
 <a href="https://ais.anac.gob.ar/" target="_blank" rel="noopener noreferrer"><strong>AIP y cartas</strong><span>Publicaciones, fichas, procedimientos y cartas de aeródromo</span></a>
 <a href="https://ais.anac.gob.ar/notam" target="_blank" rel="noopener noreferrer"><strong>NOTAM</strong><span>Información operacional oficial</span></a>
@@ -150,12 +137,12 @@
 </aside>
 </div>
 
-<section class="card" id="shimoda-brief" style="margin-top:22px;border-color:#97643c;background:linear-gradient(145deg,#242827,#171e20)">
+<section class="card" id="analisis-altura" style="margin-top:22px;border-color:#97643c;background:linear-gradient(145deg,#242827,#171e20)">
 <div class="card-header">
- <div><span class="card-kicker">08 / Informe meteorológico en ruta · solo administrador</span><h2>Robert Shimoda · Informe de condiciones en altura</h2></div>
+ <div><span class="card-kicker">05 / Informe meteorológico en ruta · solo administrador</span><h2>Informe de condiciones en altura</h2></div>
  <span style="border:1px solid #b87745;border-radius:99px;padding:7px 11px;color:var(--accent2);font-size:12px;font-weight:700">Usa tokens solo al confirmar</span>
 </div>
-<p class="sub">Seleccioná salida, destino, altitud y hora prevista. Incorporá PRONAREA y NOTAM vigentes. Shimoda combinará esa información con METAR, TAF y SIGMET recuperados para explicar los fenómenos relevantes durante el trayecto. <strong>No calcula piernas, rumbos, tiempos ni combustible:</strong> eso corresponde a FlightPrep NAV. Solo informará datos de viento en altura cuando el pronóstico cubra el nivel, sector y horario consultados.</p>
+<p class="sub">Seleccioná salida, destino, altitud y hora prevista. Incorporá PRONAREA y NOTAM vigentes. El sistema combinará esa información con METAR, TAF y SIGMET recuperados para explicar los fenómenos relevantes durante el trayecto. <strong>No calcula piernas, rumbos, tiempos ni combustible:</strong> eso corresponde a FlightPrep NAV. Solo informará datos de viento en altura cuando el pronóstico cubra el nivel, sector y horario consultados.</p>
 <form id="flight-analysis-form">
 <div class="form" style="margin-top:17px">
 <label class="field" for="flight-origin">Aeródromo de salida
@@ -185,7 +172,7 @@
 <label class="field">Altitud prevista (pies AMSL)<input id="flight-alt" type="number" required min="500" max="45000" step="100" placeholder="6500"></label>
 <label class="field">Fecha y hora previstas de salida (hora local)<input id="flight-time" type="datetime-local" required></label>
 <label class="field">Reglas de vuelo<select id="flight-rules" required><option value="VFR">VFR</option><option value="IFR">IFR</option></select></label>
-<label class="field full">Ruta o corredores previstos (opcional)<input id="flight-route" maxlength="800" placeholder="Si conocés puntos intermedios, indicálos; si no, Shimoda advertirá que desconoce la trayectoria exacta"></label>
+<label class="field full">Ruta o corredores previstos (opcional)<input id="flight-route" maxlength="800" placeholder="Si conocés puntos intermedios, indicálos; si no, el informe indicará que se desconoce la trayectoria exacta"></label>
 <fieldset class="full" style="margin:0;border:1px solid #58645e;border-radius:12px;padding:12px 16px">
 <legend style="padding:0 5px;font-weight:700">FIR que atraviesa tu ruta</legend>
 <div style="display:flex;gap:10px 20px;flex-wrap:wrap">
@@ -213,24 +200,24 @@
 </div>
 </div>
 <div style="margin:19px 0 16px;padding:17px;border:1px solid #745c45;border-radius:14px;background:#1c2526">
-<label class="field" for="flight-question">¿Qué querés consultar a Shimoda sobre las condiciones en altura? (opcional)
+<label class="field" for="flight-question">¿Qué querés consultar sobre las condiciones en altura? (opcional)
 <textarea id="flight-question" maxlength="500" rows="3" style="resize:vertical" placeholder="Ej.: Para mi vuelo a 6.500 pies, ¿qué viento, nubosidad, turbulencia, engelamiento o fenómenos relevantes hay en la ruta?"></textarea></label>
-<p class="sub" style="margin:9px 0 0">Primero cargá PRONAREA y NOTAM. Si dejás este campo vacío, Shimoda elaborará el informe general con la información disponible cuando solicites el análisis.</p>
+<p class="sub" style="margin:9px 0 0">Primero cargá PRONAREA y NOTAM. Si dejás este campo vacío, se elaborará un informe general con la información disponible cuando solicites el análisis.</p>
 </div>
 <div class="warning" style="margin:17px 0">
-<strong>Antes de usar tokens:</strong> verificá que los boletines cubran el vuelo previsto. Si no indicaste ruta exacta, Shimoda no podrá determinar qué sectores atravesás. El resultado es orientación educativa, no un briefing oficial ni una evaluación de aptitud VFR/IFR.
+<strong>Antes de usar tokens:</strong> verificá que los boletines cubran el vuelo previsto. Si no indicaste ruta exacta, el sistema no podrá determinar qué sectores atravesás. El resultado es orientación educativa, no un briefing oficial ni una evaluación de aptitud VFR/IFR.
 </div>
 <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px">
 <input id="flight-confirm-cost" required type="checkbox" style="width:20px;height:20px;flex:none">
 <span>Entiendo que al solicitar el análisis completo se consumirán tokens de OpenAI. Acepto iniciar una consulta privada de prueba.</span>
 </label>
 <div class="actions">
-<button class="primary" id="flight-ask" type="submit">Solicitar informe en altura · Shimoda IA</button>
+<button class="primary" id="flight-ask" type="submit">Solicitar informe en altura con IA</button>
 <span id="flight-status" class="feedback" role="status" aria-live="polite">Sin ejecutar. Las consultas anteriores no consumen tokens de IA.</span>
 </div>
 </form>
 <div id="flight-result" hidden style="margin-top:20px;border-top:1px solid #605951;padding-top:18px">
-<div class="card-header"><h3>Informe meteorológico y operacional de Robert Shimoda</h3><button class="secondary" id="flight-copy" type="button">Copiar análisis</button></div>
+<div class="card-header"><h3>Informe meteorológico y operacional</h3><button class="secondary" id="flight-copy" type="button">Copiar análisis</button></div>
 <p class="sub" id="flight-analysis-time"></p>
 <div id="flight-analysis" style="white-space:pre-wrap;line-height:1.76;background:#172125;padding:18px;border:1px solid #755f50;border-radius:12px;color:#f1ebe2"></div>
 <p class="source-notes" id="flight-warning"></p>
@@ -240,12 +227,12 @@
 <section class="card" id="navigation-inline" style="margin-top:24px;border-color:#57736c;background:#172224">
 <div class="card-header">
   <div>
-    <span class="card-kicker">09 / Navegación · cálculos gratuitos</span>
+    <span class="card-kicker">06 / Navegación · cálculos gratuitos</span>
     <h2>FlightPrep NAV · Planificación de navegación</h2>
   </div>
   <span class="sub">Integrado dentro de la Mesa de Vuelo</span>
 </div>
-<p class="sub">Después de consultar la meteorología y, si lo necesitás, el informe de Shimoda, completá la navegación aquí mismo. Este módulo conserva los <strong>datos de aeronave, piernas, rumbos, WCA, GS, tiempos, totales y combustible</strong> originales de FlightPrep NAV. No utiliza IA ni consume tokens.</p>
+<p class="sub">Después de consultar la meteorología y, si lo necesitás, el informe meteorológico, completá la navegación aquí mismo. Este módulo conserva los <strong>datos de aeronave, piernas, rumbos, WCA, GS, tiempos, totales y combustible</strong> originales de FlightPrep NAV. No utiliza IA ni consume tokens.</p>
 <p class="source-notes">El viento de cada pierna debe corresponder al sector, altitud y horario del vuelo: no uses el viento de superficie del METAR como viento en altura. Las distancias y demás datos deben comprobarse con cartas, performance y fuentes aeronáuticas vigentes. Las reservas reglamentarias son responsabilidad del piloto.</p>
 <iframe
   id="gdv-flightprep-frame"
@@ -257,7 +244,7 @@
 <p class="sub">La navegación permanece dentro de esta Mesa. Si deseás usar la versión independiente, también podés <a href="flightprep-nav.html">abrir FlightPrep NAV por separado</a>.</p>
 </section>
 
-<footer class="sitefoot">MODO PRUEBA PRIVADA · Solo administración. Gente de Vuelo · Robert Shimoda, asistente de carácter educativo. Toda decisión aeronáutica requiere verificación oficial vigente y responsabilidad del piloto al mando.</footer>
+<footer class="sitefoot">MODO PRUEBA PRIVADA · Solo administración. Gente de Vuelo · Herramienta de consulta de carácter educativo. Toda decisión aeronáutica requiere verificación oficial vigente y responsabilidad del piloto al mando.</footer>
 </main>
 <section class="wrap" id="gdv-meteo-gate" role="status" aria-live="polite">
 <div class="card" style="max-width:670px;margin:28px auto">
@@ -285,8 +272,6 @@ window.addEventListener('message',event=>{
 'use strict';
 const el=id=>document.getElementById(id);
 const state={data:null};
-const n=(id)=>Number(el(id).value);
-const validNumber=id=>el(id).value.trim()!==''&&Number.isFinite(n(id));
 const localTime=(date)=>new Intl.DateTimeFormat('es-AR',{timeZone:'America/Argentina/Buenos_Aires',hour:'2-digit',minute:'2-digit',hour12:false}).format(date);
 const utcStamp=(value)=>{const d=new Date(value);return Number.isFinite(d.getTime())?d.toLocaleString('es-AR',{timeZone:'UTC',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false})+' UTC':'no confirmada';};
 const makeStatus=(id,text,kind)=>{const node=el('s-'+id);node.className='status-tile '+kind;node.querySelector('span').textContent=text;};
@@ -399,22 +384,6 @@ el('copy-report').addEventListener('click',async()=>{
   try{await navigator.clipboard.writeText(lastCopied);el('status').textContent='Informe parcial copiado.';}
   catch{el('status').textContent='El navegador no permitió copiar el informe.';}
 });
-function updateWind(){
-  if(!['runway','wind-dir','wind-speed'].every(validNumber)||n('runway')<0||n('runway')>360||n('wind-dir')<0||n('wind-dir')>360||n('wind-speed')<0||n('wind-speed')>250){
-    for(const id of ['headwind','crosswind','gust-result'])el(id).textContent='—';
-    el('wind-warning').textContent='Completá grados entre 0 y 360 y una velocidad válida.';
-    return;
-  }
-  const diff=(n('wind-dir')-n('runway'))*Math.PI/180,v=n('wind-speed');
-  const head=v*Math.cos(diff),cross=v*Math.sin(diff);
-  el('headwind').textContent=Math.abs(head).toFixed(1)+' kt '+(head>=0?'frente':'cola');
-  el('crosswind').textContent=Math.abs(cross).toFixed(1)+' kt '+(cross>=0?'derecha':'izquierda');
-  if(validNumber('wind-gust')&&n('wind-gust')>=v&&n('wind-gust')<=250)el('gust-result').textContent=(Math.abs(n('wind-gust')*Math.sin(diff))).toFixed(1)+' kt cruz.';
-  else el('gust-result').textContent=el('wind-gust').value.trim()===''?'Sin dato':'Ráfaga inválida';
-  el('wind-warning').textContent='Cálculo trigonométrico ilustrativo. Verificá declinación magnética, ráfagas, viento variable y límites de la aeronave.';
-}
-for(const id of ['runway','wind-dir','wind-speed','wind-gust'])el(id).addEventListener('input',updateWind);
-updateWind();
 
 })();
 
@@ -475,7 +444,7 @@ updateWind();
    };
    // Después de confirmar, ninguna llamada previa a consultar boletines implica gasto.
    button.disabled=true;$('flight-result').hidden=true;
-   status.textContent='Solicitando interpretación contextual a Shimoda. Se consumirán tokens si se procesa la solicitud…';
+   status.textContent='Solicitando análisis meteorológico. Se consumirán tokens si se procesa la solicitud…';
    try{
      const client=window.GDV_AUTH?.client;
      if(!client)throw new Error('Iniciá sesión como administrador.');
