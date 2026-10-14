@@ -369,6 +369,7 @@ function showObservedCloud(report,icao){
     ?'Observación METAR · '+icao+'. Símbolo indicativo: verificá todas las capas y la vigencia del parte original.'
     :'No hay METAR recuperado. Consultá la fuente oficial; no se puede determinar nubosidad actual.';
 }
+window.gdvMeteoShowCloud=showObservedCloud;
 let lastCopied='';
 el('brief-form').addEventListener('submit',async e=>{
   e.preventDefault();
@@ -456,23 +457,207 @@ el('copy-report').addEventListener('click',async()=>{
    else return;
    if(origin.value!=='OTHER')updateCustomField('flight-origin');
  });
+
+ // Itinerario: cada pierna conserva su altitud declarada.
+ const stops=[];
+ let legHeights=[null];
+ const points=$('flight-waypoints'),legList=$('flight-legs-list');
+ let lastConsultKey='',consultBusy=false;
+ const defaultAltitude=()=>Number($('flight-alt').value)||3500;
+ const flightKey=()=>JSON.stringify({
+   origin:airportCode('flight-origin'),
+   destination:airportCode('flight-dest'),
+   firs:[...document.querySelectorAll('.flight-fir:checked')].map(node=>node.value)
+ });
+ function markRouteEdited(){
+   const state=$('flight-fetch-status');
+   if(lastConsultKey && lastConsultKey!==flightKey())
+     state.textContent='Cambió la ruta o la FIR: volvé a consultar los boletines.';
+ }
+ function updateNotamLabels(){
+   $('notam-origin-link').textContent='Consultar NOTAM de salida · '+(airportCode('flight-origin')||'sin definir');
+   $('notam-dest-link').textContent='Consultar NOTAM de destino · '+(airportCode('flight-dest')||'sin definir');
+ }
+ function renderLegs(){
+   points.replaceChildren();
+   stops.forEach((name,index)=>{
+     const row=document.createElement('div');row.className='flight-waypoint-row';
+     const label=document.createElement('label');label.className='field';
+     label.textContent='Punto intermedio '+(index+1);
+     const input=document.createElement('input');
+     input.required=true;input.maxLength=60;input.placeholder='Ej.: Zárate, VOR o punto publicado';
+     input.value=name;
+     input.addEventListener('input',()=>{stops[index]=input.value;refreshLegLabels();});
+     label.append(input);
+     const del=document.createElement('button');del.type='button';del.className='secondary';del.textContent='Quitar';
+     del.setAttribute('aria-label','Eliminar punto intermedio '+(index+1));
+     del.addEventListener('click',()=>{
+       stops.splice(index,1);
+       legHeights.splice(index+1,1);
+       renderLegs();
+     });
+     row.append(label,del);points.append(row);
+   });
+   legList.replaceChildren();
+   const nodes=[airportCode('flight-origin')||'Salida',...stops,airportCode('flight-dest')||'Destino'];
+   for(let i=0;i<nodes.length-1;i++){
+     if(legHeights[i]==null)legHeights[i]=defaultAltitude();
+     const row=document.createElement('div');row.className='flight-leg-row';
+     const route=document.createElement('div');route.className='flight-leg-route';route.dataset.legIndex=String(i);
+     route.textContent='Pierna '+(i+1)+': '+(nodes[i]||'Punto pendiente')+' → '+(nodes[i+1]||'Punto pendiente');
+     const label=document.createElement('label');label.className='field';
+     label.textContent='Altitud prevista (ft AMSL)';
+     const input=document.createElement('input');input.type='number';input.min='500';input.max='45000';
+     input.step='100';input.required=true;input.value=String(legHeights[i]);
+     input.setAttribute('aria-label','Altitud de pierna '+(i+1)+' en pies AMSL');
+     input.addEventListener('input',()=>{legHeights[i]=input.value===''?null:Number(input.value);});
+     label.append(input);row.append(route,label);legList.append(row);
+   }
+   legHeights.length=nodes.length-1;
+   $('flight-add-stop').disabled=stops.length>=8;
+   updateNotamLabels();
+   markRouteEdited();
+ }
+ function refreshLegLabels(){
+   const nodes=[airportCode('flight-origin')||'Salida',...stops,airportCode('flight-dest')||'Destino'];
+   legList.querySelectorAll('[data-leg-index]').forEach((node)=>{
+     const i=Number(node.dataset.legIndex);
+     node.textContent='Pierna '+(i+1)+': '+(nodes[i]||'Punto pendiente')+' → '+(nodes[i+1]||'Punto pendiente');
+   });
+ }
+ $('flight-add-stop').addEventListener('click',()=>{
+   if(stops.length>=8)return;
+   stops.push('');
+   legHeights.push(defaultAltitude());
+   renderLegs();
+   points.querySelector('.flight-waypoint-row:last-child input')?.focus();
+ });
+ ['flight-origin','flight-dest','flight-origin-other','flight-dest-other'].forEach(id=>{
+   $(id).addEventListener('change',()=>{refreshLegLabels();updateNotamLabels();markRouteEdited();});
+   $(id).addEventListener('input',()=>{refreshLegLabels();updateNotamLabels();markRouteEdited();});
+ });
+ document.querySelectorAll('.flight-fir').forEach(node=>node.addEventListener('change',markRouteEdited));
+ $('flight-alt').addEventListener('change',()=>{
+   // La altitud general es una referencia para piernas nuevas, no cambia las ya editadas.
+   if(legHeights.length===1 && stops.length===0){legHeights[0]=defaultAltitude();renderLegs();}
+ });
+ renderLegs();
+ const markStatus=(id,txt,good)=>{
+   const node=$('s-'+id);
+   if(!node)return;
+   node.className='status-tile '+(good?'good':'pending');
+   node.querySelector('span').textContent=txt;
+ };
+ function showAutomaticReport(data,which,icao){
+   for(const type of ['metar','taf']){
+     const block=data?.[type];
+     $('flight-'+type+'-'+which+'-title').textContent=type.toUpperCase()+' '+(which==='origin'?'salida':'destino')+' · '+icao;
+     $('flight-'+type+'-'+which+'-state').textContent=block?.available?'Recuperado':'No disponible';
+     $('flight-'+type+'-'+which+'-raw').textContent=block?.available?block.raw:
+       'Sin boletín recuperado. Consultá la fuente oficial: '+(block?.error||'No confirmado');
+     const stage=which==='dest'?type+'-dest':type;
+     $('label-'+stage).textContent=block?.available?'Recuperado · '+icao:'No disponible · '+icao;
+     $('raw-'+stage).textContent=block?.available?block.raw:'No confirmado para '+icao+'.';
+   }
+   if(which==='origin'){
+     const report=data?.sigmet;
+     $('raw-sigmet').textContent=report?.available?report.raw:
+       'Sin coincidencias confirmadas por esta búsqueda parcial. No significa ausencia de SIGMET.';
+     $('label-sigmet').textContent=report?.available?'Coincidencias parciales':'Cobertura parcial';
+     markStatus('sigmet',report?.available?'Búsqueda parcial':'Confirmar en SMN',Boolean(report?.available));
+     if(typeof window.gdvMeteoShowCloud==='function')window.gdvMeteoShowCloud(data?.metar,icao);
+   }
+ }
+ $('flight-fetch-reports').addEventListener('click',async()=>{
+   if(consultBusy)return;
+   const originCode=airportCode('flight-origin'),destCode=airportCode('flight-dest');
+   const firs=[...document.querySelectorAll('.flight-fir:checked')].map(n=>n.value);
+   if(!/^SA[A-Z]{2}$/.test(originCode)||!/^SA[A-Z]{2}$/.test(destCode)){
+     $('flight-fetch-status').textContent='Elegí códigos OACI válidos de salida y destino.';return;
+   }
+   if(!firs.length){$('flight-fetch-status').textContent='Marcá por lo menos una FIR.';return;}
+   const client=window.GDV_AUTH?.client;
+   if(!client){$('flight-fetch-status').textContent='Ingresá como administrador para consultar.';return;}
+   consultBusy=true;
+   const fetchButton=$('flight-fetch-reports');fetchButton.disabled=true;
+   $('flight-fetch-status').textContent='Consultando salida y destino…';
+   const key=flightKey(),codes=originCode===destCode?[originCode]:[originCode,destCode];
+   let count=0;
+   try{
+     const results=await Promise.allSettled(codes.map(icao=>
+       client.functions.invoke('robert-meteo',{body:{icao,fir:firs[0],question:''}})));
+     for(let i=0;i<codes.length;i++){
+       const item=results[i];
+       const response=item.status==='fulfilled' && !item.value.error?item.value.data:null;
+       const valid=response?.ok===true;
+       if(valid)count++;
+       const data=valid?response:{metar:{available:false,error:'Error de consulta'},
+         taf:{available:false,error:'Error de consulta'},sigmet:{available:false}};
+       showAutomaticReport(data,i===0?'origin':'dest',codes[i]);
+       if(codes.length===1)showAutomaticReport(data,'dest',codes[i]);
+     }
+     $('flight-auto-results').hidden=false;
+     $('flight-auto-time').textContent='Consulta: '+new Date().toLocaleString('es-AR')+
+       '. Los boletines pueden variar antes del despegue; verificá sus horas de emisión y validez.';
+     const tafAvailable=['origin','dest'].some(which=>$('flight-taf-'+which+'-state').textContent==='Recuperado');
+     const metarAvailable=['origin','dest'].some(which=>$('flight-metar-'+which+'-state').textContent==='Recuperado');
+     markStatus('taf',tafAvailable?'Consultar validez':'No disponible',tafAvailable);
+     markStatus('metar',metarAvailable?'Consultar hora':'No disponible',metarAvailable);
+     if(count===codes.length){
+       lastConsultKey=key;
+       $('flight-fetch-status').textContent='Consulta completada. Revisá TAF/METAR y cargá PRONAREA.';
+     }else{
+       lastConsultKey='';
+       $('flight-fetch-status').textContent='Consulta incompleta: reintentá. Revisá los enlaces oficiales.';
+     }
+     if(firs.length>1)
+       $('flight-fetch-status').textContent+=' SIGMET mostrado solo para la primera FIR; las demás requieren verificación oficial.';
+   }catch(err){
+     lastConsultKey='';
+     $('flight-fetch-status').textContent='No se completó la consulta. '+(err?.message||'Reintentá más tarde.');
+   }finally{consultBusy=false;fetchButton.disabled=false;}
+ });
+ $('flight-pronarea').addEventListener('input',()=>{
+   const entered=$('flight-pronarea').value.trim().length>=40;
+   markStatus('pronarea',entered?'Texto cargado (no verificado)':'Falta cargar',entered);
+ });
  form.addEventListener('submit',async event=>{
    event.preventDefault();
    if(!form.reportValidity())return;
    const firs=[...document.querySelectorAll('.flight-fir:checked')].map(x=>x.value);
    if(!firs.length){status.textContent='Seleccioná por lo menos una FIR.';return;}
    if(!document.getElementById('flight-confirm-cost').checked){status.textContent='Confirmá expresamente el consumo de tokens.';return;}
+   if(!lastConsultKey || lastConsultKey!==flightKey()){
+     status.textContent='Primero consultá los boletines automáticos del paso 2 para esta ruta.';
+     $('consultar').scrollIntoView({behavior:'smooth',block:'start'});
+     return;
+   }
+   const nodes=[airportCode('flight-origin'),...stops.map(x=>x.trim()),airportCode('flight-dest')];
+   if(nodes.some(x=>!x) || legHeights.some(x=>!Number.isFinite(x)||x<500||x>45000)){
+     status.textContent='Completá todos los puntos intermedios y las altitudes previstas de las piernas.';
+     $('plan-vuelo').scrollIntoView({behavior:'smooth',block:'start'});
+     return;
+   }
+   const legs=legHeights.map((alt,index)=>
+     'Pierna '+(index+1)+': '+nodes[index]+' a '+nodes[index+1]+', '+alt+' ft AMSL.');
+   const annotation=$('flight-route').value.trim();
+   const routeText=legs.join(' ') + (annotation?' Observaciones: '+annotation:'');
+   if(routeText.length>800){
+     status.textContent='La descripción supera 800 caracteres. Abreviá los puntos o las observaciones.';
+     $('plan-vuelo').scrollIntoView({behavior:'smooth',block:'start'});
+     return;
+   }
    const data={
      origin:airportCode('flight-origin'),
      destination:airportCode('flight-dest'),
-     route:$('flight-route').value.trim(),
+     route:routeText,
      planned_at_utc:iso('flight-time'),
      cruise_altitude_ft:Number($('flight-alt').value),
      flight_rules:$('flight-rules').value,
      firs,
      question:$('flight-question').value.trim(),
      pronarea_text:$('flight-pronarea').value.trim(),
-     notam_text:$('flight-notam').value.trim(),
+     notam_text:'', // NOTAM: consulta oficial externa, no pegado obligatorio.
      confirm_ai_cost:true
    };
    // Después de confirmar, ninguna llamada previa a consultar boletines implica gasto.
