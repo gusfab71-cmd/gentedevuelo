@@ -58,6 +58,17 @@
 
 /* Flujo secuencial de la Mesa de Vuelo; mantiene diseño responsive existente. */
 .flight-workflow{margin:0 0 18px;scroll-margin-top:14px}
+/* Fecha y hora de salida: campo aeronáutico UTC, gris azulado. */
+.flight-utc-field{min-width:0;align-content:start;gap:8px;padding:11px 13px 12px;border:1px solid #536c7d;border-radius:13px;background:linear-gradient(155deg,#273943 0%,#1b2933 100%);box-shadow:inset 0 1px 0 rgba(227,239,247,.08)}
+.flight-utc-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;color:#ecf3f7;font-weight:730}
+.flight-utc-badge{display:inline-flex;align-items:center;justify-content:center;padding:3px 8px;border:1px solid #7894a6;border-radius:6px;background:#354a59;color:#e2edf4;font-size:11px;font-weight:800;letter-spacing:.08em;white-space:nowrap}
+.flight-utc-field input[type="datetime-local"]{color-scheme:dark;width:100%;min-height:49px;background:linear-gradient(180deg,#1c2c37,#182630);border:1px solid #748c9b;border-radius:9px;color:#f2f6f8;font-weight:650;font-variant-numeric:tabular-nums;letter-spacing:.01em;padding:11px 12px;box-shadow:inset 0 1px 3px #050c1247;accent-color:#a0b7c6}
+.flight-utc-field input[type="datetime-local"]:hover{border-color:#99b1c0}
+.flight-utc-field input[type="datetime-local"]:focus{border-color:#acc7d9;outline:2px solid #b3d0e0;outline-offset:2px}
+.flight-utc-field input[type="datetime-local"]::-webkit-calendar-picker-indicator{cursor:pointer;opacity:.92;filter:brightness(1.25)}
+.flight-utc-help{display:block;font-size:11px;font-weight:500;color:#bfd0da;line-height:1.4}
+@media(max-width:620px){.flight-utc-field{padding:10px 11px}.flight-utc-heading{gap:6px}}
+
 .flight-alternate-suggestions{border:1px solid #4f6662;border-radius:12px;padding:13px 15px;background:#142327}
 .flight-alternate-suggestions .actions{margin:0 0 9px;align-items:center}
 .flight-alternate-suggestions .sub{font-size:12px;line-height:1.55;margin:7px 0 0}
@@ -182,7 +193,11 @@
 </label>
 
 <label class="field">Altitud prevista (pies AMSL)<input id="flight-alt" type="number" required min="500" max="45000" step="100" placeholder="6500"></label>
-<label class="field">Fecha y hora previstas de salida (hora local)<input id="flight-time" type="datetime-local" required></label>
+<label class="field flight-utc-field" for="flight-time">
+ <span class="flight-utc-heading"><span>Fecha y hora previstas de salida</span><span class="flight-utc-badge">UTC · Z</span></span>
+ <input id="flight-time" type="datetime-local" step="60" required aria-describedby="flight-time-help">
+ <span class="flight-utc-help" id="flight-time-help">Ingresá la fecha y hora en UTC, no en hora local. Se utilizarán exactamente como las cargues.</span>
+</label>
 <label class="field">Reglas de vuelo<select id="flight-rules" required><option value="VFR">VFR</option><option value="IFR">IFR</option></select></label>
 <label class="field full" for="flight-alternate">Aeródromo alternativo (obligatorio)
 <select id="flight-alternate" required>
@@ -612,7 +627,9 @@ el('copy-report').addEventListener('click',async()=>{
  'use strict';
  const $=id=>document.getElementById(id);
  const form=$('flight-analysis-form'),button=$('flight-ask'),status=$('flight-status');
- const iso=id=>new Date($(id).value).toISOString();
+ // datetime-local no incluye zona horaria. La entrada se interpreta literalmente como UTC,
+ // sin aplicar el huso horario configurado en la PC o el celular.
+ const iso=id=>new Date($(id).value+'Z').toISOString();
  const once=[];let latest='';
  const saved=$('icao'),origin=$('flight-origin');
  const selections=['flight-origin','flight-dest','flight-alternate'];
