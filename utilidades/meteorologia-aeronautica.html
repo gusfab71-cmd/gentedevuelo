@@ -753,73 +753,183 @@ el('copy-report').addEventListener('click',async()=>{
    const entered=$('flight-pronarea').value.trim().length>=40;
    markStatus('pronarea',entered?'Texto cargado (no verificado)':'Falta cargar',entered);
  });
- form.addEventListener('submit',async event=>{
-   event.preventDefault();
-   if(!form.reportValidity())return;
+
+ // Los tres modos utilizan el mismo plan y vuelven a recuperar los boletines
+ // desde el servidor. Ninguno invoca IA sin consentimiento por consulta.
+ let aiBusy=false;
+ const aiButtons=['flight-precautions-ask','flight-ask','flight-pilot-ask'];
+ const modeElements={
+   precautions:{
+     consent:'flight-precautions-consent',status:'flight-precautions-status',
+     result:'flight-precautions-result',text:'flight-precautions-analysis',time:'flight-precautions-time'
+   },
+   report:{
+     consent:'flight-confirm-cost',status:'flight-status',
+     result:'flight-result',text:'flight-analysis',time:'flight-analysis-time'
+   },
+   pilot_question:{
+     consent:'flight-pilot-consent',status:'flight-pilot-status',
+     result:'flight-pilot-result',text:'flight-pilot-analysis',time:'flight-pilot-time'
+   }
+ };
+ let pilotAnswer='';
+ function clearAiOutputs(){
+   for(const mode of Object.keys(modeElements)){
+     const item=modeElements[mode];
+     $(item.result).hidden=true;
+     $(item.text).textContent='';
+     $(item.consent).checked=false;
+     $(item.status).textContent='Los datos del vuelo cambiaron o se actualizaron: solicitá una nueva consulta si la necesitás.';
+   }
+   latest='';pilotAnswer='';
+ }
+ const tripInputIds=new Set([
+   'flight-origin','flight-dest','flight-origin-other','flight-dest-other',
+   'flight-alt','flight-time','flight-rules','flight-route','flight-pronarea'
+ ]);
+ function handleChangedField(event){
+   const node=event.target;
+   if(tripInputIds.has(node.id)||node.classList?.contains('flight-fir')||
+     node.closest?.('#flight-legs-list')||node.closest?.('#flight-waypoints'))
+     clearAiOutputs();
+ }
+ form.addEventListener('input',handleChangedField);
+ form.addEventListener('change',handleChangedField);
+ $('flight-pronarea').addEventListener('input',handleChangedField);
+ $('flight-fetch-reports').addEventListener('click',()=>{
+   if(!aiBusy)clearAiOutputs();
+ });
+ $('flight-pilot-question').addEventListener('input',()=>{
+   $('flight-pilot-result').hidden=true;
+   $('flight-pilot-analysis').textContent='';
+   pilotAnswer='';
+ });
+ function preparePayload(mode,targetStatus){
+   // El casillero del informe final no debe bloquear las otras dos consultas.
+   const confirmation=$('flight-confirm-cost');
+   const wasRequired=confirmation.required;
+   if(mode!=='report')confirmation.required=false;
+   let valid;
+   try{valid=form.reportValidity();}finally{confirmation.required=wasRequired;}
+   if(!valid){
+     targetStatus.textContent='Completá primero los datos del vuelo y PRONAREA.';
+     return null;
+   }
    const firs=[...document.querySelectorAll('.flight-fir:checked')].map(x=>x.value);
-   if(!firs.length){status.textContent='Seleccioná por lo menos una FIR.';return;}
-   if(!document.getElementById('flight-confirm-cost').checked){status.textContent='Confirmá expresamente el consumo de tokens.';return;}
-   if(!lastConsultKey || lastConsultKey!==flightKey()){
-     status.textContent='Primero consultá los boletines automáticos del paso 2 para esta ruta.';
+   if(!firs.length){
+     targetStatus.textContent='Seleccioná por lo menos una FIR.';
+     return null;
+   }
+   if(!lastConsultKey||lastConsultKey!==flightKey()){
+     targetStatus.textContent='Primero consultá los boletines de salida, destino y FIR en el paso 2.';
      $('consultar').scrollIntoView({behavior:'smooth',block:'start'});
-     return;
+     return null;
    }
    const nodes=[airportCode('flight-origin'),...stops.map(x=>x.trim()),airportCode('flight-dest')];
-   if(nodes.some(x=>!x) || legHeights.some(x=>!Number.isFinite(x)||x<500||x>45000)){
-     status.textContent='Completá todos los puntos intermedios y las altitudes previstas de las piernas.';
+   if(nodes.some(x=>!x)||legHeights.some(x=>!Number.isFinite(x)||x<500||x>45000)){
+     targetStatus.textContent='Completá todas las piernas con puntos y altitudes previstas.';
      $('plan-vuelo').scrollIntoView({behavior:'smooth',block:'start'});
-     return;
+     return null;
    }
    const legs=legHeights.map((alt,index)=>
      'Pierna '+(index+1)+': '+nodes[index]+' a '+nodes[index+1]+', '+alt+' ft AMSL.');
    const annotation=$('flight-route').value.trim();
-   const routeText=legs.join(' ') + (annotation?' Observaciones: '+annotation:'');
+   const routeText=legs.join(' ')+(annotation?' Observaciones: '+annotation:'');
    if(routeText.length>800){
-     status.textContent='La descripción supera 800 caracteres. Abreviá los puntos o las observaciones.';
-     $('plan-vuelo').scrollIntoView({behavior:'smooth',block:'start'});
-     return;
+     targetStatus.textContent='Abreviá la ruta: supera el máximo de 800 caracteres.';
+     return null;
    }
-   const data={
-     origin:airportCode('flight-origin'),
-     destination:airportCode('flight-dest'),
-     route:routeText,
-     planned_at_utc:iso('flight-time'),
+   const question=mode==='pilot_question'?$('flight-pilot-question').value.trim():'';
+   if(mode==='pilot_question' && question.length<10){
+     targetStatus.textContent='Escribí una pregunta de al menos 10 caracteres relacionada con el vuelo.';
+     $('flight-pilot-question').focus();
+     return null;
+   }
+   return {
+     mode,origin:airportCode('flight-origin'),destination:airportCode('flight-dest'),
+     route:routeText,planned_at_utc:iso('flight-time'),
      cruise_altitude_ft:Number($('flight-alt').value),
-     flight_rules:$('flight-rules').value,
-     firs,
-     question:$('flight-question').value.trim(),
+     flight_rules:$('flight-rules').value,firs,question,
      pronarea_text:$('flight-pronarea').value.trim(),
-     notam_text:'', // NOTAM: consulta oficial externa, no pegado obligatorio.
+     notam_text:'', // Se consulta fuera de la Mesa en AIS/ANAC.
      confirm_ai_cost:true
    };
-   // Después de confirmar, ninguna llamada previa a consultar boletines implica gasto.
-   button.disabled=true;$('flight-result').hidden=true;
-   status.textContent='Solicitando análisis meteorológico. Se consumirán tokens si se procesa la solicitud…';
+ }
+ async function runAi(mode){
+   const elements=modeElements[mode];
+   if(!elements||aiBusy)return;
+   const outputStatus=$(elements.status);
+   if(!$(elements.consent).checked){
+     outputStatus.textContent='Confirmá el uso de IA y el consumo de tokens para esta consulta.';
+     return;
+   }
+   const data=preparePayload(mode,outputStatus);
+   if(!data)return;
+   aiBusy=true;
+   for(const id of aiButtons)$(id).disabled=true;
+   $(elements.result).hidden=true;
+   outputStatus.textContent='Consultando boletines vigentes y preparando la respuesta con IA…';
    try{
      const client=window.GDV_AUTH?.client;
-     if(!client)throw new Error('Iniciá sesión como administrador.');
+     if(!client)throw Error('Iniciá sesión como administrador.');
      const {data:auth,error:authError}=await client.auth.getUser();
-     if(authError||!auth?.user)throw new Error('Sesión no disponible.');
+     if(authError||!auth?.user)throw Error('Sesión no disponible.');
      const {data:response,error}=await client.functions.invoke('robert-flight-brief',{body:data});
      if(error||!response?.ok){
        let message=response?.error||error?.message||'No se pudo analizar el vuelo.';
-       if(error?.context?.json){try{const details=await error.context.json();if(details?.error)message=details.error;}catch(_){}}
-       throw new Error(message);
+       if(error?.context?.json){
+         try{const detail=await error.context.json();if(detail?.error)message=detail.error;}catch(_){}
+       }
+       throw Error(message);
      }
-     if(response.ai_used!==true||!response.analysis)throw new Error('No se recibió una interpretación completa.');
-     latest=response.analysis;
-     $('flight-analysis').textContent=latest;
-     $('flight-analysis-time').textContent='Generado: '+new Date(response.generated_at_utc).toLocaleString('es-AR',{timeZone:'America/Argentina/Buenos_Aires'})+' (hora argentina). Documentos manuales recibidos por el servidor sin verificación de vigencia.';
-     $('flight-warning').textContent=response.warning||'Documentos manuales sin verificación automática. No reemplaza el briefing oficial.';
-     $('flight-result').hidden=false;
-     status.textContent='Análisis generado con IA. Revisá especialmente los datos faltantes y las advertencias.';
-   }catch(err){status.textContent='No se completó: '+(err?.message||'Error de conexión.');}
-   finally{button.disabled=false;$('flight-confirm-cost').checked=false;}
+     if(response.ai_used!==true || !response.analysis || response.mode!==mode)
+       throw Error('No se recibió una respuesta válida para esta consulta.');
+     const answer=response.analysis;
+     $(elements.text).textContent=answer;
+     $(elements.time).textContent='Generado: '+
+       new Date(response.generated_at_utc).toLocaleString('es-AR',{
+         timeZone:'America/Argentina/Buenos_Aires'
+       })+' · Boletines automáticos consultados nuevamente. PRONAREA manual no verificado.';
+     $(elements.result).hidden=false;
+     if(mode==='report'){
+       latest=answer;
+       $('flight-warning').textContent=response.warning||
+         'Confirmá vigencias y fuentes oficiales. No reemplaza el briefing oficial.';
+     }else if(mode==='pilot_question')pilotAnswer=answer;
+     outputStatus.textContent=mode==='precautions'?
+       'Precauciones generadas. Revisá cada punto con las fuentes oficiales.':
+       mode==='report'?'Informe generado. Contrastá datos y riesgos con fuentes oficiales.':
+       'Respuesta generada según los datos de este vuelo; corroborá la información.';
+   }catch(err){
+     outputStatus.textContent='No se completó: '+(err?.message||'Error de conexión.');
+   }finally{
+     aiBusy=false;
+     for(const id of aiButtons)$(id).disabled=false;
+     // Cada nuevo gasto requiere una confirmación expresa independiente.
+     $(elements.consent).checked=false;
+   }
+ }
+ form.addEventListener('submit',event=>{
+   event.preventDefault();
+   void runAi('report');
  });
+ $('flight-precautions-ask').addEventListener('click',()=>{void runAi('precautions');});
+ $('flight-pilot-ask').addEventListener('click',()=>{void runAi('pilot_question');});
  $('flight-copy').addEventListener('click',async()=>{
    if(!latest)return;
-   try{await navigator.clipboard.writeText(latest);status.textContent='Análisis copiado.';}catch{status.textContent='El navegador no permitió copiar.';}
+   try{await navigator.clipboard.writeText(latest);status.textContent='Informe copiado.';}
+   catch{status.textContent='El navegador no permitió copiar el informe.';}
  });
+ $('flight-pilot-copy').addEventListener('click',async()=>{
+   if(!pilotAnswer)return;
+   try{
+     await navigator.clipboard.writeText(pilotAnswer);
+     $('flight-pilot-status').textContent='Respuesta copiada.';
+   }catch{
+     $('flight-pilot-status').textContent='No se pudo copiar la respuesta.';
+   }
+ });
+
 })();
 </script>
 
