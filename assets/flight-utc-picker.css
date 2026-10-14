@@ -1,0 +1,29 @@
+/* Selector UTC exclusivo de la Mesa de Vuelo. Diseñado en gris azulado. */
+.flight-utc-field{background:none;border:0;border-radius:0;box-shadow:none;padding:0;gap:6px;align-content:start}
+.flight-utc-heading{color:var(--text);font-size:13px;font-weight:650}
+.flight-utc-badge{background:#263945;border:1px solid #5c7888;color:#d5e4ec;box-shadow:none}
+.flight-utc-field input[type="datetime-local"],.flight-utc-field input.flight-time-display{background:#111e27;border:1px solid #5a7485;border-radius:11px;color:#e9f1f6;min-height:46px;padding:11px 12px;box-shadow:inset 0 1px 3px #070e1540;font-size:inherit;font-weight:500;letter-spacing:normal}
+.flight-utc-field input[type="datetime-local"]:hover,.flight-utc-field input.flight-time-display:hover{border-color:#86a5b6}
+.flight-utc-field input[type="datetime-local"]:focus,.flight-utc-field input.flight-time-display:focus{border-color:#a3c7da;outline:2px solid #a3c7da;outline-offset:2px}
+.flight-utc-help{margin-top:1px;color:#a9becb;font-size:11px}
+.flatpickr-calendar.gdv-utc-calendar{background:#1b2b35!important;border:1px solid #587385!important;border-radius:13px!important;color:#e8f0f5!important;box-shadow:0 18px 40px #060e17aa!important;font-family:inherit!important}
+.gdv-utc-calendar:before,.gdv-utc-calendar:after{border-bottom-color:#587385!important}
+.gdv-utc-calendar .flatpickr-months,.gdv-utc-calendar .flatpickr-month,.gdv-utc-calendar .flatpickr-current-month,.gdv-utc-calendar .flatpickr-weekdays{background:#253844!important;color:#e8f0f5!important}
+.gdv-utc-calendar .flatpickr-month{border-radius:11px 11px 0 0}
+.gdv-utc-calendar .flatpickr-current-month input.cur-year,.gdv-utc-calendar .flatpickr-current-month .flatpickr-monthDropdown-months{background:transparent!important;color:#edf4f8!important}
+.gdv-utc-calendar .flatpickr-weekday{background:#253844!important;color:#c2d5e0!important}
+.gdv-utc-calendar .flatpickr-days,.gdv-utc-calendar .dayContainer{background:#1b2b35!important}
+.gdv-utc-calendar .flatpickr-day{color:#e0edf4!important;border-radius:7px!important;background:transparent!important;border-color:transparent!important}
+.gdv-utc-calendar .flatpickr-day.prevMonthDay,.gdv-utc-calendar .flatpickr-day.nextMonthDay{color:#788f9e!important}
+.gdv-utc-calendar .flatpickr-day.flatpickr-disabled,.gdv-utc-calendar .flatpickr-day.flatpickr-disabled:hover{color:#637788!important}
+.gdv-utc-calendar .flatpickr-day:hover,.gdv-utc-calendar .flatpickr-day:focus{background:#344e5d!important;border-color:#344e5d!important}
+.gdv-utc-calendar .flatpickr-day.today{border:1px solid #81a8bf!important}
+.gdv-utc-calendar .flatpickr-day.selected,.gdv-utc-calendar .flatpickr-day.selected:hover{color:#10232d!important;background:#a4c5d7!important;border-color:#a4c5d7!important;font-weight:800}
+.gdv-utc-calendar .flatpickr-prev-month svg,.gdv-utc-calendar .flatpickr-next-month svg{fill:#cfdfeb!important}
+.gdv-utc-calendar .flatpickr-time{background:#21333e!important;border-top:1px solid #506d7c!important;border-radius:0 0 12px 12px}
+.gdv-utc-calendar .flatpickr-time input,.gdv-utc-calendar .flatpickr-time .flatpickr-am-pm{background:transparent!important;color:#e9f2f7!important;box-shadow:none!important;border:0!important}
+.gdv-utc-calendar .flatpickr-time input:hover,.gdv-utc-calendar .flatpickr-time input:focus{background:#36505f!important}
+.gdv-utc-calendar .flatpickr-time-separator{color:#d2e2eb!important}
+.gdv-utc-calendar .numInputWrapper span.arrowUp:after{border-bottom-color:#d2e2eb!important}
+.gdv-utc-calendar .numInputWrapper span.arrowDown:after{border-top-color:#d2e2eb!important}
+@media(max-width:620px){.flight-utc-field{padding:0}.flatpickr-calendar.gdv-utc-calendar{max-width:calc(100vw - 20px)}}
