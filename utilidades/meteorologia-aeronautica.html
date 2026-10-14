@@ -545,7 +545,7 @@ el('copy-report').addEventListener('click',async()=>{
  const iso=id=>new Date($(id).value).toISOString();
  const once=[];let latest='';
  const saved=$('icao'),origin=$('flight-origin');
- const selections=['flight-origin','flight-dest'];
+ const selections=['flight-origin','flight-dest','flight-alternate'];
  const knownCodes=new Set([...origin.options].map(option=>option.value).filter(code=>/^SA[A-Z]{2}$/.test(code)));
  function updateCustomField(id){
    const manual=$(id).value==='OTHER',field=$(id+'-other');
@@ -583,6 +583,7 @@ el('copy-report').addEventListener('click',async()=>{
  const flightKey=()=>JSON.stringify({
    origin:airportCode('flight-origin'),
    destination:airportCode('flight-dest'),
+   alternate:airportCode('flight-alternate'),
    firs:[...document.querySelectorAll('.flight-fir:checked')].map(node=>node.value)
  });
  function markRouteEdited(){
@@ -599,6 +600,7 @@ el('copy-report').addEventListener('click',async()=>{
  function updateNotamLabels(){
    $('notam-origin-link').textContent='Consultar NOTAM de salida · '+(airportCode('flight-origin')||'sin definir');
    $('notam-dest-link').textContent='Consultar NOTAM de destino · '+(airportCode('flight-dest')||'sin definir');
+   $('notam-alternate-link').textContent='Consultar NOTAM de alternativo · '+(airportCode('flight-alternate')||'sin definir');
  }
  function renderLegs(){
    points.replaceChildren();
@@ -654,7 +656,7 @@ el('copy-report').addEventListener('click',async()=>{
    renderLegs();
    points.querySelector('.flight-waypoint-row:last-child input')?.focus();
  });
- ['flight-origin','flight-dest','flight-origin-other','flight-dest-other'].forEach(id=>{
+ ['flight-origin','flight-dest','flight-alternate','flight-origin-other','flight-dest-other','flight-alternate-other'].forEach(id=>{
    $(id).addEventListener('change',()=>{refreshLegLabels();updateNotamLabels();markRouteEdited();});
    $(id).addEventListener('input',()=>{refreshLegLabels();updateNotamLabels();markRouteEdited();});
  });
@@ -673,11 +675,11 @@ el('copy-report').addEventListener('click',async()=>{
  function showAutomaticReport(data,which,icao){
    for(const type of ['metar','taf']){
      const block=data?.[type];
-     $('flight-'+type+'-'+which+'-title').textContent=type.toUpperCase()+' '+(which==='origin'?'salida':'destino')+' · '+icao;
+     $('flight-'+type+'-'+which+'-title').textContent=type.toUpperCase()+' '+(which==='origin'?'salida':which==='dest'?'destino':'alternativo')+' · '+icao;
      $('flight-'+type+'-'+which+'-state').textContent=block?.available?'Recuperado':'No disponible';
      $('flight-'+type+'-'+which+'-raw').textContent=block?.available?block.raw:
        'Sin boletín recuperado. Consultá la fuente oficial: '+(block?.error||'No confirmado');
-     const stage=which==='dest'?type+'-dest':type;
+     const stage=which==='origin'?type:type+'-'+which;
      $('label-'+stage).textContent=block?.available?'Recuperado · '+icao:'No disponible · '+icao;
      $('raw-'+stage).textContent=block?.available?block.raw:'No confirmado para '+icao+'.';
    }
@@ -732,24 +734,30 @@ el('copy-report').addEventListener('click',async()=>{
  }
  $('flight-fetch-reports').addEventListener('click',async()=>{
    if(consultBusy)return;
-   const originCode=airportCode('flight-origin'),destCode=airportCode('flight-dest');
+   const originCode=airportCode('flight-origin'),destCode=airportCode('flight-dest'),
+     alternateCode=airportCode('flight-alternate');
    const firs=[...document.querySelectorAll('.flight-fir:checked')].map(n=>n.value);
-   if(!/^SA[A-Z]{2}$/.test(originCode)||!/^SA[A-Z]{2}$/.test(destCode)){
-     $('flight-fetch-status').textContent='Elegí códigos OACI válidos de salida y destino.';return;
+   if(![originCode,destCode,alternateCode].every(code=>/^SA[A-Z]{2}$/.test(code))){
+     $('flight-fetch-status').textContent='Elegí códigos OACI válidos de salida, destino y alternativo antes de consultar.';return;
+   }
+   if(alternateCode===destCode){
+     $('flight-fetch-status').textContent='El alternativo debe ser distinto del destino.';return;
    }
    if(!firs.length){$('flight-fetch-status').textContent='Marcá por lo menos una FIR.';return;}
    const client=window.GDV_AUTH?.client;
    if(!client){$('flight-fetch-status').textContent='Ingresá como administrador para consultar.';return;}
    consultBusy=true;
    const fetchButton=$('flight-fetch-reports');fetchButton.disabled=true;
-   $('flight-fetch-status').textContent='Consultando salida y destino…';
-   const key=flightKey(),codes=originCode===destCode?[originCode]:[originCode,destCode];
+   $('flight-fetch-status').textContent='Consultando salida, destino y alternativo…';
+   const key=flightKey(),places=[['origin',originCode],['dest',destCode],['alternate',alternateCode]];
+   const codes=[...new Set(places.map(([,code])=>code))];
    let count=0;
    try{
      const results=await Promise.allSettled(codes.map((icao,index)=>
        client.functions.invoke('robert-meteo',{
          body:{icao,fir:firs[0],firs:index===0?firs:undefined,skip_sigmet:index>0,question:''}
        })));
+     const byCode=new Map();
      let firResults=null;
      for(let i=0;i<codes.length;i++){
        const item=results[i];
@@ -757,25 +765,25 @@ el('copy-report').addEventListener('click',async()=>{
        const valid=response?.ok===true;
        if(valid)count++;
        if(i===0 && valid)firResults=response.sigmets_by_fir;
-       const data=valid?response:{metar:{available:false,error:'Error de consulta'},
-         taf:{available:false,error:'Error de consulta'},sigmet:{available:false}};
-       showAutomaticReport(data,i===0?'origin':'dest',codes[i]);
-       if(codes.length===1)showAutomaticReport(data,'dest',codes[i]);
+       byCode.set(codes[i],valid?response:{metar:{available:false,error:'Error de consulta'},
+         taf:{available:false,error:'Error de consulta'},sigmet:{available:false}});
      }
+     for(const [which,code] of places)showAutomaticReport(byCode.get(code),which,code);
      const sigmetOverview=renderRouteSigmets(firResults,firs);
      $('flight-auto-results').hidden=false;
      $('flight-auto-time').textContent='Consulta: '+new Date().toLocaleString('es-AR')+
        '. Los boletines pueden variar antes del despegue; verificá sus horas de emisión y validez.';
-     const tafAvailable=['origin','dest'].some(which=>$('flight-taf-'+which+'-state').textContent==='Recuperado');
-     const metarAvailable=['origin','dest'].some(which=>$('flight-metar-'+which+'-state').textContent==='Recuperado');
-     markStatus('taf',tafAvailable?'Consultar validez':'No disponible',tafAvailable);
-     markStatus('metar',metarAvailable?'Consultar hora':'No disponible',metarAvailable);
+     const checkpoints=['origin','dest','alternate'];
+     const tafCount=checkpoints.filter(which=>$('flight-taf-'+which+'-state').textContent==='Recuperado').length;
+     const metarCount=checkpoints.filter(which=>$('flight-metar-'+which+'-state').textContent==='Recuperado').length;
+     markStatus('taf',tafCount+'/3 disponibles',tafCount===3);
+     markStatus('metar',metarCount+'/3 disponibles',metarCount===3);
      if(count===codes.length){
        lastConsultKey=key;
-       $('flight-fetch-status').textContent='Consulta completada. Revisá TAF/METAR y cargá PRONAREA.';
+       $('flight-fetch-status').textContent='Consulta completada para salida, destino y alternativo. Revisá TAF/METAR y cargá PRONAREA.';
      }else{
        lastConsultKey='';
-       $('flight-fetch-status').textContent='Consulta incompleta: reintentá. Revisá los enlaces oficiales.';
+       $('flight-fetch-status').textContent='Consulta incompleta para uno o más aeródromos: reintentá y revisá las fuentes oficiales.';
      }
      if(sigmetOverview.failed>0)
        $('flight-fetch-status').textContent+=' La búsqueda SIGMET fue incompleta en una o más FIR; verificá el SMN.';
@@ -818,8 +826,8 @@ el('copy-report').addEventListener('click',async()=>{
  function contextFingerprint(){
    return JSON.stringify({
      origin:airportCode('flight-origin'),destination:airportCode('flight-dest'),
-     time:$('flight-time').value,alt:$('flight-alt').value,
-     rules:$('flight-rules').value,route:$('flight-route').value,
+     alternate:airportCode('flight-alternate'),time:$('flight-time').value,alt:$('flight-alt').value,
+     rules:$('flight-rules').value,
      stops,legHeights,
      firs:[...document.querySelectorAll('.flight-fir:checked')].map(el=>el.value),
      pronarea:$('flight-pronarea').value,
@@ -838,8 +846,8 @@ el('copy-report').addEventListener('click',async()=>{
    latest='';pilotAnswer='';
  }
  const tripInputIds=new Set([
-   'flight-origin','flight-dest','flight-origin-other','flight-dest-other',
-   'flight-alt','flight-time','flight-rules','flight-route','flight-pronarea'
+   'flight-origin','flight-dest','flight-alternate','flight-origin-other','flight-dest-other','flight-alternate-other',
+   'flight-alt','flight-time','flight-rules','flight-pronarea'
  ]);
  function handleChangedField(event){
    const node=event.target;
@@ -860,7 +868,7 @@ el('copy-report').addEventListener('click',async()=>{
    pilotAnswer='';
  });
  function preparePayload(mode,targetStatus){
-   // El casillero del informe final no debe bloquear las otras dos consultas.
+   // El casillero del informe final no debe bloquear las otras tres consultas.
    const confirmation=$('flight-confirm-cost');
    const wasRequired=confirmation.required;
    if(mode!=='report')confirmation.required=false;
@@ -876,7 +884,7 @@ el('copy-report').addEventListener('click',async()=>{
      return null;
    }
    if(!lastConsultKey||lastConsultKey!==flightKey()){
-     targetStatus.textContent='Primero consultá los boletines de salida, destino y FIR en el paso 2.';
+     targetStatus.textContent='Primero consultá los boletines de salida, destino, alternativo y FIR en el paso 2.';
      $('consultar').scrollIntoView({behavior:'smooth',block:'start'});
      return null;
    }
@@ -888,10 +896,15 @@ el('copy-report').addEventListener('click',async()=>{
    }
    const legs=legHeights.map((alt,index)=>
      'Pierna '+(index+1)+': '+nodes[index]+' a '+nodes[index+1]+', '+alt+' ft AMSL.');
-   const annotation=$('flight-route').value.trim();
-   const routeText=legs.join(' ')+(annotation?' Observaciones: '+annotation:'');
+   const routeText=legs.join(' ');
    if(routeText.length>800){
      targetStatus.textContent='Abreviá la ruta: supera el máximo de 800 caracteres.';
+     return null;
+   }
+   const alternateCode=airportCode('flight-alternate');
+   if(alternateCode===airportCode('flight-dest')){
+     targetStatus.textContent='El aeródromo alternativo debe ser distinto del destino.';
+     $('flight-alternate').focus();
      return null;
    }
    const question=mode==='pilot_question'?$('flight-pilot-question').value.trim():'';
@@ -901,7 +914,7 @@ el('copy-report').addEventListener('click',async()=>{
      return null;
    }
    return {
-     mode,origin:airportCode('flight-origin'),destination:airportCode('flight-dest'),
+     mode,origin:airportCode('flight-origin'),destination:airportCode('flight-dest'),alternate:alternateCode,
      route:routeText,planned_at_utc:iso('flight-time'),
      cruise_altitude_ft:Number($('flight-alt').value),
      flight_rules:$('flight-rules').value,firs,question,
