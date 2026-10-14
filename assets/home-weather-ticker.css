@@ -65,3 +65,39 @@ body.modo-seccion-unica > #gdv-meteo-ciudades{display:none!important}
     margin-top: -12px;
   }
 }
+
+/* Ajuste de tarjetas por administrador: únicamente PC. Las variables
+   se aplican a todas las tarjetas, inclusive las duplicadas del carrusel. */
+@media (min-width:701px) {
+  #gdv-meteo-ciudades .gdv-wx-card {
+    width: var(--gdv-weather-card-width, 265px);
+  }
+  #gdv-meteo-ciudades.gdv-wx-height-custom .gdv-wx-card {
+    height: var(--gdv-weather-card-height, 76px);
+    min-height: 0;
+    padding: calc(8px * var(--gdv-weather-card-factor, 1)) 13px;
+    gap: calc(13px * var(--gdv-weather-card-factor, 1));
+    overflow: hidden;
+  }
+  #gdv-meteo-ciudades.gdv-wx-height-custom .gdv-wx-icon {
+    width: calc(27px * var(--gdv-weather-card-factor, 1));
+    height: calc(27px * var(--gdv-weather-card-factor, 1));
+    flex-basis: calc(27px * var(--gdv-weather-card-factor, 1));
+  }
+  #gdv-meteo-ciudades.gdv-wx-height-custom .gdv-wx-place {
+    font-size: calc(12px * var(--gdv-weather-card-factor, 1));
+  }
+  #gdv-meteo-ciudades.gdv-wx-height-custom .gdv-wx-province,
+  #gdv-meteo-ciudades.gdv-wx-height-custom .gdv-wx-condition,
+  #gdv-meteo-ciudades.gdv-wx-height-custom .gdv-wx-wind {
+    font-size: calc(10px * var(--gdv-weather-card-factor, 1));
+  }
+  #gdv-meteo-ciudades.gdv-wx-height-custom .gdv-wx-temp {
+    font-size: calc(25px * var(--gdv-weather-card-factor, 1));
+  }
+  #gdv-meteo-ciudades.gdv-wx-height-custom .gdv-wx-info > div {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+}
