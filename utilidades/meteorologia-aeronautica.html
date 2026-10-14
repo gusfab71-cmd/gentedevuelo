@@ -492,8 +492,14 @@ el('copy-report').addEventListener('click',async()=>{
  });
  function markRouteEdited(){
    const state=$('flight-fetch-status');
-   if(lastConsultKey && lastConsultKey!==flightKey())
-     state.textContent='Cambió la ruta o la FIR: volvé a consultar los boletines.';
+   if(lastConsultKey && lastConsultKey!==flightKey()){
+     lastConsultKey='';
+     $('flight-auto-results').hidden=true;
+     $('flight-sigmet-state').textContent='Requiere nueva consulta';
+     $('flight-sigmet-firs').replaceChildren();
+     markStatus('sigmet','Pendiente de nueva consulta',false);
+     state.textContent='Cambió la ruta o la FIR: volvé a consultar los boletines para estos aeródromos y FIR.';
+   }
  }
  function updateNotamLabels(){
    $('notam-origin-link').textContent='Consultar NOTAM de salida · '+(airportCode('flight-origin')||'sin definir');
