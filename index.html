@@ -4918,6 +4918,7 @@ img, video { max-width: 100%; }
        <a href="moderacion.html#video-portada" id="gdvStolAdminLink" hidden>Video de portada</a>
        <a href="index.html?editar-tarjetas=1#inicio" id="gdvCardsEditLink" hidden>Editar tarjetas de portada</a>
        <a href="index.html?editar-marca=1#inicio" id="gdvBrandEditLink" hidden>Mover logo y textos</a>
+        <a href="index.html?editar-meteo=1#inicio" id="gdvWeatherEditorLink" hidden>Ajustar carrusel meteorológico (PC)</a>
        <a href="moderacion.html#registro-manual" id="gdvManualRegistrationLink" hidden>Registro manual</a>
        <a href="moderacion.html#registros-incompletos" id="gdvIncompleteRegistrationLink" hidden>Registros incompletos</a>
        <a href="moderacion.html#conocimiento-robert" id="gdvRobertKnowledgeLink" hidden>Conocimiento de Robert Shimoda</a>
@@ -6618,6 +6619,8 @@ document.getElementById("hangarLicense").textContent = perfil?.aviation_license 
   if (cardsEditorLink) cardsEditorLink.hidden = !window.gdvLegacyAdmin;
   const brandEditorLink = document.getElementById("gdvBrandEditLink");
   if (brandEditorLink) brandEditorLink.hidden = !window.gdvLegacyAdmin;
+   const weatherEditorLink = document.getElementById("gdvWeatherEditorLink");
+   if (weatherEditorLink) weatherEditorLink.hidden = !window.gdvLegacyAdmin;
    const manualRegistrationLink = document.getElementById("gdvManualRegistrationLink");
    if (manualRegistrationLink) manualRegistrationLink.hidden = !window.gdvLegacyAdmin;
    const incompleteRegistrationLink = document.getElementById("gdvIncompleteRegistrationLink");
@@ -11889,6 +11892,32 @@ body.modo-anexo-clasificados #clasificados-seccion {
   .controles-usuario > :is(.youtube-portada,.facebook-portada,.instagram-portada) { top:96px !important; }
 }
 </style>
+<style id="gdv-redes-izquierda-escritorio-20261014">
+/* Redes alineadas con la primera línea del menú. Mi cuenta conserva la derecha.
+   Reservar columnas reales evita solapamientos incluso en notebooks. */
+@media (min-width:851px) {
+  .menu-principal {
+    padding-left:198px !important;
+    padding-right:164px !important;
+  }
+  #menuDesplegable {
+    box-sizing:border-box !important;
+    width:100% !important;
+    max-width:910px !important;
+  }
+  .controles-usuario > :is(.youtube-portada,.facebook-portada,.instagram-portada) {
+    position:fixed !important;
+    top:28px !important;
+    right:auto !important;
+    margin:0 !important;
+    width:44px !important;
+    height:44px !important;
+  }
+  .controles-usuario > .youtube-portada { left:22px !important; }
+  .controles-usuario > .facebook-portada { left:76px !important; }
+  .controles-usuario > .instagram-portada { left:130px !important; }
+}
+</style>
 <script src="assets/home-online-count.js?v=20261013conectados1"></script>
 <link rel="stylesheet" href="assets/home-card-editor.css?v=20261013cards2">
 <link rel="stylesheet" href="assets/home-instituciones-logo.css?v=20261013marcos-unificados1">
@@ -11896,8 +11925,10 @@ body.modo-anexo-clasificados #clasificados-seccion {
 <script src="assets/home-card-editor.js?v=20261013cards2"></script>
 <link rel="stylesheet" href="assets/home-brand-editor.css?v=20261013marca1">
 <script src="assets/home-brand-editor.js?v=20261013marca2"></script>
-<link rel="stylesheet" href="assets/home-weather-ticker.css?v=20261014visible2">
+<link rel="stylesheet" href="assets/home-weather-ticker.css?v=20261014altura1">
 <script defer src="assets/home-weather-ticker.js?v=20261013ciudades1"></script>
+<link rel="stylesheet" href="assets/home-weather-editor.css?v=20261014altura1">
+<script defer src="assets/home-weather-editor.js?v=20261014altura1"></script>
 <script defer src="assets/chat-alerts.js?v=20261012avisosunavez1"></script>
 </body>
 </html>
