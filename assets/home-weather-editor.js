@@ -58,6 +58,7 @@
     if (!editing || busy || draft === saved || !window.gdvLegacyAdmin) return;
     busy = true;
     repaint('Guardando ubicación del carrusel…');
+    let message = '', failed = false;
     try {
       const { data, error } = await db.from('gdv_home_weather_position')
         .upsert({ id: 1, lift_px: draft, updated_at: new Date().toISOString() }, { onConflict: 'id' })
@@ -65,13 +66,14 @@
       if (error || !data) throw Error(error?.message || 'No se confirmó el guardado.');
       saved = clamp(data.lift_px);
       draft = saved;
-      repaint('Posición guardada. El cambio es visible para todos en computadoras.');
+      message = 'Posición guardada. El cambio es visible para todos en computadoras.';
     } catch (error) {
-      repaint();
-      status('No se pudo guardar: ' + (error.message || 'Error de conexión.'), true);
+      message = 'No se pudo guardar: ' + (error.message || 'Error de conexión.');
+      failed = true;
     } finally {
       busy = false;
-      repaint();
+      repaint(message);
+      if (failed) status(message, true);
     }
   }
   async function reset() {
@@ -79,18 +81,20 @@
     if (!confirm('¿Restaurar la altura original del carrusel para todos?')) return;
     busy = true;
     repaint('Restaurando posición…');
+    let message = '', failed = false;
     try {
       const { error } = await db.from('gdv_home_weather_position').delete().eq('id', 1);
       if (error) throw error;
       saved = 0;
       draft = 0;
-      repaint('Se restauró la ubicación original del carrusel.');
+      message = 'Se restauró la ubicación original del carrusel.';
     } catch (error) {
-      repaint();
-      status('No se pudo restaurar: ' + (error.message || 'Error de conexión.'), true);
+      message = 'No se pudo restaurar: ' + (error.message || 'Error de conexión.');
+      failed = true;
     } finally {
       busy = false;
-      repaint();
+      repaint(message);
+      if (failed) status(message, true);
     }
   }
   function openEditor() {
