@@ -62,8 +62,8 @@
 .flight-leg-row,.flight-waypoint-row{display:grid;grid-template-columns:minmax(0,2fr) minmax(125px,1fr);gap:12px;align-items:end;margin-top:12px;padding:11px 12px;border:1px solid #475554;border-radius:11px}
 .flight-leg-row .field{margin:0}.flight-leg-route{font-weight:720;overflow-wrap:anywhere;color:#e6e9e5}
 .flight-waypoint-row{grid-template-columns:minmax(0,1fr) auto}.flight-waypoint-row button{min-height:42px}
-.flight-reports-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:10px}
-.flight-reports-grid .report{margin:0}.flight-reports-grid pre{margin:0;max-height:250px;overflow:auto}
+.flight-reports-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:10px;align-items:stretch}
+.flight-reports-grid .report{margin:0;min-width:0}.flight-reports-grid .report summary{flex-wrap:wrap}.flight-reports-grid pre{margin:0;max-height:250px;overflow:auto}
 #flight-auto-results{margin-top:17px}
 .flight-sigmet-report{grid-column:1/-1}
 .flight-sigmet-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,265px),1fr));gap:11px;margin:12px 0}
@@ -74,7 +74,7 @@
 .flight-sigmet-item .flight-sigmet-label.found{color:#ffb88e}
 .flight-sigmet-item pre{margin-top:10px;max-height:250px;overflow:auto}
 #consultar-antiguo{display:none!important}
-@media(max-width:700px){.flight-reports-grid{grid-template-columns:1fr}.flight-leg-row{grid-template-columns:1fr}.flight-leg-editor{padding:12px}}
+@media(max-width:870px){.flight-reports-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:700px){.flight-reports-grid{grid-template-columns:1fr}.flight-leg-row{grid-template-columns:1fr}.flight-leg-editor{padding:12px}}
 
 .flight-weather-overview{margin:22px 0 18px;border-color:#52727c;background:linear-gradient(145deg,#1c3038,#172225);scroll-margin-top:20px}
 .flight-weather-overview h2{color:#e5f3f5}
@@ -181,29 +181,6 @@
 </div>
 </form>
 </section>
-<div class="layout">
-<div class="stack">
-<section class="card" id="consultar-antiguo" hidden>
-<div class="card-header"><div><span class="card-kicker">Consulta de boletines · sin IA</span><h2>Consultar datos disponibles</h2></div><span class="sub">Argentina · Selección manual</span></div>
-<p class="sub">Ingresá el código OACI y la FIR. Esta consulta recupera METAR y TAF del aeródromo indicado y una búsqueda complementaria de SIGMET de la FIR, sin consumir tokens de IA. Para salida, destino y alternativo, repetí la consulta con el código de cada aeródromo. PRONAREA y NOTAM se verifican en fuentes oficiales.</p>
-<form id="brief-form" class="form">
-<label class="field">Aeródromo (OACI)<input id="icao" required minlength="4" maxlength="4" pattern="[sS][aA][A-Za-z]{2}" autocomplete="off" value="SAEZ" placeholder="SAEZ"></label>
-<label class="field">FIR <select id="fir" required><option value="SAEF">Ezeiza · SAEF</option><option value="SACF">Córdoba · SACF</option><option value="SAMF">Mendoza · SAMF</option><option value="SARR">Resistencia · SARR</option><option value="SAVF">Comodoro Rivadavia · SAVF</option></select></label>
-<p class="sub full" style="margin:0">Este botón solo obtiene datos. Para solicitar una interpretación del vuelo, utilizá el formulario de análisis meteorológico más abajo.</p>
-<div class="full"><button class="primary" id="ask" type="submit">Consultar boletines gratis</button><p id="status" class="feedback" role="status" aria-live="polite">Iniciá sesión para consultar los datos.</p></div>
-</form>
-<div id="brief-result" class="report-summary" hidden>
-<div class="card-header"><h3 id="fetched-title">Boletines consultados</h3><button class="secondary" type="button" id="copy-report">Copiar boletines</button></div>
-<p class="sub" id="fetched-at"></p>
-
-<div class="metric-grid" id="metar-metrics" hidden>
-<div class="metric"><span>Viento observado</span><strong id="wind-metric">—</strong></div>
-<div class="metric"><span>Visibilidad informada</span><strong id="vis-metric">—</strong></div>
-<div class="metric"><span>Capas de nubes</span><strong id="cloud-metric">—</strong></div>
-<div class="metric"><span>QNH · Ajuste altimétrico</span><strong id="qnh-metric">—</strong></div>
-</div>
-</div>
-</section>
 <section class="card flight-workflow" id="consultar">
 <div class="card-header"><div><span class="card-kicker">PASO 2 · BOLETINES</span><h2>Consultar y cargar información</h2></div><span class="sub">Sin gasto de tokens</span></div>
 <p class="sub">Con los aeródromos del paso 1, se obtienen automáticamente los METAR y TAF disponibles de salida, destino y alternativo. La búsqueda SIGMET es parcial. Verificá la hora, emisión y vigencia de cada boletín; los TAF no son pronósticos de ruta.</p>
@@ -212,10 +189,10 @@
 <p class="sub" id="flight-auto-time"></p>
 <div class="flight-reports-grid">
  <details class="report" open><summary><strong id="flight-metar-origin-title">METAR salida</strong><span id="flight-metar-origin-state">Pendiente</span></summary><div class="content"><pre id="flight-metar-origin-raw">—</pre></div></details>
- <details class="report" open><summary><strong id="flight-taf-origin-title">TAF salida</strong><span id="flight-taf-origin-state">Pendiente</span></summary><div class="content"><pre id="flight-taf-origin-raw">—</pre></div></details>
  <details class="report" open><summary><strong id="flight-metar-dest-title">METAR destino</strong><span id="flight-metar-dest-state">Pendiente</span></summary><div class="content"><pre id="flight-metar-dest-raw">—</pre></div></details>
- <details class="report" open><summary><strong id="flight-taf-dest-title">TAF destino</strong><span id="flight-taf-dest-state">Pendiente</span></summary><div class="content"><pre id="flight-taf-dest-raw">—</pre></div></details>
  <details class="report" open><summary><strong id="flight-metar-alternate-title">METAR alternativo</strong><span id="flight-metar-alternate-state">Pendiente</span></summary><div class="content"><pre id="flight-metar-alternate-raw">—</pre></div></details>
+ <details class="report" open><summary><strong id="flight-taf-origin-title">TAF salida</strong><span id="flight-taf-origin-state">Pendiente</span></summary><div class="content"><pre id="flight-taf-origin-raw">—</pre></div></details>
+ <details class="report" open><summary><strong id="flight-taf-dest-title">TAF destino</strong><span id="flight-taf-dest-state">Pendiente</span></summary><div class="content"><pre id="flight-taf-dest-raw">—</pre></div></details>
  <details class="report" open><summary><strong id="flight-taf-alternate-title">TAF alternativo</strong><span id="flight-taf-alternate-state">Pendiente</span></summary><div class="content"><pre id="flight-taf-alternate-raw">—</pre></div></details>
  <details class="report flight-sigmet-report" open>
   <summary><strong>SIGMET · FIR del recorrido</strong><span id="flight-sigmet-state">Sin consultar</span></summary>
@@ -238,6 +215,29 @@
 <div class="manual-source-heading"><strong>NOTAM · consulta oficial</strong><span class="sub">No se cargan automáticamente ni son obligatorios para pedir el análisis</span></div>
 <p class="sub">Revisá los NOTAM de salida, llegada y alternativo en AIS/ANAC. El informe de IA señalará esta verificación como pendiente, pues no recibe ni interpreta automáticamente esos avisos.</p>
 <div class="actions"><a id="notam-origin-link" href="https://ais.anac.gob.ar/notam" target="_blank" rel="noopener noreferrer">Consultar NOTAM de salida</a><a id="notam-dest-link" href="https://ais.anac.gob.ar/notam" target="_blank" rel="noopener noreferrer">Consultar NOTAM de destino</a><a id="notam-alternate-link" href="https://ais.anac.gob.ar/notam" target="_blank" rel="noopener noreferrer">Consultar NOTAM de alternativo</a></div>
+</div>
+</section>
+<div class="layout">
+<div class="stack">
+<section class="card" id="consultar-antiguo" hidden>
+<div class="card-header"><div><span class="card-kicker">Consulta de boletines · sin IA</span><h2>Consultar datos disponibles</h2></div><span class="sub">Argentina · Selección manual</span></div>
+<p class="sub">Ingresá el código OACI y la FIR. Esta consulta recupera METAR y TAF del aeródromo indicado y una búsqueda complementaria de SIGMET de la FIR, sin consumir tokens de IA. Para salida, destino y alternativo, repetí la consulta con el código de cada aeródromo. PRONAREA y NOTAM se verifican en fuentes oficiales.</p>
+<form id="brief-form" class="form">
+<label class="field">Aeródromo (OACI)<input id="icao" required minlength="4" maxlength="4" pattern="[sS][aA][A-Za-z]{2}" autocomplete="off" value="SAEZ" placeholder="SAEZ"></label>
+<label class="field">FIR <select id="fir" required><option value="SAEF">Ezeiza · SAEF</option><option value="SACF">Córdoba · SACF</option><option value="SAMF">Mendoza · SAMF</option><option value="SARR">Resistencia · SARR</option><option value="SAVF">Comodoro Rivadavia · SAVF</option></select></label>
+<p class="sub full" style="margin:0">Este botón solo obtiene datos. Para solicitar una interpretación del vuelo, utilizá el formulario de análisis meteorológico más abajo.</p>
+<div class="full"><button class="primary" id="ask" type="submit">Consultar boletines gratis</button><p id="status" class="feedback" role="status" aria-live="polite">Iniciá sesión para consultar los datos.</p></div>
+</form>
+<div id="brief-result" class="report-summary" hidden>
+<div class="card-header"><h3 id="fetched-title">Boletines consultados</h3><button class="secondary" type="button" id="copy-report">Copiar boletines</button></div>
+<p class="sub" id="fetched-at"></p>
+
+<div class="metric-grid" id="metar-metrics" hidden>
+<div class="metric"><span>Viento observado</span><strong id="wind-metric">—</strong></div>
+<div class="metric"><span>Visibilidad informada</span><strong id="vis-metric">—</strong></div>
+<div class="metric"><span>Capas de nubes</span><strong id="cloud-metric">—</strong></div>
+<div class="metric"><span>QNH · Ajuste altimétrico</span><strong id="qnh-metric">—</strong></div>
+</div>
 </div>
 </section>
 <section class="card" id="boletines">
