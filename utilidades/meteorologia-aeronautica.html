@@ -118,7 +118,7 @@
 <nav class="jump" aria-label="Secciones"><a href="#plan-vuelo">1 · Plan de vuelo</a><a href="#consultar">2 · Boletines y PRONAREA</a><a href="#boletines">3 · Cuatro etapas</a><a href="#informe-meteorologico">Informe meteorológico</a><a href="#precauciones-vuelo">Precauciones</a><a href="#analisis-altura">4 · Informe con IA</a><a href="#consulta-piloto">Consulta del piloto</a></nav>
 <section class="card flight-workflow" id="plan-vuelo">
 <div class="card-header"><div><span class="card-kicker">PASO 1 · PLANIFICACIÓN</span><h2>Salida, destino y piernas de vuelo</h2></div></div>
-<p class="sub">Definí los aeródromos, los puntos intermedios y la altitud prevista para cada tramo. Las piernas son declaradas por el piloto; esta Mesa no calcula rumbos, distancias, ETA ni altitudes mínimas.</p>
+<p class="sub">Definí salida, destino, aeródromo alternativo obligatorio, puntos intermedios y altitud prevista para cada tramo. Las piernas son declaradas por el piloto; esta Mesa no calcula rumbos, distancias, ETA ni altitudes mínimas.</p>
 <form id="flight-analysis-form">
 <div class="form" style="margin-top:17px">
 <label class="field" for="flight-origin">Aeródromo de salida
@@ -148,7 +148,18 @@
 <label class="field">Altitud prevista (pies AMSL)<input id="flight-alt" type="number" required min="500" max="45000" step="100" placeholder="6500"></label>
 <label class="field">Fecha y hora previstas de salida (hora local)<input id="flight-time" type="datetime-local" required></label>
 <label class="field">Reglas de vuelo<select id="flight-rules" required><option value="VFR">VFR</option><option value="IFR">IFR</option></select></label>
-<label class="field full">Observaciones sobre la ruta (opcional)<input id="flight-route" maxlength="400" placeholder="Indicá corredores o referencias adicionales, si corresponde"></label>
+<label class="field full" for="flight-alternate">Aeródromo alternativo (obligatorio)
+<select id="flight-alternate" required>
+<option value="" selected disabled>Seleccioná un aeródromo alternativo</option>
+<optgroup label="Buenos Aires y alrededores"><option value="SAEZ">Ezeiza · Ministro Pistarini · SAEZ</option><option value="SABE">Aeroparque · Jorge Newbery · SABE</option><option value="SADF">San Fernando · SADF</option><option value="SADM">Morón · SADM</option><option value="SADP">El Palomar · SADP</option><option value="SAZM">Mar del Plata · SAZM</option><option value="SAZB">Bahía Blanca · SAZB</option></optgroup>
+<optgroup label="Centro y Litoral"><option value="SACO">Córdoba · SACO</option><option value="SAAR">Rosario · SAAR</option><option value="SAAV">Santa Fe · Sauce Viejo · SAAV</option><option value="SAAP">Paraná · SAAP</option><option value="SAOC">Río Cuarto · SAOC</option><option value="SAOU">San Luis · SAOU</option><option value="SAAC">Concordia · SAAC</option></optgroup>
+<optgroup label="Cuyo"><option value="SAME">Mendoza · El Plumerillo · SAME</option><option value="SAMR">San Rafael · SAMR</option><option value="SANU">San Juan · SANU</option><option value="SAMM">Malargüe · SAMM</option></optgroup>
+<optgroup label="Norte"><option value="SASA">Salta · SASA</option><option value="SASJ">Jujuy · SASJ</option><option value="SANT">Tucumán · SANT</option><option value="SANC">Catamarca · SANC</option><option value="SANE">Santiago del Estero · SANE</option><option value="SANL">La Rioja · SANL</option><option value="SARI">Puerto Iguazú · SARI</option><option value="SARE">Resistencia · SARE</option><option value="SARC">Corrientes · SARC</option><option value="SARF">Formosa · SARF</option><option value="SARP">Posadas · SARP</option></optgroup>
+<optgroup label="Patagonia"><option value="SAZN">Neuquén · SAZN</option><option value="SAZS">Bariloche · SAZS</option><option value="SAZY">San Martín de los Andes · SAZY</option><option value="SAVC">Comodoro Rivadavia · SAVC</option><option value="SAVT">Trelew · SAVT</option><option value="SAVE">Esquel · SAVE</option><option value="SAWC">El Calafate · SAWC</option><option value="SAWG">Río Gallegos · SAWG</option><option value="SAWE">Río Grande · SAWE</option><option value="SAWH">Ushuaia · SAWH</option><option value="SAZR">Santa Rosa · SAZR</option><option value="SAZT">Tandil · SAZT</option></optgroup>
+<option value="OTHER">Otro aeródromo (ingresar código OACI)</option>
+</select>
+<input id="flight-alternate-other" aria-label="Código OACI del alternativo" type="text" pattern="[sS][aA][A-Za-z]{2}" minlength="4" maxlength="4" placeholder="Ej.: SAXX" autocomplete="off" autocapitalize="characters" hidden disabled>
+</label>
 <fieldset class="full" style="margin:0;border:1px solid #58645e;border-radius:12px;padding:12px 16px">
 <legend style="padding:0 5px;font-weight:700">FIR que atraviesa tu ruta</legend>
 <div style="display:flex;gap:10px 20px;flex-wrap:wrap">
@@ -195,7 +206,7 @@
 </section>
 <section class="card flight-workflow" id="consultar">
 <div class="card-header"><div><span class="card-kicker">PASO 2 · BOLETINES</span><h2>Consultar y cargar información</h2></div><span class="sub">Sin gasto de tokens</span></div>
-<p class="sub">Con los aeródromos del paso 1, se obtienen automáticamente los METAR y TAF disponibles de salida y destino. La búsqueda SIGMET es parcial. Verificá la hora, emisión y vigencia de cada boletín; los TAF no son pronósticos de ruta.</p>
+<p class="sub">Con los aeródromos del paso 1, se obtienen automáticamente los METAR y TAF disponibles de salida, destino y alternativo. La búsqueda SIGMET es parcial. Verificá la hora, emisión y vigencia de cada boletín; los TAF no son pronósticos de ruta.</p>
 <div class="actions"><button class="primary" type="button" id="flight-fetch-reports">Consultar METAR, TAF y SIGMET</button><span class="feedback" id="flight-fetch-status" aria-live="polite">Todavía no se consultaron boletines.</span></div>
 <div id="flight-auto-results" hidden>
 <p class="sub" id="flight-auto-time"></p>
@@ -204,6 +215,8 @@
  <details class="report" open><summary><strong id="flight-taf-origin-title">TAF salida</strong><span id="flight-taf-origin-state">Pendiente</span></summary><div class="content"><pre id="flight-taf-origin-raw">—</pre></div></details>
  <details class="report" open><summary><strong id="flight-metar-dest-title">METAR destino</strong><span id="flight-metar-dest-state">Pendiente</span></summary><div class="content"><pre id="flight-metar-dest-raw">—</pre></div></details>
  <details class="report" open><summary><strong id="flight-taf-dest-title">TAF destino</strong><span id="flight-taf-dest-state">Pendiente</span></summary><div class="content"><pre id="flight-taf-dest-raw">—</pre></div></details>
+ <details class="report" open><summary><strong id="flight-metar-alternate-title">METAR alternativo</strong><span id="flight-metar-alternate-state">Pendiente</span></summary><div class="content"><pre id="flight-metar-alternate-raw">—</pre></div></details>
+ <details class="report" open><summary><strong id="flight-taf-alternate-title">TAF alternativo</strong><span id="flight-taf-alternate-state">Pendiente</span></summary><div class="content"><pre id="flight-taf-alternate-raw">—</pre></div></details>
  <details class="report flight-sigmet-report" open>
   <summary><strong>SIGMET · FIR del recorrido</strong><span id="flight-sigmet-state">Sin consultar</span></summary>
   <div class="content">
@@ -223,8 +236,8 @@
 </div>
 <div class="manual-source">
 <div class="manual-source-heading"><strong>NOTAM · consulta oficial</strong><span class="sub">No se cargan automáticamente ni son obligatorios para pedir el análisis</span></div>
-<p class="sub">Revisá los NOTAM de salida y llegada en AIS/ANAC. El informe de IA señalará esta verificación como pendiente, pues no recibe ni interpreta automáticamente esos avisos.</p>
-<div class="actions"><a id="notam-origin-link" href="https://ais.anac.gob.ar/notam" target="_blank" rel="noopener noreferrer">Consultar NOTAM de salida</a><a id="notam-dest-link" href="https://ais.anac.gob.ar/notam" target="_blank" rel="noopener noreferrer">Consultar NOTAM de destino</a></div>
+<p class="sub">Revisá los NOTAM de salida, llegada y alternativo en AIS/ANAC. El informe de IA señalará esta verificación como pendiente, pues no recibe ni interpreta automáticamente esos avisos.</p>
+<div class="actions"><a id="notam-origin-link" href="https://ais.anac.gob.ar/notam" target="_blank" rel="noopener noreferrer">Consultar NOTAM de salida</a><a id="notam-dest-link" href="https://ais.anac.gob.ar/notam" target="_blank" rel="noopener noreferrer">Consultar NOTAM de destino</a><a id="notam-alternate-link" href="https://ais.anac.gob.ar/notam" target="_blank" rel="noopener noreferrer">Consultar NOTAM de alternativo</a></div>
 </div>
 </section>
 <section class="card" id="boletines">
@@ -242,14 +255,15 @@
 <details class="report" id="r-sigmet"><summary><strong>SIGMET · Peligros severos en ruta</strong><span id="label-sigmet">Sin consultar</span></summary><div class="content"><p>La búsqueda internacional disponible aquí es parcial. No encontrar coincidencias no demuestra ausencia de SIGMET: comprobá los avisos oficiales, el área afectada, el nivel y su validez.</p><pre id="raw-sigmet">Todavía no hay datos.</pre><a href="https://www.smn.gob.ar/mensajes-sigmet" target="_blank" rel="noopener noreferrer">Verificar SIGMET oficiales · SMN</a></div></details>
 </section>
 <section class="brief-stage" id="etapa-puntos" aria-labelledby="etapa-puntos-titulo">
-<div class="brief-stage-heading"><span class="brief-stage-number">2</span><div><h3 id="etapa-puntos-titulo">Evaluación de puntos clave · Micro / TAF</h3><p class="sub">Los TAF recuperados en el paso 2 corresponden a los aeródromos de salida y destino, no al espacio aéreo de ruta.</p></div></div>
+<div class="brief-stage-heading"><span class="brief-stage-number">2</span><div><h3 id="etapa-puntos-titulo">Evaluación de puntos clave · Micro / TAF</h3><p class="sub">Los TAF recuperados en el paso 2 corresponden a los aeródromos de salida, destino y alternativo, no al espacio aéreo de ruta.</p></div></div>
 <div class="taf-checkpoints">
 <div><strong>Salida</strong><span>Pronóstico válido para la hora prevista de despegue</span></div>
-<div><strong>Destino</strong><span>Pronóstico válido para la hora estimada de arribo</span></div>
-<div><strong>Alternativo</strong><span>Pronóstico válido durante la ventana de utilización prevista y la reserva disponible</span></div>
+<div><strong>Destino</strong><span>Verificá la ventana TAF correspondiente a la ETA (no calculada aquí)</span></div>
+<div><strong>Alternativo</strong><span>Verificá el TAF del alternativo elegido para su posible hora de utilización</span></div>
 </div>
 <details class="report" id="r-taf"><summary><strong>TAF · Pronóstico del aeródromo consultado</strong><span id="label-taf">Sin consultar</span></summary><div class="content"><p>TAF de salida del paso 2. Verificá emisión, validez y grupos TEMPO, BECMG y PROB; no se estima la condición exacta a una ETA no declarada.</p><pre id="raw-taf">Todavía no hay datos.</pre><a href="https://www.smn.gob.ar/taf" target="_blank" rel="noopener noreferrer">Verificar TAF en SMN</a></div></details>
 <details class="report" id="r-taf-dest"><summary><strong>TAF destino</strong><span id="label-taf-dest">Sin consultar</span></summary><div class="content"><pre id="raw-taf-dest">Todavía no hay datos.</pre></div></details>
+<details class="report" id="r-taf-alternate"><summary><strong>TAF alternativo</strong><span id="label-taf-alternate">Sin consultar</span></summary><div class="content"><pre id="raw-taf-alternate">Todavía no hay datos.</pre><a href="https://www.smn.gob.ar/taf" target="_blank" rel="noopener noreferrer">Verificar TAF en SMN</a></div></details>
 </section>
 <section class="brief-stage" id="etapa-operacional" aria-labelledby="etapa-operacional-titulo">
 <div class="brief-stage-heading"><span class="brief-stage-number">3</span><div><h3 id="etapa-operacional-titulo">Verificación operacional · Infraestructura</h3><p class="sub">Pistas, radioayudas, procedimientos, espacio aéreo y restricciones aplicables.</p></div></div>
@@ -259,6 +273,7 @@
 <div class="brief-stage-heading"><span class="brief-stage-number">4</span><div><h3 id="etapa-final-titulo">Verificación final prevuelo · Tiempo presente</h3><p class="sub">METAR/SPECI recientes en los aeródromos pertinentes, viento, visibilidad, nubosidad y QNH. Comprobá la hora de observación.</p></div></div>
 <details class="report" id="r-metar"><summary><strong>METAR · Condición observada</strong><span id="label-metar">Sin consultar</span></summary><div class="content"><p>Reportes recuperados desde Aviation Weather Center. Comprobá emisión y vigencia en la fuente oficial y verificá el QNH para el ajuste altimétrico. No todos los aeródromos reportan continuamente; un TAF no reemplaza una observación.</p><pre id="raw-metar">Todavía no hay datos.</pre><a href="https://www.smn.gob.ar/metar" target="_blank" rel="noopener noreferrer">Verificar METAR en SMN</a></div></details>
 <details class="report" id="r-metar-dest"><summary><strong>METAR destino</strong><span id="label-metar-dest">Sin consultar</span></summary><div class="content"><pre id="raw-metar-dest">Todavía no hay datos.</pre></div></details>
+<details class="report" id="r-metar-alternate"><summary><strong>METAR alternativo</strong><span id="label-metar-alternate">Sin consultar</span></summary><div class="content"><pre id="raw-metar-alternate">Todavía no hay datos.</pre><a href="https://www.smn.gob.ar/metar" target="_blank" rel="noopener noreferrer">Verificar METAR en SMN</a></div></details>
 <p class="sub">La lectura simbólica de la nubosidad del último METAR consultado está en el panel de observación.</p>
 </section>
 <p class="source-notes">La fecha de consulta no acredita emisión o validez. Ningún resultado de esta Mesa sustituye el briefing oficial ni la evaluación operacional del piloto.</p>
@@ -308,7 +323,7 @@
 <section class="card flight-weather-overview" id="informe-meteorologico" aria-labelledby="flight-weather-heading">
  <div class="card-header"><div><span class="card-kicker">SÍNTESIS METEOROLÓGICA · ANTES DE LAS PRECAUCIONES</span>
   <h2 id="flight-weather-heading">Condiciones meteorológicas del vuelo planificado</h2></div></div>
- <p class="sub">La IA relaciona la salida, el destino, las piernas y altitudes previstas con el PRONAREA cargado, los TAF/METAR disponibles y los posibles SIGMET. Distingue pronósticos, observaciones y datos faltantes, sin inventar condiciones para períodos no cubiertos.</p>
+ <p class="sub">La IA relaciona la salida, el destino, el alternativo, las piernas y altitudes previstas con el PRONAREA cargado, los TAF/METAR disponibles y los posibles SIGMET. Distingue pronósticos, observaciones y datos faltantes, sin inventar condiciones para períodos no cubiertos.</p>
  <label class="flight-ai-consent"><input id="flight-weather-consent" type="checkbox">
   <span>Autorizo generar este informe meteorológico con IA y consumir tokens.</span></label>
  <div class="actions"><button class="primary" id="flight-weather-ask" type="button">Generar informe meteorológico con IA</button>
@@ -345,10 +360,10 @@
  <div><span class="card-kicker">PASO 4 · INFORME FINAL</span><h2>Análisis de las cuatro etapas con IA</h2></div>
  <span style="border:1px solid #b87745;border-radius:99px;padding:7px 11px;color:var(--accent2);font-size:12px;font-weight:700">Usa tokens solo al confirmar</span>
 </div>
-<p class="sub">El sistema tendrá en cuenta las piernas declaradas, PRONAREA cargado manualmente y los METAR/TAF/SIGMET recuperables. Evaluará: 1) ruta (PRONAREA/SIGMET), 2) salida y destino (TAF), 3) infraestructura (NOTAM por consulta externa), 4) observaciones actuales (METAR). <strong>Solo generará el informe después de tu confirmación; no autoriza el vuelo.</strong></p>
+<p class="sub">El sistema tendrá en cuenta las piernas declaradas, salida, destino y alternativo, PRONAREA cargado manualmente y los METAR/TAF/SIGMET recuperables. Evaluará: 1) ruta (PRONAREA/SIGMET), 2) salida, destino y alternativo (TAF), 3) infraestructura (NOTAM por consulta externa), 4) observaciones actuales de los tres aeródromos (METAR). <strong>Solo generará el informe después de tu confirmación; no autoriza el vuelo.</strong></p>
 
 <div class="warning" style="margin:17px 0">
-<strong>Antes de usar tokens:</strong> verificá que los boletines cubran el vuelo previsto. Si no indicaste ruta exacta, el sistema no podrá determinar qué sectores atravesás. La consulta NOTAM de salida y destino queda bajo responsabilidad del piloto. El resultado no reemplaza un briefing oficial ni determina aptitud VFR/IFR.
+<strong>Antes de usar tokens:</strong> verificá que los boletines cubran el vuelo previsto. Si no indicaste ruta exacta, el sistema no podrá determinar qué sectores atravesás. La consulta NOTAM de salida, destino y alternativo queda bajo responsabilidad del piloto. El resultado no reemplaza un briefing oficial ni determina aptitud VFR/IFR.
 </div>
 <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px">
 <input id="flight-confirm-cost" required form="flight-analysis-form" type="checkbox" style="width:20px;height:20px;flex:none">
