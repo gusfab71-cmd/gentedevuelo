@@ -58,6 +58,8 @@
 
 /* Flujo secuencial de la Mesa de Vuelo; mantiene diseño responsive existente. */
 .flight-workflow{margin:0 0 18px;scroll-margin-top:14px}
+.flight-airport-invalid>select,.flight-airport-invalid>input:not([hidden]){border-color:#f59b5f!important;box-shadow:0 0 0 2px rgba(245,155,95,.27)!important}
+#flight-fetch-status.flight-fetch-error{color:#ffbd93;font-weight:750}
 .flight-leg-editor{margin:17px 0 0;padding:16px;border:1px solid #52645e;background:#131f22;border-radius:14px}
 .flight-leg-row,.flight-waypoint-row{display:grid;grid-template-columns:minmax(0,2fr) minmax(125px,1fr);gap:12px;align-items:end;margin-top:12px;padding:11px 12px;border:1px solid #475554;border-radius:11px}
 .flight-leg-row .field{margin:0}.flight-leg-route{font-weight:720;overflow-wrap:anywhere;color:#e6e9e5}
@@ -209,7 +211,7 @@
 <section class="card flight-workflow" id="consultar">
 <div class="card-header"><div><span class="card-kicker">PASO 2 · BOLETINES</span><h2>Consultar y cargar información</h2></div><span class="sub">Sin gasto de tokens</span></div>
 <p class="sub">Con los aeródromos del paso 1, se obtienen automáticamente los METAR y TAF disponibles de salida, destino y alternativo. La búsqueda SIGMET es parcial. Verificá la hora, emisión y vigencia de cada boletín; los TAF no son pronósticos de ruta.</p>
-<div class="actions"><button class="primary" type="button" id="flight-fetch-reports">Consultar METAR, TAF y SIGMET</button><span class="feedback" id="flight-fetch-status" aria-live="polite">Todavía no se consultaron boletines.</span></div>
+<div class="actions"><button class="primary" type="button" id="flight-fetch-reports">Consultar METAR, TAF y SIGMET</button><span class="feedback" id="flight-fetch-status" role="status" aria-live="polite">Todavía no se consultaron boletines.</span></div>
 <div id="flight-auto-results" hidden>
 <p class="sub" id="flight-auto-time"></p>
 <div class="flight-reports-grid">
@@ -711,8 +713,15 @@ el('copy-report').addEventListener('click',async()=>{
    points.querySelector('.flight-waypoint-row:last-child input')?.focus();
  });
  ['flight-origin','flight-dest','flight-alternate','flight-origin-other','flight-dest-other','flight-alternate-other'].forEach(id=>{
-   $(id).addEventListener('change',()=>{refreshLegLabels();updateNotamLabels();markRouteEdited();});
-   $(id).addEventListener('input',()=>{refreshLegLabels();updateNotamLabels();markRouteEdited();});
+   const node=$(id);
+   const changed=()=>{
+     refreshLegLabels();updateNotamLabels();markRouteEdited();
+     node.removeAttribute('aria-invalid');
+     node.closest('label')?.classList.remove('flight-airport-invalid');
+     $('flight-fetch-status').classList.remove('flight-fetch-error');
+   };
+   node.addEventListener('change',changed);
+   node.addEventListener('input',changed);
  });
  document.querySelectorAll('.flight-fir').forEach(node=>node.addEventListener('change',markRouteEdited));
  $('flight-alt').addEventListener('change',()=>{
@@ -791,13 +800,44 @@ el('copy-report').addEventListener('click',async()=>{
    const originCode=airportCode('flight-origin'),destCode=airportCode('flight-dest'),
      alternateCode=airportCode('flight-alternate');
    const firs=[...document.querySelectorAll('.flight-fir:checked')].map(n=>n.value);
-   if(![originCode,destCode,alternateCode].every(code=>/^SA[A-Z]{2}$/.test(code))){
-     $('flight-fetch-status').textContent='Elegí códigos OACI válidos de salida, destino y alternativo antes de consultar.';return;
+   const status=$('flight-fetch-status');
+   const airports=[
+     {id:'flight-origin',code:originCode,name:'salida'},
+     {id:'flight-dest',code:destCode,name:'destino'},
+     {id:'flight-alternate',code:alternateCode,name:'alternativo'}
+   ];
+   // El alternativo debe elegirlo el piloto: no se asigna uno automáticamente.
+   const missing=airports.find(({code})=>!/^SA[A-Z]{2}$/.test(code));
+   if(missing){
+     const select=$(missing.id);
+     const manual=select.value==='OTHER';
+     const field=manual?$(missing.id+'-other'):select;
+     status.textContent=manual
+       ?'Ingresá un código OACI argentino válido de 4 letras para el aeródromo de '+missing.name+' (paso 1).'
+       :'Falta seleccionar el aeródromo de '+missing.name+' en el paso 1. Elegilo para consultar METAR y TAF.';
+     status.classList.add('flight-fetch-error');
+     select.closest('label')?.classList.add('flight-airport-invalid');
+     field.setAttribute('aria-invalid','true');
+     field.scrollIntoView({behavior:'smooth',block:'center'});
+     field.focus({preventScroll:true});
+     return;
    }
    if(alternateCode===destCode){
-     $('flight-fetch-status').textContent='El alternativo debe ser distinto del destino.';return;
+     status.textContent='El aeródromo alternativo tiene que ser distinto del destino. Corregilo en el paso 1.';
+     status.classList.add('flight-fetch-error');
+     $('flight-alternate').closest('label')?.classList.add('flight-airport-invalid');
+     $('flight-alternate').setAttribute('aria-invalid','true');
+     $('flight-alternate').scrollIntoView({behavior:'smooth',block:'center'});
+     $('flight-alternate').focus({preventScroll:true});
+     return;
    }
-   if(!firs.length){$('flight-fetch-status').textContent='Marcá por lo menos una FIR.';return;}
+   if(!firs.length){
+     status.textContent='Marcá al menos una FIR en el paso 1.';
+     status.classList.add('flight-fetch-error');
+     document.querySelector('.flight-fir')?.scrollIntoView({behavior:'smooth',block:'center'});
+     return;
+   }
+   status.classList.remove('flight-fetch-error');
    const client=window.GDV_AUTH?.client;
    if(!client){$('flight-fetch-status').textContent='Ingresá como administrador para consultar.';return;}
    consultBusy=true;
