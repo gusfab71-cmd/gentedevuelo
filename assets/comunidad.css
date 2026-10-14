@@ -1173,3 +1173,47 @@
 @media(prefers-reduced-motion:reduce){
   .account-menu-panel .account-submenu-chevron{transition:none;}
 }
+
+
+/* Cabecera del Foro en celular: Mi cuenta a la derecha y menú sin recortes.
+   Se mantiene el logo en su propia fila para no superponer los controles. */
+@media (max-width: 620px) {
+  .site-header {
+    position: relative;
+    z-index: 40;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    padding: 14px 16px 10px;
+    gap: 8px;
+    overflow: visible;
+  }
+  .site-header > .brand {
+    flex: 0 0 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+  .site-header > #account.actions {
+    display: flex;
+    flex: 0 0 100%;
+    justify-content: flex-end;
+    align-items: center;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+  }
+  .site-header #account > .account-menu {
+    position: relative;
+    margin-left: auto;
+    max-width: 100%;
+  }
+  .site-header #account .account-menu-panel {
+    left: auto !important;
+    right: 0 !important;
+    width: min(240px, calc(100vw - 32px)) !important;
+    max-width: calc(100vw - 32px) !important;
+    box-sizing: border-box;
+  }
+}
