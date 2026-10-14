@@ -6,7 +6,9 @@
   top: 94px;
   transform: translateX(-50%);
   box-sizing: border-box;
-  width: min(760px, calc(100vw - 32px));
+  width: min(790px, calc(100vw - 32px));
+  max-height: calc(100vh - 110px);
+  overflow-y: auto;
   padding: 14px 17px;
   border: 1px solid #d9b37b;
   border-radius: 12px;
@@ -23,7 +25,7 @@
 }
 #gdvWeatherEditor label { font-weight: 650; }
 #gdvWeatherEditor input[type=range] { width: min(220px, 100%); accent-color: #eabb75; }
-#gdvWeatherEditor output { min-width: 43px; font-weight: 700; font-variant-numeric: tabular-nums; }
+#gdvWeatherEditor output { min-width: 64px; font-weight: 700; font-variant-numeric: tabular-nums; }
 #gdvWeatherEditor button {
   border: 1px solid #8999a4; border-radius: 8px; background: #2c3d48; color: white;
   padding: 8px 12px; min-height: 35px; cursor: pointer; font: 650 12px system-ui, sans-serif;
