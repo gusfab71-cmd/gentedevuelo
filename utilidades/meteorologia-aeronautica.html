@@ -773,6 +773,19 @@ el('copy-report').addEventListener('click',async()=>{
    }
  };
  let pilotAnswer='';
+ let bulletinGeneration=0;
+ function contextFingerprint(){
+   return JSON.stringify({
+     origin:airportCode('flight-origin'),destination:airportCode('flight-dest'),
+     time:$('flight-time').value,alt:$('flight-alt').value,
+     rules:$('flight-rules').value,route:$('flight-route').value,
+     stops,legHeights,
+     firs:[...document.querySelectorAll('.flight-fir:checked')].map(el=>el.value),
+     pronarea:$('flight-pronarea').value,
+     pilotQuestion:$('flight-pilot-question').value,
+     bulletinGeneration
+   });
+ }
  function clearAiOutputs(){
    for(const mode of Object.keys(modeElements)){
      const item=modeElements[mode];
@@ -797,7 +810,8 @@ el('copy-report').addEventListener('click',async()=>{
  form.addEventListener('change',handleChangedField);
  $('flight-pronarea').addEventListener('input',handleChangedField);
  $('flight-fetch-reports').addEventListener('click',()=>{
-   if(!aiBusy)clearAiOutputs();
+   bulletinGeneration++;
+   clearAiOutputs();
  });
  $('flight-pilot-question').addEventListener('input',()=>{
    $('flight-pilot-result').hidden=true;
@@ -865,6 +879,7 @@ el('copy-report').addEventListener('click',async()=>{
    }
    const data=preparePayload(mode,outputStatus);
    if(!data)return;
+   const inputFingerprint=contextFingerprint();
    aiBusy=true;
    for(const id of aiButtons)$(id).disabled=true;
    $(elements.result).hidden=true;
@@ -884,6 +899,10 @@ el('copy-report').addEventListener('click',async()=>{
      }
      if(response.ai_used!==true || !response.analysis || response.mode!==mode)
        throw Error('No se recibió una respuesta válida para esta consulta.');
+     if(inputFingerprint!==contextFingerprint()){
+       outputStatus.textContent='Los datos o boletines cambiaron durante la consulta. Repetí el análisis sobre los datos actuales.';
+       return;
+     }
      const answer=response.analysis;
      $(elements.text).textContent=answer;
      $(elements.time).textContent='Generado: '+
