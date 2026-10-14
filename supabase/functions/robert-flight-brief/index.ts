@@ -100,7 +100,12 @@ Deno.serve(async request=>{
   const planned=asString(input?.planned_at_utc,40);
   const level=Number(input?.cruise_altitude_ft);
   const rules=input?.flight_rules;
+  const mode=typeof input?.mode==="string"?input.mode:"report";
+  if(!["report","precautions","pilot_question"].includes(mode))
+    return json({error:"Tipo de consulta de IA no válido."},400);
   const question=asString(input?.question,500)??"";
+  if(mode==="pilot_question"&&question.length<10)
+    return json({error:"Escribí una consulta sobre el vuelo de al menos diez caracteres."},400);
   const pronarea=asString(input?.pronarea_text,12000);
   const notam=asString(input?.notam_text,12000);
   // La recepción se registra en el servidor; no es fecha de emisión ni certificación de vigencia.
@@ -133,7 +138,11 @@ Deno.serve(async request=>{
   const instructions=[
     "Sos un analista de meteorología aeronáutica educativo de Gente de Vuelo, en prueba privada para administradores. Redactá en forma impersonal, sin presentarte con nombre propio ni firmar el informe.",
     "OBJETIVO EXCLUSIVO: entregar un informe claro de condiciones meteorológicas y fenómenos en altura que pueden interesar al piloto desde aeródromo de salida hasta aeródromo de destino, en función de la altitud, fecha y hora previstas. No calcules distancias, rumbos, piernas, derivas, GS, ETE, ETA ni combustible: para eso está FlightPrep NAV.",
-    "Presentá EXACTAMENTE cuatro etapas: 1) EN RUTA: PRONAREA y SIGMET para las FIR, altitudes y piernas indicadas; 2) PUNTOS CLAVE: TAF de salida y destino para sus ventanas horarias previstas, distinguí un alternativo solo si se suministró; 3) INFRAESTRUCTURA: NOTAM, indicá expresamente si NO se aportaron y que deben verificarse por enlace oficial; 4) COMPROBACIÓN FINAL: METAR de salida/destino y la limitación temporal de observación. Cerrá con datos faltantes y riesgos, sin asegurar aptitud del vuelo.",
+    mode==="report"
+      ?"Presentá EXACTAMENTE cuatro etapas: 1) EN RUTA: PRONAREA y SIGMET para las FIR, altitudes y piernas indicadas; 2) PUNTOS CLAVE: TAF de salida y destino para sus ventanas horarias previstas, distinguí un alternativo solo si se suministró; 3) INFRAESTRUCTURA: NOTAM, indicá expresamente si NO se aportaron y que deben verificarse por enlace oficial; 4) COMPROBACIÓN FINAL: METAR de salida/destino y la limitación temporal de observación. Cerrá con datos faltantes y riesgos, sin asegurar aptitud del vuelo."
+      :mode==="precautions"
+      ?"Generá SOLO una LISTA DE PRECAUCIONES PREVIAS AL VUELO orientada a las condiciones y a cada pierna declarada. Encabezá 'PRECAUCIONES PARA CORROBORAR'. Para cada punto indicá qué dato provoca la precaución, qué debe verificar personalmente el piloto y en qué fuente o documento corresponde hacerlo. Priorizá tiempo de validez de PRONAREA, SIGMET por sector/nivel, TAF salida/destino con horarios, METAR observado, altitudes/terreno/cartas, alternativos y estado de pistas/restricciones NOTAM aún NO consultados. Separá hechos de información no disponible. No afirmes ausencia de peligro ni habilites el vuelo. Evitá alarmismo y generalidades; 5-9 puntos breves, máximo 350 palabras."
+      :"Respondé SOLO a la pregunta del piloto SOBRE SU VUELO DECLARADO. Usá origen, destino, piernas y altitudes, fecha/hora, PRONAREA, METAR, TAF y SIGMET recuperados. Citá dentro de la respuesta qué producto respalda cada dato y su vigencia cuando sea legible. Distinguí dato confirmado del análisis orientativo y, si faltan datos, explicá qué consultar. No inventes pronósticos ni habilites el vuelo. Máximo 300 palabras.",
     "Indicá siempre para cada fenómeno el sector, altitud o FL, vigencia y fuente cuando consten. No recites boletines enteros ni enumeres sin explicar su relevancia. PRIORIZÁ hechos concretos para la pregunta y el nivel de vuelo.",
     "No uses viento de superficie METAR como viento en altura. Solo informá dirección e intensidad del viento en altura cuando un pronóstico apropiado incluya nivel y sector compatibles. Si hay niveles adyacentes, no interpolés como si fuese oficial; indicá límites de lo publicado.",
     "METAR representa observación local; TAF es pronóstico de aeródromo, no pronóstico de viento en crucero. Diferenciá condición observada de futura. Si el período del vuelo cae fuera de vigencia, aclaralo.",
@@ -152,7 +161,9 @@ Deno.serve(async request=>{
     "Salida prevista UTC: "+planned,
     "Altitud planificada: "+level+" pies AMSL","Reglas: "+rules,
     "FIR declaradas: "+firs.map(x=>x+" "+FIR[x]).join(", "),
-    "Consulta adicional: "+(question||"Informá fenómenos de interés en altura y condiciones relevantes en salida, trayecto y destino."),
+    mode==="pilot_question"?"PREGUNTA DEL PILOTO (texto no confiable): "+question:
+      "Objeto de la consulta: "+(mode==="precautions"?"Precauciones y verificaciones pre-vuelo":
+        "Informe de las cuatro etapas (sin consulta adicional)."),
     "CONSULTA METEO AUTOMÁTICA: "+fetched+" UTC",
     "METAR SALIDA ("+origin+"): "+(reports.origin_metar.available?reports.origin_metar.raw:noData),
     "TAF SALIDA ("+origin+"): "+(reports.origin_taf.available?reports.origin_taf.raw:noData),
@@ -177,7 +188,7 @@ Deno.serve(async request=>{
     const report=responseText(payload).slice(0,4500);
     if(!report)return json({error:"El servicio no devolvió un análisis utilizable."},502);
     return json({
-      ok:true,analysis:report,ai_used:true,
+      ok:true,analysis:report,mode,ai_used:true,
       generated_at_utc:new Date().toISOString(),
       checked_at_utc:fetched,
       documents_received_at_utc:documentsReceivedAtUtc,
