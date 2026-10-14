@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#11191c">
+<meta name="theme-color" content="#10161b">
 <meta name="robots" content="noindex,nofollow">
 <meta name="description" content="Mesa de Vuelo de Gente de Vuelo: METAR, TAF, SIGMET, PRONAREA, NOTAM, análisis meteorológico, navegación y nubosidad.">
 <title>Mesa de Vuelo · Gente de Vuelo</title>
@@ -104,7 +104,7 @@
 .flight-weather-overview .flight-ai-consent input{accent-color:var(--accent)}
 .flight-weather-result{margin-top:18px;border-top:1px solid #526a70;padding-top:17px}
 .flight-weather-result .flight-ai-text{background:#101e24;border:1px solid #52717b;border-radius:12px;padding:17px;color:#edf1f1}
-/* Advertencias de planificación: amarillo legible sobre el tema oscuro. */
+/* Precauciones: lectura diferenciada por estructura e icono, sin fondo amarillo. */
 .flight-precautions{margin:22px 0 18px;padding:23px 25px;border-radius:18px;background:#f3dd8e;color:#2b2b1f;border:2px solid #ffdf65;scroll-margin-top:20px}
 .flight-precautions-head{display:flex;gap:14px;align-items:center;margin-bottom:13px}
 .flight-precautions-head h2{margin:3px 0 0;color:#282518;font-size:21px}
@@ -150,6 +150,193 @@
 .flight-chart-caption{padding:9px 7px 3px;color:#202e30;font-size:12px;line-height:1.5}
 .flight-chart-placeholder{border:1px dashed #637676;border-radius:12px;background:#172528;padding:21px;color:#d5e0de;font-size:13px;margin:14px 0}
 @media(max-width:620px){#boletines .status-grid{grid-template-columns:repeat(5,minmax(120px,1fr));gap:7px}.flight-chart-options button{width:100%}}
+
+
+/* ===============================================================
+   GENTE DE VUELO · MESA DE VUELO · GRIS CARBÓN + AZUL ACERO
+   Identidad coherente en toda la aplicación; conserva estructura,
+   estados meteorológicos diferenciados y diseño responsive.
+   =============================================================== */
+:root {
+  color-scheme:dark;
+  --bg:#10161b;
+  --surface:#19252e;
+  --surface2:#22313b;
+  --surface3:#2c3e49;
+  --line:#455d6d;
+  --text:#e9f1f6;
+  --muted:#b4c5d0;
+  --accent:#91b6ca;
+  --accent2:#bfd9e8;
+  --mint:#97c7b9;
+  --white:#f5f8fa;
+}
+body {background:var(--bg);color:var(--text)}
+a {color:#bdd7e7;text-underline-offset:3px}
+a:hover {color:#e0eff8}
+button,input,select,textarea {accent-color:#9bbfd1}
+input,select,textarea {
+  background:#111e27;border-color:#5a7485;color:var(--text);
+  box-shadow:inset 0 1px 3px #070e1540;
+}
+input:hover,select:hover,textarea:hover {border-color:#86a5b6}
+input:focus,select:focus,textarea:focus,button:focus-visible,a:focus-visible {
+  outline:2px solid #a3c7da;outline-offset:2px;
+}
+.top {background:#141e25;border-color:#344856}
+.brand-name span,.toplinks a {color:#c3d3dd}
+.mark {
+  background:linear-gradient(145deg,#a8c8d9,#789caf);
+  color:#11212b;box-shadow:0 4px 14px #060e1650;
+}
+.hero-main {
+  border-color:#506878;
+  background:radial-gradient(ellipse at 95% 0%,#344b5a 0%,#20303c 46%,#17232c 100%);
+  box-shadow:0 16px 44px #050c1330;
+}
+.hero-main:after {
+  border-color:#7296aa;
+  box-shadow:0 0 0 38px #b6d6e50a,0 0 0 86px #b6d6e505;
+}
+.hero-side {
+  background:linear-gradient(155deg,#233540,#19252e);
+  border-color:#526b7a;box-shadow:0 10px 30px #070f1535;
+}
+.hero-side strong,.hero h1 em,.dial {color:#bdd9e9}
+.dial {border-color:#7997a8}
+.hero p {color:#cbd9e3}
+.card,
+.flight-weather-overview,
+.flight-pilot-query,
+.flight-chart {
+  background:linear-gradient(155deg,#1d2b35 0%,#17232c 100%);
+  border:1px solid #465d6e;
+  box-shadow:0 8px 30px #050b1238,inset 0 1px 0 #e0eff409;
+}
+.card-kicker,.eyebrow {color:#bed8e8}
+.sub,.feedback {color:#b6c8d3}
+.jump a {
+  background:#192731;border-color:#526b7a;color:#dce9f1;
+  transition:background .15s ease,border-color .15s ease;
+}
+.jump a:hover,.jump a:focus-visible {
+  border-color:#90b4c8;background:#2a4050;color:#f6fbfe;
+}
+.primary,.flight-precautions-button {
+  border:1px solid #b0d1e2;
+  background:linear-gradient(180deg,#a2c2d4 0%,#7d9eb3 100%);
+  color:#12242f;
+  border-radius:11px;font-weight:800;
+  box-shadow:0 4px 13px #0b17214a;
+  transition:filter .15s ease,box-shadow .15s ease;
+}
+.primary:hover,.flight-precautions-button:hover {filter:brightness(1.08);box-shadow:0 5px 18px #0b172161}
+.primary:disabled,.flight-precautions-button:disabled {filter:none}
+.secondary,.flight-alternate-option button {
+  background:#21333e;border-color:#617e8f;color:#edf4f8;
+  transition:background .15s ease,border-color .15s ease;
+}
+.secondary:hover,.flight-alternate-option button:hover {
+  background:#2c4351;border-color:#9dbccd;
+}
+.report,.flight-leg-editor,.flight-step,.manual-source,
+.flight-stages-details,.flight-advanced-report,
+.flight-alternate-suggestions,.flight-sigmet-item,
+.metric,.math-out,.quicklinks a,
+.cloud-current,.taf-checkpoints>div,.flight-alternate-option {
+  background:linear-gradient(155deg,#1b2b35,#15222b);
+  border-color:#4d6676;
+}
+.flight-leg-row,.flight-waypoint-row {border-color:#486171;background:#1a2933}
+.flight-leg-route,.metric strong,.math-out strong {color:#ecf3f7}
+.manual-source-heading strong,.quicklinks a strong,
+.flight-alternate-option strong,.taf-checkpoints strong,
+.cloud-code,.flight-step-head h3 {color:#bdd8e8}
+.flight-step-number,.brief-stage-number {
+  border-color:#6b90a6;background:#263d4c;color:#d3e8f4;
+}
+.flight-stages-details>summary {color:#c5dce9}
+.flight-advanced-report>summary {color:#d1e1eb}
+.report summary:after {color:#aecbdd}
+.report .content {border-color:#435f70}
+pre,.flight-weather-result .flight-ai-text,.flight-pilot-result .flight-ai-text,
+#flight-analysis {
+  background:#12212b;border-color:#4b6b7e;color:#e6f0f6;
+}
+.source-notes,.assistant,.warning {
+  background:linear-gradient(145deg,#223441,#192832);
+  border-color:#597788;color:#dce8ef;
+}
+.assistant {border-left:4px solid #91b7ca;border-radius:9px}
+.assistant p {color:#eaf2f7}
+.status-tile {
+  background:#1b2a34;border-color:#536b7c;color:#e8f1f6;
+}
+.status-tile strong {color:#e8f1f6}
+.status-tile.good {border-color:#699e91;background:#20343a}
+.status-tile.good span {color:#acd8c8}
+.status-tile.pending {border-color:#889baa;background:#26333f}
+.status-tile.pending span {color:#d8e1e9}
+.status-tile.bad {border-color:#ae8990;background:#332d38}
+.status-tile.bad span {color:#e3bbc2}
+.flight-airport-invalid>select,
+.flight-airport-invalid>input:not([hidden]) {
+  border-color:#bc8c99!important;box-shadow:0 0 0 2px #bc8c9942!important;
+}
+#flight-fetch-status.flight-fetch-error {color:#efbdc5}
+.flight-utc-field {
+  background:linear-gradient(145deg,#263a48,#1b2b35);
+  border-color:#5a788b;
+}
+.flight-utc-badge {background:#3b5363;border-color:#799cac;color:#e9f4fa}
+.flight-utc-field input[type="datetime-local"] {
+  background:#182936;border-color:#68889b;color:#f0f6fa;
+}
+.flight-ai-consent input {accent-color:#92b6ca}
+.flight-weather-overview {border-color:#5d8095}
+.flight-weather-result {border-color:#54778b}
+.flight-weather-result .flight-ai-text {border-color:#54778b}
+/* Precauciones con igual estética. Se distinguen mediante barra, icono y título. */
+.flight-precautions {
+  background:linear-gradient(150deg,#253b49 0%,#1a2b36 52%,#17242d 100%);
+  color:#eaf1f6;border:1px solid #6e91a6;
+  border-left:4px solid #9abed2;
+  border-radius:18px;
+  box-shadow:0 10px 35px #060e1640,inset 0 1px 0 #ffffff10;
+}
+.flight-precautions-head h2 {color:#f1f7fa}
+.flight-precautions-icon {
+  border:1px solid #91b4c8;background:#324b5c;
+  color:#e9f4fa;box-shadow:0 0 0 5px #9dbfd415;
+}
+.flight-precautions-kicker {color:#bed9e9}
+.flight-precautions p {color:#d8e5ed}
+.flight-precautions strong {color:#f0f7fb}
+.flight-precautions .flight-ai-consent {color:#dceaf3}
+.flight-precautions .flight-ai-consent input {accent-color:#a0c3d7}
+.flight-ai-actions span {color:#c9dce9}
+.flight-precautions-result {
+  background:#182a35;border:1px solid #688da2;
+  border-radius:12px;color:#e8f1f7;
+  box-shadow:inset 0 1px 0 #ffffff0d;
+}
+.flight-precautions-result>strong {color:#d4eaf7}
+.flight-precautions-result p:last-child {border-color:#58788c;color:#dce9f1}
+.flight-chart-options button[aria-pressed="true"] {
+  background:#a0bfd0;border-color:#a0bfd0;color:#152732;
+}
+.flight-chart-figure {background:#263844;border-color:#5d7a8a}
+.flight-chart-caption {background:#233642;color:#e7f1f7}
+.flight-chart-placeholder {background:#1c2c36;border-color:#618092;color:#dbe9f1}
+.cloud-symbol {border-color:#94b1c0}
+.flight-sigmet-item .flight-sigmet-label.warning {
+  color:#d5b6c0;background:transparent;border:0;
+}
+.flight-sigmet-item .flight-sigmet-label.found {color:#c2ddeb}
+/* Evita modificar la lógica y los tamaños de las tarjetas en móvil. */
+@media(prefers-reduced-motion:reduce) {
+  .primary,.secondary,.jump a,.flight-precautions-button {transition:none}
+}
 
 </style>
 <script>document.documentElement.classList.add('auth-pending')</script>
@@ -416,10 +603,10 @@
 </section>
 
 <details class="flight-advanced-report"><summary>Informe operacional ampliado de las cuatro etapas · consulta opcional</summary>
-<section class="card" id="analisis-altura" style="border-color:#97643c;background:linear-gradient(145deg,#242827,#171e20)">
+<section class="card" id="analisis-altura" style="border-color:#54758a;background:linear-gradient(145deg,#1c2b36,#17232c)">
 <div class="card-header">
  <div><span class="card-kicker">PASO 4 · INFORME FINAL</span><h2>Análisis de las cuatro etapas con IA</h2></div>
- <span style="border:1px solid #b87745;border-radius:99px;padding:7px 11px;color:var(--accent2);font-size:12px;font-weight:700">Usa tokens solo al confirmar</span>
+ <span style="border:1px solid #648597;border-radius:99px;padding:7px 11px;color:var(--accent2);font-size:12px;font-weight:700">Usa tokens solo al confirmar</span>
 </div>
 <p class="sub">El sistema tendrá en cuenta las piernas declaradas, salida, destino y alternativo, PRONAREA cargado manualmente y los METAR/TAF/SIGMET recuperables. Evaluará: 1) ruta (PRONAREA/SIGMET), 2) salida, destino y alternativo (TAF), 3) infraestructura (NOTAM por consulta externa), 4) observaciones actuales de los tres aeródromos (METAR). <strong>Solo generará el informe después de tu confirmación; no autoriza el vuelo.</strong></p>
 
@@ -437,7 +624,7 @@
 <div id="flight-result" hidden style="margin-top:20px;border-top:1px solid #605951;padding-top:18px">
 <div class="card-header"><h3>Informe meteorológico y operacional</h3><button class="secondary" id="flight-copy" type="button">Copiar análisis</button></div>
 <p class="sub" id="flight-analysis-time"></p>
-<div id="flight-analysis" style="white-space:pre-wrap;line-height:1.76;background:#172125;padding:18px;border:1px solid #755f50;border-radius:12px;color:#f1ebe2"></div>
+<div id="flight-analysis" style="white-space:pre-wrap;line-height:1.76;background:#111f29;padding:18px;border:1px solid #567588;border-radius:12px;color:#e9f1f6"></div>
 <p class="source-notes" id="flight-warning"></p>
 </div>
 </section>
