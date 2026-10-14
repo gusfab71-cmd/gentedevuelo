@@ -65,6 +65,14 @@
 .flight-reports-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:10px}
 .flight-reports-grid .report{margin:0}.flight-reports-grid pre{margin:0;max-height:250px;overflow:auto}
 #flight-auto-results{margin-top:17px}
+.flight-sigmet-report{grid-column:1/-1}
+.flight-sigmet-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,265px),1fr));gap:11px;margin:12px 0}
+.flight-sigmet-item{border:1px solid #4a5b5b;border-radius:10px;background:#142124;padding:12px;min-width:0}
+.flight-sigmet-item h4{font-size:13px;line-height:1.35;margin:0 0 7px;color:#f0eee6}
+.flight-sigmet-item .flight-sigmet-label{font-size:12px;color:#d0d9d6}
+.flight-sigmet-item .flight-sigmet-label.warning{color:#ffd6a4;background:transparent;border:0;padding:0}
+.flight-sigmet-item .flight-sigmet-label.found{color:#ffb88e}
+.flight-sigmet-item pre{margin-top:10px;max-height:250px;overflow:auto}
 #consultar-antiguo{display:none!important}
 @media(max-width:700px){.flight-reports-grid{grid-template-columns:1fr}.flight-leg-row{grid-template-columns:1fr}.flight-leg-editor{padding:12px}}
 </style>
@@ -167,8 +175,16 @@
  <details class="report" open><summary><strong id="flight-taf-origin-title">TAF salida</strong><span id="flight-taf-origin-state">Pendiente</span></summary><div class="content"><pre id="flight-taf-origin-raw">—</pre></div></details>
  <details class="report" open><summary><strong id="flight-metar-dest-title">METAR destino</strong><span id="flight-metar-dest-state">Pendiente</span></summary><div class="content"><pre id="flight-metar-dest-raw">—</pre></div></details>
  <details class="report" open><summary><strong id="flight-taf-dest-title">TAF destino</strong><span id="flight-taf-dest-state">Pendiente</span></summary><div class="content"><pre id="flight-taf-dest-raw">—</pre></div></details>
+ <details class="report flight-sigmet-report" open>
+  <summary><strong>SIGMET · FIR del recorrido</strong><span id="flight-sigmet-state">Sin consultar</span></summary>
+  <div class="content">
+   <p class="sub">Avisos de las FIR que marcaste en el plan de vuelo. Un SIGMET puede afectar solamente un sector de la FIR, no necesariamente tu ruta o altitud.</p>
+   <div id="flight-sigmet-firs" class="flight-sigmet-grid" aria-live="polite"></div>
+   <a href="https://www.smn.gob.ar/mensajes-sigmet" target="_blank" rel="noopener noreferrer">Verificar SIGMET oficiales en el SMN ↗</a>
+  </div>
+ </details>
 </div>
-<p class="source-notes">SIGMET internacional: búsqueda parcial para la FIR seleccionada. Confirmá todos los SIGMET de las FIR de la ruta en el SMN. El análisis final realizará una nueva consulta automática.</p>
+<p class="source-notes">SIGMET: consulta internacional parcial por cada FIR seleccionada. Sin coincidencias no significa ausencia de avisos. Antes del vuelo corroborá los SIGMET oficiales, sectores afectados, alturas y períodos de validez.</p>
 </div>
 <div class="manual-source">
 <div class="manual-source-heading"><strong>PRONAREA · carga manual</strong><a class="secondary" href="https://www.smn.gob.ar/pronarea" target="_blank" rel="noopener noreferrer">Abrir PRONAREA · SMN ↗</a></div>
@@ -564,14 +580,54 @@ el('copy-report').addEventListener('click',async()=>{
      $('label-'+stage).textContent=block?.available?'Recuperado · '+icao:'No disponible · '+icao;
      $('raw-'+stage).textContent=block?.available?block.raw:'No confirmado para '+icao+'.';
    }
-   if(which==='origin'){
-     const report=data?.sigmet;
-     $('raw-sigmet').textContent=report?.available?report.raw:
-       'Sin coincidencias confirmadas por esta búsqueda parcial. No significa ausencia de SIGMET.';
-     $('label-sigmet').textContent=report?.available?'Coincidencias parciales':'Cobertura parcial';
-     markStatus('sigmet',report?.available?'Búsqueda parcial':'Confirmar en SMN',Boolean(report?.available));
-     if(typeof window.gdvMeteoShowCloud==='function')window.gdvMeteoShowCloud(data?.metar,icao);
-   }
+   if(which==='origin' && typeof window.gdvMeteoShowCloud==='function')
+     window.gdvMeteoShowCloud(data?.metar,icao);
+ }
+ const FIR_LABELS={SAEF:'Ezeiza',SACF:'Córdoba',SAMF:'Mendoza',SARR:'Resistencia',SAVF:'Comodoro Rivadavia'};
+ function renderRouteSigmets(reports,firs){
+   const root=$('flight-sigmet-firs');
+   root.replaceChildren();
+   const byCode=new Map((Array.isArray(reports)?reports:[]).map(item=>[item.fir,item]));
+   let found=0,failed=0,unknown=0;
+   const combined=[];
+   firs.forEach(fir=>{
+     const item=byCode.get(fir);
+     const row=document.createElement('div');row.className='flight-sigmet-item';
+     const title=document.createElement('h4');
+     title.textContent='FIR '+(FIR_LABELS[fir]||fir)+' · '+fir;
+     const label=document.createElement('div');label.className='flight-sigmet-label';
+     const status=item?.status;
+     const matched=item?.available===true && typeof item.raw==='string' && item.raw.trim().length>0;
+     if(matched){
+       found++;
+       label.textContent=(Number(item.matched_count)||1)+' aviso(s) coincidente(s) · comprobar alcance';
+       label.classList.add('found');
+     }else if(status==='sin_coincidencias_no_concluyente'){
+       unknown++;
+       label.textContent='Sin coincidencias en esta búsqueda parcial';
+       label.classList.add('warning');
+     }else{
+       failed++;
+       label.textContent='No se pudo confirmar el resultado de esta FIR';
+       label.classList.add('warning');
+     }
+     row.append(title,label);
+     const raw=document.createElement('pre');
+     raw.textContent=matched?item.raw:
+       status==='sin_coincidencias_no_concluyente'
+         ?'No se recuperó un SIGMET vigente que coincidiera con esta FIR. Esto NO confirma ausencia de avisos.'
+         :(item?.error||'La consulta SIGMET no pudo completarse.');
+     row.append(raw);
+     root.append(row);
+     combined.push('FIR '+(FIR_LABELS[fir]||fir)+' ('+fir+'): '+raw.textContent);
+   });
+   const summary=found?found+' FIR con coincidencias'+(failed?' · consulta incompleta':''):
+     failed?'Consulta incompleta':'Sin coincidencias · parcial';
+   $('flight-sigmet-state').textContent=summary;
+   $('label-sigmet').textContent=summary;
+   $('raw-sigmet').textContent=combined.join('\n\n');
+   markStatus('sigmet',found?'Verificar alcance de avisos':failed?'Consulta incompleta':'Búsqueda parcial',found>0);
+   return {found,failed,unknown};
  }
  $('flight-fetch-reports').addEventListener('click',async()=>{
    if(consultBusy)return;
@@ -589,18 +645,23 @@ el('copy-report').addEventListener('click',async()=>{
    const key=flightKey(),codes=originCode===destCode?[originCode]:[originCode,destCode];
    let count=0;
    try{
-     const results=await Promise.allSettled(codes.map(icao=>
-       client.functions.invoke('robert-meteo',{body:{icao,fir:firs[0],question:''}})));
+     const results=await Promise.allSettled(codes.map((icao,index)=>
+       client.functions.invoke('robert-meteo',{
+         body:{icao,fir:firs[0],firs:index===0?firs:undefined,skip_sigmet:index>0,question:''}
+       })));
+     let firResults=null;
      for(let i=0;i<codes.length;i++){
        const item=results[i];
        const response=item.status==='fulfilled' && !item.value.error?item.value.data:null;
        const valid=response?.ok===true;
        if(valid)count++;
+       if(i===0 && valid)firResults=response.sigmets_by_fir;
        const data=valid?response:{metar:{available:false,error:'Error de consulta'},
          taf:{available:false,error:'Error de consulta'},sigmet:{available:false}};
        showAutomaticReport(data,i===0?'origin':'dest',codes[i]);
        if(codes.length===1)showAutomaticReport(data,'dest',codes[i]);
      }
+     const sigmetOverview=renderRouteSigmets(firResults,firs);
      $('flight-auto-results').hidden=false;
      $('flight-auto-time').textContent='Consulta: '+new Date().toLocaleString('es-AR')+
        '. Los boletines pueden variar antes del despegue; verificá sus horas de emisión y validez.';
@@ -615,8 +676,10 @@ el('copy-report').addEventListener('click',async()=>{
        lastConsultKey='';
        $('flight-fetch-status').textContent='Consulta incompleta: reintentá. Revisá los enlaces oficiales.';
      }
-     if(firs.length>1)
-       $('flight-fetch-status').textContent+=' SIGMET mostrado solo para la primera FIR; las demás requieren verificación oficial.';
+     if(sigmetOverview.failed>0)
+       $('flight-fetch-status').textContent+=' La búsqueda SIGMET fue incompleta en una o más FIR; verificá el SMN.';
+     else
+       $('flight-fetch-status').textContent+=' SIGMET evaluado parcialmente para '+firs.length+' FIR seleccionada(s).';
    }catch(err){
      lastConsultKey='';
      $('flight-fetch-status').textContent='No se completó la consulta. '+(err?.message||'Reintentá más tarde.');
