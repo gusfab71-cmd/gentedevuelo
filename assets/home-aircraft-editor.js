@@ -125,10 +125,10 @@
         '<input id="gdvAircraftY" type="range" min="0" max="100" step="1" aria-label="Posición vertical del avión">' +
         '<output id="gdvAircraftYValue" for="gdvAircraftY"></output></div>' +
       '<div class="gdv-aircraft-nudges">' +
-        '<button type="button" data-axis="x" data-step="-3" aria-label="Mover fondo a la izquierda">←</button>' +
-        '<button type="button" data-axis="y" data-step="-3" aria-label="Mover fondo hacia arriba">↑</button>' +
-        '<button type="button" data-axis="y" data-step="3" aria-label="Mover fondo hacia abajo">↓</button>' +
-        '<button type="button" data-axis="x" data-step="3" aria-label="Mover fondo a la derecha">→</button>' +
+        '<button type="button" data-axis="x" data-step="3" aria-label="Mover fondo a la izquierda">←</button>' +
+        '<button type="button" data-axis="y" data-step="3" aria-label="Mover fondo hacia arriba">↑</button>' +
+        '<button type="button" data-axis="y" data-step="-3" aria-label="Mover fondo hacia abajo">↓</button>' +
+        '<button type="button" data-axis="x" data-step="-3" aria-label="Mover fondo a la derecha">→</button>' +
       '</div>' +
       '<div class="gdv-aircraft-actions">' +
         '<button type="button" id="gdvAircraftSave">Guardar</button>' +
