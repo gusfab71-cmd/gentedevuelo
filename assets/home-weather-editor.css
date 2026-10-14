@@ -1,0 +1,36 @@
+/* Controles de administración para posicionar el carrusel de escritorio. */
+#gdvWeatherEditor {
+  position: fixed;
+  z-index: 100090;
+  left: 50%;
+  top: 94px;
+  transform: translateX(-50%);
+  box-sizing: border-box;
+  width: min(760px, calc(100vw - 32px));
+  padding: 14px 17px;
+  border: 1px solid #d9b37b;
+  border-radius: 12px;
+  background: #18242cf8;
+  color: #eef2f5;
+  box-shadow: 0 12px 36px #000c;
+  font: 12px/1.5 system-ui, sans-serif;
+}
+#gdvWeatherEditor strong { display: block; margin-bottom: 4px; color: #ffe1ab; letter-spacing: .06em; }
+#gdvWeatherEditor span { display: block; color: #cad5da; }
+#gdvWeatherEditor .gdv-wx-editor-controls,
+#gdvWeatherEditor .gdv-wx-editor-actions {
+  display: flex; flex-wrap: wrap; gap: 9px; align-items: center; margin-top: 12px;
+}
+#gdvWeatherEditor label { font-weight: 650; }
+#gdvWeatherEditor input[type=range] { width: min(220px, 100%); accent-color: #eabb75; }
+#gdvWeatherEditor output { min-width: 43px; font-weight: 700; font-variant-numeric: tabular-nums; }
+#gdvWeatherEditor button {
+  border: 1px solid #8999a4; border-radius: 8px; background: #2c3d48; color: white;
+  padding: 8px 12px; min-height: 35px; cursor: pointer; font: 650 12px system-ui, sans-serif;
+}
+#gdvWeatherEditor button:hover { background: #425765; }
+#gdvWeatherEditor button:disabled { opacity: .5; cursor: not-allowed; }
+#gdvWeatherSave { background: #e2b46b !important; color: #222930 !important; border-color: #e2b46b !important; }
+#gdvWeatherEditStatus { margin: 10px 0 0; min-height: 1.4em; color: #ffdb9f; }
+#gdvWeatherEditStatus.gdv-wx-edit-error { color: #ffb8b0; }
+@media (max-width:700px) { #gdvWeatherEditor { display:none !important; } }
