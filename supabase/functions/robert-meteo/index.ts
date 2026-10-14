@@ -61,63 +61,66 @@ const FIR_NAMES: Record<string,string> = {
 };
 const NOAA_API = "https://aviationweather.gov/api/data/";
 type Report = { available: boolean; raw: string; error: string | null };
-async function fetchInternationalSigmet(fir: string): Promise<{
-  available:boolean;raw:string;error:string|null;status:string;matched_count:number;
-  verified_time:boolean;warning:string;
-}> {
-  const warning = "Búsqueda internacional complementaria; no garantiza cobertura total de SIGMET para la FIR. Verificá siempre el SMN.";
-  const url = NOAA_API + "isigmet?format=json";
-  const response = await fetch(url, {
-    headers: { "Accept":"application/json", "User-Agent":"GenteDeVuelo/1.0 (gentedevuelo@gmail.com)" },
-    signal: AbortSignal.timeout(11000)
-  });
-  if (response.status === 204) return {
-    available:false,raw:"",error:null,status:"sin_coincidencias_no_concluyente",
+type FirSigmet = {
+  fir: string; fir_name: string; available: boolean; raw: string;
+  error: string | null; status: string; matched_count: number;
+  verified_time: boolean; warning: string;
+};
+async function fetchInternationalSigmets(firs: string[]): Promise<FirSigmet[]> {
+  const warning="Consulta internacional parcial (NOAA/AWC), no exhaustiva. La coincidencia con una FIR no demuestra que un SIGMET afecte la ruta; comprobá límites, niveles y vigencia en el SMN.";
+  const empty=(fir:string,status:string,error:string|null=null):FirSigmet=>({
+    fir,fir_name:FIR_NAMES[fir],available:false,raw:"",error,status,
     matched_count:0,verified_time:false,warning
-  };
-  if (!response.ok) return {
-    available:false,raw:"",error:"Servicio internacional HTTP "+response.status,
-    status:"error_fuente",matched_count:0,verified_time:false,warning
-  };
-  // AWC limita los resultados y no ofrece, en esta integración, una verificación exhaustiva por FIR.
-  const data = await response.json();
-  if (!Array.isArray(data)) return {
-    available:false,raw:"",error:"Formato SIGMET no reconocido",
-    status:"error_fuente",matched_count:0,verified_time:false,warning
-  };
-  const name = FIR_NAMES[fir];
-  const phrase = name.replace(/ /g,"\\s+");
-  const expression = new RegExp("\\b(?:"+fir+"|"+phrase+")\\b","i");
+  });
+  let response:Response;
+  try {
+    response=await fetch(NOAA_API+"isigmet?format=json",{
+      headers:{"Accept":"application/json","User-Agent":"GenteDeVuelo/1.0 (gentedevuelo@gmail.com)"},
+      signal:AbortSignal.timeout(11000)
+    });
+  }catch{
+    return firs.map(fir=>empty(fir,"error_fuente","No se pudo contactar la fuente internacional."));
+  }
+  if(response.status===204)return firs.map(fir=>empty(fir,"sin_coincidencias_no_concluyente"));
+  if(!response.ok)return firs.map(fir=>empty(fir,"error_fuente","Servicio internacional HTTP "+response.status));
+  let data:unknown;
+  try { data=await response.json(); } catch {
+    return firs.map(fir=>empty(fir,"error_fuente","No se pudieron interpretar los datos."));
+  }
+  if(!Array.isArray(data))return firs.map(fir=>empty(fir,"error_fuente","Formato SIGMET inesperado."));
   const now=Date.now();
-  const parseTime=(v:any):number|null=>{
-    if(typeof v==="number"&&Number.isFinite(v)){
-      const t=v<10_000_000_000?v*1000:v;
-      return Number.isFinite(t)?t:null;
-    }
+  const parseTime=(v:unknown):number|null=>{
+    if(typeof v==="number"&&Number.isFinite(v))return v<10000000000?v*1000:v;
     if(typeof v==="string"&&v.trim()){
-      const t=Date.parse(v);
-      return Number.isFinite(t)?t:null;
+      const t=Date.parse(v);return Number.isFinite(t)?t:null;
     }
     return null;
   };
-  const results:{raw:string;valid:boolean}[]=[];
-  for(const item of data) {
-    if(!item || typeof item!=="object") continue;
-    const raw = [item.rawSigmet,item.rawSIGMET,item.rawText,item.raw].find(x=>typeof x==="string") || "";
-    const location=[item.firId,item.fir,item.firName,item.firICAO].filter(x=>typeof x==="string").join(" ");
-    if(!expression.test(raw+"\n"+location)) continue;
-    const from=parseTime(item.validTimeFrom ?? item.validFrom ?? item.validStart);
-    const until=parseTime(item.validTimeTo ?? item.validTo ?? item.validEnd);
-    // Vigencia no verificable o vencida: jamás alimentar a Shimoda con su contenido.
-    const valid=from!==null && until!==null && from<=now && now<until;
-    if(raw.trim() && valid)results.push({raw:raw.slice(0,1500),valid});
-    if(results.length>=8)break;
-  }
-  return {
-    available:results.length>0,raw:results.map(x=>x.raw).join("\n\n").slice(0,4800),
-    error:null,status:results.length?"coincidencias_vigentes_no_exhaustivas":"sin_coincidencias_no_concluyente",
-    matched_count:results.length,verified_time:results.length>0,warning
-  };
+  return firs.map(fir=>{
+    const name=FIR_NAMES[fir];
+    const expression=new RegExp("\\b(?:"+fir+"|"+name.replace(/ /g,"\\s+")+")\\b","i");
+    const found:string[]=[];
+    for(const item of data){
+      if(!item||typeof item!=="object")continue;
+      const raw=[item.rawSigmet,item.rawSIGMET,item.rawText,item.raw]
+        .find((v:unknown)=>typeof v==="string")||"";
+      if(typeof raw!=="string"||!raw.trim())continue;
+      const scope=raw+"\n"+[item.firId,item.fir,item.firName,item.firICAO]
+        .filter((v:unknown)=>typeof v==="string").join(" ");
+      if(!expression.test(scope))continue;
+      const from=parseTime(item.validTimeFrom??item.validFrom??item.validStart);
+      const until=parseTime(item.validTimeTo??item.validTo??item.validEnd);
+      if(from===null||until===null||from>now||now>=until)continue;
+      if(!found.includes(raw.slice(0,1500)))found.push(raw.slice(0,1500));
+      if(found.length>=8)break;
+    }
+    return {
+      fir,fir_name:name,available:found.length>0,
+      raw:found.join("\n\n").slice(0,4800),error:null,
+      status:found.length?"coincidencias_vigentes_parciales":"sin_coincidencias_no_concluyente",
+      matched_count:found.length,verified_time:found.length>0,warning
+    };
+  });
 }
 
 
@@ -211,12 +214,20 @@ Deno.serve(async (request: Request) => {
   let icao = "";
   let question = "";
   let fir = "";
+  let requestedFirs:string[]=[];
 
   try {
     const input = await request.json();
     icao = typeof input?.icao === "string" ? input.icao.trim().toUpperCase() : "";
     question = typeof input?.question === "string" ? input.question.trim() : "";
     fir = typeof input?.fir === "string" ? input.fir.trim().toUpperCase() : "";
+    if(input?.firs!==undefined){
+      if(!Array.isArray(input.firs)||input.firs.length<1||input.firs.length>5||
+        input.firs.some((f:unknown)=>typeof f!=="string"||!Object.prototype.hasOwnProperty.call(FIR_NAMES,f))||
+        new Set(input.firs).size!==input.firs.length)
+        return send({error:"Seleccioná de una a cinco FIR válidas, sin repetir."},400);
+      requestedFirs=input.firs;
+    }
     if (input?.use_ai === true) return send({ error: "El análisis con IA se solicita únicamente al final de Mesa de Vuelo." }, 400);
   } catch { return send({ error: "Solicitud inválida." }, 400); }
   if (!/^SA[A-Z]{2}$/.test(icao)) return send({ error: "Ingresá un código OACI argentino de cuatro letras, como SAEZ o SABE." }, 400);
@@ -226,19 +237,23 @@ Deno.serve(async (request: Request) => {
   if (!Object.prototype.hasOwnProperty.call(FIR_NAMES,fir)) {
     return send({error:"Seleccioná explícitamente la FIR: Ezeiza, Córdoba, Mendoza, Resistencia o Comodoro Rivadavia."},400);
   }
+  if(!requestedFirs.length)requestedFirs=[fir];
   const fetchedAt = new Date().toISOString();
   const [metarResult,tafResult,sigmetResult]=await Promise.allSettled([
-    fetchBulletin("metar",icao),fetchBulletin("taf",icao),fetchInternationalSigmet(fir)
+    fetchBulletin("metar",icao),fetchBulletin("taf",icao),fetchInternationalSigmets(requestedFirs)
   ]);
   const product=(result:PromiseSettledResult<Report>):Report=>
     result.status==="fulfilled"?result.value:{available:false,raw:"",error:"La consulta a la fuente falló"};
   const metar=product(metarResult as PromiseSettledResult<Report>);
   const taf=product(tafResult as PromiseSettledResult<Report>);
-  const sigmet=sigmetResult.status==="fulfilled"?sigmetResult.value:{
-    available:false,raw:"",error:"No se pudo consultar la fuente internacional",
-    status:"error_fuente",matched_count:0,verified_time:false,
-    warning:"La consulta SIGMET es complementaria y no sustituye al SMN."
-  };
+  const sigmets_by_fir:FirSigmet[]=sigmetResult.status==="fulfilled"?sigmetResult.value:
+    requestedFirs.map(f=>({
+      fir:f,fir_name:FIR_NAMES[f],available:false,raw:"",
+      error:"No se pudo consultar la fuente internacional",
+      status:"error_fuente",matched_count:0,verified_time:false,
+      warning:"La consulta SIGMET es complementaria y no sustituye al SMN."
+    }));
+  const sigmet=sigmets_by_fir[0];
   const pronarea={
     available:false,raw:"",status:"pendiente_integracion_oficial",
     error:null,source:"Servicio Meteorológico Nacional",
@@ -254,7 +269,7 @@ Deno.serve(async (request: Request) => {
   const sources=[
     ...(metar.available?[{product:"METAR",name:"NOAA Aviation Weather Center",url:"https://aviationweather.gov/data/api/"}]:[]),
     ...(taf.available?[{product:"TAF",name:"NOAA Aviation Weather Center",url:"https://aviationweather.gov/data/api/"}]:[]),
-    ...(sigmet.available?[{product:"SIGMET (búsqueda parcial)",name:"NOAA Aviation Weather Center",url:"https://aviationweather.gov/data/api/"}]:[])
+    ...(sigmets_by_fir.some(x=>x.available)?[{product:"SIGMET (búsqueda parcial)",name:"NOAA Aviation Weather Center",url:"https://aviationweather.gov/data/api/"}]:[])
   ];
   const answer = describeAvailableWeather(icao, question, metar, taf, sigmet);
   const interpretationAvailable = false;
@@ -264,7 +279,7 @@ Deno.serve(async (request: Request) => {
     ok:true,icao,fir,fir_name:FIR_NAMES[fir],
     consulted_at_utc:fetchedAt,
     source:"NOAA Aviation Weather Center: redistribución aeronáutica, no API directa del SMN",
-    metar,taf,sigmet,pronarea,notam,
+    metar,taf,sigmet,sigmets_by_fir,pronarea,notam,
     answer:limited(answer),interpretation_available:interpretationAvailable,
     ai_used:aiUsed,answer_mode:aiUsed?"ia_opcional":"resumen_automatico_sin_ia",
     complete_flight_briefing:false,source_verified_as_current:false,
