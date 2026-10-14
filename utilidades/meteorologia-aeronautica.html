@@ -123,8 +123,11 @@
 .flight-chart-options{display:flex;gap:8px;flex-wrap:wrap;margin:15px 0}
 .flight-chart-options button{font-size:13px;text-align:left}
 .flight-chart-options button[aria-pressed="true"]{background:#f5a869;color:#172024;border-color:#f5a869;font-weight:750}
-.flight-chart-frame{height:clamp(380px,65vh,760px);width:100%;border:1px solid #5b6c6e;border-radius:12px;background:#fff}
-@media(max-width:620px){#boletines .status-grid{grid-template-columns:repeat(5,minmax(120px,1fr));gap:7px}.flight-chart-frame{height:475px}.flight-chart-options button{width:100%}}
+.flight-chart-figure{margin:13px 0;border:1px solid #52696c;border-radius:12px;background:#eaeef0;overflow:hidden;padding:9px}
+.flight-chart-image{display:block;width:100%;height:auto;max-height:740px;object-fit:contain;background:#fff}
+.flight-chart-caption{padding:9px 7px 3px;color:#202e30;font-size:12px;line-height:1.5}
+.flight-chart-placeholder{border:1px dashed #637676;border-radius:12px;background:#172528;padding:21px;color:#d5e0de;font-size:13px;margin:14px 0}
+@media(max-width:620px){#boletines .status-grid{grid-template-columns:repeat(5,minmax(120px,1fr));gap:7px}.flight-chart-options button{width:100%}}
 
 </style>
 <script>document.documentElement.classList.add('auth-pending')</script>
@@ -431,19 +434,24 @@
 
 <section class="card flight-chart" id="cartas-oficiales">
 <div class="card-header"><div><span class="card-kicker">CARTAS METEOROLÓGICAS · CONSULTA OFICIAL</span><h2>Mapas de superficie, altura y tiempo significativo</h2></div></div>
-<p class="sub">Visor de productos oficiales que consulta el proveedor al abrir esta sección, sin consumir tokens. Elegí cartas de presión al nivel del mar, topografía de 500 hPa y viento a 850 hPa, o tiempo significativo SFC/FL250. <strong>Las cartas no son necesariamente del nivel de vuelo elegido:</strong> comprobá región, hora de emisión, validez y nivel directamente en cada producto.</p>
-<div class="flight-chart-options" role="group" aria-label="Carta oficial a consultar">
+<p class="sub">Las cartas de superficie y altura se solicitan automáticamente como imágenes oficiales ECMWF, sin insertar páginas ni consumir tokens de IA. Para SIGWX se conserva la consulta directa al SMN. <strong>Comprobá región, hora base, validez y nivel.</strong> Los niveles de las cartas no coinciden necesariamente con la altitud planificada.</p>
+<div class="flight-chart-options" role="group" aria-label="Carta meteorológica oficial">
 <button class="secondary" type="button" data-chart="surface" aria-pressed="true">Isobaras y viento · ECMWF</button>
 <button class="secondary" type="button" data-chart="height" aria-pressed="false">Topografía 500 hPa · ECMWF</button>
 <button class="secondary" type="button" data-chart="sigwx" aria-pressed="false">Tiempo significativo · SMN</button>
 </div>
-<p class="sub" id="flight-chart-status" role="status" aria-live="polite">La carta se cargará automáticamente desde la fuente oficial al llegar a esta sección.</p>
-<iframe id="flight-chart-frame" class="flight-chart-frame" title="Carta meteorológica desde el servicio oficial seleccionado" loading="lazy" referrerpolicy="no-referrer" hidden></iframe>
+<p class="sub" id="flight-chart-status" role="status" aria-live="polite">La imagen se solicitará automáticamente al llegar a esta sección.</p>
+<figure class="flight-chart-figure" id="flight-chart-figure" hidden>
+<img class="flight-chart-image" id="flight-chart-image" alt="Carta meteorológica oficial ECMWF de Sudamérica" decoding="async" referrerpolicy="no-referrer">
+<figcaption id="flight-chart-description" class="flight-chart-caption"></figcaption>
+</figure>
+<div class="flight-chart-placeholder" id="flight-chart-placeholder" hidden></div>
 <div class="actions">
 <a id="flight-chart-source" class="secondary" href="https://charts.ecmwf.int/products/medium-mslp-wind850?projection=opencharts_south_america" target="_blank" rel="noopener noreferrer">Abrir carta en la fuente oficial ↗</a>
+<button class="secondary" id="flight-chart-refresh" type="button">Actualizar carta</button>
 <a class="secondary" href="https://www.smn.gob.ar/cartas-de-tiempo-significativo-sfcfl250" target="_blank" rel="noopener noreferrer">Consultar SIGWX oficial SMN ↗</a>
 </div>
-<p class="source-notes">El visor depende de que el sitio oficial permita la visualización externa. Si aparece vacío o bloqueado, abrí el enlace oficial. No se guardan copias ni se presume que un mapa sea reciente solo por haberse cargado; verificá las horas y la región. Las cartas representan distintos niveles y productos, no un único mapa que certifique todas las amenazas del vuelo.</p>
+<p class="source-notes">Fuente ECMWF OpenCharts (CC BY 4.0). Se verifican la región y la antigüedad de la emisión antes de mostrar cada imagen. SIGWX se consulta en el SMN porque todavía no se ha identificado una imagen oficial estable que pueda integrarse automáticamente. Verificá siempre el briefing aeronáutico oficial.</p>
 </section>
 
 <p class="source-notes" style="margin-top:20px">Para realizar los cálculos de navegación, <a href="flightprep-nav.html" style="font-weight:750">abrir FlightPrep NAV en Utilidades →</a>.</p>
@@ -1090,49 +1098,77 @@ el('copy-report').addEventListener('click',async()=>{
 </script>
 <script>
 (function(){
-  'use strict';
-  const frame=document.getElementById('flight-chart-frame');
-  const status=document.getElementById('flight-chart-status');
-  const source=document.getElementById('flight-chart-source');
-  const panel=document.getElementById('cartas-oficiales');
-  const urls={
-    surface:'https://charts.ecmwf.int/products/medium-mslp-wind850?projection=opencharts_south_america',
-    height:'https://charts.ecmwf.int/products/medium-z500-t850?projection=opencharts_south_america',
-    sigwx:'https://www.smn.gob.ar/cartas-de-tiempo-significativo-sfcfl250'
+'use strict';
+const panel=document.getElementById('cartas-oficiales');
+const figure=document.getElementById('flight-chart-figure');
+const image=document.getElementById('flight-chart-image');
+const caption=document.getElementById('flight-chart-description');
+const status=document.getElementById('flight-chart-status');
+const source=document.getElementById('flight-chart-source');
+const placeholder=document.getElementById('flight-chart-placeholder');
+const refresh=document.getElementById('flight-chart-refresh');
+const urls={
+ surface:'https://charts.ecmwf.int/products/medium-mslp-wind850?projection=opencharts_south_america',
+ height:'https://charts.ecmwf.int/products/medium-z500-t850?projection=opencharts_south_america',
+ sigwx:'https://www.smn.gob.ar/cartas-de-tiempo-significativo-sfcfl250'
+};
+let selected='surface',activated=false,requestId=0;
+function clearChart(){figure.hidden=true;image.removeAttribute('src');caption.textContent='';placeholder.hidden=true;}
+function failure(message){
+ clearChart();status.textContent=message;
+ placeholder.textContent='No se pudo visualizar una imagen reciente y verificada. Abrí la fuente oficial para comprobar su emisión y validez.';
+ placeholder.hidden=false;
+}
+async function load(){
+ if(!activated)return;
+ const key=selected,id=++requestId;source.href=urls[key];clearChart();
+ if(key==='sigwx'){
+  status.textContent='Las cartas de tiempo significativo se consultan directamente en el SMN.';
+  placeholder.textContent='Abrí la carta SIGWX en la fuente oficial. No se muestra una copia sin vigencia comprobada.';
+  placeholder.hidden=false;return;
+ }
+ refresh.disabled=true;status.textContent='Consultando ECMWF OpenCharts para Sudamérica…';
+ try{
+  const client=window.GDV_AUTH?.client;
+  if(!client)throw Error('No hay una sesión disponible.');
+  const {data:identity,error:authError}=await client.auth.getUser();
+  if(authError||!identity?.user)throw Error('Iniciá sesión como administrador.');
+  const {data,error}=await client.functions.invoke('gdv-flight-charts',{body:{chart:key}});
+  if(id!==requestId)return;
+  if(error||!data?.ok){
+   let message=data?.error||error?.message||'No hay imagen oficial disponible.';
+   if(error?.context?.json){try{const detail=await error.context.json();if(detail?.error)message=detail.error;}catch(_){}}
+   throw Error(message);
+  }
+  const u=new URL(data.image_url);
+  if(u.origin!=='https://charts.ecmwf.int'||!u.pathname.startsWith('/content/')||!u.pathname.endsWith('.png'))
+   throw Error('La imagen oficial no pudo validarse.');
+  caption.textContent=data.title+' · '+data.description+' · ECMWF OpenCharts, CC BY 4.0. Consultado: '+new Date(data.checked_at_utc).toLocaleString('es-AR',{timeZone:'America/Argentina/Buenos_Aires'});
+  source.href=data.source_url||urls[key];
+  image.onload=()=>{
+   if(id!==requestId||selected!==key)return;
+   figure.hidden=false;placeholder.hidden=true;
+   status.textContent='Carta oficial cargada. Revisá las horas, el área y el nivel.';
   };
-  let selected='surface',activated=false;
-  function loadChart(){
-    if(!activated)return;
-    const url=urls[selected];
-    if(frame.getAttribute('src')!==url){
-      status.textContent='Cargando el sitio oficial. Si no se visualiza, abrí la carta directamente en su fuente.';
-      frame.src=url;
-    }
-    frame.hidden=false;
-    source.href=url;
-  }
-  document.querySelectorAll('[data-chart]').forEach(button=>{
-    button.addEventListener('click',()=>{
-      const key=button.getAttribute('data-chart');
-      if(!Object.prototype.hasOwnProperty.call(urls,key))return;
-      selected=key;activated=true;
-      document.querySelectorAll('[data-chart]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));
-      loadChart();
-    });
-  });
-  if('IntersectionObserver' in window){
-    const observer=new IntersectionObserver(entries=>{
-      if(entries.some(e=>e.isIntersecting)){
-        activated=true;loadChart();observer.disconnect();
-      }
-    },{rootMargin:'180px'});
-    observer.observe(panel);
-  }else{
-    activated=true;loadChart();
-  }
-  frame.addEventListener('load',()=>{
-    status.textContent='Se solicitó la carta al proveedor oficial. Revisá fecha, hora, región y nivel; si el visor fue bloqueado, usá el enlace a la fuente.';
-  });
+  image.onerror=()=>{if(id===requestId&&selected===key)failure('El navegador no pudo abrir el PNG oficial de ECMWF.');};
+  image.src=u.href;
+ }catch(e){if(id===requestId)failure('No se pudo obtener la carta: '+(e?.message||'Servicio no disponible.'));}
+ finally{if(id===requestId)refresh.disabled=false;}
+}
+document.querySelectorAll('[data-chart]').forEach(button=>button.addEventListener('click',()=>{
+ const key=button.getAttribute('data-chart');if(!Object.prototype.hasOwnProperty.call(urls,key))return;
+ selected=key;activated=true;
+ document.querySelectorAll('[data-chart]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));
+ void load();
+}));
+refresh.addEventListener('click',()=>{activated=true;void load()});
+if('IntersectionObserver' in window){
+ const obs=new IntersectionObserver(entries=>{
+  if(entries.some(e=>e.isIntersecting)){activated=true;void load();obs.disconnect();}
+ },{rootMargin:'180px'});
+ obs.observe(panel);
+}else{activated=true;void load();}
+
 })();
 </script>
 </body>
