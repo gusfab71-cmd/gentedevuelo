@@ -306,8 +306,10 @@ pre,.flight-weather-result .flight-ai-text,.flight-pilot-result .flight-ai-text,
 }
 .flight-precautions-head h2 {color:#f1f7fa}
 .flight-precautions-icon {
-  border:1px solid #91b4c8;background:#324b5c;
-  color:#e9f4fa;box-shadow:0 0 0 5px #9dbfd415;
+  border:2px solid #f2d46b;
+  background:linear-gradient(155deg,#fce48c,#e9c94e);
+  color:#242a31;
+  box-shadow:0 0 0 5px #e5c95820,0 3px 12px #050e1840;
 }
 .flight-precautions-kicker {color:#bed9e9}
 .flight-precautions p {color:#d8e5ed}
@@ -652,11 +654,11 @@ pre,.flight-weather-result .flight-ai-text,.flight-pilot-result .flight-ai-text,
 
 <section class="card flight-chart" id="cartas-oficiales">
 <div class="card-header"><div><span class="card-kicker">CARTAS METEOROLÓGICAS · CONSULTA OFICIAL</span><h2>Mapas de superficie, altura y tiempo significativo</h2></div></div>
-<p class="sub">Las cartas de superficie y altura se solicitan automáticamente como imágenes oficiales ECMWF, sin insertar páginas ni consumir tokens de IA. Para SIGWX se conserva la consulta directa al SMN. <strong>Comprobá región, hora base, validez y nivel.</strong> Los niveles de las cartas no coinciden necesariamente con la altitud planificada.</p>
+<p class="sub">Las cartas de superficie y altura se solicitan automáticamente como imágenes oficiales ECMWF, sin insertar páginas ni consumir tokens de IA. Para SIGWX se ofrecen alternativas oficiales cuando el enlace del SMN no muestra las cartas. <strong>Comprobá región, hora base, validez y nivel.</strong> Los niveles de las cartas no coinciden necesariamente con la altitud planificada.</p>
 <div class="flight-chart-options" role="group" aria-label="Carta meteorológica oficial">
 <button class="secondary" type="button" data-chart="surface" aria-pressed="true">Isobaras y viento · ECMWF</button>
 <button class="secondary" type="button" data-chart="height" aria-pressed="false">Topografía 500 hPa · ECMWF</button>
-<button class="secondary" type="button" data-chart="sigwx" aria-pressed="false">Tiempo significativo · SMN</button>
+<button class="secondary" type="button" data-chart="sigwx" aria-pressed="false">Tiempo significativo · fuentes oficiales</button>
 </div>
 <p class="sub" id="flight-chart-status" role="status" aria-live="polite">La imagen se solicitará automáticamente al llegar a esta sección.</p>
 <figure class="flight-chart-figure" id="flight-chart-figure" hidden>
@@ -667,9 +669,11 @@ pre,.flight-weather-result .flight-ai-text,.flight-pilot-result .flight-ai-text,
 <div class="actions">
 <a id="flight-chart-source" class="secondary" href="https://charts.ecmwf.int/products/medium-mslp-wind850?projection=opencharts_south_america" target="_blank" rel="noopener noreferrer">Abrir carta en la fuente oficial ↗</a>
 <button class="secondary" id="flight-chart-refresh" type="button">Actualizar carta</button>
-<a class="secondary" href="https://www.smn.gob.ar/cartas-de-tiempo-significativo-sfcfl250" target="_blank" rel="noopener noreferrer">Consultar SIGWX oficial SMN ↗</a>
+<a class="secondary" href="https://redemet.decea.mil.br/" target="_blank" rel="noopener noreferrer">SIGWX SFC/FL250 · REDEMET Brasil ↗</a>
+<a class="secondary" href="https://aviationweather.gov/sigwx/" target="_blank" rel="noopener noreferrer">SIGWX WAFS · NOAA/AWC ↗</a>
+<a class="secondary" href="https://imagenesmeteorologicas.faa.mil.ar/app/model/index.php" target="_blank" rel="noopener noreferrer">Cartas sinópticas · Fuerza Aérea Argentina ↗</a>
 </div>
-<p class="source-notes">Fuente ECMWF OpenCharts (CC BY 4.0). Se verifican la región y la antigüedad de la emisión antes de mostrar cada imagen. SIGWX se consulta en el SMN porque todavía no se ha identificado una imagen oficial estable que pueda integrarse automáticamente. Verificá siempre el briefing aeronáutico oficial.</p>
+<p class="source-notes">Fuente ECMWF OpenCharts (CC BY 4.0). Se verifican la región y la antigüedad de la emisión antes de mostrar cada imagen. El enlace SIGWX del SMN no muestra los mapas al consultar. REDEMET ofrece SIGWX SFC/FL250 de Brasil, cuya cobertura geográfica puede no abarcar la ruta argentina completa y cuya API requiere credenciales. El visor WAFS de NOAA/AWC corresponde a otros niveles, en general FL100–FL600, y no sustituye una carta nacional de baja altura. La Fuerza Aérea Argentina ofrece cartas sinópticas, que tampoco reemplazan las SIGWX. La Mesa no muestra una carta sin poder comprobar su vigencia. Verificá siempre el briefing aeronáutico oficial.</p>
 </section>
 
 <p class="source-notes" style="margin-top:20px">Para realizar los cálculos de navegación, <a href="flightprep-nav.html" style="font-weight:750">abrir FlightPrep NAV en Utilidades →</a>.</p>
@@ -1368,7 +1372,7 @@ const refresh=document.getElementById('flight-chart-refresh');
 const urls={
  surface:'https://charts.ecmwf.int/products/medium-mslp-wind850?projection=opencharts_south_america',
  height:'https://charts.ecmwf.int/products/medium-z500-t850?projection=opencharts_south_america',
- sigwx:'https://www.smn.gob.ar/cartas-de-tiempo-significativo-sfcfl250'
+ sigwx:'https://redemet.decea.mil.br/'
 };
 let selected='surface',activated=false,requestId=0;
 function clearChart(){figure.hidden=true;image.removeAttribute('src');caption.textContent='';placeholder.hidden=true;}
@@ -1381,9 +1385,9 @@ async function load(){
  if(!activated)return;
  const key=selected,id=++requestId;source.href=urls[key];clearChart();
  if(key==='sigwx'){
-  status.textContent='Las cartas de tiempo significativo se consultan directamente en el SMN.';
-  placeholder.textContent='Abrí la carta SIGWX en la fuente oficial. No se muestra una copia sin vigencia comprobada.';
-  placeholder.hidden=false;return;
+  status.textContent='Cartas SIGWX: consultá las fuentes oficiales alternativas y verificá la zona, nivel y fecha.';
+  placeholder.textContent='REDEMET (Brasil) publica cartas SIGWX SFC/FL250, pero su API necesita clave y la cobertura puede no incluir toda tu ruta en Argentina. Usá los enlaces oficiales debajo para consultar allí. NOAA/AWC ofrece WAFS de niveles superiores: no es equivalente al SIGWX nacional de baja altura. La Mesa no puede certificar una imagen actual para mostrarla aquí.';
+  placeholder.hidden=false;refresh.disabled=false;return;
  }
  refresh.disabled=true;status.textContent='Consultando ECMWF OpenCharts para Sudamérica…';
  try{
