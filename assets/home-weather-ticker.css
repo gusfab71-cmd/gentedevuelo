@@ -1,26 +1,14 @@
 /* Informe meteorológico de ciudades argentinas para la portada. */
 #gdv-meteo-ciudades{
-  box-sizing:border-box;width:100%;margin:0;padding:13px 0 12px;
-  border-top:1px solid #6c5332;border-bottom:1px solid #425056;
-  background:linear-gradient(110deg,#11191f,#1b252c 53%,#131a1e);
+  box-sizing:border-box;width:100%;margin:0;padding:4px 0;
+  border:0;
+  background:transparent;
+  box-shadow:none;
   color:#eef2f5;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
 }
 body.modo-anexo > #gdv-meteo-ciudades,
 body.modo-seccion-unica > #gdv-meteo-ciudades{display:none!important}
 #gdv-meteo-ciudades *{box-sizing:border-box}
-#gdv-meteo-ciudades .gdv-wx-head{
-  max-width:1360px;margin:0 auto 8px;padding:0 18px;
-  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px 20px;
-}
-#gdv-meteo-ciudades .gdv-wx-title{
-  font-size:12px;line-height:1.3;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
-  color:#e9c18a;white-space:normal;
-}
-#gdv-meteo-ciudades .gdv-wx-byline{
-  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
-  font-size:10px;line-height:1.4;color:#becbd1;
-}
-#gdv-meteo-ciudades .gdv-wx-byline a{color:#d6e2ea;text-decoration:underline;text-underline-offset:2px}
 #gdv-meteo-ciudades .gdv-wx-viewport{overflow-x:auto;scrollbar-width:thin;outline-offset:-2px}
 #gdv-meteo-ciudades .gdv-wx-track{display:flex;width:max-content;animation:gdv-weather-scroll var(--gdv-weather-speed,100s) linear infinite}
 #gdv-meteo-ciudades .gdv-wx-group{display:flex;flex:none;gap:12px;padding-right:12px}
@@ -40,10 +28,7 @@ body.modo-seccion-unica > #gdv-meteo-ciudades{display:none!important}
 #gdv-meteo-ciudades .gdv-wx-viewport:focus-within .gdv-wx-track{animation-play-state:paused}
 @keyframes gdv-weather-scroll{to{transform:translateX(-50%)}}
 @media (max-width:700px){
-  #gdv-meteo-ciudades{padding:11px 0}
-  #gdv-meteo-ciudades .gdv-wx-head{padding:0 12px}
-  #gdv-meteo-ciudades .gdv-wx-title{font-size:11px}
-  #gdv-meteo-ciudades .gdv-wx-byline{font-size:9px}
+  #gdv-meteo-ciudades{padding:4px 0}
   #gdv-meteo-ciudades .gdv-wx-card{width:225px;min-height:57px;padding:7px 10px;gap:9px}
   #gdv-meteo-ciudades .gdv-wx-temp{font-size:23px}
 }
