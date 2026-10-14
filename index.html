@@ -11864,6 +11864,31 @@ body.modo-anexo-clasificados #clasificados-seccion {
   .atajos-portada .gdv-online-badge {padding:1px 4px;}
 }
 </style>
+<style id="gdv-redes-notebook-20261014">
+/* Los íconos quedan debajo de Mi cuenta, fuera de la línea de navegación. */
+@media (min-width:851px) and (max-width:1500px) {
+  .controles-usuario { top:18px !important; right:22px !important; }
+  .controles-usuario > :is(.youtube-portada,.facebook-portada,.instagram-portada) {
+    position:absolute !important;
+    top:68px !important;
+    left:auto !important;
+    margin:0 !important;
+    width:44px !important;
+    height:44px !important;
+  }
+  .controles-usuario > .youtube-portada { right:108px !important; }
+  .controles-usuario > .facebook-portada { right:54px !important; }
+  .controles-usuario > .instagram-portada { right:0 !important; }
+}
+/* En notebooks más angostas el menú reserva sitio para Mi cuenta. */
+@media (min-width:851px) and (max-width:1180px) {
+  .menu-principal { padding-right:160px !important; }
+  #menuDesplegable > a { font-size:15px !important; padding-left:6px !important; padding-right:6px !important; }
+}
+@media (min-width:851px) and (max-width:1060px) {
+  .controles-usuario > :is(.youtube-portada,.facebook-portada,.instagram-portada) { top:96px !important; }
+}
+</style>
 <script src="assets/home-online-count.js?v=20261013conectados1"></script>
 <link rel="stylesheet" href="assets/home-card-editor.css?v=20261013cards2">
 <link rel="stylesheet" href="assets/home-instituciones-logo.css?v=20261013marcos-unificados1">
