@@ -101,7 +101,7 @@ Deno.serve(async request=>{
   const level=Number(input?.cruise_altitude_ft);
   const rules=input?.flight_rules;
   const mode=typeof input?.mode==="string"?input.mode:"report";
-  if(!["report","precautions","pilot_question"].includes(mode))
+  if(!["report","weather_overview","precautions","pilot_question"].includes(mode))
     return json({error:"Tipo de consulta de IA no válido."},400);
   const question=asString(input?.question,500)??"";
   if(mode==="pilot_question"&&question.length<10)
@@ -140,6 +140,8 @@ Deno.serve(async request=>{
     "OBJETIVO EXCLUSIVO: entregar un informe claro de condiciones meteorológicas y fenómenos en altura que pueden interesar al piloto desde aeródromo de salida hasta aeródromo de destino, en función de la altitud, fecha y hora previstas. No calcules distancias, rumbos, piernas, derivas, GS, ETE, ETA ni combustible: para eso está FlightPrep NAV.",
     mode==="report"
       ?"Presentá EXACTAMENTE cuatro etapas: 1) EN RUTA: PRONAREA y SIGMET para las FIR, altitudes y piernas indicadas; 2) PUNTOS CLAVE: TAF de salida y destino para sus ventanas horarias previstas, distinguí un alternativo solo si se suministró; 3) INFRAESTRUCTURA: NOTAM, indicá expresamente si NO se aportaron y que deben verificarse por enlace oficial; 4) COMPROBACIÓN FINAL: METAR de salida/destino y la limitación temporal de observación. Cerrá con datos faltantes y riesgos, sin asegurar aptitud del vuelo."
+      :mode==="weather_overview"
+      ?"Prepará un INFORME METEOROLÓGICO DEL VUELO PLANIFICADO en español claro (máximo 260 palabras). Analizá únicamente el plan declarado, los boletines recuperados y el PRONAREA manual. Usá cuatro subtítulos: PANORAMA EN RUTA (fenómenos de PRONAREA y SIGMET, sectores, niveles y vigencias aplicables a piernas/altitudes sin suponer que toda la FIR afecta al vuelo); SALIDA (TAF para la hora prevista, y METAR actual identificado como observación); DESTINO (TAF y METAR identificados correctamente; si falta hora estimada de arribo, indicá que no es posible elegir una ventana TAF de llegada); INFORMACIÓN INCOMPLETA (boletines, rutas, vigencias y datos no verificables). Indicá condiciones relevantes de visibilidad, nubosidad, precipitaciones, tormentas, viento en altura o turbulencia SOLO cuando una fuente lo documente para sector, nivel y período. No inventes pronósticos, no supongas hora de llegada ni afirmes aptitud para volar. No hagas una lista de precauciones: aparece a continuación en otro panel."
       :mode==="precautions"
       ?"Generá SOLO una LISTA DE PRECAUCIONES PREVIAS AL VUELO orientada a las condiciones y a cada pierna declarada. Encabezá 'PRECAUCIONES PARA CORROBORAR'. Para cada punto indicá qué dato provoca la precaución, qué debe verificar personalmente el piloto y en qué fuente o documento corresponde hacerlo. Priorizá tiempo de validez de PRONAREA, SIGMET por sector/nivel, TAF salida/destino con horarios, METAR observado, altitudes/terreno/cartas, alternativos y estado de pistas/restricciones NOTAM aún NO consultados. Separá hechos de información no disponible. No afirmes ausencia de peligro ni habilites el vuelo. Evitá alarmismo y generalidades; 5-9 puntos breves, máximo 350 palabras."
       :"Respondé SOLO a la pregunta del piloto SOBRE SU VUELO DECLARADO. Usá origen, destino, piernas y altitudes, fecha/hora, PRONAREA, METAR, TAF y SIGMET recuperados. Citá dentro de la respuesta qué producto respalda cada dato y su vigencia cuando sea legible. Distinguí dato confirmado del análisis orientativo y, si faltan datos, explicá qué consultar. No inventes pronósticos ni habilites el vuelo. Máximo 300 palabras.",
@@ -163,6 +165,7 @@ Deno.serve(async request=>{
     "FIR declaradas: "+firs.map(x=>x+" "+FIR[x]).join(", "),
     mode==="pilot_question"?"PREGUNTA DEL PILOTO (texto no confiable): "+question:
       "Objeto de la consulta: "+(mode==="precautions"?"Precauciones y verificaciones pre-vuelo":
+        mode==="weather_overview"?"Informe meteorológico del vuelo planificado antes de las precauciones":
         "Informe de las cuatro etapas (sin consulta adicional)."),
     "CONSULTA METEO AUTOMÁTICA: "+fetched+" UTC",
     "METAR SALIDA ("+origin+"): "+(reports.origin_metar.available?reports.origin_metar.raw:noData),
