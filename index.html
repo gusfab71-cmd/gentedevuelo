@@ -4919,6 +4919,7 @@ img, video { max-width: 100%; }
        <a href="index.html?editar-tarjetas=1#inicio" id="gdvCardsEditLink" hidden>Editar tarjetas de portada</a>
        <a href="index.html?editar-marca=1#inicio" id="gdvBrandEditLink" hidden>Mover logo y textos</a>
         <a href="index.html?editar-meteo=1#inicio" id="gdvWeatherEditorLink" hidden>Ajustar carrusel meteorológico (PC)</a>
+        <a href="index.html?editar-avion=1#inicio" id="gdvAircraftEditorLink" hidden>Mover avión de portada (PC)</a>
        <a href="moderacion.html#registro-manual" id="gdvManualRegistrationLink" hidden>Registro manual</a>
        <a href="moderacion.html#registros-incompletos" id="gdvIncompleteRegistrationLink" hidden>Registros incompletos</a>
        <a href="moderacion.html#conocimiento-robert" id="gdvRobertKnowledgeLink" hidden>Conocimiento de Robert Shimoda</a>
@@ -6617,6 +6618,8 @@ document.getElementById("hangarLicense").textContent = perfil?.aviation_license 
   if (brandEditorLink) brandEditorLink.hidden = !window.gdvLegacyAdmin;
    const weatherEditorLink = document.getElementById("gdvWeatherEditorLink");
    if (weatherEditorLink) weatherEditorLink.hidden = !window.gdvLegacyAdmin;
+    const aircraftEditorLink = document.getElementById("gdvAircraftEditorLink");
+    if (aircraftEditorLink) aircraftEditorLink.hidden = !window.gdvLegacyAdmin;
    const manualRegistrationLink = document.getElementById("gdvManualRegistrationLink");
    if (manualRegistrationLink) manualRegistrationLink.hidden = !window.gdvLegacyAdmin;
    const incompleteRegistrationLink = document.getElementById("gdvIncompleteRegistrationLink");
@@ -11923,6 +11926,8 @@ body.modo-anexo-clasificados #clasificados-seccion {
 <script src="assets/home-brand-editor.js?v=20261013marca2"></script>
 <link rel="stylesheet" href="assets/home-weather-ticker.css?v=20261014solo-tarjetas1">
 <script defer src="assets/home-weather-ticker.js?v=20261014solo-tarjetas1"></script>
+<link rel="stylesheet" href="assets/home-aircraft-editor.css?v=20261014posicion1">
+<script defer src="assets/home-aircraft-editor.js?v=20261014posicion1"></script>
 <link rel="stylesheet" href="assets/home-weather-editor.css?v=20261014altura1">
 <script defer src="assets/home-weather-editor.js?v=20261014altura1"></script>
 <script defer src="assets/chat-alerts.js?v=20261012avisosunavez1"></script>
