@@ -104,6 +104,28 @@
 .flight-pilot-result{border-top:1px solid #56615d;margin-top:17px;padding-top:17px}
 .flight-pilot-result .flight-ai-text{background:#151f22;border:1px solid #50615e;padding:15px;border-radius:12px}
 @media(max-width:620px){.flight-precautions{padding:17px 15px}.flight-precautions-head h2{font-size:18px}}
+/* Paso 3: cinco estados visibles; el detalle se despliega solo cuando hace falta. */
+#boletines .status-grid{grid-template-columns:repeat(5,minmax(105px,1fr));overflow-x:auto;padding-bottom:5px}
+#boletines .status-tile{min-width:105px}
+.flight-stages-details{margin-top:13px;border:1px solid #50615e;border-radius:12px;background:#142022;overflow:hidden}
+.flight-stages-details>summary{list-style:none;cursor:pointer;padding:12px 15px;font-size:13px;font-weight:700;color:#e9c5a1}
+.flight-stages-details>summary::-webkit-details-marker{display:none}
+.flight-stages-details>summary:after{content:" +";float:right}
+.flight-stages-details[open]>summary:after{content:" −"}
+.flight-stages-inner{padding:0 15px 15px}
+.flight-advanced-report{margin-top:18px;border:1px solid #576561;border-radius:13px;background:#171e20}
+.flight-advanced-report>summary{list-style:none;cursor:pointer;padding:16px;font-size:13px;color:#d2dad7;font-weight:700}
+.flight-advanced-report>summary::-webkit-details-marker{display:none}
+.flight-advanced-report>summary:after{content:" +";float:right}
+.flight-advanced-report[open]>summary:after{content:" −"}
+.flight-advanced-report>.card{margin:0;border:0}
+.flight-chart{margin-top:20px;border-color:#546666;scroll-margin-top:20px}
+.flight-chart-options{display:flex;gap:8px;flex-wrap:wrap;margin:15px 0}
+.flight-chart-options button{font-size:13px;text-align:left}
+.flight-chart-options button[aria-pressed="true"]{background:#f5a869;color:#172024;border-color:#f5a869;font-weight:750}
+.flight-chart-frame{height:clamp(380px,65vh,760px);width:100%;border:1px solid #5b6c6e;border-radius:12px;background:#fff}
+@media(max-width:620px){#boletines .status-grid{grid-template-columns:repeat(5,minmax(120px,1fr));gap:7px}.flight-chart-frame{height:475px}.flight-chart-options button{width:100%}}
+
 </style>
 <script>document.documentElement.classList.add('auth-pending')</script>
 <style>html.auth-pending body{visibility:hidden}</style>
@@ -115,7 +137,7 @@
 <header class="top"><div class="top-inner"><a class="brand" href="../index.html"><span class="mark">GDV</span><span class="brand-name">GENTE DE VUELO<span>Centro de consulta aeronáutica</span></span></a><nav class="toplinks"><a href="index.html">Utilidades</a><a href="../index.html">Portada</a></nav></div></header>
 <main class="wrap" id="gdv-meteo-private" hidden>
 <section class="hero"><div class="hero-main"><span class="eyebrow">Mesa de Vuelo / acceso de administración</span><h1>Tu mesa de <em>vuelo</em>.</h1><p>Datos meteorológicos, lectura de boletines y herramientas de cálculo en un único espacio. Diseñado para consultar con criterio, no para reemplazar la información oficial.</p></div><aside class="hero-side"><div class="dial" aria-hidden="true">MV</div><div><span class="eyebrow">Información crítica</span><p>Verificá siempre <strong>emisión, vigencia, ruta y fuentes oficiales</strong> antes de planificar una operación.</p></div></aside></section>
-<nav class="jump" aria-label="Secciones"><a href="#plan-vuelo">1 · Plan de vuelo</a><a href="#consultar">2 · Boletines y PRONAREA</a><a href="#boletines">3 · Cuatro etapas</a><a href="#informe-meteorologico">Informe meteorológico</a><a href="#precauciones-vuelo">Precauciones</a><a href="#analisis-altura">4 · Informe con IA</a><a href="#consulta-piloto">Consulta del piloto</a></nav>
+<nav class="jump" aria-label="Secciones"><a href="#plan-vuelo">1 · Plan de vuelo</a><a href="#consultar">2 · Boletines y PRONAREA</a><a href="#boletines">3 · Cuatro etapas</a><a href="#informe-meteorologico">Informe meteorológico</a><a href="#precauciones-vuelo">Precauciones</a><a href="#analisis-altura">4 · Informe con IA</a><a href="#consulta-piloto">Consulta del piloto</a><a href="#cartas-oficiales">Cartas oficiales</a></nav>
 <section class="card flight-workflow" id="plan-vuelo">
 <div class="card-header"><div><span class="card-kicker">PASO 1 · PLANIFICACIÓN</span><h2>Salida, destino y piernas de vuelo</h2></div></div>
 <p class="sub">Definí salida, destino, aeródromo alternativo obligatorio, puntos intermedios y altitud prevista para cada tramo. Las piernas son declaradas por el piloto; esta Mesa no calcula rumbos, distancias, ETA ni altitudes mínimas.</p>
@@ -241,14 +263,16 @@
 </div>
 </section>
 <section class="card" id="boletines">
-<div class="card-header"><div><span class="card-kicker">PASO 3 · INTERPRETACIÓN</span><h2>Evaluación en cuatro etapas</h2></div></div>
+<div class="card-header"><div><span class="card-kicker">PASO 3 · ESTADO DE LOS BOLETINES</span><h2>Información disponible para el vuelo</h2></div></div>
 <div class="status-grid" aria-label="Disponibilidad de las fuentes">
 <div class="status-tile pending" id="s-pronarea"><strong>PRONAREA</strong><span>Consulta oficial</span></div>
 <div class="status-tile" id="s-sigmet"><strong>SIGMET</strong><span>Sin consultar</span></div>
 <div class="status-tile" id="s-taf"><strong>TAF</strong><span>Sin consultar</span></div>
-<div class="status-tile pending" id="s-notam"><strong>NOTAM</strong><span>Consulta oficial</span></div>
 <div class="status-tile" id="s-metar"><strong>METAR</strong><span>Sin consultar</span></div>
+<div class="status-tile pending" id="s-notam"><strong>NOTAM</strong><span>Consulta oficial</span></div>
 </div>
+<details class="flight-stages-details" id="flight-stage-details"><summary>Ver detalle de las cuatro etapas cuando falten datos</summary>
+<div class="flight-stages-inner">
 <section class="brief-stage" id="etapa-ruta" aria-labelledby="etapa-ruta-titulo">
 <div class="brief-stage-heading"><span class="brief-stage-number">1</span><div><h3 id="etapa-ruta-titulo">Evaluación en ruta · Macro</h3><p class="sub">Área y FIR: verificá fenómenos, sectores, altitudes y vigencia en el recorrido.</p></div></div>
 <details class="report"><summary><strong>PRONAREA · Pronóstico de área / FIR</strong><span>Consulta oficial</span></summary><div class="content"><p>Obtené el PRONAREA vigente para cada FIR atravesada y verificá que corresponda a la hora, el nivel y la ruta prevista. Pegalo en la carga manual del paso 2.</p><a href="https://www.smn.gob.ar/pronarea" target="_blank" rel="noopener noreferrer">Abrir PRONAREA oficial · SMN</a></div></details>
@@ -277,6 +301,8 @@
 <p class="sub">La lectura simbólica de la nubosidad del último METAR consultado está en el panel de observación.</p>
 </section>
 <p class="source-notes">La fecha de consulta no acredita emisión o validez. Ningún resultado de esta Mesa sustituye el briefing oficial ni la evaluación operacional del piloto.</p>
+</div>
+</details>
 </section>
 </div>
 <aside class="stack">
@@ -322,8 +348,8 @@
 
 <section class="card flight-weather-overview" id="informe-meteorologico" aria-labelledby="flight-weather-heading">
  <div class="card-header"><div><span class="card-kicker">SÍNTESIS METEOROLÓGICA · ANTES DE LAS PRECAUCIONES</span>
-  <h2 id="flight-weather-heading">Condiciones meteorológicas del vuelo planificado</h2></div></div>
- <p class="sub">La IA relaciona la salida, el destino, el alternativo, las piernas y altitudes previstas con el PRONAREA cargado, los TAF/METAR disponibles y los posibles SIGMET. Distingue pronósticos, observaciones y datos faltantes, sin inventar condiciones para períodos no cubiertos.</p>
+  <h2 id="flight-weather-heading">Informe meteorológico del vuelo planificado</h2></div></div>
+ <p class="sub">Análisis de condiciones observadas en aeródromos y pronósticos disponibles para la ruta, salida, destino y alternativo. Incluye viento y temperatura a la altitud prevista, turbulencia, engelamiento, tormentas, visibilidad reducida y demás fenómenos <strong>solo cuando existan datos verificables de sector, nivel y vigencia</strong>. Lo no informado quedará señalado como dato faltante.</p>
  <label class="flight-ai-consent"><input id="flight-weather-consent" type="checkbox">
   <span>Autorizo generar este informe meteorológico con IA y consumir tokens.</span></label>
  <div class="actions"><button class="primary" id="flight-weather-ask" type="button">Generar informe meteorológico con IA</button>
@@ -349,13 +375,14 @@
  <div class="flight-ai-actions"><button class="flight-precautions-button" id="flight-precautions-ask" type="button">Generar precauciones con IA</button>
   <span id="flight-precautions-status" role="status" aria-live="polite">Pendiente. No se consumen tokens hasta que lo solicites.</span></div>
  <div class="flight-precautions-result" id="flight-precautions-result" hidden>
-  <strong>Advertencias y puntos para corroborar</strong><p class="flight-ai-timestamp" id="flight-precautions-time"></p>
+  <strong>Riesgos y verificaciones específicas para el piloto</strong><p class="flight-ai-timestamp" id="flight-precautions-time"></p>
   <div class="flight-ai-text" id="flight-precautions-analysis"></div>
   <p>El piloto debe verificar personalmente los informes, las restricciones operacionales y la aptitud del vuelo.</p>
  </div>
 </section>
 
-<section class="card" id="analisis-altura" style="margin-top:22px;border-color:#97643c;background:linear-gradient(145deg,#242827,#171e20)">
+<details class="flight-advanced-report"><summary>Informe operacional ampliado de las cuatro etapas · consulta opcional</summary>
+<section class="card" id="analisis-altura" style="border-color:#97643c;background:linear-gradient(145deg,#242827,#171e20)">
 <div class="card-header">
  <div><span class="card-kicker">PASO 4 · INFORME FINAL</span><h2>Análisis de las cuatro etapas con IA</h2></div>
  <span style="border:1px solid #b87745;border-radius:99px;padding:7px 11px;color:var(--accent2);font-size:12px;font-weight:700">Usa tokens solo al confirmar</span>
@@ -380,6 +407,7 @@
 <p class="source-notes" id="flight-warning"></p>
 </div>
 </section>
+</details>
 
 
 <section class="card flight-pilot-query" id="consulta-piloto">
@@ -398,6 +426,24 @@
   <div id="flight-pilot-analysis" class="flight-ai-text"></div>
   <p class="sub">Contrastá la respuesta con información oficial vigente. La IA no confirma que el vuelo sea seguro ni reemplaza la decisión del piloto.</p>
  </div>
+</section>
+
+
+<section class="card flight-chart" id="cartas-oficiales">
+<div class="card-header"><div><span class="card-kicker">CARTAS METEOROLÓGICAS · CONSULTA OFICIAL</span><h2>Mapas de superficie, altura y tiempo significativo</h2></div></div>
+<p class="sub">Visor de productos oficiales que consulta el proveedor al abrir esta sección, sin consumir tokens. Elegí cartas de presión al nivel del mar, topografía de 500 hPa y viento a 850 hPa, o tiempo significativo SFC/FL250. <strong>Las cartas no son necesariamente del nivel de vuelo elegido:</strong> comprobá región, hora de emisión, validez y nivel directamente en cada producto.</p>
+<div class="flight-chart-options" role="group" aria-label="Carta oficial a consultar">
+<button class="secondary" type="button" data-chart="surface" aria-pressed="true">Isobaras y viento · ECMWF</button>
+<button class="secondary" type="button" data-chart="height" aria-pressed="false">Topografía 500 hPa · ECMWF</button>
+<button class="secondary" type="button" data-chart="sigwx" aria-pressed="false">Tiempo significativo · SMN</button>
+</div>
+<p class="sub" id="flight-chart-status" role="status" aria-live="polite">La carta se cargará automáticamente desde la fuente oficial al llegar a esta sección.</p>
+<iframe id="flight-chart-frame" class="flight-chart-frame" title="Carta meteorológica desde el servicio oficial seleccionado" loading="lazy" referrerpolicy="no-referrer" hidden></iframe>
+<div class="actions">
+<a id="flight-chart-source" class="secondary" href="https://charts.ecmwf.int/products/medium-mslp-wind850?projection=opencharts_south_america" target="_blank" rel="noopener noreferrer">Abrir carta en la fuente oficial ↗</a>
+<a class="secondary" href="https://www.smn.gob.ar/cartas-de-tiempo-significativo-sfcfl250" target="_blank" rel="noopener noreferrer">Consultar SIGWX oficial SMN ↗</a>
+</div>
+<p class="source-notes">El visor depende de que el sitio oficial permita la visualización externa. Si aparece vacío o bloqueado, abrí el enlace oficial. No se guardan copias ni se presume que un mapa sea reciente solo por haberse cargado; verificá las horas y la región. Las cartas representan distintos niveles y productos, no un único mapa que certifique todas las amenazas del vuelo.</p>
 </section>
 
 <p class="source-notes" style="margin-top:20px">Para realizar los cálculos de navegación, <a href="flightprep-nav.html" style="font-weight:750">abrir FlightPrep NAV en Utilidades →</a>.</p>
@@ -778,6 +824,7 @@ el('copy-report').addEventListener('click',async()=>{
      const metarCount=checkpoints.filter(which=>$('flight-metar-'+which+'-state').textContent==='Recuperado').length;
      markStatus('taf',tafCount+'/3 disponibles',tafCount===3);
      markStatus('metar',metarCount+'/3 disponibles',metarCount===3);
+     if(tafCount<3||metarCount<3||count<codes.length)$('flight-stage-details').open=true;
      if(count===codes.length){
        lastConsultKey=key;
        $('flight-fetch-status').textContent='Consulta completada para salida, destino y alternativo. Revisá TAF/METAR y cargá PRONAREA.';
@@ -1039,6 +1086,53 @@ el('copy-report').addEventListener('click',async()=>{
   }catch(error){
     status.textContent='No fue posible comprobar los permisos. Acceso bloqueado.';
   }
+})();
+</script>
+<script>
+(function(){
+  'use strict';
+  const frame=document.getElementById('flight-chart-frame');
+  const status=document.getElementById('flight-chart-status');
+  const source=document.getElementById('flight-chart-source');
+  const panel=document.getElementById('cartas-oficiales');
+  const urls={
+    surface:'https://charts.ecmwf.int/products/medium-mslp-wind850?projection=opencharts_south_america',
+    height:'https://charts.ecmwf.int/products/medium-z500-t850?projection=opencharts_south_america',
+    sigwx:'https://www.smn.gob.ar/cartas-de-tiempo-significativo-sfcfl250'
+  };
+  let selected='surface',activated=false;
+  function loadChart(){
+    if(!activated)return;
+    const url=urls[selected];
+    if(frame.getAttribute('src')!==url){
+      status.textContent='Cargando el sitio oficial. Si no se visualiza, abrí la carta directamente en su fuente.';
+      frame.src=url;
+    }
+    frame.hidden=false;
+    source.href=url;
+  }
+  document.querySelectorAll('[data-chart]').forEach(button=>{
+    button.addEventListener('click',()=>{
+      const key=button.getAttribute('data-chart');
+      if(!Object.prototype.hasOwnProperty.call(urls,key))return;
+      selected=key;activated=true;
+      document.querySelectorAll('[data-chart]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));
+      loadChart();
+    });
+  });
+  if('IntersectionObserver' in window){
+    const observer=new IntersectionObserver(entries=>{
+      if(entries.some(e=>e.isIntersecting)){
+        activated=true;loadChart();observer.disconnect();
+      }
+    },{rootMargin:'180px'});
+    observer.observe(panel);
+  }else{
+    activated=true;loadChart();
+  }
+  frame.addEventListener('load',()=>{
+    status.textContent='Se solicitó la carta al proveedor oficial. Revisá fecha, hora, región y nivel; si el visor fue bloqueado, usá el enlace a la fuente.';
+  });
 })();
 </script>
 </body>
