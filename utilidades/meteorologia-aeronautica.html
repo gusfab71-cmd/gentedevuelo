@@ -10,7 +10,7 @@
 <script defer src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/l10n/es.js"></script>
 <meta name="robots" content="noindex,nofollow">
 <meta name="description" content="Mesa de Vuelo de Gente de Vuelo: METAR, TAF, SIGMET, PRONAREA, NOTAM, análisis meteorológico, navegación y nubosidad.">
-<title>Mesa de Vuelo · Gente de Vuelo</title>
+<title>Flight Operations · Developed by Gente de Vuelo</title>
 <style>
 :root{color-scheme:dark;--bg:#101719;--surface:#1a2426;--surface2:#212d2f;--surface3:#2b3739;--line:#3c4a4b;--text:#edf0ee;--muted:#b4c0bd;--accent:#ff994b;--accent2:#ffbc78;--mint:#8cddc4;--white:#f3efe7;--radius:18px}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.55 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}button,input,select,textarea{font:inherit}a{color:var(--accent2)}a:hover{color:#ffe0bb}button{cursor:pointer}button:disabled{cursor:wait;opacity:.65}input,select,textarea{width:100%;background:#121a1d;border:1px solid #65716e;border-radius:11px;color:var(--text);padding:11px 12px;min-width:0}input:focus,select:focus,textarea:focus,button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:3px}input[type=number]{font-variant-numeric:tabular-nums}p{margin:9px 0}h1,h2,h3{line-height:1.22}h2{font-size:22px;letter-spacing:-.025em;margin:0 0 10px}h3{font-size:16px;margin:0 0 7px}strong{font-weight:710}small{font-size:12px}pre{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.65;font:13px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace;margin:12px 0 0;padding:14px;border:1px solid #4b5d60;border-radius:12px;background:#111b1e;color:#e2e9e8}[hidden]{display:none!important}
@@ -344,6 +344,85 @@ pre,.flight-weather-result .flight-ai-text,.flight-pilot-result .flight-ai-text,
   .primary,.secondary,.jump a,.flight-precautions-button {transition:none}
 }
 
+/* FLIGHT OPERATIONS · Rediseño de interfaz 3C + accesos 3A.
+   Las consultas y formularios originales permanecen sin modificaciones. */
+:root{--bg:#111820;--surface:#192531;--surface2:#243646;--surface3:#2c4052;--line:#40596f;--text:#f1f5f9;--muted:#b4c6d7;--accent:#9fc3dc;--accent2:#d1e5f2;--mint:#9bcbbe}
+body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 100%),#111820}
+.top{background:#141e28;border-bottom:1px solid #33485c}
+.wrap{max-width:1320px;padding-top:22px}
+.top-inner{max-width:1320px}
+.hero{grid-template-columns:minmax(0,1.65fr) minmax(250px,.48fr);gap:14px;margin-bottom:18px}
+.hero-main{padding:28px 32px;border-radius:20px;background:radial-gradient(ellipse at 90% 5%,#36546b 0%,#203242 45%,#192733 100%);border:1px solid #57738a}
+.hero-main:after{opacity:.35}
+.hero h1{font-size:clamp(33px,4.5vw,56px);letter-spacing:-.047em;margin:6px 0 2px}
+.hero h1 em{color:#bfdbed}
+.hero .eyebrow{color:#b1cedf}
+.ops-developer{font-size:13px!important;color:#d6e6f2!important;margin:0 0 12px!important;letter-spacing:.02em}
+.ops-developer strong{color:#fff}
+.ops-intro{max-width:630px;font-size:14px;margin-bottom:0!important}
+.hero-side{padding:22px 23px;background:linear-gradient(145deg,#24394b,#1b2a36)}
+.ops-hero-monogram{font-size:44px;font-weight:850;letter-spacing:-.08em;color:#daeaf5}
+.ops-hero-monogram span{font-size:12px;letter-spacing:.14em;color:#9cb9cd;font-weight:700}
+.ops-dashboard{border:1px solid #48657a;border-radius:20px;padding:23px;background:linear-gradient(150deg,#1b2b39,#17232e);box-shadow:0 15px 34px #030a1240;margin-bottom:17px;scroll-margin-top:14px}
+.ops-dashboard-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.ops-dashboard-heading h2{font-size:23px;margin:4px 0 2px;color:#f1f6fb}
+.ops-dashboard-heading .sub{margin:0 0 16px}
+.ops-dashboard-marker{font-size:10px;letter-spacing:.11em;white-space:nowrap;color:#b0c9da;border:1px solid #526e82;border-radius:30px;padding:7px 10px}
+.ops-route-strip{display:grid;grid-template-columns:minmax(110px,.7fr) 42px minmax(110px,.7fr) minmax(290px,1.75fr);gap:14px;align-items:center;background:linear-gradient(115deg,#2b4153,#223342);border:1px solid #59748a;border-radius:15px;padding:17px 21px;margin:1px 0 20px}
+.ops-route-airport{display:grid;gap:3px;min-width:0}
+.ops-route-airport>span,.ops-route-meta span{font-size:10px;font-weight:780;letter-spacing:.11em;color:#aac3d7}
+.ops-route-airport strong{font-size:clamp(18px,2.1vw,29px);line-height:1.2;color:#f7fafc;overflow-wrap:anywhere}
+.ops-route-direction{text-align:center;color:#abcfe4;font-size:24px}
+.ops-route-meta{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;border-left:1px solid #62798b;padding-left:17px}
+.ops-route-meta>div{display:grid;gap:5px;min-width:0}
+.ops-route-meta strong{font-size:13px;color:#eef5fa;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.ops-cards-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+.ops-cards-heading h3{margin:0;font-size:16px}
+.ops-cards-heading span{font-size:12px;color:#a9bed0}
+.ops-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.ops-shortcut{appearance:none;text-align:left;display:flex;flex-direction:column;align-items:flex-start;min-width:0;min-height:142px;gap:5px;padding:15px;border-radius:13px;border:1px solid #496278;background:linear-gradient(145deg,#2a3d4e,#21313e);color:#edf5fb;transition:border-color .15s ease,background .15s ease,transform .15s ease,box-shadow .15s ease}
+.ops-shortcut:hover,.ops-shortcut:focus-visible{border-color:#9ac4e2;background:#314a5e;box-shadow:0 8px 22px #06111a66;transform:translateY(-1px)}
+.ops-shortcut-icon{display:grid;place-items:center;width:29px;height:29px;border:1px solid #6889a0;background:#354e62;border-radius:8px;color:#d8ebf7;font-size:17px;font-weight:850}
+.ops-shortcut>strong{font-size:14px;line-height:1.15;margin-top:2px}
+.ops-shortcut-state{font-size:11px;color:#c0d0dc;line-height:1.35}
+.ops-shortcut-link{margin-top:auto;font-size:11px;color:#b5d7ed;font-weight:750}
+.ops-shortcut-attention .ops-shortcut-icon{color:#f1d56f;background:#445163;border-color:#b4a05f}
+.jump{margin-bottom:15px;gap:7px}
+.jump a{border-radius:9px;padding:8px 11px;font-size:12px;background:#1a2a38;border-color:#3e5a70}
+.ops-accordion,.flight-advanced-report{border:1px solid #47657c;border-radius:17px;background:linear-gradient(155deg,#1c2b38,#192631);margin:0 0 15px;overflow:hidden;scroll-margin-top:15px;box-shadow:0 6px 23px #030a1230}
+.ops-accordion[open],.flight-advanced-report[open]{border-color:#6a8da5}
+.ops-accordion-toggle,.flight-advanced-report>summary{display:flex;gap:13px;align-items:center;list-style:none;cursor:pointer;padding:18px 20px;min-height:76px;color:#edf5fa}
+.ops-accordion-toggle::-webkit-details-marker,.flight-advanced-report>summary::-webkit-details-marker{display:none}
+.ops-accordion-toggle:hover,.flight-advanced-report>summary:hover{background:#2a4051}
+.ops-accordion-number{display:grid;place-items:center;width:38px;height:38px;flex:0 0 38px;background:#2b4255;border:1px solid #698ba2;border-radius:10px;font-size:13px;font-weight:800;color:#d5e9f7}
+.ops-accordion-name{display:grid;gap:4px;min-width:0;flex:1}
+.ops-accordion-name>strong{font-size:17px;color:#f0f7fb;line-height:1.25}
+.ops-accordion-name>span{color:#afc4d5;font-size:12px;line-height:1.4}
+.ops-accordion-arrow{width:10px;height:10px;border-right:2px solid #b8d5e8;border-bottom:2px solid #b8d5e8;transform:rotate(45deg);margin-right:6px;transition:transform .16s ease}
+.ops-accordion[open]>.ops-accordion-toggle .ops-accordion-arrow,.flight-advanced-report[open]>summary .ops-accordion-arrow{transform:rotate(225deg)}
+.ops-accordion-content{padding:0 20px 21px;border-top:1px solid #3d566c}
+.ops-accordion-content>section{margin:0!important;padding:18px 0 0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}
+.ops-accordion-content>.flight-precautions{border-left:0!important;color:#ecf4f9}
+.ops-accordion-content>.flight-precautions .flight-precautions-head h2{color:#f1f7fb}
+.ops-next-row{display:flex;justify-content:flex-end;margin:12px 0 0}
+.ops-next{font-weight:750}
+.layout{grid-template-columns:minmax(0,1.55fr) minmax(250px,.75fr);gap:15px}
+.layout .ops-accordion{margin-bottom:0}
+.layout .stack{gap:15px}
+#boletines .status-grid{grid-template-columns:repeat(5,minmax(0,1fr))}
+#boletines .status-tile{padding:12px 9px}
+.flight-advanced-report>summary{font-size:initial}
+.flight-advanced-report>summary:after{display:none}
+.flight-advanced-report>.card{border:0;background:transparent;box-shadow:none;padding:0 20px 20px}
+.flight-advanced-report>.card .card-header{padding-top:13px}
+.flight-precautions-icon{color:#222c36}
+.sitefoot{margin-top:18px}
+@media(max-width:1000px){.ops-route-strip{grid-template-columns:1fr 28px 1fr}.ops-route-meta{grid-column:1/-1;grid-template-columns:repeat(4,minmax(0,1fr));border-left:0;border-top:1px solid #62798b;padding-left:0;padding-top:12px}.ops-cards{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(max-width:870px){.layout{grid-template-columns:1fr}.ops-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:620px){.wrap{padding:14px 11px 55px}.hero-main{padding:23px 19px}.ops-dashboard{padding:14px;border-radius:15px}.ops-dashboard-marker{display:none}.ops-dashboard-heading h2{font-size:20px}.ops-route-strip{padding:13px 11px;gap:8px}.ops-route-meta{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.ops-route-airport strong{font-size:21px}.ops-route-direction{font-size:19px}.ops-cards{gap:8px}.ops-shortcut{min-height:128px;padding:12px}.ops-shortcut>strong{font-size:13px}.ops-cards-heading{display:block}.ops-cards-heading span{display:block;margin-top:2px}.ops-accordion-toggle,.flight-advanced-report>summary{padding:14px 12px;gap:10px;min-height:69px}.ops-accordion-number{width:33px;height:33px;flex-basis:33px}.ops-accordion-name>strong{font-size:15px}.ops-accordion-content{padding:0 13px 15px}.flight-advanced-report>.card{padding:0 13px 15px}#boletines .status-grid{grid-template-columns:repeat(5,minmax(112px,1fr));overflow-x:auto;padding-bottom:4px}.jump a{font-size:11px;padding:7px 9px}}
+@media(max-width:390px){.ops-cards{grid-template-columns:repeat(2,minmax(0,1fr))}.ops-shortcut{padding:10px;min-height:126px}}
+@media(prefers-reduced-motion:reduce){.ops-shortcut,.ops-accordion-arrow{transition:none}.ops-shortcut:hover{transform:none}}
+
 </style>
 <link rel="stylesheet" href="../assets/flight-utc-picker.css?v=20261014a">
 <script>document.documentElement.classList.add('auth-pending')</script>
@@ -355,8 +434,29 @@ pre,.flight-weather-result .flight-ai-text,.flight-pilot-result .flight-ai-text,
 <body>
 <header class="top"><div class="top-inner"><a class="brand" href="../index.html"><span class="mark">GDV</span><span class="brand-name">GENTE DE VUELO<span>Centro de consulta aeronáutica</span></span></a><nav class="toplinks"><a href="index.html">Utilidades</a><a href="../index.html">Portada</a></nav></div></header>
 <main class="wrap" id="gdv-meteo-private" hidden>
-<section class="hero"><div class="hero-main"><span class="eyebrow">Mesa de Vuelo / acceso de administración</span><h1>Tu mesa de <em>vuelo</em>.</h1><p>Datos meteorológicos, lectura de boletines y herramientas de cálculo en un único espacio. Diseñado para consultar con criterio, no para reemplazar la información oficial.</p></div><aside class="hero-side"><div class="dial" aria-hidden="true">MV</div><div><span class="eyebrow">Información crítica</span><p>Verificá siempre <strong>emisión, vigencia, ruta y fuentes oficiales</strong> antes de planificar una operación.</p></div></aside></section>
+<section class="hero"><div class="hero-main"><span class="eyebrow">Centro de operaciones aeronáuticas · Acceso de administración</span><h1>Flight <em>Operations</em></h1><p class="ops-developer">Developed by <strong>Gente de Vuelo</strong></p><p class="ops-intro">Planificación, evaluación meteorológica y consulta operacional en un entorno claro y profesional. La información debe verificarse siempre en las fuentes oficiales.</p></div><aside class="hero-side"><div class="ops-hero-monogram" aria-hidden="true">FO<span> / GDV</span></div><div><span class="eyebrow">Criterio operacional</span><p>Comprobá <strong>emisión, validez, FIR, ruta y nivel</strong>. La evaluación y decisión de vuelo corresponden al piloto.</p></div></aside></section>
+<section class="ops-dashboard" aria-label="Tablero de acceso rápido">
+  <div class="ops-dashboard-heading"><div><span class="eyebrow">Resumen del plan · 3C + 3A</span><h2>Centro de operaciones</h2><p class="sub">Los datos se actualizan al completar el plan de vuelo. Las tarjetas abren información existente; no hacen consultas automáticas.</p></div><span class="ops-dashboard-marker">VISTA OPERACIONAL</span></div>
+  <div class="ops-route-strip" aria-label="Datos del vuelo planificado">
+    <div class="ops-route-airport"><span>ORIGEN</span><strong id="ops-summary-origin">SAEZ</strong></div>
+    <div class="ops-route-direction" aria-hidden="true">⟶</div>
+    <div class="ops-route-airport"><span>DESTINO</span><strong id="ops-summary-dest">Sin definir</strong></div>
+    <div class="ops-route-meta"><div><span>ALTERNATIVO</span><strong id="ops-summary-alternate">Sin definir</strong></div><div><span>ALTITUD</span><strong id="ops-summary-alt">—</strong></div><div><span>SALIDA UTC</span><strong id="ops-summary-time">—</strong></div><div><span>PIERNAS</span><strong id="ops-summary-legs">1</strong></div></div>
+  </div>
+  <div class="ops-cards-heading"><h3>Accesos rápidos</h3><span>Elegí una tarjeta para abrir su detalle</span></div>
+  <div class="ops-cards" aria-label="Accesos a módulos">
+    <button class="ops-shortcut" type="button" data-ops-target="#r-metar"><span class="ops-shortcut-icon" aria-hidden="true">☁</span><strong>METAR</strong><span class="ops-shortcut-state" id="ops-status-metar">Sin consultar</span><span class="ops-shortcut-link">Ver observaciones ↗</span></button>
+    <button class="ops-shortcut" type="button" data-ops-target="#r-taf"><span class="ops-shortcut-icon" aria-hidden="true">◷</span><strong>TAF</strong><span class="ops-shortcut-state" id="ops-status-taf">Sin consultar</span><span class="ops-shortcut-link">Ver pronósticos ↗</span></button>
+    <button class="ops-shortcut" type="button" data-ops-target="#r-sigmet"><span class="ops-shortcut-icon" aria-hidden="true">⚡</span><strong>SIGMET</strong><span class="ops-shortcut-state" id="ops-status-sigmet">Sin consultar</span><span class="ops-shortcut-link">Ver avisos ↗</span></button>
+    <button class="ops-shortcut" type="button" data-ops-target="#flight-pronarea"><span class="ops-shortcut-icon" aria-hidden="true">≋</span><strong>PRONAREA</strong><span class="ops-shortcut-state" id="ops-status-pronarea">Consulta oficial</span><span class="ops-shortcut-link">Cargar boletín ↗</span></button>
+    <button class="ops-shortcut" type="button" data-ops-target="#etapa-operacional"><span class="ops-shortcut-icon" aria-hidden="true">◎</span><strong>NOTAM</strong><span class="ops-shortcut-state" id="ops-status-notam">Consulta oficial</span><span class="ops-shortcut-link">Verificar restricciones ↗</span></button>
+    <button class="ops-shortcut" type="button" data-ops-target="#informe-meteorologico"><span class="ops-shortcut-icon" aria-hidden="true">◈</span><strong>Informe meteo</strong><span class="ops-shortcut-state" id="ops-status-weather">Generación opcional</span><span class="ops-shortcut-link">Abrir análisis ↗</span></button>
+    <button class="ops-shortcut ops-shortcut-attention" type="button" data-ops-target="#precauciones-vuelo"><span class="ops-shortcut-icon" aria-hidden="true">!</span><strong>Precauciones IA</strong><span class="ops-shortcut-state" id="ops-status-precautions">Pendiente de revisión</span><span class="ops-shortcut-link">Revisar controles ↗</span></button>
+    <button class="ops-shortcut" type="button" data-ops-target="#analisis-altura"><span class="ops-shortcut-icon" aria-hidden="true">▤</span><strong>Informe final</strong><span class="ops-shortcut-state" id="ops-status-final">Generación opcional</span><span class="ops-shortcut-link">Abrir informe ↗</span></button>
+  </div>
+</section>
 <nav class="jump" aria-label="Secciones"><a href="#plan-vuelo">1 · Plan de vuelo</a><a href="#consultar">2 · Boletines y PRONAREA</a><a href="#boletines">3 · Cuatro etapas</a><a href="#informe-meteorologico">Informe meteorológico</a><a href="#precauciones-vuelo">Precauciones</a><a href="#analisis-altura">4 · Informe con IA</a><a href="#consulta-piloto">Consulta del piloto</a><a href="#cartas-oficiales">Cartas oficiales</a></nav>
+<details class="ops-accordion" id="ops-plan" open><summary class="ops-accordion-toggle"><span class="ops-accordion-number">01</span><span class="ops-accordion-name"><strong>Plan de vuelo</strong><span>Origen, destino, alternativo, UTC y piernas</span></span><span class="ops-accordion-arrow" aria-hidden="true"></span></summary><div class="ops-accordion-content">
 <section class="card flight-workflow" id="plan-vuelo">
 <div class="card-header"><div><span class="card-kicker">PASO 1 · PLANIFICACIÓN</span><h2>Salida, destino y piernas de vuelo</h2></div></div>
 <p class="sub">Definí salida, destino, aeródromo alternativo obligatorio, puntos intermedios y altitud prevista para cada tramo. Las piernas son declaradas por el piloto; esta Mesa no calcula rumbos, distancias, ETA ni altitudes mínimas.</p>
@@ -431,6 +531,9 @@ pre,.flight-weather-result .flight-ai-text,.flight-pilot-result .flight-ai-text,
 </div>
 </form>
 </section>
+<div class="ops-next-row"><button class="secondary ops-next" type="button" data-ops-target="#consultar">Continuar a boletines <span aria-hidden="true">→</span></button></div>
+</div></details>
+<details class="ops-accordion" id="ops-consultar"><summary class="ops-accordion-toggle"><span class="ops-accordion-number">02</span><span class="ops-accordion-name"><strong>Boletines meteorológicos</strong><span>METAR, TAF, SIGMET, PRONAREA y NOTAM</span></span><span class="ops-accordion-arrow" aria-hidden="true"></span></summary><div class="ops-accordion-content">
 <section class="card flight-workflow" id="consultar">
 <div class="card-header"><div><span class="card-kicker">PASO 2 · BOLETINES</span><h2>Consultar y cargar información</h2></div><span class="sub">Sin gasto de tokens</span></div>
 <p class="sub">Con los aeródromos del paso 1, se obtienen automáticamente los METAR y TAF disponibles de salida, destino y alternativo. La búsqueda SIGMET es parcial. Verificá la hora, emisión y vigencia de cada boletín; los TAF no son pronósticos de ruta.</p>
@@ -467,6 +570,7 @@ pre,.flight-weather-result .flight-ai-text,.flight-pilot-result .flight-ai-text,
 <div class="actions"><a id="notam-origin-link" href="https://ais.anac.gob.ar/notam" target="_blank" rel="noopener noreferrer">Consultar NOTAM de salida</a><a id="notam-dest-link" href="https://ais.anac.gob.ar/notam" target="_blank" rel="noopener noreferrer">Consultar NOTAM de destino</a><a id="notam-alternate-link" href="https://ais.anac.gob.ar/notam" target="_blank" rel="noopener noreferrer">Consultar NOTAM de alternativo</a></div>
 </div>
 </section>
+</div></details>
 <div class="layout">
 <div class="stack">
 <section class="card" id="consultar-antiguo" hidden>
@@ -490,6 +594,7 @@ pre,.flight-weather-result .flight-ai-text,.flight-pilot-result .flight-ai-text,
 </div>
 </div>
 </section>
+<details class="ops-accordion" id="ops-boletines"><summary class="ops-accordion-toggle"><span class="ops-accordion-number">03</span><span class="ops-accordion-name"><strong>Evaluación de las cuatro etapas</strong><span>Ruta, pronósticos, infraestructura y METAR</span></span><span class="ops-accordion-arrow" aria-hidden="true"></span></summary><div class="ops-accordion-content">
 <section class="card" id="boletines">
 <div class="card-header"><div><span class="card-kicker">PASO 3 · ESTADO DE LOS BOLETINES</span><h2>Información disponible para el vuelo</h2></div></div>
 <div class="status-grid" aria-label="Disponibilidad de las fuentes">
@@ -532,6 +637,7 @@ pre,.flight-weather-result .flight-ai-text,.flight-pilot-result .flight-ai-text,
 </div>
 </details>
 </section>
+</div></details>
 </div>
 <aside class="stack">
 <section class="card" id="nubosidad">
@@ -574,6 +680,7 @@ pre,.flight-weather-result .flight-ai-text,.flight-pilot-result .flight-ai-text,
 </div>
 
 
+<details class="ops-accordion" id="ops-meteo"><summary class="ops-accordion-toggle"><span class="ops-accordion-number">04</span><span class="ops-accordion-name"><strong>Informe meteorológico</strong><span>Síntesis orientativa del recorrido y las condiciones</span></span><span class="ops-accordion-arrow" aria-hidden="true"></span></summary><div class="ops-accordion-content">
 <section class="card flight-weather-overview" id="informe-meteorologico" aria-labelledby="flight-weather-heading">
  <div class="card-header"><div><span class="card-kicker">SÍNTESIS METEOROLÓGICA · ANTES DE LAS PRECAUCIONES</span>
   <h2 id="flight-weather-heading">Informe meteorológico del vuelo planificado</h2></div></div>
@@ -589,7 +696,8 @@ pre,.flight-weather-result .flight-ai-text,.flight-pilot-result .flight-ai-text,
   <p class="sub">Análisis orientativo. Verificá emisión, vigencia, sectores y niveles en las fuentes oficiales; no acredita aptitud ni autoriza el vuelo.</p>
  </div>
 </section>
-
+</div></details>
+<details class="ops-accordion" id="ops-precauciones"><summary class="ops-accordion-toggle"><span class="ops-accordion-number">05</span><span class="ops-accordion-name"><strong>Precauciones antes del vuelo</strong><span>Comprobaciones que requieren verificación del piloto</span></span><span class="ops-accordion-arrow" aria-hidden="true"></span></summary><div class="ops-accordion-content">
 <section class="flight-precautions" id="precauciones-vuelo" aria-labelledby="flight-precautions-heading">
  <div class="flight-precautions-head">
   <span class="flight-precautions-icon" aria-hidden="true">!</span>
@@ -608,8 +716,8 @@ pre,.flight-weather-result .flight-ai-text,.flight-pilot-result .flight-ai-text,
   <p>El piloto debe verificar personalmente los informes, las restricciones operacionales y la aptitud del vuelo.</p>
  </div>
 </section>
-
-<details class="flight-advanced-report"><summary>Informe operacional ampliado de las cuatro etapas · consulta opcional</summary>
+</div></details>
+<details class="flight-advanced-report"><summary><span class="ops-accordion-number">06</span><span class="ops-accordion-name"><strong>Informe operacional ampliado</strong><span>Evaluación IA de las cuatro etapas · opcional</span></span><span class="ops-accordion-arrow" aria-hidden="true"></span></summary>
 <section class="card" id="analisis-altura" style="border-color:#54758a;background:linear-gradient(145deg,#1c2b36,#17232c)">
 <div class="card-header">
  <div><span class="card-kicker">PASO 4 · INFORME FINAL</span><h2>Análisis de las cuatro etapas con IA</h2></div>
@@ -638,6 +746,7 @@ pre,.flight-weather-result .flight-ai-text,.flight-pilot-result .flight-ai-text,
 </details>
 
 
+<details class="ops-accordion" id="ops-piloto"><summary class="ops-accordion-toggle"><span class="ops-accordion-number">07</span><span class="ops-accordion-name"><strong>Consulta del piloto</strong><span>Preguntas a la IA sobre los datos del vuelo</span></span><span class="ops-accordion-arrow" aria-hidden="true"></span></summary><div class="ops-accordion-content">
 <section class="card flight-pilot-query" id="consulta-piloto">
  <div class="card-header"><div><span class="card-kicker">CONSULTA FINAL · IA</span>
  <h2>Consulta del piloto sobre su vuelo</h2></div></div>
@@ -655,8 +764,8 @@ pre,.flight-weather-result .flight-ai-text,.flight-pilot-result .flight-ai-text,
   <p class="sub">Contrastá la respuesta con información oficial vigente. La IA no confirma que el vuelo sea seguro ni reemplaza la decisión del piloto.</p>
  </div>
 </section>
-
-
+</div></details>
+<details class="ops-accordion" id="ops-cartas"><summary class="ops-accordion-toggle"><span class="ops-accordion-number">08</span><span class="ops-accordion-name"><strong>Cartas meteorológicas</strong><span>Superficie, altura y tiempo significativo</span></span><span class="ops-accordion-arrow" aria-hidden="true"></span></summary><div class="ops-accordion-content">
 <section class="card flight-chart" id="cartas-oficiales">
 <div class="card-header"><div><span class="card-kicker">CARTAS METEOROLÓGICAS · CONSULTA OFICIAL</span><h2>Mapas de superficie, altura y tiempo significativo</h2></div></div>
 <p class="sub">Las cartas de superficie y altura se solicitan automáticamente como imágenes oficiales ECMWF, sin insertar páginas ni consumir tokens de IA. Para SIGWX se ofrecen alternativas oficiales cuando el enlace del SMN no muestra las cartas. <strong>Comprobá región, hora base, validez y nivel.</strong> Los niveles de las cartas no coinciden necesariamente con la altitud planificada.</p>
@@ -680,6 +789,7 @@ pre,.flight-weather-result .flight-ai-text,.flight-pilot-result .flight-ai-text,
 </div>
 <p class="source-notes">Fuente ECMWF OpenCharts (CC BY 4.0). Se verifican la región y la antigüedad de la emisión antes de mostrar cada imagen. El enlace SIGWX del SMN no muestra los mapas al consultar. REDEMET ofrece SIGWX SFC/FL250 de Brasil, cuya cobertura geográfica puede no abarcar la ruta argentina completa y cuya API requiere credenciales. El visor WAFS de NOAA/AWC corresponde a otros niveles, en general FL100–FL600, y no sustituye una carta nacional de baja altura. La Fuerza Aérea Argentina ofrece cartas sinópticas, que tampoco reemplazan las SIGWX. La Mesa no muestra una carta sin poder comprobar su vigencia. Verificá siempre el briefing aeronáutico oficial.</p>
 </section>
+</div></details>
 
 <p class="source-notes" style="margin-top:20px">Para realizar los cálculos de navegación, <a href="flightprep-nav.html" style="font-weight:750">abrir FlightPrep NAV en Utilidades →</a>.</p>
 
@@ -688,7 +798,7 @@ pre,.flight-weather-result .flight-ai-text,.flight-pilot-result .flight-ai-text,
 <section class="wrap" id="gdv-meteo-gate" role="status" aria-live="polite">
 <div class="card" style="max-width:670px;margin:28px auto">
 <span class="card-kicker">Área de administración</span>
-<h1 style="font-size:28px;margin:12px 0">Mesa de Vuelo</h1>
+<h1 style="font-size:28px;margin:12px 0">Flight Operations</h1><p class="sub">Developed by Gente de Vuelo</p>
 <p class="sub" id="gdv-meteo-gate-state">Comprobando permisos de acceso…</p>
 <p class="sub">Esta aplicación está reservada a las cuentas administradoras de Gente de Vuelo hasta nuevo aviso.</p>
 <a href="index.html">Volver a Utilidades</a>
@@ -1459,5 +1569,78 @@ if('IntersectionObserver' in window){
 </script>
 <script src="../assets/alternate-suggestions.js?v=20261014"></script>
 <script src="../assets/flight-utc-picker.js?v=20261014a"></script>
+
+<script>
+/* Flight Operations: capa visual de accesos, resúmenes y acordeones.
+   No modifica consultas, validaciones, endpoints ni llamadas de IA. */
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const cards=document.querySelectorAll('[data-ops-target]');
+function reveal(target){
+  if(!target)return;
+  let ancestor=target;
+  while(ancestor){if(ancestor.tagName==='DETAILS')ancestor.open=true;ancestor=ancestor.parentElement;}
+  if(target.tagName==='DETAILS')target.open=true;
+  target.scrollIntoView({behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});
+}
+cards.forEach(btn=>btn.addEventListener('click',()=>reveal(document.querySelector(btn.dataset.opsTarget))));
+document.querySelectorAll('.jump a[href^="#"]').forEach(link=>link.addEventListener('click',event=>{
+  const target=document.getElementById(link.getAttribute('href').slice(1));
+  if(!target)return;
+  event.preventDefault();reveal(target);
+}));
+const airport=id=>{
+  const node=$(id);if(!node)return '—';
+  if(node.value==='OTHER')return ($(id+'-other')?.value||'').trim().toUpperCase()||'Por definir';
+  return node.value||'Por definir';
+};
+const set=(id,value)=>{const node=$(id);if(node)node.textContent=value;};
+function renderFlight(){
+  set('ops-summary-origin',airport('flight-origin'));
+  set('ops-summary-dest',airport('flight-dest'));
+  set('ops-summary-alternate',airport('flight-alternate'));
+  const alt=$('flight-alt')?.value;
+  set('ops-summary-alt',alt?Number(alt).toLocaleString('es-AR')+' ft':'—');
+  const time=$('flight-time')?.value;
+  set('ops-summary-time',time?time.replace('T',' ')+' Z':'—');
+  const legCount=$('flight-legs-list')?.querySelectorAll('.flight-leg-row').length||1;
+  set('ops-summary-legs',String(legCount));
+}
+const plan=$('flight-analysis-form');
+if(plan){plan.addEventListener('input',renderFlight);plan.addEventListener('change',renderFlight);}
+const legs=$('flight-legs-list');
+if(legs)new MutationObserver(renderFlight).observe(legs,{childList:true,subtree:true});
+renderFlight();
+const map=[['metar','s-metar'],['taf','s-taf'],['sigmet','s-sigmet'],['pronarea','s-pronarea'],['notam','s-notam']];
+map.forEach(([name,source])=>{
+  const original=$(source),output=$('ops-status-'+name);
+  if(!original||!output)return;
+  const update=()=>{output.textContent=original.querySelector('span')?.textContent||'Sin consultar';};
+  new MutationObserver(update).observe(original,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
+  update();
+});
+[['flight-weather-result','ops-status-weather'],['flight-precautions-result','ops-status-precautions'],['flight-result','ops-status-final']].forEach(([source,target])=>{
+  const original=$(source),out=$(target);if(!original||!out)return;
+  const initial=out.textContent;
+  const update=()=>{out.textContent=original.hidden?initial:'Informe generado · revisar vigencia';};
+  new MutationObserver(update).observe(original,{attributes:true,attributeFilter:['hidden']});
+  update();
+});
+document.addEventListener('invalid',event=>{
+  let node=event.target;
+  while(node){if(node.tagName==='DETAILS')node.open=true;node=node.parentElement;}
+},true);
+$('flight-fetch-reports')?.addEventListener('click',()=>{
+  for(const id of ['flight-origin','flight-dest','flight-alternate']){
+    const node=$(id);
+    const code=airport(id);
+    if(!node||!/^SA[A-Z]{2}$/.test(code)||!node.checkValidity()){$('ops-plan').open=true;break;}
+  }
+},true);
+const stage=$('flight-stage-details');
+if(stage)new MutationObserver(()=>{if(stage.open)$('ops-boletines').open=true;}).observe(stage,{attributes:true,attributeFilter:['open']});
+})();
+</script>
 </body>
 </html>
