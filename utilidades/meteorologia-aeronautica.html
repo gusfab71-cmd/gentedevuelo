@@ -55,6 +55,18 @@
 .cloud-current .cloud-desc{margin-top:4px}
 .cloud-legend p{margin:6px 0;font-size:12px}
 @media(max-width:390px){.cloud-current{gap:10px}.cloud-current .cloud-symbol{width:50px;height:50px}}
+
+/* Flujo secuencial de la Mesa de Vuelo; mantiene diseño responsive existente. */
+.flight-workflow{margin:0 0 18px;scroll-margin-top:14px}
+.flight-leg-editor{margin:17px 0 0;padding:16px;border:1px solid #52645e;background:#131f22;border-radius:14px}
+.flight-leg-row,.flight-waypoint-row{display:grid;grid-template-columns:minmax(0,2fr) minmax(125px,1fr);gap:12px;align-items:end;margin-top:12px;padding:11px 12px;border:1px solid #475554;border-radius:11px}
+.flight-leg-row .field{margin:0}.flight-leg-route{font-weight:720;overflow-wrap:anywhere;color:#e6e9e5}
+.flight-waypoint-row{grid-template-columns:minmax(0,1fr) auto}.flight-waypoint-row button{min-height:42px}
+.flight-reports-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:10px}
+.flight-reports-grid .report{margin:0}.flight-reports-grid pre{margin:0;max-height:250px;overflow:auto}
+#flight-auto-results{margin-top:17px}
+#consultar-antiguo{display:none!important}
+@media(max-width:700px){.flight-reports-grid{grid-template-columns:1fr}.flight-leg-row{grid-template-columns:1fr}.flight-leg-editor{padding:12px}}
 </style>
 <script>document.documentElement.classList.add('auth-pending')</script>
 <style>html.auth-pending body{visibility:hidden}</style>
@@ -66,10 +78,64 @@
 <header class="top"><div class="top-inner"><a class="brand" href="../index.html"><span class="mark">GDV</span><span class="brand-name">GENTE DE VUELO<span>Centro de consulta aeronáutica</span></span></a><nav class="toplinks"><a href="index.html">Utilidades</a><a href="../index.html">Portada</a></nav></div></header>
 <main class="wrap" id="gdv-meteo-private" hidden>
 <section class="hero"><div class="hero-main"><span class="eyebrow">Mesa de Vuelo / acceso de administración</span><h1>Tu mesa de <em>vuelo</em>.</h1><p>Datos meteorológicos, lectura de boletines y herramientas de cálculo en un único espacio. Diseñado para consultar con criterio, no para reemplazar la información oficial.</p></div><aside class="hero-side"><div class="dial" aria-hidden="true">MV</div><div><span class="eyebrow">Información crítica</span><p>Verificá siempre <strong>emisión, vigencia, ruta y fuentes oficiales</strong> antes de planificar una operación.</p></div></aside></section>
-<nav class="jump" aria-label="Secciones"><a href="#consultar">Consultar boletines</a><a href="#etapa-ruta">1 · En ruta</a><a href="#etapa-puntos">2 · Puntos clave</a><a href="#etapa-operacional">3 · NOTAM</a><a href="#etapa-final">4 · METAR</a><a href="#analisis-altura">Informe integrado</a></nav>
+<nav class="jump" aria-label="Secciones"><a href="#plan-vuelo">1 · Plan de vuelo</a><a href="#consultar">2 · Boletines y PRONAREA</a><a href="#boletines">3 · Cuatro etapas</a><a href="#analisis-altura">4 · Informe con IA</a></nav>
+<section class="card flight-workflow" id="plan-vuelo">
+<div class="card-header"><div><span class="card-kicker">PASO 1 · PLANIFICACIÓN</span><h2>Salida, destino y piernas de vuelo</h2></div></div>
+<p class="sub">Definí los aeródromos, los puntos intermedios y la altitud prevista para cada tramo. Las piernas son declaradas por el piloto; esta Mesa no calcula rumbos, distancias, ETA ni altitudes mínimas.</p>
+<form id="flight-analysis-form">
+<div class="form" style="margin-top:17px">
+<label class="field" for="flight-origin">Aeródromo de salida
+<select id="flight-origin" required>
+<optgroup label="Buenos Aires y alrededores"><option value="SAEZ">Ezeiza · Ministro Pistarini · SAEZ</option><option value="SABE">Aeroparque · Jorge Newbery · SABE</option><option value="SADF">San Fernando · SADF</option><option value="SADM">Morón · SADM</option><option value="SADP">El Palomar · SADP</option><option value="SAZM">Mar del Plata · SAZM</option><option value="SAZB">Bahía Blanca · SAZB</option></optgroup>
+<optgroup label="Centro y Litoral"><option value="SACO">Córdoba · SACO</option><option value="SAAR">Rosario · SAAR</option><option value="SAAV">Santa Fe · Sauce Viejo · SAAV</option><option value="SAAP">Paraná · SAAP</option><option value="SAOC">Río Cuarto · SAOC</option><option value="SAOU">San Luis · SAOU</option><option value="SAAC">Concordia · SAAC</option></optgroup>
+<optgroup label="Cuyo"><option value="SAME">Mendoza · El Plumerillo · SAME</option><option value="SAMR">San Rafael · SAMR</option><option value="SANU">San Juan · SANU</option><option value="SAMM">Malargüe · SAMM</option></optgroup>
+<optgroup label="Norte"><option value="SASA">Salta · SASA</option><option value="SASJ">Jujuy · SASJ</option><option value="SANT">Tucumán · SANT</option><option value="SANC">Catamarca · SANC</option><option value="SANE">Santiago del Estero · SANE</option><option value="SANL">La Rioja · SANL</option><option value="SARI">Puerto Iguazú · SARI</option><option value="SARE">Resistencia · SARE</option><option value="SARC">Corrientes · SARC</option><option value="SARF">Formosa · SARF</option><option value="SARP">Posadas · SARP</option></optgroup>
+<optgroup label="Patagonia"><option value="SAZN">Neuquén · SAZN</option><option value="SAZS">Bariloche · SAZS</option><option value="SAZY">San Martín de los Andes · SAZY</option><option value="SAVC">Comodoro Rivadavia · SAVC</option><option value="SAVT">Trelew · SAVT</option><option value="SAVE">Esquel · SAVE</option><option value="SAWC">El Calafate · SAWC</option><option value="SAWG">Río Gallegos · SAWG</option><option value="SAWE">Río Grande · SAWE</option><option value="SAWH">Ushuaia · SAWH</option><option value="SAZR">Santa Rosa · SAZR</option><option value="SAZT">Tandil · SAZT</option></optgroup>
+<option value="OTHER">Otro aeródromo (ingresar código OACI)</option>
+</select>
+<input id="flight-origin-other" aria-label="Código OACI de salida" type="text" pattern="[sS][aA][A-Za-z]{2}" minlength="4" maxlength="4" placeholder="Ej.: SAXX" autocomplete="off" autocapitalize="characters" hidden disabled>
+</label>
+<label class="field" for="flight-dest">Aeródromo de destino
+<select id="flight-dest" required>
+<option value="" selected disabled>Seleccioná un aeródromo de destino</option>
+<optgroup label="Buenos Aires y alrededores"><option value="SAEZ">Ezeiza · Ministro Pistarini · SAEZ</option><option value="SABE">Aeroparque · Jorge Newbery · SABE</option><option value="SADF">San Fernando · SADF</option><option value="SADM">Morón · SADM</option><option value="SADP">El Palomar · SADP</option><option value="SAZM">Mar del Plata · SAZM</option><option value="SAZB">Bahía Blanca · SAZB</option></optgroup>
+<optgroup label="Centro y Litoral"><option value="SACO">Córdoba · SACO</option><option value="SAAR">Rosario · SAAR</option><option value="SAAV">Santa Fe · Sauce Viejo · SAAV</option><option value="SAAP">Paraná · SAAP</option><option value="SAOC">Río Cuarto · SAOC</option><option value="SAOU">San Luis · SAOU</option><option value="SAAC">Concordia · SAAC</option></optgroup>
+<optgroup label="Cuyo"><option value="SAME">Mendoza · El Plumerillo · SAME</option><option value="SAMR">San Rafael · SAMR</option><option value="SANU">San Juan · SANU</option><option value="SAMM">Malargüe · SAMM</option></optgroup>
+<optgroup label="Norte"><option value="SASA">Salta · SASA</option><option value="SASJ">Jujuy · SASJ</option><option value="SANT">Tucumán · SANT</option><option value="SANC">Catamarca · SANC</option><option value="SANE">Santiago del Estero · SANE</option><option value="SANL">La Rioja · SANL</option><option value="SARI">Puerto Iguazú · SARI</option><option value="SARE">Resistencia · SARE</option><option value="SARC">Corrientes · SARC</option><option value="SARF">Formosa · SARF</option><option value="SARP">Posadas · SARP</option></optgroup>
+<optgroup label="Patagonia"><option value="SAZN">Neuquén · SAZN</option><option value="SAZS">Bariloche · SAZS</option><option value="SAZY">San Martín de los Andes · SAZY</option><option value="SAVC">Comodoro Rivadavia · SAVC</option><option value="SAVT">Trelew · SAVT</option><option value="SAVE">Esquel · SAVE</option><option value="SAWC">El Calafate · SAWC</option><option value="SAWG">Río Gallegos · SAWG</option><option value="SAWE">Río Grande · SAWE</option><option value="SAWH">Ushuaia · SAWH</option><option value="SAZR">Santa Rosa · SAZR</option><option value="SAZT">Tandil · SAZT</option></optgroup>
+<option value="OTHER">Otro aeródromo (ingresar código OACI)</option>
+</select>
+<input id="flight-dest-other" aria-label="Código OACI de destino" type="text" pattern="[sS][aA][A-Za-z]{2}" minlength="4" maxlength="4" placeholder="Ej.: SAXX" autocomplete="off" autocapitalize="characters" hidden disabled>
+</label>
+
+<label class="field">Altitud prevista (pies AMSL)<input id="flight-alt" type="number" required min="500" max="45000" step="100" placeholder="6500"></label>
+<label class="field">Fecha y hora previstas de salida (hora local)<input id="flight-time" type="datetime-local" required></label>
+<label class="field">Reglas de vuelo<select id="flight-rules" required><option value="VFR">VFR</option><option value="IFR">IFR</option></select></label>
+<label class="field full">Observaciones sobre la ruta (opcional)<input id="flight-route" maxlength="400" placeholder="Indicá corredores o referencias adicionales, si corresponde"></label>
+<fieldset class="full" style="margin:0;border:1px solid #58645e;border-radius:12px;padding:12px 16px">
+<legend style="padding:0 5px;font-weight:700">FIR que atraviesa tu ruta</legend>
+<div style="display:flex;gap:10px 20px;flex-wrap:wrap">
+<label><input class="flight-fir" type="checkbox" value="SAEF" checked style="width:auto"> Ezeiza</label>
+<label><input class="flight-fir" type="checkbox" value="SACF" style="width:auto"> Córdoba</label>
+<label><input class="flight-fir" type="checkbox" value="SAMF" style="width:auto"> Mendoza</label>
+<label><input class="flight-fir" type="checkbox" value="SARR" style="width:auto"> Resistencia</label>
+<label><input class="flight-fir" type="checkbox" value="SAVF" style="width:auto"> Comodoro Rivadavia</label>
+</div>
+<p class="sub">Marcá todas las FIR implicadas y corroboralas con cartas AIP; el sistema no determina automáticamente el trazado de tu ruta.</p>
+</fieldset>
+</div>
+
+<div class="flight-leg-editor">
+ <div class="manual-source-heading"><strong>Piernas previstas</strong><button class="secondary" type="button" id="flight-add-stop">+ Agregar punto intermedio</button></div>
+ <p class="sub">Si volás directo, quedará una sola pierna. Podés agregar hasta ocho puntos intermedios.</p>
+ <div id="flight-waypoints"></div>
+ <div id="flight-legs-list" aria-live="polite"></div>
+</div>
+</form>
+</section>
 <div class="layout">
 <div class="stack">
-<section class="card" id="consultar">
+<section class="card" id="consultar-antiguo" hidden>
 <div class="card-header"><div><span class="card-kicker">Consulta de boletines · sin IA</span><h2>Consultar datos disponibles</h2></div><span class="sub">Argentina · Selección manual</span></div>
 <p class="sub">Ingresá el código OACI y la FIR. Esta consulta recupera METAR y TAF del aeródromo indicado y una búsqueda complementaria de SIGMET de la FIR, sin consumir tokens de IA. Para salida, destino y alternativo, repetí la consulta con el código de cada aeródromo. PRONAREA y NOTAM se verifican en fuentes oficiales.</p>
 <form id="brief-form" class="form">
@@ -90,8 +156,29 @@
 </div>
 </div>
 </section>
+<section class="card flight-workflow" id="consultar">
+<div class="card-header"><div><span class="card-kicker">PASO 2 · BOLETINES</span><h2>Consultar y cargar información</h2></div><span class="sub">Sin gasto de tokens</span></div>
+<p class="sub">Con los aeródromos del paso 1, se obtienen automáticamente los METAR y TAF disponibles de salida y destino. La búsqueda SIGMET es parcial. Verificá la hora, emisión y vigencia de cada boletín; los TAF no son pronósticos de ruta.</p>
+<div class="actions"><button class="primary" type="button" id="flight-fetch-reports">Consultar METAR, TAF y SIGMET</button><span class="feedback" id="flight-fetch-status" aria-live="polite">Todavía no se consultaron boletines.</span></div>
+<div id="flight-auto-results" hidden>
+<p class="sub" id="flight-auto-time"></p>
+<div class="flight-reports-grid">
+ <details class="report" open><summary><strong id="flight-metar-origin-title">METAR salida</strong><span id="flight-metar-origin-state">Pendiente</span></summary><div class="content"><pre id="flight-metar-origin-raw">—</pre></div></details>
+ <details class="report" open><summary><strong id="flight-taf-origin-title">TAF salida</strong><span id="flight-taf-origin-state">Pendiente</span></summary><div class="content"><pre id="flight-taf-origin-raw">—</pre></div></details>
+ <details class="report" open><summary><strong id="flight-metar-dest-title">METAR destino</strong><span id="flight-metar-dest-state">Pendiente</span></summary><div class="content"><pre id="flight-metar-dest-raw">—</pre></div></details>
+ <details class="report" open><summary><strong id="flight-taf-dest-title">TAF destino</strong><span id="flight-taf-dest-state">Pendiente</span></summary><div class="content"><pre id="flight-taf-dest-raw">—</pre></div></details>
+</div>
+<p class="source-notes">SIGMET internacional: búsqueda parcial para la FIR seleccionada. Confirmá todos los SIGMET de las FIR de la ruta en el SMN. El análisis final realizará una nueva consulta automática.</p>
+</div>
+<div class="manual-source">
+<div class="manual-source-heading"><strong>PRONAREA · carga manual</strong><a class="secondary" href="https://www.smn.gob.ar/pronarea" target="_blank" rel="noopener noreferrer">Abrir PRONAREA · SMN ↗</a></div>
+<p class="sub">Copiá el PRONAREA de las FIR que recorrés y pegalo aquí, incluyendo emisión, vigencia, sectores y niveles.</p>
+<label class="field" for="flight-pronarea">Texto del PRONAREA
+<textarea id="flight-pronarea" form="flight-analysis-form" required minlength="40" maxlength="12000" rows="7" placeholder="Pegá el PRONAREA oficial vigente para las FIR involucradas."></textarea></label>
+</div>
+</section>
 <section class="card" id="boletines">
-<div class="card-header"><div><span class="card-kicker">Secuencia de verificación previa al vuelo</span><h2>Evaluación en cuatro etapas</h2></div></div>
+<div class="card-header"><div><span class="card-kicker">PASO 3 · INTERPRETACIÓN</span><h2>Evaluación en cuatro etapas</h2></div></div>
 <div class="status-grid" aria-label="Disponibilidad de las fuentes">
 <div class="status-tile pending" id="s-pronarea"><strong>PRONAREA</strong><span>Consulta oficial</span></div>
 <div class="status-tile" id="s-sigmet"><strong>SIGMET</strong><span>Sin consultar</span></div>
@@ -101,25 +188,27 @@
 </div>
 <section class="brief-stage" id="etapa-ruta" aria-labelledby="etapa-ruta-titulo">
 <div class="brief-stage-heading"><span class="brief-stage-number">1</span><div><h3 id="etapa-ruta-titulo">Evaluación en ruta · Macro</h3><p class="sub">Área y FIR: verificá fenómenos, sectores, altitudes y vigencia en el recorrido.</p></div></div>
-<details class="report"><summary><strong>PRONAREA · Pronóstico de área / FIR</strong><span>Consulta oficial</span></summary><div class="content"><p>Obtené el PRONAREA vigente para cada FIR atravesada y verificá que corresponda a la hora, el nivel y la ruta prevista. Podés pegarlo en el formulario del informe integrado.</p><a href="https://www.smn.gob.ar/pronarea" target="_blank" rel="noopener noreferrer">Abrir PRONAREA oficial · SMN</a></div></details>
+<details class="report"><summary><strong>PRONAREA · Pronóstico de área / FIR</strong><span>Consulta oficial</span></summary><div class="content"><p>Obtené el PRONAREA vigente para cada FIR atravesada y verificá que corresponda a la hora, el nivel y la ruta prevista. Pegalo en la carga manual del paso 2.</p><a href="https://www.smn.gob.ar/pronarea" target="_blank" rel="noopener noreferrer">Abrir PRONAREA oficial · SMN</a></div></details>
 <details class="report" id="r-sigmet"><summary><strong>SIGMET · Peligros severos en ruta</strong><span id="label-sigmet">Sin consultar</span></summary><div class="content"><p>La búsqueda internacional disponible aquí es parcial. No encontrar coincidencias no demuestra ausencia de SIGMET: comprobá los avisos oficiales, el área afectada, el nivel y su validez.</p><pre id="raw-sigmet">Todavía no hay datos.</pre><a href="https://www.smn.gob.ar/mensajes-sigmet" target="_blank" rel="noopener noreferrer">Verificar SIGMET oficiales · SMN</a></div></details>
 </section>
 <section class="brief-stage" id="etapa-puntos" aria-labelledby="etapa-puntos-titulo">
-<div class="brief-stage-heading"><span class="brief-stage-number">2</span><div><h3 id="etapa-puntos-titulo">Evaluación de puntos clave · Micro / TAF</h3><p class="sub">Repetí la consulta del TAF para cada aeródromo; no presupongas las mismas condiciones en distintos lugares.</p></div></div>
+<div class="brief-stage-heading"><span class="brief-stage-number">2</span><div><h3 id="etapa-puntos-titulo">Evaluación de puntos clave · Micro / TAF</h3><p class="sub">Los TAF recuperados en el paso 2 corresponden a los aeródromos de salida y destino, no al espacio aéreo de ruta.</p></div></div>
 <div class="taf-checkpoints">
 <div><strong>Salida</strong><span>Pronóstico válido para la hora prevista de despegue</span></div>
 <div><strong>Destino</strong><span>Pronóstico válido para la hora estimada de arribo</span></div>
 <div><strong>Alternativo</strong><span>Pronóstico válido durante la ventana de utilización prevista y la reserva disponible</span></div>
 </div>
-<details class="report" id="r-taf"><summary><strong>TAF · Pronóstico del aeródromo consultado</strong><span id="label-taf">Sin consultar</span></summary><div class="content"><p>Este es el TAF del código OACI que ingresaste arriba, no el de los tres puntos simultáneamente. Verificá emisión, validez y grupos TEMPO, BECMG y PROB; el sistema no predice automáticamente la condición exacta a la ETA.</p><pre id="raw-taf">Todavía no hay datos.</pre><a href="https://www.smn.gob.ar/taf" target="_blank" rel="noopener noreferrer">Verificar TAF en SMN</a></div></details>
+<details class="report" id="r-taf"><summary><strong>TAF · Pronóstico del aeródromo consultado</strong><span id="label-taf">Sin consultar</span></summary><div class="content"><p>TAF de salida del paso 2. Verificá emisión, validez y grupos TEMPO, BECMG y PROB; no se estima la condición exacta a una ETA no declarada.</p><pre id="raw-taf">Todavía no hay datos.</pre><a href="https://www.smn.gob.ar/taf" target="_blank" rel="noopener noreferrer">Verificar TAF en SMN</a></div></details>
+<details class="report" id="r-taf-dest"><summary><strong>TAF destino</strong><span id="label-taf-dest">Sin consultar</span></summary><div class="content"><pre id="raw-taf-dest">Todavía no hay datos.</pre></div></details>
 </section>
 <section class="brief-stage" id="etapa-operacional" aria-labelledby="etapa-operacional-titulo">
 <div class="brief-stage-heading"><span class="brief-stage-number">3</span><div><h3 id="etapa-operacional-titulo">Verificación operacional · Infraestructura</h3><p class="sub">Pistas, radioayudas, procedimientos, espacio aéreo y restricciones aplicables.</p></div></div>
-<details class="report"><summary><strong>NOTAM · Estado y restricciones operacionales</strong><span>Consulta oficial</span></summary><div class="content"><p>Consultá NOTAM vigentes para salida, ruta, destino y alternativo, y contrastalos con la información aeronáutica oficial. Pegalos en el formulario del informe integrado si lo necesitás.</p><a href="https://ais.anac.gob.ar/notam" target="_blank" rel="noopener noreferrer">Abrir NOTAM oficiales · AIS/ANAC</a></div></details>
+<details class="report"><summary><strong>NOTAM · Estado y restricciones operacionales</strong><span>Consulta oficial</span></summary><div class="content"><p>Consultá NOTAM vigentes para salida, ruta, destino y alternativo, y contrastalos con la información aeronáutica oficial. La consulta oficial es externa; este sistema no recibe ni certifica los NOTAM. Si no se incorporan, el informe indicará que siguen pendientes.</p><div class="actions"><a id="notam-origin-link" href="https://ais.anac.gob.ar/notam" target="_blank" rel="noopener noreferrer">Consultar NOTAM de salida</a><a id="notam-dest-link" href="https://ais.anac.gob.ar/notam" target="_blank" rel="noopener noreferrer">Consultar NOTAM de destino</a></div></div></details>
 </section>
 <section class="brief-stage" id="etapa-final" aria-labelledby="etapa-final-titulo">
 <div class="brief-stage-heading"><span class="brief-stage-number">4</span><div><h3 id="etapa-final-titulo">Verificación final prevuelo · Tiempo presente</h3><p class="sub">METAR/SPECI recientes en los aeródromos pertinentes, viento, visibilidad, nubosidad y QNH. Comprobá la hora de observación.</p></div></div>
 <details class="report" id="r-metar"><summary><strong>METAR · Condición observada</strong><span id="label-metar">Sin consultar</span></summary><div class="content"><p>Reportes recuperados desde Aviation Weather Center. Comprobá emisión y vigencia en la fuente oficial y verificá el QNH para el ajuste altimétrico. No todos los aeródromos reportan continuamente; un TAF no reemplaza una observación.</p><pre id="raw-metar">Todavía no hay datos.</pre><a href="https://www.smn.gob.ar/metar" target="_blank" rel="noopener noreferrer">Verificar METAR en SMN</a></div></details>
+<details class="report" id="r-metar-dest"><summary><strong>METAR destino</strong><span id="label-metar-dest">Sin consultar</span></summary><div class="content"><pre id="raw-metar-dest">Todavía no hay datos.</pre></div></details>
 <p class="sub">La lectura simbólica de la nubosidad del último METAR consultado está en el panel de observación.</p>
 </section>
 <p class="source-notes">La fecha de consulta no acredita emisión o validez. Ningún resultado de esta Mesa sustituye el briefing oficial ni la evaluación operacional del piloto.</p>
@@ -167,83 +256,26 @@
 
 <section class="card" id="analisis-altura" style="margin-top:22px;border-color:#97643c;background:linear-gradient(145deg,#242827,#171e20)">
 <div class="card-header">
- <div><span class="card-kicker">Análisis integrado · Solo administrador</span><h2>Informe para el vuelo previsto</h2></div>
+ <div><span class="card-kicker">PASO 4 · INFORME FINAL</span><h2>Análisis de las cuatro etapas con IA</h2></div>
  <span style="border:1px solid #b87745;border-radius:99px;padding:7px 11px;color:var(--accent2);font-size:12px;font-weight:700">Usa tokens solo al confirmar</span>
 </div>
-<p class="sub">Aplicá la secuencia: 1) PRONAREA y SIGMET de la ruta; 2) TAF de salida y destino para sus horarios previstos (verificá también el alternativo por separado); 3) NOTAM; 4) METAR vigente poco antes del vuelo. Completá salida, destino, altitud y hora, y pegá PRONAREA y NOTAM oficiales. El informe con IA sigue siendo una interpretación educativa, no una confirmación de condiciones ni una autorización de vuelo. <strong>Los cálculos de rumbos, tiempos y combustible permanecen en FlightPrep NAV.</strong></p>
-<form id="flight-analysis-form">
-<div class="form" style="margin-top:17px">
-<label class="field" for="flight-origin">Aeródromo de salida
-<select id="flight-origin" required>
-<optgroup label="Buenos Aires y alrededores"><option value="SAEZ">Ezeiza · Ministro Pistarini · SAEZ</option><option value="SABE">Aeroparque · Jorge Newbery · SABE</option><option value="SADF">San Fernando · SADF</option><option value="SADM">Morón · SADM</option><option value="SADP">El Palomar · SADP</option><option value="SAZM">Mar del Plata · SAZM</option><option value="SAZB">Bahía Blanca · SAZB</option></optgroup>
-<optgroup label="Centro y Litoral"><option value="SACO">Córdoba · SACO</option><option value="SAAR">Rosario · SAAR</option><option value="SAAV">Santa Fe · Sauce Viejo · SAAV</option><option value="SAAP">Paraná · SAAP</option><option value="SAOC">Río Cuarto · SAOC</option><option value="SAOU">San Luis · SAOU</option><option value="SAAC">Concordia · SAAC</option></optgroup>
-<optgroup label="Cuyo"><option value="SAME">Mendoza · El Plumerillo · SAME</option><option value="SAMR">San Rafael · SAMR</option><option value="SANU">San Juan · SANU</option><option value="SAMM">Malargüe · SAMM</option></optgroup>
-<optgroup label="Norte"><option value="SASA">Salta · SASA</option><option value="SASJ">Jujuy · SASJ</option><option value="SANT">Tucumán · SANT</option><option value="SANC">Catamarca · SANC</option><option value="SANE">Santiago del Estero · SANE</option><option value="SANL">La Rioja · SANL</option><option value="SARI">Puerto Iguazú · SARI</option><option value="SARE">Resistencia · SARE</option><option value="SARC">Corrientes · SARC</option><option value="SARF">Formosa · SARF</option><option value="SARP">Posadas · SARP</option></optgroup>
-<optgroup label="Patagonia"><option value="SAZN">Neuquén · SAZN</option><option value="SAZS">Bariloche · SAZS</option><option value="SAZY">San Martín de los Andes · SAZY</option><option value="SAVC">Comodoro Rivadavia · SAVC</option><option value="SAVT">Trelew · SAVT</option><option value="SAVE">Esquel · SAVE</option><option value="SAWC">El Calafate · SAWC</option><option value="SAWG">Río Gallegos · SAWG</option><option value="SAWE">Río Grande · SAWE</option><option value="SAWH">Ushuaia · SAWH</option><option value="SAZR">Santa Rosa · SAZR</option><option value="SAZT">Tandil · SAZT</option></optgroup>
-<option value="OTHER">Otro aeródromo (ingresar código OACI)</option>
-</select>
-<input id="flight-origin-other" aria-label="Código OACI de salida" type="text" pattern="[sS][aA][A-Za-z]{2}" minlength="4" maxlength="4" placeholder="Ej.: SAXX" autocomplete="off" autocapitalize="characters" hidden disabled>
-</label>
-<label class="field" for="flight-dest">Aeródromo de destino
-<select id="flight-dest" required>
-<option value="" selected disabled>Seleccioná un aeródromo de destino</option>
-<optgroup label="Buenos Aires y alrededores"><option value="SAEZ">Ezeiza · Ministro Pistarini · SAEZ</option><option value="SABE">Aeroparque · Jorge Newbery · SABE</option><option value="SADF">San Fernando · SADF</option><option value="SADM">Morón · SADM</option><option value="SADP">El Palomar · SADP</option><option value="SAZM">Mar del Plata · SAZM</option><option value="SAZB">Bahía Blanca · SAZB</option></optgroup>
-<optgroup label="Centro y Litoral"><option value="SACO">Córdoba · SACO</option><option value="SAAR">Rosario · SAAR</option><option value="SAAV">Santa Fe · Sauce Viejo · SAAV</option><option value="SAAP">Paraná · SAAP</option><option value="SAOC">Río Cuarto · SAOC</option><option value="SAOU">San Luis · SAOU</option><option value="SAAC">Concordia · SAAC</option></optgroup>
-<optgroup label="Cuyo"><option value="SAME">Mendoza · El Plumerillo · SAME</option><option value="SAMR">San Rafael · SAMR</option><option value="SANU">San Juan · SANU</option><option value="SAMM">Malargüe · SAMM</option></optgroup>
-<optgroup label="Norte"><option value="SASA">Salta · SASA</option><option value="SASJ">Jujuy · SASJ</option><option value="SANT">Tucumán · SANT</option><option value="SANC">Catamarca · SANC</option><option value="SANE">Santiago del Estero · SANE</option><option value="SANL">La Rioja · SANL</option><option value="SARI">Puerto Iguazú · SARI</option><option value="SARE">Resistencia · SARE</option><option value="SARC">Corrientes · SARC</option><option value="SARF">Formosa · SARF</option><option value="SARP">Posadas · SARP</option></optgroup>
-<optgroup label="Patagonia"><option value="SAZN">Neuquén · SAZN</option><option value="SAZS">Bariloche · SAZS</option><option value="SAZY">San Martín de los Andes · SAZY</option><option value="SAVC">Comodoro Rivadavia · SAVC</option><option value="SAVT">Trelew · SAVT</option><option value="SAVE">Esquel · SAVE</option><option value="SAWC">El Calafate · SAWC</option><option value="SAWG">Río Gallegos · SAWG</option><option value="SAWE">Río Grande · SAWE</option><option value="SAWH">Ushuaia · SAWH</option><option value="SAZR">Santa Rosa · SAZR</option><option value="SAZT">Tandil · SAZT</option></optgroup>
-<option value="OTHER">Otro aeródromo (ingresar código OACI)</option>
-</select>
-<input id="flight-dest-other" aria-label="Código OACI de destino" type="text" pattern="[sS][aA][A-Za-z]{2}" minlength="4" maxlength="4" placeholder="Ej.: SAXX" autocomplete="off" autocapitalize="characters" hidden disabled>
-</label>
-
-<label class="field">Altitud prevista (pies AMSL)<input id="flight-alt" type="number" required min="500" max="45000" step="100" placeholder="6500"></label>
-<label class="field">Fecha y hora previstas de salida (hora local)<input id="flight-time" type="datetime-local" required></label>
-<label class="field">Reglas de vuelo<select id="flight-rules" required><option value="VFR">VFR</option><option value="IFR">IFR</option></select></label>
-<label class="field full">Ruta o corredores previstos (opcional)<input id="flight-route" maxlength="800" placeholder="Si conocés puntos intermedios, indicálos; si no, el informe indicará que se desconoce la trayectoria exacta"></label>
-<fieldset class="full" style="margin:0;border:1px solid #58645e;border-radius:12px;padding:12px 16px">
-<legend style="padding:0 5px;font-weight:700">FIR que atraviesa tu ruta</legend>
-<div style="display:flex;gap:10px 20px;flex-wrap:wrap">
-<label><input class="flight-fir" type="checkbox" value="SAEF" checked style="width:auto"> Ezeiza</label>
-<label><input class="flight-fir" type="checkbox" value="SACF" style="width:auto"> Córdoba</label>
-<label><input class="flight-fir" type="checkbox" value="SAMF" style="width:auto"> Mendoza</label>
-<label><input class="flight-fir" type="checkbox" value="SARR" style="width:auto"> Resistencia</label>
-<label><input class="flight-fir" type="checkbox" value="SAVF" style="width:auto"> Comodoro Rivadavia</label>
-</div>
-<p class="sub">Marcá todas las FIR implicadas y corroboralas con cartas AIP; el sistema no determina automáticamente el trazado de tu ruta.</p>
-</fieldset>
-</div>
-<div style="margin-top:20px;padding-top:18px;border-top:1px solid #55534d">
-<h3 style="color:var(--accent2)">Boletines oficiales · Copiar y pegar</h3>
-<p class="sub">Primero abrí cada fuente, copiá el texto completo con emisión y vigencia, volvé a esta Mesa y pegalo inmediatamente debajo. No se requiere escribir la hora de carga. La aplicación no certifica que un texto pegado sea auténtico ni esté vigente.</p>
-<div class="manual-source">
-  <div class="manual-source-heading"><strong>1 · PRONAREA</strong><a class="secondary" href="https://www.smn.gob.ar/pronarea" target="_blank" rel="noopener noreferrer">Abrir PRONAREA · SMN <span aria-hidden="true">↗</span></a></div>
-  <label class="field" for="flight-pronarea">Pegá aquí el PRONAREA oficial
-  <textarea id="flight-pronarea" required minlength="40" maxlength="12000" rows="7" style="resize:vertical;min-height:145px" placeholder="Copiá desde el SMN el PRONAREA de las FIR correspondientes, incluyendo emisión, validez, niveles y fenómenos."></textarea></label>
-</div>
-<div class="manual-source">
-  <div class="manual-source-heading"><strong>2 · NOTAM</strong><a class="secondary" href="https://ais.anac.gob.ar/notam" target="_blank" rel="noopener noreferrer">Abrir NOTAM · AIS / ANAC <span aria-hidden="true">↗</span></a></div>
-  <label class="field" for="flight-notam">Pegá aquí los NOTAM oficiales
-  <textarea id="flight-notam" required minlength="30" maxlength="12000" rows="7" style="resize:vertical;min-height:145px" placeholder="Copiá desde AIS / ANAC los NOTAM aplicables a salida, ruta, destino y alternativas, incluyendo sus períodos de vigencia."></textarea></label>
-</div>
-</div>
+<p class="sub">El sistema tendrá en cuenta las piernas declaradas, PRONAREA cargado manualmente y los METAR/TAF/SIGMET recuperables. Evaluará: 1) ruta (PRONAREA/SIGMET), 2) salida y destino (TAF), 3) infraestructura (NOTAM por consulta externa), 4) observaciones actuales (METAR). <strong>Solo generará el informe después de tu confirmación; no autoriza el vuelo.</strong></p>
 <div style="margin:19px 0 16px;padding:17px;border:1px solid #745c45;border-radius:14px;background:#1c2526">
 <label class="field" for="flight-question">¿Qué querés consultar sobre las condiciones en altura? (opcional)
 <textarea id="flight-question" maxlength="500" rows="3" style="resize:vertical" placeholder="Ej.: Para mi vuelo a 6.500 pies, ¿qué viento, nubosidad, turbulencia, engelamiento o fenómenos relevantes hay en la ruta?"></textarea></label>
-<p class="sub" style="margin:9px 0 0">Primero cargá PRONAREA y NOTAM. Si dejás este campo vacío, se elaborará un informe general con la información disponible cuando solicites el análisis.</p>
+<p class="sub" style="margin:9px 0 0">Primero consultá los boletines automáticos y cargá PRONAREA. Si no hacés una pregunta, recibirás una síntesis de las cuatro etapas.</p>
 </div>
 <div class="warning" style="margin:17px 0">
-<strong>Antes de usar tokens:</strong> verificá que los boletines cubran el vuelo previsto. Si no indicaste ruta exacta, el sistema no podrá determinar qué sectores atravesás. El resultado es orientación educativa, no un briefing oficial ni una evaluación de aptitud VFR/IFR.
+<strong>Antes de usar tokens:</strong> verificá que los boletines cubran el vuelo previsto. Si no indicaste ruta exacta, el sistema no podrá determinar qué sectores atravesás. La consulta NOTAM de salida y destino queda bajo responsabilidad del piloto. El resultado no reemplaza un briefing oficial ni determina aptitud VFR/IFR.
 </div>
 <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px">
-<input id="flight-confirm-cost" required type="checkbox" style="width:20px;height:20px;flex:none">
+<input id="flight-confirm-cost" required form="flight-analysis-form" type="checkbox" style="width:20px;height:20px;flex:none">
 <span>Entiendo que al solicitar el análisis completo se consumirán tokens de OpenAI. Acepto iniciar una consulta privada de prueba.</span>
 </label>
 <div class="actions">
-<button class="primary" id="flight-ask" type="submit">Solicitar informe en altura con IA</button>
+<button class="primary" id="flight-ask" form="flight-analysis-form" type="submit">Generar informe de las cuatro etapas con IA</button>
 <span id="flight-status" class="feedback" role="status" aria-live="polite">Sin ejecutar. Las consultas anteriores no consumen tokens de IA.</span>
 </div>
-</form>
 <div id="flight-result" hidden style="margin-top:20px;border-top:1px solid #605951;padding-top:18px">
 <div class="card-header"><h3>Informe meteorológico y operacional</h3><button class="secondary" id="flight-copy" type="button">Copiar análisis</button></div>
 <p class="sub" id="flight-analysis-time"></p>
