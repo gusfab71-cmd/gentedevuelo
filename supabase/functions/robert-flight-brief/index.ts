@@ -90,7 +90,7 @@ Deno.serve(async request=>{
   if(adminError)return json({error:"No se pudieron verificar permisos."},503);
   if(!admin)return json({error:"Análisis de vuelo reservado a administración."},403);
   const {data:state,error:stateError}=await db.from("robert_daily_config").select("chat_enabled").eq("singleton",true).maybeSingle();
-  if(stateError||state?.chat_enabled===false)return json({error:"Shimoda está desactivado o no disponible."},503);
+  if(stateError||state?.chat_enabled===false)return json({error:"El análisis meteorológico con IA está desactivado o no disponible."},503);
   let input:any;
   try{input=await request.json();}catch{return json({error:"Solicitud JSON inválida."},400);}
   if(input?.confirm_ai_cost!==true)return json({error:"Debés confirmar expresamente el consumo de tokens antes del análisis."},400);
@@ -131,7 +131,7 @@ Deno.serve(async request=>{
   const reports={origin_metar:reportResult(originMetar),origin_taf:reportResult(originTaf),destination_metar:reportResult(destinationMetar),destination_taf:reportResult(destinationTaf)};
   const sigmet=sigmetResult.status==="fulfilled"?sigmetResult.value:{available:false,raw:"",status:"error_consulta"};
   const instructions=[
-    "Sos Robert Shimoda, asistente aeronáutico educativo de Gente de Vuelo, en prueba privada para administradores.",
+    "Sos un analista de meteorología aeronáutica educativo de Gente de Vuelo, en prueba privada para administradores. Redactá en forma impersonal, sin presentarte con nombre propio ni firmar el informe.",
     "OBJETIVO EXCLUSIVO: entregar un informe claro de condiciones meteorológicas y fenómenos en altura que pueden interesar al piloto desde aeródromo de salida hasta aeródromo de destino, en función de la altitud, fecha y hora previstas. No calcules distancias, rumbos, piernas, derivas, GS, ETE, ETA ni combustible: para eso está FlightPrep NAV.",
     "Presentá secciones: 1. Salida (METAR y TAF); 2. En ruta, a la altitud indicada (viento en altura si consta en PRONAREA, nubosidad, turbulencia, engelamiento, convección, corrientes en chorro y SIGMET relevantes); 3. Llegada (METAR y TAF); 4. NOTAM relevantes; 5. Incertidumbres y verificaciones.",
     "Indicá siempre para cada fenómeno el sector, altitud o FL, vigencia y fuente cuando consten. No recites boletines enteros ni enumeres sin explicar su relevancia. PRIORIZÁ hechos concretos para la pregunta y el nivel de vuelo.",
@@ -171,11 +171,11 @@ Deno.serve(async request=>{
     });
     if(!response.ok){
       console.error("robert-flight-brief: model unavailable",response.status);
-      return json({error:"No se pudo obtener el análisis de Shimoda. Verificá la configuración del servicio."},502);
+      return json({error:"No se pudo obtener el análisis meteorológico. Verificá la configuración del servicio."},502);
     }
     const payload=await response.json();
     const report=responseText(payload).slice(0,4500);
-    if(!report)return json({error:"Shimoda no devolvió un análisis utilizable."},502);
+    if(!report)return json({error:"El servicio no devolvió un análisis utilizable."},502);
     return json({
       ok:true,analysis:report,ai_used:true,
       generated_at_utc:new Date().toISOString(),
