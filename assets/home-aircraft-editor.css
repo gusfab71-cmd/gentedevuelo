@@ -1,0 +1,58 @@
+/* Posición configurable de la fotografía de fondo de la portada.
+   El avión no es una capa separada: se desplaza la imagen completa.
+   El diseño móvil usa su propia imagen en .hero y no se modifica. */
+@media (min-width:701px) {
+  body > .portada-completa {
+    background-position: var(--gdv-aircraft-bg-x,50%) var(--gdv-aircraft-bg-y,65%) !important;
+  }
+}
+#gdvAircraftEditor {
+  position: fixed;
+  z-index: 100100;
+  top: 94px;
+  right: 18px;
+  box-sizing: border-box;
+  width: min(465px, calc(100vw - 36px));
+  padding: 16px;
+  background: #18242cf8;
+  color: #f1f4f6;
+  border: 1px solid #d9b37b;
+  border-radius: 12px;
+  box-shadow: 0 12px 38px #000b;
+  font: 12px/1.5 system-ui, sans-serif;
+}
+#gdvAircraftEditor strong { color: #ffe1ab; font-weight: 800; letter-spacing: .05em; }
+#gdvAircraftEditor p { margin: 7px 0 0; color: #d3e0e7; }
+#gdvAircraftEditor .gdv-aircraft-axis {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+#gdvAircraftEditor .gdv-aircraft-axis label { min-width: 69px; font-weight: 700; }
+#gdvAircraftEditor .gdv-aircraft-axis input[type=range] { flex: 1; min-width: 60px; accent-color: #eabb75; }
+#gdvAircraftEditor .gdv-aircraft-axis output { min-width: 37px; text-align: right; font-variant-numeric: tabular-nums; }
+#gdvAircraftEditor .gdv-aircraft-nudges,
+#gdvAircraftEditor .gdv-aircraft-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 13px;
+}
+#gdvAircraftEditor button {
+  min-height: 34px;
+  border: 1px solid #8598a4;
+  border-radius: 8px;
+  background: #2d3c48;
+  color: #fff;
+  padding: 8px 11px;
+  font: 650 12px system-ui, sans-serif;
+  cursor: pointer;
+}
+#gdvAircraftEditor button:hover { background: #425865; }
+#gdvAircraftEditor button:disabled { opacity: .55; cursor: not-allowed; }
+#gdvAircraftEditor .gdv-aircraft-nudges button { min-width: 42px; font-size: 18px; padding: 5px; }
+#gdvAircraftSave { background: #ddb06d !important; color: #20242b !important; border-color: #edc58d !important; }
+#gdvAircraftStatus { min-height: 1.4em; margin-top: 10px !important; color: #ffdca2 !important; }
+#gdvAircraftStatus.gdv-aircraft-error { color: #ffb8b0 !important; }
+@media (max-width:700px) { #gdvAircraftEditor { display: none !important; } }
