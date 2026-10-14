@@ -176,6 +176,11 @@
 <label class="field" for="flight-pronarea">Texto del PRONAREA
 <textarea id="flight-pronarea" form="flight-analysis-form" required minlength="40" maxlength="12000" rows="7" placeholder="Pegá el PRONAREA oficial vigente para las FIR involucradas."></textarea></label>
 </div>
+<div class="manual-source">
+<div class="manual-source-heading"><strong>NOTAM · consulta oficial</strong><span class="sub">No se cargan automáticamente ni son obligatorios para pedir el análisis</span></div>
+<p class="sub">Revisá los NOTAM de salida y llegada en AIS/ANAC. El informe de IA señalará esta verificación como pendiente, pues no recibe ni interpreta automáticamente esos avisos.</p>
+<div class="actions"><a id="notam-origin-link" href="https://ais.anac.gob.ar/notam" target="_blank" rel="noopener noreferrer">Consultar NOTAM de salida</a><a id="notam-dest-link" href="https://ais.anac.gob.ar/notam" target="_blank" rel="noopener noreferrer">Consultar NOTAM de destino</a></div>
+</div>
 </section>
 <section class="card" id="boletines">
 <div class="card-header"><div><span class="card-kicker">PASO 3 · INTERPRETACIÓN</span><h2>Evaluación en cuatro etapas</h2></div></div>
@@ -203,7 +208,7 @@
 </section>
 <section class="brief-stage" id="etapa-operacional" aria-labelledby="etapa-operacional-titulo">
 <div class="brief-stage-heading"><span class="brief-stage-number">3</span><div><h3 id="etapa-operacional-titulo">Verificación operacional · Infraestructura</h3><p class="sub">Pistas, radioayudas, procedimientos, espacio aéreo y restricciones aplicables.</p></div></div>
-<details class="report"><summary><strong>NOTAM · Estado y restricciones operacionales</strong><span>Consulta oficial</span></summary><div class="content"><p>Consultá NOTAM vigentes para salida, ruta, destino y alternativo, y contrastalos con la información aeronáutica oficial. La consulta oficial es externa; este sistema no recibe ni certifica los NOTAM. Si no se incorporan, el informe indicará que siguen pendientes.</p><div class="actions"><a id="notam-origin-link" href="https://ais.anac.gob.ar/notam" target="_blank" rel="noopener noreferrer">Consultar NOTAM de salida</a><a id="notam-dest-link" href="https://ais.anac.gob.ar/notam" target="_blank" rel="noopener noreferrer">Consultar NOTAM de destino</a></div></div></details>
+<details class="report"><summary><strong>NOTAM · Estado y restricciones operacionales</strong><span>Consulta oficial</span></summary><div class="content"><p>Consultá NOTAM vigentes para salida, ruta, destino y alternativo, y contrastalos con la información aeronáutica oficial. La consulta oficial es externa; este sistema no recibe ni certifica los NOTAM. Si no se incorporan, el informe indicará que siguen pendientes.</p><a href="https://ais.anac.gob.ar/notam" target="_blank" rel="noopener noreferrer">Abrir fuente oficial AIS/ANAC</a></div></details>
 </section>
 <section class="brief-stage" id="etapa-final" aria-labelledby="etapa-final-titulo">
 <div class="brief-stage-heading"><span class="brief-stage-number">4</span><div><h3 id="etapa-final-titulo">Verificación final prevuelo · Tiempo presente</h3><p class="sub">METAR/SPECI recientes en los aeródromos pertinentes, viento, visibilidad, nubosidad y QNH. Comprobá la hora de observación.</p></div></div>
