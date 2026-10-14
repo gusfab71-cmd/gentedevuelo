@@ -76,6 +76,12 @@
 #consultar-antiguo{display:none!important}
 @media(max-width:700px){.flight-reports-grid{grid-template-columns:1fr}.flight-leg-row{grid-template-columns:1fr}.flight-leg-editor{padding:12px}}
 
+.flight-weather-overview{margin:22px 0 18px;border-color:#52727c;background:linear-gradient(145deg,#1c3038,#172225);scroll-margin-top:20px}
+.flight-weather-overview h2{color:#e5f3f5}
+.flight-weather-overview .flight-ai-consent{font-weight:500;color:var(--text)}
+.flight-weather-overview .flight-ai-consent input{accent-color:var(--accent)}
+.flight-weather-result{margin-top:18px;border-top:1px solid #526a70;padding-top:17px}
+.flight-weather-result .flight-ai-text{background:#101e24;border:1px solid #52717b;border-radius:12px;padding:17px;color:#edf1f1}
 /* Advertencias de planificación: amarillo legible sobre el tema oscuro. */
 .flight-precautions{margin:22px 0 18px;padding:23px 25px;border-radius:18px;background:#f3dd8e;color:#2b2b1f;border:2px solid #ffdf65;scroll-margin-top:20px}
 .flight-precautions-head{display:flex;gap:14px;align-items:center;margin-bottom:13px}
@@ -109,7 +115,7 @@
 <header class="top"><div class="top-inner"><a class="brand" href="../index.html"><span class="mark">GDV</span><span class="brand-name">GENTE DE VUELO<span>Centro de consulta aeronáutica</span></span></a><nav class="toplinks"><a href="index.html">Utilidades</a><a href="../index.html">Portada</a></nav></div></header>
 <main class="wrap" id="gdv-meteo-private" hidden>
 <section class="hero"><div class="hero-main"><span class="eyebrow">Mesa de Vuelo / acceso de administración</span><h1>Tu mesa de <em>vuelo</em>.</h1><p>Datos meteorológicos, lectura de boletines y herramientas de cálculo en un único espacio. Diseñado para consultar con criterio, no para reemplazar la información oficial.</p></div><aside class="hero-side"><div class="dial" aria-hidden="true">MV</div><div><span class="eyebrow">Información crítica</span><p>Verificá siempre <strong>emisión, vigencia, ruta y fuentes oficiales</strong> antes de planificar una operación.</p></div></aside></section>
-<nav class="jump" aria-label="Secciones"><a href="#plan-vuelo">1 · Plan de vuelo</a><a href="#consultar">2 · Boletines y PRONAREA</a><a href="#boletines">3 · Cuatro etapas</a><a href="#precauciones-vuelo">Precauciones</a><a href="#analisis-altura">4 · Informe con IA</a><a href="#consulta-piloto">Consulta del piloto</a></nav>
+<nav class="jump" aria-label="Secciones"><a href="#plan-vuelo">1 · Plan de vuelo</a><a href="#consultar">2 · Boletines y PRONAREA</a><a href="#boletines">3 · Cuatro etapas</a><a href="#informe-meteorologico">Informe meteorológico</a><a href="#precauciones-vuelo">Precauciones</a><a href="#analisis-altura">4 · Informe con IA</a><a href="#consulta-piloto">Consulta del piloto</a></nav>
 <section class="card flight-workflow" id="plan-vuelo">
 <div class="card-header"><div><span class="card-kicker">PASO 1 · PLANIFICACIÓN</span><h2>Salida, destino y piernas de vuelo</h2></div></div>
 <p class="sub">Definí los aeródromos, los puntos intermedios y la altitud prevista para cada tramo. Las piernas son declaradas por el piloto; esta Mesa no calcula rumbos, distancias, ETA ni altitudes mínimas.</p>
@@ -299,10 +305,26 @@
 </div>
 
 
+<section class="card flight-weather-overview" id="informe-meteorologico" aria-labelledby="flight-weather-heading">
+ <div class="card-header"><div><span class="card-kicker">SÍNTESIS METEOROLÓGICA · ANTES DE LAS PRECAUCIONES</span>
+  <h2 id="flight-weather-heading">Condiciones meteorológicas del vuelo planificado</h2></div></div>
+ <p class="sub">La IA relaciona la salida, el destino, las piernas y altitudes previstas con el PRONAREA cargado, los TAF/METAR disponibles y los posibles SIGMET. Distingue pronósticos, observaciones y datos faltantes, sin inventar condiciones para períodos no cubiertos.</p>
+ <label class="flight-ai-consent"><input id="flight-weather-consent" type="checkbox">
+  <span>Autorizo generar este informe meteorológico con IA y consumir tokens.</span></label>
+ <div class="actions"><button class="primary" id="flight-weather-ask" type="button">Generar informe meteorológico con IA</button>
+  <span class="feedback" id="flight-weather-status" role="status" aria-live="polite">Pendiente. No se consumen tokens sin tu confirmación.</span></div>
+ <div class="flight-weather-result" id="flight-weather-result" hidden>
+  <div class="card-header"><h3>Panorama meteorológico para el vuelo previsto</h3></div>
+  <p class="sub flight-ai-timestamp" id="flight-weather-time"></p>
+  <div class="flight-ai-text" id="flight-weather-analysis"></div>
+  <p class="sub">Análisis orientativo. Verificá emisión, vigencia, sectores y niveles en las fuentes oficiales; no acredita aptitud ni autoriza el vuelo.</p>
+ </div>
+</section>
+
 <section class="flight-precautions" id="precauciones-vuelo" aria-labelledby="flight-precautions-heading">
  <div class="flight-precautions-head">
   <span class="flight-precautions-icon" aria-hidden="true">!</span>
-  <div><span class="flight-precautions-kicker">CONTROL PREVIO · ANTES DEL INFORME</span>
+  <div><span class="flight-precautions-kicker">CONTROL PREVIO · TRAS EL INFORME METEOROLÓGICO</span>
   <h2 id="flight-precautions-heading">Precauciones que debe revisar el piloto</h2></div>
  </div>
  <p>Con la ruta, las altitudes y los boletines cargados, la IA puede preparar una lista de comprobaciones y riesgos a considerar. <strong>Es información orientativa: el piloto debe contrastar cada dato con las fuentes oficiales y decidir por sí mismo.</strong></p>
@@ -754,11 +776,15 @@ el('copy-report').addEventListener('click',async()=>{
    markStatus('pronarea',entered?'Texto cargado (no verificado)':'Falta cargar',entered);
  });
 
- // Los tres modos utilizan el mismo plan y vuelven a recuperar los boletines
+ // Los cuatro modos utilizan el mismo plan y vuelven a recuperar los boletines
  // desde el servidor. Ninguno invoca IA sin consentimiento por consulta.
  let aiBusy=false;
- const aiButtons=['flight-precautions-ask','flight-ask','flight-pilot-ask'];
+ const aiButtons=['flight-weather-ask','flight-precautions-ask','flight-ask','flight-pilot-ask'];
  const modeElements={
+   weather_overview:{
+     consent:'flight-weather-consent',status:'flight-weather-status',
+     result:'flight-weather-result',text:'flight-weather-analysis',time:'flight-weather-time'
+   },
    precautions:{
      consent:'flight-precautions-consent',status:'flight-precautions-status',
      result:'flight-precautions-result',text:'flight-precautions-analysis',time:'flight-precautions-time'
@@ -915,7 +941,9 @@ el('copy-report').addEventListener('click',async()=>{
        $('flight-warning').textContent=response.warning||
          'Confirmá vigencias y fuentes oficiales. No reemplaza el briefing oficial.';
      }else if(mode==='pilot_question')pilotAnswer=answer;
-     outputStatus.textContent=mode==='precautions'?
+     outputStatus.textContent=mode==='weather_overview'?
+       'Informe meteorológico generado. Comprobá fuentes y vigencias oficiales.':
+       mode==='precautions'?
        'Precauciones generadas. Revisá cada punto con las fuentes oficiales.':
        mode==='report'?'Informe generado. Contrastá datos y riesgos con fuentes oficiales.':
        'Respuesta generada según los datos de este vuelo; corroborá la información.';
@@ -932,6 +960,7 @@ el('copy-report').addEventListener('click',async()=>{
    event.preventDefault();
    void runAi('report');
  });
+ $('flight-weather-ask').addEventListener('click',()=>{void runAi('weather_overview');});
  $('flight-precautions-ask').addEventListener('click',()=>{void runAi('precautions');});
  $('flight-pilot-ask').addEventListener('click',()=>{void runAi('pilot_question');});
  $('flight-copy').addEventListener('click',async()=>{
