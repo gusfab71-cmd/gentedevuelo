@@ -52,13 +52,14 @@ body.modo-seccion-unica > #gdv-meteo-ciudades{display:none!important}
   #gdv-meteo-ciudades .gdv-wx-group[aria-hidden="true"]{display:none!important}
 }
 
-/* Ajuste fino: subir la franja meteorológica sin modificar tamaño ni rotación.
-   En PC solapa solo el borde inferior de la portada; en móvil, menos. */
+/* En notebooks de altura reducida, superponer la franja sobre la parte
+   inferior de la portada para que se vean también las tarjetas de ciudades.
+   Mantener animación, contenido, altura del carrusel y diseño móvil. */
 @media (min-width: 701px) {
   body:not(.modo-anexo):not(.modo-seccion-unica) > #gdv-meteo-ciudades {
     position: relative;
     z-index: 3;
-    margin-top: -30px;
+    margin-top: -132px;
   }
 }
 @media (max-width: 700px) {
