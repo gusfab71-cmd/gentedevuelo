@@ -5,7 +5,6 @@
   if(!root)return;
   const status=root.querySelector("#gdv-wx-state");
   const viewport=root.querySelector("#gdv-wx-viewport");
-  const byTime=root.querySelector("#gdv-wx-updated");
   // Una ciudad representa un punto: NO se atribuye este valor a toda la provincia.
   const cities=[
     ["CABA","Ciudad de Buenos Aires",-34.6037,-58.3816],
@@ -95,17 +94,10 @@
           Number.isFinite(item.weather.wind_speed_10m)&&Number.isFinite(item.weather.weather_code));
       if(items.length===0)throw new Error("Sin condiciones disponibles");
       render(items);
-      const sample=arr.find(x=>x?.current?.time)?.current?.time;
-      const when=typeof sample==="string"&&/^\d{4}-\d\d-\d\dT\d\d:\d\d/.test(sample)
-        ?" · Datos "+sample.slice(8,10)+"/"+sample.slice(5,7)+" "+sample.slice(11,16)+" h (ARG)"
-        :" · Hora de datos no disponible";
-      byTime.textContent=when;
     }catch(err){
       if(!viewport.querySelector(".gdv-wx-track")){
         viewport.hidden=true;status.hidden=false;
         status.textContent="No se pudieron consultar las condiciones ahora. Volvé a intentar más tarde.";
-      }else{
-        byTime.textContent+=" · Actualización temporalmente no disponible";
       }
     }
   }
