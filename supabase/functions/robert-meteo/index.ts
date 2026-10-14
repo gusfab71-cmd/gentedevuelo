@@ -215,12 +215,14 @@ Deno.serve(async (request: Request) => {
   let question = "";
   let fir = "";
   let requestedFirs:string[]=[];
+  let skipSigmet=false;
 
   try {
     const input = await request.json();
     icao = typeof input?.icao === "string" ? input.icao.trim().toUpperCase() : "";
     question = typeof input?.question === "string" ? input.question.trim() : "";
     fir = typeof input?.fir === "string" ? input.fir.trim().toUpperCase() : "";
+    skipSigmet=input?.skip_sigmet===true;
     if(input?.firs!==undefined){
       if(!Array.isArray(input.firs)||input.firs.length<1||input.firs.length>5||
         input.firs.some((f:unknown)=>typeof f!=="string"||!Object.prototype.hasOwnProperty.call(FIR_NAMES,f))||
@@ -240,7 +242,7 @@ Deno.serve(async (request: Request) => {
   if(!requestedFirs.length)requestedFirs=[fir];
   const fetchedAt = new Date().toISOString();
   const [metarResult,tafResult,sigmetResult]=await Promise.allSettled([
-    fetchBulletin("metar",icao),fetchBulletin("taf",icao),fetchInternationalSigmets(requestedFirs)
+    fetchBulletin("metar",icao),fetchBulletin("taf",icao),skipSigmet?Promise.resolve([] as FirSigmet[]):fetchInternationalSigmets(requestedFirs)
   ]);
   const product=(result:PromiseSettledResult<Report>):Report=>
     result.status==="fulfilled"?result.value:{available:false,raw:"",error:"La consulta a la fuente falló"};
@@ -253,7 +255,11 @@ Deno.serve(async (request: Request) => {
       status:"error_fuente",matched_count:0,verified_time:false,
       warning:"La consulta SIGMET es complementaria y no sustituye al SMN."
     }));
-  const sigmet=sigmets_by_fir[0];
+  const sigmet=sigmets_by_fir[0]??{
+    fir,fir_name:FIR_NAMES[fir],available:false,raw:"",error:null,
+    status:"consulta_omitida",matched_count:0,verified_time:false,
+    warning:"La consulta de SIGMET se efectúa por separado para las FIR seleccionadas."
+  };
   const pronarea={
     available:false,raw:"",status:"pendiente_integracion_oficial",
     error:null,source:"Servicio Meteorológico Nacional",
