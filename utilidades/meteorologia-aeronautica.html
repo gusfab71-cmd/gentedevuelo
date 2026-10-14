@@ -38,6 +38,16 @@
 .manual-source textarea{width:100%;font-family:ui-monospace,Consolas,monospace;font-size:13px;line-height:1.55}
 @media(max-width:620px){.manual-source{padding:12px}.manual-source-heading a{width:100%}}
 
+.brief-stage{border-top:1px solid #4a5858;padding-top:17px;margin-top:18px;scroll-margin-top:22px}
+.brief-stage-heading{display:flex;align-items:flex-start;gap:12px}
+.brief-stage-heading h3{margin:0 0 4px;font-size:18px;letter-spacing:-.015em}
+.brief-stage-heading .sub{margin:0}
+.brief-stage-number{display:grid;place-items:center;flex:0 0 33px;height:33px;border:1px solid #a77b4c;background:#382c25;border-radius:10px;font-size:14px;font-weight:900;color:#ffce92}
+.taf-checkpoints{display:grid;gap:8px;margin:14px 0}
+.taf-checkpoints>div{display:flex;align-items:baseline;gap:12px;padding:9px 12px;background:#131d20;border:1px solid #405257;border-radius:10px}
+.taf-checkpoints strong{color:#ffc48e;min-width:78px}
+.taf-checkpoints span{font-size:12px;color:#c1cfce}
+@media(max-width:620px){.brief-stage-heading h3{font-size:16px}.taf-checkpoints>div{display:grid;gap:3px}.taf-checkpoints strong{min-width:0}}
 .cloud-current{display:flex;gap:14px;align-items:center;padding:13px;border:1px solid #4d6060;border-radius:14px;background:#132024}
 .cloud-current .cloud-symbol{flex:none}
 .cloud-current .cloud-code{font-size:19px}
@@ -56,12 +66,12 @@
 <header class="top"><div class="top-inner"><a class="brand" href="../index.html"><span class="mark">GDV</span><span class="brand-name">GENTE DE VUELO<span>Centro de consulta aeronáutica</span></span></a><nav class="toplinks"><a href="index.html">Utilidades</a><a href="../index.html">Portada</a></nav></div></header>
 <main class="wrap" id="gdv-meteo-private" hidden>
 <section class="hero"><div class="hero-main"><span class="eyebrow">Mesa de Vuelo / acceso de administración</span><h1>Tu mesa de <em>vuelo</em>.</h1><p>Datos meteorológicos, lectura de boletines y herramientas de cálculo en un único espacio. Diseñado para consultar con criterio, no para reemplazar la información oficial.</p></div><aside class="hero-side"><div class="dial" aria-hidden="true">MV</div><div><span class="eyebrow">Información crítica</span><p>Verificá siempre <strong>emisión, vigencia, ruta y fuentes oficiales</strong> antes de planificar una operación.</p></div></aside></section>
-<nav class="jump" aria-label="Secciones"><a href="#consultar">METAR · TAF · SIGMET</a><a href="#analisis-altura" style="border-color:var(--accent);color:var(--accent2)">PRONAREA · NOTAM · Análisis</a><a href="#navigation-inline" style="border-color:#72928b">Navegación FlightPrep</a><a href="#fuentes">Fuentes oficiales</a><a href="#nubosidad">Nubosidad</a></nav>
+<nav class="jump" aria-label="Secciones"><a href="#consultar">Consultar boletines</a><a href="#etapa-ruta">1 · En ruta</a><a href="#etapa-puntos">2 · Puntos clave</a><a href="#etapa-operacional">3 · NOTAM</a><a href="#etapa-final">4 · METAR</a><a href="#analisis-altura">Informe integrado</a><a href="#navigation-inline">Navegación</a></nav>
 <div class="layout">
 <div class="stack">
 <section class="card" id="consultar">
-<div class="card-header"><div><span class="card-kicker">01 / Datos gratuitos</span><h2>Consultar información meteorológica</h2></div><span class="sub">Argentina · Selección manual</span></div>
-<p class="sub">Consultá METAR, TAF y posibles SIGMET internacionales gratuitamente y sin consumir tokens. PRONAREA y NOTAM deben obtenerse de fuentes oficiales; más abajo podrás pegarlos para el análisis final.</p>
+<div class="card-header"><div><span class="card-kicker">Consulta de boletines · sin IA</span><h2>Consultar datos disponibles</h2></div><span class="sub">Argentina · Selección manual</span></div>
+<p class="sub">Ingresá el código OACI y la FIR. Esta consulta recupera METAR y TAF del aeródromo indicado y una búsqueda complementaria de SIGMET de la FIR, sin consumir tokens de IA. Para salida, destino y alternativo, repetí la consulta con el código de cada aeródromo. PRONAREA y NOTAM se verifican en fuentes oficiales.</p>
 <form id="brief-form" class="form">
 <label class="field">Aeródromo (OACI)<input id="icao" required minlength="4" maxlength="4" pattern="[sS][aA][A-Za-z]{2}" autocomplete="off" value="SAEZ" placeholder="SAEZ"></label>
 <label class="field">FIR <select id="fir" required><option value="SAEF">Ezeiza · SAEF</option><option value="SACF">Córdoba · SACF</option><option value="SAMF">Mendoza · SAMF</option><option value="SARR">Resistencia · SARR</option><option value="SAVF">Comodoro Rivadavia · SAVF</option></select></label>
@@ -80,26 +90,43 @@
 </div>
 </section>
 <section class="card" id="boletines">
-<div class="card-header"><div><span class="card-kicker">02 / Fuentes consultadas</span><h2>Boletines y vigencia</h2></div></div>
-<div class="status-grid" aria-label="Estado por fuente">
-<div class="status-tile" id="s-metar"><strong>METAR</strong><span>Sin consultar</span></div>
-<div class="status-tile" id="s-taf"><strong>TAF</strong><span>Sin consultar</span></div>
-<div class="status-tile" id="s-sigmet"><strong>SIGMET</strong><span>Sin consultar</span></div>
+<div class="card-header"><div><span class="card-kicker">Secuencia de verificación previa al vuelo</span><h2>Evaluación en cuatro etapas</h2></div></div>
+<div class="status-grid" aria-label="Disponibilidad de las fuentes">
 <div class="status-tile pending" id="s-pronarea"><strong>PRONAREA</strong><span>Consulta oficial</span></div>
+<div class="status-tile" id="s-sigmet"><strong>SIGMET</strong><span>Sin consultar</span></div>
+<div class="status-tile" id="s-taf"><strong>TAF</strong><span>Sin consultar</span></div>
 <div class="status-tile pending" id="s-notam"><strong>NOTAM</strong><span>Consulta oficial</span></div>
+<div class="status-tile" id="s-metar"><strong>METAR</strong><span>Sin consultar</span></div>
 </div>
-<details class="report" id="r-metar"><summary><strong>METAR · Observación</strong><span id="label-metar">Sin consultar</span></summary><div class="content"><p>Reportes recuperados desde Aviation Weather Center. Verificá la emisión; no todos los aeródromos informan continuamente.</p><pre id="raw-metar">Todavía no hay datos.</pre><a href="https://www.smn.gob.ar/metar" target="_blank" rel="noopener noreferrer">Verificar METAR en SMN</a></div></details>
-<details class="report" id="r-taf"><summary><strong>TAF · Pronóstico</strong><span id="label-taf">Sin consultar</span></summary><div class="content"><p>Comprobá período de validez y grupos TEMPO, BECMG y PROB cuando existan.</p><pre id="raw-taf">Todavía no hay datos.</pre><a href="https://www.smn.gob.ar/taf" target="_blank" rel="noopener noreferrer">Verificar TAF en SMN</a></div></details>
-<details class="report" id="r-sigmet"><summary><strong>SIGMET · Fenómenos significativos</strong><span id="label-sigmet">Sin consultar</span></summary><div class="content"><p>La búsqueda de SIGMET internacionales es complementaria y no necesariamente exhaustiva. Sin coincidencias no significa ausencia de SIGMET.</p><pre id="raw-sigmet">Todavía no hay datos.</pre><a href="https://www.smn.gob.ar/mensajes-sigmet" target="_blank" rel="noopener noreferrer">Verificar todos los SIGMET oficiales</a></div></details>
-<details class="report"><summary><strong>PRONAREA · Pronóstico por FIR</strong><span>Pendiente de conexión directa</span></summary><div class="content"><p>El pronóstico de área debe obtenerse del SMN y verificarse para el sector, altura, hora y ruta. No se utilizan datos manuales antiguos.</p><a href="https://www.smn.gob.ar/pronarea" target="_blank" rel="noopener noreferrer">Abrir PRONAREA oficial</a></div></details>
-<details class="report"><summary><strong>NOTAM · Avisos operacionales</strong><span>Pendiente de conexión directa</span></summary><div class="content"><p>Consultá los NOTAM de salida, ruta, destino y alternativa en el AIS oficial. Esta aplicación no confirma cierres de pista.</p><a href="https://ais.anac.gob.ar/notam" target="_blank" rel="noopener noreferrer">Abrir NOTAM en ANAC</a></div></details>
-<p class="source-notes">La hora de consulta no equivale a la de emisión. Los textos se presentan sin certificación operacional; comprobá todas las fuentes oficiales.</p>
+<section class="brief-stage" id="etapa-ruta" aria-labelledby="etapa-ruta-titulo">
+<div class="brief-stage-heading"><span class="brief-stage-number">1</span><div><h3 id="etapa-ruta-titulo">Evaluación en ruta · Macro</h3><p class="sub">Área y FIR: verificá fenómenos, sectores, altitudes y vigencia en el recorrido.</p></div></div>
+<details class="report"><summary><strong>PRONAREA · Pronóstico de área / FIR</strong><span>Consulta oficial</span></summary><div class="content"><p>Obtené el PRONAREA vigente para cada FIR atravesada y verificá que corresponda a la hora, el nivel y la ruta prevista. Podés pegarlo en el formulario del informe integrado.</p><a href="https://www.smn.gob.ar/pronarea" target="_blank" rel="noopener noreferrer">Abrir PRONAREA oficial · SMN</a></div></details>
+<details class="report" id="r-sigmet"><summary><strong>SIGMET · Peligros severos en ruta</strong><span id="label-sigmet">Sin consultar</span></summary><div class="content"><p>La búsqueda internacional disponible aquí es parcial. No encontrar coincidencias no demuestra ausencia de SIGMET: comprobá los avisos oficiales, el área afectada, el nivel y su validez.</p><pre id="raw-sigmet">Todavía no hay datos.</pre><a href="https://www.smn.gob.ar/mensajes-sigmet" target="_blank" rel="noopener noreferrer">Verificar SIGMET oficiales · SMN</a></div></details>
 </section>
-
+<section class="brief-stage" id="etapa-puntos" aria-labelledby="etapa-puntos-titulo">
+<div class="brief-stage-heading"><span class="brief-stage-number">2</span><div><h3 id="etapa-puntos-titulo">Evaluación de puntos clave · Micro / TAF</h3><p class="sub">Repetí la consulta del TAF para cada aeródromo; no presupongas las mismas condiciones en distintos lugares.</p></div></div>
+<div class="taf-checkpoints">
+<div><strong>Salida</strong><span>Pronóstico válido para la hora prevista de despegue</span></div>
+<div><strong>Destino</strong><span>Pronóstico válido para la hora estimada de arribo</span></div>
+<div><strong>Alternativo</strong><span>Pronóstico válido durante la ventana de utilización prevista y la reserva disponible</span></div>
+</div>
+<details class="report" id="r-taf"><summary><strong>TAF · Pronóstico del aeródromo consultado</strong><span id="label-taf">Sin consultar</span></summary><div class="content"><p>Este es el TAF del código OACI que ingresaste arriba, no el de los tres puntos simultáneamente. Verificá emisión, validez y grupos TEMPO, BECMG y PROB; el sistema no predice automáticamente la condición exacta a la ETA.</p><pre id="raw-taf">Todavía no hay datos.</pre><a href="https://www.smn.gob.ar/taf" target="_blank" rel="noopener noreferrer">Verificar TAF en SMN</a></div></details>
+</section>
+<section class="brief-stage" id="etapa-operacional" aria-labelledby="etapa-operacional-titulo">
+<div class="brief-stage-heading"><span class="brief-stage-number">3</span><div><h3 id="etapa-operacional-titulo">Verificación operacional · Infraestructura</h3><p class="sub">Pistas, radioayudas, procedimientos, espacio aéreo y restricciones aplicables.</p></div></div>
+<details class="report"><summary><strong>NOTAM · Estado y restricciones operacionales</strong><span>Consulta oficial</span></summary><div class="content"><p>Consultá NOTAM vigentes para salida, ruta, destino y alternativo, y contrastalos con la información aeronáutica oficial. Pegalos en el formulario del informe integrado si lo necesitás.</p><a href="https://ais.anac.gob.ar/notam" target="_blank" rel="noopener noreferrer">Abrir NOTAM oficiales · AIS/ANAC</a></div></details>
+</section>
+<section class="brief-stage" id="etapa-final" aria-labelledby="etapa-final-titulo">
+<div class="brief-stage-heading"><span class="brief-stage-number">4</span><div><h3 id="etapa-final-titulo">Verificación final prevuelo · Tiempo presente</h3><p class="sub">METAR/SPECI recientes en los aeródromos pertinentes, viento, visibilidad, nubosidad y QNH. Comprobá la hora de observación.</p></div></div>
+<details class="report" id="r-metar"><summary><strong>METAR · Condición observada</strong><span id="label-metar">Sin consultar</span></summary><div class="content"><p>Reportes recuperados desde Aviation Weather Center. Comprobá emisión y vigencia en la fuente oficial y verificá el QNH para el ajuste altimétrico. No todos los aeródromos reportan continuamente; un TAF no reemplaza una observación.</p><pre id="raw-metar">Todavía no hay datos.</pre><a href="https://www.smn.gob.ar/metar" target="_blank" rel="noopener noreferrer">Verificar METAR en SMN</a></div></details>
+<p class="sub">La lectura simbólica de la nubosidad del último METAR consultado está en el panel de observación.</p>
+</section>
+<p class="source-notes">La fecha de consulta no acredita emisión o validez. Ningún resultado de esta Mesa sustituye el briefing oficial ni la evaluación operacional del piloto.</p>
+</section>
 </div>
 <aside class="stack">
 <section class="card" id="nubosidad">
-<div class="card-header"><div><span class="card-kicker">03 / Observación METAR</span><h2>Lectura de nubosidad</h2></div><span class="sub">Símbolo de la observación disponible</span></div>
+<div class="card-header"><div><span class="card-kicker">04 / METAR · Complemento visual</span><h2>Lectura de nubosidad</h2></div><span class="sub">Símbolo de la observación disponible</span></div>
 <div class="cloud-current" role="status" aria-live="polite">
   <div class="cloud-symbol" id="current-cloud-symbol" style="--fill:0deg" aria-hidden="true"></div>
   <div><div class="cloud-code" id="current-cloud-code">—</div>
@@ -124,7 +151,7 @@
 </details>
 </section>
 <section class="card" id="fuentes">
-<div class="card-header"><div><span class="card-kicker">04 / Enlaces</span><h2>Directorio aeronáutico</h2></div></div>
+<div class="card-header"><div><span class="card-kicker">Consulta oficial · Enlaces</span><h2>Directorio aeronáutico</h2></div></div>
 <div class="quicklinks">
 <a href="https://ais.anac.gob.ar/" target="_blank" rel="noopener noreferrer"><strong>AIP y cartas</strong><span>Publicaciones, fichas, procedimientos y cartas de aeródromo</span></a>
 <a href="https://ais.anac.gob.ar/notam" target="_blank" rel="noopener noreferrer"><strong>NOTAM</strong><span>Información operacional oficial</span></a>
@@ -139,10 +166,10 @@
 
 <section class="card" id="analisis-altura" style="margin-top:22px;border-color:#97643c;background:linear-gradient(145deg,#242827,#171e20)">
 <div class="card-header">
- <div><span class="card-kicker">05 / Informe meteorológico en ruta · solo administrador</span><h2>Informe de condiciones en altura</h2></div>
+ <div><span class="card-kicker">Análisis integrado · Solo administrador</span><h2>Informe para el vuelo previsto</h2></div>
  <span style="border:1px solid #b87745;border-radius:99px;padding:7px 11px;color:var(--accent2);font-size:12px;font-weight:700">Usa tokens solo al confirmar</span>
 </div>
-<p class="sub">Seleccioná salida, destino, altitud y hora prevista. Incorporá PRONAREA y NOTAM vigentes. El sistema combinará esa información con METAR, TAF y SIGMET recuperados para explicar los fenómenos relevantes durante el trayecto. <strong>No calcula piernas, rumbos, tiempos ni combustible:</strong> eso corresponde a FlightPrep NAV. Solo informará datos de viento en altura cuando el pronóstico cubra el nivel, sector y horario consultados.</p>
+<p class="sub">Aplicá la secuencia: 1) PRONAREA y SIGMET de la ruta; 2) TAF de salida y destino para sus horarios previstos (verificá también el alternativo por separado); 3) NOTAM; 4) METAR vigente poco antes del vuelo. Completá salida, destino, altitud y hora, y pegá PRONAREA y NOTAM oficiales. El informe con IA sigue siendo una interpretación educativa, no una confirmación de condiciones ni una autorización de vuelo. <strong>Los cálculos de rumbos, tiempos y combustible permanecen en FlightPrep NAV.</strong></p>
 <form id="flight-analysis-form">
 <div class="form" style="margin-top:17px">
 <label class="field" for="flight-origin">Aeródromo de salida
@@ -227,7 +254,7 @@
 <section class="card" id="navigation-inline" style="margin-top:24px;border-color:#57736c;background:#172224">
 <div class="card-header">
   <div>
-    <span class="card-kicker">06 / Navegación · cálculos gratuitos</span>
+    <span class="card-kicker">Después del briefing · Navegación gratuita</span>
     <h2>FlightPrep NAV · Planificación de navegación</h2>
   </div>
   <span class="sub">Integrado dentro de la Mesa de Vuelo</span>
