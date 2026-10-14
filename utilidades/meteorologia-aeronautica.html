@@ -75,6 +75,29 @@
 .flight-sigmet-item pre{margin-top:10px;max-height:250px;overflow:auto}
 #consultar-antiguo{display:none!important}
 @media(max-width:700px){.flight-reports-grid{grid-template-columns:1fr}.flight-leg-row{grid-template-columns:1fr}.flight-leg-editor{padding:12px}}
+
+/* Advertencias de planificación: amarillo legible sobre el tema oscuro. */
+.flight-precautions{margin:22px 0 18px;padding:23px 25px;border-radius:18px;background:#f3dd8e;color:#2b2b1f;border:2px solid #ffdf65;scroll-margin-top:20px}
+.flight-precautions-head{display:flex;gap:14px;align-items:center;margin-bottom:13px}
+.flight-precautions-head h2{margin:3px 0 0;color:#282518;font-size:21px}
+.flight-precautions-icon{display:grid;place-items:center;border:2px solid #6c5512;border-radius:50%;width:37px;height:37px;flex:none;font-size:23px;font-weight:900}
+.flight-precautions-kicker{font-size:11px;letter-spacing:.09em;color:#654811;font-weight:800}
+.flight-precautions p{font-size:13px;line-height:1.55}
+.flight-ai-consent{display:flex;gap:10px;align-items:flex-start;margin:17px 0 10px;font-size:13px;font-weight:650}
+.flight-ai-consent input{width:19px;height:19px;flex:none;margin:1px 0 0;accent-color:#ac7722}
+.flight-ai-actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.flight-precautions-button{background:#2f322b;color:#fff;padding:12px 17px;border:0;border-radius:10px;font-weight:750}
+.flight-ai-actions span{font-size:12px;color:#423b23}
+.flight-precautions-result{margin-top:17px;background:#fff3c3;border:1px solid #a68b42;border-radius:12px;padding:17px}
+.flight-precautions-result > strong{font-size:15px;color:#382b11}
+.flight-precautions-result p:last-child{font-weight:700;border-top:1px solid #beab6f;padding-top:10px}
+.flight-ai-timestamp{font-size:12px}
+.flight-ai-text{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.7}
+.flight-pilot-query{margin:18px 0 0;border-color:#6a7675}
+.flight-pilot-query .flight-ai-consent{color:var(--text);font-weight:500}
+.flight-pilot-result{border-top:1px solid #56615d;margin-top:17px;padding-top:17px}
+.flight-pilot-result .flight-ai-text{background:#151f22;border:1px solid #50615e;padding:15px;border-radius:12px}
+@media(max-width:620px){.flight-precautions{padding:17px 15px}.flight-precautions-head h2{font-size:18px}}
 </style>
 <script>document.documentElement.classList.add('auth-pending')</script>
 <style>html.auth-pending body{visibility:hidden}</style>
@@ -86,7 +109,7 @@
 <header class="top"><div class="top-inner"><a class="brand" href="../index.html"><span class="mark">GDV</span><span class="brand-name">GENTE DE VUELO<span>Centro de consulta aeronáutica</span></span></a><nav class="toplinks"><a href="index.html">Utilidades</a><a href="../index.html">Portada</a></nav></div></header>
 <main class="wrap" id="gdv-meteo-private" hidden>
 <section class="hero"><div class="hero-main"><span class="eyebrow">Mesa de Vuelo / acceso de administración</span><h1>Tu mesa de <em>vuelo</em>.</h1><p>Datos meteorológicos, lectura de boletines y herramientas de cálculo en un único espacio. Diseñado para consultar con criterio, no para reemplazar la información oficial.</p></div><aside class="hero-side"><div class="dial" aria-hidden="true">MV</div><div><span class="eyebrow">Información crítica</span><p>Verificá siempre <strong>emisión, vigencia, ruta y fuentes oficiales</strong> antes de planificar una operación.</p></div></aside></section>
-<nav class="jump" aria-label="Secciones"><a href="#plan-vuelo">1 · Plan de vuelo</a><a href="#consultar">2 · Boletines y PRONAREA</a><a href="#boletines">3 · Cuatro etapas</a><a href="#analisis-altura">4 · Informe con IA</a></nav>
+<nav class="jump" aria-label="Secciones"><a href="#plan-vuelo">1 · Plan de vuelo</a><a href="#consultar">2 · Boletines y PRONAREA</a><a href="#boletines">3 · Cuatro etapas</a><a href="#precauciones-vuelo">Precauciones</a><a href="#analisis-altura">4 · Informe con IA</a><a href="#consulta-piloto">Consulta del piloto</a></nav>
 <section class="card flight-workflow" id="plan-vuelo">
 <div class="card-header"><div><span class="card-kicker">PASO 1 · PLANIFICACIÓN</span><h2>Salida, destino y piernas de vuelo</h2></div></div>
 <p class="sub">Definí los aeródromos, los puntos intermedios y la altitud prevista para cada tramo. Las piernas son declaradas por el piloto; esta Mesa no calcula rumbos, distancias, ETA ni altitudes mínimas.</p>
@@ -275,17 +298,33 @@
 </aside>
 </div>
 
+
+<section class="flight-precautions" id="precauciones-vuelo" aria-labelledby="flight-precautions-heading">
+ <div class="flight-precautions-head">
+  <span class="flight-precautions-icon" aria-hidden="true">!</span>
+  <div><span class="flight-precautions-kicker">CONTROL PREVIO · ANTES DEL INFORME</span>
+  <h2 id="flight-precautions-heading">Precauciones que debe revisar el piloto</h2></div>
+ </div>
+ <p>Con la ruta, las altitudes y los boletines cargados, la IA puede preparar una lista de comprobaciones y riesgos a considerar. <strong>Es información orientativa: el piloto debe contrastar cada dato con las fuentes oficiales y decidir por sí mismo.</strong></p>
+ <p>La consulta incluye los datos meteorológicos disponibles, PRONAREA, posibles SIGMET, vigencias, terreno, cartas y NOTAM aún pendientes. <strong>No equivale a una autorización de vuelo.</strong></p>
+ <label class="flight-ai-consent"><input id="flight-precautions-consent" type="checkbox">
+  <span>Autorizo esta consulta de precauciones con IA y su consumo de tokens.</span></label>
+ <div class="flight-ai-actions"><button class="flight-precautions-button" id="flight-precautions-ask" type="button">Generar precauciones con IA</button>
+  <span id="flight-precautions-status" role="status" aria-live="polite">Pendiente. No se consumen tokens hasta que lo solicites.</span></div>
+ <div class="flight-precautions-result" id="flight-precautions-result" hidden>
+  <strong>Advertencias y puntos para corroborar</strong><p class="flight-ai-timestamp" id="flight-precautions-time"></p>
+  <div class="flight-ai-text" id="flight-precautions-analysis"></div>
+  <p>El piloto debe verificar personalmente los informes, las restricciones operacionales y la aptitud del vuelo.</p>
+ </div>
+</section>
+
 <section class="card" id="analisis-altura" style="margin-top:22px;border-color:#97643c;background:linear-gradient(145deg,#242827,#171e20)">
 <div class="card-header">
  <div><span class="card-kicker">PASO 4 · INFORME FINAL</span><h2>Análisis de las cuatro etapas con IA</h2></div>
  <span style="border:1px solid #b87745;border-radius:99px;padding:7px 11px;color:var(--accent2);font-size:12px;font-weight:700">Usa tokens solo al confirmar</span>
 </div>
 <p class="sub">El sistema tendrá en cuenta las piernas declaradas, PRONAREA cargado manualmente y los METAR/TAF/SIGMET recuperables. Evaluará: 1) ruta (PRONAREA/SIGMET), 2) salida y destino (TAF), 3) infraestructura (NOTAM por consulta externa), 4) observaciones actuales (METAR). <strong>Solo generará el informe después de tu confirmación; no autoriza el vuelo.</strong></p>
-<div style="margin:19px 0 16px;padding:17px;border:1px solid #745c45;border-radius:14px;background:#1c2526">
-<label class="field" for="flight-question">¿Qué querés consultar sobre las condiciones en altura? (opcional)
-<textarea id="flight-question" maxlength="500" rows="3" style="resize:vertical" placeholder="Ej.: Para mi vuelo a 6.500 pies, ¿qué viento, nubosidad, turbulencia, engelamiento o fenómenos relevantes hay en la ruta?"></textarea></label>
-<p class="sub" style="margin:9px 0 0">Primero consultá los boletines automáticos y cargá PRONAREA. Si no hacés una pregunta, recibirás una síntesis de las cuatro etapas.</p>
-</div>
+
 <div class="warning" style="margin:17px 0">
 <strong>Antes de usar tokens:</strong> verificá que los boletines cubran el vuelo previsto. Si no indicaste ruta exacta, el sistema no podrá determinar qué sectores atravesás. La consulta NOTAM de salida y destino queda bajo responsabilidad del piloto. El resultado no reemplaza un briefing oficial ni determina aptitud VFR/IFR.
 </div>
@@ -303,6 +342,25 @@
 <div id="flight-analysis" style="white-space:pre-wrap;line-height:1.76;background:#172125;padding:18px;border:1px solid #755f50;border-radius:12px;color:#f1ebe2"></div>
 <p class="source-notes" id="flight-warning"></p>
 </div>
+</section>
+
+
+<section class="card flight-pilot-query" id="consulta-piloto">
+ <div class="card-header"><div><span class="card-kicker">CONSULTA FINAL · IA</span>
+ <h2>Consulta del piloto sobre su vuelo</h2></div></div>
+ <p class="sub">Preguntá lo que necesites sobre la ruta prevista. La IA responderá tomando en cuenta los datos cargados, las piernas y las altitudes, PRONAREA y los boletines disponibles, indicando sus límites.</p>
+ <label class="field" for="flight-pilot-question">¿Qué querés saber de tu vuelo?
+ <textarea id="flight-pilot-question" minlength="10" maxlength="500" rows="4" placeholder="Ej.: Para la pierna hacia Paraná a 3.500 pies, ¿qué nubosidad o fenómenos requieren mayor atención?" style="resize:vertical"></textarea></label>
+ <label class="flight-ai-consent"><input id="flight-pilot-consent" type="checkbox">
+  <span>Confirmo que esta pregunta utilizará la IA y consumirá tokens.</span></label>
+ <div class="actions"><button class="primary" id="flight-pilot-ask" type="button">Enviar consulta a la IA</button>
+  <span class="feedback" id="flight-pilot-status" role="status" aria-live="polite">Escribí una pregunta y autorizá la consulta.</span></div>
+ <div class="flight-pilot-result" id="flight-pilot-result" hidden>
+  <div class="card-header"><h3>Respuesta orientativa para este vuelo</h3><button class="secondary" id="flight-pilot-copy" type="button">Copiar respuesta</button></div>
+  <p class="sub" id="flight-pilot-time"></p>
+  <div id="flight-pilot-analysis" class="flight-ai-text"></div>
+  <p class="sub">Contrastá la respuesta con información oficial vigente. La IA no confirma que el vuelo sea seguro ni reemplaza la decisión del piloto.</p>
+ </div>
 </section>
 
 <p class="source-notes" style="margin-top:20px">Para realizar los cálculos de navegación, <a href="flightprep-nav.html" style="font-weight:750">abrir FlightPrep NAV en Utilidades →</a>.</p>
