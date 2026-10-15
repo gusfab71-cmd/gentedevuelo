@@ -50,6 +50,7 @@ css.textContent='.ops-accordion[hidden],.flight-wizard-nav-panel[hidden],.flight
 '.flight-wizard-toolbar #flight-wizard-status{flex:1 1 230px;font-size:13px;color:#d8e9f4}'+
 '.flight-wizard-nav-panel{background:#253847;border:1px solid #557080;border-radius:15px;padding:18px;margin:12px 0;color:#eef5fb}'+
 '.flight-fuel-inputs{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:12px;margin:15px 0}'+
+'#flight-wizard-leg-table{overflow-x:auto;margin:15px 0}#flight-wizard-leg-table table{width:100%;border-collapse:collapse;font-size:12px;color:#eef5fa}#flight-wizard-leg-table th,#flight-wizard-leg-table td{padding:9px 6px;border-bottom:1px solid #566e80;text-align:left;white-space:nowrap}'+
 '.flight-fuel-inputs label{display:grid;gap:5px;font-size:13px}.flight-fuel-inputs input{padding:9px;border-radius:8px;background:#31495d;color:#fff;border:1px solid #7893a8;width:100%;box-sizing:border-box}'+
 '#flight-fuel-summary{white-space:pre-line;line-height:1.8;padding:15px;background:#33495b;border-radius:10px}'+
 '@media(max-width:700px){.flight-wizard-steps{grid-template-columns:repeat(2,minmax(0,1fr))}.flight-wizard-ui,.flight-wizard-nav-panel{padding:12px}}'+
@@ -66,6 +67,7 @@ if(navSettings)nav.append(navSettings);if(navOutput)nav.append(navOutput);
 const fuel=document.createElement('div');fuel.id='flight-wizard-fuel';
 const inputs=[['flight-fuel-burn','Consumo (litros/hora)',''],['flight-fuel-available','Combustible utilizable (litros)',''],['flight-fuel-start','Inicial: rodaje y ascenso (litros)','5'],['flight-fuel-contingency','Contingencia (%)','10'],['flight-fuel-reserve','Reserva final (minutos)','45'],['flight-fuel-alternate-gs','GS estimada al alternativo (kt)','']];
 fuel.innerHTML='<h3>Planificación de combustible</h3><div class="flight-fuel-inputs">'+inputs.map(x=>'<label>'+x[1]+'<input id="'+x[0]+'" type="number" min="0" max="10000" step="0.1" value="'+x[2]+'"></label>').join('')+'</div><div id="flight-fuel-summary" role="status" aria-live="polite">Completá los datos del plan.</div><p class="sub">5 litros iniciales, 10 % y 45 minutos son valores orientativos editables, no garantías ni mínimos reglamentarios. Validá el POH/AFM, reservas, fases de ascenso y rutas oficiales.</p><button type="button" id="flight-wizard-print">Imprimir o guardar como PDF A4</button>';
+const legTable=document.createElement('section');legTable.id='flight-wizard-leg-table';legTable.setAttribute('aria-label','Planilla de navegación por piernas');nav.append(legTable);
 nav.append(fuel);
 let step=0,busy=false,stored=null;
 const all=[plan,weather,$('ops-boletines'),$('ops-fuentes'),report,$('ops-piloto'),$('ops-precauciones'),$('ops-cartas'),nav].filter(Boolean);
@@ -108,7 +110,7 @@ function pack(){
   if(!('value' in e)||e.closest('#flight-legs-list')||e.closest('#flight-waypoints'))return;
   fields[e.id]=e.type==='checkbox'?e.checked:e.value;
  });
- return {version:1,step,fields,stops:[...document.querySelectorAll('#flight-waypoints input')].map(x=>x.value),levels:[...document.querySelectorAll('#flight-legs-list input[type=number]')].map(x=>x.value),
+ return {version:1,step,fields,manualWinds:window.GDV_FLIGHT_NAV?.saveWind?.()||[],stops:[...document.querySelectorAll('#flight-waypoints input')].map(x=>x.value),levels:[...document.querySelectorAll('#flight-legs-list input[type=number]')].map(x=>x.value),
  firs:[...document.querySelectorAll('.flight-fir')].filter(x=>x.checked).map(x=>x.value)};
 }
 async function userClient(){
@@ -142,6 +144,7 @@ function restore(plan){
  (plan.levels||[]).forEach((v,i)=>{if(a[i]){a[i].value=String(v);emit(a[i]);}});
  document.querySelectorAll('.flight-fir').forEach(e=>{e.checked=(plan.firs||[]).includes(e.value);emit(e);});
  $('flight-auto-results').hidden=true;
+ queueMicrotask(()=>window.GDV_FLIGHT_NAV?.restoreWind?.(plan.manualWinds||[]));
  display(Math.max(0,Math.min(3,Number(plan.step)||0)));
  notify('Plan recuperado. Volvé a consultar METAR, TAF y SIGMET: los informes anteriores no se consideran vigentes.');
 }
@@ -187,6 +190,21 @@ function calcFuel(){
  '\nUtilizable: '+fmt(available)+' L · Saldo previsto: '+fmt(rem)+' L'+
  (rem!==null&&rem<0?'\nATENCIÓN: combustible insuficiente según estos datos.':'')+
  (altFuel===null?'\nPara el alternativo necesitás una GS estimada aportada por el piloto.':'');
+ const el=$('flight-wizard-leg-table');
+ if(el){
+  const tbl=document.createElement('table'),header=document.createElement('tr');
+  ['Pierna','Derrota °T','Dist. NM','Alt. ft','Rumbo °M','GS kt','ETA UTC','Consumo L'].forEach(label=>{const cell=document.createElement('th');cell.scope='col';cell.textContent=label;header.append(cell);});
+  const thead=document.createElement('thead');thead.append(header);tbl.append(thead);
+  const tbody=document.createElement('tbody');let elapsed=0,knownEta=!!date();
+  for(const r of list){
+   const duration=Number.isFinite(r.distance_nm)&&Number.isFinite(r.gs_kt)&&r.gs_kt>0?r.distance_nm/r.gs_kt:null;
+   if(duration===null)knownEta=false;else if(knownEta)elapsed+=duration;
+   const at=knownEta?new Date(date().getTime()+elapsed*3600000).toISOString().slice(0,16).replace('T',' '):'Pendiente';
+   const vals=[r.name,fmt(r.course_true_deg),fmt(r.distance_nm),fmt(r.altitude_ft),fmt(r.heading_magnetic_deg),fmt(r.gs_kt),at,
+    duration===null||burn===null?'Pendiente':fmt(duration*burn)];
+   const row=document.createElement('tr');for(const v of vals){const td=document.createElement('td');td.textContent=String(v);row.append(td);}tbody.append(row);
+  }tbl.append(tbody);el.replaceChildren(tbl);
+ }
  refreshGate();
 }
 fuel.querySelectorAll('input').forEach(x=>x.addEventListener('input',calcFuel));
