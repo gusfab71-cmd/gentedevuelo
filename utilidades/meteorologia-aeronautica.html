@@ -551,9 +551,9 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
     <button class="ops-shortcut" type="button" data-ops-target="#r-sigmet"><span class="ops-shortcut-icon" aria-hidden="true">⚡</span><strong>SIGMET</strong><span class="ops-shortcut-state" id="ops-status-sigmet">Sin consultar</span><span class="ops-shortcut-link">Ver avisos ↗</span></button>
     <button class="ops-shortcut" type="button" data-ops-target="#flight-pronarea"><span class="ops-shortcut-icon" aria-hidden="true">≋</span><strong>PRONAREA</strong><span class="ops-shortcut-state" id="ops-status-pronarea">Consulta oficial</span><span class="ops-shortcut-link">Cargar boletín ↗</span></button>
     <button class="ops-shortcut" type="button" data-ops-target="#etapa-operacional"><span class="ops-shortcut-icon" aria-hidden="true">◎</span><strong>NOTAM</strong><span class="ops-shortcut-state" id="ops-status-notam">Consulta oficial</span><span class="ops-shortcut-link">Verificar restricciones ↗</span></button>
-    <button class="ops-shortcut" type="button" data-ops-target="#informe-meteorologico"><span class="ops-shortcut-icon" aria-hidden="true">◈</span><strong>Informe meteo</strong><span class="ops-shortcut-state" id="ops-status-weather">Generación opcional</span><span class="ops-shortcut-link">Abrir análisis ↗</span></button>
+
     <button class="ops-shortcut ops-shortcut-attention" type="button" data-ops-target="#precauciones-vuelo"><span class="ops-shortcut-icon" aria-hidden="true">!</span><strong>Precauciones IA</strong><span class="ops-shortcut-state" id="ops-status-precautions">Pendiente de revisión</span><span class="ops-shortcut-link">Revisar controles ↗</span></button>
-    <button class="ops-shortcut" type="button" data-ops-target="#analisis-altura"><span class="ops-shortcut-icon" aria-hidden="true">▤</span><strong>Informe final</strong><span class="ops-shortcut-state" id="ops-status-final">Generación opcional</span><span class="ops-shortcut-link">Abrir informe ↗</span></button>
+
   </div>
 </section>
 <section class="flight-usage-panel" id="consumo-ia" aria-labelledby="flight-usage-title">
@@ -809,7 +809,7 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
 </div>
 </section>
 
-<details class="ops-accordion" id="ops-meteo"><summary class="ops-accordion-toggle"><span class="ops-accordion-number">05</span><span class="ops-accordion-name"><strong>Informes meteorológicos</strong><span>Informe único esencial o análisis meteorológico detallado</span></span><span class="ops-accordion-arrow" aria-hidden="true"></span></summary><div class="ops-accordion-content">
+<details class="ops-accordion" id="ops-meteo"><summary class="ops-accordion-toggle"><span class="ops-accordion-number">05</span><span class="ops-accordion-name"><strong>Informe esencial del vuelo</strong><span>Una síntesis meteorológica con navegación estimada para tu plan</span></span><span class="ops-accordion-arrow" aria-hidden="true"></span></summary><div class="ops-accordion-content">
 <div class="flight-essential-card" id="informe-esencial" aria-labelledby="flight-essential-heading">
   <div class="card-header"><div><span class="card-kicker">RECOMENDADO · UNA SOLA CONSULTA A LA IA</span><h2 id="flight-essential-heading">Informe esencial del vuelo</h2></div></div>
   <p class="sub">Resumen claro de los puntos realmente importantes para tu origen, destino, alternativo, ruta, altitudes y salida UTC. Reúne tiempo observado, pronósticos disponibles, peligros significativos, precauciones y verificaciones pendientes, sin generar varios informes por separado.</p>
@@ -834,28 +834,12 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
     <p class="flight-essential-note">Revisá emisión y vigencia en las fuentes oficiales; este resumen no reemplaza el briefing aeronáutico ni la decisión del piloto al mando.</p>
   </div>
 </div>
-<section class="card flight-weather-overview" id="informe-meteorologico" aria-labelledby="flight-weather-heading">
- <div class="card-header"><div><span class="card-kicker">SÍNTESIS METEOROLÓGICA · ANTES DE LAS PRECAUCIONES</span>
-  <h2 id="flight-weather-heading">Informe meteorológico del vuelo planificado</h2></div></div>
- <p class="sub">Explicación sencilla y punto por punto de los METAR, TAF, SIGMET y PRONAREA cargados, siempre referida a la ruta, las altitudes y la salida UTC programadas. La IA traduce las abreviaturas, pero no inventa fenómenos cuando faltan datos.</p>
- <p class="flight-ai-project-state">Los informes utilizan la conexión de OpenAI ya configurada para Robert Shimoda. Cada consulta autorizada consume tokens del saldo de la API compartida, sin requerir otra clave.</p>
- <label class="flight-ai-consent"><input id="flight-weather-consent" type="checkbox" aria-describedby="flight-weather-status">
-  <span><strong>1. Autorizo</strong> generar este informe meteorológico con IA y consumir tokens. Después presioná <strong>2. Generar informe</strong>.</span></label>
- <div class="actions"><button class="primary" id="flight-weather-ask" type="button">Generar informe meteorológico con IA</button>
-  <span class="feedback ai-validation-status" id="flight-weather-status" role="status" aria-live="polite">Primero marcá «Autorizo» y después generá el informe.</span></div>
- <div class="flight-weather-result" id="flight-weather-result" hidden>
-  <div class="card-header"><h3>Panorama meteorológico para el vuelo previsto</h3></div>
-  <p class="sub flight-ai-timestamp" id="flight-weather-time"></p>
-  <div class="flight-ai-text" id="flight-weather-analysis"></div>
-  <p class="sub">Análisis orientativo. Verificá emisión, vigencia, sectores y niveles en las fuentes oficiales; no acredita aptitud ni autoriza el vuelo.</p>
- </div>
-</section>
 </div></details>
 <details class="ops-accordion" id="ops-precauciones"><summary class="ops-accordion-toggle"><span class="ops-accordion-number">06</span><span class="ops-accordion-name"><strong>Precauciones antes del vuelo</strong><span>Comprobaciones que requieren verificación del piloto</span></span><span class="ops-accordion-arrow" aria-hidden="true"></span></summary><div class="ops-accordion-content">
 <section class="flight-precautions" id="precauciones-vuelo" aria-labelledby="flight-precautions-heading">
  <div class="flight-precautions-head">
   <span class="flight-precautions-icon" aria-hidden="true">!</span>
-  <div><span class="flight-precautions-kicker">CONTROL PREVIO · TRAS EL INFORME METEOROLÓGICO</span>
+  <div><span class="flight-precautions-kicker">CONTROL PREVIO · TRAS EL INFORME ESENCIAL</span>
   <h2 id="flight-precautions-heading">Precauciones que debe revisar el piloto</h2></div>
  </div>
  <p>Con la ruta, las altitudes y los boletines cargados, la IA puede preparar una lista de comprobaciones y riesgos a considerar. <strong>Es información orientativa: el piloto debe contrastar cada dato con las fuentes oficiales y decidir por sí mismo.</strong></p>
@@ -872,37 +856,10 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
  </div>
 </section>
 </div></details>
-<details class="flight-advanced-report"><summary><span class="ops-accordion-number">07</span><span class="ops-accordion-name"><strong>Informe operacional ampliado</strong><span>Evaluación IA de las cuatro etapas · opcional</span></span><span class="ops-accordion-arrow" aria-hidden="true"></span></summary>
-<section class="card" id="analisis-altura" style="border-color:#54758a;background:linear-gradient(145deg,#1c2b36,#17232c)">
-<div class="card-header">
- <div><span class="card-kicker">PASO 7 · INFORME OPERACIONAL</span><h2>Cuatro etapas explicadas en lenguaje sencillo</h2></div>
- <span style="border:1px solid #648597;border-radius:99px;padding:7px 11px;color:var(--accent2);font-size:12px;font-weight:700">Usa tokens solo al confirmar</span>
-</div>
-<p class="sub">El sistema tendrá en cuenta las piernas declaradas, salida, destino y alternativo, PRONAREA cargado manualmente y los METAR/TAF/SIGMET ya cargados. Evaluará: 1) ruta (PRONAREA/SIGMET), 2) salida, destino y alternativo (TAF), 3) infraestructura (NOTAM por consulta externa), 4) observaciones actuales de los tres aeródromos (METAR). <strong>Solo generará el informe después de tu confirmación; no autoriza el vuelo.</strong></p>
 
 
-<div class="warning" style="margin:17px 0">
-<strong>Antes de usar tokens:</strong> verificá que los boletines cubran el vuelo previsto. Si no indicaste ruta exacta, el sistema no podrá determinar qué sectores atravesás. La consulta NOTAM de salida, destino y alternativo queda bajo responsabilidad del piloto. El resultado no reemplaza un briefing oficial ni determina aptitud VFR/IFR.
-</div>
-<label class="flight-ai-consent">
-<input id="flight-confirm-cost" required form="flight-analysis-form" type="checkbox" aria-describedby="flight-status">
-<span>Entiendo que al solicitar el análisis completo se consumirán tokens de OpenAI. Acepto iniciar una consulta privada de prueba.</span>
-</label>
-<div class="actions">
-<button class="primary" id="flight-ask" form="flight-analysis-form" type="submit">Generar informe de las cuatro etapas con IA</button>
-<span id="flight-status" class="feedback ai-validation-status" role="status" aria-live="polite">Marcá la autorización antes de generar el informe completo.</span>
-</div>
-<div id="flight-result" hidden style="margin-top:20px;border-top:1px solid #605951;padding-top:18px">
-<div class="card-header"><h3>Informe meteorológico y operacional</h3><button class="secondary" id="flight-copy" type="button">Copiar análisis</button></div>
-<p class="sub" id="flight-analysis-time"></p>
-<div id="flight-analysis" style="white-space:pre-wrap;line-height:1.76;background:#111f29;padding:18px;border:1px solid #567588;border-radius:12px;color:#e9f1f6"></div>
-<p class="source-notes" id="flight-warning"></p>
-</div>
-</section>
-</details>
 
-
-<details class="ops-accordion" id="ops-piloto"><summary class="ops-accordion-toggle"><span class="ops-accordion-number">08</span><span class="ops-accordion-name"><strong>Consulta del piloto · ChatGPT</strong><span>Chat sobre el vuelo y sus boletines</span></span><span class="ops-accordion-arrow" aria-hidden="true"></span></summary><div class="ops-accordion-content">
+<details class="ops-accordion" id="ops-piloto"><summary class="ops-accordion-toggle"><span class="ops-accordion-number">07</span><span class="ops-accordion-name"><strong>Consulta del piloto · ChatGPT</strong><span>Chat sobre el vuelo y sus boletines</span></span><span class="ops-accordion-arrow" aria-hidden="true"></span></summary><div class="ops-accordion-content">
 <section class="card flight-pilot-query" id="consulta-piloto">
  <div class="card-header"><div><span class="card-kicker">ASISTENTE GPT · CONVERSACIÓN AERONÁUTICA</span><h2>ChatGPT · Consulta del piloto</h2></div></div>
  <p class="sub">Preguntá en lenguaje común. ChatGPT traduce METAR, TAF, SIGMET y PRONAREA y responde únicamente con los datos cargados, siempre para la ruta, altitud y hora UTC previstas. Si no hay información suficiente, te lo dirá. El chat de Shimoda se administra por separado.</p>
@@ -1087,7 +1044,7 @@ el('copy-report').addEventListener('click',async()=>{
 (function(){
  'use strict';
  const $=id=>document.getElementById(id);
- const form=$('flight-analysis-form'),button=$('flight-ask'),status=$('flight-status');
+ const form=$('flight-analysis-form');
  // datetime-local no incluye zona horaria. La entrada se interpreta literalmente como UTC,
  // sin aplicar el huso horario configurado en la PC o el celular.
  // El respaldo nativo entrega YYYY-MM-DDTHH:mm; Flatpickr YYYY-MM-DD HH:mm.
@@ -1113,7 +1070,7 @@ el('copy-report').addEventListener('click',async()=>{
    if(!validPlannedUtc(raw))throw Error('Fecha y hora UTC inválidas.');
    return new Date(raw.replace(' ','T')+'Z').toISOString();
  };
- const once=[];let latest='';
+ const once=[];
  const saved=$('icao'),origin=$('flight-origin');
  const selections=['flight-origin','flight-dest','flight-alternate'];
  const knownCodes=new Set([...origin.options].map(option=>option.value).filter(code=>/^SA[A-Z]{2}$/.test(code)));
@@ -1443,7 +1400,7 @@ el('copy-report').addEventListener('click',async()=>{
  let aiBusy=false;
  const usageFmt=n=>Number(n||0).toLocaleString('es-AR');
  const usdFmt=n=>'US$ '+Number(n||0).toLocaleString('es-AR',{minimumFractionDigits:5,maximumFractionDigits:6});
- const modeLabels={essential:'Informe único',weather_overview:'Informe meteorológico',precautions:'Precauciones',report:'Informe ampliado',pilot_question:'Consulta del piloto'};
+ const modeLabels={essential:'Informe único',weather_overview:'Informe meteorológico anterior',precautions:'Precauciones',report:'Informe ampliado anterior',pilot_question:'Consulta del piloto'};
  function showUsageMeter(meter){
    if(!meter||typeof meter!=='object')return;
    const entries=Array.isArray(meter.recent)?meter.recent:[];
@@ -1471,23 +1428,15 @@ el('copy-report').addEventListener('click',async()=>{
  }
  $('flight-usage-refresh').addEventListener('click',()=>{void refreshUsageMeter();});
  void refreshUsageMeter();
- const aiButtons=['flight-essential-ask','flight-weather-ask','flight-precautions-ask','flight-ask','flight-pilot-ask','flight-pilot-new'];
+ const aiButtons=['flight-essential-ask','flight-precautions-ask','flight-pilot-ask','flight-pilot-new'];
  const modeElements={
    essential:{
      consent:'flight-essential-consent',status:'flight-essential-status',
      result:'flight-essential-result',text:'flight-essential-analysis',time:'flight-essential-time'
    },
-   weather_overview:{
-     consent:'flight-weather-consent',status:'flight-weather-status',
-     result:'flight-weather-result',text:'flight-weather-analysis',time:'flight-weather-time'
-   },
    precautions:{
      consent:'flight-precautions-consent',status:'flight-precautions-status',
      result:'flight-precautions-result',text:'flight-precautions-analysis',time:'flight-precautions-time'
-   },
-   report:{
-     consent:'flight-confirm-cost',status:'flight-status',
-     result:'flight-result',text:'flight-analysis',time:'flight-analysis-time'
    },
    pilot_question:{
      consent:'flight-pilot-consent',status:'flight-pilot-status',
@@ -1537,7 +1486,7 @@ el('copy-report').addEventListener('click',async()=>{
      $(item.consent).checked=false;
      $(item.status).textContent='Los datos del vuelo cambiaron o se actualizaron: solicitá una nueva consulta si la necesitás.';
    }
-   latest='';pilotAnswer='';pilotTurns=[];pilotThread.replaceChildren();
+   pilotAnswer='';pilotTurns=[];pilotThread.replaceChildren();
  }
  const tripInputIds=new Set([
    'flight-origin','flight-dest','flight-alternate','flight-origin-other','flight-dest-other','flight-alternate-other',
@@ -1561,16 +1510,12 @@ el('copy-report').addEventListener('click',async()=>{
      $('flight-pilot-status').textContent='Confirmá el consumo de tokens antes de enviar.';
  });
  function preparePayload(mode,targetStatus){
-   // El casillero del informe final no debe bloquear las otras tres consultas.
-   const confirmation=$('flight-confirm-cost');
-   const wasRequired=confirmation.required;
+   // El informe esencial tiene su propio consentimiento. PRONAREA puede
+   // omitirse si ya se han cargado boletines meteorológicos automáticos.
    const pronareaField=$('flight-pronarea'),pronareaWasRequired=pronareaField.required;
-   if(mode!=='report')confirmation.required=false;
-   // PRONAREA, si falta, figura como dato no disponible en el análisis.
    pronareaField.required=false;
    let valid;
    try{valid=form.reportValidity();}finally{
-     confirmation.required=wasRequired;
      pronareaField.required=pronareaWasRequired;
    }
    if(!valid){
@@ -1738,19 +1683,11 @@ el('copy-report').addEventListener('click',async()=>{
        pilotAnswer=pilotTurns.map(turn=>(turn.role==='user'?'Piloto: ':'ChatGPT: ')+turn.content).join('\n\n');
        $('flight-pilot-question').value='';
      }
-     if(mode==='report'){
-       latest=answer;
-       $('flight-warning').textContent=response.warning||
-         'Confirmá vigencias y fuentes oficiales. No reemplaza el briefing oficial.';
-     }
-     outputStatus.textContent=mode==='essential'?
-       'Informe único generado. Comprobá fuentes, vigencias y condiciones oficiales.':
-       mode==='weather_overview'?
-       'Informe meteorológico generado. Comprobá fuentes y vigencias oficiales.':
-       mode==='precautions'?
-       'Precauciones generadas. Revisá cada punto con las fuentes oficiales.':
-       mode==='report'?'Informe generado. Contrastá datos y riesgos con fuentes oficiales.':
-       'Respuesta generada según los datos de este vuelo; corroborá la información.';
+     outputStatus.textContent=mode==='essential'
+       ?'Informe esencial generado. Confirmá fuentes oficiales y vigencias.'
+       :mode==='precautions'
+         ?'Precauciones generadas. Revisalas en las fuentes oficiales.'
+         :'Respuesta generada según los datos cargados. Verificá la información.';
    }catch(err){
      outputStatus.textContent='No se completó: '+(err?.message||'Error de conexión.');
    }finally{
@@ -1760,12 +1697,8 @@ el('copy-report').addEventListener('click',async()=>{
      $(elements.consent).checked=false;
    }
  }
- form.addEventListener('submit',event=>{
-   event.preventDefault();
-   void runAi('report');
- });
+ form.addEventListener('submit',event=>event.preventDefault());
  $('flight-essential-ask').addEventListener('click',()=>{void runAi('essential');});
- $('flight-weather-ask').addEventListener('click',()=>{void runAi('weather_overview');});
  $('flight-essential-copy').addEventListener('click',async()=>{
    const answer=$('flight-essential-analysis').textContent.trim();
    if(!answer||$('flight-essential-result').hidden)return;
@@ -1782,11 +1715,6 @@ el('copy-report').addEventListener('click',async()=>{
    $('flight-pilot-question').value='';$('flight-pilot-consent').checked=false;
    $('flight-pilot-result').hidden=true;
    $('flight-pilot-status').textContent='Nueva conversación lista. Se mantiene el plan actual.';
- });
- $('flight-copy').addEventListener('click',async()=>{
-   if(!latest)return;
-   try{await navigator.clipboard.writeText(latest);status.textContent='Informe copiado.';}
-   catch{status.textContent='El navegador no permitió copiar el informe.';}
  });
  $('flight-pilot-copy').addEventListener('click',async()=>{
    if(!pilotAnswer)return;
@@ -1963,7 +1891,7 @@ map.forEach(([name,source])=>{
   new MutationObserver(update).observe(original,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
   update();
 });
-[['flight-essential-result','ops-status-essential'],['flight-weather-result','ops-status-weather'],['flight-precautions-result','ops-status-precautions'],['flight-result','ops-status-final']].forEach(([source,target])=>{
+[['flight-essential-result','ops-status-essential'],['flight-precautions-result','ops-status-precautions']].forEach(([source,target])=>{
   const original=$(source),out=$(target);if(!original||!out)return;
   const initial=out.textContent;
   const update=()=>{out.textContent=original.hidden?initial:'Informe generado · revisar vigencia';};
