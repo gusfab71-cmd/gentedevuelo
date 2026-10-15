@@ -68,7 +68,7 @@ const ui=document.createElement('section');ui.className='flight-wizard-ui';
 ui.innerHTML='<strong>FLIGHT OPERATIONS · Planificación guiada</strong><p>Una etapa por vez · UTC · Guardado privado al continuar</p><div id="flight-wizard-steps" class="flight-wizard-steps"></div><div class="flight-wizard-toolbar"><button id="flight-wizard-back" type="button">← Anterior</button><button id="flight-wizard-next" type="button">Guardar y continuar →</button><span id="flight-wizard-status" role="status" aria-live="polite"></span></div><div class="flight-wizard-toolbar"><button id="flight-wizard-resume" type="button" hidden>Continuar vuelo guardado</button><button id="flight-wizard-new" type="button">Nuevo vuelo</button></div>';
 plan.before(ui);
 const nav=document.createElement('section');nav.className='flight-wizard-nav-panel';nav.id='flight-wizard-navigation';
-nav.innerHTML='<h2>Etapa 4 · Cálculos de navegación y combustible</h2><p>Precomputada VFR: curso verdadero → corrección por viento → rumbo verdadero → variación magnética → rumbo magnético → GS, tiempo y combustible. Resultados estimados sujetos a verificación en cartas y boletines oficiales. Sin tokens de IA.</p>';
+nav.innerHTML='<h2>Etapa 4 · Cálculos de navegación y combustible</h2><p>Precomputada VFR: curso verdadero → corrección de deriva → rumbo verdadero → variación magnética → rumbo magnético → GS, tiempo y combustible. Resultados estimados sujetos a verificación en cartas y boletines oficiales. Sin tokens de IA.</p>';
 report.before(nav);
 const navSettings=$('flight-nav-settings'),navOutput=$('flight-essential-navigation');
 if(navSettings)nav.append(navSettings);if(navOutput)nav.append(navOutput);
@@ -374,7 +374,7 @@ function calcFuel(){
  const el=$('flight-wizard-leg-table');
  if(el){
   const tbl=document.createElement('table'),header=document.createElement('tr');
-  ['Pierna','Curso °T','Alt. ft','Viento °T/kt','Corr. viento °','Rumbo °T','Variación °','Rumbo °M','Derrota °M','Dist. NM','GS kt','ETE min','ETA UTC','Consumo L'].forEach(label=>{const cell=document.createElement('th');cell.scope='col';cell.textContent=label;header.append(cell);});
+  ['Pierna','Curso verdadero °T','Alt. ft','Viento °T/kt','Corrección de deriva °','Rumbo °T','Variación °','Rumbo °M','Derrota magnética °M','Dist. NM','GS kt','ETE min','ETA UTC','Consumo L'].forEach(label=>{const cell=document.createElement('th');cell.scope='col';cell.textContent=label;header.append(cell);});
   const thead=document.createElement('thead');thead.append(header);tbl.append(thead);
   const tbody=document.createElement('tbody');let elapsed=0,knownEta=!!date();
   for(const r of list){

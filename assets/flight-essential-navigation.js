@@ -179,7 +179,7 @@ function describe(r){
  ];
  if(r.missing){lines.push('Rumbo corregido y GS: no calculables. '+r.missing);return {title:name,lines};}
  lines.push('Datos: TAS '+num(r.tas)+' kt; viento de altura desde '+String(Math.round(r.wind.from)%360).padStart(3,'0')+'° verdaderos a '+num(r.wind.speed,1)+' kt. '+r.windSource);
- lines.push('Corrección por viento ESTIMADA: '+(r.wca>=0?'+':'')+num(r.wca,1)+'°; rumbo verdadero de proa: '+asLine(r.trueHeading)+
+ lines.push('Corrección de deriva estimada: '+(r.wca>=0?'+':'')+num(r.wca,1)+'°; rumbo verdadero de proa: '+asLine(r.trueHeading)+
    '; rumbo magnético de proa: '+asLine(r.magneticHeading)+
    '; GS ORIENTATIVA DE REFERENCIA: '+num(r.gs,1)+' kt (NO confirmada para todo el vuelo).');
  if(Number.isFinite(r.forecastLevelFt)&&Number.isFinite(r.stationDistanceKm)){
