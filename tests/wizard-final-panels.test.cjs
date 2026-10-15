@@ -31,6 +31,12 @@ test('official links and chart controls remain intact', () => {
  assert.match(html, /flight-operations-wizard\.js\?v=20261015r/);
 });
 
+test('the shared footer does not link out to FlightPrep NAV from any wizard stage', () => {
+ assert.doesNotMatch(html, /href="flightprep-nav\.html"/);
+ assert.doesNotMatch(html, /abrir FlightPrep NAV en Utilidades/);
+ assert.match(html, /<footer class="sitefoot">/);
+});
+
 test('meteorology renders the calculations shortcut once, under the evaluation', () => {
  assert.match(wizard, /for\(const section of \[\$\('ops-boletines'\)\]\.filter\(Boolean\)\)/);
  assert.doesNotMatch(wizard, /\[weather,\$\('ops-boletines'\)\]/);
