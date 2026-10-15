@@ -4,7 +4,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 const cors={
   "Access-Control-Allow-Origin":"*",
   "Access-Control-Allow-Headers":"authorization,apikey,content-type,x-client-info",
-  "Access-Control-Allow-Methods":"GET,POST,OPTIONS"
+  "Access-Control-Allow-Methods":"POST,OPTIONS"
 };
 function json(data:unknown,status=200){
   return new Response(JSON.stringify(data),{status,headers:{...cors,"Content-Type":"application/json; charset=utf-8","Cache-Control":"no-store"}});
@@ -31,7 +31,7 @@ function responseText(body:any){
 
 Deno.serve(async request=>{
   if(request.method==="OPTIONS")return new Response("ok",{headers:cors});
-  if(request.method!=="POST"&&request.method!=="GET")return json({error:"Método no permitido."},405);
+  if(request.method!=="POST")return json({error:"Método no permitido."},405);
   const bearer=request.headers.get("authorization")||"";
   if(!bearer.startsWith("Bearer "))return json({error:"Acceso exclusivo para administrador."},401);
   const url=Deno.env.get("SUPABASE_URL")||"";
@@ -45,22 +45,9 @@ Deno.serve(async request=>{
   const {data:admin,error:adminError}=await db.from("site_admins").select("user_id").eq("user_id",identity.user.id).maybeSingle();
   if(adminError)return json({error:"No se pudieron verificar permisos."},503);
   if(!admin)return json({error:"Análisis de vuelo reservado a administración."},403);
-  // La IA de Flight Operations solo opera mientras Robert Shimoda permanezca bloqueado.
-  // El interruptor del chat no se cambia aquí ni se exponen sus credenciales.
-  const {data:shimoda,error:shimodaError}=await db.from("robert_daily_config")
-    .select("chat_enabled").eq("singleton",true).maybeSingle();
-  if(shimodaError||!shimoda)return json({error:"No se pudo verificar el bloqueo de Robert Shimoda."},503);
-  // Cada producto debe utilizar una credencial del proyecto de OpenAI que le corresponde.
-  // Hasta que el administrador guarde la nueva credencial, se conserva la
-  // conexión antigua para evitar interrumpir un servicio existente.
-  const flightOperationsKey=Deno.env.get("FLIGHT_OPERATIONS_OPENAI_API_KEY")?.trim()||"";
-  const usesDedicatedKey=Boolean(flightOperationsKey);
-  if(request.method==="GET")return json({
-    ok:true,source:usesDedicatedKey?"dedicated":"shared_legacy",
-    shimoda_blocked:shimoda.chat_enabled===false
-  });
-  if(shimoda.chat_enabled!==false)
-    return json({error:"La IA de Flight Operations solo está habilitada mientras Robert Shimoda permanezca desactivado."},403);
+  // Flight Operations comparte la conexión OPENAI_API_KEY del asistente
+  // Shimoda. La habilitación del chat de Shimoda se administra por separado:
+  // ni se altera ni limita el análisis de vuelo.
   let input:any;
   try{input=await request.json();}catch{return json({error:"Solicitud JSON inválida."},400);}
   if(input?.confirm_ai_cost!==true)return json({error:"Debés confirmar expresamente el consumo de tokens antes del análisis."},400);
@@ -158,8 +145,9 @@ Deno.serve(async request=>{
     return json({error:"Cargá primero al menos un boletín automático o un PRONAREA manual; la IA no inventará información meteorológica."},400);
   const now=Date.now(),plannedMs=Date.parse(planned);
   if(plannedMs<now-12*3600000)return json({error:"La hora prevista ya pasó. Actualizá el plan antes de gastar tokens."},400);
-  // La clave exclusiva tiene prioridad. Shimoda sigue leyendo OPENAI_API_KEY.
-  const key=flightOperationsKey||(Deno.env.get("OPENAI_API_KEY")||"");
+  // Se reutiliza el saldo de API ya configurado para Shimoda; la suscripción
+  // ChatGPT Plus no cubre las llamadas a la API realizadas por este sitio.
+  const key=Deno.env.get("OPENAI_API_KEY")||"";
   if(!key)return json({error:"El análisis de IA no está configurado."},503);
   const instructions=[
     "Sos el intérprete didáctico de los boletines cargados en Flight Operations, un módulo de Gente de Vuelo en acceso privado para administradores. Explicá para un piloto que NO sabe leer códigos METAR, TAF, SIGMET ni PRONAREA. No uses nombres propios para presentarte ni firmes.",
@@ -234,8 +222,7 @@ Deno.serve(async request=>{
     if(!report)return json({error:"El servicio no devolvió un análisis utilizable."},502);
     return json({
       ok:true,analysis:report,mode,ai_used:true,
-      billing_connection:usesDedicatedKey?"dedicated":"shared_legacy",
-      generated_at_utc:new Date().toISOString(),
+remove API project indicator      generated_at_utc:new Date().toISOString(),
       checked_at_utc:checkedAt,
       documents_received_at_utc:documentsReceivedAtUtc,
       origin,destination,alternate,firs,cruise_altitude_ft:level,
