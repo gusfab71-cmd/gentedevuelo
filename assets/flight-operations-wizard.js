@@ -109,6 +109,10 @@ function valid(){
   if(waypoints.some(e=>!e.value.trim())||legs.some(e=>!e.value||!e.checkValidity())){notify('Completá todas las piernas y altitudes.');return false;}
  }
  if(step===3){
+  const burn=Number($('flight-fuel-burn')?.value),available=Number($('flight-fuel-available')?.value);
+  if(!Number.isFinite(burn)||burn<=0||!Number.isFinite(available)||available<=0){
+   notify('Completá consumo en litros/hora y combustible utilizable en litros para finalizar la navegación.');return false;
+  }
   const status=gate();if(!status.ok){notify('IA bloqueada, sin tokens: '+status.message);return false;}
  }
  return true;
