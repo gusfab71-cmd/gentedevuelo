@@ -183,7 +183,12 @@ Deno.serve(async request=>{
   const level=Number(input?.cruise_altitude_ft);
   const rules=input?.flight_rules;
   const mode=typeof input?.mode==="string"?input.mode:"report";
-  if(!["report","weather_overview","precautions","pilot_question","essential"].includes(mode))
+  // Solo el Informe esencial permanece como informe del vuelo.
+  // Los informes duplicados se rechazan también en el servidor, ANTES de
+  // consumir tokens, aunque el usuario conserve una pestaña anterior.
+  if(["report","weather_overview"].includes(mode))
+    return json({error:"Ese informe anterior fue retirado. Utilizá el Informe esencial del vuelo. No se consumieron tokens."},410);
+  if(!["precautions","pilot_question","essential"].includes(mode))
     return json({error:"Tipo de consulta de IA no válido."},400);
   // Compatibilidad: las versiones antiguas del frontend aún envían el
   // Informe esencial sin route_legs. Deben seguir generando informe sin
