@@ -1,7 +1,7 @@
 /* Gente de Vuelo - Flight Operations: etapas, borrador y control previo sin IA */
 (()=>{
 'use strict';
-const $=id=>document.getElementById(id),DAY=86400000;
+const $=id=>document.getElementById(id);
 const date=()=>{const raw=String($('flight-time')?.value||'').trim();const x=raw.replace(' ','T');if(!/^\d{4}-\d{2}-\d{2}T(?:[01]\d|2[0-3]):[0-5]\d$/.test(x))return null;const d=new Date(x+'Z');return Number.isFinite(d.getTime())&&d.toISOString().slice(0,16)===x?d:null;};
 const rows=()=>window.GDV_FLIGHT_NAV?.snapshot?.()||[];
 const eta=()=>{
@@ -11,13 +11,10 @@ const eta=()=>{
  return hours>0&&hours<72?new Date(dep.getTime()+hours*3600000).toISOString():null;
 };
 function gate(){
- const raw=$('flight-pronarea')?.value||'', day=$('flight-pronarea-date')?.value,dep=date();
+ const raw=$('flight-pronarea')?.value||'',dep=date();
  if(!raw.trim())return {ok:false,message:'Pegá el PRONAREA oficial.'};
  if(!dep)return {ok:false,message:'Cargá fecha y hora UTC de salida.'};
- if(!/^\d{4}-\d{2}-\d{2}$/.test(day||''))return {ok:false,message:'Indicá la fecha UTC de inicio de validez del boletín.'};
- const d=new Date(day+'T00:00:00Z');
- if(!Number.isFinite(d.getTime())||d.toISOString().slice(0,10)!==day)return {ok:false,message:'La fecha de validez no es correcta.'};
- if(!$('flight-pronarea-confirm')?.checked)return {ok:false,message:'Confirmá que comprobaste emisión, FIR y fecha en el SMN.'};
+ if(!$('flight-pronarea-confirm')?.checked)return {ok:false,message:'Confirmá que comprobaste emisión, FIR y vigencia real en el SMN.'};
  const matches=[...raw.toUpperCase().matchAll(/\bPRONAREA\s+FIR\s+([A-Z]{3,4})\s+VALIDEZ\s+(\d{4})(?!\d)/g)];
  if(!matches.length)return {ok:false,message:'No se puede identificar la cabecera FIR / VALIDEZ del PRONAREA.'};
  const aliases={SAEF:['EZE','SAEF'],SACF:['CBA','COR','SACF'],SAMF:['MZA','SAMF'],SARR:['RES','SARR'],SAVF:['CRV','SAVF']};
@@ -30,13 +27,12 @@ function gate(){
  const end=eta();
  if(!end)return {ok:false,message:'No se conoce la ETA completa: verificá distancias y vientos de todas las piernas antes de activar la IA.'};
  for(const m of matches){
-  const a=Number(m[2].slice(0,2)),b=Number(m[2].slice(2));
-  if(a>23||b>24||a===b)return {ok:false,message:'VALIDEZ del PRONAREA ilegible o incorrecta.'};
-  const begin=d.getTime()+a*3600000,finish=d.getTime()+b*3600000+(b<=a?DAY:0);
-  if(dep.getTime()<begin||dep.getTime()>=finish)return {ok:false,message:'PRONAREA '+m[1]+' '+m[2]+' no cubre la salida '+dep.toISOString().slice(11,16)+' UTC.'};
-  if(Date.parse(end)>=finish)return {ok:false,message:'PRONAREA '+m[1]+' '+m[2]+' no cubre el arribo estimado '+end.slice(11,16)+' UTC.'};
+  const window=window.GDV_PRONAREA_WIND?.resolveWindow?.(m[2],dep);
+  if(!window)return {ok:false,message:'VALIDEZ del PRONAREA ilegible o incorrecta.'};
+  if(dep.getTime()<window.start||dep.getTime()>=window.end)return {ok:false,message:'PRONAREA '+m[1]+' '+m[2]+' no cubre la salida '+dep.toISOString().slice(11,16)+' UTC.'};
+  if(Date.parse(end)>=window.end)return {ok:false,message:'PRONAREA '+m[1]+' '+m[2]+' no cubre el arribo estimado '+end.slice(11,16)+' UTC.'};
  }
- return {ok:true,message:'Fecha declarada y horario compatibles hasta la ETA. La vigencia real debe confirmarse siempre en el boletín del SMN.'};
+ return {ok:true,message:'Fecha UTC tomada de la salida prevista y horario compatible hasta la ETA. La emisión y vigencia reales deben confirmarse en el SMN.'};
 }
 window.GDV_FLIGHT_PRONAREA_GATE=Object.freeze({check:gate,estimatedArrivalUtc:eta});
 function refreshGate(){
@@ -44,7 +40,7 @@ function refreshGate(){
  if(e){e.textContent=result.message;e.dataset.validity=result.ok?'compatible':'blocked';}
  if(b){b.disabled=!result.ok;b.title=result.ok?'':'IA bloqueada sin tokens: '+result.message;}
 }
-['flight-pronarea','flight-pronarea-date','flight-pronarea-confirm','flight-time'].forEach(id=>{$(id)?.addEventListener('input',refreshGate);$(id)?.addEventListener('change',refreshGate)});
+['flight-pronarea','flight-pronarea-confirm','flight-time'].forEach(id=>{$(id)?.addEventListener('input',refreshGate);$(id)?.addEventListener('change',refreshGate)});
 const plan=$('ops-plan'),weather=$('ops-consultar'),report=$('ops-meteo'),p=$('gdv-meteo-private');
 if(!plan||!weather||!report||!p)return;
 const css=document.createElement('style');
@@ -258,7 +254,7 @@ function valid(){
  return true;
 }
 function pack(){
- const fields={};p.querySelectorAll('#flight-analysis-form [id],#flight-nav-tas,#flight-pronarea,#flight-pronarea-date,#flight-pronarea-confirm,#flight-atis,#flight-wizard-fuel input').forEach(e=>{
+ const fields={};p.querySelectorAll('#flight-analysis-form [id],#flight-nav-tas,#flight-pronarea,#flight-pronarea-confirm,#flight-atis,#flight-wizard-fuel input').forEach(e=>{
   if(!('value' in e)||e.closest('#flight-legs-list')||e.closest('#flight-waypoints'))return;
   fields[e.id]=e.type==='checkbox'?e.checked:e.value;
  });
@@ -377,7 +373,7 @@ $('flight-wizard-print').onclick=()=>{
  'Despegue: '+$('flight-time')?.value+' UTC · Reglas: '+$('flight-rules')?.value,'TAS: '+$('flight-nav-tas')?.value+' kt',''];
  rows().forEach(r=>out.push('Pierna '+(r.index+1)+' '+r.name+' · '+fmt(r.distance_nm)+' NM ('+(r.distance_source==='pilot'?'piloto':'geometría')+') · '+fmt(r.altitude_ft)+' ft AMSL · derrota °T '+fmt(r.course_true_deg)+' · derrota °M '+fmt(r.magnetic_track_deg)+' · rumbo °M '+fmt(r.heading_magnetic_deg)+' · GS '+fmt(r.gs_kt)+' kt','Viento: '+r.wind_source));
  out.push('','COMBUSTIBLE',$('flight-fuel-summary')?.textContent||'Pendiente','','PRONAREA',gate().message,
- 'Fuente PRONAREA: carga manual · fecha declarada '+($('flight-pronarea-date')?.value||'sin fecha'),
+ 'Fuente PRONAREA: carga manual · fecha de referencia UTC '+(date()?.toISOString().slice(0,10)||'sin fecha de salida')+' · emisión y vigencia real sujetas a verificación SMN',
  'ATIS aportado: '+($('flight-atis')?.value?.trim()||'No aportado.'),
  'DATOS METEOROLÓGICOS RECUPERADOS',
  $('flight-auto-results')?.hidden?'Boletines automáticos pendientes de nueva consulta.':($('flight-auto-time')?.textContent||'Fecha de consulta no informada.'),

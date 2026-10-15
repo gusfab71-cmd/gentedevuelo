@@ -214,7 +214,7 @@ function windInputs(){
  const route=currentRoute();
  // Un PRONAREA nuevo vuelve a seleccionar nivel/estación sin depender de la
  // respuesta IA ni producir una llamada a OpenAI.
- const signature=JSON.stringify(route.map(r=>[r.key,r.alt]))+'|'+($('flight-pronarea')?.value||'')+'|'+($('flight-time')?.value||'')+'|'+($('flight-pronarea-date')?.value||'')+'|'+String($('flight-pronarea-confirm')?.checked);
+ const signature=JSON.stringify(route.map(r=>[r.key,r.alt]))+'|'+($('flight-pronarea')?.value||'')+'|'+($('flight-time')?.value||'')+'|'+String($('flight-pronarea-confirm')?.checked);
  if(currentSignature===signature)return;
  currentSignature=signature;
  settings.replaceChildren();
@@ -286,7 +286,7 @@ for(const id of ['flight-origin','flight-dest','flight-origin-other','flight-des
 }
 waypoints.addEventListener('input',schedule);
 $('flight-pronarea')?.addEventListener('input',()=>{aiWindValues.clear();schedule();output();});
-for(const id of ['flight-pronarea-date','flight-pronarea-confirm']){
+for(const id of ['flight-pronarea-confirm']){
  $(id)?.addEventListener('input',()=>{aiWindValues.clear();currentSignature='';schedule();output();});
  $(id)?.addEventListener('change',()=>{aiWindValues.clear();currentSignature='';schedule();output();});
 }

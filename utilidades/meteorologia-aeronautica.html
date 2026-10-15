@@ -735,10 +735,8 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
 <textarea id="flight-pronarea" form="flight-analysis-form" required minlength="40" maxlength="12000" rows="7" placeholder="Pegá el PRONAREA oficial vigente para las FIR involucradas." aria-describedby="flight-pronarea-validity"></textarea></label>
 <p class="flight-pronarea-validity" id="flight-pronarea-validity" role="status" aria-live="polite" hidden></p>
 <div class="flight-pronarea-day" style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin:13px 0">
-<label class="field" for="flight-pronarea-date" style="min-width:200px;flex:1">Fecha UTC de inicio de validez del PRONAREA
-<input type="date" id="flight-pronarea-date" aria-describedby="flight-pronarea-day-help"></label>
-<label class="flight-ai-consent" style="flex:2;min-width:230px"><input type="checkbox" id="flight-pronarea-confirm"><span>Confirmé en el SMN la fecha, FIR y emisión del boletín copiado.</span></label>
-</div><p id="flight-pronarea-day-help" class="sub">El grupo 0416 significa 04:00 a 16:00 UTC, pero no informa por sí solo el día. Indicá la fecha UTC de inicio de la validez, no la fecha de carga.</p>
+<label class="flight-ai-consent" style="flex:1;min-width:230px"><input type="checkbox" id="flight-pronarea-confirm"><span>Confirmé en el SMN la FIR, la emisión y la vigencia real del boletín copiado.</span></label>
+</div><p id="flight-pronarea-day-help" class="sub">La fecha se toma automáticamente de la salida UTC del paso 1. Si la franja de validez cruza medianoche UTC, se considera el día de inicio correspondiente. El grupo horario por sí solo no demuestra que el boletín sea del día del vuelo: comprobalo en el SMN.</p>
 <p id="flight-pronarea-gate" class="flight-pronarea-validity" role="status" aria-live="polite">La vigencia del PRONAREA se verificará antes de activar la IA, sin tokens.</p>
 <div style="margin-top:14px"><label class="field" for="flight-atis"><strong>ATIS (opcional)</strong> · texto o información copiada por el piloto
 <textarea id="flight-atis" form="flight-analysis-form" maxlength="2500" rows="3" placeholder="Cuando esté disponible, pegá aquí ATIS del aeródromo e indicá su horario UTC. No se consulta automáticamente."></textarea></label>
@@ -1592,7 +1590,7 @@ el('copy-report').addEventListener('click',async()=>{
      stops,legHeights,
      firs:[...document.querySelectorAll('.flight-fir:checked')].map(el=>el.value),
      pronarea:$('flight-pronarea').value,
-      pronareaDate:$('flight-pronarea-date')?.value,pronareaConfirmed:$('flight-pronarea-confirm')?.checked,
+      pronareaConfirmed:$('flight-pronarea-confirm')?.checked,
       atis:$('flight-atis')?.value,
      pilotQuestion:$('flight-pilot-question').value,
      bulletinGeneration
@@ -1610,7 +1608,7 @@ el('copy-report').addEventListener('click',async()=>{
  }
  const tripInputIds=new Set([
    'flight-origin','flight-dest','flight-alternate','flight-origin-other','flight-dest-other','flight-alternate-other',
-   'flight-alt','flight-nav-tas','flight-time','flight-rules','flight-pronarea','flight-atis','flight-pronarea-date','flight-pronarea-confirm'
+   'flight-alt','flight-nav-tas','flight-time','flight-rules','flight-pronarea','flight-atis','flight-pronarea-confirm'
  ]);
  function handleChangedField(event){
    const node=event.target;
@@ -1623,7 +1621,6 @@ el('copy-report').addEventListener('click',async()=>{
  $('flight-nav-tas')?.addEventListener('input',handleChangedField);
  $('flight-nav-tas')?.addEventListener('change',handleChangedField);
  $('flight-pronarea').addEventListener('input',handleChangedField);
- $('flight-pronarea-date')?.addEventListener('change',handleChangedField);
  $('flight-pronarea-confirm')?.addEventListener('change',handleChangedField);
  $('flight-atis')?.addEventListener('input',handleChangedField);
  $('flight-nav-wind-legs')?.addEventListener('input',clearAiOutputs);
@@ -1728,7 +1725,6 @@ el('copy-report').addEventListener('click',async()=>{
      cruise_altitude_ft:Number($('flight-alt').value),
      flight_rules:$('flight-rules').value,firs,question,
      pronarea_text:$('flight-pronarea').value.trim(),
-      pronarea_valid_from_date_utc:$('flight-pronarea-date').value,
       pronarea_official_checked:$('flight-pronarea-confirm').checked,
       atis_text:$('flight-atis').value.trim(),
       planned_end_utc:window.GDV_FLIGHT_PRONAREA_GATE?.estimatedArrivalUtc()||null,
@@ -2063,10 +2059,10 @@ if(stage){
 <script src="../assets/flight-fir-geodata.js?v=20261015c"></script>
 <script src="../assets/flight-wmm2025.js?v=20261015a"></script>
 <script src="../assets/flight-vfr-altitude.js?v=20261015f"></script>
-<script src="../assets/flight-pronarea-wind.js?v=20261015e"></script>
-<script src="../assets/flight-essential-navigation.js?v=20261015l"></script>
+<script src="../assets/flight-pronarea-wind.js?v=20261015f"></script>
+<script src="../assets/flight-essential-navigation.js?v=20261015m"></script>
 <script src="../assets/flight-fir-autoselect.js?v=20261015b"></script>
 <script src="../assets/flight-route-suggestions.js?v=20261015b"></script>
-<script defer src="../assets/flight-operations-wizard.js?v=20261015f"></script>
+<script defer src="../assets/flight-operations-wizard.js?v=20261015g"></script>
 </body>
 </html>
