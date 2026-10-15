@@ -228,11 +228,20 @@ $('flight-wizard-print').onclick=()=>{
  'Despegue: '+$('flight-time')?.value+' UTC · Reglas: '+$('flight-rules')?.value,'TAS: '+$('flight-nav-tas')?.value+' kt',''];
  rows().forEach(r=>out.push('Pierna '+(r.index+1)+' '+r.name+' · '+fmt(r.distance_nm)+' NM · '+fmt(r.altitude_ft)+' ft AMSL · °T '+fmt(r.course_true_deg)+' · rumbo °M '+fmt(r.heading_magnetic_deg)+' · GS '+fmt(r.gs_kt)+' kt','Viento: '+r.wind_source));
  out.push('','COMBUSTIBLE',$('flight-fuel-summary')?.textContent||'Pendiente','','PRONAREA',gate().message,
+ 'Fuente PRONAREA: carga manual · fecha declarada '+($('flight-pronarea-date')?.value||'sin fecha'),
+ 'ATIS aportado: '+($('flight-atis')?.value?.trim()||'No aportado.'),
+ 'DATOS METEOROLÓGICOS RECUPERADOS',
+ $('flight-auto-results')?.hidden?'Boletines automáticos pendientes de nueva consulta.':($('flight-auto-time')?.textContent||'Fecha de consulta no informada.'),
  'METAR/TAF/SIGMET: verificar fecha y vigencia en fuentes oficiales.','',
  'INFORME ESENCIAL DE IA',$('flight-essential-result')?.hidden?'No generado.':$('flight-essential-analysis')?.textContent||'No generado.','',
  'Herramienta orientativa: el piloto debe verificar información meteorológica oficial, NOTAM, cartas, reglamentación y performance.');
  if(!sheet){sheet=document.createElement('section');sheet.id='flight-print-sheet';sheet.hidden=true;document.body.append(sheet);}
  sheet.textContent=out.join('\n');window.print();
 };
+const printAfterReport=document.createElement('button');
+printAfterReport.type='button';printAfterReport.className='secondary';
+printAfterReport.textContent='Imprimir o guardar planificación completa en PDF';
+printAfterReport.addEventListener('click',()=>$('flight-wizard-print').click());
+$('informe-esencial')?.append(printAfterReport);
 display(0);refreshGate();void loadSaved();
 })();
