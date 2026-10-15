@@ -79,6 +79,18 @@ fuel.innerHTML='<h3>Planificación de combustible</h3><div class="flight-fuel-in
 const legTable=document.createElement('section');legTable.id='flight-wizard-leg-table';legTable.setAttribute('aria-label','Planilla de navegación por piernas');nav.append(legTable);
 nav.append(fuel);
 let step=0,busy=false,stored=null;
+const essentialRow=document.createElement('div');essentialRow.className='flight-wizard-continue-row';
+const essentialButton=document.createElement('button');essentialButton.type='button';essentialButton.textContent='Guardar y continuar al informe esencial →';
+const essentialFeedback=document.createElement('span');essentialFeedback.className='feedback';essentialFeedback.setAttribute('role','status');
+essentialFeedback.textContent='Siguiente etapa: informe esencial y consultas del piloto.';
+essentialButton.addEventListener('click',async()=>{
+ if(step!==3||busy)return;
+ essentialButton.disabled=true;essentialFeedback.textContent='Guardando cálculos y abriendo el informe esencial…';
+ await go(4);
+ essentialFeedback.textContent=step===4?'Informe esencial abierto.':$('flight-wizard-status').textContent;
+ essentialButton.disabled=false;
+});
+essentialRow.append(essentialButton,essentialFeedback);nav.append(essentialRow);
 const all=[plan,weather,$('ops-boletines'),$('nubosidad'),$('fuentes'),$('ops-fuentes'),report,$('ops-piloto'),$('ops-precauciones'),$('ops-cartas'),nav].filter(Boolean);
 const titles=['Datos del vuelo','Planificar piernas','Meteorología','Cálculos y combustible','Informe esencial'];
 const steps=titles.map((x,i)=>{const b=document.createElement('button');b.textContent=(i+1)+' · '+x;b.type='button';b.onclick=()=>{if(i<=step)void go(i);else notify('Avanzá utilizando Guardar y continuar.');};$('flight-wizard-steps').append(b);return b;});

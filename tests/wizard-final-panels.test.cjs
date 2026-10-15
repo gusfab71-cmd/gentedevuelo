@@ -28,7 +28,7 @@ test('official links and chart controls remain intact', () => {
  }
  assert.match(html, /https:\/\/ais\.anac\.gob\.ar\//);
  assert.match(html, /https:\/\/redemet\.decea\.mil\.br\//);
- assert.match(html, /flight-operations-wizard\.js\?v=20261015p/);
+ assert.match(html, /flight-operations-wizard\.js\?v=20261015q/);
 });
 
 test('meteorology renders the calculations shortcut once, under the evaluation', () => {
@@ -36,6 +36,13 @@ test('meteorology renders the calculations shortcut once, under the evaluation',
  assert.doesNotMatch(wizard, /\[weather,\$\('ops-boletines'\)\]/);
  assert.match(wizard, /section\.append\(row\)/);
  assert.match(wizard, /await go\(3\)/);
+});
+
+test('calculations provide a bottom shortcut that saves and opens the essential report', () => {
+ assert.match(wizard, /essentialButton\.textContent='Guardar y continuar al informe esencial →'/);
+ assert.match(wizard, /essentialButton\.type='button'/);
+ assert.match(wizard, /await go\(4\)/);
+ assert.match(wizard, /essentialRow\.append\(essentialButton,essentialFeedback\);nav\.append\(essentialRow\)/);
 });
 
 test('magnetic courses above 360° are displayed as three-digit bearings', () => {
