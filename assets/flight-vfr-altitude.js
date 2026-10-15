@@ -7,26 +7,16 @@
 'use strict';
 const $=id=>document.getElementById(id);
 const legs=$('flight-legs-list'),form=$('flight-analysis-form'),rules=$('flight-rules');
-const parent=document.querySelector('.flight-leg-editor'),geo=window.GDV_FLIGHT_FIR_GEODATA?.airports,geomag=window.GDV_WMM2025;
-if(!legs||!form||!rules||!parent)return;
-const panel=document.createElement('section');
-panel.id='flight-vfr-guidance';panel.className='flight-vfr-guidance';
-panel.setAttribute('aria-labelledby','flight-vfr-heading');
-panel.innerHTML='<span class="card-kicker">VERIFICACIÓN DE NIVELES VFR · SIN TOKENS</span>'+
-'<h3 id="flight-vfr-heading">Altitud VFR según el rumbo a destino</h3>'+
-'<p class="sub">Para aeródromos y puntos con coordenadas conocidas, se estima automáticamente la <strong>derrota magnética de cada tramo</strong> (no el rumbo de brújula). Se calcula el rumbo geográfico y se ajusta por declinación magnética WMM2025. Podés corregirlo con el rumbo obtenido de tus cartas.</p>'+
-'<label class="field flight-vfr-policy" for="flight-vfr-context">¿Cuándo corresponde aplicar la serie semicircular VFR?'+
-'<select id="flight-vfr-context">'+
-'<option value="standard">Crucero VFR a 3.000 pies AGL o más, sin excepción ATC (aplicar control)</option>'+
-'<option value="below">Crucero por debajo de 3.000 pies AGL (la serie no es obligatoria)</option>'+
-'<option value="controlled">Vuelo VFR controlado con niveles establecidos por ATC (verificar autorización)</option>'+
-'<option value="climb">Ascenso, descenso u otro tramo no sujeto a nivel de crucero (verificar)</option>'+
-'</select></label>'+
-'<p class="flight-vfr-overview" id="flight-vfr-overview" role="status" aria-live="polite">Calculando las derrotas magnéticas…</p>'+
-'<p class="sub"><strong>Importante:</strong> la opción inicial presupone crucero VFR en el supuesto donde rige la tabla; el sistema <strong>no conoce la altura AGL</strong> ni puede comprobar que corresponda. Si volás por debajo del umbral, en VFR controlado o durante ascenso/descenso, elegí el caso adecuado. Las sugerencias no comprueban terreno, obstáculos, techo, autorizaciones, espacio aéreo, ni aptitud de la aeronave. El piloto debe revisar AIP y cartas vigentes.</p>'+
-'<p class="sub"><a href="https://ais.anac.gob.ar/" target="_blank" rel="noopener noreferrer">AIP Argentina · RAAC 91.159 y tabla de niveles ↗</a></p>';
-parent.append(panel);
+const geo=window.GDV_FLIGHT_FIR_GEODATA?.airports,geomag=window.GDV_WMM2025;
 const overview=$('flight-vfr-overview'),context=$('flight-vfr-context');
+const contextRow=$('flight-vfr-exceptions');
+if(!legs||!form||!rules||!context||!overview)return;
+// El control legal/operacional se conserva en un desplegable compacto junto
+// a la altitud principal. No se renderiza una segunda tarjeta redundante.
+function updateContextVisibility(){
+ if(contextRow)contextRow.hidden=rules.value!=='VFR';
+}
+updateContextVisibility();
 const mainAltitude=$('flight-alt'),mainFeedback=$('flight-alt-vfr-status'),mainApply=$('flight-alt-vfr-apply');
 const continuation=[...document.querySelectorAll('.ops-next[data-ops-target="#consultar"]')];
 
@@ -327,7 +317,7 @@ mainAltitude?.addEventListener('input',()=>{
 $('flight-waypoints')?.addEventListener('input',refresh);
 $('flight-waypoints')?.addEventListener('change',refresh);
 new MutationObserver(refresh).observe($('flight-waypoints'),{childList:true});
-rules.addEventListener('change',()=>{for(const row of legs.querySelectorAll('.flight-leg-row'))paint(row);updateOverview();});
+rules.addEventListener('change',()=>{updateContextVisibility();for(const row of legs.querySelectorAll('.flight-leg-row'))paint(row);updateOverview();});
 context.addEventListener('change',()=>{for(const row of legs.querySelectorAll('.flight-leg-row'))paint(row);updateOverview();});
 form.addEventListener('submit',checkBlocked,true);
 for(const selector of ['[data-ops-target="#consultar"]']){
