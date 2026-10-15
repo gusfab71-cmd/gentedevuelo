@@ -35,6 +35,24 @@ function countUsage(response:any){
 }
 // La IA identifica el par estación/código, pero los números se derivan
 // exclusivamente de WIND/T realmente aportado en el PRONAREA manual.
+// VALID 0416 especifica HORAS UTC (04 a 16), pero NO incluye fecha.
+function pronareaHourCheck(text:string,plannedAtUtc:string){
+ const source=text.toUpperCase();
+ if(!source.trim())return {status:"no_aportado",windows:[] as string[]};
+ const windows=[...source.matchAll(/\bPRONAREA\s+FIR\s+[A-Z]{3,4}\s+VALIDEZ\s+(\d{4})(?!\d)/g)].map(m=>m[1]);
+ if(!windows.length)return {status:"sin_validez_legible",windows:[] as string[]};
+ const departure=new Date(plannedAtUtc);
+ if(!Number.isFinite(departure.getTime()))return {status:"sin_validez_legible",windows:[] as string[]};
+ const minutes=departure.getUTCHours()*60+departure.getUTCMinutes();
+ for(const digits of windows){
+  const from=Number(digits.slice(0,2)),to=Number(digits.slice(2,4));
+  if(from>23||to>24||from===to)return {status:"sin_validez_legible",windows};
+  const start=from*60,end=to*60;
+  const matching=start<end?(minutes>=start&&minutes<end):(minutes>=start||minutes<end);
+  if(!matching)return {status:"fuera_del_horario",windows};
+ }
+ return {status:"horario_compatible_fecha_no_confirmada",windows};
+}
 function verifiedWindTokens(text:string){
   const groups=new Map<string,Map<string,{ft:number,dir:number,kt:number}>>();
   const sections=text.toUpperCase().split(/\bWIND\s*\/\s*T\s*:/);
@@ -247,6 +265,15 @@ Deno.serve(async request=>{
     return json({error:"Seleccioná las FIR que atraviesa la ruta (máximo cinco)."},400);
   if(pronarea&&pronarea.length<40)
     return json({error:"El PRONAREA manual es incompleto; cargalo entero o dejalo vacío."},400);
+  const pronareaCheck=pronareaHourCheck(pronarea||"",planned);
+  const pronareaUsable=pronareaCheck.status==="horario_compatible_fecha_no_confirmada";
+  const pronareaStatus=pronareaCheck.status==="fuera_del_horario"
+    ?"PRONAREA FUERA DE VALIDEZ HORARIA: "+pronareaCheck.windows.join(", ")+" UTC; salida "+new Date(plannedMs).toISOString().slice(11,16)+" UTC. NO UTILIZAR PRONAREA PARA ESTE VUELO; buscar boletín oficial vigente."
+    :pronareaCheck.status==="sin_validez_legible"
+      ?"PRONAREA SIN VALIDEZ LEGIBLE; no se usa para pronóstico ni viento hasta confirmar horario y fecha."
+      :pronareaCheck.status==="horario_compatible_fecha_no_confirmada"
+        ?"Horario compatible con PRONAREA "+pronareaCheck.windows.join(", ")+" UTC, pero fecha de emisión y vigencia real NO verificadas; consultar SMN."
+        :"PRONAREA no aportado.";
   // Única fuente documental de la IA: datos cargados en la Mesa.
   // La función NO hace nuevas consultas meteorológicas ni consulta sitios externos.
   const provided=input?.source_snapshot;
@@ -295,7 +322,7 @@ Deno.serve(async request=>{
   }else{
     for(const key of acceptedKeys)reports[key]={...blankReport};
   }
-  if(!pronarea&&!acceptedKeys.some(key=>reports[key].available)&&
+  if(!pronareaUsable&&!acceptedKeys.some(key=>reports[key].available)&&
      (provided==null||sigmetText===noData||
        !provided.sigmet.some((item:any)=>item.available&&item.raw.trim().length)))
     return json({error:"Cargá primero al menos un boletín automático o un PRONAREA manual; la IA no inventará información meteorológica."},400);
@@ -312,6 +339,8 @@ Deno.serve(async request=>{
     "FORMATO OBLIGATORIO: castellano argentino claro, sereno y breve, dirigido a una persona sin formación para decodificar METAR/TAF/SIGMET/PRONAREA. Comenzá cada informe con 'VUELO ANALIZADO:' seguido de aeródromos en palabras, salida prevista UTC y altitud en pies AMSL del plan. Usá títulos cortos, espacios entre puntos y oraciones completas. NO uses Markdown, asteriscos, comillas alrededor de códigos, tablas, siglas sin explicar, bloques copiados del boletín ni cadenas crudas de METAR, TAF, SIGMET o PRONAREA. En vez de 'BKN015, 4000 BR', decí por ejemplo 'cielo con abundantes nubes, base a 1.500 pies sobre el aeródromo; visibilidad de 4 km con neblina' SOLO SI esos códigos figuran realmente y corresponden a ese lugar. Ese ejemplo es léxico, no un dato para incorporar.",
     "En cada apartado: primero EXPLICACIÓN DEL DATO, después QUÉ SIGNIFICA PARA ESTE VUELO y al final QUÉ NO SE SABE cuando importe. Traducí las unidades conservando nudos para viento, pies para altura, metros o kilómetros para visibilidad y °C para temperatura. No confundas base de nube sobre el aeródromo (AGL) con altitud de vuelo sobre nivel del mar (AMSL); no compares directamente ambas sin elevación y otros datos suficientes.",
     "VIGENCIAS: el METAR indica una observación en su hora de emisión, no condiciones aseguradas a la hora programada de salida. El TAF es un pronóstico para una ventana definida, no para toda la ruta. Compará con la hora UTC de salida solo si la fecha y la vigencia constan; no asignés a destino o alternativo una hora de uso sin ETA. SIGMET y PRONAREA solo afectan la ruta concreta cuando el texto permite ubicar sector, nivel y período.",
+    "Si el servidor DESCARTA PRONAREA por horario/validez, NO se pueden citar sus fenómenos como pronóstico de este vuelo NI utilizar WIND/T. Informá el motivo y pedí un PRONAREA vigente. Aunque el grupo VALIDEZ HH-HH coincida con la hora, NO se ha verificado la fecha de ese texto manual.",
+    "TAF: en destino y alternativo NO destaques como riesgos de ARRIBO grupos TEMPO/BECMG/FM cuya ventana finaliza antes de la salida UTC. Sin ETA no afirmes qué grupo afecta el arribo. Si la validez general del TAF termina antes de despegar, indicá que no cubre el arribo y que debe consultarse un TAF actualizado.",
     "La comprobación horaria de SIGMET del servidor prevalece: si indica VENCIDO ANTES de la salida NO lo presentes como fenómeno actual ni riesgo SIGMET vigente. Podés mencionar que hubo un aviso antiguo ya vencido, indicando que corresponde comprobar nuevos avisos oficiales. Si indica vigencia no confirmable, NO lo declares vigente. Tampoco confundas engelamiento por encima de FL070 con afectación confirmada de un vuelo a 4.500 pies.",
     "Mantené el estado de METAR y TAF como observación o pronóstico en sus instantes correspondientes: una observación antigua no describe las condiciones presentes. No afirmes que un TAF garantiza el tiempo real a una hora concreta.",
     mode==="essential"
@@ -359,7 +388,9 @@ Deno.serve(async request=>{
     "METAR ALTERNATIVO ("+alternate+"): "+(reports.alternate_metar.available?reports.alternate_metar.raw:noData),
     "TAF ALTERNATIVO ("+alternate+"): "+(reports.alternate_taf.available?reports.alternate_taf.raw:noData),
     "SIGMET CARGADO POR FIR (búsqueda parcial, NO confirma ausencia): "+sigmetText,
-    "PRONAREA PEGADO MANUALMENTE (NO VERIFICADO POR SERVIDOR), recepción UTC "+documentsReceivedAtUtc+" (NO acredita validez):\n"+(pronarea||"NO APORTADO: consultar PRONAREA vigente de las FIR del vuelo."),
+    "ESTADO DE VALIDEZ DEL PRONAREA PARA ESTE VUELO: "+pronareaStatus,
+    "PRONAREA MANUAL, FECHA DE EMISIÓN NO VERIFICADA, recepción UTC "+documentsReceivedAtUtc+":\n"+
+      (pronareaUsable?pronarea:"NO UTILIZABLE AL HORARIO DE ESTE VUELO: no se entrega su texto ni sus vientos para evitar presentar información fuera de validez."),
     ...(mode==="essential"?["PIERNAS EXACTAS PARA WIND/T (índice desde 0; no sustituye cartas oficiales):\n"+
       routeLegs.map((leg,index)=>index+": "+leg.from+" → "+leg.to+" a "+leg.altitude_ft+" ft AMSL").join("\n")]:[]),
     "NOTAM (consulta oficial externa opcional), recepción UTC "+documentsReceivedAtUtc+":\n"+(notam||"NO APORTADOS: faltan comprobar los NOTAM de salida, destino, ruta y alternativos en AIS/ANAC. No suponer condiciones operacionales."),
@@ -404,7 +435,7 @@ Deno.serve(async request=>{
       try{
         const parsed=JSON.parse(rawOutput);
         report=typeof parsed?.analysis==="string"?parsed.analysis:"";
-        windSelections=verifiedWindSelections(parsed?.wind_legs,routeLegs,pronarea||"");
+        windSelections=verifiedWindSelections(parsed?.wind_legs,routeLegs,pronareaUsable?(pronarea||""):"");
       }catch{
         // Si el modelo no entrega JSON válido no exponer códigos parciales.
         // No se realizan llamadas adicionales a OpenAI ni se inventan datos.
@@ -417,6 +448,7 @@ Deno.serve(async request=>{
       usage:tokens,usage_tracked:tracked,usage_meter:accounting,
       ok:true,analysis:report,mode,ai_used:true,
       ...(mode==="essential"?{navigation_winds:windSelections}:{}),
+      pronarea_validity:{...pronareaCheck,message:pronareaStatus},
       generated_at_utc:new Date().toISOString(),
       checked_at_utc:checkedAt,
       documents_received_at_utc:documentsReceivedAtUtc,
