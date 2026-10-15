@@ -53,6 +53,9 @@ css.textContent='.ops-accordion[hidden],.flight-wizard-nav-panel[hidden],.flight
 '.flight-wizard-steps button[aria-current=step]{background:#b3c9d8;color:#162f41;font-weight:700}'+
 '.flight-wizard-toolbar{display:flex;gap:12px;flex-wrap:wrap;align-items:center;padding-top:13px;border-top:1px solid #526879}'+
 '.flight-wizard-toolbar #flight-wizard-status{flex:1 1 230px;font-size:13px;color:#d8e9f4}'+
+'.flight-wizard-continue-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin:14px 0;padding:14px;border:1px solid #6793ad;border-radius:13px;background:#203b4d}'+
+'.flight-wizard-continue-row button{border:1px solid #bbdfed;border-radius:10px;padding:12px 18px;background:#b3d6e8;color:#102c3d;font:inherit;font-weight:800;cursor:pointer}'+
+'.flight-wizard-continue-row button:disabled{opacity:.55;cursor:wait}.flight-wizard-continue-row .feedback{flex:1 1 190px;color:#d7e9f3;font-size:12px}'+
 '.flight-wizard-nav-panel{background:#253847;border:1px solid #557080;border-radius:15px;padding:18px;margin:12px 0;color:#eef5fb}'+
 '.flight-fuel-inputs{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:12px;margin:15px 0}'+
 '#flight-wizard-leg-table{overflow-x:auto;margin:15px 0}#flight-wizard-leg-table table{width:100%;border-collapse:collapse;font-size:12px;color:#eef5fa}#flight-wizard-leg-table th,#flight-wizard-leg-table td{padding:9px 6px;border-bottom:1px solid #566e80;text-align:left;white-space:nowrap}'+
@@ -65,7 +68,7 @@ const ui=document.createElement('section');ui.className='flight-wizard-ui';
 ui.innerHTML='<strong>FLIGHT OPERATIONS · Planificación guiada</strong><p>Una etapa por vez · UTC · Guardado privado al continuar</p><div id="flight-wizard-steps" class="flight-wizard-steps"></div><div class="flight-wizard-toolbar"><button id="flight-wizard-back" type="button">← Anterior</button><button id="flight-wizard-next" type="button">Guardar y continuar →</button><span id="flight-wizard-status" role="status" aria-live="polite"></span></div><div class="flight-wizard-toolbar"><button id="flight-wizard-resume" type="button" hidden>Continuar vuelo guardado</button><button id="flight-wizard-new" type="button">Nuevo vuelo</button></div>';
 plan.before(ui);
 const nav=document.createElement('section');nav.className='flight-wizard-nav-panel';nav.id='flight-wizard-navigation';
-nav.innerHTML='<h2>Etapa 4 · Navegación y combustible</h2><p>Cálculos automáticos y datos editables. Sin tokens de IA.</p>';
+nav.innerHTML='<h2>Etapa 4 · Cálculos de navegación y combustible</h2><p>Cálculos automáticos y datos editables. Sin tokens de IA.</p>';
 report.before(nav);
 const navSettings=$('flight-nav-settings'),navOutput=$('flight-essential-navigation');
 if(navSettings)nav.append(navSettings);if(navOutput)nav.append(navOutput);
@@ -76,7 +79,7 @@ const legTable=document.createElement('section');legTable.id='flight-wizard-leg-
 nav.append(fuel);
 let step=0,busy=false,stored=null;
 const all=[plan,weather,$('ops-boletines'),$('nubosidad'),$('fuentes'),$('ops-fuentes'),report,$('ops-piloto'),$('ops-precauciones'),$('ops-cartas'),nav].filter(Boolean);
-const titles=['Datos del vuelo','Planificar piernas','Meteorología','Navegación y combustible','Informe esencial'];
+const titles=['Datos del vuelo','Planificar piernas','Meteorología','Cálculos y combustible','Informe esencial'];
 const steps=titles.map((x,i)=>{const b=document.createElement('button');b.textContent=(i+1)+' · '+x;b.type='button';b.onclick=()=>{if(i<=step)void go(i);else notify('Avanzá utilizando Guardar y continuar.');};$('flight-wizard-steps').append(b);return b;});
 const base=plan.querySelector('.form'),editor=plan.querySelector('.flight-leg-editor');
 if(base)base.classList.add('flight-base-fields');
@@ -89,7 +92,7 @@ function display(s){
  const title=$('plan-vuelo')?.querySelector('h2');if(title)title.textContent=s===1?'Planificación asistida de piernas':'Datos del vuelo';
  if(s===1)refreshDistanceFields();
  steps.forEach((b,i)=>b.setAttribute('aria-current',i===s?'step':'false'));
- $('flight-wizard-back').disabled=s===0;$('flight-wizard-next').textContent=s===4?'Guardar planificación':'Guardar y continuar →';
+ $('flight-wizard-back').disabled=s===0;$('flight-wizard-next').textContent=s===4?'Guardar planificación':s===2?'Guardar y pasar a cálculos →':'Guardar y continuar →';
  $('consumo-ia').hidden=s!==4;
  if(s>=3)calcFuel();if(s===4)refreshGate();
  ui.scrollIntoView({behavior:'smooth',block:'start'});
@@ -282,6 +285,27 @@ async function go(n){
 }
 $('flight-wizard-next').onclick=()=>{if(step===4){void save().then(()=>notify('Plan guardado. Podés descargar o imprimir la planilla.')).catch(e=>notify(e.message));}else void go(step+1);};
 $('flight-wizard-back').onclick=()=>{void go(Math.max(0,step-1));};
+// La pantalla meteorológica es larga: dejar el avance visible al terminar
+// Boletines y también debajo de la evaluación, sin saltarse el guardado.
+const calculationsButtons=[],calculationsMessages=[];
+async function continueToCalculations(){
+ if(step!==2){notify('Este acceso corresponde a la etapa de Meteorología.');return;}
+ if(busy)return;
+ calculationsButtons.forEach(button=>{button.disabled=true;});
+ calculationsMessages.forEach(node=>{node.textContent='Guardando vuelo y abriendo cálculos…';});
+ await go(3);
+ if(step!==3)calculationsMessages.forEach(node=>{node.textContent=$('flight-wizard-status').textContent;});
+ calculationsButtons.forEach(button=>{button.disabled=false;});
+}
+for(const section of [weather,$('ops-boletines')].filter(Boolean)){
+ const row=document.createElement('div');row.className='flight-wizard-continue-row';
+ const button=document.createElement('button');button.type='button';button.textContent='Guardar y continuar a cálculos →';
+ const feedback=document.createElement('span');feedback.className='feedback';feedback.setAttribute('role','status');
+ feedback.textContent='Siguiente etapa: rumbo, velocidad sobre el suelo, tiempos y combustible.';
+ button.addEventListener('click',()=>{void continueToCalculations();});
+ row.append(button,feedback);section.append(row);
+ calculationsButtons.push(button);calculationsMessages.push(feedback);
+}
 function emit(e){e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}));}
 function restore(plan){
  if(!plan||plan.version!==1)return;
