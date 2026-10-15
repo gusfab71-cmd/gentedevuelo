@@ -90,6 +90,47 @@ const essentialShape={type:"object",additionalProperties:false,
       properties:{leg_index:{type:"integer"},station:{type:"string"},forecast_token:{type:"string"}},
       required:["leg_index","station","forecast_token"]}}
   },required:["analysis","wind_legs"]};
+
+function sigmetAtDeparture(raw:string,checkedAt:string,plannedMs:number){
+  // SIGMET "VALID DDHHMM/DDHHMM" (UTC) asociado al mes del chequeo.
+  // No se infiere vigencia si falta fecha o el grupo es ilegible.
+  const pairs=[...raw.toUpperCase().matchAll(/\bVALID\s+(\d{6})\s*\/\s*(\d{6})\b/g)];
+  if(!pairs.length)return "desconocido";
+  const reference=new Date(checkedAt);
+  if(!Number.isFinite(reference.valueOf()))return "desconocido";
+  let expired=0,future=0,active=0;
+  for(const pair of pairs){
+    let best:{start:number;end:number;distance:number}|null=null;
+    for(const offset of [-1,0,1]){
+      const baseMonth=reference.getUTCMonth()+offset;
+      const parse=(value:string,monthOffset:number)=>{
+        const shifted=baseMonth+monthOffset;
+        const year=reference.getUTCFullYear()+Math.floor(shifted/12),month=(shifted+12)%12;
+        const day=Number(value.slice(0,2)),hour=Number(value.slice(2,4)),minute=Number(value.slice(4,6));
+        if(day<1||day>31||hour>23||minute>59)return null;
+        const ms=Date.UTC(year,month,day,hour,minute);
+        const date=new Date(ms);
+        return date.getUTCFullYear()===year&&date.getUTCMonth()===month&&date.getUTCDate()===day?ms:null;
+      };
+      const start=parse(pair[1],0);
+      if(start===null)continue;
+      for(const step of [0,1]){
+        const end=parse(pair[2],step);
+        if(end===null||end<=start||end-start>18*3600000)continue;
+        const distance=Math.abs((start+end)/2-reference.getTime());
+        if(!best||distance<best.distance)best={start,end,distance};
+      }
+    }
+    if(!best)return "desconocido";
+    if(best.end<=plannedMs)expired++;
+    else if(best.start>plannedMs)future++;
+    else active++;
+  }
+  if(active)return "coincide_en_tiempo";
+  if(expired===pairs.length)return "vencido";
+  if(future===pairs.length)return "futuro";
+  return "desconocido";
+}
 function responseText(body:any){
   if(typeof body?.output_text==="string")return body.output_text.trim();
   const parts:string[]=[];
@@ -191,6 +232,9 @@ Deno.serve(async request=>{
   if(alternate===destination)return json({error:"El aeródromo alternativo debe ser distinto del destino."},400);
   if(!planned||!Number.isFinite(Date.parse(planned)))
     return json({error:"Ingresá fecha y hora previstas de salida."},400);
+  const plannedMs=Date.parse(planned);
+  if(plannedMs<=Date.now())
+    return json({error:"La salida prevista UTC ya pasó. Actualizá fecha y hora antes de generar informes de IA. Esta solicitud no consumió tokens."},400);
   if(!Number.isFinite(level)||level<500||level>45000)
     return json({error:"Indicá una altitud de crucero válida en pies AMSL."},400);
   if(!["VFR","IFR"].includes(rules))return json({error:"Seleccioná VFR o IFR."},400);
@@ -230,12 +274,19 @@ Deno.serve(async request=>{
       sigmet.some((item:any,index:number)=>!item||item.fir!==firs[index]||
         typeof item.available!=="boolean"||typeof item.raw!=="string"||item.raw.length>2500))
       return json({error:"El detalle SIGMET cargado es inválido."},400);
-    sigmetText=sigmet.map((item:any)=>{
-      const value=item.available&&item.raw.trim()?item.raw.trim():
-        "Sin SIGMET confirmado en los datos cargados; no implica ausencia de avisos";
-      return item.fir+": "+value;
-    }).join("\n").slice(0,10000);
     checkedAt=provided.checked_at_utc;
+    sigmetText=sigmet.map((item:any)=>{
+      if(!item.available||!item.raw.trim())
+        return item.fir+": SIGMET no confirmado; NO implica ausencia de avisos.";
+      const temporal=sigmetAtDeparture(item.raw,checkedAt,plannedMs);
+      if(temporal==="vencido")
+        return item.fir+": El SIGMET recuperado VENCÍA ANTES de la salida prevista. NO está vigente en el horario de salida, NO debe describirse como amenaza activa. Consultar un aviso actualizado en el SMN.";
+      if(temporal==="futuro")
+        return item.fir+": El SIGMET comienza DESPUÉS de la salida prevista. No afirmar que regía al despegar; corroborar período y sector si el vuelo continúa: "+item.raw.trim();
+      if(temporal==="desconocido")
+        return item.fir+": VIGENCIA NO CONFIRMABLE con seguridad para la salida. No presentar como SIGMET activo sin comprobar su período: "+item.raw.trim();
+      return item.fir+": Coincidencia horaria aproximada con la salida (SIN confirmación de afectación de ruta, nivel o zona): "+item.raw.trim();
+    }).join("\n").slice(0,10000);
   }else{
     for(const key of acceptedKeys)reports[key]={...blankReport};
   }
@@ -243,8 +294,6 @@ Deno.serve(async request=>{
      (provided==null||sigmetText===noData||
        !provided.sigmet.some((item:any)=>item.available&&item.raw.trim().length)))
     return json({error:"Cargá primero al menos un boletín automático o un PRONAREA manual; la IA no inventará información meteorológica."},400);
-  const now=Date.now(),plannedMs=Date.parse(planned);
-  if(plannedMs<now-12*3600000)return json({error:"La hora prevista ya pasó. Actualizá el plan antes de gastar tokens."},400);
   // Se reutiliza el saldo de API ya configurado para Shimoda; la suscripción
   // ChatGPT Plus no cubre las llamadas a la API realizadas por este sitio.
   const key=Deno.env.get("OPENAI_API_KEY")||"";
@@ -258,8 +307,10 @@ Deno.serve(async request=>{
     "FORMATO OBLIGATORIO: castellano argentino claro, sereno y breve, dirigido a una persona sin formación para decodificar METAR/TAF/SIGMET/PRONAREA. Comenzá cada informe con 'VUELO ANALIZADO:' seguido de aeródromos en palabras, salida prevista UTC y altitud en pies AMSL del plan. Usá títulos cortos, espacios entre puntos y oraciones completas. NO uses Markdown, asteriscos, comillas alrededor de códigos, tablas, siglas sin explicar, bloques copiados del boletín ni cadenas crudas de METAR, TAF, SIGMET o PRONAREA. En vez de 'BKN015, 4000 BR', decí por ejemplo 'cielo con abundantes nubes, base a 1.500 pies sobre el aeródromo; visibilidad de 4 km con neblina' SOLO SI esos códigos figuran realmente y corresponden a ese lugar. Ese ejemplo es léxico, no un dato para incorporar.",
     "En cada apartado: primero EXPLICACIÓN DEL DATO, después QUÉ SIGNIFICA PARA ESTE VUELO y al final QUÉ NO SE SABE cuando importe. Traducí las unidades conservando nudos para viento, pies para altura, metros o kilómetros para visibilidad y °C para temperatura. No confundas base de nube sobre el aeródromo (AGL) con altitud de vuelo sobre nivel del mar (AMSL); no compares directamente ambas sin elevación y otros datos suficientes.",
     "VIGENCIAS: el METAR indica una observación en su hora de emisión, no condiciones aseguradas a la hora programada de salida. El TAF es un pronóstico para una ventana definida, no para toda la ruta. Compará con la hora UTC de salida solo si la fecha y la vigencia constan; no asignés a destino o alternativo una hora de uso sin ETA. SIGMET y PRONAREA solo afectan la ruta concreta cuando el texto permite ubicar sector, nivel y período.",
+    "La comprobación horaria de SIGMET del servidor prevalece: si indica VENCIDO ANTES de la salida NO lo presentes como fenómeno actual ni riesgo SIGMET vigente. Podés mencionar que hubo un aviso antiguo ya vencido, indicando que corresponde comprobar nuevos avisos oficiales. Si indica vigencia no confirmable, NO lo declares vigente. Tampoco confundas engelamiento por encima de FL070 con afectación confirmada de un vuelo a 4.500 pies.",
+    "Mantené el estado de METAR y TAF como observación o pronóstico en sus instantes correspondientes: una observación antigua no describe las condiciones presentes. No afirmes que un TAF garantiza el tiempo real a una hora concreta.",
     mode==="essential"
-      ?"INFORME ÚNICO ESENCIAL: hacé UNA SOLA síntesis de 140 a 220 palabras en castellano común, específica para el origen, destino, alternativo, las piernas y altitudes declaradas, y la hora UTC prevista. Estructurala en seis rótulos cortos: 1. VUELO (datos y horario previsto); 2. SALIDA (tiempo observado por METAR y pronóstico TAF para la hora prevista SOLO si la validez lo permite); 3. EN RUTA Y ALTITUDES (PRONAREA y SIGMET realmente relacionados con las piernas, sin suposiciones geográficas); 4. DESTINO Y ALTERNATIVO (observaciones y pronósticos, aclarando que sin ETA no se puede determinar la condición exacta de arribo); 5. ATENCIÓN PRIORITARIA (máximo tres riesgos concretos respaldados por boletines y qué debe revisar el piloto); 6. PENDIENTE DE COMPROBAR (hasta tres faltantes críticos, particularmente vigencia, NOTAM, ETA o fuentes oficiales). Explicá con palabras comunes viento, visibilidad, nubes y fenómenos relevantes; omití valores irrelevantes y nunca copies códigos sin traducir. Cuando una fuente no está cargada o no se puede relacionar con este vuelo, decilo en una frase; NO presentes ausencias de boletines como buenas condiciones. No añadas recomendaciones genéricas, inventadas ni una conclusión de aptitud para volar. Es una orientación educativa, no despacho meteorológico oficial."
+      ?"INFORME ÚNICO ESENCIAL: hacé UNA SOLA síntesis de 140 a 220 palabras en castellano común, específica para el origen, destino, alternativo, las piernas y altitudes declaradas, y la hora UTC prevista. Estructurala en seis rótulos cortos: 1. PLAN (exclusivamente ruta, escalas, hora UTC, altitudes y reglas; PROHIBIDO repetir en este punto meteorología de salida, METAR ni TAF); 2. SALIDA (describí UNA SOLA VEZ en este apartado el METAR observado y el TAF solo para la hora prevista si está vigente); 3. EN RUTA Y ALTITUDES (PRONAREA y SIGMET realmente relacionados con las piernas, sin suposiciones geográficas); 4. DESTINO Y ALTERNATIVO (observaciones y pronósticos, aclarando que sin ETA no se puede determinar la condición exacta de arribo); 5. ATENCIÓN PRIORITARIA (máximo tres riesgos concretos respaldados por boletines y qué debe revisar el piloto); 6. PENDIENTE DE COMPROBAR (hasta tres faltantes críticos, particularmente vigencia, NOTAM, ETA o fuentes oficiales). Explicá con palabras comunes viento, visibilidad, nubes y fenómenos relevantes; omití valores irrelevantes y nunca copies códigos sin traducir. Cuando una fuente no está cargada o no se puede relacionar con este vuelo, decilo en una frase; NO presentes ausencias de boletines como buenas condiciones. No añadas recomendaciones genéricas, inventadas ni una conclusión de aptitud para volar. Es una orientación educativa, no despacho meteorológico oficial."
       :mode==="report"
       ?"INFORME OPERACIONAL AMPLIADO: en 220-320 palabras, cuatro apartados numerados con título y explicación breve: 1. EN RUTA (traducí PRONAREA y SIGMET aplicables a las piernas y altura cargadas, indicando incertidumbre); 2. SALIDA, DESTINO Y ALTERNATIVO (explicá TAF en lenguaje común y sus vigencias); 3. INFRAESTRUCTURA (NOTAM: si no están cargados decí que no hay datos, sin afirmar pistas abiertas ni cerradas); 4. COMPROBACIÓN ACTUAL (traducí METAR indicando la hora de observación). En cada apartado incluí solamente los datos útiles para ese vuelo, su interpretación sencilla y lo pendiente. Cerrá con una frase breve sobre los datos que faltan. No repitas códigos sin traducir."
       :mode==="weather_overview"
