@@ -525,11 +525,17 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
 <script src="../assets/auth-guard.js?v=20261013registro2"></script>
 <style>
 /* Control VFR: capa visual de planeamiento, sin nuevos endpoints. */
-.flight-vfr-guidance{margin:14px 0 0;border:1px solid #6b8da5;border-radius:13px;background:linear-gradient(155deg,#223847,#1a2c39);padding:15px 17px}
-.flight-vfr-guidance h3{font-size:17px;margin:4px 0 10px;color:#f1f7fb}
-.flight-vfr-guidance .sub{font-size:12px;line-height:1.6;margin:9px 0}
-.flight-vfr-overview{font-size:12px;line-height:1.5;font-weight:750;color:#c7ddeb}
-.flight-vfr-overview[data-vfr-state="different"]{color:#d6e9f6}
+.flight-vfr-screenreader{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip-path:inset(50%)!important;white-space:nowrap!important;border:0!important}
+.flight-vfr-exceptions{margin-left:auto;flex:0 1 auto;font-size:12px}
+.flight-vfr-exceptions[hidden]{display:none!important}
+.flight-vfr-exceptions summary{cursor:pointer;color:#c9ddeb;font-weight:700;list-style-position:inside;padding:3px 0}
+.flight-vfr-exceptions[open]{flex:0 0 100%;width:100%;margin:2px 0 0;padding:10px 0 0;border-top:1px solid #466274}
+.flight-vfr-exceptions[open] summary{margin-bottom:10px}
+.flight-vfr-exceptions .field{display:grid;max-width:540px;gap:6px;font-weight:700;font-size:12px}
+.flight-vfr-exceptions .field select{min-height:37px}
+.flight-vfr-exceptions p{color:#c5d8e6;font-size:12px;line-height:1.55;margin:9px 0 1px}
+.flight-vfr-exceptions a{color:#c9e3f4}
+@media(max-width:640px){.flight-vfr-exceptions:not([open]){margin:0}}
 #flight-legs-list .flight-leg-row{grid-template-columns:minmax(0,1.4fr) minmax(118px,1fr) minmax(130px,1fr);align-items:start}
 #flight-legs-list .flight-leg-route{padding-top:25px}
 .flight-vfr-track-label{min-width:0}
@@ -620,6 +626,18 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
  <div class="flight-alt-vfr-feedback" data-vfr-status>
    <span id="flight-alt-vfr-status" data-vfr-state="unknown" role="status" aria-live="polite">Seleccioná origen y destino para comprobar la altitud VFR.</span>
    <button class="secondary" id="flight-alt-vfr-apply" type="button" hidden>Aplicar altitud sugerida</button>
+   <details class="flight-vfr-exceptions" id="flight-vfr-exceptions">
+     <summary>Excepciones VFR <span aria-hidden="true">⌄</span></summary>
+     <label class="field" for="flight-vfr-context">Condición real del tramo
+       <select id="flight-vfr-context">
+         <option value="standard">Crucero VFR a 3.000 ft AGL o más · aplicar regla</option>
+         <option value="below">Crucero por debajo de 3.000 ft AGL</option>
+         <option value="controlled">VFR controlado con nivel establecido por ATC</option>
+         <option value="climb">Ascenso o descenso, sin nivel de crucero</option>
+       </select>
+     </label>
+     <p>El sistema no calcula altura AGL, obstáculos ni autorizaciones. Elegí una excepción únicamente cuando corresponda al vuelo. <a href="https://ais.anac.gob.ar/" target="_blank" rel="noopener noreferrer">Consultar AIP Argentina ↗</a></p>
+   </details>
  </div>
 </div>
 <label class="field flight-utc-field" for="flight-time">
@@ -678,6 +696,7 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
  </section>
  <div id="flight-waypoints"></div>
  <div id="flight-legs-list" aria-live="polite"></div>
+ <p id="flight-vfr-overview" class="flight-vfr-screenreader" role="status" aria-live="polite">Calculando compatibilidad de las altitudes VFR.</p>
 </div>
 </form>
 </section>
@@ -1946,7 +1965,7 @@ if(stage){
 
 <script src="../assets/flight-fir-geodata.js?v=20261015c"></script>
 <script src="../assets/flight-wmm2025.js?v=20261015a"></script>
-<script src="../assets/flight-vfr-altitude.js?v=20261015d"></script>
+<script src="../assets/flight-vfr-altitude.js?v=20261015e"></script>
 <script src="../assets/flight-pronarea-wind.js?v=20261015b"></script>
 <script src="../assets/flight-essential-navigation.js?v=20261015f"></script>
 <script src="../assets/flight-fir-autoselect.js?v=20261015b"></script>
