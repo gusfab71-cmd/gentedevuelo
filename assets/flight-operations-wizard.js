@@ -258,7 +258,7 @@ function valid(){
  return true;
 }
 function pack(){
- const fields={};p.querySelectorAll('#flight-analysis-form [id],#flight-pronarea,#flight-pronarea-date,#flight-pronarea-confirm,#flight-atis,#flight-wizard-fuel input').forEach(e=>{
+ const fields={};p.querySelectorAll('#flight-analysis-form [id],#flight-nav-tas,#flight-pronarea,#flight-pronarea-date,#flight-pronarea-confirm,#flight-atis,#flight-wizard-fuel input').forEach(e=>{
   if(!('value' in e)||e.closest('#flight-legs-list')||e.closest('#flight-waypoints'))return;
   fields[e.id]=e.type==='checkbox'?e.checked:e.value;
  });
@@ -366,6 +366,7 @@ function calcFuel(){
 }
 fuel.querySelectorAll('input').forEach(x=>x.addEventListener('input',calcFuel));
 p.querySelector('#flight-analysis-form')?.addEventListener('input',()=>queueMicrotask(calcFuel));
+$('flight-nav-tas')?.addEventListener('input',()=>queueMicrotask(calcFuel));
 new MutationObserver(()=>queueMicrotask(calcFuel)).observe($('flight-legs-list'),{childList:true,subtree:true});
 new MutationObserver(()=>queueMicrotask(calcFuel)).observe($('flight-nav-wind-legs'),{childList:true,subtree:true});
 let sheet=null;

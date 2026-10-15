@@ -154,7 +154,7 @@ function computeLeg(leg){
   reason:'Sin coordenadas verificables ni variación magnética disponible: no se calcula rumbo verdadero ni GS solo con derrota magnética.'};
  const tas=readTAS(),windInfo=windForLeg(leg),wind=windInfo.wind;
  if(tas===null||wind===null)
-   return {leg,course,variation,magneticTrack,courseSource,missing:tas===null?'Falta TAS válida en el Paso 1 (nudos); completala para calcular rumbo con viento y GS.':windInfo.reason};
+   return {leg,course,variation,magneticTrack,courseSource,missing:tas===null?'Falta TAS válida en la etapa 4 (nudos); completala para calcular rumbo con viento y GS.':windInfo.reason};
  const solution=windTriangle(course,tas,wind.from,wind.speed);
  if(!solution?.possible)return {leg,course,variation,magneticTrack,courseSource,missing:solution?.reason||'Datos del viento o TAS insuficientes.'};
  return {leg,course,variation,magneticTrack,courseSource,wind,tas,windSource:windInfo.source,windNotice:windInfo.notice,

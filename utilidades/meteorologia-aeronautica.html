@@ -386,8 +386,8 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
 .flight-nav-settings{border:1px solid #65879d;background:#1c3443;border-radius:12px;padding:15px 16px;margin:15px 0}
 .flight-nav-settings h3,.flight-essential-nav-result h3{font-size:17px;color:#f0f6fb;margin:4px 0 10px}
 .flight-nav-settings .field{margin:0}
-.flight-speed-alt-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;min-width:0}
-.flight-speed-alt-row>.field{min-width:0;margin:0}
+.flight-altitude-row{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;min-width:0}
+.flight-altitude-row>.field{min-width:0;margin:0}
 .flight-route-suggest-box{border:1px solid #60809a;background:linear-gradient(145deg,#203748,#172b3b);border-radius:13px;padding:14px 17px;margin:12px 0 17px}
 .flight-route-suggest-box .actions{display:flex;align-items:center;gap:10px 13px;flex-wrap:wrap;margin:2px 0 8px}
 .flight-route-suggest-box .feedback{font-size:12px;color:#bed2e0}
@@ -406,7 +406,6 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
 #flight-alt-vfr-status[data-vfr-state="match"]{color:#c6e9d9;font-weight:700}
 #flight-alt-vfr-apply:not([hidden]){font-weight:730;font-size:12px;min-height:34px}
 #flight-alt[aria-invalid="true"]{border-color:#8aa8bd!important;outline:2px solid #89a9c466;outline-offset:1px}
-@media(max-width:600px){.flight-speed-alt-row{grid-template-columns:1fr}}
 .flight-utc-past-alert:not([hidden]){display:block;padding:9px 12px;border:1px solid #7898af;border-radius:9px;background:#223949;color:#e4eff9;font-weight:700;line-height:1.6;font-size:12px;margin-top:7px}
 .flight-pronarea-validity:not([hidden]){border:1px solid #617f94;border-radius:10px;background:#20384a;color:#dcecf7;padding:11px 13px;font-size:12px;line-height:1.65;margin:9px 0;font-weight:650}
 .flight-pronarea-validity[data-validity="fuera_del_horario"],.flight-pronarea-validity[data-validity="sin_validez_legible"]{border-color:#9ab5c8;background:#293d4c;color:#fff}
@@ -620,12 +619,9 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
 <input id="flight-dest-other" aria-label="Código OACI de destino" type="text" pattern="[sS][aA][A-Za-z]{2}" minlength="4" maxlength="4" placeholder="Ej.: SAXX" autocomplete="off" autocapitalize="characters" hidden disabled>
 </label>
 
-<div class="flight-speed-alt-row full">
+<div class="flight-altitude-row full">
  <label class="field" for="flight-alt">Altitud prevista (pies AMSL)
    <input id="flight-alt" type="number" required min="500" max="45000" step="100" placeholder="3500" aria-describedby="flight-alt-vfr-status">
- </label>
- <label class="field" for="flight-nav-tas">Velocidad verdadera · TAS (nudos)
-   <input id="flight-nav-tas" type="number" min="20" max="500" step="1" inputmode="numeric" placeholder="Ej.: 100" aria-describedby="flight-nav-help">
  </label>
  <div class="flight-alt-vfr-feedback" data-vfr-status>
    <span id="flight-alt-vfr-status" data-vfr-state="unknown" role="status" aria-live="polite">Seleccioná origen y destino para comprobar la altitud VFR.</span>
@@ -871,7 +867,10 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
   <p class="flight-essential-note">El informe utiliza únicamente los boletines y el plan cargados. Si faltan horarios de llegada o datos oficiales, lo aclarará. Es orientativo y no autoriza el vuelo. <strong>Una solicitud consume tokens de la API compartida con Shimoda.</strong></p>
   <section class="flight-nav-settings" id="flight-nav-settings" aria-labelledby="flight-nav-title">
     <div class="card-header"><div><span class="card-kicker">COMPLEMENTO DE NAVEGACIÓN · CÁLCULO LOCAL</span><h3 id="flight-nav-title">Rumbo corregido y GS estimada</h3></div></div>
-    <p class="sub">La TAS se ingresa en el plan. El viento de PRONAREA WIND/T se selecciona localmente por nivel y referencia geográfica; también podés ingresar viento manual por pierna. Sin IA ni tokens.</p>
+    <p class="sub">Ingresá la TAS de tu aeronave para calcular rumbo corregido, velocidad sobre el suelo y tiempos estimados. El viento de PRONAREA WIND/T se selecciona por nivel y referencia geográfica; también podés ingresar viento manual por pierna. Sin IA ni tokens.</p>
+    <label class="field" for="flight-nav-tas">Velocidad verdadera · TAS (nudos)
+      <input id="flight-nav-tas" form="flight-analysis-form" type="number" min="20" max="500" step="1" inputmode="numeric" placeholder="Ej.: 100" aria-describedby="flight-nav-help">
+    </label>
     <div id="flight-nav-wind-legs" aria-live="polite"></div>
     <p class="flight-essential-note" id="flight-nav-help">El viento automático procede exclusivamente de la sección <strong>WIND/T</strong> del PRONAREA que pegaste, <strong>no de METAR ni TAF</strong>. Se elige el nivel FL publicado más cercano a la altitud de cada pierna y una estación de referencia próxima al trayecto. Debés verificar fecha y período de validez, FIR, sector, hora de cada tramo y representatividad del viento. Si faltan datos o son dudosos, la GS quedará «No calculable» y podrás ingresar manualmente el viento oficial verificado.</p>
   </section>
@@ -1558,6 +1557,8 @@ el('copy-report').addEventListener('click',async()=>{
  }
  form.addEventListener('input',handleChangedField);
  form.addEventListener('change',handleChangedField);
+ $('flight-nav-tas')?.addEventListener('input',handleChangedField);
+ $('flight-nav-tas')?.addEventListener('change',handleChangedField);
  $('flight-pronarea').addEventListener('input',handleChangedField);
  $('flight-pronarea-date')?.addEventListener('change',handleChangedField);
  $('flight-pronarea-confirm')?.addEventListener('change',handleChangedField);
@@ -2000,9 +2001,9 @@ if(stage){
 <script src="../assets/flight-wmm2025.js?v=20261015a"></script>
 <script src="../assets/flight-vfr-altitude.js?v=20261015f"></script>
 <script src="../assets/flight-pronarea-wind.js?v=20261015e"></script>
-<script src="../assets/flight-essential-navigation.js?v=20261015k"></script>
+<script src="../assets/flight-essential-navigation.js?v=20261015l"></script>
 <script src="../assets/flight-fir-autoselect.js?v=20261015b"></script>
 <script src="../assets/flight-route-suggestions.js?v=20261015b"></script>
-<script defer src="../assets/flight-operations-wizard.js?v=20261015e"></script>
+<script defer src="../assets/flight-operations-wizard.js?v=20261015f"></script>
 </body>
 </html>
