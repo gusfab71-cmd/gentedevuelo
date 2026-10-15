@@ -719,7 +719,7 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
  <details class="report flight-sigmet-report" open>
   <summary><strong>SIGMET · FIR del recorrido</strong><span id="flight-sigmet-state">Sin consultar</span></summary>
   <div class="content">
-   <p class="sub">Avisos de las FIR que marcaste en el plan de vuelo. Un SIGMET puede afectar solamente un sector de la FIR, no necesariamente tu ruta o altitud.</p>
+   <p class="sub">Consulta automática complementaria de NOAA/AWC para las FIR que marcaste. Un SIGMET puede afectar solo un sector de la FIR, no necesariamente tu ruta o altitud. Sin resultados no significa que no existan avisos oficiales.</p>
    <div id="flight-sigmet-firs" class="flight-sigmet-grid" aria-live="polite"></div>
    <a href="https://www.smn.gob.ar/mensajes-sigmet" target="_blank" rel="noopener noreferrer">Verificar SIGMET oficiales en el SMN ↗</a>
   </div>
@@ -1296,11 +1296,11 @@ el('copy-report').addEventListener('click',async()=>{
      const matched=item?.available===true && typeof item.raw==='string' && item.raw.trim().length>0;
      if(matched){
        found++;
-       label.textContent=(Number(item.matched_count)||1)+' aviso(s) coincidente(s) · comprobar alcance';
+       label.textContent='Recuperado automáticamente · '+(Number(item.matched_count)||1)+' SIGMET vigente(s)';
        label.classList.add('found');
      }else if(status==='sin_coincidencias_no_concluyente'){
        unknown++;
-       label.textContent='Sin coincidencias en esta búsqueda parcial';
+       label.textContent='Consulta automática realizada · sin SIGMET recuperado';
        label.classList.add('warning');
      }else{
        failed++;
@@ -1311,14 +1311,14 @@ el('copy-report').addEventListener('click',async()=>{
      const raw=document.createElement('pre');
      raw.textContent=matched?item.raw:
        status==='sin_coincidencias_no_concluyente'
-         ?'No se recuperó un SIGMET vigente que coincidiera con esta FIR. Esto NO confirma ausencia de avisos.'
+         ?'NOAA/AWC respondió sin SIGMET vigente coincidente para esta FIR. Esto NO confirma ausencia de avisos: verificá siempre el SMN.'
          :(item?.error||'La consulta SIGMET no pudo completarse.');
      row.append(raw);
      root.append(row);
      combined.push('FIR '+(FIR_LABELS[fir]||fir)+' ('+fir+'): '+raw.textContent);
    });
-   const summary=found?found+' FIR con coincidencias'+(failed?' · consulta incompleta':''):
-     failed?'Consulta incompleta':'Sin coincidencias · parcial';
+   const summary=found?found+' FIR con SIGMET recuperado'+(failed?' · consulta incompleta':''):
+     failed?'Consulta SIGMET incompleta':'Consulta realizada · sin avisos recuperados (parcial)';
    $('flight-sigmet-state').textContent=summary;
    $('label-sigmet').textContent=summary;
    $('raw-sigmet').textContent=combined.join('\n\n');
@@ -1439,7 +1439,7 @@ el('copy-report').addEventListener('click',async()=>{
      if(sigmetOverview.failed>0)
        $('flight-fetch-status').textContent+=' La búsqueda SIGMET fue incompleta en una o más FIR; verificá el SMN.';
      else
-       $('flight-fetch-status').textContent+=' SIGMET evaluado parcialmente para '+firs.length+' FIR seleccionada(s).';
+       $('flight-fetch-status').textContent+=' SIGMET consultado automáticamente en NOAA/AWC para '+firs.length+' FIR seleccionada(s); sin coincidencias no implica ausencia de avisos.';
    }catch(err){
      lastConsultKey='';
      $('flight-fetch-status').textContent='No se completó la consulta. '+(err?.message||'Reintentá más tarde.');
