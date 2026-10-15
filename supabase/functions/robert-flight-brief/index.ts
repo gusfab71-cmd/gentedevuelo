@@ -89,8 +89,9 @@ Deno.serve(async request=>{
   const {data:admin,error:adminError}=await db.from("site_admins").select("user_id").eq("user_id",identity.user.id).maybeSingle();
   if(adminError)return json({error:"No se pudieron verificar permisos."},503);
   if(!admin)return json({error:"Análisis de vuelo reservado a administración."},403);
-  const {data:state,error:stateError}=await db.from("robert_daily_config").select("chat_enabled").eq("singleton",true).maybeSingle();
-  if(stateError||state?.chat_enabled===false)return json({error:"El análisis meteorológico con IA está desactivado o no disponible."},503);
+  // Flight Operations usa OpenAI de forma independiente del interruptor de
+  // Robert Shimoda. Sigue limitado al administrador autenticado y exige
+  // confirmación expresa del gasto de tokens en cada consulta.
   let input:any;
   try{input=await request.json();}catch{return json({error:"Solicitud JSON inválida."},400);}
   if(input?.confirm_ai_cost!==true)return json({error:"Debés confirmar expresamente el consumo de tokens antes del análisis."},400);
