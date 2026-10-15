@@ -15,12 +15,13 @@ const settings=$('flight-nav-wind-legs'),tasInput=$('flight-nav-tas');
 const legs=$('flight-legs-list'),waypoints=$('flight-waypoints');
 const result=$('flight-essential-result'),wmm=window.GDV_WMM2025;
 const airports=window.GDV_FLIGHT_FIR_GEODATA?.airports;
+const namedPoints=window.GDV_FLIGHT_NAMED_POINTS||{};
 const windSource=window.GDV_PRONAREA_WIND;
 if(!target||!settings||!tasInput||!legs||!waypoints)return;
 const rad=Math.PI/180,deg=180/Math.PI;
 const normalize=d=>((d%360)+360)%360;
 const num=(v,digits=0)=>Number(v).toLocaleString('es-AR',{minimumFractionDigits:digits,maximumFractionDigits:digits});
-const windValues=new Map();
+const windValues=new Map(),aiWindValues=new Map();
 let currentSignature='';
 const readCode=id=>{
  const el=$(id);
@@ -29,6 +30,7 @@ const readCode=id=>{
 const point=value=>{
  const name=String(value||'').trim().toUpperCase();
  if(airports?.[name])return airports[name];
+ if(namedPoints?.[name])return namedPoints[name];
  const m=/^(-?\d{1,2}(?:\.\d+)?)\s*[,;]\s*(-?\d{1,3}(?:\.\d+)?)$/.exec(name);
  if(m){
   const a=Number(m[1]),b=Number(m[2]);
@@ -81,6 +83,24 @@ function readTAS(){
  const n=Number(raw);
  return raw!==''&&Number.isFinite(n)&&n>=20&&n<=500?n:null;
 }
+function validatedAiWind(leg){
+ const ai=aiWindValues.get(leg.index);
+ if(!ai||ai.from.trim().toUpperCase()!==leg.name.split(' → ')[0].trim().toUpperCase()||
+    ai.to.trim().toUpperCase()!==leg.name.split(' → ')[1].trim().toUpperCase()||
+    ai.altitude_ft!==Number(leg.alt))return null;
+ const entries=windSource?.parse($('flight-pronarea')?.value||'')||[];
+ const item=entries.find(v=>v.station===ai.station&&v.level_ft===ai.forecast_level_ft&&
+   v.direction_true_deg===ai.direction_true_deg&&v.speed_kt===ai.speed_kt);
+ if(!item||!leg.from||!leg.to||!airports?.[item.airport])return null;
+ const mid=[(leg.from[0]+leg.to[0])/2,(leg.from[1]+leg.to[1])/2];
+ const distance=windSource.distanceKm(mid,airports[item.airport]);
+ if(!Number.isFinite(distance)||distance>300)return null;
+ return {wind:{speed:ai.speed_kt,from:ai.direction_true_deg},
+   source:'PRONAREA WIND/T interpretado por IA y cotejado · '+ai.station+
+     ' · FL'+String(ai.forecast_level_ft/100).padStart(3,'0')+
+     ' · estación a '+Math.round(distance)+' km del centro de la pierna.',
+   notice:'Comprobá la vigencia, el área y el nivel de referencia en el PRONAREA original.'};
+}
 function windForLeg(leg){
  const state=windValues.get(leg.key)||{};
  if(state.mode==='manual'){
@@ -93,6 +113,8 @@ function windForLeg(leg){
   return {wind:{speed,from:speed===0?0:from},
     source:'Viento ingresado manualmente por el piloto (fuente y vigencia por verificar).'};
  }
+ const ai=validatedAiWind(leg);
+ if(ai)return ai;
  const raw=$('flight-pronarea')?.value||'';
  if(!raw.trim())return {wind:null,reason:'No se cargó PRONAREA con WIND/T para esta pierna.'};
  const location=leg.from&&leg.to?[
@@ -233,8 +255,20 @@ for(const id of ['flight-origin','flight-dest','flight-origin-other','flight-des
  node?.addEventListener('change',()=>{schedule();output();});
 }
 waypoints.addEventListener('input',schedule);
-$('flight-pronarea')?.addEventListener('input',schedule);
+$('flight-pronarea')?.addEventListener('input',()=>{aiWindValues.clear();schedule();});
 tasInput.addEventListener('input',output);
-document.addEventListener('gdv-flight-essential-generated',()=>{schedule();output();});
+document.addEventListener('gdv-flight-essential-generated',(event)=>{
+ aiWindValues.clear();
+ const entries=Array.isArray(event.detail?.winds)?event.detail.winds:[];
+ for(const entry of entries){
+   if(!entry||!Number.isInteger(entry.leg_index)||entry.leg_index<0||entry.leg_index>8)continue;
+   if(typeof entry.station!=="string"||typeof entry.from!=="string"||typeof entry.to!=="string")continue;
+   if(!Number.isInteger(entry.altitude_ft)||!Number.isInteger(entry.forecast_level_ft)||
+     !Number.isFinite(entry.direction_true_deg)||!Number.isFinite(entry.speed_kt))continue;
+   aiWindValues.set(entry.leg_index,entry);
+ }
+ currentSignature='';
+ windInputs();output();
+});
 schedule();
 })();
