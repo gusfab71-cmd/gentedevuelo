@@ -381,6 +381,22 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
 .flight-essential-card .flight-ai-consent{background:#1e3441}
 .flight-essential-result{border-top:1px solid #607b90;margin-top:17px;padding-top:16px}
 .flight-essential-result .flight-ai-text{white-space:pre-wrap;line-height:1.75;color:#edf4f8}
+.flight-nav-settings{border:1px solid #65879d;background:#1c3443;border-radius:12px;padding:15px 16px;margin:15px 0}
+.flight-nav-settings h3,.flight-essential-nav-result h3{font-size:17px;color:#f0f6fb;margin:4px 0 10px}
+.flight-nav-settings .field{margin:0}
+.flight-nav-tas-label{max-width:330px}
+.flight-nav-legs{display:grid;gap:9px;margin:12px 0}
+.flight-nav-leg{border:1px solid #55788e;border-radius:11px;background:#213b4c;padding:12px;display:grid;gap:10px}
+.flight-nav-leg strong{font-size:13px;color:#e8f2f9}
+.flight-nav-leg-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.flight-nav-leg-fields label{min-width:0;font-size:12px;color:#c4d8e5;display:grid;gap:5px}
+.flight-nav-leg-fields input{width:100%}
+.flight-essential-nav-result{margin:22px 0 12px;border-top:1px solid #647e91;padding-top:17px}
+.flight-nav-result-row{padding:12px 0;border-bottom:1px solid #40576a}
+.flight-nav-result-row strong{color:#eaf5fc;display:block;margin:0 0 7px}
+.flight-nav-result-row p{margin:5px 0;font-size:13px;line-height:1.65;color:#d9e8f2}
+.flight-nav-result-note{font-size:12px;line-height:1.55;color:#bfd1dc;margin-top:11px}
+@media(max-width:600px){.flight-nav-leg-fields{grid-template-columns:1fr}.flight-nav-settings{padding:12px}}
 .ops-shortcut-essential{border-color:#83a9c0;background:linear-gradient(145deg,#335469,#294256)}
 .ops-shortcut-essential .ops-shortcut-icon{background:#43647d;border-color:#8ab0c9}
 @media(max-width:620px){.flight-essential-card{padding:15px 14px}}
@@ -775,12 +791,25 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
   <div class="card-header"><div><span class="card-kicker">RECOMENDADO · UNA SOLA CONSULTA A LA IA</span><h2 id="flight-essential-heading">Informe esencial del vuelo</h2></div></div>
   <p class="sub">Resumen claro de los puntos realmente importantes para tu origen, destino, alternativo, ruta, altitudes y salida UTC. Reúne tiempo observado, pronósticos disponibles, peligros significativos, precauciones y verificaciones pendientes, sin generar varios informes por separado.</p>
   <p class="flight-essential-note">El informe utiliza únicamente los boletines y el plan cargados. Si faltan horarios de llegada o datos oficiales, lo aclarará. Es orientativo y no autoriza el vuelo. <strong>Una solicitud consume tokens de la API compartida con Shimoda.</strong></p>
+  <section class="flight-nav-settings" id="flight-nav-settings" aria-labelledby="flight-nav-title">
+    <div class="card-header"><div><span class="card-kicker">COMPLEMENTO DE NAVEGACIÓN · CÁLCULO LOCAL</span><h3 id="flight-nav-title">Rumbo corregido y GS estimada</h3></div></div>
+    <p class="sub">Al finalizar el informe único, agregaremos las derrotas verdaderas de las piernas y la corrección magnética aproximada. Para obtener <strong>rumbo corregido por viento y velocidad sobre el suelo (GS)</strong>, ingresá la velocidad verdadera de la aeronave (TAS) y el pronóstico de viento <strong>en altura</strong> de cada tramo.</p>
+    <label class="field flight-nav-tas-label" for="flight-nav-tas">Velocidad verdadera prevista · TAS (kt)
+      <input id="flight-nav-tas" type="number" min="20" max="500" step="1" inputmode="numeric" placeholder="Ej.: 100" aria-describedby="flight-nav-help">
+    </label>
+    <div id="flight-nav-wind-legs" aria-live="polite"></div>
+    <p class="flight-essential-note" id="flight-nav-help">Los vientos se ingresan en grados <strong>verdaderos</strong> y nudos, tomando PRONAREA u otra fuente oficial vigente para la FIR, nivel, zona y horario de cada pierna. Nunca se toma automáticamente el viento de superficie del METAR como viento de crucero. Si falta algún dato, se indicará «No calculable» sin inventar valores.</p>
+  </section>
   <label class="flight-ai-consent"><input id="flight-essential-consent" type="checkbox" aria-describedby="flight-essential-status"><span><strong>1. Autorizo</strong> generar el informe único con IA y consumir tokens. Luego presioná <strong>2. Generar informe</strong>.</span></label>
   <div class="actions"><button class="primary" id="flight-essential-ask" type="button">Generar informe único con IA</button><span class="feedback ai-validation-status" id="flight-essential-status" role="status" aria-live="polite">Marcá «Autorizo» para generar el informe.</span></div>
   <div class="flight-essential-result" id="flight-essential-result" hidden>
     <div class="card-header"><h3>Informe esencial para el vuelo previsto</h3><button class="secondary" type="button" id="flight-essential-copy">Copiar informe</button></div>
     <p class="sub flight-ai-timestamp" id="flight-essential-time"></p>
     <div class="flight-ai-text" id="flight-essential-analysis"></div>
+    <section class="flight-essential-nav-result" id="flight-essential-navigation" aria-labelledby="flight-essential-navigation-heading">
+      <h3 id="flight-essential-navigation-heading">Navegación estimada · derrotas, rumbo y GS</h3>
+      <div id="flight-essential-navigation-content" aria-live="polite">Se calculará al finalizar el informe, según los datos disponibles.</div>
+    </section>
     <p class="flight-essential-note" id="flight-essential-tokens"></p>
     <p class="flight-essential-note">Revisá emisión y vigencia en las fuentes oficiales; este resumen no reemplaza el briefing aeronáutico ni la decisión del piloto al mando.</p>
   </div>
@@ -1654,6 +1683,7 @@ el('copy-report').addEventListener('click',async()=>{
        })+' · Solo información cargada en la Mesa; no se consultaron nuevas fuentes. PRONAREA manual sin verificación automática.';
      $(elements.result).hidden=false;
      if(mode==='essential'){
+       document.dispatchEvent(new CustomEvent('gdv-flight-essential-generated'));
        const usage=response.usage;
        $('flight-essential-tokens').textContent=usage
          ?'Esta consulta utilizó '+usageFmt(usage.total_tokens)+' tokens (entrada: '+usageFmt(usage.input_tokens)+', salida: '+usageFmt(usage.output_tokens)+') · Costo estimado: '+usdFmt(usage.estimated_cost_usd)+'.'
@@ -1697,7 +1727,9 @@ el('copy-report').addEventListener('click',async()=>{
  $('flight-essential-copy').addEventListener('click',async()=>{
    const answer=$('flight-essential-analysis').textContent.trim();
    if(!answer||$('flight-essential-result').hidden)return;
-   try{await navigator.clipboard.writeText(answer);$('flight-essential-status').textContent='Informe copiado.';}
+   const navigation=$('flight-essential-navigation-content').textContent.trim();
+   const copyText=answer+(navigation?'\n\nNAVEGACIÓN ESTIMADA POR PIERNAS\n'+navigation:'');
+   try{await navigator.clipboard.writeText(copyText);$('flight-essential-status').textContent='Informe y navegación copiados.';}
    catch(_){$('flight-essential-status').textContent='No se pudo copiar el informe.';}
  });
  $('flight-precautions-ask').addEventListener('click',()=>{void runAi('precautions');});
@@ -1923,6 +1955,7 @@ if(stage){
 <script src="../assets/flight-fir-geodata.js?v=20261015a"></script>
 <script src="../assets/flight-wmm2025.js?v=20261015a"></script>
 <script src="../assets/flight-vfr-altitude.js?v=20261015b"></script>
+<script src="../assets/flight-essential-navigation.js?v=20261015a"></script>
 <script src="../assets/flight-fir-autoselect.js?v=20261015a"></script>
 </body>
 </html>
