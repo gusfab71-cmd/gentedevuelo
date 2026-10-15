@@ -2,7 +2,7 @@
 (()=>{
 'use strict';
 const $=id=>document.getElementById(id),DAY=86400000;
-const date=()=>{const x=$('flight-time')?.value||'';if(!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(x))return null;const d=new Date(x+'Z');return d.toISOString().slice(0,16)===x?d:null;};
+const date=()=>{const x=$('flight-time')?.value||'';if(!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(x))return null;const d=new Date(x+'Z');return Number.isFinite(d.getTime())&&d.toISOString().slice(0,16)===x?d:null;};
 const rows=()=>window.GDV_FLIGHT_NAV?.snapshot?.()||[];
 const eta=()=>{
  const dep=date(),rr=rows();
@@ -160,7 +160,7 @@ $('flight-wizard-new').onclick=async()=>{
  try{const {client,user}=await userClient();const {error}=await client.from('gdv_flight_plan_drafts').delete().eq('user_id',user.id);if(error)throw Error(error.message);location.reload();}
  catch(e){notify('No fue posible iniciar un vuelo nuevo: '+e.message);}
 };
-const value=id=>{const s=$ (id)?.value??'';return s!==''&&Number.isFinite(Number(s))?Number(s):null};
+const value=id=>{const s=$(id)?.value??'';return s!==''&&Number.isFinite(Number(s))?Number(s):null};
 const fmt=v=>Number.isFinite(v)?v.toLocaleString('es-AR',{maximumFractionDigits:1}):'Pendiente';
 function nm(a,b){
  if(!a||!b)return null;const R=Math.PI/180,dl=(b[0]-a[0])*R,dn=(b[1]-a[1])*R;
