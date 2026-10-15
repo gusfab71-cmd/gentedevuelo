@@ -400,7 +400,9 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
 .jump{margin-bottom:15px;gap:7px}
 .jump a{border-radius:9px;padding:8px 11px;font-size:12px;background:#1a2a38;border-color:#3e5a70}
 .ops-accordion,.flight-advanced-report{border:1px solid #47657c;border-radius:17px;background:linear-gradient(155deg,#1c2b38,#192631);margin:0 0 15px;overflow:hidden;scroll-margin-top:15px;box-shadow:0 6px 23px #030a1230}
-.ops-accordion[open],.flight-advanced-report[open]{border-color:#6a8da5}
+.ops-accordion[open],.flight-advanced-report[open],.ops-accordion-static{border-color:#6a8da5}
+.ops-accordion-static>.ops-accordion-toggle{cursor:default}
+.ops-accordion-static>.ops-accordion-toggle:hover{background:transparent}
 .ops-accordion-toggle,.flight-advanced-report>summary{display:flex;gap:13px;align-items:center;list-style:none;cursor:pointer;padding:18px 20px;min-height:76px;color:#edf5fa}
 .ops-accordion-toggle::-webkit-details-marker,.flight-advanced-report>summary::-webkit-details-marker{display:none}
 .ops-accordion-toggle:hover,.flight-advanced-report>summary:hover{background:#2a4051}
@@ -623,7 +625,7 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
 </div>
 </div>
 </section>
-<details class="ops-accordion" id="ops-boletines"><summary class="ops-accordion-toggle"><span class="ops-accordion-number">03</span><span class="ops-accordion-name"><strong>Evaluación de las cuatro etapas</strong><span>Ruta, pronósticos, infraestructura y METAR</span></span><span class="ops-accordion-arrow" aria-hidden="true"></span></summary><div class="ops-accordion-content">
+<section class="ops-accordion ops-accordion-static" id="ops-boletines" aria-labelledby="ops-boletines-title"><div class="ops-accordion-toggle"><span class="ops-accordion-number">03</span><span class="ops-accordion-name"><strong id="ops-boletines-title">Evaluación de las cuatro etapas</strong><span>Ruta, pronósticos, infraestructura y METAR · Estado siempre visible</span></span></div><div class="ops-accordion-content">
 <section class="card" id="boletines">
 <div class="card-header"><div><span class="card-kicker">PASO 3 · ESTADO DE LOS BOLETINES</span><h2>Información disponible para el vuelo</h2></div></div>
 <div class="status-grid" aria-label="Disponibilidad de las fuentes">
@@ -666,7 +668,7 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
 </div>
 </details>
 </section>
-</div></details>
+</div></section>
 </div>
 <aside class="stack">
 <section class="card" id="nubosidad">
@@ -1788,7 +1790,6 @@ if(stage){
   stage.addEventListener('toggle',()=>{
     if(!stage.open)stage.querySelectorAll('details[open]').forEach(item=>{item.open=false;});
   });
-  new MutationObserver(()=>{if(stage.open)$('ops-boletines').open=true;}).observe(stage,{attributes:true,attributeFilter:['open']});
 }
 })();
 </script>
