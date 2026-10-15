@@ -386,6 +386,12 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
 .flight-nav-settings .field{margin:0}
 .flight-speed-alt-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;min-width:0}
 .flight-speed-alt-row>.field{min-width:0;margin:0}
+.flight-alt-vfr-feedback{grid-column:1/-1;display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:11px 13px;border:1px solid #536d82;border-radius:10px;background:#1b303f;font-size:12px;line-height:1.6;color:#d4e6f3}
+.flight-alt-vfr-feedback:has([data-vfr-state="different"]){background:#3d302a;border-color:#dba877}
+#flight-alt-vfr-status[data-vfr-state="different"]{color:#ffe0ba;font-weight:780}
+#flight-alt-vfr-status[data-vfr-state="match"]{color:#c6e9d9;font-weight:700}
+#flight-alt-vfr-apply:not([hidden]){font-weight:730;font-size:12px;min-height:34px}
+#flight-alt[aria-invalid="true"]{border-color:#e8ac7d!important;outline:2px solid #dd9b5977;outline-offset:1px}
 @media(max-width:600px){.flight-speed-alt-row{grid-template-columns:1fr}}
 .flight-nav-source{font-size:12px;color:#b8d8ed;line-height:1.55}
 .flight-nav-source[data-status="manual"]{color:#f3d2a1}
@@ -593,11 +599,15 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
 
 <div class="flight-speed-alt-row full">
  <label class="field" for="flight-alt">Altitud prevista (pies AMSL)
-   <input id="flight-alt" type="number" required min="500" max="45000" step="100" placeholder="3500">
+   <input id="flight-alt" type="number" required min="500" max="45000" step="100" placeholder="3500" aria-describedby="flight-alt-vfr-status">
  </label>
  <label class="field" for="flight-nav-tas">Velocidad verdadera · TAS (nudos)
    <input id="flight-nav-tas" type="number" min="20" max="500" step="1" inputmode="numeric" placeholder="Ej.: 100" aria-describedby="flight-nav-help">
  </label>
+ <div class="flight-alt-vfr-feedback" data-vfr-status>
+   <span id="flight-alt-vfr-status" data-vfr-state="unknown" role="status" aria-live="polite">Seleccioná origen y destino para comprobar la altitud VFR.</span>
+   <button class="secondary" id="flight-alt-vfr-apply" type="button" hidden>Aplicar altitud sugerida</button>
+ </div>
 </div>
 <label class="field flight-utc-field" for="flight-time">
  <span class="flight-utc-heading"><span>Fecha y hora previstas de salida</span><span class="flight-utc-badge">UTC · Z</span></span>
@@ -1962,7 +1972,7 @@ if(stage){
 
 <script src="../assets/flight-fir-geodata.js?v=20261015a"></script>
 <script src="../assets/flight-wmm2025.js?v=20261015a"></script>
-<script src="../assets/flight-vfr-altitude.js?v=20261015b"></script>
+<script src="../assets/flight-vfr-altitude.js?v=20261015c"></script>
 <script src="../assets/flight-pronarea-wind.js?v=20261015b"></script>
 <script src="../assets/flight-essential-navigation.js?v=20261015c"></script>
 <script src="../assets/flight-fir-autoselect.js?v=20261015a"></script>
