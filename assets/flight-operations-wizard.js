@@ -50,6 +50,7 @@ if(!plan||!weather||!report||!p)return;
 const css=document.createElement('style');
 css.textContent='.ops-accordion[hidden],.flight-wizard-nav-panel[hidden],.flight-leg-editor[hidden],.flight-base-fields[hidden]{display:none!important}'+
 '.ops-cards-heading,.ops-cards,.jump{display:none!important}'+
+'#nubosidad[hidden],#fuentes[hidden],#ops-fuentes[hidden]{display:none!important}'+
 '.flight-wizard-ui{padding:19px;margin:18px 0;border:1px solid #577389;background:#202e3b;border-radius:18px;color:#ecf3f8}'+
 '.flight-wizard-steps{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin:16px 0}'+
 '.flight-wizard-steps button,.flight-wizard-toolbar button{padding:11px;border:1px solid #7f98aa;border-radius:11px;background:#354c5f;color:#ecf5fa;font:inherit;cursor:pointer}'+
@@ -78,7 +79,7 @@ fuel.innerHTML='<h3>Planificación de combustible</h3><div class="flight-fuel-in
 const legTable=document.createElement('section');legTable.id='flight-wizard-leg-table';legTable.setAttribute('aria-label','Planilla de navegación por piernas');nav.append(legTable);
 nav.append(fuel);
 let step=0,busy=false,stored=null;
-const all=[plan,weather,$('ops-boletines'),$('ops-fuentes'),report,$('ops-piloto'),$('ops-precauciones'),$('ops-cartas'),nav].filter(Boolean);
+const all=[plan,weather,$('ops-boletines'),$('nubosidad'),$('fuentes'),$('ops-fuentes'),report,$('ops-piloto'),$('ops-precauciones'),$('ops-cartas'),nav].filter(Boolean);
 const titles=['Datos del vuelo','Planificar piernas','Meteorología','Navegación y combustible','Informe esencial'];
 const steps=titles.map((x,i)=>{const b=document.createElement('button');b.textContent=(i+1)+' · '+x;b.type='button';b.onclick=()=>{if(i<=step)void go(i);else notify('Avanzá utilizando Guardar y continuar.');};$('flight-wizard-steps').append(b);return b;});
 const base=plan.querySelector('.form'),editor=plan.querySelector('.flight-leg-editor');
@@ -86,7 +87,7 @@ if(base)base.classList.add('flight-base-fields');
 const notify=s=>$('flight-wizard-status').textContent=s;
 function display(s){
  step=s;all.forEach(x=>x.hidden=true);
- const visible=s===0||s===1?[plan]:s===2?[weather,$('ops-boletines'),$('ops-fuentes'),$('ops-cartas')]:s===3?[nav]:[report,$('ops-piloto')];
+ const visible=s===0||s===1?[plan]:s===2?[weather,$('ops-boletines'),$('nubosidad'),$('fuentes'),$('ops-fuentes'),$('ops-cartas')]:s===3?[nav]:[report,$('ops-piloto')];
  visible.forEach(x=>{if(x){x.hidden=false;if(x.tagName==='DETAILS')x.open=true;}});
  if(base)base.hidden=s===1;if(editor)editor.hidden=s===0;
  const title=$('plan-vuelo')?.querySelector('h2');if(title)title.textContent=s===1?'Planificación asistida de piernas':'Datos del vuelo';
