@@ -86,7 +86,7 @@ if(base)base.classList.add('flight-base-fields');
 const notify=s=>$('flight-wizard-status').textContent=s;
 function display(s){
  step=s;all.forEach(x=>x.hidden=true);
- const visible=s===0||s===1?[plan]:s===2?[weather,$('ops-boletines'),$('nubosidad'),$('fuentes'),$('ops-fuentes'),$('ops-cartas')]:s===3?[nav]:[report,$('ops-piloto')];
+ const visible=s===0||s===1?[plan]:s===2?[weather,$('ops-boletines'),$('nubosidad'),$('ops-fuentes')]:s===3?[nav]:[report,$('ops-piloto'),$('fuentes'),$('ops-cartas')];
  visible.forEach(x=>{if(x){x.hidden=false;if(x.tagName==='DETAILS')x.open=true;}});
  if(base)base.hidden=s===1;if(editor)editor.hidden=s===0;
  const title=$('plan-vuelo')?.querySelector('h2');if(title)title.textContent=s===1?'Planificación asistida de piernas':'Datos del vuelo';
