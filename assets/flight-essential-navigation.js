@@ -275,6 +275,11 @@ const schedule=()=>{
 };
 new MutationObserver(schedule).observe(legs,{childList:true,characterData:true,subtree:true});
 new MutationObserver(schedule).observe(waypoints,{childList:true,characterData:true,subtree:true});
+// Los cambios de valor en <input> no son mutaciones del DOM: la derrota
+// corregida por el piloto debe recalcular la planilla sin esperar otro paso.
+const syncLegResults=()=>{schedule();output();};
+legs.addEventListener('input',syncLegResults);
+legs.addEventListener('change',syncLegResults);
 for(const id of ['flight-origin','flight-dest','flight-origin-other','flight-dest-other','flight-time']){
  const node=$(id);
  node?.addEventListener('input',()=>{schedule();output();});

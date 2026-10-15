@@ -80,10 +80,11 @@ test('conflicting reports from the same endpoint station cannot yield an automat
  assert.match(result.reason, /contradictorios/);
 });
 
-test('end to end: the navigation snapshot calculates GS from TAS and endpoint WIND/T', () => {
+test('end to end: changing a leg course refreshes navigation and GS from endpoint WIND/T', () => {
  const elements = new Map();
- const makeElement = props => ({value: '', dataset: {}, hidden: false, append() {},
-  addEventListener() {}, replaceChildren() {}, setAttribute() {}, ...props});
+ const makeElement = props => ({value: '', dataset: {}, hidden: false, children: [],
+  append(...items) {this.children.push(...items);},addEventListener() {},
+  replaceChildren(...items) {this.children=[...items];},setAttribute() {}, ...props});
  const pronarea = 'PRONAREA FIR EZE VALIDEZ 0416\nWIND/T: EZE FL030/27020P18\nCBA FL030/27010P17\nFCST:';
  elements.set('flight-pronarea', makeElement({value: pronarea}));
  elements.set('flight-time', makeElement({value: '2026-10-15T12:00'}));
@@ -92,14 +93,16 @@ test('end to end: the navigation snapshot calculates GS from TAS and endpoint WI
  elements.set('flight-origin', makeElement({value: 'SAEZ'}));
  elements.set('flight-dest', makeElement({value: 'SACO'}));
  elements.set('flight-nav-tas', makeElement({value: '100'}));
- elements.set('flight-essential-result', makeElement({hidden: true}));
+ elements.set('flight-essential-result', makeElement({hidden: false}));
  elements.set('flight-essential-navigation-content', makeElement());
  elements.set('flight-nav-wind-legs', makeElement());
  const altitudeInput = makeElement({value: '4500'});
  const trueCourseInput = makeElement({value: '', dataset: {estimated: 'false'}});
  const legRow = makeElement({querySelector: selector => selector==='.flight-true-track'
   ?trueCourseInput:altitudeInput});
- elements.set('flight-legs-list', makeElement({querySelectorAll: () => [legRow]}));
+ const legListeners = {};
+ elements.set('flight-legs-list', makeElement({querySelectorAll: () => [legRow],
+  addEventListener: (type,handler) => {legListeners[type]=handler;}}));
  elements.set('flight-waypoints', makeElement({querySelectorAll: () => []}));
  const context = {
   window: {GDV_WMM2025: {magneticVariation: () => 7},
@@ -115,6 +118,7 @@ test('end to end: the navigation snapshot calculates GS from TAS and endpoint WI
  assert.equal(pending.gs_kt, undefined);
  assert.match(pending.wind_source, /Ingresá el curso verdadero/);
  trueCourseInput.value = '300';
+ legListeners.input();
  const [leg] = context.window.GDV_FLIGHT_NAV.snapshot();
  assert.equal(leg.name, 'SAEZ → SACO');
  assert.ok(leg.gs_kt > 86 && leg.gs_kt < 89, `GS should be about 87.5 kt, got ${leg.gs_kt}`);
@@ -123,9 +127,13 @@ test('end to end: the navigation snapshot calculates GS from TAS and endpoint WI
  assert.ok(Number.isFinite(leg.wind_correction_deg));
  assert.equal(leg.wind_true_from_deg, 270);
  assert.equal(leg.wind_speed_kt, 15);
+ const navText = () => elements.get('flight-essential-navigation-content').children
+  .flatMap(row => row.children.map(child => child.textContent)).join(' ');
+ assert.match(navText(), /Curso verdadero manual: 300/);
  // La entrada manual es °T (no °M). La variación Este se resta para rumbo °M.
  trueCourseInput.value = '90';
  trueCourseInput.dataset.estimated = 'false';
+ legListeners.input();
  const [manual] = context.window.GDV_FLIGHT_NAV.snapshot();
  assert.equal(manual.course_source, 'Curso verdadero ingresado por el piloto');
  assert.equal(manual.course_true_deg, 90);
@@ -134,4 +142,6 @@ test('end to end: the navigation snapshot calculates GS from TAS and endpoint WI
  assert.equal(manual.heading_magnetic_deg, 83);
  assert.ok(Math.abs(manual.gs_kt-115) < 0.0001);
  assert.ok(Math.abs(manual.wind_correction_deg) < 0.0001);
+ assert.match(navText(), /Curso verdadero manual: 90/);
+ assert.doesNotMatch(navText(), /Curso verdadero manual: 300/);
 });

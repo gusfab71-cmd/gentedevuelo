@@ -343,6 +343,8 @@ $('flight-wizard-new').onclick=async()=>{
 };
 const value=id=>{const s=$(id)?.value??'';return s!==''&&Number.isFinite(Number(s))?Number(s):null};
 const fmt=v=>Number.isFinite(v)?v.toLocaleString('es-AR',{maximumFractionDigits:1}):'Pendiente';
+const fmtBearing=v=>Number.isFinite(v)?
+ ((Math.round((((v%360)+360)%360)*10)%3600)/10).toLocaleString('es-AR',{minimumIntegerDigits:3,minimumFractionDigits:1,maximumFractionDigits:1}):'Pendiente';
 function nm(a,b){
  if(!a||!b)return null;const R=Math.PI/180,dl=(b[0]-a[0])*R,dn=(b[1]-a[1])*R;
  const x=Math.sin(dl/2)**2+Math.cos(a[0]*R)*Math.cos(b[0]*R)*Math.sin(dn/2)**2;
@@ -382,7 +384,7 @@ function calcFuel(){
    if(duration===null)knownEta=false;else if(knownEta)elapsed+=duration;
    const at=knownEta?new Date(date().getTime()+elapsed*3600000).toISOString().slice(0,16).replace('T',' '):'Pendiente';
    const wind=Number.isFinite(r.wind_true_from_deg)&&Number.isFinite(r.wind_speed_kt)?fmt(r.wind_true_from_deg)+' / '+fmt(r.wind_speed_kt):'Pendiente';
-   const vals=[r.name,fmt(r.course_true_deg),fmt(r.altitude_ft),wind,fmt(r.wind_correction_deg),fmt(r.heading_true_deg),fmt(r.variation_deg),fmt(r.heading_magnetic_deg),fmt(r.magnetic_track_deg),fmt(r.distance_nm),fmt(r.gs_kt),fmt(duration===null?null:duration*60),at,
+   const vals=[r.name,fmtBearing(r.course_true_deg),fmt(r.altitude_ft),wind,fmt(r.wind_correction_deg),fmtBearing(r.heading_true_deg),fmt(r.variation_deg),fmtBearing(r.heading_magnetic_deg),fmtBearing(r.magnetic_track_deg),fmt(r.distance_nm),fmt(r.gs_kt),fmt(duration===null?null:duration*60),at,
     duration===null||burn===null?'Pendiente':fmt(duration*burn)];
    const row=document.createElement('tr');for(const v of vals){const td=document.createElement('td');td.textContent=String(v);row.append(td);}tbody.append(row);
   }tbl.append(tbody);el.replaceChildren(tbl);
@@ -391,6 +393,11 @@ function calcFuel(){
 }
 fuel.querySelectorAll('input').forEach(x=>x.addEventListener('input',calcFuel));
 p.querySelector('#flight-analysis-form')?.addEventListener('input',()=>queueMicrotask(calcFuel));
+// La planilla de piernas siempre toma el valor actual, aun tras volver atrás
+// y corregir un curso °T que altera la derrota °M y la corrección por viento.
+for(const type of ['input','change'])$('flight-legs-list')?.addEventListener(type,event=>{
+ if(event.target?.matches?.('.flight-true-track'))queueMicrotask(calcFuel);
+});
 $('flight-nav-tas')?.addEventListener('input',()=>queueMicrotask(calcFuel));
 new MutationObserver(()=>queueMicrotask(calcFuel)).observe($('flight-legs-list'),{childList:true,subtree:true});
 new MutationObserver(()=>queueMicrotask(calcFuel)).observe($('flight-nav-wind-legs'),{childList:true,subtree:true});
@@ -400,7 +407,7 @@ $('flight-wizard-print').onclick=()=>{
  const out=['FLIGHT OPERATIONS · GENTE DE VUELO','PLANILLA ORIENTATIVA DE VUELO · UTC','',
  'Salida: '+$('flight-origin')?.value+' · Destino: '+$('flight-dest')?.value+' · Alternativo: '+$('flight-alternate')?.value,
  'Despegue: '+$('flight-time')?.value+' UTC · Reglas: '+$('flight-rules')?.value,'TAS: '+$('flight-nav-tas')?.value+' kt',''];
- rows().forEach(r=>out.push('Pierna '+(r.index+1)+' '+r.name+' · '+fmt(r.distance_nm)+' NM ('+(r.distance_source==='pilot'?'piloto':'geometría')+') · '+fmt(r.altitude_ft)+' ft AMSL · curso °T '+fmt(r.course_true_deg)+' · derrota °M '+fmt(r.magnetic_track_deg)+' · corrección viento '+fmt(r.wind_correction_deg)+'° · rumbo °T '+fmt(r.heading_true_deg)+' · rumbo °M '+fmt(r.heading_magnetic_deg)+' · GS '+fmt(r.gs_kt)+' kt','Viento: '+r.wind_source));
+ rows().forEach(r=>out.push('Pierna '+(r.index+1)+' '+r.name+' · '+fmt(r.distance_nm)+' NM ('+(r.distance_source==='pilot'?'piloto':'geometría')+') · '+fmt(r.altitude_ft)+' ft AMSL · curso °T '+fmtBearing(r.course_true_deg)+' · derrota °M '+fmtBearing(r.magnetic_track_deg)+' · corrección viento '+fmt(r.wind_correction_deg)+'° · rumbo °T '+fmtBearing(r.heading_true_deg)+' · rumbo °M '+fmtBearing(r.heading_magnetic_deg)+' · GS '+fmt(r.gs_kt)+' kt','Viento: '+r.wind_source));
  out.push('','COMBUSTIBLE',$('flight-fuel-summary')?.textContent||'Pendiente','','PRONAREA',gate().message,
  'Fuente PRONAREA: carga manual · fecha de referencia UTC '+(date()?.toISOString().slice(0,10)||'sin fecha de salida')+' · emisión y vigencia real sujetas a verificación SMN',
  'ATIS aportado: '+($('flight-atis')?.value?.trim()||'No aportado.'),

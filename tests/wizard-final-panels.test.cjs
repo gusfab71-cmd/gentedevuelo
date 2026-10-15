@@ -2,6 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
+const vm = require('node:vm');
 
 const html = fs.readFileSync(path.join(__dirname, '../utilidades/meteorologia-aeronautica.html'), 'utf8');
 const wizard = fs.readFileSync(path.join(__dirname, '../assets/flight-operations-wizard.js'), 'utf8');
@@ -27,7 +28,7 @@ test('official links and chart controls remain intact', () => {
  }
  assert.match(html, /https:\/\/ais\.anac\.gob\.ar\//);
  assert.match(html, /https:\/\/redemet\.decea\.mil\.br\//);
- assert.match(html, /flight-operations-wizard\.js\?v=20261015l/);
+ assert.match(html, /flight-operations-wizard\.js\?v=20261015n/);
 });
 
 test('meteorology renders the calculations shortcut once, under the evaluation', () => {
@@ -35,4 +36,14 @@ test('meteorology renders the calculations shortcut once, under the evaluation',
  assert.doesNotMatch(wizard, /\[weather,\$\('ops-boletines'\)\]/);
  assert.match(wizard, /section\.append\(row\)/);
  assert.match(wizard, /await go\(3\)/);
+});
+
+test('magnetic courses above 360° are displayed as three-digit bearings', () => {
+ const from = wizard.indexOf('const fmtBearing=');
+ const to = wizard.indexOf('\nfunction nm(', from);
+ assert.ok(from > 0 && to > from);
+ const bearing = vm.runInNewContext(wizard.slice(from,to)+'\nfmtBearing;');
+ assert.equal(bearing(361.8), '001,8');
+ assert.equal(bearing(332.8), '332,8');
+ assert.equal(bearing(359.96), '000,0');
 });
