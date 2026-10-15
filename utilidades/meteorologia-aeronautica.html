@@ -122,8 +122,6 @@
 .flight-ai-consent:has(input:checked){border-color:#7799a9;background:#243c4b}
 .flight-ai-consent.needs-confirmation{outline:2px solid #ebcd82;outline-offset:1px;background:#394036}
 .flight-ai-project-state{padding:11px 13px;border:1px solid #67869a;border-radius:10px;background:#223746;color:#dae7f0;line-height:1.5;font-size:13px;margin:10px 0 12px}
-.flight-ai-project-state[data-source="shared_legacy"]{border-color:#d3a76d;background:#37332e;color:#fce6bc}
-.flight-ai-project-state[data-source="dedicated"]{border-color:#779eaa;background:#213e48;color:#daedf1}
 .flight-ai-consent.needs-confirmation span{color:#fff1c5!important}
 .ai-validation-status{font-size:13px!important;line-height:1.45;font-weight:650}
 .ai-validation-status.needs-confirmation{color:#f3d68b!important;font-weight:750}
@@ -717,7 +715,7 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
  <div class="card-header"><div><span class="card-kicker">SÍNTESIS METEOROLÓGICA · ANTES DE LAS PRECAUCIONES</span>
   <h2 id="flight-weather-heading">Informe meteorológico del vuelo planificado</h2></div></div>
  <p class="sub">Explicación sencilla y punto por punto de los METAR, TAF, SIGMET y PRONAREA cargados, siempre referida a la ruta, las altitudes y la salida UTC programadas. La IA traduce las abreviaturas, pero no inventa fenómenos cuando faltan datos.</p>
- <p class="flight-ai-project-state" data-flight-ai-project role="status" aria-live="polite">Comprobando si Flight Operations tiene una clave de OpenAI exclusiva…</p>
+ <p class="flight-ai-project-state">Los informes utilizan la conexión de OpenAI ya configurada para Robert Shimoda. Cada consulta autorizada consume tokens del saldo de la API compartida, sin requerir otra clave.</p>
  <label class="flight-ai-consent"><input id="flight-weather-consent" type="checkbox" aria-describedby="flight-weather-status">
   <span><strong>1. Autorizo</strong> generar este informe meteorológico con IA y consumir tokens. Después presioná <strong>2. Generar informe</strong>.</span></label>
  <div class="actions"><button class="primary" id="flight-weather-ask" type="button">Generar informe meteorológico con IA</button>
@@ -739,7 +737,7 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
  </div>
  <p>Con la ruta, las altitudes y los boletines cargados, la IA puede preparar una lista de comprobaciones y riesgos a considerar. <strong>Es información orientativa: el piloto debe contrastar cada dato con las fuentes oficiales y decidir por sí mismo.</strong></p>
  <p>La consulta incluye los datos meteorológicos disponibles, PRONAREA, posibles SIGMET, vigencias, terreno, cartas y NOTAM aún pendientes. <strong>No equivale a una autorización de vuelo.</strong></p>
- <p class="flight-ai-project-state" data-flight-ai-project role="status" aria-live="polite">Comprobando la conexión de OpenAI…</p>
+ 
  <label class="flight-ai-consent"><input id="flight-precautions-consent" type="checkbox">
   <span>Autorizo esta consulta de precauciones con IA y su consumo de tokens.</span></label>
  <div class="flight-ai-actions"><button class="flight-precautions-button" id="flight-precautions-ask" type="button">Generar precauciones con IA</button>
@@ -758,7 +756,7 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
  <span style="border:1px solid #648597;border-radius:99px;padding:7px 11px;color:var(--accent2);font-size:12px;font-weight:700">Usa tokens solo al confirmar</span>
 </div>
 <p class="sub">El sistema tendrá en cuenta las piernas declaradas, salida, destino y alternativo, PRONAREA cargado manualmente y los METAR/TAF/SIGMET ya cargados. Evaluará: 1) ruta (PRONAREA/SIGMET), 2) salida, destino y alternativo (TAF), 3) infraestructura (NOTAM por consulta externa), 4) observaciones actuales de los tres aeródromos (METAR). <strong>Solo generará el informe después de tu confirmación; no autoriza el vuelo.</strong></p>
-<p class="flight-ai-project-state" data-flight-ai-project role="status" aria-live="polite">Comprobando la conexión de OpenAI…</p>
+
 
 <div class="warning" style="margin:17px 0">
 <strong>Antes de usar tokens:</strong> verificá que los boletines cubran el vuelo previsto. Si no indicaste ruta exacta, el sistema no podrá determinar qué sectores atravesás. La consulta NOTAM de salida, destino y alternativo queda bajo responsabilidad del piloto. El resultado no reemplaza un briefing oficial ni determina aptitud VFR/IFR.
@@ -784,8 +782,8 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
 <details class="ops-accordion" id="ops-piloto"><summary class="ops-accordion-toggle"><span class="ops-accordion-number">08</span><span class="ops-accordion-name"><strong>Consulta del piloto · ChatGPT</strong><span>Chat sobre el vuelo y sus boletines</span></span><span class="ops-accordion-arrow" aria-hidden="true"></span></summary><div class="ops-accordion-content">
 <section class="card flight-pilot-query" id="consulta-piloto">
  <div class="card-header"><div><span class="card-kicker">ASISTENTE GPT · CONVERSACIÓN AERONÁUTICA</span><h2>ChatGPT · Consulta del piloto</h2></div></div>
- <p class="sub">Preguntá en lenguaje común. ChatGPT traduce METAR, TAF, SIGMET y PRONAREA y responde únicamente con los datos cargados, siempre para la ruta, altitud y hora UTC previstas. Si no hay información suficiente, te lo dirá. Disponible mientras Robert Shimoda esté desactivado.</p>
- <p class="flight-ai-project-state" data-flight-ai-project role="status" aria-live="polite">Comprobando la conexión de OpenAI…</p>
+ <p class="sub">Preguntá en lenguaje común. ChatGPT traduce METAR, TAF, SIGMET y PRONAREA y responde únicamente con los datos cargados, siempre para la ruta, altitud y hora UTC previstas. Si no hay información suficiente, te lo dirá. El chat de Shimoda se administra por separado.</p>
+ 
  <div class="flight-pilot-result" id="flight-pilot-result" hidden>
   <div class="card-header"><h3>Conversación del vuelo</h3><div class="flight-pilot-chat-controls"><button class="secondary" id="flight-pilot-new" type="button">Nueva conversación</button><button class="secondary" id="flight-pilot-copy" type="button">Copiar conversación</button></div></div>
   <div id="flight-pilot-thread" role="log" aria-live="polite" aria-label="Conversación del piloto con ChatGPT"></div>
@@ -1310,26 +1308,6 @@ el('copy-report').addEventListener('click',async()=>{
  // Los cuatro modos emplean el plan y los boletines cargados en la Mesa.
  // Ninguno invoca IA sin consentimiento en cada consulta.
  let aiBusy=false;
- function renderFlightAiProjectState(source){
-   document.querySelectorAll('[data-flight-ai-project]').forEach(node=>{
-     node.dataset.source=source;
-     node.textContent=source==='dedicated'
-       ?'Conexión independiente: Flight Operations usa su propia clave de OpenAI.'
-       :source==='shared_legacy'
-         ?'Separación pendiente: las consultas aún utilizan la misma clave de OpenAI que Shimoda. Si querés evitar ese consumo, no generes informes hasta completar la conexión exclusiva.'
-         :'No se pudo comprobar la conexión de OpenAI. Verificá la sesión de administrador.';
-   });
- }
- async function checkFlightAiProjectState(){
-   try{
-     const client=window.GDV_AUTH?.client;
-     if(!client)throw Error('Sin cliente autenticado');
-     const {data,error}=await client.functions.invoke('robert-flight-brief',{method:'GET'});
-     if(error||data?.ok!==true)throw Error('Consulta de configuración no disponible');
-     renderFlightAiProjectState(data.source);
-   }catch(_){renderFlightAiProjectState('unknown');}
- }
- void checkFlightAiProjectState();
  const aiButtons=['flight-weather-ask','flight-precautions-ask','flight-ask','flight-pilot-ask','flight-pilot-new'];
  const modeElements={
    weather_overview:{
@@ -1545,7 +1523,6 @@ el('copy-report').addEventListener('click',async()=>{
      }
      if(response.ai_used!==true || !response.analysis || response.mode!==mode)
        throw Error('No se recibió una respuesta válida para esta consulta.');
-     if(response.billing_connection)renderFlightAiProjectState(response.billing_connection);
      if(inputFingerprint!==contextFingerprint()){
        outputStatus.textContent='Los datos o boletines cambiaron durante la consulta. Repetí el análisis sobre los datos actuales.';
        return;
