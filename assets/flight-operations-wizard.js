@@ -241,7 +241,7 @@ function valid(){
  if(step===1){
   normalizeWaypoints();
   refreshDistanceFields();
-  const waypoints=[...document.querySelectorAll('#flight-waypoints input')],legs=[...document.querySelectorAll('#flight-legs-list .flight-leg-row > .field input[type=number]')];
+  const waypoints=[...document.querySelectorAll('#flight-waypoints input')],legs=[...document.querySelectorAll('#flight-legs-list .flight-leg-row > .field:not(.flight-vfr-track-label):not(.flight-leg-nm-field) input[type=number]')];
   const distances=[...document.querySelectorAll('#flight-legs-list .flight-leg-distance')];
   if(!distances.length||distances.length!==legs.length||distances.some(e=>!e.value.trim()||!e.checkValidity())){
    notify('Completá las distancias en millas náuticas (NM) de cada pierna.');return false;
@@ -262,7 +262,7 @@ function pack(){
   if(!('value' in e)||e.closest('#flight-legs-list')||e.closest('#flight-waypoints'))return;
   fields[e.id]=e.type==='checkbox'?e.checked:e.value;
  });
- return {version:1,step,fields,manualWinds:window.GDV_FLIGHT_NAV?.saveWind?.()||[],magneticTracks:window.GDV_FLIGHT_VFR_TRACK?.exportManual?.()||[],manualNm:window.GDV_FLIGHT_DISTANCE?.save?.()||[],stops:[...document.querySelectorAll('#flight-waypoints input')].map(x=>x.value),levels:[...document.querySelectorAll('#flight-legs-list input[type=number]')].map(x=>x.value),
+ return {version:1,step,fields,manualWinds:window.GDV_FLIGHT_NAV?.saveWind?.()||[],magneticTracks:window.GDV_FLIGHT_VFR_TRACK?.exportManual?.()||[],manualNm:window.GDV_FLIGHT_DISTANCE?.save?.()||[],stops:[...document.querySelectorAll('#flight-waypoints input')].map(x=>x.value),levels:[...document.querySelectorAll('#flight-legs-list .flight-leg-row > .field:not(.flight-vfr-track-label):not(.flight-leg-nm-field) input[type=number]')].map(x=>x.value),
  firs:[...document.querySelectorAll('.flight-fir')].filter(x=>x.checked).map(x=>x.value)};
 }
 async function userClient(){
@@ -293,7 +293,7 @@ function restore(plan){
  const stops=Array.isArray(plan.stops)?plan.stops.slice(0,8):[];
  stops.forEach(()=>{$('flight-add-stop')?.click();});
  const w=[...document.querySelectorAll('#flight-waypoints input')];stops.forEach((s,i)=>{if(w[i]){w[i].value=String(s);emit(w[i]);}});
- const a=[...document.querySelectorAll('#flight-legs-list input[type=number]')];
+ const a=[...document.querySelectorAll('#flight-legs-list .flight-leg-row > .field:not(.flight-vfr-track-label):not(.flight-leg-nm-field) input[type=number]')];
  (plan.levels||[]).forEach((v,i)=>{if(a[i]){a[i].value=String(v);emit(a[i]);}});
  document.querySelectorAll('.flight-fir').forEach(e=>{e.checked=(plan.firs||[]).includes(e.value);emit(e);});
  $('flight-auto-results').hidden=true;
