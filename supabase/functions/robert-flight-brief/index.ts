@@ -413,17 +413,17 @@ Deno.serve(async request=>{
     "TAF SALIDA ("+origin+"): "+(reports.origin_taf.available?
       tafStatusForDeparture(reports.origin_taf.raw,origin,plannedMs)==="vencido_antes_despegue"?
         "TAF ENCONTRADO PERO VENCIDO ANTES DE SALIDA UTC: excluir contenido como pronóstico aplicable. Consultar TAF actualizado.":
-        reports.origin_taf.raw+"\nSin ETA del "+origin+", NO atribuir al arribo grupos BECMG/TEMPO previos al despegue.":noData),
+        reports.origin_taf.raw+"\nPara SALIDA usar solo el período aplicable a la hora UTC de despegue; los grupos anteriores solo pueden establecer evolución, no riesgo actual sin vigencia.":noData),
     "METAR DESTINO ("+destination+"): "+(reports.destination_metar.available?reports.destination_metar.raw:noData),
     "TAF DESTINO ("+destination+"): "+(reports.destination_taf.available?
       tafStatusForDeparture(reports.destination_taf.raw,destination,plannedMs)==="vencido_antes_despegue"?
         "TAF ENCONTRADO PERO VENCIDO ANTES DE SALIDA UTC: excluir contenido como pronóstico aplicable. Consultar TAF actualizado.":
-        reports.destination_taf.raw+"\nSin ETA del "+destination+", NO atribuir al arribo grupos BECMG/TEMPO previos al despegue.":noData),
+        reports.destination_taf.raw+"\nSin ETA de llegada, NO atribuir al arribo grupos TEMPO/BECMG anteriores al despegue; pedir hora estimada de arribo.":noData),
     "METAR ALTERNATIVO ("+alternate+"): "+(reports.alternate_metar.available?reports.alternate_metar.raw:noData),
     "TAF ALTERNATIVO ("+alternate+"): "+(reports.alternate_taf.available?
       tafStatusForDeparture(reports.alternate_taf.raw,alternate,plannedMs)==="vencido_antes_despegue"?
         "TAF ENCONTRADO PERO VENCIDO ANTES DE SALIDA UTC: excluir contenido como pronóstico aplicable. Consultar TAF actualizado.":
-        reports.alternate_taf.raw+"\nSin ETA del "+alternate+", NO atribuir al arribo grupos BECMG/TEMPO previos al despegue.":noData),
+        reports.alternate_taf.raw+"\nSin ETA de llegada, NO atribuir al arribo grupos TEMPO/BECMG anteriores al despegue; pedir hora estimada de arribo.":noData),
     "SIGMET CARGADO POR FIR (búsqueda parcial, NO confirma ausencia): "+sigmetText,
     "ESTADO DE VALIDEZ DEL PRONAREA PARA ESTE VUELO: "+pronareaStatus,
     "PRONAREA MANUAL, FECHA DE EMISIÓN NO VERIFICADA, recepción UTC "+documentsReceivedAtUtc+":\n"+
