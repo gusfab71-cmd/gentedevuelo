@@ -20,6 +20,13 @@ function gate(){
  if(!$('flight-pronarea-confirm')?.checked)return {ok:false,message:'Confirmá que comprobaste emisión, FIR y fecha en el SMN.'};
  const matches=[...raw.toUpperCase().matchAll(/\bPRONAREA\s+FIR\s+([A-Z]{3,4})\s+VALIDEZ\s+(\d{4})(?!\d)/g)];
  if(!matches.length)return {ok:false,message:'No se puede identificar la cabecera FIR / VALIDEZ del PRONAREA.'};
+ const aliases={SAEF:['EZE','SAEF'],SACF:['CBA','COR','SACF'],SAMF:['MZA','SAMF'],SARR:['RES','SARR'],SAVF:['CRV','SAVF']};
+ const present=matches.map(m=>m[1]);
+ for(const f of document.querySelectorAll('.flight-fir:checked')){
+  if(!(aliases[f.value]||[f.value]).some(name=>present.includes(name)))
+   return {ok:false,message:'Falta PRONAREA de la FIR '+f.value+'. Cargá el boletín correspondiente o revisá las FIR del vuelo.'};
+ }
+
  const end=eta();
  if(!end)return {ok:false,message:'No se conoce la ETA completa: verificá distancias y vientos de todas las piernas antes de activar la IA.'};
  for(const m of matches){
@@ -27,7 +34,7 @@ function gate(){
   if(a>23||b>24||a===b)return {ok:false,message:'VALIDEZ del PRONAREA ilegible o incorrecta.'};
   const begin=d.getTime()+a*3600000,finish=d.getTime()+b*3600000+(b<=a?DAY:0);
   if(dep.getTime()<begin||dep.getTime()>=finish)return {ok:false,message:'PRONAREA '+m[1]+' '+m[2]+' no cubre la salida '+dep.toISOString().slice(11,16)+' UTC.'};
-  if(Date.parse(end)>finish)return {ok:false,message:'PRONAREA '+m[1]+' '+m[2]+' no cubre el arribo estimado '+end.slice(11,16)+' UTC.'};
+  if(Date.parse(end)>=finish)return {ok:false,message:'PRONAREA '+m[1]+' '+m[2]+' no cubre el arribo estimado '+end.slice(11,16)+' UTC.'};
  }
  return {ok:true,message:'Fecha declarada y horario compatibles hasta la ETA. La vigencia real debe confirmarse siempre en el boletín del SMN.'};
 }
@@ -107,7 +114,7 @@ function valid(){
  return true;
 }
 function pack(){
- const fields={};p.querySelectorAll('#flight-analysis-form [id],#flight-pronarea,#flight-pronarea-date,#flight-pronarea-confirm,#flight-wizard-fuel input').forEach(e=>{
+ const fields={};p.querySelectorAll('#flight-analysis-form [id],#flight-pronarea,#flight-pronarea-date,#flight-pronarea-confirm,#flight-atis,#flight-wizard-fuel input').forEach(e=>{
   if(!('value' in e)||e.closest('#flight-legs-list')||e.closest('#flight-waypoints'))return;
   fields[e.id]=e.type==='checkbox'?e.checked:e.value;
  });
