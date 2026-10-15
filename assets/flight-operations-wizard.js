@@ -27,10 +27,10 @@ function gate(){
  const end=eta();
  if(!end)return {ok:false,message:'No se conoce la ETA completa: verificá distancias y vientos de todas las piernas antes de activar la IA.'};
  for(const m of matches){
-  const window=window.GDV_PRONAREA_WIND?.resolveWindow?.(m[2],dep);
-  if(!window)return {ok:false,message:'VALIDEZ del PRONAREA ilegible o incorrecta.'};
-  if(dep.getTime()<window.start||dep.getTime()>=window.end)return {ok:false,message:'PRONAREA '+m[1]+' '+m[2]+' no cubre la salida '+dep.toISOString().slice(11,16)+' UTC.'};
-  if(Date.parse(end)>=window.end)return {ok:false,message:'PRONAREA '+m[1]+' '+m[2]+' no cubre el arribo estimado '+end.slice(11,16)+' UTC.'};
+  const validityWindow=window.GDV_PRONAREA_WIND?.resolveWindow?.(m[2],dep);
+  if(!validityWindow)return {ok:false,message:'VALIDEZ del PRONAREA ilegible o incorrecta.'};
+  if(dep.getTime()<validityWindow.start||dep.getTime()>=validityWindow.end)return {ok:false,message:'PRONAREA '+m[1]+' '+m[2]+' no cubre la salida '+dep.toISOString().slice(11,16)+' UTC.'};
+  if(Date.parse(end)>=validityWindow.end)return {ok:false,message:'PRONAREA '+m[1]+' '+m[2]+' no cubre el arribo estimado '+end.slice(11,16)+' UTC.'};
  }
  return {ok:true,message:'Fecha UTC tomada de la salida prevista y horario compatible hasta la ETA. La emisión y vigencia reales deben confirmarse en el SMN.'};
 }
@@ -59,7 +59,8 @@ css.textContent='.ops-accordion[hidden],.flight-wizard-nav-panel[hidden],.flight
 '.flight-wizard-nav-panel{background:#253847;border:1px solid #557080;border-radius:15px;padding:18px;margin:12px 0;color:#eef5fb}'+
 '.flight-fuel-inputs{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:12px;margin:15px 0}'+
 '#flight-wizard-leg-table{overflow-x:auto;margin:15px 0}#flight-wizard-leg-table table{width:100%;border-collapse:collapse;font-size:12px;color:#eef5fa}#flight-wizard-leg-table th,#flight-wizard-leg-table td{padding:9px 6px;border-bottom:1px solid #566e80;text-align:left;white-space:nowrap}'+
-'#flight-wizard-leg-table th:last-child,#flight-wizard-leg-table td:last-child{position:sticky;right:0;background:#294c5f;color:#e5f8ff;font-weight:800;border-left:2px solid #9fc6dc;box-shadow:-5px 0 10px #15263155}'+
+'#flight-wizard-leg-table .flight-magnetic-heading{background:#294c5f;color:#e5f8ff;font-weight:800;border-left:2px solid #9fc6dc;border-right:2px solid #9fc6dc}'+
+'#flight-wizard-leg-table .flight-leg-legend{color:#bfd7e7;font-size:12px;line-height:1.5;margin:9px 0 0}'+
 '.flight-fuel-inputs label{display:grid;gap:5px;font-size:13px}.flight-fuel-inputs input{padding:9px;border-radius:8px;background:#31495d;color:#fff;border:1px solid #7893a8;width:100%;box-sizing:border-box}'+
 '#flight-fuel-summary{white-space:pre-line;line-height:1.8;padding:15px;background:#33495b;border-radius:10px}'+
 '@media(max-width:700px){.flight-wizard-steps{grid-template-columns:repeat(2,minmax(0,1fr))}.flight-wizard-ui,.flight-wizard-nav-panel{padding:12px}}'+
@@ -69,7 +70,7 @@ const ui=document.createElement('section');ui.className='flight-wizard-ui';
 ui.innerHTML='<strong>FLIGHT OPERATIONS · Planificación guiada</strong><p>Una etapa por vez · UTC · Guardado privado al continuar</p><div id="flight-wizard-steps" class="flight-wizard-steps"></div><div class="flight-wizard-toolbar"><button id="flight-wizard-back" type="button">← Anterior</button><button id="flight-wizard-next" type="button">Guardar y continuar →</button><span id="flight-wizard-status" role="status" aria-live="polite"></span></div><div class="flight-wizard-toolbar"><button id="flight-wizard-resume" type="button" hidden>Continuar vuelo guardado</button><button id="flight-wizard-new" type="button">Nuevo vuelo</button></div>';
 plan.before(ui);
 const nav=document.createElement('section');nav.className='flight-wizard-nav-panel';nav.id='flight-wizard-navigation';
-nav.innerHTML='<h2>Etapa 4 · Cálculos de navegación y combustible</h2><p>Precomputada VFR: curso verdadero, viento, corrección de deriva, variación magnética, GS, tiempo y combustible. El rumbo magnético a mantener figura al final de cada pierna. Resultados estimados sujetos a verificación en cartas y boletines oficiales. Sin tokens de IA.</p>';
+nav.innerHTML='<h2>Etapa 4 · Cálculos de navegación y combustible</h2><p>Precomputada VFR: curso verdadero, viento, corrección de deriva, variación magnética, GS, tiempo y combustible. El rumbo magnético a mantener aparece después de la derrota magnética. Resultados estimados sujetos a verificación en cartas y boletines oficiales. Sin tokens de IA.</p>';
 report.before(nav);
 const navSettings=$('flight-nav-settings'),navOutput=$('flight-essential-navigation');
 if(navSettings)nav.append(navSettings);if(navOutput)nav.append(navOutput);
@@ -270,7 +271,8 @@ function valid(){
   if(!Number.isFinite(burn)||burn<=0||!Number.isFinite(available)||available<=0){
    notify('Completá consumo en litros/hora y combustible utilizable en litros para finalizar la navegación.');return false;
   }
-  const status=gate();if(!status.ok){notify('IA bloqueada, sin tokens: '+status.message);return false;}
+  // Los boletines pueden revisarse en la etapa siguiente: la vigencia del
+  // PRONAREA bloquea la consulta a IA, nunca la navegación entre pantallas.
  }
  return true;
 }
@@ -384,7 +386,15 @@ function calcFuel(){
  const el=$('flight-wizard-leg-table');
  if(el){
   const tbl=document.createElement('table'),header=document.createElement('tr');
-  ['Pierna','Curso verdadero °T','Alt. ft','Viento °T/kt','Corrección de deriva °','Rumbo °T','Variación °','Derrota magnética °M','Dist. NM','GS kt','ETE min','ETA UTC','Consumo L','Rumbo magnético a mantener °M'].forEach(label=>{const cell=document.createElement('th');cell.scope='col';cell.textContent=label;header.append(cell);});
+  const columns=[
+   ['Pierna','Tramo de vuelo'],['CV °T','Curso verdadero'],['Alt. ft','Altitud prevista en pies'],
+   ['Viento °T/kt','Dirección verdadera de procedencia y velocidad del viento'],
+   ['CD °','Corrección de deriva'],['RV °T','Rumbo verdadero'],['Var. °','Variación magnética'],
+   ['DM °M','Derrota magnética'],['RM °M','Rumbo magnético a mantener: dirección hacia la que apunta la nariz'],
+   ['NM','Distancia en millas náuticas'],['GS kt','Velocidad respecto del suelo'],
+   ['ETE min','Tiempo estimado en ruta'],['ETA UTC','Hora estimada de llegada UTC'],['Cons. L','Consumo en litros']
+  ];
+  columns.forEach(([label,description],i)=>{const cell=document.createElement('th');cell.scope='col';cell.textContent=label;cell.title=description;if(i===8)cell.className='flight-magnetic-heading';header.append(cell);});
   const thead=document.createElement('thead');thead.append(header);tbl.append(thead);
   const tbody=document.createElement('tbody');let elapsed=0,knownEta=!!date();
   for(const r of list){
@@ -392,10 +402,12 @@ function calcFuel(){
    if(duration===null)knownEta=false;else if(knownEta)elapsed+=duration;
    const at=knownEta?new Date(date().getTime()+elapsed*3600000).toISOString().slice(0,16).replace('T',' '):'Pendiente';
    const wind=Number.isFinite(r.wind_true_from_deg)&&Number.isFinite(r.wind_speed_kt)?fmt(r.wind_true_from_deg)+' / '+fmt(r.wind_speed_kt):'Pendiente';
-   const vals=[r.name,fmtBearing(r.course_true_deg),fmt(r.altitude_ft),wind,fmt(r.wind_correction_deg),fmtBearing(r.heading_true_deg),fmt(r.variation_deg),fmtBearing(r.magnetic_track_deg),fmt(r.distance_nm),fmt(r.gs_kt),fmt(duration===null?null:duration*60),at,
-    duration===null||burn===null?'Pendiente':fmt(duration*burn),fmtBearing(r.heading_magnetic_deg)];
-   const row=document.createElement('tr');for(const v of vals){const td=document.createElement('td');td.textContent=String(v);row.append(td);}tbody.append(row);
-  }tbl.append(tbody);el.replaceChildren(tbl);
+   const vals=[r.name,fmtBearing(r.course_true_deg),fmt(r.altitude_ft),wind,fmt(r.wind_correction_deg),fmtBearing(r.heading_true_deg),fmt(r.variation_deg),fmtBearing(r.magnetic_track_deg),fmtBearing(r.heading_magnetic_deg),fmt(r.distance_nm),fmt(r.gs_kt),fmt(duration===null?null:duration*60),at,
+    duration===null||burn===null?'Pendiente':fmt(duration*burn)];
+   const row=document.createElement('tr');vals.forEach((v,i)=>{const td=document.createElement('td');td.textContent=String(v);if(i===8)td.className='flight-magnetic-heading';row.append(td);});tbody.append(row);
+  }tbl.append(tbody);
+  const legend=document.createElement('p');legend.className='flight-leg-legend';legend.textContent='CV: curso verdadero · CD: corrección de deriva · RV: rumbo verdadero · DM: derrota magnética · RM: rumbo magnético a mantener.';
+  el.replaceChildren(tbl,legend);
  }
  refreshGate();
 }
@@ -415,7 +427,16 @@ $('flight-wizard-print').onclick=()=>{
  const out=['FLIGHT OPERATIONS · GENTE DE VUELO','PLANILLA ORIENTATIVA DE VUELO · UTC','',
  'Salida: '+$('flight-origin')?.value+' · Destino: '+$('flight-dest')?.value+' · Alternativo: '+$('flight-alternate')?.value,
  'Despegue: '+$('flight-time')?.value+' UTC · Reglas: '+$('flight-rules')?.value,'TAS: '+$('flight-nav-tas')?.value+' kt',''];
- rows().forEach(r=>out.push('Pierna '+(r.index+1)+' '+r.name+' · '+fmt(r.distance_nm)+' NM ('+(r.distance_source==='pilot'?'piloto':'geometría')+') · '+fmt(r.altitude_ft)+' ft AMSL · curso °T '+fmtBearing(r.course_true_deg)+' · derrota °M '+fmtBearing(r.magnetic_track_deg)+' · corrección viento '+fmt(r.wind_correction_deg)+'° · rumbo °T '+fmtBearing(r.heading_true_deg)+' · GS '+fmt(r.gs_kt)+' kt · RUMBO MAGNÉTICO A MANTENER '+fmtBearing(r.heading_magnetic_deg)+'° M','Viento: '+r.wind_source));
+ let printElapsed=0,printEtaKnown=!!date();
+ rows().forEach(r=>{
+  const hours=Number.isFinite(r.distance_nm)&&Number.isFinite(r.gs_kt)&&r.gs_kt>0?r.distance_nm/r.gs_kt:null;
+  if(hours===null)printEtaKnown=false;else if(printEtaKnown)printElapsed+=hours;
+  const arrival=printEtaKnown?new Date(date().getTime()+printElapsed*3600000).toISOString().slice(0,16).replace('T',' ')+' UTC':'Pendiente';
+  out.push('Pierna '+(r.index+1)+' '+r.name+' · CV '+fmtBearing(r.course_true_deg)+'°T · Alt. '+fmt(r.altitude_ft)+' ft · Viento '+r.wind_source,
+   'CD '+fmt(r.wind_correction_deg)+'° · RV '+fmtBearing(r.heading_true_deg)+'°T · Var. '+fmt(r.variation_deg)+'° · DM '+fmtBearing(r.magnetic_track_deg)+'°M · RM '+fmtBearing(r.heading_magnetic_deg)+'°M',
+   'NM '+fmt(r.distance_nm)+' ('+(r.distance_source==='pilot'?'piloto':'geometría')+') · GS '+fmt(r.gs_kt)+' kt · ETE '+fmt(hours===null?null:hours*60)+' min · ETA '+arrival+' · Cons. '+fmt(hours!==null&&value('flight-fuel-burn')!==null?hours*value('flight-fuel-burn'):null)+' L');
+ });
+ out.push('CV: curso verdadero · CD: corrección de deriva · RV: rumbo verdadero · DM: derrota magnética · RM: rumbo magnético a mantener.');
  out.push('','COMBUSTIBLE',$('flight-fuel-summary')?.textContent||'Pendiente','','PRONAREA',gate().message,
  'Fuente PRONAREA: carga manual · fecha de referencia UTC '+(date()?.toISOString().slice(0,10)||'sin fecha de salida')+' · emisión y vigencia real sujetas a verificación SMN',
  'ATIS aportado: '+($('flight-atis')?.value?.trim()||'No aportado.'),
