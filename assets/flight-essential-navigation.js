@@ -143,20 +143,18 @@ function computeLeg(leg){
  const variation=date&&leg.from&&leg.to&&wmm?.magneticVariation
    ?wmm.magneticVariation((leg.from[0]+leg.to[0])/2,(leg.from[1]+leg.to[1])/2,date)
    :null;
- const manualInput=[...legs.querySelectorAll('.flight-leg-row')][leg.index]?.querySelector('.flight-vfr-track');
+ const manualInput=[...legs.querySelectorAll('.flight-leg-row')][leg.index]?.querySelector('.flight-true-track');
  const manualRaw=manualInput?.dataset.estimated==='false'?String(manualInput.value).trim():'';
  const chosen=manualRaw!==''?Number(manualRaw):null;
- const manualMag=Number.isFinite(chosen)&&chosen>=0&&chosen<360?chosen:null;
- // La derrota magnética ingresada por el piloto prevalece; convertir a verdadera
- // solo cuando exista variación geomagnética determinable para este tramo.
- const course=manualMag!==null&&Number.isFinite(variation)
-  ?normalize(manualMag+variation):geographic;
- const magneticTrack=manualMag!==null?manualMag:
-  Number.isFinite(variation)&&course!==null?normalize(course-variation):null;
- const courseSource=manualMag!==null?'Derrota magnética ingresada por el piloto':
+ const manualTrue=Number.isFinite(chosen)&&chosen>=0&&chosen<360?chosen:null;
+ // El curso verdadero del piloto prevalece sobre la línea geométrica.
+ // La derrota magnética se deriva, nunca se usa como rumbo de proa.
+ const course=manualTrue!==null?manualTrue:geographic;
+ const magneticTrack=Number.isFinite(variation)&&course!==null?normalize(course-variation):null;
+ const courseSource=manualTrue!==null?'Curso verdadero ingresado por el piloto':
   'Derrota verdadera geométrica calculada';
  if(course===null)return {leg,course:null,magneticTrack,variation,courseSource,
-  reason:'Sin coordenadas verificables ni variación magnética disponible: no se calcula rumbo verdadero ni GS solo con derrota magnética.'};
+  reason:'Sin coordenadas verificables ni curso verdadero ingresado: no se calcula rumbo verdadero ni GS.'};
  const tas=readTAS(),windInfo=windForLeg(leg),wind=windInfo.wind;
  if(tas===null||wind===null)
    return {leg,course,variation,magneticTrack,courseSource,missing:tas===null?'Falta TAS válida en la etapa 4 (nudos); completala para calcular rumbo con viento y GS.':windInfo.reason};
@@ -175,7 +173,7 @@ function describe(r){
  const name='Pierna '+(r.leg.index+1)+' · '+r.leg.name+' · Altitud declarada '+(r.leg.alt?num(Number(r.leg.alt))+' ft AMSL':'sin definir');
  if(r.course===null)return {title:name,lines:[r.reason]};
  const lines=[
-  'Derrota verdadera inicial estimada: '+asLine(r.course)+
+  (r.courseSource==='Curso verdadero ingresado por el piloto'?'Curso verdadero manual: ':'Derrota verdadera inicial estimada: ')+asLine(r.course)+
    '. Declinación magnética (WMM2025): '+(Number.isFinite(r.variation)?num(r.variation,1)+'° (este +, oeste −)':'No disponible')+
    '. Derrota magnética de referencia: '+asLine(r.magneticTrack)+'.'
  ];
@@ -329,6 +327,7 @@ window.GDV_FLIGHT_NAV=Object.freeze({saveWind:()=>[...windValues.entries()].map(
  return {index:leg.index,name:leg.name,altitude_ft:Number(leg.alt),distance_nm:window.GDV_FLIGHT_DISTANCE?.get?.(leg.index)??distanceNm(leg.from,leg.to),distance_source:window.GDV_FLIGHT_DISTANCE?.getSource?.(leg.index)||'geometric',magnetic_track_deg:result.magneticTrack,course_source:result.courseSource,
    course_true_deg:result.course,heading_true_deg:result.trueHeading,
    heading_magnetic_deg:result.magneticHeading,variation_deg:result.variation,
+   wind_correction_deg:result.wca,wind_true_from_deg:result.wind?.from,wind_speed_kt:result.wind?.speed,
    gs_kt:result.gs,wind_source:result.windSource||result.missing||'Sin viento verificable',
    from:leg.from,to:leg.to};
 })});

@@ -1,6 +1,6 @@
 /* Flight Operations · Verificación VFR de crucero según derrota magnética.
- * Derrota calculada como rumbo ortodrómico inicial de cada tramo geográfico,
- * convertida con WMM2025 (NOAA); entrada manual disponible.
+ * Derrota verdadera calculada desde la geometría (o ingresada por el piloto),
+ * convertida a magnética con WMM2025 (NOAA) para la regla semicircular.
  * No habilita vuelo ni determina AGL / obstáculos / espacio aéreo / ATC.
  * No usa IA ni tokens. */
 (()=>{
@@ -88,7 +88,9 @@ function estimatedTrack(a,b,date){
   // NO bloquear a partir de un cálculo cartográfico aproximado.
   const hemi=values.map(n=>n<180);
   const ambiguous=hemi.some(x=>x!==hemi[0])||values.some(nearLimit);
-  return {track:values[0],variation:geomag.magneticVariation(a[0],a[1],date),ambiguous,distanceKm:delta*6371};
+  const variation=geomag.magneticVariation((a[0]+b[0])/2,(a[1]+b[1])/2,date);
+  const trueTrack=initialBearing(a,b);
+  return {track:normalize(trueTrack-variation),trueTrack,variation,ambiguous,distanceKm:delta*6371};
 }
 function evaluate(trackRaw,altRaw,policy,uncertain){
   const t=Number(trackRaw);
@@ -229,54 +231,77 @@ function refresh(){
     if(!route||!alt)return;
     const key=String(index)+'|'+(names[index]||'')+'|'+(names[index+1]||'');
     let label=row.querySelector('.flight-vfr-track-label');
-    const newlyCreated=!label;
+    let trueLabel=row.querySelector('.flight-true-track-label');
+    const newlyCreated=!label||!trueLabel;
     if(!label){
       label=document.createElement('label');label.className='field flight-vfr-track-label';
       const input=document.createElement('input');input.type='number';input.step='0.1';input.min='0';input.max='359.9';
-      input.className='flight-vfr-track';input.inputMode='decimal';input.placeholder='Auto o manual';
+      input.className='flight-vfr-track';input.readOnly=true;input.tabIndex=-1;
       input.setAttribute('aria-label','Derrota magnética de pierna '+(index+1)+' en grados');
-      label.append('Derrota magnética (°)',input);
+      label.append('Derrota magnética (°M) · calculada',input);
       const result=document.createElement('div');result.className='flight-vfr-result';
       result.dataset.vfrState='unknown';row.append(label,result);
-      input.addEventListener('input',()=>{
-        if(input.value===''){
-          manual.delete(key);
-          label.dataset.routeKey='';
-          refresh(); // Vaciar la entrada manual restablece el cálculo automático.
-          return;
-        }
-        input.dataset.estimated='false';input.dataset.uncertain='false';
-        label.firstChild.textContent='Derrota magnética (°) · manual';
-        manual.set(key,input.value);
-        paint(row);updateOverview();
-      });
       if(!tracked.has(alt)){
         tracked.add(alt);alt.addEventListener('input',()=>{paint(row);updateOverview();});
       }
+    }
+    if(!trueLabel){
+      trueLabel=document.createElement('label');trueLabel.className='field flight-true-track-label';
+      const input=document.createElement('input');input.type='number';input.step='0.1';input.min='0';input.max='359.9';
+      input.className='flight-true-track';input.inputMode='decimal';input.placeholder='Auto o ingresá °T';
+      input.setAttribute('aria-label','Curso verdadero de pierna '+(index+1)+' en grados');
+      trueLabel.append('Curso verdadero (°T) · estimado',input);
+      input.addEventListener('input',()=>{
+        const routeKey=trueLabel.dataset.manualKey;
+        if(!routeKey)return;
+        const value=input.value.trim();
+        if(value!==''&&(!Number.isFinite(Number(value))||Number(value)<0||Number(value)>=360)){
+          input.dataset.estimated='false';
+          return; // Dejar visible el error para que el piloto lo corrija.
+        }
+        if(value==='')
+          manual.delete(routeKey);
+        else manual.set(routeKey,value);
+        label.removeAttribute('data-route-key');
+        refresh(); // Vaciar el dato restablece el curso geométrico automático.
+      });
+      row.insertBefore(trueLabel,label);
     }
     const prevKey=label.dataset.routeKey;
     const dateKey=date.toISOString().slice(0,10);
     const signature=key+'|'+dateKey;
     if(newlyCreated||prevKey!==signature){
       label.dataset.routeKey=signature;
-      const input=label.querySelector('.flight-vfr-track');
-      const computed=estimatedTrack(resolve(names[index]),resolve(names[index+1]),date);
+      trueLabel.dataset.manualKey=key;
+      const input=label.querySelector('.flight-vfr-track'),trueInput=trueLabel.querySelector('.flight-true-track');
+      const from=resolve(names[index]),to=resolve(names[index+1]);
+      const computed=estimatedTrack(from,to,date);
+      const geographic=from&&to?initialBearing(from,to):null;
       if(manual.has(key)){
-        input.value=manual.get(key)||'';
-        input.dataset.estimated='false';
-        input.dataset.uncertain='false';
-        label.firstChild.textContent='Derrota magnética (°) · manual';
-      }else if(computed){
-        input.value=computed.track.toFixed(1);
-        input.dataset.estimated='true';
-        input.dataset.uncertain=String(computed.ambiguous);
-        label.firstChild.textContent='Derrota magnética (°) · estimada';
+        const chosen=Number(manual.get(key));
+        trueInput.value=String(manual.get(key));
+        trueInput.dataset.estimated='false';
+        trueLabel.firstChild.textContent='Curso verdadero (°T) · manual';
+        if(Number.isFinite(computed?.variation)){
+          const magnetic=normalize(chosen-computed.variation);
+          input.value=magnetic.toFixed(1);
+          input.dataset.estimated='false';input.dataset.uncertain=String(nearLimit(magnetic));
+        }else{
+          input.value='';input.dataset.estimated='false';input.dataset.uncertain='true';
+        }
+      }else if(geographic!==null){
+        trueInput.value=geographic.toFixed(1);
+        trueInput.dataset.estimated='true';
+        trueLabel.firstChild.textContent='Curso verdadero (°T) · estimado';
+        input.value=computed?computed.track.toFixed(1):'';
+        input.dataset.estimated=String(Boolean(computed));
+        input.dataset.uncertain=String(computed?.ambiguous??true);
       }else{
+        trueInput.value='';trueInput.dataset.estimated='false';
+        trueLabel.firstChild.textContent='Curso verdadero (°T) · ingresá el valor';
         input.value='';
         input.dataset.estimated='false';input.dataset.uncertain='true';
-        label.firstChild.textContent='Derrota magnética (°) · ingresá el valor';
       }
-      if(newlyCreated)row.append(label);
       paint(row);
     }
   });
@@ -330,11 +355,20 @@ for(const selector of ['#flight-fetch-reports','#flight-essential-ask',
   '#flight-pilot-new']){
   document.querySelectorAll(selector).forEach(btn=>btn.addEventListener('click',checkBlocked,true));
 }
-// Conserva derrotas magnéticas declaradas al guardar un borrador privado.
+// Conserva cursos verdaderos manuales; migra borradores anteriores en °M.
 window.GDV_FLIGHT_VFR_TRACK=Object.freeze({
  exportManual:()=>[...manual.entries()].map(([key,value])=>({key,value})),
- restoreManual:entries=>{
+ restoreManual:(entries,legacyMagnetic=[])=>{
    manual.clear();
+   if(Array.isArray(legacyMagnetic))for(const e of legacyMagnetic.slice(0,9)){
+     if(typeof e?.key!=='string'||!/^\d\|/.test(e.key)||!Number.isFinite(Number(e.value))||
+        Number(e.value)<0||Number(e.value)>=360)continue;
+     const names=e.key.split('|');
+     const from=resolve(names[1]),to=resolve(names[2]);
+     const variation=from&&to&&geomag?.magneticVariation?
+       geomag.magneticVariation(from[0],from[1],plannedDate()):null;
+     if(Number.isFinite(variation))manual.set(e.key,normalize(Number(e.value)+variation).toFixed(1));
+   }
    if(Array.isArray(entries))for(const e of entries.slice(0,9)){
      if(typeof e?.key==='string'&&e.key.length<=160&&typeof e.value==='string'&&
         e.value.length<=8&&e.value.trim()!==''&&Number.isFinite(Number(e.value))&&

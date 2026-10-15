@@ -68,7 +68,7 @@ const ui=document.createElement('section');ui.className='flight-wizard-ui';
 ui.innerHTML='<strong>FLIGHT OPERATIONS · Planificación guiada</strong><p>Una etapa por vez · UTC · Guardado privado al continuar</p><div id="flight-wizard-steps" class="flight-wizard-steps"></div><div class="flight-wizard-toolbar"><button id="flight-wizard-back" type="button">← Anterior</button><button id="flight-wizard-next" type="button">Guardar y continuar →</button><span id="flight-wizard-status" role="status" aria-live="polite"></span></div><div class="flight-wizard-toolbar"><button id="flight-wizard-resume" type="button" hidden>Continuar vuelo guardado</button><button id="flight-wizard-new" type="button">Nuevo vuelo</button></div>';
 plan.before(ui);
 const nav=document.createElement('section');nav.className='flight-wizard-nav-panel';nav.id='flight-wizard-navigation';
-nav.innerHTML='<h2>Etapa 4 · Cálculos de navegación y combustible</h2><p>Cálculos automáticos y datos editables. Sin tokens de IA.</p>';
+nav.innerHTML='<h2>Etapa 4 · Cálculos de navegación y combustible</h2><p>Precomputada VFR: curso verdadero → corrección por viento → rumbo verdadero → variación magnética → rumbo magnético → GS, tiempo y combustible. Resultados estimados sujetos a verificación en cartas y boletines oficiales. Sin tokens de IA.</p>';
 report.before(nav);
 const navSettings=$('flight-nav-settings'),navOutput=$('flight-essential-navigation');
 if(navSettings)nav.append(navSettings);if(navOutput)nav.append(navOutput);
@@ -195,8 +195,8 @@ function normalizeWaypoint(input){
  const code=/^SA[A-Z]{2}$/.test(name)?name:airportNames.get(name);
  if(!code||!window.GDV_FLIGHT_FIR_GEODATA?.airports?.[code]||raw===code)return false;
  const legIndex=[...document.querySelectorAll('#flight-waypoints .flight-waypoint-row input')].indexOf(input);
- const oldMag=[legIndex,legIndex+1].map(index=>{
-  const x=[...document.querySelectorAll('#flight-legs-list .flight-vfr-track')][index];
+ const oldTrue=[legIndex,legIndex+1].map(index=>{
+  const x=[...document.querySelectorAll('#flight-legs-list .flight-true-track')][index];
   return x&&x.value!==''&&x.dataset.estimated==='false'?x.value:null;
  });
  input.value=code;
@@ -204,9 +204,9 @@ function normalizeWaypoint(input){
  input.title=(option?.textContent?.trim()||code)+' · Referencia reconocida del catálogo';
  input.dispatchEvent(new Event('input',{bubbles:true}));
  input.dispatchEvent(new Event('change',{bubbles:true}));
- oldMag.forEach((val,j)=>{
+ oldTrue.forEach((val,j)=>{
   if(val===null)return;
-  const x=[...document.querySelectorAll('#flight-legs-list .flight-vfr-track')][legIndex+j];
+  const x=[...document.querySelectorAll('#flight-legs-list .flight-true-track')][legIndex+j];
   if(x){x.value=val;x.dispatchEvent(new Event('input',{bubbles:true}));}
  });
  refreshDistanceFields();
@@ -240,8 +240,13 @@ function valid(){
  if(step===1){
   normalizeWaypoints();
   refreshDistanceFields();
-  const waypoints=[...document.querySelectorAll('#flight-waypoints input')],legs=[...document.querySelectorAll('#flight-legs-list .flight-leg-row > .field:not(.flight-vfr-track-label):not(.flight-leg-nm-field) input[type=number]')];
+  const waypoints=[...document.querySelectorAll('#flight-waypoints input')],legs=[...document.querySelectorAll('#flight-legs-list .flight-leg-row > .field:not(.flight-vfr-track-label):not(.flight-true-track-label):not(.flight-leg-nm-field) input[type=number]')];
   const distances=[...document.querySelectorAll('#flight-legs-list .flight-leg-distance')];
+  const courses=[...document.querySelectorAll('#flight-legs-list .flight-true-track')];
+  if(courses.length!==legs.length||courses.some(e=>!e.value.trim()||!e.checkValidity())){
+   courses.find(e=>!e.value.trim()||!e.checkValidity())?.focus();
+   notify('Ingresá o corregí el curso verdadero (°T) de cada pierna; comprobalo con tu carta de navegación.');return false;
+  }
   if(!distances.length||distances.length!==legs.length||distances.some(e=>!e.value.trim()||!e.checkValidity())){
    notify('Completá las distancias en millas náuticas (NM) de cada pierna.');return false;
   }
@@ -261,7 +266,7 @@ function pack(){
   if(!('value' in e)||e.closest('#flight-legs-list')||e.closest('#flight-waypoints'))return;
   fields[e.id]=e.type==='checkbox'?e.checked:e.value;
  });
- return {version:1,step,fields,manualWinds:window.GDV_FLIGHT_NAV?.saveWind?.()||[],magneticTracks:window.GDV_FLIGHT_VFR_TRACK?.exportManual?.()||[],manualNm:window.GDV_FLIGHT_DISTANCE?.save?.()||[],stops:[...document.querySelectorAll('#flight-waypoints input')].map(x=>x.value),levels:[...document.querySelectorAll('#flight-legs-list .flight-leg-row > .field:not(.flight-vfr-track-label):not(.flight-leg-nm-field) input[type=number]')].map(x=>x.value),
+ return {version:1,step,fields,manualWinds:window.GDV_FLIGHT_NAV?.saveWind?.()||[],trueTracks:window.GDV_FLIGHT_VFR_TRACK?.exportManual?.()||[],manualNm:window.GDV_FLIGHT_DISTANCE?.save?.()||[],stops:[...document.querySelectorAll('#flight-waypoints input')].map(x=>x.value),levels:[...document.querySelectorAll('#flight-legs-list .flight-leg-row > .field:not(.flight-vfr-track-label):not(.flight-true-track-label):not(.flight-leg-nm-field) input[type=number]')].map(x=>x.value),
  firs:[...document.querySelectorAll('.flight-fir')].filter(x=>x.checked).map(x=>x.value)};
 }
 async function userClient(){
@@ -312,12 +317,12 @@ function restore(plan){
  const stops=Array.isArray(plan.stops)?plan.stops.slice(0,8):[];
  stops.forEach(()=>{$('flight-add-stop')?.click();});
  const w=[...document.querySelectorAll('#flight-waypoints input')];stops.forEach((s,i)=>{if(w[i]){w[i].value=String(s);emit(w[i]);}});
- const a=[...document.querySelectorAll('#flight-legs-list .flight-leg-row > .field:not(.flight-vfr-track-label):not(.flight-leg-nm-field) input[type=number]')];
+ const a=[...document.querySelectorAll('#flight-legs-list .flight-leg-row > .field:not(.flight-vfr-track-label):not(.flight-true-track-label):not(.flight-leg-nm-field) input[type=number]')];
  (plan.levels||[]).forEach((v,i)=>{if(a[i]){a[i].value=String(v);emit(a[i]);}});
  document.querySelectorAll('.flight-fir').forEach(e=>{e.checked=(plan.firs||[]).includes(e.value);emit(e);});
  $('flight-auto-results').hidden=true;
  queueMicrotask(()=>{
-  window.GDV_FLIGHT_VFR_TRACK?.restoreManual?.(plan.magneticTracks||[]);
+  window.GDV_FLIGHT_VFR_TRACK?.restoreManual?.(plan.trueTracks||[],plan.magneticTracks||[]);
   window.GDV_FLIGHT_DISTANCE?.restore?.(plan.manualNm||[]);
   window.GDV_FLIGHT_NAV?.restoreWind?.(plan.manualWinds||[]);
  });
@@ -369,14 +374,15 @@ function calcFuel(){
  const el=$('flight-wizard-leg-table');
  if(el){
   const tbl=document.createElement('table'),header=document.createElement('tr');
-  ['Pierna','Derrota °T','Derrota °M','Dist. NM','Alt. ft','Rumbo °M','GS kt','ETA UTC','Consumo L'].forEach(label=>{const cell=document.createElement('th');cell.scope='col';cell.textContent=label;header.append(cell);});
+  ['Pierna','Curso °T','Alt. ft','Viento °T/kt','Corr. viento °','Rumbo °T','Variación °','Rumbo °M','Derrota °M','Dist. NM','GS kt','ETE min','ETA UTC','Consumo L'].forEach(label=>{const cell=document.createElement('th');cell.scope='col';cell.textContent=label;header.append(cell);});
   const thead=document.createElement('thead');thead.append(header);tbl.append(thead);
   const tbody=document.createElement('tbody');let elapsed=0,knownEta=!!date();
   for(const r of list){
    const duration=Number.isFinite(r.distance_nm)&&Number.isFinite(r.gs_kt)&&r.gs_kt>0?r.distance_nm/r.gs_kt:null;
    if(duration===null)knownEta=false;else if(knownEta)elapsed+=duration;
    const at=knownEta?new Date(date().getTime()+elapsed*3600000).toISOString().slice(0,16).replace('T',' '):'Pendiente';
-   const vals=[r.name,fmt(r.course_true_deg),fmt(r.magnetic_track_deg),fmt(r.distance_nm),fmt(r.altitude_ft),fmt(r.heading_magnetic_deg),fmt(r.gs_kt),at,
+   const wind=Number.isFinite(r.wind_true_from_deg)&&Number.isFinite(r.wind_speed_kt)?fmt(r.wind_true_from_deg)+' / '+fmt(r.wind_speed_kt):'Pendiente';
+   const vals=[r.name,fmt(r.course_true_deg),fmt(r.altitude_ft),wind,fmt(r.wind_correction_deg),fmt(r.heading_true_deg),fmt(r.variation_deg),fmt(r.heading_magnetic_deg),fmt(r.magnetic_track_deg),fmt(r.distance_nm),fmt(r.gs_kt),fmt(duration===null?null:duration*60),at,
     duration===null||burn===null?'Pendiente':fmt(duration*burn)];
    const row=document.createElement('tr');for(const v of vals){const td=document.createElement('td');td.textContent=String(v);row.append(td);}tbody.append(row);
   }tbl.append(tbody);el.replaceChildren(tbl);
@@ -394,7 +400,7 @@ $('flight-wizard-print').onclick=()=>{
  const out=['FLIGHT OPERATIONS · GENTE DE VUELO','PLANILLA ORIENTATIVA DE VUELO · UTC','',
  'Salida: '+$('flight-origin')?.value+' · Destino: '+$('flight-dest')?.value+' · Alternativo: '+$('flight-alternate')?.value,
  'Despegue: '+$('flight-time')?.value+' UTC · Reglas: '+$('flight-rules')?.value,'TAS: '+$('flight-nav-tas')?.value+' kt',''];
- rows().forEach(r=>out.push('Pierna '+(r.index+1)+' '+r.name+' · '+fmt(r.distance_nm)+' NM ('+(r.distance_source==='pilot'?'piloto':'geometría')+') · '+fmt(r.altitude_ft)+' ft AMSL · derrota °T '+fmt(r.course_true_deg)+' · derrota °M '+fmt(r.magnetic_track_deg)+' · rumbo °M '+fmt(r.heading_magnetic_deg)+' · GS '+fmt(r.gs_kt)+' kt','Viento: '+r.wind_source));
+ rows().forEach(r=>out.push('Pierna '+(r.index+1)+' '+r.name+' · '+fmt(r.distance_nm)+' NM ('+(r.distance_source==='pilot'?'piloto':'geometría')+') · '+fmt(r.altitude_ft)+' ft AMSL · curso °T '+fmt(r.course_true_deg)+' · derrota °M '+fmt(r.magnetic_track_deg)+' · corrección viento '+fmt(r.wind_correction_deg)+'° · rumbo °T '+fmt(r.heading_true_deg)+' · rumbo °M '+fmt(r.heading_magnetic_deg)+' · GS '+fmt(r.gs_kt)+' kt','Viento: '+r.wind_source));
  out.push('','COMBUSTIBLE',$('flight-fuel-summary')?.textContent||'Pendiente','','PRONAREA',gate().message,
  'Fuente PRONAREA: carga manual · fecha de referencia UTC '+(date()?.toISOString().slice(0,10)||'sin fecha de salida')+' · emisión y vigencia real sujetas a verificación SMN',
  'ATIS aportado: '+($('flight-atis')?.value?.trim()||'No aportado.'),

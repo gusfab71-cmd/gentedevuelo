@@ -96,12 +96,13 @@ test('end to end: the navigation snapshot calculates GS from TAS and endpoint WI
  elements.set('flight-essential-navigation-content', makeElement());
  elements.set('flight-nav-wind-legs', makeElement());
  const altitudeInput = makeElement({value: '4500'});
- const legRow = makeElement({querySelector: selector => selector==='.flight-vfr-track'
-  ?makeElement({value:'',dataset:{estimated:'true'}}):altitudeInput});
+ const trueCourseInput = makeElement({value: '300', dataset: {estimated: 'true'}});
+ const legRow = makeElement({querySelector: selector => selector==='.flight-true-track'
+  ?trueCourseInput:altitudeInput});
  elements.set('flight-legs-list', makeElement({querySelectorAll: () => [legRow]}));
  elements.set('flight-waypoints', makeElement({querySelectorAll: () => []}));
  const context = {
-  window: {GDV_WMM2025: {magneticVariation: () => 0},
+  window: {GDV_WMM2025: {magneticVariation: () => 7},
    GDV_FLIGHT_FIR_GEODATA: {airports},GDV_FLIGHT_DISTANCE: {get: () => 354.8}},
   document: {getElementById: id => elements.get(id) || null,
    createElement: () => makeElement(),addEventListener() {}},
@@ -114,4 +115,18 @@ test('end to end: the navigation snapshot calculates GS from TAS and endpoint WI
  assert.ok(leg.gs_kt > 86 && leg.gs_kt < 89, `GS should be about 87.5 kt, got ${leg.gs_kt}`);
  assert.match(leg.wind_source, /promedio vectorial/);
  assert.ok(leg.heading_true_deg > 290 && leg.heading_true_deg < 315);
+ assert.ok(Number.isFinite(leg.wind_correction_deg));
+ assert.equal(leg.wind_true_from_deg, 270);
+ assert.equal(leg.wind_speed_kt, 15);
+ // La entrada manual es °T (no °M). La variación Este se resta para rumbo °M.
+ trueCourseInput.value = '90';
+ trueCourseInput.dataset.estimated = 'false';
+ const [manual] = context.window.GDV_FLIGHT_NAV.snapshot();
+ assert.equal(manual.course_source, 'Curso verdadero ingresado por el piloto');
+ assert.equal(manual.course_true_deg, 90);
+ assert.equal(manual.magnetic_track_deg, 83);
+ assert.equal(manual.heading_true_deg, 90);
+ assert.equal(manual.heading_magnetic_deg, 83);
+ assert.ok(Math.abs(manual.gs_kt-115) < 0.0001);
+ assert.ok(Math.abs(manual.wind_correction_deg) < 0.0001);
 });
