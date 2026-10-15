@@ -28,7 +28,35 @@ test('official links and chart controls remain intact', () => {
  }
  assert.match(html, /https:\/\/ais\.anac\.gob\.ar\//);
  assert.match(html, /https:\/\/redemet\.decea\.mil\.br\//);
- assert.match(html, /flight-operations-wizard\.js\?v=20261015r/);
+ assert.match(html, /flight-operations-wizard\.js\?v=20261015s/);
+});
+
+test('all five fuel inputs show permanent, working adjustment arrows while remaining manually editable', () => {
+ const ids=['flight-fuel-burn','flight-fuel-available','flight-fuel-start','flight-fuel-contingency','flight-fuel-reserve'];
+ for(const id of ids) assert.match(wizard, new RegExp("\\['"+id+"','"));
+ assert.match(wizard, /flight-fuel-stepper/);
+ assert.match(wizard, /data-fuel-direction="1"/);
+ assert.match(wizard, /data-fuel-direction="-1"/);
+ assert.match(wizard, /aria-label="Aumentar /);
+ assert.match(wizard, /aria-label="Disminuir /);
+ assert.match(wizard, /input\.dispatchEvent\(new Event\('input',\{bubbles:true\}\)\)/);
+ const start=wizard.indexOf('function adjustFuelValue(');
+ const end=wizard.indexOf('\nfuel.querySelectorAll(\'.flight-fuel-stepper button\')',start);
+ assert.ok(start>0&&end>start);
+ const fn=vm.runInNewContext(wizard.slice(start,end)+'\nadjustFuelValue;', {Event:class{constructor(type,options){this.type=type;this.bubbles=options.bubbles;}}});
+ const input={value:'5',max:'10000',events:[],dispatchEvent(event){this.events.push(event);}};
+ fn(input,1,1);
+ assert.equal(input.value,'6');
+ fn(input,-1,1);
+ assert.equal(input.value,'5');
+ input.value='45';
+ fn(input,1,5);
+ assert.equal(input.value,'50');
+ input.value='0';
+ fn(input,-1,5);
+ assert.equal(input.value,'0');
+ assert.equal(input.events.length,4);
+ assert.equal(input.events.every(event=>event.type==='input'&&event.bubbles),true);
 });
 
 test('the shared footer does not link out to FlightPrep NAV from any wizard stage', () => {

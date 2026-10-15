@@ -62,6 +62,10 @@ css.textContent='.ops-accordion[hidden],.flight-wizard-nav-panel[hidden],.flight
 '#flight-wizard-leg-table .flight-magnetic-heading{background:#294c5f;color:#e5f8ff;font-weight:800;border-left:2px solid #9fc6dc;border-right:2px solid #9fc6dc}'+
 '#flight-wizard-leg-table .flight-leg-legend{color:#bfd7e7;font-size:12px;line-height:1.5;margin:9px 0 0}'+
 '.flight-fuel-inputs label{display:grid;gap:5px;font-size:13px}.flight-fuel-inputs input{padding:9px;border-radius:8px;background:#31495d;color:#fff;border:1px solid #7893a8;width:100%;box-sizing:border-box}'+
+'.flight-fuel-editable{display:flex;min-width:0;width:100%}.flight-fuel-editable input{flex:1 1 auto;min-width:0;border-radius:8px 0 0 8px;border-right:0;appearance:textfield}'+
+'.flight-fuel-editable input::-webkit-inner-spin-button,.flight-fuel-editable input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}'+
+'.flight-fuel-stepper{display:grid;grid-template-rows:1fr 1fr;flex:0 0 27px}.flight-fuel-stepper button{display:block;width:100%;min-height:0;margin:0;padding:0;border:1px solid #91b3ca;border-radius:0;background:#47667d;color:#fff;font:700 12px/1 Arial,sans-serif;cursor:pointer}'+
+'.flight-fuel-stepper button:first-child{border-radius:0 8px 0 0;border-bottom:0}.flight-fuel-stepper button:last-child{border-radius:0 0 8px 0}.flight-fuel-stepper button:hover,.flight-fuel-stepper button:focus-visible{background:#658eaa;outline-offset:1px}'+
 '#flight-fuel-summary{white-space:pre-line;line-height:1.8;padding:15px;background:#33495b;border-radius:10px}'+
 '@media(max-width:700px){.flight-wizard-steps{grid-template-columns:repeat(2,minmax(0,1fr))}.flight-wizard-ui,.flight-wizard-nav-panel{padding:12px}}'+
 '@media print{body>*:not(#flight-print-sheet){display:none!important}#flight-print-sheet{display:block!important;white-space:pre-wrap;background:#fff!important;color:#111!important;font:11pt/1.5 Arial;padding:8mm}@page{size:A4;margin:12mm}}';
@@ -76,7 +80,7 @@ const navSettings=$('flight-nav-settings'),navOutput=$('flight-essential-navigat
 if(navSettings)nav.append(navSettings);if(navOutput)nav.append(navOutput);
 const fuel=document.createElement('div');fuel.id='flight-wizard-fuel';
 const inputs=[['flight-fuel-burn','Consumo (litros/hora)',''],['flight-fuel-available','Combustible utilizable (litros)',''],['flight-fuel-start','Inicial: rodaje y ascenso (litros)','5'],['flight-fuel-contingency','Contingencia (%)','10'],['flight-fuel-reserve','Reserva final (minutos)','45']];
-fuel.innerHTML='<h3>Planificación de combustible</h3><div class="flight-fuel-inputs">'+inputs.map(x=>'<label>'+x[1]+'<input id="'+x[0]+'" type="number" min="0" max="10000" step="0.1" value="'+x[2]+'"></label>').join('')+'</div><div id="flight-fuel-summary" role="status" aria-live="polite">Completá los datos del plan.</div><p class="sub">5 litros iniciales, 10 % y 45 minutos son valores orientativos editables, no garantías ni mínimos reglamentarios. Validá el POH/AFM, reservas, fases de ascenso y rutas oficiales.</p><button type="button" id="flight-wizard-print">Imprimir o guardar como PDF A4</button>';
+fuel.innerHTML='<h3>Planificación de combustible</h3><div class="flight-fuel-inputs">'+inputs.map(x=>'<label>'+x[1]+'<span class="flight-fuel-editable"><input id="'+x[0]+'" type="number" min="0" max="10000" step="0.1" value="'+x[2]+'"><span class="flight-fuel-stepper"><button type="button" data-fuel-target="'+x[0]+'" data-fuel-direction="1" aria-label="Aumentar '+x[1]+'" title="Aumentar">▲</button><button type="button" data-fuel-target="'+x[0]+'" data-fuel-direction="-1" aria-label="Disminuir '+x[1]+'" title="Disminuir">▼</button></span></span></label>').join('')+'</div><div id="flight-fuel-summary" role="status" aria-live="polite">Completá los datos del plan.</div><p class="sub">5 litros iniciales, 10 % y 45 minutos son valores orientativos editables, no garantías ni mínimos reglamentarios. Validá el POH/AFM, reservas, fases de ascenso y rutas oficiales.</p><button type="button" id="flight-wizard-print">Imprimir o guardar como PDF A4</button>';
 const legTable=document.createElement('section');legTable.id='flight-wizard-leg-table';legTable.setAttribute('aria-label','Planilla de navegación por piernas');nav.append(legTable);
 nav.append(fuel);
 let step=0,busy=false,stored=null;
@@ -412,6 +416,18 @@ function calcFuel(){
  refreshGate();
 }
 fuel.querySelectorAll('input').forEach(x=>x.addEventListener('input',calcFuel));
+function adjustFuelValue(input,direction,increment){
+ const current=Number(input.value)||0;
+ const next=Math.max(0,Math.min(Number(input.max)||10000,Math.round((current+direction*increment)*10)/10));
+ input.value=String(next);
+ input.dispatchEvent(new Event('input',{bubbles:true}));
+}
+fuel.querySelectorAll('.flight-fuel-stepper button').forEach(button=>button.addEventListener('click',()=>{
+ const input=$(button.dataset.fuelTarget);
+ if(!input)return;
+ const increment=input.id==='flight-fuel-reserve'?5:1;
+ adjustFuelValue(input,Number(button.dataset.fuelDirection),increment);
+}));
 p.querySelector('#flight-analysis-form')?.addEventListener('input',()=>queueMicrotask(calcFuel));
 // La planilla de piernas siempre toma el valor actual, aun tras volver atrás
 // y corregir un curso °T que altera la derrota °M y la corrección por viento.
