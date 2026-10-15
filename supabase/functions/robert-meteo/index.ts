@@ -67,14 +67,16 @@ type FirSigmet = {
   verified_time: boolean; warning: string;
 };
 async function fetchInternationalSigmets(firs: string[]): Promise<FirSigmet[]> {
-  const warning="Consulta internacional parcial (NOAA/AWC), no exhaustiva. La coincidencia con una FIR no demuestra que un SIGMET afecte la ruta; comprobá límites, niveles y vigencia en el SMN.";
+  const warning="Consulta complementaria SIGMET de NOAA/AWC (API unificada), no exhaustiva para Argentina. Un aviso encontrado en una FIR no necesariamente afecta tu ruta, horario o altitud. Verificá siempre los avisos oficiales del SMN.";
   const empty=(fir:string,status:string,error:string|null=null):FirSigmet=>({
     fir,fir_name:FIR_NAMES[fir],available:false,raw:"",error,status,
     matched_count:0,verified_time:false,warning
   });
   let response:Response;
   try {
-    response=await fetch(NOAA_API+"isigmet?format=json",{
+    // NOAA/AWC 4.34 (octubre 2026) unificó SIGMET domésticos e internacionales.
+    // /isigmet quedó obsoleto: usar /sigmet y filtrar FIR argentinas.
+    response=await fetch(NOAA_API+"sigmet?format=json",{
       headers:{"Accept":"application/json","User-Agent":"GenteDeVuelo/1.0 (gentedevuelo@gmail.com)"},
       signal:AbortSignal.timeout(11000)
     });
@@ -87,7 +89,14 @@ async function fetchInternationalSigmets(firs: string[]): Promise<FirSigmet[]> {
   try { data=await response.json(); } catch {
     return firs.map(fir=>empty(fir,"error_fuente","No se pudieron interpretar los datos."));
   }
-  if(!Array.isArray(data))return firs.map(fir=>empty(fir,"error_fuente","Formato SIGMET inesperado."));
+  // /sigmet devuelve normalmente una lista JSON; tolerar contenedores
+  // estandarizados sin aceptar objetos de error como datos meteorológicos.
+  const reports=Array.isArray(data)?data:
+    data&&typeof data==="object"&&Array.isArray((data as any).features)
+      ?(data as any).features
+      :data&&typeof data==="object"&&Array.isArray((data as any).data)
+        ?(data as any).data:null;
+  if(!reports)return firs.map(fir=>empty(fir,"error_fuente","Formato SIGMET inesperado de la fuente NOAA."));
   const now=Date.now();
   const parseTime=(v:unknown):number|null=>{
     if(typeof v==="number"&&Number.isFinite(v))return v<10000000000?v*1000:v;
@@ -100,16 +109,21 @@ async function fetchInternationalSigmets(firs: string[]): Promise<FirSigmet[]> {
     const name=FIR_NAMES[fir];
     const expression=new RegExp("\\b(?:"+fir+"|"+name.replace(/ /g,"\\s+")+")\\b","i");
     const found:string[]=[];
-    for(const item of data){
-      if(!item||typeof item!=="object")continue;
-      const raw=[item.rawSigmet,item.rawSIGMET,item.rawText,item.raw]
-        .find((v:unknown)=>typeof v==="string")||"";
+    for(const entry of reports){
+      if(!entry||typeof entry!=="object")continue;
+      const item=entry.properties&&typeof entry.properties==="object"?entry.properties:entry;
+      const raw=[item.rawSigmet,item.rawSIGMET,item.rawText,item.raw,item.text]
+        .find((v:unknown)=>typeof v==="string"&&v.trim())||"";
       if(typeof raw!=="string"||!raw.trim())continue;
-      const scope=raw+"\n"+[item.firId,item.fir,item.firName,item.firICAO]
-        .filter((v:unknown)=>typeof v==="string").join(" ");
+      // En los reportes internacionales el código FIR puede llegar como
+      // icaoId (formato NOAA actual), además de firId/fir/firICAO.
+      const scope=raw+"\n"+[
+        item.icaoId,item.firId,item.fir,item.firName,item.firICAO,
+        item.firIcao,item.flightInformationRegion
+      ].filter((v:unknown)=>typeof v==="string").join(" ");
       if(!expression.test(scope))continue;
-      const from=parseTime(item.validTimeFrom??item.validFrom??item.validStart);
-      const until=parseTime(item.validTimeTo??item.validTo??item.validEnd);
+      const from=parseTime(item.validTimeFrom??item.validFrom??item.validStart??item.valid_time_from);
+      const until=parseTime(item.validTimeTo??item.validTo??item.validEnd??item.valid_time_to);
       if(from===null||until===null||from>now||now>=until)continue;
       if(!found.includes(raw.slice(0,1500)))found.push(raw.slice(0,1500));
       if(found.length>=8)break;
@@ -251,9 +265,9 @@ Deno.serve(async (request: Request) => {
   const sigmets_by_fir:FirSigmet[]=sigmetResult.status==="fulfilled"?sigmetResult.value:
     requestedFirs.map(f=>({
       fir:f,fir_name:FIR_NAMES[f],available:false,raw:"",
-      error:"No se pudo consultar la fuente internacional",
+      error:"No se pudo consultar el servicio NOAA/AWC SIGMET",
       status:"error_fuente",matched_count:0,verified_time:false,
-      warning:"La consulta SIGMET es complementaria y no sustituye al SMN."
+      warning:"La búsqueda NOAA/AWC de SIGMET es complementaria y no sustituye al SMN."
     }));
   const sigmet=sigmets_by_fir[0]??{
     fir,fir_name:FIR_NAMES[fir],available:false,raw:"",error:null,
@@ -275,7 +289,7 @@ Deno.serve(async (request: Request) => {
   const sources=[
     ...(metar.available?[{product:"METAR",name:"NOAA Aviation Weather Center",url:"https://aviationweather.gov/data/api/"}]:[]),
     ...(taf.available?[{product:"TAF",name:"NOAA Aviation Weather Center",url:"https://aviationweather.gov/data/api/"}]:[]),
-    ...(sigmets_by_fir.some(x=>x.available)?[{product:"SIGMET (búsqueda parcial)",name:"NOAA Aviation Weather Center",url:"https://aviationweather.gov/data/api/"}]:[])
+    ...(sigmets_by_fir.some(x=>x.available)?[{product:"SIGMET (búsqueda parcial)",name:"NOAA Aviation Weather Center (API unificada)",url:"https://aviationweather.gov/data/api/"}]:[])
   ];
   const answer = describeAvailableWeather(icao, question, metar, taf, sigmet);
   const interpretationAvailable = false;
