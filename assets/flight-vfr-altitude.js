@@ -41,6 +41,7 @@ function code(id){
 function resolve(value){
   const name=String(value||'').trim().toUpperCase();
   if(geo?.[name])return geo[name];
+  if(window.GDV_FLIGHT_NAMED_POINTS?.[name])return window.GDV_FLIGHT_NAMED_POINTS[name];
   const m=/^(-?\d{1,2}(?:\.\d+)?)\s*[,;]\s*(-?\d{1,3}(?:\.\d+)?)$/.exec(name);
   if(m){const lat=Number(m[1]),lon=Number(m[2]);if(Math.abs(lat)<=90&&Math.abs(lon)<=180)return [lat,lon];}
   return null;
