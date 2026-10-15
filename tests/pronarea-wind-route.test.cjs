@@ -96,7 +96,7 @@ test('end to end: the navigation snapshot calculates GS from TAS and endpoint WI
  elements.set('flight-essential-navigation-content', makeElement());
  elements.set('flight-nav-wind-legs', makeElement());
  const altitudeInput = makeElement({value: '4500'});
- const trueCourseInput = makeElement({value: '300', dataset: {estimated: 'true'}});
+ const trueCourseInput = makeElement({value: '', dataset: {estimated: 'false'}});
  const legRow = makeElement({querySelector: selector => selector==='.flight-true-track'
   ?trueCourseInput:altitudeInput});
  elements.set('flight-legs-list', makeElement({querySelectorAll: () => [legRow]}));
@@ -110,6 +110,11 @@ test('end to end: the navigation snapshot calculates GS from TAS and endpoint WI
  };
  vm.runInNewContext(source, context);
  vm.runInNewContext(navigationSource, context);
+ const [pending] = context.window.GDV_FLIGHT_NAV.snapshot();
+ assert.equal(pending.course_true_deg, null);
+ assert.equal(pending.gs_kt, undefined);
+ assert.match(pending.wind_source, /Ingresá el curso verdadero/);
+ trueCourseInput.value = '300';
  const [leg] = context.window.GDV_FLIGHT_NAV.snapshot();
  assert.equal(leg.name, 'SAEZ → SACO');
  assert.ok(leg.gs_kt > 86 && leg.gs_kt < 89, `GS should be about 87.5 kt, got ${leg.gs_kt}`);

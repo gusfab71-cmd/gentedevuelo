@@ -248,9 +248,9 @@ function refresh(){
     if(!trueLabel){
       trueLabel=document.createElement('label');trueLabel.className='field flight-true-track-label';
       const input=document.createElement('input');input.type='number';input.step='0.1';input.min='0';input.max='359.9';
-      input.className='flight-true-track';input.inputMode='decimal';input.placeholder='Auto o ingresá °T';
+      input.className='flight-true-track';input.inputMode='decimal';input.placeholder='Ingresá el curso de la carta';input.required=true;
       input.setAttribute('aria-label','Curso verdadero de pierna '+(index+1)+' en grados');
-      trueLabel.append('Curso verdadero (°T) · estimado',input);
+      trueLabel.append('Curso verdadero (°T) · obligatorio',input);
       input.addEventListener('input',()=>{
         const routeKey=trueLabel.dataset.manualKey;
         if(!routeKey)return;
@@ -263,7 +263,7 @@ function refresh(){
           manual.delete(routeKey);
         else manual.set(routeKey,value);
         label.removeAttribute('data-route-key');
-        refresh(); // Vaciar el dato restablece el curso geométrico automático.
+        refresh(); // Vaciar el dato vuelve a requerir el curso de la carta.
       });
       row.insertBefore(trueLabel,label);
     }
@@ -276,7 +276,6 @@ function refresh(){
       const input=label.querySelector('.flight-vfr-track'),trueInput=trueLabel.querySelector('.flight-true-track');
       const from=resolve(names[index]),to=resolve(names[index+1]);
       const computed=estimatedTrack(from,to,date);
-      const geographic=from&&to?initialBearing(from,to):null;
       if(manual.has(key)){
         const chosen=Number(manual.get(key));
         trueInput.value=String(manual.get(key));
@@ -289,16 +288,9 @@ function refresh(){
         }else{
           input.value='';input.dataset.estimated='false';input.dataset.uncertain='true';
         }
-      }else if(geographic!==null){
-        trueInput.value=geographic.toFixed(1);
-        trueInput.dataset.estimated='true';
-        trueLabel.firstChild.textContent='Curso verdadero (°T) · estimado';
-        input.value=computed?computed.track.toFixed(1):'';
-        input.dataset.estimated=String(Boolean(computed));
-        input.dataset.uncertain=String(computed?.ambiguous??true);
       }else{
         trueInput.value='';trueInput.dataset.estimated='false';
-        trueLabel.firstChild.textContent='Curso verdadero (°T) · ingresá el valor';
+        trueLabel.firstChild.textContent='Curso verdadero (°T) · obligatorio';
         input.value='';
         input.dataset.estimated='false';input.dataset.uncertain='true';
       }
