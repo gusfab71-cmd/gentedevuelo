@@ -222,7 +222,7 @@ Deno.serve(async request=>{
     if(!report)return json({error:"El servicio no devolvió un análisis utilizable."},502);
     return json({
       ok:true,analysis:report,mode,ai_used:true,
-remove API project indicator      generated_at_utc:new Date().toISOString(),
+      generated_at_utc:new Date().toISOString(),
       checked_at_utc:checkedAt,
       documents_received_at_utc:documentsReceivedAtUtc,
       origin,destination,alternate,firs,cruise_altitude_ft:level,
