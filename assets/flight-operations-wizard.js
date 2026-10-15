@@ -91,6 +91,7 @@ function display(s){
  visible.forEach(x=>{if(x){x.hidden=false;if(x.tagName==='DETAILS')x.open=true;}});
  if(base)base.hidden=s===1;if(editor)editor.hidden=s===0;
  const title=$('plan-vuelo')?.querySelector('h2');if(title)title.textContent=s===1?'Planificación asistida de piernas':'Datos del vuelo';
+ if(s===1)refreshDistanceFields();
  steps.forEach((b,i)=>b.setAttribute('aria-current',i===s?'step':'false'));
  $('flight-wizard-back').disabled=s===0;$('flight-wizard-next').textContent=s===4?'Guardar planificación':'Guardar y continuar →';
  $('consumo-ia').hidden=s!==4;
@@ -109,16 +110,107 @@ for(const o of document.querySelectorAll('#flight-origin option,#flight-dest opt
  if(!airportNames.has(name))airportNames.set(name,o.value);
  else if(airportNames.get(name)!==o.value)airportNames.set(name,null);
 }
+// Distancia de cada pierna en millas náuticas. La fuente queda identificada.
+const pilotNm=new Map();
+const routePoints=()=>{
+ const choice=id=>{
+  const n=$(id);return String((n?.value==='OTHER'?$(id+'-other')?.value:n?.value)||'').trim().toUpperCase();
+ };
+ return [choice('flight-origin'),...[...document.querySelectorAll('#flight-waypoints .flight-waypoint-row input')].map(n=>n.value.trim().toUpperCase()),choice('flight-dest')];
+};
+function knownPoint(name){
+ const key=String(name||'').toUpperCase(),geo=window.GDV_FLIGHT_FIR_GEODATA?.airports||{},named=window.GDV_FLIGHT_NAMED_POINTS||{};
+ const found=geo[key]||named[key];
+ if(Array.isArray(found)&&found.length===2&&found.every(Number.isFinite))return found;
+ const raw=/^(-?\d{1,2}(?:\.\d+)?)\s*[,;]\s*(-?\d{1,3}(?:\.\d+)?)$/.exec(key);
+ if(!raw)return null;
+ const lat=Number(raw[1]),lon=Number(raw[2]);
+ return Math.abs(lat)<=90&&Math.abs(lon)<=180?[lat,lon]:null;
+}
+function haversineNm(a,b){
+ if(!a||!b)return null;
+ const rad=Math.PI/180,dlat=(b[0]-a[0])*rad,dlon=(b[1]-a[1])*rad;
+ const h=Math.sin(dlat/2)**2+Math.cos(a[0]*rad)*Math.cos(b[0]*rad)*Math.sin(dlon/2)**2;
+ return 3440.065*2*Math.asin(Math.min(1,Math.sqrt(h)));
+}
+function nmKey(index,points){return index+'|'+(points[index]||'')+'|'+(points[index+1]||'');}
+function refreshDistanceFields(){
+ const points=routePoints();
+ [...document.querySelectorAll('#flight-legs-list .flight-leg-row')].forEach((row,i)=>{
+  let wrap=row.querySelector('.flight-leg-nm-field');
+  if(!wrap){
+   wrap=document.createElement('label');wrap.className='field flight-leg-nm-field';
+   const label=document.createElement('span');wrap.append(label);
+   const input=document.createElement('input');
+   input.type='number';input.min='0.1';input.max='20000';input.step='0.1';
+   input.className='flight-leg-distance';input.inputMode='decimal';
+   input.setAttribute('aria-label','Distancia de la pierna '+(i+1)+' en millas náuticas');
+   wrap.append(input);
+   input.addEventListener('input',()=>{
+    const key=wrap.dataset.routeKey;
+    if(!key)return;
+    const raw=input.value.trim();
+    if(raw===''||!Number.isFinite(Number(raw))||Number(raw)<=0||Number(raw)>20000)pilotNm.delete(key);
+    else pilotNm.set(key,raw);
+    wrap.querySelector('span').textContent=raw===''?'Distancia (NM) · pendiente':'Distancia (NM) · ingresada por piloto';
+   });
+   row.append(wrap);
+  }
+  const key=nmKey(i,points),input=wrap.querySelector('input');
+  wrap.dataset.routeKey=key;
+  const pilot=pilotNm.get(key),auto=haversineNm(knownPoint(points[i]),knownPoint(points[i+1]));
+  const next=pilot!==undefined?pilot:Number.isFinite(auto)&&auto>0?auto.toFixed(1):'';
+  if(document.activeElement!==input&&input.value!==next)input.value=next;
+  input.dataset.distanceSource=pilot!==undefined?'pilot':Number.isFinite(auto)&&auto>0?'geometric':'unknown';
+  const text=pilot!==undefined?'Distancia (NM) · ingresada por piloto':Number.isFinite(auto)&&auto>0?'Distancia (NM) · calculada':'Distancia (NM) · ingresá el valor';
+  if(wrap.querySelector('span').textContent!==text)wrap.querySelector('span').textContent=text;
+ });
+}
+const scheduleNm=()=>queueMicrotask(refreshDistanceFields);
+new MutationObserver(scheduleNm).observe($('flight-legs-list'),{childList:true,subtree:true});
+$('flight-waypoints')?.addEventListener('input',scheduleNm);
+for(const id of ['flight-origin','flight-dest','flight-origin-other','flight-dest-other']){
+ $(id)?.addEventListener('change',scheduleNm);
+ $(id)?.addEventListener('input',scheduleNm);
+}
+window.GDV_FLIGHT_DISTANCE=Object.freeze({
+ refresh:refreshDistanceFields,
+ get:(index)=>{const input=document.querySelectorAll('#flight-legs-list .flight-leg-distance')[index];
+  const n=Number(input?.value);return input?.value.trim()!==''&&Number.isFinite(n)&&n>0?n:null;},
+ getSource:(index)=>document.querySelectorAll('#flight-legs-list .flight-leg-distance')[index]?.dataset.distanceSource||'unknown',
+ save:()=>[...pilotNm.entries()].map(([key,value])=>({key,value})),
+ restore:entries=>{
+  pilotNm.clear();
+  if(Array.isArray(entries))for(const row of entries.slice(0,9)){
+   if(typeof row?.key==='string'&&row.key.length<160&&
+      typeof row.value==='string'&&row.value.length<14&&Number(row.value)>0&&Number(row.value)<=20000)
+    pilotNm.set(row.key,row.value);
+  }
+  refreshDistanceFields();
+ }
+});
+scheduleNm();
 function normalizeWaypoint(input){
  if(!input||!input.matches('#flight-waypoints .flight-waypoint-row input'))return false;
  const raw=input.value.trim(),name=plainName(raw);
  const code=/^SA[A-Z]{2}$/.test(name)?name:airportNames.get(name);
  if(!code||!window.GDV_FLIGHT_FIR_GEODATA?.airports?.[code]||raw===code)return false;
+ const legIndex=[...document.querySelectorAll('#flight-waypoints .flight-waypoint-row input')].indexOf(input);
+ const oldMag=[legIndex,legIndex+1].map(index=>{
+  const x=[...document.querySelectorAll('#flight-legs-list .flight-vfr-track')][index];
+  return x&&x.value!==''&&x.dataset.estimated==='false'?x.value:null;
+ });
  input.value=code;
  const option=document.querySelector('#flight-origin option[value="'+code+'"]');
  input.title=(option?.textContent?.trim()||code)+' · Referencia reconocida del catálogo';
  input.dispatchEvent(new Event('input',{bubbles:true}));
  input.dispatchEvent(new Event('change',{bubbles:true}));
+ oldMag.forEach((val,j)=>{
+  if(val===null)return;
+  const x=[...document.querySelectorAll('#flight-legs-list .flight-vfr-track')][legIndex+j];
+  if(x){x.value=val;x.dispatchEvent(new Event('input',{bubbles:true}));}
+ });
+ refreshDistanceFields();
  return true;
 }
 function normalizeWaypoints(){
@@ -148,7 +240,12 @@ function valid(){
  }
  if(step===1){
   normalizeWaypoints();
-  const waypoints=[...document.querySelectorAll('#flight-waypoints input')],legs=[...document.querySelectorAll('#flight-legs-list input[type=number]')];
+  refreshDistanceFields();
+  const waypoints=[...document.querySelectorAll('#flight-waypoints input')],legs=[...document.querySelectorAll('#flight-legs-list .flight-leg-row > .field input[type=number]')];
+  const distances=[...document.querySelectorAll('#flight-legs-list .flight-leg-distance')];
+  if(!distances.length||distances.length!==legs.length||distances.some(e=>!e.value.trim()||!e.checkValidity())){
+   notify('Completá las distancias en millas náuticas (NM) de cada pierna.');return false;
+  }
   if(waypoints.some(e=>!e.value.trim())||legs.some(e=>!e.value||!e.checkValidity())){notify('Completá todas las piernas y altitudes.');return false;}
  }
  if(step===3){
@@ -165,7 +262,7 @@ function pack(){
   if(!('value' in e)||e.closest('#flight-legs-list')||e.closest('#flight-waypoints'))return;
   fields[e.id]=e.type==='checkbox'?e.checked:e.value;
  });
- return {version:1,step,fields,manualWinds:window.GDV_FLIGHT_NAV?.saveWind?.()||[],stops:[...document.querySelectorAll('#flight-waypoints input')].map(x=>x.value),levels:[...document.querySelectorAll('#flight-legs-list input[type=number]')].map(x=>x.value),
+ return {version:1,step,fields,manualWinds:window.GDV_FLIGHT_NAV?.saveWind?.()||[],magneticTracks:window.GDV_FLIGHT_VFR_TRACK?.exportManual?.()||[],manualNm:window.GDV_FLIGHT_DISTANCE?.save?.()||[],stops:[...document.querySelectorAll('#flight-waypoints input')].map(x=>x.value),levels:[...document.querySelectorAll('#flight-legs-list input[type=number]')].map(x=>x.value),
  firs:[...document.querySelectorAll('.flight-fir')].filter(x=>x.checked).map(x=>x.value)};
 }
 async function userClient(){
@@ -200,7 +297,11 @@ function restore(plan){
  (plan.levels||[]).forEach((v,i)=>{if(a[i]){a[i].value=String(v);emit(a[i]);}});
  document.querySelectorAll('.flight-fir').forEach(e=>{e.checked=(plan.firs||[]).includes(e.value);emit(e);});
  $('flight-auto-results').hidden=true;
- queueMicrotask(()=>window.GDV_FLIGHT_NAV?.restoreWind?.(plan.manualWinds||[]));
+ queueMicrotask(()=>{
+  window.GDV_FLIGHT_VFR_TRACK?.restoreManual?.(plan.magneticTracks||[]);
+  window.GDV_FLIGHT_DISTANCE?.restore?.(plan.manualNm||[]);
+  window.GDV_FLIGHT_NAV?.restoreWind?.(plan.manualWinds||[]);
+ });
  display(Math.max(0,Math.min(3,Number(plan.step)||0)));
  notify('Plan recuperado. Volvé a consultar METAR, TAF y SIGMET: los informes anteriores no se consideran vigentes.');
 }
