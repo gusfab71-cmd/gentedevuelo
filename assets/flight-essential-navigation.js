@@ -133,19 +133,31 @@ function windForLeg(leg){
   notice:report.notice};
 }
 function computeLeg(leg){
- const course=trueTrack(leg.from,leg.to);
- if(course===null)return {leg,course:null,reason:'Sin coordenadas conocidas para uno de los puntos. No se calculan rumbo ni GS.'};
+ const geographic=trueTrack(leg.from,leg.to);
  const date=flightDate();
  const variation=date&&leg.from&&leg.to&&wmm?.magneticVariation
    ?wmm.magneticVariation((leg.from[0]+leg.to[0])/2,(leg.from[1]+leg.to[1])/2,date)
    :null;
- const magneticTrack=Number.isFinite(variation)?normalize(course-variation):null;
+ const manualInput=[...legs.querySelectorAll('.flight-leg-row')][leg.index]?.querySelector('.flight-vfr-track');
+ const manualRaw=manualInput?.dataset.estimated==='false'?String(manualInput.value).trim():'';
+ const chosen=manualRaw!==''?Number(manualRaw):null;
+ const manualMag=Number.isFinite(chosen)&&chosen>=0&&chosen<360?chosen:null;
+ // La derrota magnética ingresada por el piloto prevalece; convertir a verdadera
+ // solo cuando exista variación geomagnética determinable para este tramo.
+ const course=manualMag!==null&&Number.isFinite(variation)
+  ?normalize(manualMag+variation):geographic;
+ const magneticTrack=manualMag!==null?manualMag:
+  Number.isFinite(variation)&&course!==null?normalize(course-variation):null;
+ const courseSource=manualMag!==null?'Derrota magnética ingresada por el piloto':
+  'Derrota verdadera geométrica calculada';
+ if(course===null)return {leg,course:null,magneticTrack,variation,courseSource,
+  reason:'Sin coordenadas verificables ni variación magnética disponible: no se calcula rumbo verdadero ni GS solo con derrota magnética.'};
  const tas=readTAS(),windInfo=windForLeg(leg),wind=windInfo.wind;
  if(tas===null||wind===null)
-   return {leg,course,variation,magneticTrack,missing:tas===null?'Falta TAS válida en el Paso 1 (nudos); completala para calcular rumbo con viento y GS.':windInfo.reason};
+   return {leg,course,variation,magneticTrack,courseSource,missing:tas===null?'Falta TAS válida en el Paso 1 (nudos); completala para calcular rumbo con viento y GS.':windInfo.reason};
  const solution=windTriangle(course,tas,wind.from,wind.speed);
- if(!solution?.possible)return {leg,course,variation,magneticTrack,missing:solution?.reason||'Datos del viento o TAS insuficientes.'};
- return {leg,course,variation,magneticTrack,wind,tas,windSource:windInfo.source,windNotice:windInfo.notice,
+ if(!solution?.possible)return {leg,course,variation,magneticTrack,courseSource,missing:solution?.reason||'Datos del viento o TAS insuficientes.'};
+ return {leg,course,variation,magneticTrack,courseSource,wind,tas,windSource:windInfo.source,windNotice:windInfo.notice,
    forecastLevelFt:windInfo.forecastLevelFt,stationDistanceKm:windInfo.stationDistanceKm,altitudeGapFt:windInfo.altitudeGapFt,
    wca:solution.wca,trueHeading:solution.trueHeading,
    magneticHeading:Number.isFinite(variation)?normalize(solution.trueHeading-variation):null,
@@ -307,7 +319,7 @@ window.GDV_FLIGHT_NAV=Object.freeze({saveWind:()=>[...windValues.entries()].map(
   currentSignature='';windInputs();output();
  },snapshot:()=>currentRoute().map(leg=>{
  const result=computeLeg(leg);
- return {index:leg.index,name:leg.name,altitude_ft:Number(leg.alt),distance_nm:distanceNm(leg.from,leg.to),
+ return {index:leg.index,name:leg.name,altitude_ft:Number(leg.alt),distance_nm:window.GDV_FLIGHT_DISTANCE?.get?.(leg.index)??distanceNm(leg.from,leg.to),distance_source:window.GDV_FLIGHT_DISTANCE?.getSource?.(leg.index)||'geometric',magnetic_track_deg:result.magneticTrack,course_source:result.courseSource,
    course_true_deg:result.course,heading_true_deg:result.trueHeading,
    heading_magnetic_deg:result.magneticHeading,variation_deg:result.variation,
    gs_kt:result.gs,wind_source:result.windSource||result.missing||'Sin viento verificable',
