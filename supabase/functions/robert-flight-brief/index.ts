@@ -4,7 +4,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 const cors={
   "Access-Control-Allow-Origin":"*",
   "Access-Control-Allow-Headers":"authorization,apikey,content-type,x-client-info",
-  "Access-Control-Allow-Methods":"POST,OPTIONS"
+  "Access-Control-Allow-Methods":"GET,POST,OPTIONS"
 };
 function json(data:unknown,status=200){
   return new Response(JSON.stringify(data),{status,headers:{...cors,"Content-Type":"application/json; charset=utf-8","Cache-Control":"no-store"}});
@@ -17,6 +17,22 @@ function asString(input:any,max:number):string|null{
   return typeof input==="string"&&input.length<=max?input.trim():null;
 }
 const noData="No disponible / no confirmado";
+// Tarifas API de gpt-5.4-mini por 1.000.000 de tokens: entrada 0,75 USD,
+// entrada cacheada 0,075 USD y salida 4,50 USD (tarifas estándar, 15-oct-2026).
+// No representan el saldo ni cargos definitivos en la cuenta de OpenAI.
+const TOKEN_PRICES={input:0.75,cached:0.075,output:4.50};
+function countUsage(response:any){
+  const usage=response?.usage;
+  const integer=(value:any)=>Number.isSafeInteger(value)&&value>=0&&value<=1000000000?value:null;
+  const input=integer(usage?.input_tokens),output=integer(usage?.output_tokens);
+  if(input===null||output===null)return null;
+  const cached=Math.min(integer(usage?.input_tokens_details?.cached_tokens)??0,input);
+  const total=integer(usage?.total_tokens)??input+output;
+  const cost=((input-cached)*TOKEN_PRICES.input+cached*TOKEN_PRICES.cached+
+    output*TOKEN_PRICES.output)/1000000;
+  return {input_tokens:input,cached_input_tokens:cached,
+    output_tokens:output,total_tokens:total,estimated_cost_usd:Number(cost.toFixed(8))};
+}
 function responseText(body:any){
   if(typeof body?.output_text==="string")return body.output_text.trim();
   const parts:string[]=[];
@@ -31,7 +47,7 @@ function responseText(body:any){
 
 Deno.serve(async request=>{
   if(request.method==="OPTIONS")return new Response("ok",{headers:cors});
-  if(request.method!=="POST")return json({error:"Método no permitido."},405);
+  if(request.method!=="POST"&&request.method!=="GET")return json({error:"Método no permitido."},405);
   const bearer=request.headers.get("authorization")||"";
   if(!bearer.startsWith("Bearer "))return json({error:"Acceso exclusivo para administrador."},401);
   const url=Deno.env.get("SUPABASE_URL")||"";
@@ -45,6 +61,16 @@ Deno.serve(async request=>{
   const {data:admin,error:adminError}=await db.from("site_admins").select("user_id").eq("user_id",identity.user.id).maybeSingle();
   if(adminError)return json({error:"No se pudieron verificar permisos."},503);
   if(!admin)return json({error:"Análisis de vuelo reservado a administración."},403);
+  // Consulta de consumo para administración: no usa la API OpenAI ni gasta tokens.
+  if(request.method==="GET"){
+    const {data:meter,error:meterError}=await db.rpc("flight_ai_usage_admin_summary");
+    if(meterError){
+      console.error("flight-ai-usage-meter lookup",meterError.code||"error");
+      return json({error:"No se pudo consultar el contador de consumo."},503);
+    }
+    return json({ok:true,meter,source:"flight_operations_only",
+      model:"gpt-5.4-mini",currency:"USD",balance_available:false});
+  }
   // Flight Operations comparte la conexión OPENAI_API_KEY del asistente
   // Shimoda. La habilitación del chat de Shimoda se administra por separado:
   // ni se altera ni limita el análisis de vuelo.
@@ -218,9 +244,26 @@ Deno.serve(async request=>{
       return json({error:"No se pudo obtener el análisis meteorológico. Verificá la configuración del servicio."},502);
     }
     const payload=await response.json();
+    // Registrar tokens facturados por la respuesta incluso si el texto no fuese
+    // utilizable. No guardar el plan, preguntas, informes ni datos meteorológicos.
+    const tokens=countUsage(payload);
+    let tracked=false,accounting=null;
+    if(tokens){
+      const {error:saveError}=await db.from("flight_ai_usage").insert({
+        user_id:identity.user.id,response_id:typeof payload.id==="string"?payload.id:null,
+        request_mode:mode,model:"gpt-5.4-mini",...tokens
+      });
+      if(saveError)console.error("flight-ai-usage-meter insert",saveError.code||"error");
+      else tracked=true;
+      if(tracked){
+        const {data:summary,error:summaryError}=await db.rpc("flight_ai_usage_admin_summary");
+        if(!summaryError)accounting=summary;
+      }
+    }
     const report=responseText(payload).slice(0,mode==="weather_overview"?8000:4500);
-    if(!report)return json({error:"El servicio no devolvió un análisis utilizable."},502);
+    if(!report)return json({error:"El servicio no devolvió un análisis utilizable.",usage:tokens,tracked},502);
     return json({
+      usage:tokens,usage_tracked:tracked,usage_meter:accounting,
       ok:true,analysis:report,mode,ai_used:true,
       generated_at_utc:new Date().toISOString(),
       checked_at_utc:checkedAt,
