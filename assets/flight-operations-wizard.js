@@ -96,6 +96,47 @@ function display(s){
  if(s>=3)calcFuel();if(s===4)refreshGate();
  ui.scrollIntoView({behavior:'smooth',block:'start'});
 }
+// Resolver nombres de aeródromos del catálogo, sin inventar coordenadas.
+function plainName(value){
+ return String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().toUpperCase().replace(/\s+/g,' ');
+}
+const airportNames=new Map();
+for(const o of document.querySelectorAll('#flight-origin option,#flight-dest option')){
+ if(!/^SA[A-Z]{2}$/.test(o.value))continue;
+ const label=o.textContent.split(' · ')[0].trim(),name=plainName(label);
+ if(!name)continue;
+ if(!airportNames.has(name))airportNames.set(name,o.value);
+ else if(airportNames.get(name)!==o.value)airportNames.set(name,null);
+}
+function normalizeWaypoint(input){
+ if(!input||!input.matches('#flight-waypoints .flight-waypoint-row input'))return false;
+ const raw=input.value.trim(),name=plainName(raw);
+ const code=/^SA[A-Z]{2}$/.test(name)?name:airportNames.get(name);
+ if(!code||!window.GDV_FLIGHT_FIR_GEODATA?.airports?.[code]||raw===code)return false;
+ input.value=code;
+ const option=document.querySelector('#flight-origin option[value="'+code+'"]');
+ input.title=(option?.textContent?.trim()||code)+' · Referencia reconocida del catálogo';
+ input.dispatchEvent(new Event('input',{bubbles:true}));
+ input.dispatchEvent(new Event('change',{bubbles:true}));
+ return true;
+}
+function normalizeWaypoints(){
+ for(const node of document.querySelectorAll('#flight-waypoints .flight-waypoint-row input'))normalizeWaypoint(node);
+}
+$('flight-waypoints')?.addEventListener('focusout',event=>{
+ if(normalizeWaypoint(event.target))notify('Punto identificado por su código OACI. Revisá las piernas actualizadas.');
+});
+const legacyNext=document.querySelector('#ops-plan .ops-next[data-ops-target="#consultar"]');
+if(legacyNext){
+ legacyNext.textContent='Guardar y continuar →';
+ legacyNext.setAttribute('aria-label','Guardar el vuelo y continuar a la siguiente etapa');
+ // Interceptar ANTES del listener histórico que solo hacía scroll a boletines.
+ legacyNext.addEventListener('click',event=>{
+  event.preventDefault();event.stopImmediatePropagation();
+  if(step<2)void go(step+1);
+  else notify('Usá el botón Guardar y continuar de la etapa actual.');
+ },true);
+}
 function valid(){
  if(step===0){
   for(const id of ['flight-origin','flight-dest','flight-alternate','flight-time','flight-alt']){
@@ -105,6 +146,7 @@ function valid(){
   if($('flight-alternate').value===$('flight-dest').value){notify('El alternativo debe ser distinto del destino.');return false;}
  }
  if(step===1){
+  normalizeWaypoints();
   const waypoints=[...document.querySelectorAll('#flight-waypoints input')],legs=[...document.querySelectorAll('#flight-legs-list input[type=number]')];
   if(waypoints.some(e=>!e.value.trim())||legs.some(e=>!e.value||!e.checkValidity())){notify('Completá todas las piernas y altitudes.');return false;}
  }
