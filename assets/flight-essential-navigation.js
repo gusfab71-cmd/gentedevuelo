@@ -288,5 +288,20 @@ document.addEventListener('gdv-flight-essential-generated',(event)=>{
  currentSignature='';
  windInputs();output();
 });
+// Cálculo geométrico de piernas para la planilla, sin IA ni fuentes externas.
+function distanceNm(a,b){
+ if(!a||!b)return null;
+ const dLat=(b[0]-a[0])*rad,dLon=(b[1]-a[1])*rad,lat1=a[0]*rad,lat2=b[0]*rad;
+ const q=Math.sin(dLat/2)**2+Math.cos(lat1)*Math.cos(lat2)*Math.sin(dLon/2)**2;
+ return 3440.065*2*Math.asin(Math.min(1,Math.sqrt(q)));
+}
+window.GDV_FLIGHT_NAV=Object.freeze({snapshot:()=>currentRoute().map(leg=>{
+ const result=computeLeg(leg);
+ return {index:leg.index,name:leg.name,altitude_ft:Number(leg.alt),distance_nm:distanceNm(leg.from,leg.to),
+   course_true_deg:result.course,heading_true_deg:result.trueHeading,
+   heading_magnetic_deg:result.magneticHeading,variation_deg:result.variation,
+   gs_kt:result.gs,wind_source:result.windSource||result.missing||'Sin viento verificable',
+   from:leg.from,to:leg.to};
+})});
 schedule();
 })();
