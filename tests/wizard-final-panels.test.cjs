@@ -28,7 +28,7 @@ test('official links and chart controls remain intact', () => {
  }
  assert.match(html, /https:\/\/ais\.anac\.gob\.ar\//);
  assert.match(html, /https:\/\/redemet\.decea\.mil\.br\//);
- assert.match(html, /flight-operations-wizard\.js\?v=20261015n/);
+ assert.match(html, /flight-operations-wizard\.js\?v=20261015o/);
 });
 
 test('meteorology renders the calculations shortcut once, under the evaluation', () => {
@@ -46,4 +46,15 @@ test('magnetic courses above 360° are displayed as three-digit bearings', () =>
  assert.equal(bearing(361.8), '001,8');
  assert.equal(bearing(332.8), '332,8');
  assert.equal(bearing(359.96), '000,0');
+});
+
+test('the final navigation column is the magnetic heading to maintain', () => {
+ const header = wizard.match(/\['Pierna','Curso verdadero °T'[^\n]+\]\.forEach\(label/);
+ assert.ok(header);
+ assert.match(header[0], /'Derrota magnética °M'/);
+ assert.match(header[0], /'Consumo L','Rumbo magnético a mantener °M'\]/);
+ const values = wizard.slice(wizard.indexOf('const vals=[r.name,fmtBearing(r.course_true_deg)'), wizard.indexOf('const row=document.createElement', wizard.indexOf('const vals=[r.name,fmtBearing(r.course_true_deg)')));
+ assert.ok(values.indexOf('fmtBearing(r.magnetic_track_deg)') < values.indexOf('fmtBearing(r.heading_magnetic_deg)'));
+ assert.match(values, /fmtBearing\(r.heading_magnetic_deg\)\];/);
+ assert.match(wizard, /GS '\+fmt\(r.gs_kt\)\+' kt · RUMBO MAGNÉTICO A MANTENER '/);
 });
