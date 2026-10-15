@@ -441,10 +441,10 @@ function calcFuel(){
  if(el){
   const tbl=document.createElement('table'),header=document.createElement('tr');
   const columns=[
-   ['Pierna','Tramo de vuelo'],['CV °T','Curso verdadero'],['Alt. ft','Altitud prevista en pies'],
+   ['Pierna','Tramo de vuelo'],['CV','Curso verdadero'],['Alt. ft','Altitud prevista en pies'],
    ['Viento °T/kt','Dirección verdadera de procedencia y velocidad del viento'],
-   ['CD °','Corrección de deriva'],['RV °T','Rumbo verdadero'],['Var. °','Variación magnética'],
-   ['DM °M','Derrota magnética'],['RM °M','Rumbo magnético a mantener: dirección hacia la que apunta la nariz'],
+   ['CD','Corrección de deriva'],['RV','Rumbo verdadero'],['Var','Variación magnética'],
+   ['DM','Derrota magnética'],['RM','Rumbo magnético a mantener: dirección hacia la que apunta la nariz'],
    ['NM','Distancia en millas náuticas'],['GS kt','Velocidad respecto del suelo'],
    ['ETE min','Tiempo estimado en ruta'],['ETA UTC','Hora estimada de llegada UTC'],['Cons. L','Consumo en litros']
   ];

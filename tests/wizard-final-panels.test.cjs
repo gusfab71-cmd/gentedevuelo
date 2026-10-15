@@ -28,7 +28,7 @@ test('official links and chart controls remain intact', () => {
  }
  assert.match(html, /https:\/\/ais\.anac\.gob\.ar\//);
  assert.match(html, /https:\/\/redemet\.decea\.mil\.br\//);
- assert.match(html, /flight-operations-wizard\.js\?v=20261015t/);
+ assert.match(html, /flight-operations-wizard\.js\?v=20261015u/);
 });
 
 test('fuel chart displays a real time-versus-liters curve and labels a one-hour projection when the route is incomplete', () => {
@@ -130,8 +130,14 @@ test('magnetic courses above 360° are displayed as three-digit bearings', () =>
 
 test('the magnetic heading follows the magnetic track, before NM, GS, ETE, ETA and fuel', () => {
  const header = wizard.slice(wizard.indexOf('const columns=['), wizard.indexOf('columns.forEach'));
- assert.match(header, /\['DM °M','Derrota magnética'\],\['RM °M'/);
- assert.ok(header.indexOf("['RM °M'") < header.indexOf("['NM'"));
+ for(const [label,description] of [
+  ['CV','Curso verdadero'],['CD','Corrección de deriva'],['RV','Rumbo verdadero'],
+  ['Var','Variación magnética'],['DM','Derrota magnética'],
+  ['RM','Rumbo magnético a mantener: dirección hacia la que apunta la nariz']
+ ])assert.ok(header.includes("['"+label+"','"+description+"']"));
+ const labels=[...header.matchAll(/\['([^']+)','[^']+'\]/g)].map(match=>match[1]);
+ assert.deepEqual(labels,['Pierna','CV','Alt. ft','Viento °T/kt','CD','RV','Var','DM','RM','NM','GS kt','ETE min','ETA UTC','Cons. L']);
+ assert.ok(header.indexOf("['RM'") < header.indexOf("['NM'"));
  assert.ok(header.indexOf("['NM'") < header.indexOf("['GS kt'"));
  assert.ok(header.indexOf("['GS kt'") < header.indexOf("['ETE min'"));
  assert.ok(header.indexOf("['ETE min'") < header.indexOf("['ETA UTC'"));
