@@ -99,6 +99,7 @@ function validatedAiWind(leg){
    source:'PRONAREA WIND/T interpretado por IA y cotejado · '+ai.station+
      ' · FL'+String(ai.forecast_level_ft/100).padStart(3,'0')+
      ' · estación a '+Math.round(distance)+' km del centro de la pierna.',
+   forecastLevelFt:ai.forecast_level_ft,stationDistanceKm:distance,altitudeGapFt:Math.abs(ai.forecast_level_ft-Number(leg.alt)),
    notice:'Comprobá la vigencia, el área y el nivel de referencia en el PRONAREA original.'};
 }
 function windForLeg(leg){
@@ -124,6 +125,7 @@ function windForLeg(leg){
  return {wind:{speed:report.speed_kt,from:report.direction_true_deg},
   source:'PRONAREA WIND/T · '+report.station+' · FL'+String(report.level_ft/100).padStart(3,'0')+
    ' ('+num(report.level_ft)+' ft) · distancia a referencia '+Math.round(report.distance_km)+' km.',
+  forecastLevelFt:report.level_ft,stationDistanceKm:report.distance_km,altitudeGapFt:report.altitude_difference_ft,
   notice:report.notice};
 }
 function computeLeg(leg){
@@ -140,6 +142,7 @@ function computeLeg(leg){
  const solution=windTriangle(course,tas,wind.from,wind.speed);
  if(!solution?.possible)return {leg,course,variation,magneticTrack,missing:solution?.reason||'Datos del viento o TAS insuficientes.'};
  return {leg,course,variation,magneticTrack,wind,tas,windSource:windInfo.source,windNotice:windInfo.notice,
+   forecastLevelFt:windInfo.forecastLevelFt,stationDistanceKm:windInfo.stationDistanceKm,altitudeGapFt:windInfo.altitudeGapFt,
    wca:solution.wca,trueHeading:solution.trueHeading,
    magneticHeading:Number.isFinite(variation)?normalize(solution.trueHeading-variation):null,
    gs:solution.groundSpeed};
@@ -157,9 +160,20 @@ function describe(r){
  ];
  if(r.missing){lines.push('Rumbo corregido y GS: no calculables. '+r.missing);return {title:name,lines};}
  lines.push('Datos: TAS '+num(r.tas)+' kt; viento de altura desde '+String(r.wind.from).padStart(3,'0')+'° verdaderos a '+num(r.wind.speed)+' kt. '+r.windSource);
- lines.push('Corrección por viento: '+(r.wca>=0?'+':'')+num(r.wca,1)+'°; rumbo verdadero de proa: '+asLine(r.trueHeading)+
+ lines.push('Corrección por viento ESTIMADA: '+(r.wca>=0?'+':'')+num(r.wca,1)+'°; rumbo verdadero de proa: '+asLine(r.trueHeading)+
    '; rumbo magnético de proa: '+asLine(r.magneticHeading)+
-   '; velocidad estimada sobre el suelo (GS): '+num(r.gs,1)+' kt.');
+   '; GS ORIENTATIVA DE REFERENCIA: '+num(r.gs,1)+' kt (NO confirmada para todo el vuelo).');
+ if(Number.isFinite(r.forecastLevelFt)&&Number.isFinite(r.stationDistanceKm)){
+   const gap=Number(r.altitudeGapFt);
+   const distant=r.stationDistanceKm>150||gap>1000;
+   lines.push((distant?'ATENCIÓN · REPRESENTATIVIDAD LIMITADA. ':'Referencia meteorológica aproximada. ')+
+     'Viento pronosticado a FL'+String(r.forecastLevelFt/100).padStart(3,'0')+
+     ' ('+num(r.forecastLevelFt)+' ft), a '+num(gap)+' ft de la altitud de la pierna. '+
+     'Estación a '+Math.round(r.stationDistanceKm)+' km del centro del tramo. '+
+     'No está confirmado que ese viento represente toda la ruta a tu hora de paso. Comprobá PRONAREA, zona y período.');
+ }else{
+   lines.push('ATENCIÓN: viento manual sin ubicación ni nivel contrastados por la Mesa. La GS sigue siendo orientativa hasta verificar su fuente y validez.');
+ }
  if(r.magneticHeading===null)lines.push('El rumbo magnético no pudo determinarse sin declinación válida: consultá AIP/carta.');
  return {title:name,lines};
 }
@@ -177,7 +191,7 @@ function output(){
   target.append(div);
  }
  const note=document.createElement('p');note.className='flight-nav-result-note';
- note.textContent='Estimación local: rumbo geográfico inicial de cada pierna, variación WMM2025 y triángulo de viento. Se usa WIND/T del PRONAREA ya cargado al nivel de vuelo publicado más cercano y una estación próxima. El WIND/T corresponde a la hora media de validez y a la vertical de estaciones; puede NO representar la ruta u hora prevista. Revisá con SMN/AIP antes de utilizar la estimación. No se usa METAR ni TAF para calcular GS. El rumbo de brújula necesita adicionalmente la desviación del compás. No reemplaza navegación certificada ni autorización de vuelo.';
+ note.textContent='ATENCIÓN: cada GS es una estimación de referencia, NO una velocidad confirmada ni garantizada. El PRONAREA WIND/T describe viento a niveles y estaciones específicas; seleccionar la estación y FL más cercanos NO valida automáticamente el viento en ruta u hora de paso. Antes de utilizar estos números corroborá emisión y validez UTC, FIR, sector, altitudes, viento previsto y cartas SMN/AIP. Nunca se usa METAR ni TAF como viento de crucero. El rumbo de brújula requiere la desviación del compás. No reemplaza la planificación, las verificaciones del piloto ni una autorización ATC.';
  target.append(note);
 }
 function windInputs(){
@@ -201,7 +215,7 @@ function windInputs(){
   source.dataset.status=state.mode==='manual'?'manual':'automatic';
   source.textContent=state.mode==='manual'
    ?'Viento manual: comprobá que el valor corresponda a esta altitud, FIR y hora UTC.'
-   :info.wind?'Referencia automática: '+info.source+
+   :info.wind?'VIENTO DE REFERENCIA (no confirmado para toda la ruta): '+info.source+
      ' Viento '+String(info.wind.from).padStart(3,'0')+'° verdaderos / '+num(info.wind.speed)+' kt. Verificá vigencia y representatividad.'
     :'Viento automático no disponible: '+info.reason;
   item.append(source);
