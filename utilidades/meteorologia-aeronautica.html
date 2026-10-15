@@ -393,6 +393,7 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
 #flight-alt-vfr-apply:not([hidden]){font-weight:730;font-size:12px;min-height:34px}
 #flight-alt[aria-invalid="true"]{border-color:#8aa8bd!important;outline:2px solid #89a9c466;outline-offset:1px}
 @media(max-width:600px){.flight-speed-alt-row{grid-template-columns:1fr}}
+.flight-utc-past-alert:not([hidden]){display:block;padding:9px 12px;border:1px solid #7898af;border-radius:9px;background:#223949;color:#e4eff9;font-weight:700;line-height:1.6;font-size:12px;margin-top:7px}
 .flight-nav-source{font-size:12px;color:#b8d8ed;line-height:1.55}
 .flight-nav-source[data-status="manual"]{color:#f3d2a1}
 .flight-nav-legs{display:grid;gap:9px;margin:12px 0}
@@ -613,6 +614,7 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
  <span class="flight-utc-heading"><span>Fecha y hora previstas de salida</span><span class="flight-utc-badge">UTC · Z</span></span>
  <input id="flight-time" type="datetime-local" step="60" required autocomplete="off" aria-label="Fecha y hora de salida UTC" aria-describedby="flight-time-help">
  <span class="flight-utc-help" id="flight-time-help">Ingresá la fecha y hora en UTC, no en hora local. Se utilizarán exactamente como las cargues.</span>
+ <span class="flight-utc-past-alert" id="flight-time-past-alert" role="status" aria-live="polite" hidden>La hora de salida ya pasó en UTC. Actualizá el plan antes de generar informes con IA, para evitar gastar tokens en un plan vencido.</span>
 </label>
 <label class="field">Reglas de vuelo<select id="flight-rules" required><option value="VFR">VFR</option><option value="IFR">IFR</option></select></label>
 <label class="field full" for="flight-alternate">Aeródromo alternativo (obligatorio)
@@ -1096,6 +1098,16 @@ el('copy-report').addEventListener('click',async()=>{
    const time=new Date(normalized+'Z');
    return Number.isFinite(time.valueOf())&&time.toISOString().slice(0,16)===normalized;
  }
+ const timeAlert=$('flight-time-past-alert');
+ function checkPastUtc(){
+   const raw=$('flight-time').value.trim();
+   const past=validPlannedUtc(raw)&&Date.parse(raw.replace(' ','T')+'Z')<=Date.now();
+   if(timeAlert)timeAlert.hidden=!past;
+   return past;
+ }
+ $('flight-time').addEventListener('input',checkPastUtc);
+ $('flight-time').addEventListener('change',checkPastUtc);
+ checkPastUtc();
  const iso=id=>{
    const raw=$(id).value.trim();
    if(!validPlannedUtc(raw))throw Error('Fecha y hora UTC inválidas.');
@@ -1508,7 +1520,7 @@ el('copy-report').addEventListener('click',async()=>{
  function contextFingerprint(){
    return JSON.stringify({
      origin:airportCode('flight-origin'),destination:airportCode('flight-dest'),
-     alternate:airportCode('flight-alternate'),time:$('flight-time').value,alt:$('flight-alt').value,
+     alternate:airportCode('flight-alternate'),time:$('flight-time').value,alt:$('flight-alt').value,tas:$('flight-nav-tas').value,
      rules:$('flight-rules').value,
      stops,legHeights,
      firs:[...document.querySelectorAll('.flight-fir:checked')].map(el=>el.value),
@@ -1529,7 +1541,7 @@ el('copy-report').addEventListener('click',async()=>{
  }
  const tripInputIds=new Set([
    'flight-origin','flight-dest','flight-alternate','flight-origin-other','flight-dest-other','flight-alternate-other',
-   'flight-alt','flight-time','flight-rules','flight-pronarea'
+   'flight-alt','flight-nav-tas','flight-time','flight-rules','flight-pronarea'
  ]);
  function handleChangedField(event){
    const node=event.target;
@@ -1570,6 +1582,13 @@ el('copy-report').addEventListener('click',async()=>{
      $('plan-vuelo').scrollIntoView({behavior:'smooth',block:'start'});
      if(window.gdvUtcPicker)window.gdvUtcPicker.open();
      else $('flight-time').focus();
+     return null;
+   }
+   if(checkPastUtc()){
+     targetStatus.textContent='La hora de salida UTC ya pasó. Corregí la fecha y hora antes de consumir tokens: no se envió ninguna consulta de IA.';
+     $('ops-plan').open=true;
+     $('flight-time').scrollIntoView({behavior:'smooth',block:'center'});
+     $('flight-time').focus({preventScroll:true});
      return null;
    }
    const firs=[...document.querySelectorAll('.flight-fir:checked')].map(x=>x.value);
