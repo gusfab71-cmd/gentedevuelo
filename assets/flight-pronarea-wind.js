@@ -10,11 +10,11 @@
 'use strict';
 const referenceStations={
  EZE:'SAEZ',AER:'SABE',FDO:'SADF',PAL:'SADP',MOR:'SADM',
- MDP:'SAZM',BCA:'SAZB',CBA:'SACO',ROS:'SAAR',SVO:'SAAV',
- PAR:'SAAP',RCU:'SAOC',SLU:'SAOU',CDU:'SAAC',GUA:'SAAG',
+ MDP:'SAZM',BCA:'SAZB',CBA:'SACO',ROS:'SAAR',SVO:'SAAV', DIL:'SAZT', OSA:'SAZR',
+ PAR:'SAAP',RCU:'SAOC',SLU:'SAOU',DIA:'SAAC',GUA:'SAAG',
  MZA:'SAME',SRA:'SAMR',SJU:'SANU',MLG:'SAMM',
  SAL:'SASA',JUJ:'SASJ',TUC:'SANT',CAT:'SANC',
- SDE:'SANE',LAR:'SANL',IGU:'SARI',RES:'SARE',
+ SDE:'SANE',LAR:'SANL',CAT:'SANC',JUJ:'SASJ',SAL:'SASA',TUC:'SANT',IGU:'SARI',RES:'SARE',
  CRR:'SARC',FSA:'SARF',POS:'SARP',NEU:'SAZN',
  BAR:'SAZS',CHP:'SAZY',CRV:'SAVC',TRE:'SAVT',
  ESQ:'SAVE',CAL:'SAWC',GAL:'SAWG',RGA:'SAWE',
@@ -29,7 +29,10 @@ function parse(text){
  const results=[];
  for(let j=1;j<slices.length;j++){
   const section=slices[j].split(/\b(?:FCST|SIGFENOM|CORRIENTE EN CHORRO|TURBULENCIA|ENGELAMIENTO|PRONAREA\s+FIR)\s*:/)[0];
-  const tokens=section.replace(/[,\n;]/g,' ').split(/\s+/).map(x=>x.replace(/^[^A-Z0-9]+|[^A-Z0-9]+$/g,'')).filter(Boolean);
+  // En el formato oficial pueden agruparse estaciones con guiones, p.ej.
+  // "TAR-JUJ-SAL FL030/..." (SMN, sección II del PRONAREA).
+  const tokens=section.replace(/[,\n;]/g,' ').replace(/([A-Z]{3})-([A-Z]{3})/g,'$1 $2').replace(/([A-Z]{3})-([A-Z]{3})/g,'$1 $2')
+    .split(/\s+/).map(x=>x.replace(/^[^A-Z0-9]+|[^A-Z0-9]+$/g,'')).filter(Boolean);
   let group=[],hasLevel=false;
   for(const token of tokens){
    // Full W/T groups always carry the temperature P/M; do not parse other flight level notices.
@@ -63,7 +66,7 @@ function distanceKm(a,b){
 }
 function pick(text,altitude_ft,midpoint,airports){
  const entries=parse(text);
- if(!entries.length)return {ok:false,reason:'PRONAREA sin sección WIND/T reconocible o sin vientos utilizables.'};
+ if(!entries.length)return {ok:false,reason:'PRONAREA sin sección WIND/T reconocible o sin vientos utilizables. El programa no inventa el viento en altura.'};
  if(!Number.isFinite(altitude_ft)||altitude_ft<500||altitude_ft>45000)
   return {ok:false,reason:'Altitud de la pierna no válida.'};
  if(!Array.isArray(midpoint))return {ok:false,reason:'No hay coordenadas del tramo para elegir una estación de referencia.'};
@@ -72,7 +75,7 @@ function pick(text,altitude_ft,midpoint,airports){
  const options=entries.map(r=>({...r,distance_km:distanceKm(midpoint,airports?.[r.airport])})).filter(x=>Number.isFinite(x.distance_km));
  if(!options.length)return {ok:false,reason:'El PRONAREA no contiene estaciones con posición conocida para esta pierna.'};
  const minDistance=Math.min(...options.map(x=>x.distance_km));
- if(minDistance>200)
+ if(minDistance>300)
   return {ok:false,reason:'La estación WIND/T más próxima se encuentra a '+Math.round(minDistance)+' km del centro del tramo; requiere selección manual/consulta oficial.'};
  const candidates=options.filter(x=>x.distance_km-minDistance<0.1);
  candidates.sort((a,b)=>Math.abs(a.level_ft-altitude_ft)-Math.abs(b.level_ft-altitude_ft));
@@ -81,7 +84,7 @@ function pick(text,altitude_ft,midpoint,airports){
  const equals=options.filter(x=>x.station===chosen.station&&x.level_ft===chosen.level_ft);
  if(equals.some(x=>x.direction_true_deg!==chosen.direction_true_deg||x.speed_kt!==chosen.speed_kt))
   return {ok:false,reason:'Se encontraron pronósticos WIND/T diferentes para la misma estación y nivel. Verificá el boletín.'};
- if(Math.abs(chosen.level_ft-altitude_ft)>4000)
+ if(Math.abs(chosen.level_ft-altitude_ft)>5000)
   return {ok:false,reason:'El nivel WIND/T más cercano es '+chosen.level_ft+' ft, demasiado alejado de la altitud seleccionada; comprobar el pronóstico.'};
  return {ok:true,...chosen,altitude_difference_ft:Math.abs(chosen.level_ft-altitude_ft),
    notice:'Viento sobre la vertical de '+chosen.station+' (a unos '+Math.round(chosen.distance_km)+' km del punto medio del tramo), a FL'+String(chosen.level_ft/100).padStart(3,'0')+'. Revisá zona, validez UTC y fuentes oficiales.'};
