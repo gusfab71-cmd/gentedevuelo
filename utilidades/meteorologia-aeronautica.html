@@ -406,6 +406,8 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
 #flight-alt[aria-invalid="true"]{border-color:#8aa8bd!important;outline:2px solid #89a9c466;outline-offset:1px}
 @media(max-width:600px){.flight-speed-alt-row{grid-template-columns:1fr}}
 .flight-utc-past-alert:not([hidden]){display:block;padding:9px 12px;border:1px solid #7898af;border-radius:9px;background:#223949;color:#e4eff9;font-weight:700;line-height:1.6;font-size:12px;margin-top:7px}
+.flight-pronarea-validity:not([hidden]){border:1px solid #617f94;border-radius:10px;background:#20384a;color:#dcecf7;padding:11px 13px;font-size:12px;line-height:1.65;margin:9px 0;font-weight:650}
+.flight-pronarea-validity[data-validity="fuera_del_horario"],.flight-pronarea-validity[data-validity="sin_validez_legible"]{border-color:#9ab5c8;background:#293d4c;color:#fff}
 .flight-nav-source{font-size:12px;color:#b8d8ed;line-height:1.55}
 .flight-nav-source[data-status="manual"]{color:#f3d2a1}
 .flight-nav-legs{display:grid;gap:9px;margin:12px 0}
@@ -731,7 +733,8 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
 <div class="manual-source-heading"><strong>PRONAREA · carga manual</strong><a class="secondary" href="https://www.smn.gob.ar/pronarea" target="_blank" rel="noopener noreferrer">Abrir PRONAREA · SMN ↗</a></div>
 <p class="sub">Copiá el PRONAREA de las FIR que recorrés y pegalo aquí, incluyendo emisión, vigencia, sectores y niveles.</p>
 <label class="field" for="flight-pronarea">Texto del PRONAREA
-<textarea id="flight-pronarea" form="flight-analysis-form" required minlength="40" maxlength="12000" rows="7" placeholder="Pegá el PRONAREA oficial vigente para las FIR involucradas."></textarea></label>
+<textarea id="flight-pronarea" form="flight-analysis-form" required minlength="40" maxlength="12000" rows="7" placeholder="Pegá el PRONAREA oficial vigente para las FIR involucradas." aria-describedby="flight-pronarea-validity"></textarea></label>
+<p class="flight-pronarea-validity" id="flight-pronarea-validity" role="status" aria-live="polite" hidden></p>
 </div>
 <div class="manual-source">
 <div class="manual-source-heading"><strong>NOTAM · consulta oficial</strong><span class="sub">No se cargan automáticamente ni son obligatorios para pedir el análisis</span></div>
@@ -1966,8 +1969,8 @@ if(stage){
 <script src="../assets/flight-fir-geodata.js?v=20261015c"></script>
 <script src="../assets/flight-wmm2025.js?v=20261015a"></script>
 <script src="../assets/flight-vfr-altitude.js?v=20261015e"></script>
-<script src="../assets/flight-pronarea-wind.js?v=20261015b"></script>
-<script src="../assets/flight-essential-navigation.js?v=20261015f"></script>
+<script src="../assets/flight-pronarea-wind.js?v=20261015c"></script>
+<script src="../assets/flight-essential-navigation.js?v=20261015g"></script>
 <script src="../assets/flight-fir-autoselect.js?v=20261015b"></script>
 <script src="../assets/flight-route-suggestions.js?v=20261015b"></script>
 </body>
