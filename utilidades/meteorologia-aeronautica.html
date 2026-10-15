@@ -769,13 +769,13 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
 <details class="ops-accordion" id="ops-piloto"><summary class="ops-accordion-toggle"><span class="ops-accordion-number">08</span><span class="ops-accordion-name"><strong>Consulta del piloto · ChatGPT</strong><span>Chat sobre el vuelo y sus boletines</span></span><span class="ops-accordion-arrow" aria-hidden="true"></span></summary><div class="ops-accordion-content">
 <section class="card flight-pilot-query" id="consulta-piloto">
  <div class="card-header"><div><span class="card-kicker">ASISTENTE GPT · CONVERSACIÓN AERONÁUTICA</span><h2>ChatGPT · Consulta del piloto</h2></div></div>
- <p class="sub">Conversá sobre el plan de vuelo. La IA utiliza origen, destino, alternativo, piernas, altitudes, salida UTC, PRONAREA (si fue cargado), METAR, TAF y SIGMET. Recuerda las preguntas anteriores durante esta conversación; los boletines se vuelven a consultar.</p>
+ <p class="sub">ChatGPT utiliza solo los datos del vuelo, los METAR, TAF y SIGMET ya cargados y el PRONAREA que hayas pegado. No consulta fuentes adicionales ni completa datos faltantes. Disponible mientras Robert Shimoda esté desactivado.</p>
  <div class="flight-pilot-result" id="flight-pilot-result" hidden>
   <div class="card-header"><h3>Conversación del vuelo</h3><div class="flight-pilot-chat-controls"><button class="secondary" id="flight-pilot-new" type="button">Nueva conversación</button><button class="secondary" id="flight-pilot-copy" type="button">Copiar conversación</button></div></div>
   <div id="flight-pilot-thread" role="log" aria-live="polite" aria-label="Conversación del piloto con ChatGPT"></div>
   <p class="sub" id="flight-pilot-time"></p>
   <div id="flight-pilot-analysis" class="flight-ai-text" hidden></div>
-  <p class="sub">Información orientativa: no reemplaza los documentos oficiales ni certifica la aptitud del vuelo. La conversación se reinicia al cambiar el plan o actualizar la página.</p>
+  <p class="sub">Si falta información, se indicará como no disponible. La información debe validarse en fuentes oficiales. La conversación se reinicia al cambiar el plan o actualizar la página.</p>
  </div>
  <label class="field" for="flight-pilot-question">Escribí tu pregunta o continuá la conversación
   <textarea id="flight-pilot-question" minlength="2" maxlength="500" rows="3" placeholder="Ej.: ¿Qué fenómenos debería vigilar a 3.500 pies? Después: ¿Y en el destino?" style="resize:vertical"></textarea></label>
@@ -1002,6 +1002,8 @@ el('copy-report').addEventListener('click',async()=>{
  let legHeights=[null];
  const points=$('flight-waypoints'),legList=$('flight-legs-list');
  let lastConsultKey='',consultBusy=false;
+ // Instantánea de boletines efectivamente cargados, no información nueva.
+ let loadedReports=null;
  const defaultAltitude=()=>Number($('flight-alt').value)||3500;
  const flightKey=()=>JSON.stringify({
    origin:airportCode('flight-origin'),
@@ -1011,8 +1013,10 @@ el('copy-report').addEventListener('click',async()=>{
  });
  function markRouteEdited(){
    const state=$('flight-fetch-status');
-   if(lastConsultKey && lastConsultKey!==flightKey()){
+   if((lastConsultKey && lastConsultKey!==flightKey())||
+      (loadedReports && loadedReports.plan_key!==flightKey())){
      lastConsultKey='';
+     loadedReports=null;
      $('flight-auto-results').hidden=true;
      $('flight-sigmet-state').textContent='Requiere nueva consulta';
      $('flight-sigmet-firs').replaceChildren();
@@ -1208,6 +1212,8 @@ el('copy-report').addEventListener('click',async()=>{
    const client=window.GDV_AUTH?.client;
    if(!client){$('flight-fetch-status').textContent='Ingresá como administrador para consultar.';return;}
    consultBusy=true;
+   loadedReports=null;
+   lastConsultKey='';
    const fetchButton=$('flight-fetch-reports');fetchButton.disabled=true;
    $('flight-fetch-status').textContent='Consultando salida, destino y alternativo…';
    const key=flightKey(),places=[['origin',originCode],['dest',destCode],['alternate',alternateCode]];
@@ -1230,6 +1236,31 @@ el('copy-report').addEventListener('click',async()=>{
          taf:{available:false,error:'Error de consulta'},sigmet:{available:false}});
      }
      for(const [which,code] of places)showAutomaticReport(byCode.get(code),which,code);
+     // Captura exactamente los resultados que muestra la sección de boletines.
+     const rawReports={};
+     for(const [which,code] of places){
+       const result=byCode.get(code);
+       for(const type of ['metar','taf']){
+         const entry=result?.[type];
+         const available=entry?.available===true&&
+           typeof entry.raw==='string'&&entry.raw.trim().length>0;
+         const key=which==='dest'?'destination_'+type:which+'_'+type;
+         rawReports[key]={available,raw:available?entry.raw.trim().slice(0,3000):''};
+       }
+     }
+     const sigmetsByCode=new Map((Array.isArray(firResults)?firResults:[])
+       .filter(item=>item&&typeof item.fir==='string').map(item=>[item.fir,item]));
+     const sigmetSnapshot=firs.map(fir=>{
+       const item=sigmetsByCode.get(fir);
+       const available=item?.available===true&&typeof item.raw==='string'&&item.raw.trim().length>0;
+       return {fir,available,raw:available?item.raw.trim().slice(0,2500):''};
+     });
+     loadedReports={
+       plan_key:key,
+       airports:{origin:originCode,destination:destCode,alternate:alternateCode},
+       firs:[...firs],checked_at_utc:new Date().toISOString(),
+       reports:rawReports,sigmet:sigmetSnapshot
+     };
      const sigmetOverview=renderRouteSigmets(firResults,firs);
      $('flight-auto-results').hidden=false;
      $('flight-auto-time').textContent='Consulta: '+new Date().toLocaleString('es-AR')+
@@ -1342,14 +1373,15 @@ el('copy-report').addEventListener('click',async()=>{
    const wasRequired=confirmation.required;
    const pronareaField=$('flight-pronarea'),pronareaWasRequired=pronareaField.required;
    if(mode!=='report')confirmation.required=false;
-   if(mode==='pilot_question')pronareaField.required=false;
+   // PRONAREA, si falta, figura como dato no disponible en el análisis.
+   pronareaField.required=false;
    let valid;
    try{valid=form.reportValidity();}finally{
      confirmation.required=wasRequired;
      pronareaField.required=pronareaWasRequired;
    }
    if(!valid){
-     targetStatus.textContent='Completá primero los datos del vuelo y PRONAREA.';
+     targetStatus.textContent='Completá los datos obligatorios del plan de vuelo.';
      return null;
    }
    if(!validPlannedUtc($('flight-time').value)){
@@ -1364,9 +1396,16 @@ el('copy-report').addEventListener('click',async()=>{
      targetStatus.textContent='Seleccioná por lo menos una FIR.';
      return null;
    }
-   if(mode!=='pilot_question'&&(!lastConsultKey||lastConsultKey!==flightKey())){
-     targetStatus.textContent='Primero consultá los boletines de salida, destino, alternativo y FIR en el paso 2.';
+   if(loadedReports&&loadedReports.plan_key!==flightKey()){
+     targetStatus.textContent='La ruta cambió: actualizá los boletines en el paso 2.';
      $('consultar').scrollIntoView({behavior:'smooth',block:'start'});
+     return null;
+   }
+   const anyAutomatic=!!loadedReports&&(
+     Object.values(loadedReports.reports).some(item=>item.available)||
+     loadedReports.sigmet.some(item=>item.available));
+   if(!anyAutomatic&&$('flight-pronarea').value.trim().length<40){
+     targetStatus.textContent='No hay boletines cargados: consultá METAR, TAF o SIGMET, o pegá un PRONAREA antes de usar OpenAI.';
      return null;
    }
    const nodes=[airportCode('flight-origin'),...stops.map(x=>x.trim()),airportCode('flight-dest')];
@@ -1400,6 +1439,7 @@ el('copy-report').addEventListener('click',async()=>{
      cruise_altitude_ft:Number($('flight-alt').value),
      flight_rules:$('flight-rules').value,firs,question,
      pronarea_text:$('flight-pronarea').value.trim(),
+     source_snapshot:loadedReports,
      notam_text:'', // Se consulta fuera de la Mesa en AIS/ANAC.
      ...(mode==='pilot_question'?{conversation_history:pilotTurns.slice(-8).map(turn=>({
        role:turn.role,content:turn.content.slice(0,1400)
@@ -1421,7 +1461,7 @@ el('copy-report').addEventListener('click',async()=>{
    aiBusy=true;
    for(const id of aiButtons)$(id).disabled=true;
    $(elements.result).hidden=true;
-   outputStatus.textContent='Consultando boletines vigentes y preparando la respuesta con IA…';
+   outputStatus.textContent='Analizando exclusivamente la información cargada en Flight Operations…';
    try{
      const client=window.GDV_AUTH?.client;
      if(!client)throw Error('Iniciá sesión como administrador.');
@@ -1446,7 +1486,7 @@ el('copy-report').addEventListener('click',async()=>{
      $(elements.time).textContent='Generado: '+
        new Date(response.generated_at_utc).toLocaleString('es-AR',{
          timeZone:'America/Argentina/Buenos_Aires'
-       })+' · Boletines automáticos consultados nuevamente. PRONAREA manual no verificado.';
+       })+' · Solo información cargada en la Mesa; no se consultaron nuevas fuentes. PRONAREA manual sin verificación automática.';
      $(elements.result).hidden=false;
      if(mode==='pilot_question'){
        pilotTurns.push({role:'user',content:data.question},{role:'assistant',content:answer});
