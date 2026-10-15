@@ -285,8 +285,7 @@ async function go(n){
 }
 $('flight-wizard-next').onclick=()=>{if(step===4){void save().then(()=>notify('Plan guardado. Podés descargar o imprimir la planilla.')).catch(e=>notify(e.message));}else void go(step+1);};
 $('flight-wizard-back').onclick=()=>{void go(Math.max(0,step-1));};
-// La pantalla meteorológica es larga: dejar el avance visible al terminar
-// Boletines y también debajo de la evaluación, sin saltarse el guardado.
+// Un único botón al pie de la evaluación meteorológica; mantiene el guardado.
 const calculationsButtons=[],calculationsMessages=[];
 async function continueToCalculations(){
  if(step!==2){notify('Este acceso corresponde a la etapa de Meteorología.');return;}
@@ -297,7 +296,7 @@ async function continueToCalculations(){
  if(step!==3)calculationsMessages.forEach(node=>{node.textContent=$('flight-wizard-status').textContent;});
  calculationsButtons.forEach(button=>{button.disabled=false;});
 }
-for(const section of [weather,$('ops-boletines')].filter(Boolean)){
+for(const section of [$('ops-boletines')].filter(Boolean)){
  const row=document.createElement('div');row.className='flight-wizard-continue-row';
  const button=document.createElement('button');button.type='button';button.textContent='Guardar y continuar a cálculos →';
  const feedback=document.createElement('span');feedback.className='feedback';feedback.setAttribute('role','status');

@@ -27,5 +27,12 @@ test('official links and chart controls remain intact', () => {
  }
  assert.match(html, /https:\/\/ais\.anac\.gob\.ar\//);
  assert.match(html, /https:\/\/redemet\.decea\.mil\.br\//);
- assert.match(html, /flight-operations-wizard\.js\?v=20261015i/);
+ assert.match(html, /flight-operations-wizard\.js\?v=20261015j/);
+});
+
+test('meteorology renders the calculations shortcut once, under the evaluation', () => {
+ assert.match(wizard, /for\(const section of \[\$\('ops-boletines'\)\]\.filter\(Boolean\)\)/);
+ assert.doesNotMatch(wizard, /\[weather,\$\('ops-boletines'\)\]/);
+ assert.match(wizard, /section\.append\(row\)/);
+ assert.match(wizard, /await go\(3\)/);
 });
