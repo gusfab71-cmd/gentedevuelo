@@ -30,6 +30,25 @@ function validity(text,departureUtc){
  if(departureUtc===null||departureUtc===undefined||departureUtc==='')return {ok:false,status:'salida_sin_hora',message:'Completá fecha y hora UTC de salida para comprobar el PRONAREA.'};
  const date=departureUtc instanceof Date?departureUtc:new Date(departureUtc);
  if(!Number.isFinite(date.getTime()))return {ok:false,status:'salida_sin_hora',message:'Completá fecha y hora UTC de salida para comprobar el PRONAREA.'};
+ // VALIDEZ HH-HH no contiene fecha: exigir la fecha declarada por el piloto
+ // y su confirmación de lectura del original oficial ANTES de usar WIND/T.
+ const fromDay=document.getElementById('flight-pronarea-date')?.value||'';
+ const pilotConfirmed=document.getElementById('flight-pronarea-confirm')?.checked===true;
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(fromDay)||!pilotConfirmed)
+  return {ok:false,status:'fecha_sin_confirmar',
+   message:'No utilizar viento PRONAREA: completá la fecha UTC de inicio de vigencia y confirmá la publicación oficial del SMN.'};
+ const base=new Date(fromDay+'T00:00:00Z');
+ if(!Number.isFinite(base.getTime())||base.toISOString().slice(0,10)!==fromDay)
+  return {ok:false,status:'fecha_incorrecta',message:'La fecha UTC del PRONAREA es incorrecta.'};
+ for(const digits of windows){
+  const h1=Number(digits.slice(0,2)),h2=Number(digits.slice(2));
+  if(h1>23||h2>24||h1===h2)
+   return {ok:false,status:'sin_validez_legible',message:'Grupo de validez del PRONAREA incorrecto.'};
+  const start=base.getTime()+h1*3600000,end=base.getTime()+h2*3600000+(h2<=h1?86400000:0);
+  if(date.getTime()<start||date.getTime()>=end)
+   return {ok:false,status:'fuera_de_fecha_y_hora',
+    message:'PRONAREA no válido para la fecha y hora UTC de salida. No usar WIND/T automático.'};
+ }
  const minutes=date.getUTCHours()*60+date.getUTCMinutes();
  for(const digits of windows){
   const start=Number(digits.slice(0,2)),end=Number(digits.slice(2,4));
@@ -127,6 +146,8 @@ function showValidity(){
  status.hidden=!field.value.trim();
 }
 field?.addEventListener('input',showValidity);
+document.getElementById('flight-pronarea-date')?.addEventListener('input',showValidity);
+document.getElementById('flight-pronarea-confirm')?.addEventListener('change',showValidity);
 time?.addEventListener('input',showValidity);
 time?.addEventListener('change',showValidity);
 showValidity();
