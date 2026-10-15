@@ -374,6 +374,19 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
 .ops-hero-monogram{font-size:44px;font-weight:850;letter-spacing:-.08em;color:#daeaf5}
 .ops-hero-monogram span{font-size:12px;letter-spacing:.14em;color:#9cb9cd;font-weight:700}
 .ops-dashboard{border:1px solid #48657a;border-radius:20px;padding:23px;background:linear-gradient(150deg,#1b2b39,#17232e);box-shadow:0 15px 34px #030a1240;margin-bottom:17px;scroll-margin-top:14px}
+.flight-usage-panel{border:1px solid #55768e;border-radius:18px;background:linear-gradient(145deg,#1c303e,#172532);padding:18px 21px;margin:0 0 16px;scroll-margin-top:15px}
+.flight-usage-panel .card-header{margin-bottom:11px}
+.flight-usage-panel h2{font-size:20px;margin:4px 0;color:#e7f3fa}
+.flight-usage-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:11px 0}
+.flight-usage-metric{padding:12px 13px;border:1px solid #4b6b80;border-radius:11px;background:#213442;min-width:0}
+.flight-usage-metric span{display:block;font-size:11px;color:#b3cbdc;margin:0 0 7px}
+.flight-usage-metric strong{display:block;font-size:20px;color:#f0f7fb;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.flight-usage-detail,.flight-usage-note{font-size:12px;color:#bacdd9;line-height:1.6;margin:9px 0 0}
+.flight-usage-detail{color:#d8e8f2}
+.flight-usage-panel .actions{gap:10px;align-items:center}
+.flight-usage-panel a{color:#cbe8fc}
+@media(max-width:850px){.flight-usage-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:420px){.flight-usage-panel{padding:15px}.flight-usage-metric strong{font-size:18px}}
 .ops-dashboard-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
 .ops-dashboard-heading h2{font-size:23px;margin:4px 0 2px;color:#f1f6fb}
 .ops-dashboard-heading .sub{margin:0 0 16px}
@@ -485,6 +498,17 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
     <button class="ops-shortcut ops-shortcut-attention" type="button" data-ops-target="#precauciones-vuelo"><span class="ops-shortcut-icon" aria-hidden="true">!</span><strong>Precauciones IA</strong><span class="ops-shortcut-state" id="ops-status-precautions">Pendiente de revisión</span><span class="ops-shortcut-link">Revisar controles ↗</span></button>
     <button class="ops-shortcut" type="button" data-ops-target="#analisis-altura"><span class="ops-shortcut-icon" aria-hidden="true">▤</span><strong>Informe final</strong><span class="ops-shortcut-state" id="ops-status-final">Generación opcional</span><span class="ops-shortcut-link">Abrir informe ↗</span></button>
   </div>
+</section>
+<section class="flight-usage-panel" id="consumo-ia" aria-labelledby="flight-usage-title">
+ <div class="card-header"><div><span class="card-kicker">CONTROL PRIVADO · CONSUMO DE OPENAI</span><h2 id="flight-usage-title">Contador de tokens · Flight Operations</h2></div><button class="secondary" id="flight-usage-refresh" type="button">Actualizar contador</button></div>
+ <div class="flight-usage-grid" aria-label="Uso de IA acumulado">
+  <div class="flight-usage-metric"><span>ÚLTIMA CONSULTA</span><strong id="flight-usage-last">—</strong></div>
+  <div class="flight-usage-metric"><span>TOKENS ACUMULADOS</span><strong id="flight-usage-total">—</strong></div>
+  <div class="flight-usage-metric"><span>COSTO ESTIMADO ACUMULADO</span><strong id="flight-usage-cost">—</strong></div>
+  <div class="flight-usage-metric"><span>SALDO REAL RESTANTE</span><strong id="flight-usage-balance">Ver OpenAI</strong></div>
+ </div>
+ <p class="flight-usage-detail" id="flight-usage-detail" role="status" aria-live="polite">Consultando el consumo registrado…</p>
+ <p class="flight-usage-note">El contador comienza con su activación y abarca solo consultas de IA de Flight Operations; no incluye consumos anteriores ni los de Robert Shimoda. El costo en USD es aproximado según los tokens y tarifas de GPT-5.4 mini. <strong>El saldo real de tus créditos es compartido</strong> y se consulta en <a href="https://platform.openai.com/settings/organization/billing/overview" target="_blank" rel="noopener noreferrer">Facturación de OpenAI ↗</a>. El panel no puede conocer ese saldo con la clave de consultas.</p>
 </section>
 <nav class="jump" aria-label="Secciones"><a href="#plan-vuelo">1 · Plan de vuelo</a><a href="#consultar">2 · Boletines y PRONAREA</a><a href="#boletines">3 · Cuatro etapas</a><a href="#fuentes">4 · Fuentes oficiales</a><a href="#informe-meteorologico">5 · Informe meteorológico</a><a href="#precauciones-vuelo">6 · Precauciones</a><a href="#analisis-altura">7 · Informe con IA</a><a href="#consulta-piloto">8 · Consulta del piloto</a><a href="#cartas-oficiales">9 · Cartas oficiales</a></nav>
 <details class="ops-accordion" id="ops-plan" open><summary class="ops-accordion-toggle"><span class="ops-accordion-number">01</span><span class="ops-accordion-name"><strong>Plan de vuelo</strong><span>Origen, destino, alternativo, UTC y piernas</span></span><span class="ops-accordion-arrow" aria-hidden="true"></span></summary><div class="ops-accordion-content">
@@ -1310,6 +1334,36 @@ el('copy-report').addEventListener('click',async()=>{
  // Los cuatro modos emplean el plan y los boletines cargados en la Mesa.
  // Ninguno invoca IA sin consentimiento en cada consulta.
  let aiBusy=false;
+ const usageFmt=n=>Number(n||0).toLocaleString('es-AR');
+ const usdFmt=n=>'US$ '+Number(n||0).toLocaleString('es-AR',{minimumFractionDigits:5,maximumFractionDigits:6});
+ const modeLabels={weather_overview:'Informe meteorológico',precautions:'Precauciones',report:'Informe ampliado',pilot_question:'Consulta del piloto'};
+ function showUsageMeter(meter){
+   if(!meter||typeof meter!=='object')return;
+   const entries=Array.isArray(meter.recent)?meter.recent:[];
+   const last=entries[0];
+   $('flight-usage-last').textContent=last?usageFmt(last.total_tokens):'0';
+   $('flight-usage-total').textContent=usageFmt(meter.total_tokens);
+   $('flight-usage-cost').textContent=usdFmt(meter.total_estimated_cost_usd);
+   const count=Number(meter.total_queries||0);
+   $('flight-usage-detail').textContent=last
+     ?'Consultas registradas: '+usageFmt(count)+' · Última: '+(modeLabels[last.request_mode]||'Análisis de IA')+' · Entrada '+usageFmt(last.input_tokens)+' tokens (cacheados '+usageFmt(last.cached_input_tokens)+') · Salida '+usageFmt(last.output_tokens)+' tokens · Costo estimado '+usdFmt(last.estimated_cost_usd)+'.'
+     :'Aún no se registraron consultas desde que se activó el contador. Las pruebas anteriores no pueden reconstruirse desde esta Mesa.';
+ }
+ async function refreshUsageMeter(){
+   const refresh=$('flight-usage-refresh');
+   if(refresh)refresh.disabled=true;
+   try{
+     const client=window.GDV_AUTH?.client;
+     if(!client)throw Error('Sin sesión disponible.');
+     const {data,error}=await client.functions.invoke('robert-flight-brief',{method:'GET'});
+     if(error||data?.ok!==true)throw Error('No se pudo consultar el registro de tokens.');
+     showUsageMeter(data.meter);
+   }catch(err){
+     $('flight-usage-detail').textContent='Contador no disponible: '+(err?.message||'volvé a intentar.')+' No se gastaron tokens por consultar el contador.';
+   }finally{if(refresh)refresh.disabled=false;}
+ }
+ $('flight-usage-refresh').addEventListener('click',()=>{void refreshUsageMeter();});
+ void refreshUsageMeter();
  const aiButtons=['flight-weather-ask','flight-precautions-ask','flight-ask','flight-pilot-ask','flight-pilot-new'];
  const modeElements={
    weather_overview:{
@@ -1525,6 +1579,11 @@ el('copy-report').addEventListener('click',async()=>{
      }
      if(response.ai_used!==true || !response.analysis || response.mode!==mode)
        throw Error('No se recibió una respuesta válida para esta consulta.');
+     if(response.usage_meter)showUsageMeter(response.usage_meter);
+     else void refreshUsageMeter();
+     if(response.usage&&response.usage_tracked===false){
+       $('flight-usage-detail').textContent='La IA devolvió '+usageFmt(response.usage.total_tokens)+' tokens, pero no se pudo guardar este consumo en el contador. Revisá el registro.';
+     }
      if(inputFingerprint!==contextFingerprint()){
        outputStatus.textContent='Los datos o boletines cambiaron durante la consulta. Repetí el análisis sobre los datos actuales.';
        return;
