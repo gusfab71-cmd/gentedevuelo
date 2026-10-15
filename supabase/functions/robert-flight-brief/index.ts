@@ -144,8 +144,11 @@ Deno.serve(async request=>{
   const mode=typeof input?.mode==="string"?input.mode:"report";
   if(!["report","weather_overview","precautions","pilot_question","essential"].includes(mode))
     return json({error:"Tipo de consulta de IA no válido."},400);
-  const receivedLegs=mode==="essential"?input?.route_legs:[];
-  if(mode==="essential"&&(!Array.isArray(receivedLegs)||receivedLegs.length<1||
+  // Compatibilidad: las versiones antiguas del frontend aún envían el
+  // Informe esencial sin route_legs. Deben seguir generando informe sin
+  // bloquearse mientras Vercel distribuye la actualización.
+  const receivedLegs=mode==="essential"?input?.route_legs??[]:[];
+  if(mode==="essential"&&(!Array.isArray(receivedLegs)||
     receivedLegs.length>9||receivedLegs.some((leg:any)=>
       !leg||typeof leg!=="object"||
       typeof leg.from!=="string"||!leg.from.trim()||leg.from.length>60||
