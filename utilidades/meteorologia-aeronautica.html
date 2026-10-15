@@ -374,6 +374,16 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
 .ops-hero-monogram{font-size:44px;font-weight:850;letter-spacing:-.08em;color:#daeaf5}
 .ops-hero-monogram span{font-size:12px;letter-spacing:.14em;color:#9cb9cd;font-weight:700}
 .ops-dashboard{border:1px solid #48657a;border-radius:20px;padding:23px;background:linear-gradient(150deg,#1b2b39,#17232e);box-shadow:0 15px 34px #030a1240;margin-bottom:17px;scroll-margin-top:14px}
+.flight-essential-card{padding:19px 20px;margin:18px 0 20px;border:1px solid #83a9c0;border-radius:15px;background:linear-gradient(140deg,#263e4e,#1b303f);box-shadow:0 5px 18px #07101933}
+.flight-essential-card h2{color:#f2f7fb;font-size:21px;margin:5px 0 9px}
+.flight-essential-card .sub{line-height:1.65}
+.flight-essential-note{font-size:12px;line-height:1.5;color:#cadeeb}
+.flight-essential-card .flight-ai-consent{background:#1e3441}
+.flight-essential-result{border-top:1px solid #607b90;margin-top:17px;padding-top:16px}
+.flight-essential-result .flight-ai-text{white-space:pre-wrap;line-height:1.75;color:#edf4f8}
+.ops-shortcut-essential{border-color:#83a9c0;background:linear-gradient(145deg,#335469,#294256)}
+.ops-shortcut-essential .ops-shortcut-icon{background:#43647d;border-color:#8ab0c9}
+@media(max-width:620px){.flight-essential-card{padding:15px 14px}}
 .flight-usage-panel{border:1px solid #55768e;border-radius:18px;background:linear-gradient(145deg,#1c303e,#172532);padding:18px 21px;margin:0 0 16px;scroll-margin-top:15px}
 .flight-usage-panel .card-header{margin-bottom:11px}
 .flight-usage-panel h2{font-size:20px;margin:4px 0;color:#e7f3fa}
@@ -489,6 +499,7 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
   </div>
   <div class="ops-cards-heading"><h3>Accesos rápidos</h3><span>Elegí una tarjeta para abrir su detalle</span></div>
   <div class="ops-cards" aria-label="Accesos a módulos">
+    <button class="ops-shortcut ops-shortcut-essential" type="button" data-ops-target="#informe-esencial"><span class="ops-shortcut-icon" aria-hidden="true">◆</span><strong>Informe único</strong><span class="ops-shortcut-state" id="ops-status-essential">Resumen en una consulta</span><span class="ops-shortcut-link">Ver informe esencial ↗</span></button>
     <button class="ops-shortcut" type="button" data-ops-target="#r-metar"><span class="ops-shortcut-icon" aria-hidden="true">☁</span><strong>METAR</strong><span class="ops-shortcut-state" id="ops-status-metar">Sin consultar</span><span class="ops-shortcut-link">Ver observaciones ↗</span></button>
     <button class="ops-shortcut" type="button" data-ops-target="#r-taf"><span class="ops-shortcut-icon" aria-hidden="true">◷</span><strong>TAF</strong><span class="ops-shortcut-state" id="ops-status-taf">Sin consultar</span><span class="ops-shortcut-link">Ver pronósticos ↗</span></button>
     <button class="ops-shortcut" type="button" data-ops-target="#r-sigmet"><span class="ops-shortcut-icon" aria-hidden="true">⚡</span><strong>SIGMET</strong><span class="ops-shortcut-state" id="ops-status-sigmet">Sin consultar</span><span class="ops-shortcut-link">Ver avisos ↗</span></button>
@@ -736,7 +747,21 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
 </div>
 </section>
 
-<details class="ops-accordion" id="ops-meteo"><summary class="ops-accordion-toggle"><span class="ops-accordion-number">05</span><span class="ops-accordion-name"><strong>Informe meteorológico</strong><span>Síntesis orientativa del recorrido y las condiciones</span></span><span class="ops-accordion-arrow" aria-hidden="true"></span></summary><div class="ops-accordion-content">
+<details class="ops-accordion" id="ops-meteo"><summary class="ops-accordion-toggle"><span class="ops-accordion-number">05</span><span class="ops-accordion-name"><strong>Informes meteorológicos</strong><span>Informe único esencial o análisis meteorológico detallado</span></span><span class="ops-accordion-arrow" aria-hidden="true"></span></summary><div class="ops-accordion-content">
+<div class="flight-essential-card" id="informe-esencial" aria-labelledby="flight-essential-heading">
+  <div class="card-header"><div><span class="card-kicker">RECOMENDADO · UNA SOLA CONSULTA A LA IA</span><h2 id="flight-essential-heading">Informe esencial del vuelo</h2></div></div>
+  <p class="sub">Resumen claro de los puntos realmente importantes para tu origen, destino, alternativo, ruta, altitudes y salida UTC. Reúne tiempo observado, pronósticos disponibles, peligros significativos, precauciones y verificaciones pendientes, sin generar varios informes por separado.</p>
+  <p class="flight-essential-note">El informe utiliza únicamente los boletines y el plan cargados. Si faltan horarios de llegada o datos oficiales, lo aclarará. Es orientativo y no autoriza el vuelo. <strong>Una solicitud consume tokens de la API compartida con Shimoda.</strong></p>
+  <label class="flight-ai-consent"><input id="flight-essential-consent" type="checkbox" aria-describedby="flight-essential-status"><span><strong>1. Autorizo</strong> generar el informe único con IA y consumir tokens. Luego presioná <strong>2. Generar informe</strong>.</span></label>
+  <div class="actions"><button class="primary" id="flight-essential-ask" type="button">Generar informe único con IA</button><span class="feedback ai-validation-status" id="flight-essential-status" role="status" aria-live="polite">Marcá «Autorizo» para generar el informe.</span></div>
+  <div class="flight-essential-result" id="flight-essential-result" hidden>
+    <div class="card-header"><h3>Informe esencial para el vuelo previsto</h3><button class="secondary" type="button" id="flight-essential-copy">Copiar informe</button></div>
+    <p class="sub flight-ai-timestamp" id="flight-essential-time"></p>
+    <div class="flight-ai-text" id="flight-essential-analysis"></div>
+    <p class="flight-essential-note" id="flight-essential-tokens"></p>
+    <p class="flight-essential-note">Revisá emisión y vigencia en las fuentes oficiales; este resumen no reemplaza el briefing aeronáutico ni la decisión del piloto al mando.</p>
+  </div>
+</div>
 <section class="card flight-weather-overview" id="informe-meteorologico" aria-labelledby="flight-weather-heading">
  <div class="card-header"><div><span class="card-kicker">SÍNTESIS METEOROLÓGICA · ANTES DE LAS PRECAUCIONES</span>
   <h2 id="flight-weather-heading">Informe meteorológico del vuelo planificado</h2></div></div>
@@ -1331,12 +1356,12 @@ el('copy-report').addEventListener('click',async()=>{
    markStatus('pronarea',entered?'Texto cargado (no verificado)':'Falta cargar',entered);
  });
 
- // Los cuatro modos emplean el plan y los boletines cargados en la Mesa.
+ // Todas las modalidades emplean el plan y los boletines cargados en la Mesa.
  // Ninguno invoca IA sin consentimiento en cada consulta.
  let aiBusy=false;
  const usageFmt=n=>Number(n||0).toLocaleString('es-AR');
  const usdFmt=n=>'US$ '+Number(n||0).toLocaleString('es-AR',{minimumFractionDigits:5,maximumFractionDigits:6});
- const modeLabels={weather_overview:'Informe meteorológico',precautions:'Precauciones',report:'Informe ampliado',pilot_question:'Consulta del piloto'};
+ const modeLabels={essential:'Informe único',weather_overview:'Informe meteorológico',precautions:'Precauciones',report:'Informe ampliado',pilot_question:'Consulta del piloto'};
  function showUsageMeter(meter){
    if(!meter||typeof meter!=='object')return;
    const entries=Array.isArray(meter.recent)?meter.recent:[];
@@ -1364,8 +1389,12 @@ el('copy-report').addEventListener('click',async()=>{
  }
  $('flight-usage-refresh').addEventListener('click',()=>{void refreshUsageMeter();});
  void refreshUsageMeter();
- const aiButtons=['flight-weather-ask','flight-precautions-ask','flight-ask','flight-pilot-ask','flight-pilot-new'];
+ const aiButtons=['flight-essential-ask','flight-weather-ask','flight-precautions-ask','flight-ask','flight-pilot-ask','flight-pilot-new'];
  const modeElements={
+   essential:{
+     consent:'flight-essential-consent',status:'flight-essential-status',
+     result:'flight-essential-result',text:'flight-essential-analysis',time:'flight-essential-time'
+   },
    weather_overview:{
      consent:'flight-weather-consent',status:'flight-weather-status',
      result:'flight-weather-result',text:'flight-weather-analysis',time:'flight-weather-time'
@@ -1601,6 +1630,12 @@ el('copy-report').addEventListener('click',async()=>{
          timeZone:'America/Argentina/Buenos_Aires'
        })+' · Solo información cargada en la Mesa; no se consultaron nuevas fuentes. PRONAREA manual sin verificación automática.';
      $(elements.result).hidden=false;
+     if(mode==='essential'){
+       const usage=response.usage;
+       $('flight-essential-tokens').textContent=usage
+         ?'Esta consulta utilizó '+usageFmt(usage.total_tokens)+' tokens (entrada: '+usageFmt(usage.input_tokens)+', salida: '+usageFmt(usage.output_tokens)+') · Costo estimado: '+usdFmt(usage.estimated_cost_usd)+'.'
+         :'No fue posible recuperar el desglose de tokens de esta respuesta.';
+     }
      if(mode==='pilot_question'){
        pilotTurns.push({role:'user',content:data.question},{role:'assistant',content:answer});
        appendPilotMessage('user',data.question);
@@ -1613,7 +1648,9 @@ el('copy-report').addEventListener('click',async()=>{
        $('flight-warning').textContent=response.warning||
          'Confirmá vigencias y fuentes oficiales. No reemplaza el briefing oficial.';
      }
-     outputStatus.textContent=mode==='weather_overview'?
+     outputStatus.textContent=mode==='essential'?
+       'Informe único generado. Comprobá fuentes, vigencias y condiciones oficiales.':
+       mode==='weather_overview'?
        'Informe meteorológico generado. Comprobá fuentes y vigencias oficiales.':
        mode==='precautions'?
        'Precauciones generadas. Revisá cada punto con las fuentes oficiales.':
@@ -1632,7 +1669,14 @@ el('copy-report').addEventListener('click',async()=>{
    event.preventDefault();
    void runAi('report');
  });
+ $('flight-essential-ask').addEventListener('click',()=>{void runAi('essential');});
  $('flight-weather-ask').addEventListener('click',()=>{void runAi('weather_overview');});
+ $('flight-essential-copy').addEventListener('click',async()=>{
+   const answer=$('flight-essential-analysis').textContent.trim();
+   if(!answer||$('flight-essential-result').hidden)return;
+   try{await navigator.clipboard.writeText(answer);$('flight-essential-status').textContent='Informe copiado.';}
+   catch(_){$('flight-essential-status').textContent='No se pudo copiar el informe.';}
+ });
  $('flight-precautions-ask').addEventListener('click',()=>{void runAi('precautions');});
  $('flight-pilot-ask').addEventListener('click',()=>{void runAi('pilot_question');});
  $('flight-pilot-new').addEventListener('click',()=>{
@@ -1822,7 +1866,7 @@ map.forEach(([name,source])=>{
   new MutationObserver(update).observe(original,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
   update();
 });
-[['flight-weather-result','ops-status-weather'],['flight-precautions-result','ops-status-precautions'],['flight-result','ops-status-final']].forEach(([source,target])=>{
+[['flight-essential-result','ops-status-essential'],['flight-weather-result','ops-status-weather'],['flight-precautions-result','ops-status-precautions'],['flight-result','ops-status-final']].forEach(([source,target])=>{
   const original=$(source),out=$(target);if(!original||!out)return;
   const initial=out.textContent;
   const update=()=>{out.textContent=original.hidden?initial:'Informe generado · revisar vigencia';};
