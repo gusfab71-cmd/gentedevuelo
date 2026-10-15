@@ -330,5 +330,21 @@ for(const selector of ['#flight-fetch-reports','#flight-essential-ask',
   '#flight-pilot-new']){
   document.querySelectorAll(selector).forEach(btn=>btn.addEventListener('click',checkBlocked,true));
 }
+// Conserva derrotas magnéticas declaradas al guardar un borrador privado.
+window.GDV_FLIGHT_VFR_TRACK=Object.freeze({
+ exportManual:()=>[...manual.entries()].map(([key,value])=>({key,value})),
+ restoreManual:entries=>{
+   manual.clear();
+   if(Array.isArray(entries))for(const e of entries.slice(0,9)){
+     if(typeof e?.key==='string'&&e.key.length<=160&&typeof e.value==='string'&&
+        e.value.length<=8&&e.value.trim()!==''&&Number.isFinite(Number(e.value))&&
+        Number(e.value)>=0&&Number(e.value)<360)manual.set(e.key,e.value);
+   }
+   for(const row of legs.querySelectorAll('.flight-leg-row')){
+     row.querySelector('.flight-vfr-track-label')?.removeAttribute('data-route-key');
+   }
+   refresh();
+ }
+});
 refresh();
 })();
