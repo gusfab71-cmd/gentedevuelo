@@ -1977,7 +1977,7 @@ function refreshOverview(){
 }
 function showResult(row){
   const track=row.querySelector('.flight-vfr-track');
-  const altitude=row.querySelector('.flight-leg-row .field input[type="number"]');
+  const altitude=row.querySelector('.field input[type="number"]');
   const out=row.querySelector('.flight-vfr-result');
   if(!track||!altitude||!out)return;
   out.replaceChildren();
