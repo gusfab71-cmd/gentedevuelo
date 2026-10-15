@@ -27,6 +27,7 @@ function validity(text,departureUtc){
  if(!raw.trim())return {ok:false,status:'no_aportado',message:'Pegá un PRONAREA oficial para conocer su franja de validez.'};
  const windows=[...raw.matchAll(/\bPRONAREA\s+FIR\s+[A-Z]{3,4}\s+VALIDEZ\s+(\d{4})(?!\d)/g)].map(m=>m[1]);
  if(!windows.length)return {ok:false,status:'sin_validez_legible',message:'No se pudo leer VALIDEZ HH-HH del PRONAREA. No se aplicará su viento a la GS.'};
+ if(departureUtc===null||departureUtc===undefined||departureUtc==='')return {ok:false,status:'salida_sin_hora',message:'Completá fecha y hora UTC de salida para comprobar el PRONAREA.'};
  const date=departureUtc instanceof Date?departureUtc:new Date(departureUtc);
  if(!Number.isFinite(date.getTime()))return {ok:false,status:'salida_sin_hora',message:'Completá fecha y hora UTC de salida para comprobar el PRONAREA.'};
  const minutes=date.getUTCHours()*60+date.getUTCMinutes();
