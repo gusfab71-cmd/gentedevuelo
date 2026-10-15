@@ -42,6 +42,7 @@ const plan=$('ops-plan'),weather=$('ops-consultar'),report=$('ops-meteo'),p=$('g
 if(!plan||!weather||!report||!p)return;
 const css=document.createElement('style');
 css.textContent='.ops-accordion[hidden],.flight-wizard-nav-panel[hidden],.flight-leg-editor[hidden],.flight-base-fields[hidden]{display:none!important}'+
+'.ops-cards-heading,.ops-cards,.jump{display:none!important}'+
 '.flight-wizard-ui{padding:19px;margin:18px 0;border:1px solid #577389;background:#202e3b;border-radius:18px;color:#ecf3f8}'+
 '.flight-wizard-steps{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin:16px 0}'+
 '.flight-wizard-steps button,.flight-wizard-toolbar button{padding:11px;border:1px solid #7f98aa;border-radius:11px;background:#354c5f;color:#ecf5fa;font:inherit;cursor:pointer}'+
@@ -118,16 +119,17 @@ async function userClient(){
  const {data,error}=await client.auth.getUser();if(error||!data?.user?.id)throw Error('Necesitás iniciar sesión.');
  return {client,user:data.user};
 }
-async function save(){
+async function save(targetStep=step){
  const {client,user}=await userClient();
- const {error}=await client.from('gdv_flight_plan_drafts').upsert({user_id:user.id,plan:pack(),updated_at:new Date().toISOString()},{onConflict:'user_id'});
+ const planData=pack();planData.step=targetStep;
+ const {error}=await client.from('gdv_flight_plan_drafts').upsert({user_id:user.id,plan:planData,updated_at:new Date().toISOString()},{onConflict:'user_id'});
  if(error)throw Error('No se guardó el borrador: '+error.message);
 }
 async function go(n){
  if(busy||n===step)return;
  if(n>step&&!valid())return;
  busy=true;notify('Guardando borrador privado…');
- try{await save();display(n);notify('Plan guardado. Etapa '+(step+1)+' de cinco.');}
+ try{await save(n);display(n);notify('Plan guardado. Etapa '+(step+1)+' de cinco.');}
  catch(e){notify(e?.message||'Error al guardar. No se cambió de etapa.');}
  finally{busy=false;}
 }
