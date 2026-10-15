@@ -2,7 +2,7 @@
 (()=>{
 'use strict';
 const $=id=>document.getElementById(id),DAY=86400000;
-const date=()=>{const x=$('flight-time')?.value||'';if(!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(x))return null;const d=new Date(x+'Z');return Number.isFinite(d.getTime())&&d.toISOString().slice(0,16)===x?d:null;};
+const date=()=>{const raw=String($('flight-time')?.value||'').trim();const x=raw.replace(' ','T');if(!/^\d{4}-\d{2}-\d{2}T(?:[01]\d|2[0-3]):[0-5]\d$/.test(x))return null;const d=new Date(x+'Z');return Number.isFinite(d.getTime())&&d.toISOString().slice(0,16)===x?d:null;};
 const rows=()=>window.GDV_FLIGHT_NAV?.snapshot?.()||[];
 const eta=()=>{
  const dep=date(),rr=rows();
