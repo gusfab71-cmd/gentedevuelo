@@ -497,6 +497,7 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
 .flight-vfr-result{grid-column:1/-1;border-top:1px solid #466172;padding-top:10px;display:grid;gap:8px;font-size:12px;line-height:1.55;color:#d9e8f2}
 .flight-vfr-result[data-vfr-state="match"]{color:#b8dfcd}
 .flight-vfr-result[data-vfr-state="different"]{color:#f1c99c}
+#flight-legs-list .flight-leg-row input[aria-invalid="true"]{border-color:#e7a86a!important;outline:2px solid #e7a86a65;outline-offset:1px;background:#392b2a;color:#fff1e1}
 .flight-vfr-options{display:flex;flex-wrap:wrap;gap:8px}
 .flight-vfr-options button{min-height:34px;padding:7px 10px;font-size:12px}
 @media(max-width:870px){#flight-legs-list .flight-leg-row{grid-template-columns:repeat(2,minmax(0,1fr))}#flight-legs-list .flight-leg-route{grid-column:1/-1;padding-top:0}}
@@ -1921,7 +1922,7 @@ if(stage){
 
 <script src="../assets/flight-fir-geodata.js?v=20261015a"></script>
 <script src="../assets/flight-wmm2025.js?v=20261015a"></script>
-<script src="../assets/flight-vfr-altitude.js?v=20261015a"></script>
+<script src="../assets/flight-vfr-altitude.js?v=20261015b"></script>
 <script src="../assets/flight-fir-autoselect.js?v=20261015a"></script>
 </body>
 </html>
