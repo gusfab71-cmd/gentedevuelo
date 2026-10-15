@@ -105,7 +105,7 @@ function distanceKm(a,b){
  const q=Math.sin(phi/2)**2+Math.cos(a[0]*d)*Math.cos(b[0]*d)*Math.sin(lambda/2)**2;
  return 12742*Math.asin(Math.min(1,Math.sqrt(q)));
 }
-function pick(text,altitude_ft,midpoint,airports,departureUtc){
+function pick(text,altitude_ft,midpoint,airports,departureUtc,routeEndpoints){
  const check=validity(text,departureUtc);
  if(!check.ok)return {ok:false,reason:check.message,status:check.status};
  const entries=parse(text);
@@ -118,8 +118,52 @@ function pick(text,altitude_ft,midpoint,airports,departureUtc){
  const options=entries.map(r=>({...r,distance_km:distanceKm(midpoint,airports?.[r.airport])})).filter(x=>Number.isFinite(x.distance_km));
  if(!options.length)return {ok:false,reason:'El PRONAREA no contiene estaciones con posición conocida para esta pierna.'};
  const minDistance=Math.min(...options.map(x=>x.distance_km));
- if(minDistance>300)
-  return {ok:false,reason:'La estación WIND/T más próxima se encuentra a '+Math.round(minDistance)+' km del centro del tramo; requiere selección manual/consulta oficial.'};
+ // En trayectos largos una estación del propio origen o destino puede quedar
+ // a más de 300 km del punto medio. Sólo admitir esa excepción cuando la
+ // estación se encuentre a 50 km o menos de un EXTREMO real de la pierna.
+ // Si hay pronósticos en ambos extremos, promediar los vectores de viento;
+ // nunca promediar directamente los ángulos (350° y 010° no son 180°).
+ if(minDistance>300){
+  const endpoints=Array.isArray(routeEndpoints)&&routeEndpoints.length===2?routeEndpoints:null;
+  function endpointWind(endpoint){
+   if(!Array.isArray(endpoint))return null;
+   const nearest=options.map(x=>({...x,endpoint_km:distanceKm(endpoint,airports?.[x.airport])}))
+    .filter(x=>x.endpoint_km<=50).sort((a,b)=>a.endpoint_km-b.endpoint_km||Math.abs(a.level_ft-altitude_ft)-Math.abs(b.level_ft-altitude_ft));
+   if(!nearest.length)return null;
+   const name=nearest[0].station;
+   const sameStation=nearest.filter(x=>x.station===name)
+    .sort((a,b)=>Math.abs(a.level_ft-altitude_ft)-Math.abs(b.level_ft-altitude_ft));
+   return sameStation[0];
+  }
+  const start=endpoints?endpointWind(endpoints[0]):null;
+  const finish=endpoints?endpointWind(endpoints[1]):null;
+  const references=[start,...(finish&&finish.station!==start?.station?[finish]:[])].filter(Boolean);
+  if(!references.length)
+   return {ok:false,reason:'La estación WIND/T más próxima se encuentra a '+Math.round(minDistance)+' km del centro del tramo y no corresponde al origen o destino de la pierna. Verificá viento oficial en ruta.'};
+  for(const ref of references){
+   if(options.some(x=>x.station===ref.station&&x.level_ft===ref.level_ft&&
+       (x.direction_true_deg!==ref.direction_true_deg||x.speed_kt!==ref.speed_kt)))
+    return {ok:false,reason:'Hay pronósticos WIND/T contradictorios para '+ref.station+' a FL'+ref.level_ft/100+'. Verificá el boletín.'};
+   if(Math.abs(ref.level_ft-altitude_ft)>5000)
+    return {ok:false,reason:'El nivel WIND/T de '+ref.station+' está demasiado alejado de la altitud seleccionada. Verificá el pronóstico.'};
+  }
+  const rad=Math.PI/180;
+  const east=references.reduce((sum,r)=>sum-r.speed_kt*Math.sin(r.direction_true_deg*rad),0)/references.length;
+  const north=references.reduce((sum,r)=>sum-r.speed_kt*Math.cos(r.direction_true_deg*rad),0)/references.length;
+  const speed=Math.hypot(east,north);
+  const from=speed<0.001?0:((Math.atan2(-east,-north)/rad)%360+360)%360;
+  const summary=references.map(r=>r.station+' FL'+String(r.level_ft/100).padStart(3,'0')).join(' + ');
+  const both=references.length===2;
+  return {ok:true,station:references.map(r=>r.station).join(' + '),
+   level_ft:references.every(r=>r.level_ft===references[0].level_ft)?references[0].level_ft:null,
+   level_summary:summary,reference_type:both?'route_endpoints_average':'route_endpoint',
+   direction_true_deg:from,speed_kt:speed,source:'PRONAREA WIND/T',
+   distance_km:Math.max(...references.map(r=>r.distance_km)),
+   altitude_difference_ft:Math.max(...references.map(r=>Math.abs(r.level_ft-altitude_ft))),
+   notice:(both?'Estimación mediante promedio vectorial de los vientos publicados en ambos extremos de la pierna: '
+      :'Estimación usando el viento publicado en un extremo de la pierna: ')+summary+
+    '. Es una referencia aproximada, NO un pronóstico confirmado para el tramo completo ni para la hora de paso; verificá representatividad, zona y vigencia oficial.'};
+ }
  const candidates=options.filter(x=>x.distance_km-minDistance<0.1);
  candidates.sort((a,b)=>Math.abs(a.level_ft-altitude_ft)-Math.abs(b.level_ft-altitude_ft));
  const chosen=candidates[0];

@@ -124,11 +124,16 @@ function windForLeg(leg){
  if(!raw.trim())return {wind:null,reason:'No se cargó PRONAREA con WIND/T para esta pierna.'};
  const location=leg.from&&leg.to?[
   (leg.from[0]+leg.to[0])/2,(leg.from[1]+leg.to[1])/2]:null;
- const report=windSource?.pick(raw,Number(leg.alt),location,airports,flightDate());
+ const report=windSource?.pick(raw,Number(leg.alt),location,airports,flightDate(),
+  leg.from&&leg.to?[leg.from,leg.to]:null);
  if(!report?.ok)return {wind:null,reason:report?.reason||'No se pudo identificar viento en altura en el PRONAREA cargado.'};
+ const levelLabel=report.level_summary||('FL'+String(report.level_ft/100).padStart(3,'0'));
+ const sourceLabel=report.reference_type==='route_endpoints_average'
+  ?'promedio vectorial de estaciones de origen y destino'
+  :report.reference_type==='route_endpoint'?'estación en un extremo de la pierna':'estación próxima al centro del tramo';
  return {wind:{speed:report.speed_kt,from:report.direction_true_deg},
-  source:'PRONAREA WIND/T · '+report.station+' · FL'+String(report.level_ft/100).padStart(3,'0')+
-   ' ('+num(report.level_ft)+' ft) · distancia a referencia '+Math.round(report.distance_km)+' km.',
+  source:'PRONAREA WIND/T · '+levelLabel+' · '+sourceLabel+
+   ' (hasta '+Math.round(report.distance_km)+' km del centro).',
   forecastLevelFt:report.level_ft,stationDistanceKm:report.distance_km,altitudeGapFt:report.altitude_difference_ft,
   notice:report.notice};
 }
@@ -175,7 +180,7 @@ function describe(r){
    '. Derrota magnética de referencia: '+asLine(r.magneticTrack)+'.'
  ];
  if(r.missing){lines.push('Rumbo corregido y GS: no calculables. '+r.missing);return {title:name,lines};}
- lines.push('Datos: TAS '+num(r.tas)+' kt; viento de altura desde '+String(r.wind.from).padStart(3,'0')+'° verdaderos a '+num(r.wind.speed)+' kt. '+r.windSource);
+ lines.push('Datos: TAS '+num(r.tas)+' kt; viento de altura desde '+String(Math.round(r.wind.from)%360).padStart(3,'0')+'° verdaderos a '+num(r.wind.speed,1)+' kt. '+r.windSource);
  lines.push('Corrección por viento ESTIMADA: '+(r.wca>=0?'+':'')+num(r.wca,1)+'°; rumbo verdadero de proa: '+asLine(r.trueHeading)+
    '; rumbo magnético de proa: '+asLine(r.magneticHeading)+
    '; GS ORIENTATIVA DE REFERENCIA: '+num(r.gs,1)+' kt (NO confirmada para todo el vuelo).');
@@ -187,6 +192,8 @@ function describe(r){
      ' ('+num(r.forecastLevelFt)+' ft), a '+num(gap)+' ft de la altitud de la pierna. '+
      'Estación a '+Math.round(r.stationDistanceKm)+' km del centro del tramo. '+
      'No está confirmado que ese viento represente toda la ruta a tu hora de paso. Comprobá PRONAREA, zona y período.');
+ }else if(r.windNotice){
+   lines.push('ATENCIÓN · REPRESENTATIVIDAD LIMITADA. '+r.windNotice);
  }else{
    lines.push('ATENCIÓN: viento manual sin ubicación ni nivel contrastados por la Mesa. La GS sigue siendo orientativa hasta verificar su fuente y validez.');
  }
@@ -232,7 +239,7 @@ function windInputs(){
   source.textContent=state.mode==='manual'
    ?'Viento manual: comprobá que el valor corresponda a esta altitud, FIR y hora UTC.'
    :info.wind?'VIENTO DE REFERENCIA (no confirmado para toda la ruta): '+info.source+
-     ' Viento '+String(info.wind.from).padStart(3,'0')+'° verdaderos / '+num(info.wind.speed)+' kt. Verificá vigencia y representatividad.'
+     ' Viento '+String(Math.round(info.wind.from)%360).padStart(3,'0')+'° verdaderos / '+num(info.wind.speed,1)+' kt. Verificá vigencia y representatividad.'
     :'Viento automático no disponible: '+info.reason;
   item.append(source);
   const toggle=document.createElement('button');toggle.className='secondary';toggle.type='button';

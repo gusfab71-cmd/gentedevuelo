@@ -866,12 +866,12 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
   <p class="flight-essential-note">El informe utiliza únicamente los boletines y el plan cargados. Si faltan horarios de llegada o datos oficiales, lo aclarará. Es orientativo y no autoriza el vuelo. <strong>Una solicitud consume tokens de la API compartida con Shimoda.</strong></p>
   <section class="flight-nav-settings" id="flight-nav-settings" aria-labelledby="flight-nav-title">
     <div class="card-header"><div><span class="card-kicker">COMPLEMENTO DE NAVEGACIÓN · CÁLCULO LOCAL</span><h3 id="flight-nav-title">Rumbo corregido y GS estimada</h3></div></div>
-    <p class="sub">Ingresá la TAS de tu aeronave para calcular rumbo corregido, velocidad sobre el suelo y tiempos estimados. El viento de PRONAREA WIND/T se selecciona por nivel y referencia geográfica; también podés ingresar viento manual por pierna. Sin IA ni tokens.</p>
+    <p class="sub">Ingresá la TAS: cuando el PRONAREA confirmado aporte dirección <strong>y velocidad</strong> del viento en altura, el sistema calculará automáticamente el rumbo corregido, la GS orientativa y los tiempos por pierna. En rutas largas puede estimar el viento con estaciones WIND/T del origen y destino, indicando las referencias usadas. También podés ingresar viento oficial manualmente. Sin IA ni tokens.</p>
     <label class="field" for="flight-nav-tas">Velocidad verdadera · TAS (nudos)
       <input id="flight-nav-tas" form="flight-analysis-form" type="number" min="20" max="500" step="1" inputmode="numeric" placeholder="Ej.: 100" aria-describedby="flight-nav-help">
     </label>
     <div id="flight-nav-wind-legs" aria-live="polite"></div>
-    <p class="flight-essential-note" id="flight-nav-help">El viento automático procede exclusivamente de la sección <strong>WIND/T</strong> del PRONAREA que pegaste, <strong>no de METAR ni TAF</strong>. Se elige el nivel FL publicado más cercano a la altitud de cada pierna y una estación de referencia próxima al trayecto. Debés verificar fecha y período de validez, FIR, sector, hora de cada tramo y representatividad del viento. Si faltan datos o son dudosos, la GS quedará «No calculable» y podrás ingresar manualmente el viento oficial verificado.</p>
+    <p class="flight-essential-note" id="flight-nav-help">El viento automático procede exclusivamente de <strong>WIND/T</strong> del PRONAREA cargado, <strong>no de METAR ni TAF</strong>. Se selecciona el FL más próximo y una estación cercana al centro; si la pierna es larga y sólo hay referencias oficiales en el origen o destino, se usa ese viento o el promedio vectorial de ambos, claramente identificado. Son <strong>estimaciones</strong>: el viento en las estaciones puede no representar todo el recorrido. Verificá emisión, vigencia UTC, FIR, sector, hora de paso y altitud; si el viento falta o es dudoso, la GS quedará pendiente y podrás ingresar viento oficial manualmente.</p>
   </section>
   <label class="flight-ai-consent"><input id="flight-essential-consent" type="checkbox" aria-describedby="flight-essential-status"><span><strong>1. Autorizo</strong> generar el informe único con IA y consumir tokens. Luego presioná <strong>2. Generar informe</strong>.</span></label>
   <div class="actions"><button class="primary" id="flight-essential-ask" type="button">Generar informe único con IA</button><span class="feedback ai-validation-status" id="flight-essential-status" role="status" aria-live="polite">Marcá «Autorizo» para generar el informe.</span></div>
@@ -2059,8 +2059,8 @@ if(stage){
 <script src="../assets/flight-fir-geodata.js?v=20261015c"></script>
 <script src="../assets/flight-wmm2025.js?v=20261015a"></script>
 <script src="../assets/flight-vfr-altitude.js?v=20261015f"></script>
-<script src="../assets/flight-pronarea-wind.js?v=20261015f"></script>
-<script src="../assets/flight-essential-navigation.js?v=20261015m"></script>
+<script src="../assets/flight-pronarea-wind.js?v=20261015g"></script>
+<script src="../assets/flight-essential-navigation.js?v=20261015n"></script>
 <script src="../assets/flight-fir-autoselect.js?v=20261015b"></script>
 <script src="../assets/flight-route-suggestions.js?v=20261015b"></script>
 <script defer src="../assets/flight-operations-wizard.js?v=20261015h"></script>
