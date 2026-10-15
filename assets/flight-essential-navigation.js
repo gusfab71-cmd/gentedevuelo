@@ -299,7 +299,13 @@ function distanceNm(a,b){
  const q=Math.sin(dLat/2)**2+Math.cos(lat1)*Math.cos(lat2)*Math.sin(dLon/2)**2;
  return 3440.065*2*Math.asin(Math.min(1,Math.sqrt(q)));
 }
-window.GDV_FLIGHT_NAV=Object.freeze({snapshot:()=>currentRoute().map(leg=>{
+window.GDV_FLIGHT_NAV=Object.freeze({saveWind:()=>[...windValues.entries()].map(([key,value])=>({key,value:{...value}})),restoreWind:entries=>{
+  windValues.clear();if(Array.isArray(entries))for(const row of entries.slice(0,9)){
+   if(row&&typeof row.key==='string'&&row.key.length<150&&row.value&&typeof row.value==='object')
+    windValues.set(row.key,{mode:row.value.mode==='manual'?'manual':'auto',direction:String(row.value.direction??'').slice(0,4),speed:String(row.value.speed??'').slice(0,4)});
+  }
+  currentSignature='';windInputs();output();
+ },snapshot:()=>currentRoute().map(leg=>{
  const result=computeLeg(leg);
  return {index:leg.index,name:leg.name,altitude_ft:Number(leg.alt),distance_nm:distanceNm(leg.from,leg.to),
    course_true_deg:result.course,heading_true_deg:result.trueHeading,
