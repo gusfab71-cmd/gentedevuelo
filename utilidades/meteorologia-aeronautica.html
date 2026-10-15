@@ -737,6 +737,12 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
 <label class="field" for="flight-pronarea">Texto del PRONAREA
 <textarea id="flight-pronarea" form="flight-analysis-form" required minlength="40" maxlength="12000" rows="7" placeholder="Pegá el PRONAREA oficial vigente para las FIR involucradas." aria-describedby="flight-pronarea-validity"></textarea></label>
 <p class="flight-pronarea-validity" id="flight-pronarea-validity" role="status" aria-live="polite" hidden></p>
+<div class="flight-pronarea-day" style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin:13px 0">
+<label class="field" for="flight-pronarea-date" style="min-width:200px;flex:1">Fecha UTC de inicio de validez del PRONAREA
+<input type="date" id="flight-pronarea-date" aria-describedby="flight-pronarea-day-help"></label>
+<label class="flight-ai-consent" style="flex:2;min-width:230px"><input type="checkbox" id="flight-pronarea-confirm"><span>Confirmé en el SMN la fecha, FIR y emisión del boletín copiado.</span></label>
+</div><p id="flight-pronarea-day-help" class="sub">El grupo 0416 significa 04:00 a 16:00 UTC, pero no informa por sí solo el día. Indicá la fecha UTC de inicio de la validez, no la fecha de carga.</p>
+<p id="flight-pronarea-gate" class="flight-pronarea-validity" role="status" aria-live="polite">La vigencia del PRONAREA se verificará antes de activar la IA, sin tokens.</p>
 </div>
 <div class="manual-source">
 <div class="manual-source-heading"><strong>NOTAM · consulta oficial</strong><span class="sub">No se cargan automáticamente ni son obligatorios para pedir el análisis</span></div>
@@ -862,7 +868,7 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
   <p class="flight-essential-note">El informe utiliza únicamente los boletines y el plan cargados. Si faltan horarios de llegada o datos oficiales, lo aclarará. Es orientativo y no autoriza el vuelo. <strong>Una solicitud consume tokens de la API compartida con Shimoda.</strong></p>
   <section class="flight-nav-settings" id="flight-nav-settings" aria-labelledby="flight-nav-title">
     <div class="card-header"><div><span class="card-kicker">COMPLEMENTO DE NAVEGACIÓN · CÁLCULO LOCAL</span><h3 id="flight-nav-title">Rumbo corregido y GS estimada</h3></div></div>
-    <p class="sub">La <strong>TAS (nudos)</strong> se carga en el Paso 1, junto a la altitud. Al generar el <strong>Informe único</strong>, la IA identifica la dirección e intensidad del viento al nivel de vuelo publicado más próximo de cada pierna. El servidor verifica que esos datos aparezcan en WIND/T del PRONAREA aportado; después se calcula rumbo y GS sin otra consulta de IA.</p>
+    <p class="sub">La TAS se ingresa en el plan. El viento de PRONAREA WIND/T se selecciona localmente por nivel y referencia geográfica; también podés ingresar viento manual por pierna. Sin IA ni tokens.</p>
     <div id="flight-nav-wind-legs" aria-live="polite"></div>
     <p class="flight-essential-note" id="flight-nav-help">El viento automático procede exclusivamente de la sección <strong>WIND/T</strong> del PRONAREA que pegaste, <strong>no de METAR ni TAF</strong>. Se elige el nivel FL publicado más cercano a la altitud de cada pierna y una estación de referencia próxima al trayecto. Debés verificar fecha y período de validez, FIR, sector, hora de cada tramo y representatividad del viento. Si faltan datos o son dudosos, la GS quedará «No calculable» y podrás ingresar manualmente el viento oficial verificado.</p>
   </section>
@@ -921,7 +927,7 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
  <label class="field" for="flight-pilot-question">Escribí tu pregunta o continuá la conversación
   <textarea id="flight-pilot-question" minlength="2" maxlength="500" rows="3" placeholder="Ej.: ¿Qué fenómenos debería vigilar a 3.500 pies? Después: ¿Y en el destino?" style="resize:vertical"></textarea></label>
  <label class="flight-ai-consent"><input id="flight-pilot-consent" type="checkbox"><span>Autorizo esta respuesta de ChatGPT y el consumo de tokens.</span></label>
- <div class="actions"><button class="primary" id="flight-pilot-ask" type="button">Enviar a ChatGPT</button><span class="feedback ai-validation-status" id="flight-pilot-status" role="status" aria-live="polite">Escribí una pregunta, marcá la autorización y enviá. PRONAREA es opcional.</span></div>
+ <div class="actions"><button class="primary" id="flight-pilot-ask" type="button">Enviar a ChatGPT</button><span class="feedback ai-validation-status" id="flight-pilot-status" role="status" aria-live="polite">Escribí tu pregunta y autorizá tokens. Se requiere PRONAREA aplicable.</span></div>
 </section>
 </div></details>
 <details class="ops-accordion" id="ops-cartas"><summary class="ops-accordion-toggle"><span class="ops-accordion-number">09</span><span class="ops-accordion-name"><strong>Cartas meteorológicas</strong><span>Superficie, altura y tiempo significativo</span></span><span class="ops-accordion-arrow" aria-hidden="true"></span></summary><div class="ops-accordion-content">
@@ -1583,7 +1589,9 @@ el('copy-report').addEventListener('click',async()=>{
      $('flight-time').focus({preventScroll:true});
      return null;
    }
-   const firs=[...document.querySelectorAll('.flight-fir:checked')].map(x=>x.value);
+   const gate=window.GDV_FLIGHT_PRONAREA_GATE?.check();
+    if(!gate?.ok){targetStatus.textContent='IA bloqueada, sin consumir tokens: '+(gate?.message||'verificá la validez UTC del PRONAREA.');return null;}
+    const firs=[...document.querySelectorAll('.flight-fir:checked')].map(x=>x.value);
    if(!firs.length){
      targetStatus.textContent='Seleccioná por lo menos una FIR.';
      return null;
@@ -1647,6 +1655,9 @@ el('copy-report').addEventListener('click',async()=>{
      cruise_altitude_ft:Number($('flight-alt').value),
      flight_rules:$('flight-rules').value,firs,question,
      pronarea_text:$('flight-pronarea').value.trim(),
+      pronarea_valid_from_date_utc:$('flight-pronarea-date').value,
+      pronarea_official_checked:$('flight-pronarea-confirm').checked,
+      planned_end_utc:window.GDV_FLIGHT_PRONAREA_GATE?.estimatedArrivalUtc()||null,
      source_snapshot:loadedReports,
      notam_text:'', // Se consulta fuera de la Mesa en AIS/ANAC.
      ...(mode==='pilot_question'?{conversation_history:pilotTurns.slice(-8).map(turn=>({
@@ -1982,5 +1993,6 @@ if(stage){
 <script src="../assets/flight-essential-navigation.js?v=20261015g"></script>
 <script src="../assets/flight-fir-autoselect.js?v=20261015b"></script>
 <script src="../assets/flight-route-suggestions.js?v=20261015b"></script>
+<script defer src="../assets/flight-operations-wizard.js?v=20261015a"></script>
 </body>
 </html>
