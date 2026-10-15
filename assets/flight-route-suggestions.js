@@ -81,6 +81,12 @@ function estimate(from,to){
  }
  return {direct,options:proposals.slice(0,3),info:points.length?'':'No se identificaron puntos de nuestro catálogo suficientemente próximos a la ruta directa. Esto NO implica que no existan referencias aeronáuticas publicadas.'};
 }
+function humanName(code){
+ if(code==='RUFINO')return 'Rufino';
+ const option=[...origin.options,...destination.options].find(item=>item.value===code);
+ const label=option?.textContent?.trim().split(' · ')[0]||'';
+ return label&&label!==code?label+' ('+code+')':code;
+}
 function element(tag,className,text){
  const node=document.createElement(tag);
  if(className)node.className=className;
@@ -135,12 +141,12 @@ function render(){
    for(const option of result.options){
      const row=element('article','flight-route-option');
      const title=element('strong','',option.items.length===1?'Sugerencia con 1 punto intermedio':'Sugerencia con '+option.items.length+' puntos intermedios');
-     const path=element('p','flight-route-path',option.route);
+     const path=element('p','flight-route-path',[from,...option.nodes,to].map(humanName).join(' → '));
      const metrics=element('p','flight-route-metrics',
        'Recorrido aproximado '+fmtKm(option.length)+' · desvío de '+fmtKm(option.extra)+
        ' respecto de la línea directa. Referencias geográficas, no ruta validada.');
      const labels=element('p','flight-route-metrics',
-       option.items.map(item=>item.code+' ('+item.kind+
+       option.items.map(item=>humanName(item.code)+' ('+item.kind+
          ', desplazamiento lateral '+fmtKm(item.off)+' aprox.)').join(' · '));
      const action=element('button','secondary','Incorporar estas piernas');
      action.type='button';action.addEventListener('click',()=>applyOption(option.nodes,key));
