@@ -417,6 +417,15 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
 .flight-advanced-report>.card .card-header{padding-top:13px}
 .flight-precautions-icon{color:#222c36}
 .sitefoot{margin-top:18px}
+.ops-official-links{margin:0 0 15px;border-color:#55778e;background:linear-gradient(155deg,#1d3040,#192936);scroll-margin-top:15px}
+.ops-official-heading{display:flex;align-items:center;gap:13px;margin-bottom:17px}
+.ops-official-heading h2{margin:4px 0 0;font-size:19px;color:#eff6fb}
+.ops-official-links .quicklinks{grid-template-columns:repeat(3,minmax(0,1fr));gap:11px}
+.ops-official-links .quicklinks a{background:#213748;border-color:#47667b;min-width:0}
+.ops-official-links .quicklinks a:hover,.ops-official-links .quicklinks a:focus-visible{border-color:#9ec6df;background:#2b4558}
+.ops-official-links .quicklinks strong{color:#d9ebf7}
+@media(max-width:700px){.ops-official-links .quicklinks{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:460px){.ops-official-links .quicklinks{grid-template-columns:1fr}}
 @media(max-width:1000px){.ops-route-strip{grid-template-columns:1fr 28px 1fr}.ops-route-meta{grid-column:1/-1;grid-template-columns:repeat(4,minmax(0,1fr));border-left:0;border-top:1px solid #62798b;padding-left:0;padding-top:12px}.ops-cards{grid-template-columns:repeat(4,minmax(0,1fr))}}
 @media(max-width:870px){.layout{grid-template-columns:1fr}.ops-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:620px){.wrap{padding:14px 11px 55px}.hero-main{padding:23px 19px}.ops-dashboard{padding:14px;border-radius:15px}.ops-dashboard-marker{display:none}.ops-dashboard-heading h2{font-size:20px}.ops-route-strip{padding:13px 11px;gap:8px}.ops-route-meta{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.ops-route-airport strong{font-size:21px}.ops-route-direction{font-size:19px}.ops-cards{gap:8px}.ops-shortcut{min-height:128px;padding:12px}.ops-shortcut>strong{font-size:13px}.ops-cards-heading{display:block}.ops-cards-heading span{display:block;margin-top:2px}.ops-accordion-toggle,.flight-advanced-report>summary{padding:14px 12px;gap:10px;min-height:69px}.ops-accordion-number{width:33px;height:33px;flex-basis:33px}.ops-accordion-name>strong{font-size:15px}.ops-accordion-content{padding:0 13px 15px}.flight-advanced-report>.card{padding:0 13px 15px}#boletines .status-grid{grid-template-columns:repeat(5,minmax(112px,1fr));overflow-x:auto;padding-bottom:4px}.jump a{font-size:11px;padding:7px 9px}}
@@ -455,7 +464,7 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
     <button class="ops-shortcut" type="button" data-ops-target="#analisis-altura"><span class="ops-shortcut-icon" aria-hidden="true">▤</span><strong>Informe final</strong><span class="ops-shortcut-state" id="ops-status-final">Generación opcional</span><span class="ops-shortcut-link">Abrir informe ↗</span></button>
   </div>
 </section>
-<nav class="jump" aria-label="Secciones"><a href="#plan-vuelo">1 · Plan de vuelo</a><a href="#consultar">2 · Boletines y PRONAREA</a><a href="#boletines">3 · Cuatro etapas</a><a href="#informe-meteorologico">Informe meteorológico</a><a href="#precauciones-vuelo">Precauciones</a><a href="#analisis-altura">4 · Informe con IA</a><a href="#consulta-piloto">Consulta del piloto</a><a href="#cartas-oficiales">Cartas oficiales</a></nav>
+<nav class="jump" aria-label="Secciones"><a href="#plan-vuelo">1 · Plan de vuelo</a><a href="#consultar">2 · Boletines y PRONAREA</a><a href="#boletines">3 · Cuatro etapas</a><a href="#fuentes">4 · Fuentes oficiales</a><a href="#informe-meteorologico">5 · Informe meteorológico</a><a href="#precauciones-vuelo">6 · Precauciones</a><a href="#analisis-altura">7 · Informe con IA</a><a href="#consulta-piloto">8 · Consulta del piloto</a><a href="#cartas-oficiales">9 · Cartas oficiales</a></nav>
 <details class="ops-accordion" id="ops-plan" open><summary class="ops-accordion-toggle"><span class="ops-accordion-number">01</span><span class="ops-accordion-name"><strong>Plan de vuelo</strong><span>Origen, destino, alternativo, UTC y piernas</span></span><span class="ops-accordion-arrow" aria-hidden="true"></span></summary><div class="ops-accordion-content">
 <section class="card flight-workflow" id="plan-vuelo">
 <div class="card-header"><div><span class="card-kicker">PASO 1 · PLANIFICACIÓN</span><h2>Salida, destino y piernas de vuelo</h2></div></div>
@@ -604,7 +613,7 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
 <div class="status-tile" id="s-metar"><strong>METAR</strong><span>Sin consultar</span></div>
 <div class="status-tile pending" id="s-notam"><strong>NOTAM</strong><span>Consulta oficial</span></div>
 </div>
-<details class="flight-stages-details" id="flight-stage-details"><summary>Ver detalle de las cuatro etapas cuando falten datos</summary>
+<details class="flight-stages-details" id="flight-stage-details"><summary>Ver detalle de las cuatro etapas</summary>
 <div class="flight-stages-inner">
 <section class="brief-stage" id="etapa-ruta" aria-labelledby="etapa-ruta-titulo">
 <div class="brief-stage-heading"><span class="brief-stage-number">1</span><div><h3 id="etapa-ruta-titulo">Evaluación en ruta · Macro</h3><p class="sub">Área y FIR: verificá fenómenos, sectores, altitudes y vigencia en el recorrido.</p></div></div>
@@ -641,7 +650,7 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
 </div>
 <aside class="stack">
 <section class="card" id="nubosidad">
-<div class="card-header"><div><span class="card-kicker">04 / METAR · Complemento visual</span><h2>Lectura de nubosidad</h2></div><span class="sub">Símbolo de la observación disponible</span></div>
+<div class="card-header"><div><span class="card-kicker">METAR · Complemento visual</span><h2>Lectura de nubosidad</h2></div><span class="sub">Símbolo de la observación disponible</span></div>
 <div class="cloud-current" role="status" aria-live="polite">
   <div class="cloud-symbol" id="current-cloud-symbol" style="--fill:0deg" aria-hidden="true"></div>
   <div><div class="cloud-code" id="current-cloud-code">—</div>
@@ -665,8 +674,12 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
   </div>
 </details>
 </section>
-<section class="card" id="fuentes">
-<div class="card-header"><div><span class="card-kicker">Consulta oficial · Enlaces</span><h2>Directorio aeronáutico</h2></div></div>
+
+</aside>
+</div>
+
+<section class="card ops-official-links" id="fuentes" aria-labelledby="ops-official-heading">
+<div class="ops-official-heading"><span class="ops-accordion-number">04</span><div><span class="card-kicker">Consulta oficial · Enlaces</span><h2 id="ops-official-heading">Directorio aeronáutico</h2></div></div>
 <div class="quicklinks">
 <a href="https://ais.anac.gob.ar/" target="_blank" rel="noopener noreferrer"><strong>AIP y cartas</strong><span>Publicaciones, fichas, procedimientos y cartas de aeródromo</span></a>
 <a href="https://ais.anac.gob.ar/notam" target="_blank" rel="noopener noreferrer"><strong>NOTAM</strong><span>Información operacional oficial</span></a>
@@ -676,11 +689,8 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
 <a href="https://redemet.decea.mil.br/" target="_blank" rel="noopener noreferrer"><strong>Cartas SIGWX · REDEMET</strong><span>Tiempo significativo SFC/FL250 (Brasil); comprobar cobertura, validez y región.</span></a>
 </div>
 </section>
-</aside>
-</div>
 
-
-<details class="ops-accordion" id="ops-meteo"><summary class="ops-accordion-toggle"><span class="ops-accordion-number">04</span><span class="ops-accordion-name"><strong>Informe meteorológico</strong><span>Síntesis orientativa del recorrido y las condiciones</span></span><span class="ops-accordion-arrow" aria-hidden="true"></span></summary><div class="ops-accordion-content">
+<details class="ops-accordion" id="ops-meteo"><summary class="ops-accordion-toggle"><span class="ops-accordion-number">05</span><span class="ops-accordion-name"><strong>Informe meteorológico</strong><span>Síntesis orientativa del recorrido y las condiciones</span></span><span class="ops-accordion-arrow" aria-hidden="true"></span></summary><div class="ops-accordion-content">
 <section class="card flight-weather-overview" id="informe-meteorologico" aria-labelledby="flight-weather-heading">
  <div class="card-header"><div><span class="card-kicker">SÍNTESIS METEOROLÓGICA · ANTES DE LAS PRECAUCIONES</span>
   <h2 id="flight-weather-heading">Informe meteorológico del vuelo planificado</h2></div></div>
@@ -697,7 +707,7 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
  </div>
 </section>
 </div></details>
-<details class="ops-accordion" id="ops-precauciones"><summary class="ops-accordion-toggle"><span class="ops-accordion-number">05</span><span class="ops-accordion-name"><strong>Precauciones antes del vuelo</strong><span>Comprobaciones que requieren verificación del piloto</span></span><span class="ops-accordion-arrow" aria-hidden="true"></span></summary><div class="ops-accordion-content">
+<details class="ops-accordion" id="ops-precauciones"><summary class="ops-accordion-toggle"><span class="ops-accordion-number">06</span><span class="ops-accordion-name"><strong>Precauciones antes del vuelo</strong><span>Comprobaciones que requieren verificación del piloto</span></span><span class="ops-accordion-arrow" aria-hidden="true"></span></summary><div class="ops-accordion-content">
 <section class="flight-precautions" id="precauciones-vuelo" aria-labelledby="flight-precautions-heading">
  <div class="flight-precautions-head">
   <span class="flight-precautions-icon" aria-hidden="true">!</span>
@@ -717,10 +727,10 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
  </div>
 </section>
 </div></details>
-<details class="flight-advanced-report"><summary><span class="ops-accordion-number">06</span><span class="ops-accordion-name"><strong>Informe operacional ampliado</strong><span>Evaluación IA de las cuatro etapas · opcional</span></span><span class="ops-accordion-arrow" aria-hidden="true"></span></summary>
+<details class="flight-advanced-report"><summary><span class="ops-accordion-number">07</span><span class="ops-accordion-name"><strong>Informe operacional ampliado</strong><span>Evaluación IA de las cuatro etapas · opcional</span></span><span class="ops-accordion-arrow" aria-hidden="true"></span></summary>
 <section class="card" id="analisis-altura" style="border-color:#54758a;background:linear-gradient(145deg,#1c2b36,#17232c)">
 <div class="card-header">
- <div><span class="card-kicker">PASO 4 · INFORME FINAL</span><h2>Análisis de las cuatro etapas con IA</h2></div>
+ <div><span class="card-kicker">PASO 7 · INFORME OPERACIONAL</span><h2>Análisis de las cuatro etapas con IA</h2></div>
  <span style="border:1px solid #648597;border-radius:99px;padding:7px 11px;color:var(--accent2);font-size:12px;font-weight:700">Usa tokens solo al confirmar</span>
 </div>
 <p class="sub">El sistema tendrá en cuenta las piernas declaradas, salida, destino y alternativo, PRONAREA cargado manualmente y los METAR/TAF/SIGMET recuperables. Evaluará: 1) ruta (PRONAREA/SIGMET), 2) salida, destino y alternativo (TAF), 3) infraestructura (NOTAM por consulta externa), 4) observaciones actuales de los tres aeródromos (METAR). <strong>Solo generará el informe después de tu confirmación; no autoriza el vuelo.</strong></p>
@@ -746,7 +756,7 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
 </details>
 
 
-<details class="ops-accordion" id="ops-piloto"><summary class="ops-accordion-toggle"><span class="ops-accordion-number">07</span><span class="ops-accordion-name"><strong>Consulta del piloto</strong><span>Preguntas a la IA sobre los datos del vuelo</span></span><span class="ops-accordion-arrow" aria-hidden="true"></span></summary><div class="ops-accordion-content">
+<details class="ops-accordion" id="ops-piloto"><summary class="ops-accordion-toggle"><span class="ops-accordion-number">08</span><span class="ops-accordion-name"><strong>Consulta del piloto</strong><span>Preguntas a la IA sobre los datos del vuelo</span></span><span class="ops-accordion-arrow" aria-hidden="true"></span></summary><div class="ops-accordion-content">
 <section class="card flight-pilot-query" id="consulta-piloto">
  <div class="card-header"><div><span class="card-kicker">CONSULTA FINAL · IA</span>
  <h2>Consulta del piloto sobre su vuelo</h2></div></div>
@@ -765,7 +775,7 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
  </div>
 </section>
 </div></details>
-<details class="ops-accordion" id="ops-cartas"><summary class="ops-accordion-toggle"><span class="ops-accordion-number">08</span><span class="ops-accordion-name"><strong>Cartas meteorológicas</strong><span>Superficie, altura y tiempo significativo</span></span><span class="ops-accordion-arrow" aria-hidden="true"></span></summary><div class="ops-accordion-content">
+<details class="ops-accordion" id="ops-cartas"><summary class="ops-accordion-toggle"><span class="ops-accordion-number">09</span><span class="ops-accordion-name"><strong>Cartas meteorológicas</strong><span>Superficie, altura y tiempo significativo</span></span><span class="ops-accordion-arrow" aria-hidden="true"></span></summary><div class="ops-accordion-content">
 <section class="card flight-chart" id="cartas-oficiales">
 <div class="card-header"><div><span class="card-kicker">CARTAS METEOROLÓGICAS · CONSULTA OFICIAL</span><h2>Mapas de superficie, altura y tiempo significativo</h2></div></div>
 <p class="sub">Las cartas de superficie y altura se solicitan automáticamente como imágenes oficiales ECMWF, sin insertar páginas ni consumir tokens de IA. Para SIGWX se ofrecen alternativas oficiales cuando el enlace del SMN no muestra las cartas. <strong>Comprobá región, hora base, validez y nivel.</strong> Los niveles de las cartas no coinciden necesariamente con la altitud planificada.</p>
@@ -1219,9 +1229,8 @@ el('copy-report').addEventListener('click',async()=>{
      const checkpoints=['origin','dest','alternate'];
      const tafCount=checkpoints.filter(which=>$('flight-taf-'+which+'-state').textContent==='Recuperado').length;
      const metarCount=checkpoints.filter(which=>$('flight-metar-'+which+'-state').textContent==='Recuperado').length;
-     markStatus('taf',tafCount+'/3 disponibles',tafCount===3);
+     markStatus('taf',tafCount+'/3 disponibles',tafCount>=1);
      markStatus('metar',metarCount+'/3 disponibles',metarCount===3);
-     if(tafCount<3||metarCount<3||count<codes.length)$('flight-stage-details').open=true;
      if(count===codes.length){
        lastConsultKey=key;
        $('flight-fetch-status').textContent='Consulta completada para salida, destino y alternativo. Revisá TAF/METAR y cargá PRONAREA.';
@@ -1579,6 +1588,8 @@ const $=id=>document.getElementById(id);
 const cards=document.querySelectorAll('[data-ops-target]');
 function reveal(target){
   if(!target)return;
+  const details=$('flight-stage-details');
+  if(details?.open && !details.contains(target))details.open=false;
   let ancestor=target;
   while(ancestor){if(ancestor.tagName==='DETAILS')ancestor.open=true;ancestor=ancestor.parentElement;}
   if(target.tagName==='DETAILS')target.open=true;
@@ -1639,7 +1650,16 @@ $('flight-fetch-reports')?.addEventListener('click',()=>{
   }
 },true);
 const stage=$('flight-stage-details');
-if(stage)new MutationObserver(()=>{if(stage.open)$('ops-boletines').open=true;}).observe(stage,{attributes:true,attributeFilter:['open']});
+if(stage){
+  stage.open=false; // No abrir automáticamente, incluso si faltan boletines.
+  document.addEventListener('pointerdown',event=>{
+    if(stage.open && !stage.contains(event.target))stage.open=false;
+  });
+  stage.addEventListener('toggle',()=>{
+    if(!stage.open)stage.querySelectorAll('details[open]').forEach(item=>{item.open=false;});
+  });
+  new MutationObserver(()=>{if(stage.open)$('ops-boletines').open=true;}).observe(stage,{attributes:true,attributeFilter:['open']});
+}
 })();
 </script>
 </body>
