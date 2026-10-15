@@ -149,7 +149,8 @@ function paint(row){
   out.dataset.vfrState=result.state;
   out.dataset.vfrBlocked=String(result.blocked);
   alt.setCustomValidity(result.blocked?result.message:'');
-  alt.toggleAttribute('aria-invalid',result.blocked);
+  if(result.blocked)alt.setAttribute('aria-invalid','true');
+  else alt.removeAttribute('aria-invalid');
   out.replaceChildren();
   const message=document.createElement('span');message.textContent=result.message;out.append(message);
   if(result.suggestions.length){
@@ -190,7 +191,15 @@ function refresh(){
       const result=document.createElement('div');result.className='flight-vfr-result';
       result.dataset.vfrState='unknown';row.append(label,result);
       input.addEventListener('input',()=>{
-        input.dataset.estimated='false';manual.set(key,input.value);
+        if(input.value===''){
+          manual.delete(key);
+          label.dataset.routeKey='';
+          refresh(); // Vaciar la entrada manual restablece el cálculo automático.
+          return;
+        }
+        input.dataset.estimated='false';input.dataset.uncertain='false';
+        label.firstChild.textContent='Derrota magnética (°) · manual';
+        manual.set(key,input.value);
         paint(row);updateOverview();
       });
       if(!tracked.has(alt)){
