@@ -716,17 +716,18 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
  <details class="report" open><summary><strong id="flight-taf-origin-title">TAF salida</strong><span id="flight-taf-origin-state">Pendiente</span></summary><div class="content"><pre id="flight-taf-origin-raw">—</pre></div></details>
  <details class="report" open><summary><strong id="flight-taf-dest-title">TAF destino</strong><span id="flight-taf-dest-state">Pendiente</span></summary><div class="content"><pre id="flight-taf-dest-raw">—</pre></div></details>
  <details class="report" open><summary><strong id="flight-taf-alternate-title">TAF alternativo</strong><span id="flight-taf-alternate-state">Pendiente</span></summary><div class="content"><pre id="flight-taf-alternate-raw">—</pre></div></details>
- <details class="report flight-sigmet-report" open>
+</div>
+</div>
+<details class="report flight-sigmet-report" open>
   <summary><strong>SIGMET · FIR del recorrido</strong><span id="flight-sigmet-state">Sin consultar</span></summary>
   <div class="content">
-   <p class="sub">Consulta automática complementaria de NOAA/AWC para las FIR que marcaste. Un SIGMET puede afectar solo un sector de la FIR, no necesariamente tu ruta o altitud. Sin resultados no significa que no existan avisos oficiales.</p>
+   <p class="sub">Consulta automática independiente de METAR y TAF para las FIR seleccionadas. La fuente NOAA/AWC es parcial: un SIGMET puede afectar solo un sector de la FIR, y sin coincidencias no se confirma ausencia de avisos oficiales.</p>
+   <div class="actions"><button class="secondary" type="button" id="flight-refresh-sigmet">Actualizar SIGMET</button><span class="feedback" id="flight-sigmet-checked" role="status" aria-live="polite">Preparando consulta automática…</span></div>
    <div id="flight-sigmet-firs" class="flight-sigmet-grid" aria-live="polite"></div>
    <a href="https://www.smn.gob.ar/mensajes-sigmet" target="_blank" rel="noopener noreferrer">Verificar SIGMET oficiales en el SMN ↗</a>
   </div>
- </details>
-</div>
+</details>
 <p class="source-notes">SIGMET: consulta internacional parcial por cada FIR seleccionada. Sin coincidencias no significa ausencia de avisos. Antes del vuelo corroborá los SIGMET oficiales, sectores afectados, alturas y períodos de validez.</p>
-</div>
 <div class="manual-source">
 <div class="manual-source-heading"><strong>PRONAREA · carga manual</strong><a class="secondary" href="https://www.smn.gob.ar/pronarea" target="_blank" rel="noopener noreferrer">Abrir PRONAREA · SMN ↗</a></div>
 <p class="sub">Copiá el PRONAREA de las FIR que recorrés y pegalo aquí, incluyendo emisión, vigencia, sectores y niveles.</p>
@@ -1325,6 +1326,66 @@ el('copy-report').addEventListener('click',async()=>{
    markStatus('sigmet',found?'Verificar alcance de avisos':failed?'Consulta incompleta':'Búsqueda parcial',found>0);
    return {found,failed,unknown};
  }
+ let sigmetSerial=0,sigmetTimer=null;
+ const selectedSigmetFirs=()=>[...document.querySelectorAll('.flight-fir:checked')].map(node=>node.value);
+ async function refreshSigmet(){
+   const firs=selectedSigmetFirs(),serial=++sigmetSerial;
+   const checked=$('flight-sigmet-checked'),state=$('flight-sigmet-state');
+   if(!firs.length){
+     state.textContent='Seleccioná al menos una FIR';
+     checked.textContent='Elegí las FIR de tu ruta en el paso 1.';
+     $('flight-sigmet-firs').replaceChildren();
+     return;
+   }
+   const client=window.GDV_AUTH?.client;
+   if(!client){
+     state.textContent='Consulta pendiente de sesión';
+     checked.textContent='Ingresá como administrador y pulsá «Actualizar SIGMET».';
+     return;
+   }
+   state.textContent='Consultando NOAA/AWC…';
+   checked.textContent='Buscando SIGMET vigentes para '+firs.join(', ')+'…';
+   $('flight-refresh-sigmet').disabled=true;
+   try{
+     const {data,error}=await client.functions.invoke('robert-meteo',{
+       body:{sigmet_only:true,fir:firs[0],firs}
+     });
+     if(serial!==sigmetSerial || firs.join(',')!==selectedSigmetFirs().join(','))return;
+     if(error || data?.ok!==true || !Array.isArray(data.sigmets_by_fir))
+       throw Error(data?.error||error?.message||'Respuesta SIGMET no válida.');
+     renderRouteSigmets(data.sigmets_by_fir,firs);
+     const time=new Date(data.consulted_at_utc);
+     checked.textContent='NOAA/AWC consultado '+(Number.isFinite(time.getTime())?time.toISOString().slice(11,16)+' UTC':'ahora')+
+       ' · Cobertura parcial; confirmar en SMN.';
+     if(loadedReports?.plan_key===flightKey()){
+       loadedReports.sigmet=firs.map(fir=>{
+         const item=data.sigmets_by_fir.find(row=>row.fir===fir);
+         const available=item?.available===true&&typeof item.raw==='string'&&item.raw.trim().length>0;
+         return {fir,available,raw:available?item.raw.trim().slice(0,2500):''};
+       });
+     }
+   }catch(error){
+     if(serial!==sigmetSerial)return;
+     state.textContent='La consulta SIGMET falló';
+     checked.textContent='Sin respuesta confirmada: '+(error?.message||'reintentá')+'. Verificá el SMN.';
+     $('flight-sigmet-firs').replaceChildren();
+     markStatus('sigmet','Error de consulta',false);
+   }finally{
+     if(serial===sigmetSerial)$('flight-refresh-sigmet').disabled=false;
+   }
+ }
+ function scheduleSigmet(delay=500){
+   sigmetSerial++;
+   if(sigmetTimer!==null)clearTimeout(sigmetTimer);
+   $('flight-sigmet-state').textContent='Actualización pendiente';
+   $('flight-sigmet-checked').textContent='FIR modificada; preparando consulta…';
+   $('flight-refresh-sigmet').disabled=false;
+   sigmetTimer=setTimeout(()=>{sigmetTimer=null;void refreshSigmet();},delay);
+ }
+ document.querySelectorAll('.flight-fir').forEach(node=>node.addEventListener('change',()=>scheduleSigmet()));
+ $('flight-refresh-sigmet').addEventListener('click',()=>scheduleSigmet(0));
+ // Esperar a la preselección geográfica inicial de FIR antes de la primera consulta.
+ scheduleSigmet(900);
  $('flight-fetch-reports').addEventListener('click',async()=>{
    if(consultBusy)return;
    const originCode=airportCode('flight-origin'),destCode=airportCode('flight-dest'),
@@ -1421,6 +1482,8 @@ el('copy-report').addEventListener('click',async()=>{
        reports:rawReports,sigmet:sigmetSnapshot
      };
      const sigmetOverview=renderRouteSigmets(firResults,firs);
+     $('flight-sigmet-checked').textContent='NOAA/AWC consultado '+new Date().toISOString().slice(11,16)+
+       ' UTC junto con METAR/TAF · Cobertura parcial.';
      $('flight-auto-results').hidden=false;
      $('flight-auto-time').textContent='Consulta: '+new Date().toLocaleString('es-AR')+
        '. Los boletines pueden variar antes del despegue; verificá sus horas de emisión y validez.';
