@@ -30,6 +30,7 @@ function airport(id){
 function parsePoint(text){
  const value=String(text||'').trim().toUpperCase();
  if(airports[value])return airports[value];
+ if(window.GDV_FLIGHT_NAMED_POINTS?.[value])return window.GDV_FLIGHT_NAMED_POINTS[value];
  // Puntos intermedios numéricos explícitos: latitud, longitud en grados decimales.
  const match=/^(-?\d{1,2}(?:\.\d+)?)\s*[,;]\s*(-?\d{1,3}(?:\.\d+)?)$/.exec(value);
  if(match){
