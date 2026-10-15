@@ -124,7 +124,9 @@
 .flight-precautions-result > strong{font-size:15px;color:#382b11}
 .flight-precautions-result p:last-child{font-weight:700;border-top:1px solid #beab6f;padding-top:10px}
 .flight-ai-timestamp{font-size:12px}
-.flight-ai-text{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.7}
+.flight-ai-text{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.85;font-size:15px;letter-spacing:.005em}
+#flight-analysis{font-size:15px;line-height:1.85;letter-spacing:.005em}
+@media(max-width:620px){.flight-ai-text,#flight-analysis{font-size:14px;line-height:1.8}}
 .flight-pilot-query{margin:18px 0 0;border-color:#6a7675}
 .flight-pilot-query .flight-ai-consent{color:var(--text);font-weight:500}
 .flight-pilot-result{border-top:1px solid #56615d;margin-top:17px;padding-top:17px}
@@ -704,7 +706,7 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
 <section class="card flight-weather-overview" id="informe-meteorologico" aria-labelledby="flight-weather-heading">
  <div class="card-header"><div><span class="card-kicker">SÍNTESIS METEOROLÓGICA · ANTES DE LAS PRECAUCIONES</span>
   <h2 id="flight-weather-heading">Informe meteorológico del vuelo planificado</h2></div></div>
- <p class="sub">Análisis de condiciones observadas en aeródromos y pronósticos disponibles para la ruta, salida, destino y alternativo. Incluye viento y temperatura a la altitud prevista, turbulencia, engelamiento, tormentas, visibilidad reducida y demás fenómenos <strong>solo cuando existan datos verificables de sector, nivel y vigencia</strong>. Lo no informado quedará señalado como dato faltante.</p>
+ <p class="sub">Explicación sencilla y punto por punto de los METAR, TAF, SIGMET y PRONAREA cargados, siempre referida a la ruta, las altitudes y la salida UTC programadas. La IA traduce las abreviaturas, pero no inventa fenómenos cuando faltan datos.</p>
  <label class="flight-ai-consent"><input id="flight-weather-consent" type="checkbox">
   <span>Autorizo generar este informe meteorológico con IA y consumir tokens.</span></label>
  <div class="actions"><button class="primary" id="flight-weather-ask" type="button">Generar informe meteorológico con IA</button>
@@ -740,7 +742,7 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
 <details class="flight-advanced-report"><summary><span class="ops-accordion-number">07</span><span class="ops-accordion-name"><strong>Informe operacional ampliado</strong><span>Evaluación IA de las cuatro etapas · opcional</span></span><span class="ops-accordion-arrow" aria-hidden="true"></span></summary>
 <section class="card" id="analisis-altura" style="border-color:#54758a;background:linear-gradient(145deg,#1c2b36,#17232c)">
 <div class="card-header">
- <div><span class="card-kicker">PASO 7 · INFORME OPERACIONAL</span><h2>Análisis de las cuatro etapas con IA</h2></div>
+ <div><span class="card-kicker">PASO 7 · INFORME OPERACIONAL</span><h2>Cuatro etapas explicadas en lenguaje sencillo</h2></div>
  <span style="border:1px solid #648597;border-radius:99px;padding:7px 11px;color:var(--accent2);font-size:12px;font-weight:700">Usa tokens solo al confirmar</span>
 </div>
 <p class="sub">El sistema tendrá en cuenta las piernas declaradas, salida, destino y alternativo, PRONAREA cargado manualmente y los METAR/TAF/SIGMET recuperables. Evaluará: 1) ruta (PRONAREA/SIGMET), 2) salida, destino y alternativo (TAF), 3) infraestructura (NOTAM por consulta externa), 4) observaciones actuales de los tres aeródromos (METAR). <strong>Solo generará el informe después de tu confirmación; no autoriza el vuelo.</strong></p>
@@ -769,7 +771,7 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
 <details class="ops-accordion" id="ops-piloto"><summary class="ops-accordion-toggle"><span class="ops-accordion-number">08</span><span class="ops-accordion-name"><strong>Consulta del piloto · ChatGPT</strong><span>Chat sobre el vuelo y sus boletines</span></span><span class="ops-accordion-arrow" aria-hidden="true"></span></summary><div class="ops-accordion-content">
 <section class="card flight-pilot-query" id="consulta-piloto">
  <div class="card-header"><div><span class="card-kicker">ASISTENTE GPT · CONVERSACIÓN AERONÁUTICA</span><h2>ChatGPT · Consulta del piloto</h2></div></div>
- <p class="sub">ChatGPT utiliza solo los datos del vuelo, los METAR, TAF y SIGMET ya cargados y el PRONAREA que hayas pegado. No consulta fuentes adicionales ni completa datos faltantes. Disponible mientras Robert Shimoda esté desactivado.</p>
+ <p class="sub">Preguntá en lenguaje común. ChatGPT traduce METAR, TAF, SIGMET y PRONAREA y responde únicamente con los datos cargados, siempre para la ruta, altitud y hora UTC previstas. Si no hay información suficiente, te lo dirá. Disponible mientras Robert Shimoda esté desactivado.</p>
  <div class="flight-pilot-result" id="flight-pilot-result" hidden>
   <div class="card-header"><h3>Conversación del vuelo</h3><div class="flight-pilot-chat-controls"><button class="secondary" id="flight-pilot-new" type="button">Nueva conversación</button><button class="secondary" id="flight-pilot-copy" type="button">Copiar conversación</button></div></div>
   <div id="flight-pilot-thread" role="log" aria-live="polite" aria-label="Conversación del piloto con ChatGPT"></div>
@@ -1427,6 +1429,14 @@ el('copy-report').addEventListener('click',async()=>{
      $('flight-alternate').focus();
      return null;
    }
+   const airportLabel=(field)=>{
+     const code=airportCode(field);
+     const node=$(field);
+     if(node.value==='OTHER')return code;
+     const label=node.selectedOptions?.[0]?.textContent?.trim()||code;
+     const tail=' · '+code;
+     return label.endsWith(tail)?label.slice(0,-tail.length)+' ('+code+')':label.slice(0,90);
+   };
    const question=mode==='pilot_question'?$('flight-pilot-question').value.trim():'';
    if(mode==='pilot_question' && question.length<2){
      targetStatus.textContent='Escribí una pregunta para el chat del vuelo.';
@@ -1435,6 +1445,11 @@ el('copy-report').addEventListener('click',async()=>{
    }
    return {
      mode,origin:airportCode('flight-origin'),destination:airportCode('flight-dest'),alternate:alternateCode,
+     airport_labels:{
+       origin:airportLabel('flight-origin'),
+       destination:airportLabel('flight-dest'),
+       alternate:airportLabel('flight-alternate')
+     },
      route:routeText,planned_at_utc:iso('flight-time'),
      cruise_altitude_ft:Number($('flight-alt').value),
      flight_rules:$('flight-rules').value,firs,question,
@@ -1481,7 +1496,13 @@ el('copy-report').addEventListener('click',async()=>{
        outputStatus.textContent='Los datos o boletines cambiaron durante la consulta. Repetí el análisis sobre los datos actuales.';
        return;
      }
-     const answer=response.analysis;
+     // El texto nunca se interpreta como HTML; se limpian marcas de formato
+     // para que títulos y oraciones se lean naturalmente.
+     const answer=response.analysis
+       .replace(/\*\*([\s\S]*?)\*\*/g,'$1')
+       .replace(/^\s*#{1,4}\s+/gm,'')
+       .replace(/\n{3,}/g,'\n\n')
+       .trim();
      $(elements.text).textContent=answer;
      $(elements.time).textContent='Generado: '+
        new Date(response.generated_at_utc).toLocaleString('es-AR',{
