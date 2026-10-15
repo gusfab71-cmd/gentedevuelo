@@ -603,7 +603,11 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
 <label><input class="flight-fir" type="checkbox" value="SARR" style="width:auto"> Resistencia</label>
 <label><input class="flight-fir" type="checkbox" value="SAVF" style="width:auto"> Comodoro Rivadavia</label>
 </div>
-<p class="sub">Marcá todas las FIR implicadas y corroboralas con cartas AIP; el sistema no determina automáticamente el trazado de tu ruta.</p>
+<div class="actions" style="margin:12px 0 7px;align-items:center;gap:12px;flex-wrap:wrap">
+  <button class="secondary" type="button" id="flight-fir-auto-mode" aria-pressed="true" aria-controls="flight-fir-auto-status">Cambiar a selección manual</button>
+  <span class="feedback" id="flight-fir-auto-status" role="status" aria-live="polite">Calculando las FIR aproximadas según la ruta seleccionada…</span>
+ </div>
+ <p class="sub">Las casillas se preseleccionan según un trazado aproximado entre los puntos ubicables y el alternativo. Si agregás puntos intermedios, usá un código OACI registrado o coordenadas decimales (ej.: -34.60, -58.40); si no se pueden ubicar, la selección será manual. <strong>Confirmá siempre las FIR y límites en AIP Argentina ENR 2.1.</strong> El cálculo no reemplaza una planificación de navegación y no consume tokens.</p>
 </fieldset>
 </div>
 
@@ -2047,5 +2051,7 @@ rules.addEventListener('change',()=>{
 enhance();
 })();
 </script>
+<script src="../assets/flight-fir-geodata.js?v=20261015a"></script>
+<script src="../assets/flight-fir-autoselect.js?v=20261015a"></script>
 </body>
 </html>
