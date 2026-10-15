@@ -386,6 +386,18 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
 .flight-nav-settings .field{margin:0}
 .flight-speed-alt-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;min-width:0}
 .flight-speed-alt-row>.field{min-width:0;margin:0}
+.flight-route-suggest-box{border:1px solid #60809a;background:linear-gradient(145deg,#203748,#172b3b);border-radius:13px;padding:14px 17px;margin:12px 0 17px}
+.flight-route-suggest-box .actions{display:flex;align-items:center;gap:10px 13px;flex-wrap:wrap;margin:2px 0 8px}
+.flight-route-suggest-box .feedback{font-size:12px;color:#bed2e0}
+.flight-route-suggest-box .sub{font-size:12px;line-height:1.6;color:#c6d6e2}
+.flight-route-options{display:grid;gap:11px;margin:12px 0}
+.flight-route-option{border:1px solid #577a91;background:#1a3040;border-radius:11px;padding:13px;display:grid;gap:7px}
+.flight-route-option strong{font-size:14px;color:#e7f4fc}
+.flight-route-path{font-weight:700;color:#e0edf7;overflow-wrap:anywhere;margin:0}
+.flight-route-metrics,.flight-route-note,.flight-route-disclaimer{margin:4px 0;color:#c4d5e1;line-height:1.6;font-size:12px}
+.flight-route-disclaimer{border-top:1px solid #4a687d;padding-top:12px;margin-top:14px}
+.flight-route-option button{justify-self:start;font-size:12px;font-weight:700}
+@media(max-width:600px){.flight-route-suggest-box{padding:12px}.flight-route-option button{width:100%}}
 .flight-alt-vfr-feedback{grid-column:1/-1;display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:11px 13px;border:1px solid #536d82;border-radius:10px;background:#1b303f;font-size:12px;line-height:1.6;color:#d4e6f3}
 .flight-alt-vfr-feedback:has([data-vfr-state="different"]){background:linear-gradient(145deg,#233a4a,#1b303f);border-color:#6e90a8;box-shadow:inset 0 1px 0 #a9c5d31a}
 #flight-alt-vfr-status[data-vfr-state="different"]{color:#e3f1fa;font-weight:750}
@@ -654,6 +666,16 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
 <div class="flight-leg-editor">
  <div class="manual-source-heading"><strong>Piernas previstas</strong><button class="secondary" type="button" id="flight-add-stop">+ Agregar punto intermedio</button></div>
  <p class="sub">Si volás directo, quedará una sola pierna. Podés agregar hasta ocho puntos intermedios.</p>
+ <section class="flight-route-suggest-box" id="flight-route-suggest" aria-label="Sugerencias geográficas de piernas">
+   <div class="actions">
+     <button class="secondary" type="button" id="flight-suggest-route" aria-controls="flight-suggested-route" aria-expanded="false">
+       <span aria-hidden="true">◇</span> Sugerir puntos intermedios
+     </button>
+     <span class="feedback">Tomando origen y destino · cálculo local, sin IA ni tokens</span>
+   </div>
+   <div id="flight-suggested-route" aria-live="polite" hidden></div>
+   <p class="sub">Mostramos referencias geográficas próximas al trayecto, no corredores ni puntos de notificación aprobados. Los sugeridos solo se incorporan cuando vos los confirmás.</p>
+ </section>
  <div id="flight-waypoints"></div>
  <div id="flight-legs-list" aria-live="polite"></div>
 </div>
@@ -1928,5 +1950,6 @@ if(stage){
 <script src="../assets/flight-pronarea-wind.js?v=20261015b"></script>
 <script src="../assets/flight-essential-navigation.js?v=20261015f"></script>
 <script src="../assets/flight-fir-autoselect.js?v=20261015b"></script>
+<script src="../assets/flight-route-suggestions.js?v=20261015a"></script>
 </body>
 </html>
