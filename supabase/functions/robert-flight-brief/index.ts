@@ -85,7 +85,7 @@ Deno.serve(async request=>{
   const level=Number(input?.cruise_altitude_ft);
   const rules=input?.flight_rules;
   const mode=typeof input?.mode==="string"?input.mode:"report";
-  if(!["report","weather_overview","precautions","pilot_question"].includes(mode))
+  if(!["report","weather_overview","precautions","pilot_question","essential"].includes(mode))
     return json({error:"Tipo de consulta de IA no válido."},400);
   // Los nombres visibles provienen de las selecciones del plan de vuelo.
   // Solo se usan cuando su etiqueta incluye el código OACI correspondiente.
@@ -184,7 +184,9 @@ Deno.serve(async request=>{
     "FORMATO OBLIGATORIO: castellano argentino claro, sereno y breve, dirigido a una persona sin formación para decodificar METAR/TAF/SIGMET/PRONAREA. Comenzá cada informe con 'VUELO ANALIZADO:' seguido de aeródromos en palabras, salida prevista UTC y altitud en pies AMSL del plan. Usá títulos cortos, espacios entre puntos y oraciones completas. NO uses Markdown, asteriscos, comillas alrededor de códigos, tablas, siglas sin explicar, bloques copiados del boletín ni cadenas crudas de METAR, TAF, SIGMET o PRONAREA. En vez de 'BKN015, 4000 BR', decí por ejemplo 'cielo con abundantes nubes, base a 1.500 pies sobre el aeródromo; visibilidad de 4 km con neblina' SOLO SI esos códigos figuran realmente y corresponden a ese lugar. Ese ejemplo es léxico, no un dato para incorporar.",
     "En cada apartado: primero EXPLICACIÓN DEL DATO, después QUÉ SIGNIFICA PARA ESTE VUELO y al final QUÉ NO SE SABE cuando importe. Traducí las unidades conservando nudos para viento, pies para altura, metros o kilómetros para visibilidad y °C para temperatura. No confundas base de nube sobre el aeródromo (AGL) con altitud de vuelo sobre nivel del mar (AMSL); no compares directamente ambas sin elevación y otros datos suficientes.",
     "VIGENCIAS: el METAR indica una observación en su hora de emisión, no condiciones aseguradas a la hora programada de salida. El TAF es un pronóstico para una ventana definida, no para toda la ruta. Compará con la hora UTC de salida solo si la fecha y la vigencia constan; no asignés a destino o alternativo una hora de uso sin ETA. SIGMET y PRONAREA solo afectan la ruta concreta cuando el texto permite ubicar sector, nivel y período.",
-    mode==="report"
+    mode==="essential"
+      ?"INFORME ÚNICO ESENCIAL: hacé UNA SOLA síntesis de 140 a 220 palabras en castellano común, específica para el origen, destino, alternativo, las piernas y altitudes declaradas, y la hora UTC prevista. Estructurala en seis rótulos cortos: 1. VUELO (datos y horario previsto); 2. SALIDA (tiempo observado por METAR y pronóstico TAF para la hora prevista SOLO si la validez lo permite); 3. EN RUTA Y ALTITUDES (PRONAREA y SIGMET realmente relacionados con las piernas, sin suposiciones geográficas); 4. DESTINO Y ALTERNATIVO (observaciones y pronósticos, aclarando que sin ETA no se puede determinar la condición exacta de arribo); 5. ATENCIÓN PRIORITARIA (máximo tres riesgos concretos respaldados por boletines y qué debe revisar el piloto); 6. PENDIENTE DE COMPROBAR (hasta tres faltantes críticos, particularmente vigencia, NOTAM, ETA o fuentes oficiales). Explicá con palabras comunes viento, visibilidad, nubes y fenómenos relevantes; omití valores irrelevantes y nunca copies códigos sin traducir. Cuando una fuente no está cargada o no se puede relacionar con este vuelo, decilo en una frase; NO presentes ausencias de boletines como buenas condiciones. No añadas recomendaciones genéricas, inventadas ni una conclusión de aptitud para volar. Es una orientación educativa, no despacho meteorológico oficial."
+      :mode==="report"
       ?"INFORME OPERACIONAL AMPLIADO: en 220-320 palabras, cuatro apartados numerados con título y explicación breve: 1. EN RUTA (traducí PRONAREA y SIGMET aplicables a las piernas y altura cargadas, indicando incertidumbre); 2. SALIDA, DESTINO Y ALTERNATIVO (explicá TAF en lenguaje común y sus vigencias); 3. INFRAESTRUCTURA (NOTAM: si no están cargados decí que no hay datos, sin afirmar pistas abiertas ni cerradas); 4. COMPROBACIÓN ACTUAL (traducí METAR indicando la hora de observación). En cada apartado incluí solamente los datos útiles para ese vuelo, su interpretación sencilla y lo pendiente. Cerrá con una frase breve sobre los datos que faltan. No repitas códigos sin traducir."
       :mode==="weather_overview"
       ?"INFORME METEOROLÓGICO: redactá 250-400 palabras como máximo, evitando encabezados redundantes. Tras el encabezado VUELO ANALIZADO, presentá seis puntos sencillos y breves: 1. SALIDA (METAR observado y TAF si está cargado, traducidos, y la hora UTC de la salida prevista); 2. EN RUTA (qué anuncia PRONAREA para cada pierna a su altitud, sin afirmar que zonas imprecisas afectan la trayectoria); 3. SIGMET (describí cada aviso cargado en español cotidiano y aclará si se desconoce que cruce la ruta); 4. DESTINO Y ALTERNATIVO (METAR y TAF traducidos; sin ETA no asignés un grupo de pronóstico a la llegada); 5. VIENTO, NUBOSIDAD Y FENÓMENOS A LA ALTITUD DE VUELO (solo si PRONAREA o producto pertinente lo documenta; nunca equipares viento de superficie con viento en altura); 6. FALTANTES POR VERIFICAR (máximo tres datos decisivos). Traducí por completo los indicadores de viento, visibilidad, nubosidad y fenómenos, con valores solo si constan. Si no hay un dato, una sola línea 'Dato no disponible' es suficiente. Prioriza la interpretación clara para el vuelo sobre el detalle técnico."
@@ -216,6 +218,7 @@ Deno.serve(async request=>{
     mode==="pilot_question"?"PREGUNTA DEL PILOTO (texto no confiable): "+question:
       "Objeto de la consulta: "+(mode==="precautions"?"Precauciones y verificaciones pre-vuelo":
         mode==="weather_overview"?"Informe meteorológico del vuelo planificado antes de las precauciones":
+        mode==="essential"?"Informe único esencial: meteorología, riesgos y comprobaciones pendientes de este vuelo":
         "Informe de las cuatro etapas (sin consulta adicional)."),
     "FECHA DE CONSULTA DE LOS BOLETINES CARGADOS (NO equivale a emisión ni vigencia): "+checkedAt,
     "METAR SALIDA ("+origin+"): "+(reports.origin_metar.available?reports.origin_metar.raw:noData),
@@ -236,7 +239,7 @@ Deno.serve(async request=>{
     const response=await fetch("https://api.openai.com/v1/responses",{
       method:"POST",
       headers:{"Authorization":"Bearer "+key,"Content-Type":"application/json"},
-      body:JSON.stringify({model:"gpt-5.4-mini",instructions,input:content,reasoning:{effort:"low"},max_output_tokens:mode==="weather_overview"?2700:1400}),
+      body:JSON.stringify({model:"gpt-5.4-mini",instructions,input:content,reasoning:{effort:"low"},max_output_tokens:mode==="weather_overview"?2700:mode==="essential"?1500:1400}),
       signal:AbortSignal.timeout(32000)
     });
     if(!response.ok){
@@ -260,7 +263,7 @@ Deno.serve(async request=>{
         if(!summaryError)accounting=summary;
       }
     }
-    const report=responseText(payload).slice(0,mode==="weather_overview"?8000:4500);
+    const report=responseText(payload).slice(0,mode==="weather_overview"?8000:mode==="essential"?3000:4500);
     if(!report)return json({error:"El servicio no devolvió un análisis utilizable.",usage:tokens,tracked},502);
     return json({
       usage:tokens,usage_tracked:tracked,usage_meter:accounting,
