@@ -1,8 +1,10 @@
 /* Flight Operations - Navigation appendix for Essential Flight Report.
  * This is a LOCAL calculation; never uses OpenAI or fetch.
  * Sources: airport coordinates from GDV reference (ANAC 2021);
- * WMM2025 magnetic variation (2025-2030); TAS and forecast winds
- * explicitly entered by the pilot. No wind is inferred from METAR.
+ * WMM2025 magnetic variation (2025-2030); TAS declared by pilot;
+ * WIND/T forecast from loaded PRONAREA at nearest published flight level
+ * and nearby reporting location (manual fallback explicitly identified).
+ * No wind is inferred from METAR or TAF.
  * Wind triangle: true track -> true heading with WCA -> magnetic heading.
  */
 (()=>{
@@ -13,6 +15,7 @@ const settings=$('flight-nav-wind-legs'),tasInput=$('flight-nav-tas');
 const legs=$('flight-legs-list'),waypoints=$('flight-waypoints');
 const result=$('flight-essential-result'),wmm=window.GDV_WMM2025;
 const airports=window.GDV_FLIGHT_FIR_GEODATA?.airports;
+const windSource=window.GDV_PRONAREA_WIND;
 if(!target||!settings||!tasInput||!legs||!waypoints)return;
 const rad=Math.PI/180,deg=180/Math.PI;
 const normalize=d=>((d%360)+360)%360;
@@ -79,14 +82,27 @@ function readTAS(){
  return raw!==''&&Number.isFinite(n)&&n>=20&&n<=500?n:null;
 }
 function windForLeg(leg){
- const data=windValues.get(leg.key)||{};
- const speedStr=String(data.speed??'').trim(),directionStr=String(data.direction??'').trim();
- const speed=speedStr!==''?Number(speedStr):null;
- const from=directionStr!==''?Number(directionStr):null;
- if(speed===null||!Number.isFinite(speed)||speed<0||speed>200)return null;
- if(speed===0)return {speed,from:0};
- if(from===null||!Number.isFinite(from)||from<0||from>359||!Number.isInteger(from))return null;
- return {speed,from};
+ const state=windValues.get(leg.key)||{};
+ if(state.mode==='manual'){
+  const speedStr=String(state.speed??'').trim(),directionStr=String(state.direction??'').trim();
+  const speed=speedStr!==''?Number(speedStr):null;
+  const from=directionStr!==''?Number(directionStr):null;
+  if(speed===null||!Number.isFinite(speed)||speed<0||speed>200||
+     (speed>0&&(from===null||!Number.isFinite(from)||from<0||from>359||!Number.isInteger(from))))
+    return {wind:null,reason:'Datos de viento manual incompletos o inválidos: dirección verdadera 000–359° y velocidad 0–200 kt.'};
+  return {wind:{speed,from:speed===0?0:from},
+    source:'Viento ingresado manualmente por el piloto (fuente y vigencia por verificar).'};
+ }
+ const raw=$('flight-pronarea')?.value||'';
+ if(!raw.trim())return {wind:null,reason:'No se cargó PRONAREA con WIND/T para esta pierna.'};
+ const location=leg.from&&leg.to?[
+  (leg.from[0]+leg.to[0])/2,(leg.from[1]+leg.to[1])/2]:null;
+ const report=windSource?.pick(raw,Number(leg.alt),location,airports);
+ if(!report?.ok)return {wind:null,reason:report?.reason||'No se pudo identificar viento en altura en el PRONAREA cargado.'};
+ return {wind:{speed:report.speed_kt,from:report.direction_true_deg},
+  source:'PRONAREA WIND/T · '+report.station+' · FL'+String(report.level_ft/100).padStart(3,'0')+
+   ' ('+num(report.level_ft)+' ft) · distancia a referencia '+Math.round(report.distance_km)+' km.',
+  notice:report.notice};
 }
 function computeLeg(leg){
  const course=trueTrack(leg.from,leg.to);
@@ -96,12 +112,12 @@ function computeLeg(leg){
    ?wmm.magneticVariation((leg.from[0]+leg.to[0])/2,(leg.from[1]+leg.to[1])/2,date)
    :null;
  const magneticTrack=Number.isFinite(variation)?normalize(course-variation):null;
- const tas=readTAS(),wind=windForLeg(leg);
+ const tas=readTAS(),windInfo=windForLeg(leg),wind=windInfo.wind;
  if(tas===null||wind===null)
-   return {leg,course,variation,magneticTrack,missing:tas===null?'Falta TAS válida (kt); completala para calcular rumbo con viento y GS.':'Faltan datos válidos de viento en altura (dirección verdadera y velocidad en kt) para esta pierna.'};
+   return {leg,course,variation,magneticTrack,missing:tas===null?'Falta TAS válida en el Paso 1 (nudos); completala para calcular rumbo con viento y GS.':windInfo.reason};
  const solution=windTriangle(course,tas,wind.from,wind.speed);
  if(!solution?.possible)return {leg,course,variation,magneticTrack,missing:solution?.reason||'Datos del viento o TAS insuficientes.'};
- return {leg,course,variation,magneticTrack,wind,tas,
+ return {leg,course,variation,magneticTrack,wind,tas,windSource:windInfo.source,windNotice:windInfo.notice,
    wca:solution.wca,trueHeading:solution.trueHeading,
    magneticHeading:Number.isFinite(variation)?normalize(solution.trueHeading-variation):null,
    gs:solution.groundSpeed};
@@ -118,7 +134,7 @@ function describe(r){
    '. Derrota magnética de referencia: '+asLine(r.magneticTrack)+'.'
  ];
  if(r.missing){lines.push('Rumbo corregido y GS: no calculables. '+r.missing);return {title:name,lines};}
- lines.push('Datos declarados: TAS '+num(r.tas)+' kt; viento de altura desde '+String(r.wind.from).padStart(3,'0')+'° verdaderos a '+num(r.wind.speed)+' kt.');
+ lines.push('Datos: TAS '+num(r.tas)+' kt; viento de altura desde '+String(r.wind.from).padStart(3,'0')+'° verdaderos a '+num(r.wind.speed)+' kt. '+r.windSource);
  lines.push('Corrección por viento: '+(r.wca>=0?'+':'')+num(r.wca,1)+'°; rumbo verdadero de proa: '+asLine(r.trueHeading)+
    '; rumbo magnético de proa: '+asLine(r.magneticHeading)+
    '; velocidad estimada sobre el suelo (GS): '+num(r.gs,1)+' kt.');
@@ -139,12 +155,14 @@ function output(){
   target.append(div);
  }
  const note=document.createElement('p');note.className='flight-nav-result-note';
- note.textContent='Cálculo local y aproximado: derrota verdadera inicial geométrica entre puntos, variación WMM2025 y triángulo de viento con la TAS/viento declarados. No usa viento METAR. El pronóstico en altura debe verificarse por tramo, nivel y horario con PRONAREA/SMN o fuente oficial; viento y variación pueden cambiar en ruta. El rumbo de brújula requiere además la desviación magnética de la aeronave. No es navegación certificada, no verifica cartas, obstáculos, AGL ni autorización ATC.';
+ note.textContent='Estimación local: rumbo geográfico inicial de cada pierna, variación WMM2025 y triángulo de viento. Se usa WIND/T del PRONAREA ya cargado al nivel de vuelo publicado más cercano y una estación próxima. El WIND/T corresponde a la hora media de validez y a la vertical de estaciones; puede NO representar la ruta u hora prevista. Revisá con SMN/AIP antes de utilizar la estimación. No se usa METAR ni TAF para calcular GS. El rumbo de brújula necesita adicionalmente la desviación del compás. No reemplaza navegación certificada ni autorización de vuelo.';
  target.append(note);
 }
 function windInputs(){
  const route=currentRoute();
- const signature=JSON.stringify(route.map(r=>[r.key,r.alt]));
+ // Un PRONAREA nuevo vuelve a seleccionar nivel/estación sin depender de la
+ // respuesta IA ni producir una llamada a OpenAI.
+ const signature=JSON.stringify(route.map(r=>[r.key,r.alt]))+'|'+($('flight-pronarea')?.value||'');
  if(currentSignature===signature)return;
  currentSignature=signature;
  settings.replaceChildren();
@@ -155,27 +173,49 @@ function windInputs(){
   const title=document.createElement('strong');
   title.textContent='Pierna '+(leg.index+1)+' · '+leg.name+(leg.alt?' · '+num(Number(leg.alt))+' ft':'');
   item.append(title);
-  const fields=document.createElement('div');fields.className='flight-nav-leg-fields';
-  const winds=windValues.get(leg.key)||{};
-  for(const field of [
-   {key:'direction',name:'Viento DESDE (° verdaderos)',placeholder:'Ej.: 270',max:'359'},
-   {key:'speed',name:'Velocidad del viento (kt)',placeholder:'Ej.: 15',max:'200'}
-  ]){
-   const label=document.createElement('label');label.textContent=field.name;
-   const input=document.createElement('input');
-   input.type='number';input.min='0';input.max=field.max;input.step='1';input.inputMode='numeric';
-   input.placeholder=field.placeholder;
-   input.value=String(winds[field.key]??'');
-   input.setAttribute('aria-label',field.name+' · '+leg.name);
-   input.addEventListener('input',()=>{
-    const state=windValues.get(leg.key)||{};
-    state[field.key]=input.value;
-    windValues.set(leg.key,state);
-    output();
-   });
-   label.append(input);fields.append(label);
+  const info=windForLeg(leg);
+  const state=windValues.get(leg.key)||{};
+  const source=document.createElement('p');source.className='flight-nav-source';
+  source.dataset.status=state.mode==='manual'?'manual':'automatic';
+  source.textContent=state.mode==='manual'
+   ?'Viento manual: comprobá que el valor corresponda a esta altitud, FIR y hora UTC.'
+   :info.wind?'Referencia automática: '+info.source+
+     ' Viento '+String(info.wind.from).padStart(3,'0')+'° verdaderos / '+num(info.wind.speed)+' kt. Verificá vigencia y representatividad.'
+    :'Viento automático no disponible: '+info.reason;
+  item.append(source);
+  const toggle=document.createElement('button');toggle.className='secondary';toggle.type='button';
+  toggle.textContent=state.mode==='manual'?'Volver a viento PRONAREA':'Ingresar viento oficial manualmente';
+  toggle.addEventListener('click',()=>{
+   const selected=windValues.get(leg.key)||{};
+   selected.mode=selected.mode==='manual'?'auto':'manual';
+   windValues.set(leg.key,selected);
+   currentSignature='';
+   windInputs();
+  });
+  item.append(toggle);
+  if(state.mode==='manual'){
+   const fields=document.createElement('div');fields.className='flight-nav-leg-fields';
+   for(const field of [
+    {key:'direction',name:'Viento DESDE (° verdaderos)',placeholder:'Ej.: 270',max:'359'},
+    {key:'speed',name:'Velocidad del viento (kt)',placeholder:'Ej.: 15',max:'200'}
+   ]){
+    const label=document.createElement('label');label.textContent=field.name;
+    const input=document.createElement('input');
+    input.type='number';input.min='0';input.max=field.max;input.step='1';input.inputMode='numeric';
+    input.placeholder=field.placeholder;
+    input.value=String(state[field.key]??'');
+    input.setAttribute('aria-label',field.name+' · '+leg.name);
+    input.addEventListener('input',()=>{
+     const saved=windValues.get(leg.key)||{mode:'manual'};
+     saved[field.key]=input.value;saved.mode='manual';
+     windValues.set(leg.key,saved);
+     output();
+    });
+    label.append(input);fields.append(label);
+   }
+   item.append(fields);
   }
-  item.append(fields);grid.append(item);
+  grid.append(item);
  }
  settings.append(grid);
  output();
@@ -193,6 +233,7 @@ for(const id of ['flight-origin','flight-dest','flight-origin-other','flight-des
  node?.addEventListener('change',()=>{schedule();output();});
 }
 waypoints.addEventListener('input',schedule);
+$('flight-pronarea')?.addEventListener('input',schedule);
 tasInput.addEventListener('input',output);
 document.addEventListener('gdv-flight-essential-generated',()=>{schedule();output();});
 schedule();
