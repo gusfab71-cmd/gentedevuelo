@@ -28,7 +28,46 @@ test('official links and chart controls remain intact', () => {
  }
  assert.match(html, /https:\/\/ais\.anac\.gob\.ar\//);
  assert.match(html, /https:\/\/redemet\.decea\.mil\.br\//);
- assert.match(html, /flight-operations-wizard\.js\?v=20261015s/);
+ assert.match(html, /flight-operations-wizard\.js\?v=20261015t/);
+});
+
+test('fuel chart displays a real time-versus-liters curve and labels a one-hour projection when the route is incomplete', () => {
+ const from=wizard.indexOf('function fuelChartPoints(');
+ const to=wizard.indexOf('\nfunction calcFuel(',from);
+ assert.ok(from>0&&to>from);
+ const nodes=Object.fromEntries(['flight-fuel-chart-svg','flight-fuel-chart-total','flight-fuel-chart-duration','flight-fuel-chart-note'].map(id=>[id,{
+  textContent:'',innerHTML:'',attrs:{},setAttribute(name,value){this.attrs[name]=value;}
+ }]));
+ const {fuelChartPoints,renderFuelChart}=vm.runInNewContext(wizard.slice(from,to)+'\n({fuelChartPoints,renderFuelChart});',{
+  $:id=>nodes[id],fmt:value=>String(Math.round(value*10)/10)
+ });
+ const legs=[{distance_nm:60,gs_kt:120},{distance_nm:90,gs_kt:90}];
+ const points=fuelChartPoints(legs,30,5);
+ assert.equal(points.length,3);
+ assert.equal(points[1].minutes,30);
+ assert.equal(points[1].liters,20);
+ assert.equal(points[2].minutes,90);
+ assert.equal(points[2].liters,50);
+ assert.equal(fuelChartPoints([{distance_nm:12,gs_kt:0}],30,5),null);
+ assert.equal(fuelChartPoints(legs,null,5),null);
+
+ renderFuelChart([],30,5);
+ assert.equal(nodes['flight-fuel-chart-total'].textContent,'35 L');
+ assert.equal(nodes['flight-fuel-chart-duration'].textContent,'Referencia de 60 min');
+ assert.match(nodes['flight-fuel-chart-note'].textContent,/No representa todavía los tramos/);
+
+ renderFuelChart(legs,30,5);
+ assert.equal(nodes['flight-fuel-chart-total'].textContent,'50 L');
+ assert.equal(nodes['flight-fuel-chart-duration'].textContent,'90 min de vuelo');
+ assert.match(nodes['flight-fuel-chart-svg'].innerHTML,/<path d="M/);
+ assert.match(nodes['flight-fuel-chart-svg'].attrs['aria-label'],/90 minutos/);
+ assert.match(nodes['flight-fuel-chart-note'].textContent,/No incluye contingencia, reserva final ni alternativo/);
+
+ renderFuelChart([],null,5);
+ assert.equal(nodes['flight-fuel-chart-total'].textContent,'— L');
+ assert.match(nodes['flight-fuel-chart-svg'].innerHTML,/Tu curva de consumo aparecerá acá/);
+ assert.match(wizard,/id="flight-fuel-chart"/);
+ assert.match(wizard,/\$\('flight-fuel-details'\)\?\.textContent\|\|'Pendiente'/);
 });
 
 test('all five fuel inputs show permanent, working adjustment arrows while remaining manually editable', () => {

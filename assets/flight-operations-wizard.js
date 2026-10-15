@@ -66,7 +66,15 @@ css.textContent='.ops-accordion[hidden],.flight-wizard-nav-panel[hidden],.flight
 '.flight-fuel-editable input::-webkit-inner-spin-button,.flight-fuel-editable input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}'+
 '.flight-fuel-stepper{display:grid;grid-template-rows:1fr 1fr;flex:0 0 27px}.flight-fuel-stepper button{display:block;width:100%;min-height:0;margin:0;padding:0;border:1px solid #91b3ca;border-radius:0;background:#47667d;color:#fff;font:700 12px/1 Arial,sans-serif;cursor:pointer}'+
 '.flight-fuel-stepper button:first-child{border-radius:0 8px 0 0;border-bottom:0}.flight-fuel-stepper button:last-child{border-radius:0 0 8px 0}.flight-fuel-stepper button:hover,.flight-fuel-stepper button:focus-visible{background:#658eaa;outline-offset:1px}'+
-'#flight-fuel-summary{white-space:pre-line;line-height:1.8;padding:15px;background:#33495b;border-radius:10px}'+
+'#flight-fuel-summary{padding:17px;background:#33495b;border:1px solid #57758b;border-radius:12px}'+
+'.flight-fuel-chart{padding:2px 1px 14px}.flight-fuel-chart-head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}'+
+'.flight-fuel-chart-head strong{display:block;color:#eefaff;font-size:16px}.flight-fuel-chart-head span{display:block;color:#b6cfdf;font-size:12px;margin-top:2px}'+
+'.flight-fuel-chart-total{background:#1c465e;border:1px solid #69a5c4;border-radius:11px;padding:7px 13px;color:#e1f8ff;text-align:right;min-width:94px}'+
+'.flight-fuel-chart-total b{display:block;font-size:19px;line-height:1.15;font-variant-numeric:tabular-nums}.flight-fuel-chart-total small{color:#b5d9ec;font-size:11px}'+
+'.flight-fuel-chart-plot{margin:8px 0 3px;border:1px solid #536f86;border-radius:11px;background:linear-gradient(180deg,#293f52,#27394a);overflow:hidden}'+
+'.flight-fuel-chart-plot svg{display:block;width:100%;height:auto;max-height:272px}'+
+'.flight-fuel-chart-note{color:#b9d0df;font-size:12px;line-height:1.5}'+
+'.flight-fuel-details{white-space:pre-line;line-height:1.8;border-top:1px solid #607b8e;padding-top:12px;margin-top:2px;color:#edf5fa}'+
 '@media(max-width:700px){.flight-wizard-steps{grid-template-columns:repeat(2,minmax(0,1fr))}.flight-wizard-ui,.flight-wizard-nav-panel{padding:12px}}'+
 '@media print{body>*:not(#flight-print-sheet){display:none!important}#flight-print-sheet{display:block!important;white-space:pre-wrap;background:#fff!important;color:#111!important;font:11pt/1.5 Arial;padding:8mm}@page{size:A4;margin:12mm}}';
 document.head.append(css);
@@ -80,7 +88,7 @@ const navSettings=$('flight-nav-settings'),navOutput=$('flight-essential-navigat
 if(navSettings)nav.append(navSettings);if(navOutput)nav.append(navOutput);
 const fuel=document.createElement('div');fuel.id='flight-wizard-fuel';
 const inputs=[['flight-fuel-burn','Consumo (litros/hora)',''],['flight-fuel-available','Combustible utilizable (litros)',''],['flight-fuel-start','Inicial: rodaje y ascenso (litros)','5'],['flight-fuel-contingency','Contingencia (%)','10'],['flight-fuel-reserve','Reserva final (minutos)','45']];
-fuel.innerHTML='<h3>Planificación de combustible</h3><div class="flight-fuel-inputs">'+inputs.map(x=>'<label>'+x[1]+'<span class="flight-fuel-editable"><input id="'+x[0]+'" type="number" min="0" max="10000" step="0.1" value="'+x[2]+'"><span class="flight-fuel-stepper"><button type="button" data-fuel-target="'+x[0]+'" data-fuel-direction="1" aria-label="Aumentar '+x[1]+'" title="Aumentar">▲</button><button type="button" data-fuel-target="'+x[0]+'" data-fuel-direction="-1" aria-label="Disminuir '+x[1]+'" title="Disminuir">▼</button></span></span></label>').join('')+'</div><div id="flight-fuel-summary" role="status" aria-live="polite">Completá los datos del plan.</div><p class="sub">5 litros iniciales, 10 % y 45 minutos son valores orientativos editables, no garantías ni mínimos reglamentarios. Validá el POH/AFM, reservas, fases de ascenso y rutas oficiales.</p><button type="button" id="flight-wizard-print">Imprimir o guardar como PDF A4</button>';
+fuel.innerHTML='<h3>Planificación de combustible</h3><div class="flight-fuel-inputs">'+inputs.map(x=>'<label>'+x[1]+'<span class="flight-fuel-editable"><input id="'+x[0]+'" type="number" min="0" max="10000" step="0.1" value="'+x[2]+'"><span class="flight-fuel-stepper"><button type="button" data-fuel-target="'+x[0]+'" data-fuel-direction="1" aria-label="Aumentar '+x[1]+'" title="Aumentar">▲</button><button type="button" data-fuel-target="'+x[0]+'" data-fuel-direction="-1" aria-label="Disminuir '+x[1]+'" title="Disminuir">▼</button></span></span></label>').join('')+'</div><div id="flight-fuel-summary"><div class="flight-fuel-chart" id="flight-fuel-chart"><div class="flight-fuel-chart-head"><div><strong>Consumo acumulado durante el vuelo</strong><span>Litros estimados · minutos transcurridos</span></div><div class="flight-fuel-chart-total"><b id="flight-fuel-chart-total">— L</b><small id="flight-fuel-chart-duration">Tiempo pendiente</small></div></div><div class="flight-fuel-chart-plot"><svg id="flight-fuel-chart-svg" viewBox="0 0 690 235" role="img" aria-label="Gráfico de combustible pendiente de datos"></svg></div><div class="flight-fuel-chart-note" id="flight-fuel-chart-note">Ingresá el consumo horario para ver una proyección de 60 minutos; luego se adaptará a la ruta.</div></div><div id="flight-fuel-details" class="flight-fuel-details" role="status" aria-live="polite">Completá los datos del plan.</div></div><p class="sub">5 litros iniciales, 10 % y 45 minutos son valores orientativos editables, no garantías ni mínimos reglamentarios. Validá el POH/AFM, reservas, fases de ascenso y rutas oficiales.</p><button type="button" id="flight-wizard-print">Imprimir o guardar como PDF A4</button>';
 const legTable=document.createElement('section');legTable.id='flight-wizard-leg-table';legTable.setAttribute('aria-label','Planilla de navegación por piernas');nav.append(legTable);
 nav.append(fuel);
 let step=0,busy=false,stored=null;
@@ -369,6 +377,47 @@ function fuelRemainder(available,trip,initial,contingency,reserve){
  const planned=amounts.every(Number.isFinite)?amounts.reduce((sum,liters)=>sum+liters,0):null;
  return {planned,remainder:planned!==null&&Number.isFinite(available)?available-planned:null};
 }
+function fuelChartPoints(legs,burn,initial){
+ if(!Array.isArray(legs)||!legs.length||!Number.isFinite(burn)||burn<0||!Number.isFinite(initial)||initial<0)return null;
+ const points=[{minutes:0,liters:initial}];let minutes=0;
+ for(const leg of legs){
+  if(!Number.isFinite(leg.distance_nm)||leg.distance_nm<0||!Number.isFinite(leg.gs_kt)||leg.gs_kt<=0)return null;
+  minutes+=60*leg.distance_nm/leg.gs_kt;
+  const liters=initial+minutes*burn/60;
+  if(!Number.isFinite(minutes)||!Number.isFinite(liters))return null;
+  points.push({minutes,liters});
+ }
+ return minutes>0?points:null;
+}
+function renderFuelChart(legs,burn,initial){
+ const routePoints=fuelChartPoints(legs,burn,initial);
+ const projection=!routePoints&&Number.isFinite(burn)&&burn>=0&&Number.isFinite(initial)&&initial>=0;
+ const points=routePoints||(projection?[0,15,30,45,60].map(minutes=>({minutes,liters:initial+minutes*burn/60})):null);
+ const svg=$('flight-fuel-chart-svg'),total=$('flight-fuel-chart-total'),duration=$('flight-fuel-chart-duration'),note=$('flight-fuel-chart-note');
+ const left=54,right=663,top=22,bottom=188,width=right-left,height=bottom-top;
+ const grid=[0,.25,.5,.75,1].map(t=>'<line x1="'+left+'" y1="'+(bottom-t*height)+'" x2="'+right+'" y2="'+(bottom-t*height)+'" stroke="#608095" stroke-opacity=".35" stroke-dasharray="4 6"/>').join('');
+ if(!points){
+  total.textContent='— L';duration.textContent='Tiempo pendiente';
+  note.textContent='Ingresá el consumo horario para ver una proyección de 60 minutos. Al calcular la ruta, el gráfico se ajustará a sus tramos reales.';
+  svg.setAttribute('aria-label','Gráfico de consumo pendiente: falta consumo horario o un tramo de ruta válido.');
+  svg.innerHTML=grid+'<text x="345" y="104" text-anchor="middle" fill="#d3e7f4" font-size="17" font-weight="600">Tu curva de consumo aparecerá acá</text><text x="345" y="125" text-anchor="middle" fill="#a8c3d4" font-size="12">Al completar los datos del vuelo</text><text x="345" y="223" text-anchor="middle" fill="#b5cfdf" font-size="12">Tiempo transcurrido (min)</text><text x="16" y="107" text-anchor="middle" transform="rotate(-90 16 107)" fill="#b5cfdf" font-size="12">Litros</text>';
+  return;
+ }
+ const final=points[points.length-1],peak=Math.max(1,final.liters),yMax=Math.ceil(peak*1.15/5)*5;
+ const x=v=>left+v/final.minutes*width,y=v=>bottom-v/yMax*height;
+ const plot=points.map((point,i)=>(i?'L':'M')+x(point.minutes).toFixed(1)+' '+y(point.liters).toFixed(1)).join(' ');
+ const area=plot+' L'+right+' '+bottom+' L'+left+' '+bottom+' Z';
+ const dots=points.map((point,i)=>'<circle cx="'+x(point.minutes).toFixed(1)+'" cy="'+y(point.liters).toFixed(1)+'" r="'+(i===points.length-1?5:3.3)+'" fill="#d5fbff" stroke="#1c829d" stroke-width="2"/>').join('');
+ const yLabels=[0,.5,1].map(t=>'<text x="44" y="'+(bottom-t*height+4)+'" text-anchor="end" fill="#b5cfdf" font-size="12">'+fmt(t*yMax)+'</text>').join('');
+ const xLabels=[0,.5,1].map(t=>'<text x="'+(left+t*width)+'" y="205" text-anchor="middle" fill="#b5cfdf" font-size="12">'+fmt(t*final.minutes)+'</text>').join('');
+ svg.setAttribute('aria-label',(projection?'Proyección de referencia de una hora: ':'Consumo estimado acumulado de la ruta: ')+fmt(points[0].liters)+' litros al inicio y '+fmt(final.liters)+' litros después de '+fmt(final.minutes)+' minutos. No incluye alternativo.');
+ svg.innerHTML='<defs><linearGradient id="flight-fuel-area" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#45c5e4" stop-opacity=".46"/><stop offset="100%" stop-color="#45c5e4" stop-opacity=".03"/></linearGradient></defs>'+grid+ yLabels+xLabels+
+  '<path d="'+area+'" fill="url(#flight-fuel-area)"/><path d="'+plot+'" fill="none" stroke="#8be5f5" stroke-width="3.7" stroke-linecap="round" stroke-linejoin="round"/>'+dots+
+  '<text x="345" y="229" text-anchor="middle" fill="#b5cfdf" font-size="12">Tiempo transcurrido (min)</text><text x="15" y="107" text-anchor="middle" transform="rotate(-90 15 107)" fill="#b5cfdf" font-size="12">Litros</text>';
+ total.textContent=fmt(final.liters)+' L';duration.textContent=projection?'Referencia de 60 min':fmt(final.minutes)+' min de vuelo';
+ note.textContent=projection?'Proyección orientativa de 60 minutos con '+fmt(burn)+' L/h e inicial '+fmt(initial)+' L. No representa todavía los tramos de la ruta.':
+  'Curva acumulada: inicia con '+fmt(initial)+' L de rodaje y ascenso y suma '+fmt(burn)+' L/h durante los tramos. No incluye contingencia, reserva final ni alternativo.';
+}
 function calcFuel(){
  const list=rows(),burn=value('flight-fuel-burn'),available=value('flight-fuel-available');
  const ground=value('flight-fuel-start'),pct=value('flight-fuel-contingency'),reserve=value('flight-fuel-reserve');
@@ -379,7 +428,7 @@ function calcFuel(){
  const extra=trip!==null&&pct!==null?trip*pct/100:null;
  const reserveFuel=burn!==null&&reserve!==null?burn*reserve/60:null;
  const {planned,remainder}=fuelRemainder(available,trip,ground,extra,reserveFuel);
- $('flight-fuel-summary').textContent='Ruta: '+fmt(distance)+' NM · '+fmt(hours===null?null:hours*60)+' min'+
+ $('flight-fuel-details').textContent='Ruta: '+fmt(distance)+' NM · '+fmt(hours===null?null:hours*60)+' min'+
  '\nETA destino: '+(eta()?.slice(0,16).replace('T',' ')||'Pendiente')+' UTC'+
  '\nRuta: '+fmt(trip)+' L · Inicial: '+fmt(ground)+' L'+
  '\nContingencia: '+fmt(extra)+' L · Reserva final: '+fmt(reserveFuel)+' L'+
@@ -387,6 +436,7 @@ function calcFuel(){
  '\nRemanente para alternativo (sin calcular consumo): '+fmt(remainder)+' L'+
  (remainder!==null&&remainder<0?'\nATENCIÓN: remanente negativo antes de considerar el alternativo.':'')+
  '\nEl consumo del tramo al alternativo no está calculado: verificá su viabilidad por separado.';
+ renderFuelChart(list,burn,ground);
  const el=$('flight-wizard-leg-table');
  if(el){
   const tbl=document.createElement('table'),header=document.createElement('tr');
@@ -453,7 +503,7 @@ $('flight-wizard-print').onclick=()=>{
    'NM '+fmt(r.distance_nm)+' ('+(r.distance_source==='pilot'?'piloto':'geometría')+') · GS '+fmt(r.gs_kt)+' kt · ETE '+fmt(hours===null?null:hours*60)+' min · ETA '+arrival+' · Cons. '+fmt(hours!==null&&value('flight-fuel-burn')!==null?hours*value('flight-fuel-burn'):null)+' L');
  });
  out.push('CV: curso verdadero · CD: corrección de deriva · RV: rumbo verdadero · DM: derrota magnética · RM: rumbo magnético a mantener.');
- out.push('','COMBUSTIBLE',$('flight-fuel-summary')?.textContent||'Pendiente','','PRONAREA',gate().message,
+ out.push('','COMBUSTIBLE',$('flight-fuel-details')?.textContent||'Pendiente','','PRONAREA',gate().message,
  'Fuente PRONAREA: carga manual · fecha de referencia UTC '+(date()?.toISOString().slice(0,10)||'sin fecha de salida')+' · emisión y vigencia real sujetas a verificación SMN',
  'ATIS aportado: '+($('flight-atis')?.value?.trim()||'No aportado.'),
  'DATOS METEOROLÓGICOS RECUPERADOS',
