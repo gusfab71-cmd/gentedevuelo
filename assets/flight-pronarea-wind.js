@@ -20,6 +20,27 @@ const referenceStations={
  ESQ:'SAVE',CAL:'SAWC',GAL:'SAWG',RGA:'SAWE',
  USH:'SAWH',OSA:'SAZR',DIL:'SAZT'
 };
+// El grupo de VALIDEZ HH-HH expresa HORAS de la FIR, no incluye fecha.
+// Una coincidencia horaria NO certifica que el ejemplar pegado sea actual.
+function validity(text,departureUtc){
+ const raw=String(text||'').toUpperCase();
+ if(!raw.trim())return {ok:false,status:'no_aportado',message:'Pegá un PRONAREA oficial para conocer su franja de validez.'};
+ const windows=[...raw.matchAll(/\bPRONAREA\s+FIR\s+[A-Z]{3,4}\s+VALIDEZ\s+(\d{4})(?!\d)/g)].map(m=>m[1]);
+ if(!windows.length)return {ok:false,status:'sin_validez_legible',message:'No se pudo leer VALIDEZ HH-HH del PRONAREA. No se aplicará su viento a la GS.'};
+ const date=departureUtc instanceof Date?departureUtc:new Date(departureUtc);
+ if(!Number.isFinite(date.getTime()))return {ok:false,status:'salida_sin_hora',message:'Completá fecha y hora UTC de salida para comprobar el PRONAREA.'};
+ const minutes=date.getUTCHours()*60+date.getUTCMinutes();
+ for(const digits of windows){
+  const start=Number(digits.slice(0,2)),end=Number(digits.slice(2,4));
+  if(start>23||end>24||start===end)return {ok:false,status:'sin_validez_legible',message:'Grupo de horas de validez incorrecto. Consultá PRONAREA oficial.'};
+  const from=start*60,to=end*60,inside=from<to?(minutes>=from&&minutes<to):(minutes>=from||minutes<to);
+  if(!inside)return {ok:false,status:'fuera_del_horario',windows,
+   message:'PRONAREA FUERA DEL HORARIO DE VALIDEZ: '+windows.join(', ')+' UTC; salida '+String(date.getUTCHours()).padStart(2,'0')+':'+String(date.getUTCMinutes()).padStart(2,'0')+
+   ' UTC. No se usará WIND/T ni se calculará GS automática con este boletín. Consultá el PRONAREA vigente.'};
+ }
+ return {ok:true,status:'horario_compatible_fecha_no_confirmada',windows,
+  message:'PRONAREA: salida dentro de '+windows.join(', ')+' UTC. La fecha de emisión y la vigencia real del texto pegado NO están verificadas; comprobá el boletín oficial en SMN.'};
+}
 function parse(text){
  const raw=String(text||'').toUpperCase().replace(/\r/g,'\n');
  if(!raw.trim())return [];
@@ -64,7 +85,9 @@ function distanceKm(a,b){
  const q=Math.sin(phi/2)**2+Math.cos(a[0]*d)*Math.cos(b[0]*d)*Math.sin(lambda/2)**2;
  return 12742*Math.asin(Math.min(1,Math.sqrt(q)));
 }
-function pick(text,altitude_ft,midpoint,airports){
+function pick(text,altitude_ft,midpoint,airports,departureUtc){
+ const check=validity(text,departureUtc);
+ if(!check.ok)return {ok:false,reason:check.message,status:check.status};
  const entries=parse(text);
  if(!entries.length)return {ok:false,reason:'PRONAREA sin sección WIND/T reconocible o sin vientos utilizables. El programa no inventa el viento en altura.'};
  if(!Number.isFinite(altitude_ft)||altitude_ft<500||altitude_ft>45000)
@@ -89,5 +112,21 @@ function pick(text,altitude_ft,midpoint,airports){
  return {ok:true,...chosen,altitude_difference_ft:Math.abs(chosen.level_ft-altitude_ft),
    notice:'Viento sobre la vertical de '+chosen.station+' (a unos '+Math.round(chosen.distance_km)+' km del punto medio del tramo), a FL'+String(chosen.level_ft/100).padStart(3,'0')+'. Revisá zona, validez UTC y fuentes oficiales.'};
 }
-window.GDV_PRONAREA_WIND=Object.freeze({parse,pick,distanceKm});
+window.GDV_PRONAREA_WIND=Object.freeze({parse,pick,distanceKm,validity});
+// Advertencia preventiva visible junto al PRONAREA, sin usar IA ni tokens.
+const field=document.getElementById('flight-pronarea'),time=document.getElementById('flight-time');
+const status=document.getElementById('flight-pronarea-validity');
+function showValidity(){
+ if(!status||!field||!time)return;
+ const raw=String(time.value||'').trim().replace(' ','T');
+ const date=/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(raw)?new Date(raw+'Z'):null;
+ const check=validity(field.value,date);
+ status.dataset.validity=check.status;
+ status.textContent=check.message;
+ status.hidden=!field.value.trim();
+}
+field?.addEventListener('input',showValidity);
+time?.addEventListener('input',showValidity);
+time?.addEventListener('change',showValidity);
+showValidity();
 })();
