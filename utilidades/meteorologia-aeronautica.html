@@ -384,7 +384,11 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
 .flight-nav-settings{border:1px solid #65879d;background:#1c3443;border-radius:12px;padding:15px 16px;margin:15px 0}
 .flight-nav-settings h3,.flight-essential-nav-result h3{font-size:17px;color:#f0f6fb;margin:4px 0 10px}
 .flight-nav-settings .field{margin:0}
-.flight-nav-tas-label{max-width:330px}
+.flight-speed-alt-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;min-width:0}
+.flight-speed-alt-row>.field{min-width:0;margin:0}
+@media(max-width:600px){.flight-speed-alt-row{grid-template-columns:1fr}}
+.flight-nav-source{font-size:12px;color:#b8d8ed;line-height:1.55}
+.flight-nav-source[data-status="manual"]{color:#f3d2a1}
 .flight-nav-legs{display:grid;gap:9px;margin:12px 0}
 .flight-nav-leg{border:1px solid #55788e;border-radius:11px;background:#213b4c;padding:12px;display:grid;gap:10px}
 .flight-nav-leg strong{font-size:13px;color:#e8f2f9}
@@ -587,7 +591,14 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
 <input id="flight-dest-other" aria-label="Código OACI de destino" type="text" pattern="[sS][aA][A-Za-z]{2}" minlength="4" maxlength="4" placeholder="Ej.: SAXX" autocomplete="off" autocapitalize="characters" hidden disabled>
 </label>
 
-<label class="field">Altitud prevista (pies AMSL)<input id="flight-alt" type="number" required min="500" max="45000" step="100" placeholder="6500"></label>
+<div class="flight-speed-alt-row full">
+ <label class="field" for="flight-alt">Altitud prevista (pies AMSL)
+   <input id="flight-alt" type="number" required min="500" max="45000" step="100" placeholder="3500">
+ </label>
+ <label class="field" for="flight-nav-tas">Velocidad verdadera · TAS (nudos)
+   <input id="flight-nav-tas" type="number" min="20" max="500" step="1" inputmode="numeric" placeholder="Ej.: 100" aria-describedby="flight-nav-help">
+ </label>
+</div>
 <label class="field flight-utc-field" for="flight-time">
  <span class="flight-utc-heading"><span>Fecha y hora previstas de salida</span><span class="flight-utc-badge">UTC · Z</span></span>
  <input id="flight-time" type="datetime-local" step="60" required autocomplete="off" aria-label="Fecha y hora de salida UTC" aria-describedby="flight-time-help">
@@ -793,12 +804,9 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
   <p class="flight-essential-note">El informe utiliza únicamente los boletines y el plan cargados. Si faltan horarios de llegada o datos oficiales, lo aclarará. Es orientativo y no autoriza el vuelo. <strong>Una solicitud consume tokens de la API compartida con Shimoda.</strong></p>
   <section class="flight-nav-settings" id="flight-nav-settings" aria-labelledby="flight-nav-title">
     <div class="card-header"><div><span class="card-kicker">COMPLEMENTO DE NAVEGACIÓN · CÁLCULO LOCAL</span><h3 id="flight-nav-title">Rumbo corregido y GS estimada</h3></div></div>
-    <p class="sub">Al finalizar el informe único, agregaremos las derrotas verdaderas de las piernas y la corrección magnética aproximada. Para obtener <strong>rumbo corregido por viento y velocidad sobre el suelo (GS)</strong>, ingresá la velocidad verdadera de la aeronave (TAS) y el pronóstico de viento <strong>en altura</strong> de cada tramo.</p>
-    <label class="field flight-nav-tas-label" for="flight-nav-tas">Velocidad verdadera prevista · TAS (kt)
-      <input id="flight-nav-tas" type="number" min="20" max="500" step="1" inputmode="numeric" placeholder="Ej.: 100" aria-describedby="flight-nav-help">
-    </label>
+    <p class="sub">La <strong>TAS (nudos)</strong> se carga en el Paso 1, junto a la altitud. El sistema busca el viento en altura de cada pierna en la sección <strong>WIND/T del PRONAREA</strong>, seleccionando el nivel publicado más cercano y una estación de referencia geográficamente próxima. Mostrará la estación, nivel y viento elegidos para que los verifiques antes de interpretar la GS.</p>
     <div id="flight-nav-wind-legs" aria-live="polite"></div>
-    <p class="flight-essential-note" id="flight-nav-help">Los vientos se ingresan en grados <strong>verdaderos</strong> y nudos, tomando PRONAREA u otra fuente oficial vigente para la FIR, nivel, zona y horario de cada pierna. Nunca se toma automáticamente el viento de superficie del METAR como viento de crucero. Si falta algún dato, se indicará «No calculable» sin inventar valores.</p>
+    <p class="flight-essential-note" id="flight-nav-help">El viento automático procede exclusivamente de la sección <strong>WIND/T</strong> del PRONAREA que pegaste, <strong>no de METAR ni TAF</strong>. Se elige el nivel FL publicado más cercano a la altitud de cada pierna y una estación de referencia próxima al trayecto. Debés verificar fecha y período de validez, FIR, sector, hora de cada tramo y representatividad del viento. Si faltan datos o son dudosos, la GS quedará «No calculable» y podrás ingresar manualmente el viento oficial verificado.</p>
   </section>
   <label class="flight-ai-consent"><input id="flight-essential-consent" type="checkbox" aria-describedby="flight-essential-status"><span><strong>1. Autorizo</strong> generar el informe único con IA y consumir tokens. Luego presioná <strong>2. Generar informe</strong>.</span></label>
   <div class="actions"><button class="primary" id="flight-essential-ask" type="button">Generar informe único con IA</button><span class="feedback ai-validation-status" id="flight-essential-status" role="status" aria-live="polite">Marcá «Autorizo» para generar el informe.</span></div>
@@ -1955,7 +1963,8 @@ if(stage){
 <script src="../assets/flight-fir-geodata.js?v=20261015a"></script>
 <script src="../assets/flight-wmm2025.js?v=20261015a"></script>
 <script src="../assets/flight-vfr-altitude.js?v=20261015b"></script>
-<script src="../assets/flight-essential-navigation.js?v=20261015a"></script>
+<script src="../assets/flight-pronarea-wind.js?v=20261015a"></script>
+<script src="../assets/flight-essential-navigation.js?v=20261015b"></script>
 <script src="../assets/flight-fir-autoselect.js?v=20261015a"></script>
 </body>
 </html>
