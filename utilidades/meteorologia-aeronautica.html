@@ -381,6 +381,8 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
 .flight-essential-card .flight-ai-consent{background:#1e3441}
 .flight-essential-result{border-top:1px solid #607b90;margin-top:17px;padding-top:16px}
 .flight-essential-result .flight-ai-text{white-space:pre-wrap;line-height:1.75;color:#edf4f8}
+.flight-essential-pronarea-alert{background:#203646;border:1px solid #688aa3;padding:10px 13px;border-radius:10px;color:#e3edf5;font-size:12px;line-height:1.65;font-weight:700;margin:10px 0 15px}
+.flight-essential-pronarea-alert[data-status="fuera_del_horario"],.flight-essential-pronarea-alert[data-status="sin_validez_legible"]{background:#283e4c;border-color:#93b4cd;color:#fff}
 .flight-nav-settings{border:1px solid #65879d;background:#1c3443;border-radius:12px;padding:15px 16px;margin:15px 0}
 .flight-nav-settings h3,.flight-essential-nav-result h3{font-size:17px;color:#f0f6fb;margin:4px 0 10px}
 .flight-nav-settings .field{margin:0}
@@ -869,6 +871,7 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
   <div class="flight-essential-result" id="flight-essential-result" hidden>
     <div class="card-header"><h3>Informe esencial para el vuelo previsto</h3><button class="secondary" type="button" id="flight-essential-copy">Copiar informe</button></div>
     <p class="sub flight-ai-timestamp" id="flight-essential-time"></p>
+    <p class="flight-essential-pronarea-alert" id="flight-essential-pronarea-status" role="status" aria-live="polite"></p>
     <div class="flight-ai-text" id="flight-essential-analysis"></div>
     <section class="flight-essential-nav-result" id="flight-essential-navigation" aria-labelledby="flight-essential-navigation-heading">
       <h3 id="flight-essential-navigation-heading">Navegación estimada · derrotas, rumbo y GS</h3>
@@ -1712,6 +1715,10 @@ el('copy-report').addEventListener('click',async()=>{
        })+' · Solo información cargada en la Mesa; no se consultaron nuevas fuentes. PRONAREA manual sin verificación automática.';
      $(elements.result).hidden=false;
      if(mode==='essential'){
+       const confirmed=response.pronarea_validity;
+       const sourceNotice=$('flight-essential-pronarea-status');
+       sourceNotice.dataset.status=confirmed?.status||'no_aportado';
+       sourceNotice.textContent=confirmed?.message||'PRONAREA: validez no confirmada por la aplicación. Verificá en SMN.';
        document.dispatchEvent(new CustomEvent('gdv-flight-essential-generated',{
          detail:{winds:Array.isArray(response.navigation_winds)?response.navigation_winds:[]}
        }));
@@ -1747,7 +1754,9 @@ el('copy-report').addEventListener('click',async()=>{
    const answer=$('flight-essential-analysis').textContent.trim();
    if(!answer||$('flight-essential-result').hidden)return;
    const navigation=$('flight-essential-navigation-content').textContent.trim();
-   const copyText=answer+(navigation?'\n\nNAVEGACIÓN ESTIMADA POR PIERNAS\n'+navigation:'');
+   const pronareaNotice=$('flight-essential-pronarea-status').textContent.trim();
+   const copyText=(pronareaNotice?'CONTROL DE VIGENCIA DEL PRONAREA\n'+pronareaNotice+'\n\n':'')+
+     answer+(navigation?'\n\nNAVEGACIÓN ESTIMADA POR PIERNAS\n'+navigation:'');
    try{await navigator.clipboard.writeText(copyText);$('flight-essential-status').textContent='Informe y navegación copiados.';}
    catch(_){$('flight-essential-status').textContent='No se pudo copiar el informe.';}
  });
