@@ -814,7 +814,7 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
   <p class="flight-essential-note">El informe utiliza únicamente los boletines y el plan cargados. Si faltan horarios de llegada o datos oficiales, lo aclarará. Es orientativo y no autoriza el vuelo. <strong>Una solicitud consume tokens de la API compartida con Shimoda.</strong></p>
   <section class="flight-nav-settings" id="flight-nav-settings" aria-labelledby="flight-nav-title">
     <div class="card-header"><div><span class="card-kicker">COMPLEMENTO DE NAVEGACIÓN · CÁLCULO LOCAL</span><h3 id="flight-nav-title">Rumbo corregido y GS estimada</h3></div></div>
-    <p class="sub">La <strong>TAS (nudos)</strong> se carga en el Paso 1, junto a la altitud. El sistema busca el viento en altura de cada pierna en la sección <strong>WIND/T del PRONAREA</strong>, seleccionando el nivel publicado más cercano y una estación de referencia geográficamente próxima. Mostrará la estación, nivel y viento elegidos para que los verifiques antes de interpretar la GS.</p>
+    <p class="sub">La <strong>TAS (nudos)</strong> se carga en el Paso 1, junto a la altitud. Al generar el <strong>Informe único</strong>, la IA identifica la dirección e intensidad del viento al nivel de vuelo publicado más próximo de cada pierna. El servidor verifica que esos datos aparezcan en WIND/T del PRONAREA aportado; después se calcula rumbo y GS sin otra consulta de IA.</p>
     <div id="flight-nav-wind-legs" aria-live="polite"></div>
     <p class="flight-essential-note" id="flight-nav-help">El viento automático procede exclusivamente de la sección <strong>WIND/T</strong> del PRONAREA que pegaste, <strong>no de METAR ni TAF</strong>. Se elige el nivel FL publicado más cercano a la altitud de cada pierna y una estación de referencia próxima al trayecto. Debés verificar fecha y período de validez, FIR, sector, hora de cada tramo y representatividad del viento. Si faltan datos o son dudosos, la GS quedará «No calculable» y podrás ingresar manualmente el viento oficial verificado.</p>
   </section>
@@ -1630,6 +1630,9 @@ el('copy-report').addEventListener('click',async()=>{
        alternate:airportLabel('flight-alternate')
      },
      route:routeText,planned_at_utc:iso('flight-time'),
+     ...(mode==='essential'?{route_legs:legHeights.map((alt,index)=>({
+       from:nodes[index],to:nodes[index+1],altitude_ft:alt
+     }))}:{}),
      cruise_altitude_ft:Number($('flight-alt').value),
      flight_rules:$('flight-rules').value,firs,question,
      pronarea_text:$('flight-pronarea').value.trim(),
@@ -1701,7 +1704,9 @@ el('copy-report').addEventListener('click',async()=>{
        })+' · Solo información cargada en la Mesa; no se consultaron nuevas fuentes. PRONAREA manual sin verificación automática.';
      $(elements.result).hidden=false;
      if(mode==='essential'){
-       document.dispatchEvent(new CustomEvent('gdv-flight-essential-generated'));
+       document.dispatchEvent(new CustomEvent('gdv-flight-essential-generated',{
+         detail:{winds:Array.isArray(response.navigation_winds)?response.navigation_winds:[]}
+       }));
        const usage=response.usage;
        $('flight-essential-tokens').textContent=usage
          ?'Esta consulta utilizó '+usageFmt(usage.total_tokens)+' tokens (entrada: '+usageFmt(usage.input_tokens)+', salida: '+usageFmt(usage.output_tokens)+') · Costo estimado: '+usdFmt(usage.estimated_cost_usd)+'.'
@@ -1970,11 +1975,11 @@ if(stage){
 })();
 </script>
 
-<script src="../assets/flight-fir-geodata.js?v=20261015a"></script>
+<script src="../assets/flight-fir-geodata.js?v=20261015b"></script>
 <script src="../assets/flight-wmm2025.js?v=20261015a"></script>
 <script src="../assets/flight-vfr-altitude.js?v=20261015c"></script>
 <script src="../assets/flight-pronarea-wind.js?v=20261015b"></script>
-<script src="../assets/flight-essential-navigation.js?v=20261015c"></script>
+<script src="../assets/flight-essential-navigation.js?v=20261015d"></script>
 <script src="../assets/flight-fir-autoselect.js?v=20261015a"></script>
 </body>
 </html>
