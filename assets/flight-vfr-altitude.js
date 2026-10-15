@@ -27,6 +27,9 @@ panel.innerHTML='<span class="card-kicker">VERIFICACIÓN DE NIVELES VFR · SIN T
 '<p class="sub"><a href="https://ais.anac.gob.ar/" target="_blank" rel="noopener noreferrer">AIP Argentina · RAAC 91.159 y tabla de niveles ↗</a></p>';
 parent.append(panel);
 const overview=$('flight-vfr-overview'),context=$('flight-vfr-context');
+const mainAltitude=$('flight-alt'),mainFeedback=$('flight-alt-vfr-status'),mainApply=$('flight-alt-vfr-apply');
+const continuation=[...document.querySelectorAll('.ops-next[data-ops-target="#consultar"]')];
+
 const manual=new Map(),tracked=new WeakSet();
 const fmt=n=>Math.round(n).toLocaleString('es-AR')+' ft';
 const rad=Math.PI/180,deg=180/Math.PI,normalize=angle=>(angle%360+360)%360;
@@ -123,10 +126,63 @@ function evaluate(trackRaw,altRaw,policy,uncertain){
   if(altitude>17500)return {state:'uncertain',message:prefix+'Nivel alto fuera del alcance del verificador simplificado. Confirmá los niveles autorizados en AIP/ATC.',suggestions:[],blocked:false};
   return {state:'different',message:prefix+'La altitud '+fmt(altitude)+' NO corresponde a esa derrota en crucero VFR de 3.000 ft AGL o más. Corregila o seleccioná una excepción real antes de continuar.',suggestions:choices.slice(0,2).sort((x,y)=>x-y),blocked:true};
 }
+function updateMainAltitude(){
+  if(!mainAltitude||!mainFeedback)return;
+  const rows=[...legs.querySelectorAll('.flight-leg-row')];
+  const direct=rows.length===1&&$('flight-waypoints')?.querySelectorAll('.flight-waypoint-row').length===0;
+  const first=direct?rows[0]:null;
+  const legField=first?.querySelector('.field input[type="number"]');
+  const track=first?.querySelector('.flight-vfr-track');
+  // En una ruta directa, altitud principal y altitud de pierna son el mismo dato.
+  // La última edición siempre prevalece: no reinterpretar alturas en itinerarios con escalas.
+  if(direct&&legField&&document.activeElement!==mainAltitude&&
+     mainAltitude.value!==legField.value)mainAltitude.value=legField.value;
+  let issue=null;
+  if(rules.value==='VFR'&&context.value==='standard'&&direct&&legField&&track){
+    const assumed=track.dataset.estimated==='true';
+    issue=evaluate(track.value,mainAltitude.value,context.value,
+      assumed&&track.dataset.uncertain==='true');
+  }
+  const blocked=Boolean(issue?.blocked);
+  mainAltitude.setCustomValidity(blocked?issue.message:'');
+  if(blocked)mainAltitude.setAttribute('aria-invalid','true');
+  else mainAltitude.removeAttribute('aria-invalid');
+  mainFeedback.dataset.vfrState=blocked?'different':issue?.state||'unknown';
+  if(rules.value!=='VFR')
+    mainFeedback.textContent='Plan IFR: la serie semicircular VFR no corresponde a este control.';
+  else if(context.value!=='standard')
+    mainFeedback.textContent='No se bloquea la serie VFR: declaraste una excepción. Verificá que corresponda realmente al vuelo.';
+  else if(!direct)
+    mainFeedback.textContent='La altitud principal es una referencia; con escalas se valida cada pierna por separado al final del Paso 1.';
+  else if(!track?.value)
+    mainFeedback.textContent='Seleccioná salida y destino para calcular la derrota magnética y comprobar la altitud.';
+  else if(blocked)
+    mainFeedback.textContent='ALTITUD NO COMPATIBLE: '+issue.message;
+  else
+    mainFeedback.textContent=issue?.state==='match'?
+      'Coincide con la serie VFR: '+issue.message+' No garantiza una altitud segura.':
+      issue?.message||'Verificá la derrota y la altura sobre el terreno antes de continuar.';
+  if(mainApply){
+    mainApply.hidden=!blocked||!issue.suggestions.length;
+    if(blocked&&issue.suggestions.length){
+      const next=issue.suggestions[0];
+      mainApply.textContent='Aplicar '+fmt(next);
+      mainApply.onclick=()=>{
+        mainAltitude.value=String(next);
+        mainAltitude.dispatchEvent(new Event('input',{bubbles:true}));
+        mainAltitude.dispatchEvent(new Event('change',{bubbles:true}));
+        mainAltitude.focus({preventScroll:true});
+      };
+    }else mainApply.onclick=null;
+  }
+  for(const button of continuation)button.disabled=blocked;
+}
 function updateOverview(){
   const rows=[...legs.querySelectorAll('.flight-leg-row')];
   if(rules.value!=='VFR'){
-    overview.dataset.vfrState='unknown';overview.textContent='Plan IFR: este control de crucero VFR no se aplica. Verificá los niveles IFR y ATC.';return;
+    overview.dataset.vfrState='unknown';overview.textContent='Plan IFR: este control de crucero VFR no se aplica. Verificá los niveles IFR y ATC.';
+    updateMainAltitude();
+    return;
   }
   const blocked=rows.filter(x=>x.querySelector('.flight-vfr-result')?.dataset.vfrBlocked==='true').length;
   const matched=rows.filter(x=>x.querySelector('.flight-vfr-result')?.dataset.vfrState==='match').length;
@@ -137,6 +193,7 @@ function updateOverview(){
     :uncertain?'Sin bloqueo automático: faltan o son inciertas las derrotas de '+uncertain+' pierna(s). Verificá tu carta antes de volar.'
     :matched===rows.length?'Todas las piernas coinciden con su serie VFR en el supuesto seleccionado. No se verificó altura AGL, seguridad ni autorizaciones.':
     'Control VFR según la condición de vuelo que declaraste. Recordá verificar las alturas sobre el terreno.';
+  updateMainAltitude();
 }
 function paint(row){
   const track=row.querySelector('.flight-vfr-track'),alt=row.querySelector('.field input[type="number"]'),out=row.querySelector('.flight-vfr-result');
@@ -236,7 +293,9 @@ function refresh(){
 }
 function checkBlocked(event){
   if(rules.value!=='VFR'||context.value!=='standard')return false;
-  const invalid=[...legs.querySelectorAll('.field input[type="number"]')].find(input=>input.validity.customError);
+  updateMainAltitude();
+  const invalid=[mainAltitude,...legs.querySelectorAll('.field input[type="number"]')]
+    .find(input=>input?.validity.customError);
   if(!invalid)return false;
   if(event){event.preventDefault();event.stopImmediatePropagation();}
   $('ops-plan').open=true;
@@ -251,6 +310,19 @@ for(const id of ['flight-origin','flight-dest','flight-origin-other','flight-des
   const node=$(id);
   if(node){node.addEventListener('input',refresh);node.addEventListener('change',refresh);}
 }
+// Los cambios de altitud del Paso 1 se reflejan al instante en el único
+// tramo directo. El control se actualiza sin esperar al evento "change".
+mainAltitude?.addEventListener('input',()=>{
+  const rows=[...legs.querySelectorAll('.flight-leg-row')];
+  if(rows.length===1&&!$('flight-waypoints')?.querySelector('.flight-waypoint-row')){
+    const field=rows[0].querySelector('.field input[type="number"]');
+    if(field&&field.value!==mainAltitude.value){
+      field.value=mainAltitude.value;
+      field.dispatchEvent(new Event('input',{bubbles:true}));
+    }
+  }
+  updateMainAltitude();
+});
 $('flight-waypoints')?.addEventListener('input',refresh);
 $('flight-waypoints')?.addEventListener('change',refresh);
 new MutationObserver(refresh).observe($('flight-waypoints'),{childList:true});
@@ -258,6 +330,13 @@ rules.addEventListener('change',()=>{for(const row of legs.querySelectorAll('.fl
 context.addEventListener('change',()=>{for(const row of legs.querySelectorAll('.flight-leg-row'))paint(row);updateOverview();});
 form.addEventListener('submit',checkBlocked,true);
 for(const selector of ['[data-ops-target="#consultar"]']){
+  document.querySelectorAll(selector).forEach(btn=>btn.addEventListener('click',checkBlocked,true));
+}
+// La consulta de boletines o IA tampoco podrá continuar con un bloqueo VFR
+// confirmado. No impedir navegación visual ni casos sin información suficiente.
+for(const selector of ['#flight-fetch-reports','#flight-essential-ask',
+  '#flight-weather-ask','#flight-precautions-ask','#flight-ask','#flight-pilot-ask',
+  '#flight-pilot-new']){
   document.querySelectorAll(selector).forEach(btn=>btn.addEventListener('click',checkBlocked,true));
 }
 refresh();
