@@ -154,7 +154,7 @@ function refreshDistanceFields(){
     else pilotNm.set(key,raw);
     wrap.querySelector('span').textContent=raw===''?'Distancia (NM) · pendiente':'Distancia (NM) · ingresada por piloto';
    });
-   row.append(wrap);
+   row.insertBefore(wrap,row.querySelector('.flight-vfr-result'));
   }
   const key=nmKey(i,points),input=wrap.querySelector('input');
   wrap.dataset.routeKey=key;
@@ -350,14 +350,14 @@ function calcFuel(){
  const el=$('flight-wizard-leg-table');
  if(el){
   const tbl=document.createElement('table'),header=document.createElement('tr');
-  ['Pierna','Derrota °T','Dist. NM','Alt. ft','Rumbo °M','GS kt','ETA UTC','Consumo L'].forEach(label=>{const cell=document.createElement('th');cell.scope='col';cell.textContent=label;header.append(cell);});
+  ['Pierna','Derrota °T','Derrota °M','Dist. NM','Alt. ft','Rumbo °M','GS kt','ETA UTC','Consumo L'].forEach(label=>{const cell=document.createElement('th');cell.scope='col';cell.textContent=label;header.append(cell);});
   const thead=document.createElement('thead');thead.append(header);tbl.append(thead);
   const tbody=document.createElement('tbody');let elapsed=0,knownEta=!!date();
   for(const r of list){
    const duration=Number.isFinite(r.distance_nm)&&Number.isFinite(r.gs_kt)&&r.gs_kt>0?r.distance_nm/r.gs_kt:null;
    if(duration===null)knownEta=false;else if(knownEta)elapsed+=duration;
    const at=knownEta?new Date(date().getTime()+elapsed*3600000).toISOString().slice(0,16).replace('T',' '):'Pendiente';
-   const vals=[r.name,fmt(r.course_true_deg),fmt(r.distance_nm),fmt(r.altitude_ft),fmt(r.heading_magnetic_deg),fmt(r.gs_kt),at,
+   const vals=[r.name,fmt(r.course_true_deg),fmt(r.magnetic_track_deg),fmt(r.distance_nm),fmt(r.altitude_ft),fmt(r.heading_magnetic_deg),fmt(r.gs_kt),at,
     duration===null||burn===null?'Pendiente':fmt(duration*burn)];
    const row=document.createElement('tr');for(const v of vals){const td=document.createElement('td');td.textContent=String(v);row.append(td);}tbody.append(row);
   }tbl.append(tbody);el.replaceChildren(tbl);
@@ -374,7 +374,7 @@ $('flight-wizard-print').onclick=()=>{
  const out=['FLIGHT OPERATIONS · GENTE DE VUELO','PLANILLA ORIENTATIVA DE VUELO · UTC','',
  'Salida: '+$('flight-origin')?.value+' · Destino: '+$('flight-dest')?.value+' · Alternativo: '+$('flight-alternate')?.value,
  'Despegue: '+$('flight-time')?.value+' UTC · Reglas: '+$('flight-rules')?.value,'TAS: '+$('flight-nav-tas')?.value+' kt',''];
- rows().forEach(r=>out.push('Pierna '+(r.index+1)+' '+r.name+' · '+fmt(r.distance_nm)+' NM · '+fmt(r.altitude_ft)+' ft AMSL · °T '+fmt(r.course_true_deg)+' · rumbo °M '+fmt(r.heading_magnetic_deg)+' · GS '+fmt(r.gs_kt)+' kt','Viento: '+r.wind_source));
+ rows().forEach(r=>out.push('Pierna '+(r.index+1)+' '+r.name+' · '+fmt(r.distance_nm)+' NM ('+(r.distance_source==='pilot'?'piloto':'geometría')+') · '+fmt(r.altitude_ft)+' ft AMSL · derrota °T '+fmt(r.course_true_deg)+' · derrota °M '+fmt(r.magnetic_track_deg)+' · rumbo °M '+fmt(r.heading_magnetic_deg)+' · GS '+fmt(r.gs_kt)+' kt','Viento: '+r.wind_source));
  out.push('','COMBUSTIBLE',$('flight-fuel-summary')?.textContent||'Pendiente','','PRONAREA',gate().message,
  'Fuente PRONAREA: carga manual · fecha declarada '+($('flight-pronarea-date')?.value||'sin fecha'),
  'ATIS aportado: '+($('flight-atis')?.value?.trim()||'No aportado.'),
