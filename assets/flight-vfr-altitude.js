@@ -131,10 +131,20 @@ function updateMainAltitude(){
   if(direct&&legField&&document.activeElement!==mainAltitude&&
      mainAltitude.value!==legField.value)mainAltitude.value=legField.value;
   let issue=null;
-  if(rules.value==='VFR'&&context.value==='standard'&&direct&&legField&&track){
-    const assumed=track.dataset.estimated==='true';
-    issue=evaluate(track.value,mainAltitude.value,context.value,
-      assumed&&track.dataset.uncertain==='true');
+  // En Datos del vuelo todavía no se ingresó el curso verdadero de la carta.
+  // Recuperamos la comprobación preliminar por geometría origen→destino,
+  // sin rellenar el campo obligatorio de curso verdadero de la etapa 2.
+  let preview=null;
+  if(rules.value==='VFR'&&context.value==='standard'&&direct&&legField){
+    const manualTrack=track?.value?.trim()||'';
+    if(!manualTrack){
+      const points=positionNames();
+      preview=estimatedTrack(resolve(points[0]),resolve(points[1]),plannedDate());
+    }
+    const magneticTrack=manualTrack||(preview?preview.track.toFixed(1):'');
+    const uncertain=manualTrack?
+      track.dataset.estimated==='true'&&track.dataset.uncertain==='true':Boolean(preview?.ambiguous);
+    issue=evaluate(magneticTrack,mainAltitude.value,context.value,uncertain);
   }
   const blocked=Boolean(issue?.blocked);
   mainAltitude.setCustomValidity(blocked?issue.message:'');
@@ -147,14 +157,14 @@ function updateMainAltitude(){
     mainFeedback.textContent='No se bloquea la serie VFR: declaraste una excepción. Verificá que corresponda realmente al vuelo.';
   else if(!direct)
     mainFeedback.textContent='La altitud principal es una referencia; con escalas se valida cada pierna por separado al final del Paso 1.';
-  else if(!track?.value)
-    mainFeedback.textContent='Seleccioná salida y destino para calcular la derrota magnética y comprobar la altitud.';
+  else if(!track?.value&&!preview)
+    mainFeedback.textContent='Seleccioná origen y destino con coordenadas conocidas para estimar la derrota magnética y comprobar la altitud.';
   else if(blocked)
-    mainFeedback.textContent='ALTITUD NO COMPATIBLE: '+issue.message;
+    mainFeedback.textContent='ALTITUD NO COMPATIBLE'+(preview?' (estimación inicial)':'')+': '+issue.message;
   else
-    mainFeedback.textContent=issue?.state==='match'?
+    mainFeedback.textContent=(preview?'Estimación inicial por ruta directa; confirmá el curso de cada pierna en la etapa 2. ':'')+(issue?.state==='match'?
       'Coincide con la serie VFR: '+issue.message+' No garantiza una altitud segura.':
-      issue?.message||'Verificá la derrota y la altura sobre el terreno antes de continuar.';
+      issue?.message||'Verificá la derrota y la altura sobre el terreno antes de continuar.');
   if(mainApply){
     mainApply.hidden=!blocked||!issue.suggestions.length;
     if(blocked&&issue.suggestions.length){
