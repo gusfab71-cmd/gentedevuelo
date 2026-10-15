@@ -1530,6 +1530,8 @@ el('copy-report').addEventListener('click',async()=>{
      stops,legHeights,
      firs:[...document.querySelectorAll('.flight-fir:checked')].map(el=>el.value),
      pronarea:$('flight-pronarea').value,
+      pronareaDate:$('flight-pronarea-date')?.value,pronareaConfirmed:$('flight-pronarea-confirm')?.checked,
+      atis:$('flight-atis')?.value,
      pilotQuestion:$('flight-pilot-question').value,
      bulletinGeneration
    });
@@ -1546,7 +1548,7 @@ el('copy-report').addEventListener('click',async()=>{
  }
  const tripInputIds=new Set([
    'flight-origin','flight-dest','flight-alternate','flight-origin-other','flight-dest-other','flight-alternate-other',
-   'flight-alt','flight-nav-tas','flight-time','flight-rules','flight-pronarea','flight-atis','flight-pronarea-date'
+   'flight-alt','flight-nav-tas','flight-time','flight-rules','flight-pronarea','flight-atis','flight-pronarea-date','flight-pronarea-confirm'
  ]);
  function handleChangedField(event){
    const node=event.target;
@@ -1557,6 +1559,10 @@ el('copy-report').addEventListener('click',async()=>{
  form.addEventListener('input',handleChangedField);
  form.addEventListener('change',handleChangedField);
  $('flight-pronarea').addEventListener('input',handleChangedField);
+ $('flight-pronarea-date')?.addEventListener('change',handleChangedField);
+ $('flight-pronarea-confirm')?.addEventListener('change',handleChangedField);
+ $('flight-atis')?.addEventListener('input',handleChangedField);
+ $('flight-nav-wind-legs')?.addEventListener('input',clearAiOutputs);
  $('flight-fetch-reports').addEventListener('click',()=>{
    bulletinGeneration++;
    clearAiOutputs();
