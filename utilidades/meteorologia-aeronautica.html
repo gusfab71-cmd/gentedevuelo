@@ -117,6 +117,13 @@
 .flight-precautions p{font-size:13px;line-height:1.55}
 .flight-ai-consent{display:flex;gap:10px;align-items:flex-start;margin:17px 0 10px;font-size:13px;font-weight:650}
 .flight-ai-consent input{width:19px;height:19px;flex:none;margin:1px 0 0;accent-color:#ac7722}
+.flight-ai-consent{padding:11px 13px;border:1px solid #617d91;border-radius:11px;background:#203440;color:#edf4f8}
+.flight-ai-consent input{width:22px;height:22px;cursor:pointer}
+.flight-ai-consent:has(input:checked){border-color:#7799a9;background:#243c4b}
+.flight-ai-consent.needs-confirmation{outline:2px solid #ebcd82;outline-offset:1px;background:#394036}
+.flight-ai-consent.needs-confirmation span{color:#fff1c5!important}
+.ai-validation-status{font-size:13px!important;line-height:1.45;font-weight:650}
+.ai-validation-status.needs-confirmation{color:#f3d68b!important;font-weight:750}
 .flight-ai-actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
 .flight-precautions-button{background:#2f322b;color:#fff;padding:12px 17px;border:0;border-radius:10px;font-weight:750}
 .flight-ai-actions span{font-size:12px;color:#423b23}
@@ -707,10 +714,10 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
  <div class="card-header"><div><span class="card-kicker">SÍNTESIS METEOROLÓGICA · ANTES DE LAS PRECAUCIONES</span>
   <h2 id="flight-weather-heading">Informe meteorológico del vuelo planificado</h2></div></div>
  <p class="sub">Explicación sencilla y punto por punto de los METAR, TAF, SIGMET y PRONAREA cargados, siempre referida a la ruta, las altitudes y la salida UTC programadas. La IA traduce las abreviaturas, pero no inventa fenómenos cuando faltan datos.</p>
- <label class="flight-ai-consent"><input id="flight-weather-consent" type="checkbox">
-  <span>Autorizo generar este informe meteorológico con IA y consumir tokens.</span></label>
+ <label class="flight-ai-consent"><input id="flight-weather-consent" type="checkbox" aria-describedby="flight-weather-status">
+  <span><strong>1. Autorizo</strong> generar este informe meteorológico con IA y consumir tokens. Después presioná <strong>2. Generar informe</strong>.</span></label>
  <div class="actions"><button class="primary" id="flight-weather-ask" type="button">Generar informe meteorológico con IA</button>
-  <span class="feedback" id="flight-weather-status" role="status" aria-live="polite">Pendiente. No se consumen tokens sin tu confirmación.</span></div>
+  <span class="feedback ai-validation-status" id="flight-weather-status" role="status" aria-live="polite">Primero marcá «Autorizo» y después generá el informe.</span></div>
  <div class="flight-weather-result" id="flight-weather-result" hidden>
   <div class="card-header"><h3>Panorama meteorológico para el vuelo previsto</h3></div>
   <p class="sub flight-ai-timestamp" id="flight-weather-time"></p>
@@ -731,7 +738,7 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
  <label class="flight-ai-consent"><input id="flight-precautions-consent" type="checkbox">
   <span>Autorizo esta consulta de precauciones con IA y su consumo de tokens.</span></label>
  <div class="flight-ai-actions"><button class="flight-precautions-button" id="flight-precautions-ask" type="button">Generar precauciones con IA</button>
-  <span id="flight-precautions-status" role="status" aria-live="polite">Pendiente. No se consumen tokens hasta que lo solicites.</span></div>
+  <span class="ai-validation-status" id="flight-precautions-status" role="status" aria-live="polite">Marcá la autorización para generar precauciones.</span></div>
  <div class="flight-precautions-result" id="flight-precautions-result" hidden>
   <strong>Riesgos y verificaciones específicas para el piloto</strong><p class="flight-ai-timestamp" id="flight-precautions-time"></p>
   <div class="flight-ai-text" id="flight-precautions-analysis"></div>
@@ -750,13 +757,13 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
 <div class="warning" style="margin:17px 0">
 <strong>Antes de usar tokens:</strong> verificá que los boletines cubran el vuelo previsto. Si no indicaste ruta exacta, el sistema no podrá determinar qué sectores atravesás. La consulta NOTAM de salida, destino y alternativo queda bajo responsabilidad del piloto. El resultado no reemplaza un briefing oficial ni determina aptitud VFR/IFR.
 </div>
-<label style="display:flex;align-items:flex-start;gap:10px;font-size:13px">
-<input id="flight-confirm-cost" required form="flight-analysis-form" type="checkbox" style="width:20px;height:20px;flex:none">
+<label class="flight-ai-consent">
+<input id="flight-confirm-cost" required form="flight-analysis-form" type="checkbox" aria-describedby="flight-status">
 <span>Entiendo que al solicitar el análisis completo se consumirán tokens de OpenAI. Acepto iniciar una consulta privada de prueba.</span>
 </label>
 <div class="actions">
 <button class="primary" id="flight-ask" form="flight-analysis-form" type="submit">Generar informe de las cuatro etapas con IA</button>
-<span id="flight-status" class="feedback" role="status" aria-live="polite">Sin ejecutar. Las consultas anteriores no consumen tokens de IA.</span>
+<span id="flight-status" class="feedback ai-validation-status" role="status" aria-live="polite">Marcá la autorización antes de generar el informe completo.</span>
 </div>
 <div id="flight-result" hidden style="margin-top:20px;border-top:1px solid #605951;padding-top:18px">
 <div class="card-header"><h3>Informe meteorológico y operacional</h3><button class="secondary" id="flight-copy" type="button">Copiar análisis</button></div>
@@ -782,7 +789,7 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
  <label class="field" for="flight-pilot-question">Escribí tu pregunta o continuá la conversación
   <textarea id="flight-pilot-question" minlength="2" maxlength="500" rows="3" placeholder="Ej.: ¿Qué fenómenos debería vigilar a 3.500 pies? Después: ¿Y en el destino?" style="resize:vertical"></textarea></label>
  <label class="flight-ai-consent"><input id="flight-pilot-consent" type="checkbox"><span>Autorizo esta respuesta de ChatGPT y el consumo de tokens.</span></label>
- <div class="actions"><button class="primary" id="flight-pilot-ask" type="button">Enviar a ChatGPT</button><span class="feedback" id="flight-pilot-status" role="status" aria-live="polite">Escribí una pregunta y confirmá el consumo de tokens. PRONAREA es opcional en el chat.</span></div>
+ <div class="actions"><button class="primary" id="flight-pilot-ask" type="button">Enviar a ChatGPT</button><span class="feedback ai-validation-status" id="flight-pilot-status" role="status" aria-live="polite">Escribí una pregunta, marcá la autorización y enviá. PRONAREA es opcional.</span></div>
 </section>
 </div></details>
 <details class="ops-accordion" id="ops-cartas"><summary class="ops-accordion-toggle"><span class="ops-accordion-number">09</span><span class="ops-accordion-name"><strong>Cartas meteorológicas</strong><span>Superficie, altura y tiempo significativo</span></span><span class="ops-accordion-arrow" aria-hidden="true"></span></summary><div class="ops-accordion-content">
@@ -1293,8 +1300,8 @@ el('copy-report').addEventListener('click',async()=>{
    markStatus('pronarea',entered?'Texto cargado (no verificado)':'Falta cargar',entered);
  });
 
- // Los cuatro modos utilizan el mismo plan y vuelven a recuperar los boletines
- // desde el servidor. Ninguno invoca IA sin consentimiento por consulta.
+ // Los cuatro modos emplean el plan y los boletines cargados en la Mesa.
+ // Ninguno invoca IA sin consentimiento en cada consulta.
  let aiBusy=false;
  const aiButtons=['flight-weather-ask','flight-precautions-ask','flight-ask','flight-pilot-ask','flight-pilot-new'];
  const modeElements={
@@ -1315,6 +1322,18 @@ el('copy-report').addEventListener('click',async()=>{
      result:'flight-pilot-result',text:'flight-pilot-analysis',time:'flight-pilot-time'
    }
  };
+ // Señalizar la autorización pendiente sin invocar la IA ni gastar tokens.
+ for(const mode of Object.keys(modeElements)){
+   const item=modeElements[mode],input=$(item.consent),feedback=$(item.status);
+   const label=input.closest('label');
+   input.addEventListener('change',()=>{
+     label?.classList.remove('needs-confirmation');
+     feedback.classList.remove('needs-confirmation');
+     feedback.textContent=input.checked
+       ?'Autorización confirmada. Ya podés solicitar el análisis.'
+       :'Marcá la casilla «Autorizo» para continuar.';
+   });
+ }
  let pilotAnswer='';
  let pilotTurns=[];
  const pilotThread=$('flight-pilot-thread');
@@ -1466,10 +1485,17 @@ el('copy-report').addEventListener('click',async()=>{
    const elements=modeElements[mode];
    if(!elements||aiBusy)return;
    const outputStatus=$(elements.status);
-   if(!$(elements.consent).checked){
-     outputStatus.textContent='Confirmá el uso de IA y el consumo de tokens para esta consulta.';
+   const consent=$(elements.consent);
+   if(!consent.checked){
+     outputStatus.textContent='Falta un paso: marcá la casilla «Autorizo» situada arriba del botón. Después volvé a presionarlo.';
+     outputStatus.classList.add('needs-confirmation');
+     consent.closest('label')?.classList.add('needs-confirmation');
+     consent.focus({preventScroll:true});
+     consent.closest('label')?.scrollIntoView({behavior:'smooth',block:'center'});
      return;
    }
+   outputStatus.classList.remove('needs-confirmation');
+   consent.closest('label')?.classList.remove('needs-confirmation');
    const data=preparePayload(mode,outputStatus);
    if(!data)return;
    const inputFingerprint=contextFingerprint();
