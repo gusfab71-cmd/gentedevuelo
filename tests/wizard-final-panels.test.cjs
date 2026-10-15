@@ -28,7 +28,7 @@ test('official links and chart controls remain intact', () => {
  }
  assert.match(html, /https:\/\/ais\.anac\.gob\.ar\//);
  assert.match(html, /https:\/\/redemet\.decea\.mil\.br\//);
- assert.match(html, /flight-operations-wizard\.js\?v=20261015o/);
+ assert.match(html, /flight-operations-wizard\.js\?v=20261015p/);
 });
 
 test('meteorology renders the calculations shortcut once, under the evaluation', () => {
@@ -40,7 +40,7 @@ test('meteorology renders the calculations shortcut once, under the evaluation',
 
 test('magnetic courses above 360° are displayed as three-digit bearings', () => {
  const from = wizard.indexOf('const fmtBearing=');
- const to = wizard.indexOf('\nfunction nm(', from);
+ const to = wizard.indexOf('\nfunction fuelRemainder(', from);
  assert.ok(from > 0 && to > from);
  const bearing = vm.runInNewContext(wizard.slice(from,to)+'\nfmtBearing;');
  assert.equal(bearing(361.8), '001,8');
@@ -57,4 +57,16 @@ test('the final navigation column is the magnetic heading to maintain', () => {
  assert.ok(values.indexOf('fmtBearing(r.magnetic_track_deg)') < values.indexOf('fmtBearing(r.heading_magnetic_deg)'));
  assert.match(values, /fmtBearing\(r.heading_magnetic_deg\)\];/);
  assert.match(wizard, /GS '\+fmt\(r.gs_kt\)\+' kt · RUMBO MAGNÉTICO A MANTENER '/);
+});
+
+test('alternate fuel is not estimated and the remaining fuel still includes contingency and reserve', () => {
+ assert.doesNotMatch(wizard, /flight-fuel-alternate-gs|altNm|altFuel|Alternativo directo/);
+ assert.match(wizard, /Remanente para alternativo \(sin calcular consumo\)/);
+ const from = wizard.indexOf('function fuelRemainder(');
+ const to = wizard.indexOf('\nfunction calcFuel(', from);
+ assert.ok(from > 0 && to > from);
+ const fn = vm.runInNewContext(wizard.slice(from, to) + '\nfuelRemainder;');
+ assert.ok(Math.abs(fn(85, 43.4, 5, 4.34, 16.5).remainder - 15.76) < 1e-9);
+ assert.equal(fn(60, 43.4, 5, 4.34, 16.5).remainder < 0, true);
+ assert.equal(fn(85, null, 5, 4.34, 16.5).planned, null);
 });

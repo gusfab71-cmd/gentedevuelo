@@ -74,7 +74,7 @@ report.before(nav);
 const navSettings=$('flight-nav-settings'),navOutput=$('flight-essential-navigation');
 if(navSettings)nav.append(navSettings);if(navOutput)nav.append(navOutput);
 const fuel=document.createElement('div');fuel.id='flight-wizard-fuel';
-const inputs=[['flight-fuel-burn','Consumo (litros/hora)',''],['flight-fuel-available','Combustible utilizable (litros)',''],['flight-fuel-start','Inicial: rodaje y ascenso (litros)','5'],['flight-fuel-contingency','Contingencia (%)','10'],['flight-fuel-reserve','Reserva final (minutos)','45'],['flight-fuel-alternate-gs','GS estimada al alternativo (kt)','']];
+const inputs=[['flight-fuel-burn','Consumo (litros/hora)',''],['flight-fuel-available','Combustible utilizable (litros)',''],['flight-fuel-start','Inicial: rodaje y ascenso (litros)','5'],['flight-fuel-contingency','Contingencia (%)','10'],['flight-fuel-reserve','Reserva final (minutos)','45']];
 fuel.innerHTML='<h3>Planificación de combustible</h3><div class="flight-fuel-inputs">'+inputs.map(x=>'<label>'+x[1]+'<input id="'+x[0]+'" type="number" min="0" max="10000" step="0.1" value="'+x[2]+'"></label>').join('')+'</div><div id="flight-fuel-summary" role="status" aria-live="polite">Completá los datos del plan.</div><p class="sub">5 litros iniciales, 10 % y 45 minutos son valores orientativos editables, no garantías ni mínimos reglamentarios. Validá el POH/AFM, reservas, fases de ascenso y rutas oficiales.</p><button type="button" id="flight-wizard-print">Imprimir o guardar como PDF A4</button>';
 const legTable=document.createElement('section');legTable.id='flight-wizard-leg-table';legTable.setAttribute('aria-label','Planilla de navegación por piernas');nav.append(legTable);
 nav.append(fuel);
@@ -346,34 +346,29 @@ const value=id=>{const s=$(id)?.value??'';return s!==''&&Number.isFinite(Number(
 const fmt=v=>Number.isFinite(v)?v.toLocaleString('es-AR',{maximumFractionDigits:1}):'Pendiente';
 const fmtBearing=v=>Number.isFinite(v)?
  ((Math.round((((v%360)+360)%360)*10)%3600)/10).toLocaleString('es-AR',{minimumIntegerDigits:3,minimumFractionDigits:1,maximumFractionDigits:1}):'Pendiente';
-function nm(a,b){
- if(!a||!b)return null;const R=Math.PI/180,dl=(b[0]-a[0])*R,dn=(b[1]-a[1])*R;
- const x=Math.sin(dl/2)**2+Math.cos(a[0]*R)*Math.cos(b[0]*R)*Math.sin(dn/2)**2;
- return 3440.065*2*Math.asin(Math.min(1,Math.sqrt(x)));
+function fuelRemainder(available,trip,initial,contingency,reserve){
+ const amounts=[trip,initial,contingency,reserve];
+ const planned=amounts.every(Number.isFinite)?amounts.reduce((sum,liters)=>sum+liters,0):null;
+ return {planned,remainder:planned!==null&&Number.isFinite(available)?available-planned:null};
 }
 function calcFuel(){
  const list=rows(),burn=value('flight-fuel-burn'),available=value('flight-fuel-available');
- const ground=value('flight-fuel-start'),pct=value('flight-fuel-contingency'),reserve=value('flight-fuel-reserve'),altGs=value('flight-fuel-alternate-gs');
+ const ground=value('flight-fuel-start'),pct=value('flight-fuel-contingency'),reserve=value('flight-fuel-reserve');
  const known=list.length&&list.every(x=>Number.isFinite(x.distance_nm)&&Number.isFinite(x.gs_kt)&&x.gs_kt>0);
  const distance=known?list.reduce((v,x)=>v+x.distance_nm,0):null;
  const hours=known?list.reduce((v,x)=>v+x.distance_nm/x.gs_kt,0):null;
  const trip=hours!==null&&burn!==null?hours*burn:null;
- const altCode=$('flight-alternate')?.value==='OTHER'?$('flight-alternate-other')?.value:$('flight-alternate')?.value;
- const alternate=window.GDV_FLIGHT_FIR_GEODATA?.airports?.[altCode];
- const altNm=nm(list.at(-1)?.to,alternate);
- const altFuel=Number.isFinite(altNm)&&Number.isFinite(altGs)&&altGs>0&&burn!==null?altNm/altGs*burn:null;
  const extra=trip!==null&&pct!==null?trip*pct/100:null;
  const reserveFuel=burn!==null&&reserve!==null?burn*reserve/60:null;
- const all=[trip,altFuel,extra,reserveFuel,ground].every(Number.isFinite)?trip+altFuel+extra+reserveFuel+ground:null;
- const rem=all!==null&&available!==null?available-all:null;
+ const {planned,remainder}=fuelRemainder(available,trip,ground,extra,reserveFuel);
  $('flight-fuel-summary').textContent='Ruta: '+fmt(distance)+' NM · '+fmt(hours===null?null:hours*60)+' min'+
  '\nETA destino: '+(eta()?.slice(0,16).replace('T',' ')||'Pendiente')+' UTC'+
  '\nRuta: '+fmt(trip)+' L · Inicial: '+fmt(ground)+' L'+
- '\nContingencia: '+fmt(extra)+' L · Alternativo directo ('+fmt(altNm)+' NM): '+fmt(altFuel)+' L'+
- '\nReserva final: '+fmt(reserveFuel)+' L · Total previsto: '+fmt(all)+' L'+
- '\nUtilizable: '+fmt(available)+' L · Saldo previsto: '+fmt(rem)+' L'+
- (rem!==null&&rem<0?'\nATENCIÓN: combustible insuficiente según estos datos.':'')+
- (altFuel===null?'\nPara el alternativo necesitás una GS estimada aportada por el piloto.':'');
+ '\nContingencia: '+fmt(extra)+' L · Reserva final: '+fmt(reserveFuel)+' L'+
+ '\nUtilizable: '+fmt(available)+' L · Previsto sin alternativo: '+fmt(planned)+' L'+
+ '\nRemanente para alternativo (sin calcular consumo): '+fmt(remainder)+' L'+
+ (remainder!==null&&remainder<0?'\nATENCIÓN: remanente negativo antes de considerar el alternativo.':'')+
+ '\nEl consumo del tramo al alternativo no está calculado: verificá su viabilidad por separado.';
  const el=$('flight-wizard-leg-table');
  if(el){
   const tbl=document.createElement('table'),header=document.createElement('tr');
