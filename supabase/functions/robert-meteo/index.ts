@@ -230,6 +230,7 @@ Deno.serve(async (request: Request) => {
   let fir = "";
   let requestedFirs:string[]=[];
   let skipSigmet=false;
+  let sigmetOnly=false;
 
   try {
     const input = await request.json();
@@ -237,6 +238,7 @@ Deno.serve(async (request: Request) => {
     question = typeof input?.question === "string" ? input.question.trim() : "";
     fir = typeof input?.fir === "string" ? input.fir.trim().toUpperCase() : "";
     skipSigmet=input?.skip_sigmet===true;
+    sigmetOnly=input?.sigmet_only===true;
     if(input?.firs!==undefined){
       if(!Array.isArray(input.firs)||input.firs.length<1||input.firs.length>5||
         input.firs.some((f:unknown)=>typeof f!=="string"||!Object.prototype.hasOwnProperty.call(FIR_NAMES,f))||
@@ -246,7 +248,7 @@ Deno.serve(async (request: Request) => {
     }
     if (input?.use_ai === true) return send({ error: "El análisis con IA se solicita únicamente al final de Mesa de Vuelo." }, 400);
   } catch { return send({ error: "Solicitud inválida." }, 400); }
-  if (!/^SA[A-Z]{2}$/.test(icao)) return send({ error: "Ingresá un código OACI argentino de cuatro letras, como SAEZ o SABE." }, 400);
+  if (!sigmetOnly && !/^SA[A-Z]{2}$/.test(icao)) return send({ error: "Ingresá un código OACI argentino de cuatro letras, como SAEZ o SABE." }, 400);
   if (question.length > 220) return send({ error: "La consulta no puede superar 220 caracteres." }, 400);
 
 
@@ -255,6 +257,17 @@ Deno.serve(async (request: Request) => {
   }
   if(!requestedFirs.length)requestedFirs=[fir];
   const fetchedAt = new Date().toISOString();
+  // SIGMET pertenece a la FIR, no a un aeródromo: permitir consultar las FIR
+  // sin exigir los tres códigos OACI ni esperar a las consultas METAR/TAF.
+  if(sigmetOnly){
+    const sigmets_by_fir=await fetchInternationalSigmets(requestedFirs);
+    return send({
+      ok:true,consulted_at_utc:fetchedAt,
+      source:"NOAA Aviation Weather Center (consulta internacional parcial)",
+      sigmets_by_fir,
+      warning:"Sin coincidencias en NOAA/AWC no confirma ausencia de SIGMET. Corroborá en el SMN."
+    });
+  }
   const [metarResult,tafResult,sigmetResult]=await Promise.allSettled([
     fetchBulletin("metar",icao),fetchBulletin("taf",icao),skipSigmet?Promise.resolve([] as FirSigmet[]):fetchInternationalSigmets(requestedFirs)
   ]);
