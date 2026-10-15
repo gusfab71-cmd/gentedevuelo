@@ -387,11 +387,11 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
 .flight-speed-alt-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;min-width:0}
 .flight-speed-alt-row>.field{min-width:0;margin:0}
 .flight-alt-vfr-feedback{grid-column:1/-1;display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:11px 13px;border:1px solid #536d82;border-radius:10px;background:#1b303f;font-size:12px;line-height:1.6;color:#d4e6f3}
-.flight-alt-vfr-feedback:has([data-vfr-state="different"]){background:#3d302a;border-color:#dba877}
-#flight-alt-vfr-status[data-vfr-state="different"]{color:#ffe0ba;font-weight:780}
+.flight-alt-vfr-feedback:has([data-vfr-state="different"]){background:linear-gradient(145deg,#233a4a,#1b303f);border-color:#6e90a8;box-shadow:inset 0 1px 0 #a9c5d31a}
+#flight-alt-vfr-status[data-vfr-state="different"]{color:#e3f1fa;font-weight:750}
 #flight-alt-vfr-status[data-vfr-state="match"]{color:#c6e9d9;font-weight:700}
 #flight-alt-vfr-apply:not([hidden]){font-weight:730;font-size:12px;min-height:34px}
-#flight-alt[aria-invalid="true"]{border-color:#e8ac7d!important;outline:2px solid #dd9b5977;outline-offset:1px}
+#flight-alt[aria-invalid="true"]{border-color:#8aa8bd!important;outline:2px solid #89a9c466;outline-offset:1px}
 @media(max-width:600px){.flight-speed-alt-row{grid-template-columns:1fr}}
 .flight-nav-source{font-size:12px;color:#b8d8ed;line-height:1.55}
 .flight-nav-source[data-status="manual"]{color:#f3d2a1}
@@ -516,14 +516,14 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
 .flight-vfr-guidance h3{font-size:17px;margin:4px 0 10px;color:#f1f7fb}
 .flight-vfr-guidance .sub{font-size:12px;line-height:1.6;margin:9px 0}
 .flight-vfr-overview{font-size:12px;line-height:1.5;font-weight:750;color:#c7ddeb}
-.flight-vfr-overview[data-vfr-state="different"]{color:#f1c99c}
+.flight-vfr-overview[data-vfr-state="different"]{color:#d6e9f6}
 #flight-legs-list .flight-leg-row{grid-template-columns:minmax(0,1.4fr) minmax(118px,1fr) minmax(130px,1fr);align-items:start}
 #flight-legs-list .flight-leg-route{padding-top:25px}
 .flight-vfr-track-label{min-width:0}
 .flight-vfr-result{grid-column:1/-1;border-top:1px solid #466172;padding-top:10px;display:grid;gap:8px;font-size:12px;line-height:1.55;color:#d9e8f2}
 .flight-vfr-result[data-vfr-state="match"]{color:#b8dfcd}
-.flight-vfr-result[data-vfr-state="different"]{color:#f1c99c}
-#flight-legs-list .flight-leg-row input[aria-invalid="true"]{border-color:#e7a86a!important;outline:2px solid #e7a86a65;outline-offset:1px;background:#392b2a;color:#fff1e1}
+.flight-vfr-result[data-vfr-state="different"]{color:#d6e9f6}
+#flight-legs-list .flight-leg-row input[aria-invalid="true"]{border-color:#86a6be!important;outline:2px solid #7fa2bf60;outline-offset:1px;background:#24394a;color:#edf6fd}
 .flight-vfr-options{display:flex;flex-wrap:wrap;gap:8px}
 .flight-vfr-options button{min-height:34px;padding:7px 10px;font-size:12px}
 @media(max-width:870px){#flight-legs-list .flight-leg-row{grid-template-columns:repeat(2,minmax(0,1fr))}#flight-legs-list .flight-leg-route{grid-column:1/-1;padding-top:0}}
