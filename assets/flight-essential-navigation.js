@@ -84,6 +84,8 @@ function readTAS(){
  return raw!==''&&Number.isFinite(n)&&n>=20&&n<=500?n:null;
 }
 function validatedAiWind(leg){
+ const check=windSource?.validity($('flight-pronarea')?.value||'',flightDate());
+ if(!check?.ok)return null; // Aunque el servidor haya extraído viento, validar nuevamente UTC.
  const ai=aiWindValues.get(leg.index);
  if(!ai||ai.from.trim().toUpperCase()!==leg.name.split(' → ')[0].trim().toUpperCase()||
     ai.to.trim().toUpperCase()!==leg.name.split(' → ')[1].trim().toUpperCase()||
@@ -114,13 +116,15 @@ function windForLeg(leg){
   return {wind:{speed,from:speed===0?0:from},
     source:'Viento ingresado manualmente por el piloto (fuente y vigencia por verificar).'};
  }
+ const raw=$('flight-pronarea')?.value||'';
+ const check=windSource?.validity(raw,flightDate());
+ if(!check?.ok)return {wind:null,reason:check?.message||'No se pudo confirmar la validez horaria del PRONAREA.'};
  const ai=validatedAiWind(leg);
  if(ai)return ai;
- const raw=$('flight-pronarea')?.value||'';
  if(!raw.trim())return {wind:null,reason:'No se cargó PRONAREA con WIND/T para esta pierna.'};
  const location=leg.from&&leg.to?[
   (leg.from[0]+leg.to[0])/2,(leg.from[1]+leg.to[1])/2]:null;
- const report=windSource?.pick(raw,Number(leg.alt),location,airports);
+ const report=windSource?.pick(raw,Number(leg.alt),location,airports,flightDate());
  if(!report?.ok)return {wind:null,reason:report?.reason||'No se pudo identificar viento en altura en el PRONAREA cargado.'};
  return {wind:{speed:report.speed_kt,from:report.direction_true_deg},
   source:'PRONAREA WIND/T · '+report.station+' · FL'+String(report.level_ft/100).padStart(3,'0')+
@@ -198,7 +202,7 @@ function windInputs(){
  const route=currentRoute();
  // Un PRONAREA nuevo vuelve a seleccionar nivel/estación sin depender de la
  // respuesta IA ni producir una llamada a OpenAI.
- const signature=JSON.stringify(route.map(r=>[r.key,r.alt]))+'|'+($('flight-pronarea')?.value||'');
+ const signature=JSON.stringify(route.map(r=>[r.key,r.alt]))+'|'+($('flight-pronarea')?.value||'')+'|'+($('flight-time')?.value||'');
  if(currentSignature===signature)return;
  currentSignature=signature;
  settings.replaceChildren();
@@ -269,7 +273,7 @@ for(const id of ['flight-origin','flight-dest','flight-origin-other','flight-des
  node?.addEventListener('change',()=>{schedule();output();});
 }
 waypoints.addEventListener('input',schedule);
-$('flight-pronarea')?.addEventListener('input',()=>{aiWindValues.clear();schedule();});
+$('flight-pronarea')?.addEventListener('input',()=>{aiWindValues.clear();schedule();output();});
 tasInput.addEventListener('input',output);
 document.addEventListener('gdv-flight-essential-generated',(event)=>{
  aiWindValues.clear();
