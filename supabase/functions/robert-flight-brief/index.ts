@@ -53,6 +53,34 @@ function pronareaHourCheck(text:string,plannedAtUtc:string){
  }
  return {status:"horario_compatible_fecha_no_confirmada",windows};
 }
+// TAF: solo descartar cuando se pudo interpretar sin ambigüedad su
+// encabezado ICAO + DDHHMMZ + DDHH/DDHH y termina ANTES del despegue UTC.
+// No se asignan grupos a un arribo sin ETA.
+function tafStatusForDeparture(raw:string,icao:string,plannedMs:number){
+ const pattern=/\bTAF\s+(?:(?:AMD|COR)\s+){0,2}(SA[A-Z]{2})\s+(\d{6})Z\s+(\d{2})(\d{2})\/(\d{2})(\d{2})\b/;
+ const match=pattern.exec(raw.toUpperCase());
+ if(!match||match[1]!==icao)return "indeterminado";
+ const dep=new Date(plannedMs),startDay=Number(match[3]),startHour=Number(match[4]),
+   endDay=Number(match[5]),endHour=Number(match[6]);
+ if(startDay<1||startDay>31||endDay<1||endDay>31||startHour>23||endHour>24)return "indeterminado";
+ let chosen:{from:number;until:number;distance:number}|null=null;
+ for(const shift of [-1,0,1]){
+  const initialMonth=dep.getUTCMonth()+shift;
+  const year=dep.getUTCFullYear()+Math.floor(initialMonth/12),month=(initialMonth+12)%12;
+  const from=Date.UTC(year,month,startDay,startHour);
+  if(new Date(from).getUTCDate()!==startDay)continue;
+  for(const nextMonth of [0,1]){
+   const endMonth=initialMonth+nextMonth;
+   const endYear=dep.getUTCFullYear()+Math.floor(endMonth/12),endM=(endMonth+12)%12;
+   const until=Date.UTC(endYear,endM,endDay,endHour);
+   if(until<=from||until-from>48*3600000)continue;
+   const distance=Math.abs(plannedMs-from);
+   if(!chosen||distance<chosen.distance)chosen={from,until,distance};
+  }
+ }
+ if(!chosen||chosen.distance>10*86400000)return "indeterminado";
+ return chosen.until<=plannedMs?"vencido_antes_despegue":"requiere_eta";
+}
 function verifiedWindTokens(text:string){
   const groups=new Map<string,Map<string,{ft:number,dir:number,kt:number}>>();
   const sections=text.toUpperCase().split(/\bWIND\s*\/\s*T\s*:/);
@@ -382,11 +410,20 @@ Deno.serve(async request=>{
         "Informe de las cuatro etapas (sin consulta adicional)."),
     "FECHA DE CONSULTA DE LOS BOLETINES CARGADOS (NO equivale a emisión ni vigencia): "+checkedAt,
     "METAR SALIDA ("+origin+"): "+(reports.origin_metar.available?reports.origin_metar.raw:noData),
-    "TAF SALIDA ("+origin+"): "+(reports.origin_taf.available?reports.origin_taf.raw:noData),
+    "TAF SALIDA ("+origin+"): "+(reports.origin_taf.available?
+      tafStatusForDeparture(reports.origin_taf.raw,origin,plannedMs)==="vencido_antes_despegue"?
+        "TAF ENCONTRADO PERO VENCIDO ANTES DE SALIDA UTC: excluir contenido como pronóstico aplicable. Consultar TAF actualizado.":
+        reports.origin_taf.raw+"\nSin ETA del "+origin+", NO atribuir al arribo grupos BECMG/TEMPO previos al despegue.":noData),
     "METAR DESTINO ("+destination+"): "+(reports.destination_metar.available?reports.destination_metar.raw:noData),
-    "TAF DESTINO ("+destination+"): "+(reports.destination_taf.available?reports.destination_taf.raw:noData),
+    "TAF DESTINO ("+destination+"): "+(reports.destination_taf.available?
+      tafStatusForDeparture(reports.destination_taf.raw,destination,plannedMs)==="vencido_antes_despegue"?
+        "TAF ENCONTRADO PERO VENCIDO ANTES DE SALIDA UTC: excluir contenido como pronóstico aplicable. Consultar TAF actualizado.":
+        reports.destination_taf.raw+"\nSin ETA del "+destination+", NO atribuir al arribo grupos BECMG/TEMPO previos al despegue.":noData),
     "METAR ALTERNATIVO ("+alternate+"): "+(reports.alternate_metar.available?reports.alternate_metar.raw:noData),
-    "TAF ALTERNATIVO ("+alternate+"): "+(reports.alternate_taf.available?reports.alternate_taf.raw:noData),
+    "TAF ALTERNATIVO ("+alternate+"): "+(reports.alternate_taf.available?
+      tafStatusForDeparture(reports.alternate_taf.raw,alternate,plannedMs)==="vencido_antes_despegue"?
+        "TAF ENCONTRADO PERO VENCIDO ANTES DE SALIDA UTC: excluir contenido como pronóstico aplicable. Consultar TAF actualizado.":
+        reports.alternate_taf.raw+"\nSin ETA del "+alternate+", NO atribuir al arribo grupos BECMG/TEMPO previos al despegue.":noData),
     "SIGMET CARGADO POR FIR (búsqueda parcial, NO confirma ausencia): "+sigmetText,
     "ESTADO DE VALIDEZ DEL PRONAREA PARA ESTE VUELO: "+pronareaStatus,
     "PRONAREA MANUAL, FECHA DE EMISIÓN NO VERIFICADA, recepción UTC "+documentsReceivedAtUtc+":\n"+
