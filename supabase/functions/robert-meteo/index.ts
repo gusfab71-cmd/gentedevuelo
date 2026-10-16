@@ -208,22 +208,13 @@ Deno.serve(async (request: Request) => {
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
   const publicKey = envDefault("SUPABASE_PUBLISHABLE_KEYS") || Deno.env.get("SUPABASE_ANON_KEY") || "";
-  const privateKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || envDefault("SUPABASE_SECRET_KEYS");
-  if (!supabaseUrl || !publicKey || !privateKey) return send({ error: "Configuración interna incompleta." }, 503);
+  if (!supabaseUrl || !publicKey) return send({ error: "Configuración interna incompleta." }, 503);
 
   const publicClient = createClient(supabaseUrl, publicKey, { auth: { persistSession: false, autoRefreshToken: false } });
   const { data: identity, error: identityError } = await publicClient.auth.getUser(bearer.slice(7));
   if (identityError || !identity?.user?.id) return send({ error: "Tu sesión venció. Volvé a ingresar." }, 401);
 
-  const adminClient = createClient(supabaseUrl, privateKey, { auth: { persistSession: false, autoRefreshToken: false } });
-
-  // Mesa de Vuelo: acceso reservado al administrador también del lado del servidor.
-  const { data: admin, error: adminError } = await adminClient.from("site_admins")
-    .select("user_id").eq("user_id", identity.user.id).maybeSingle();
-  if (adminError) return send({ error: "No se pudo validar el permiso de administrador." }, 503);
-  if (!admin) return send({ error: "La Mesa de Vuelo está reservada para pruebas privadas del administrador." }, 403);
-
-  // Esta función solo consulta boletines; funciona sin habilitar la IA de Shimoda.
+  // Consulta meteorológica para integrantes autenticados. Nunca consume tokens de IA.
 
   let icao = "";
   let question = "";

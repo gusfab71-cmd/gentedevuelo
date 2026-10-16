@@ -106,9 +106,9 @@ const essentialFeedback=document.createElement('span');essentialFeedback.classNa
 essentialFeedback.textContent='Siguiente etapa: informe esencial y consultas del piloto.';
 essentialButton.addEventListener('click',async()=>{
  if(step!==3||busy)return;
- essentialButton.disabled=true;essentialFeedback.textContent='Guardando cálculos y abriendo el informe esencial…';
+ essentialButton.disabled=true;essentialFeedback.textContent=document.documentElement.dataset.flightRole==='member'?'Guardando cálculos y abriendo la planilla final…':'Guardando cálculos y abriendo el informe esencial…';
  await go(4);
- essentialFeedback.textContent=step===4?'Informe esencial abierto.':$('flight-wizard-status').textContent;
+ essentialFeedback.textContent=step===4?(document.documentElement.dataset.flightRole==='member'?'Planilla final abierta.':'Informe esencial abierto.'):$('flight-wizard-status').textContent;
  essentialButton.disabled=false;
 });
 essentialRow.append(essentialButton,essentialFeedback);nav.append(essentialRow);
@@ -573,7 +573,7 @@ $('flight-wizard-print').onclick=()=>{
  'DATOS METEOROLÓGICOS RECUPERADOS',
  $('flight-auto-results')?.hidden?'Boletines automáticos pendientes de nueva consulta.':($('flight-auto-time')?.textContent||'Fecha de consulta no informada.'),
  'METAR/TAF/SIGMET: verificar fecha y vigencia en fuentes oficiales.','',
- 'INFORME ESENCIAL DE IA',$('flight-essential-result')?.hidden?'No generado.':$('flight-essential-analysis')?.textContent||'No generado.','',
+ 'INFORME ESENCIAL DE IA',document.documentElement.dataset.flightRole==='member'?'Reservado a la administración. No se realizó ninguna consulta de IA.':($('flight-essential-result')?.hidden?'No generado.':$('flight-essential-analysis')?.textContent||'No generado.'),'',
  'Herramienta orientativa: el piloto debe verificar información meteorológica oficial, NOTAM, cartas, reglamentación y performance.');
  if(!sheet){sheet=document.createElement('section');sheet.id='flight-print-sheet';sheet.hidden=true;document.body.append(sheet);}
  sheet.textContent=out.join('\n');window.print();

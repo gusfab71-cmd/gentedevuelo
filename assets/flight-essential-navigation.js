@@ -190,7 +190,7 @@ function describe(r){
  return {title:name,lines};
 }
 function output(){
- if(result.hidden)return;
+ // Los cálculos locales se actualizan aunque no se haya solicitado un informe con IA.
  const legs=currentRoute().map(computeLeg).map(describe);
  target.replaceChildren();
  if(!legs.length){target.textContent='Definí origen y destino para calcular las piernas.';return;}

@@ -21,20 +21,15 @@ Deno.serve(async req=>{
   if(req.method==="OPTIONS")return new Response("ok",{headers:cors});
   if(req.method!=="POST")return json({error:"Método no permitido."},405);
   const token=req.headers.get("authorization")||"";
-  if(!token.startsWith("Bearer "))return json({error:"Iniciá sesión como administrador."},401);
+  if(!token.startsWith("Bearer "))return json({error:"Iniciá sesión para consultar las cartas."},401);
   const url=Deno.env.get("SUPABASE_URL")||"";
   const anon=readKey("SUPABASE_PUBLISHABLE_KEYS")||Deno.env.get("SUPABASE_ANON_KEY")||"";
-  const secret=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")||readKey("SUPABASE_SECRET_KEYS");
-  if(!url||!anon||!secret)return json({error:"Configuración de permisos no disponible."},503);
+  if(!url||!anon)return json({error:"Configuración de permisos no disponible."},503);
   try{
     const auth=createClient(url,anon,{auth:{persistSession:false,autoRefreshToken:false}});
     const {data:identity,error:authError}=await auth.auth.getUser(token.slice(7));
     if(authError||!identity?.user?.id)return json({error:"Sesión vencida."},401);
-    const db=createClient(url,secret,{auth:{persistSession:false,autoRefreshToken:false}});
-    const {data:admin,error:dbError}=await db.from("site_admins").select("user_id")
-      .eq("user_id",identity.user.id).maybeSingle();
-    if(dbError)return json({error:"No se pudieron validar los permisos."},503);
-    if(!admin)return json({error:"Consulta reservada a la administración."},403);
+    // Cartas oficiales: disponibles para integrantes, sin llamadas a servicios de IA.
     let input:unknown;
     try{input=await req.json();}catch{return json({error:"Datos de consulta inválidos."},400);}
     const chart=(input as {chart?:unknown})?.chart;

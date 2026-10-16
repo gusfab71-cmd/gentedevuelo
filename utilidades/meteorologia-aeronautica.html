@@ -974,10 +974,10 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
 </main>
 <section class="wrap" id="gdv-meteo-gate" role="status" aria-live="polite">
 <div class="card" style="max-width:670px;margin:28px auto">
-<span class="card-kicker">Área de administración</span>
+<span class="card-kicker">Herramienta para integrantes</span>
 <h1 style="font-size:28px;margin:12px 0">Flight Operations</h1><p class="sub">Developed by Gente de Vuelo</p>
 <p class="sub" id="gdv-meteo-gate-state">Comprobando permisos de acceso…</p>
-<p class="sub">Esta aplicación está reservada a las cuentas administradoras de Gente de Vuelo hasta nuevo aviso.</p>
+<p class="sub">Flight Operations está disponible para integrantes con sesión iniciada. Las consultas con IA siguen reservadas exclusivamente a la administración.</p>
 <a href="index.html">Volver a Utilidades</a>
 </div>
 </section>
@@ -1553,8 +1553,13 @@ el('copy-report').addEventListener('click',async()=>{
      $('flight-usage-detail').textContent='Contador no disponible: '+(err?.message||'volvé a intentar.')+' No se gastaron tokens por consultar el contador.';
    }finally{if(refresh)refresh.disabled=false;}
  }
- $('flight-usage-refresh').addEventListener('click',()=>{void refreshUsageMeter();});
- void refreshUsageMeter();
+ $('flight-usage-refresh').addEventListener('click',()=>{if(document.documentElement.dataset.flightRole==='admin')void refreshUsageMeter();});
+ let usageMeterInitialized=false;
+ const initUsageMeter=()=>{if(!usageMeterInitialized&&document.documentElement.dataset.flightRole==='admin'){
+   usageMeterInitialized=true;void refreshUsageMeter();
+ }};
+ document.addEventListener('gdv-flight-role-ready',initUsageMeter,{once:true});
+ initUsageMeter();
  const aiButtons=['flight-essential-ask','flight-precautions-ask','flight-pilot-ask','flight-pilot-new'];
  const modeElements={
    essential:{
@@ -1922,29 +1927,76 @@ el('copy-report').addEventListener('click',async()=>{
   const page=document.getElementById('gdv-meteo-private');
   const notice=document.getElementById('gdv-meteo-gate');
   const status=document.getElementById('gdv-meteo-gate-state');
-  // Cerrado por defecto: solo se muestra después de confirmar el rol en Supabase.
+  const byId=id=>document.getElementById(id);
+  // Acceso para integrantes autenticados; la función de IA valida al administrador en el servidor.
   try{
     const client=window.GDV_AUTH?.client;
     if(!client){status.textContent='No se pudo comprobar la sesión. Volvé a ingresar.';return;}
     const {data:identity,error:identityError}=await client.auth.getUser();
     if(identityError||!identity?.user){
-      status.textContent='Iniciá sesión con una cuenta administradora para acceder.';
+      status.textContent='Iniciá sesión con tu cuenta de Gente de Vuelo para acceder.';
       return;
     }
-    const {data:admin,error:permissionError}=await client.from('site_admins')
-      .select('user_id').eq('user_id',identity.user.id).maybeSingle();
-    if(permissionError){
-      status.textContent='No se pudo validar el permiso de administrador. Acceso bloqueado.';
-      return;
+    let isAdmin=false;
+    try{
+      const {data:admin,error:roleError}=await client.from('site_admins')
+        .select('user_id').eq('user_id',identity.user.id).maybeSingle();
+      isAdmin=!roleError&&!!admin;
+    }catch(_){isAdmin=false;}
+    document.documentElement.dataset.flightRole=isAdmin?'admin':'member';
+    if(!isAdmin){
+      // Ocultar y desactivar controles de IA; la protección real permanece en robert-flight-brief.
+      for(const id of ['consumo-ia','ops-precauciones','ops-piloto']){
+        const element=byId(id);if(element)element.hidden=true;
+      }
+      for(const id of ['flight-essential-consent','flight-essential-ask',
+        'flight-precautions-consent','flight-precautions-ask','flight-pilot-consent','flight-pilot-ask']){
+        const control=byId(id);if(control)control.disabled=true;
+      }
+      document.querySelector('[data-ops-target="#precauciones-vuelo"]')?.setAttribute('hidden','');
+      for(const selector of ['.jump a[href="#precauciones-vuelo"]','.jump a[href="#consulta-piloto"]']){
+        document.querySelector(selector)?.setAttribute('hidden','');
+      }
+      const report=byId('informe-esencial');
+      if(report){
+        const kicker=report.querySelector('.card-header .card-kicker');
+        const heading=byId('flight-essential-heading');
+        const intro=report.querySelector(':scope > p.sub');
+        const note=report.querySelector(':scope > p.flight-essential-note');
+        if(kicker)kicker.textContent='PLANILLA FINAL · SIN IA';
+        if(heading)heading.textContent='Planificación lista para imprimir';
+        if(intro)intro.textContent='Revisá los datos y cálculos de las etapas anteriores. Podés imprimir o guardar tu planificación en PDF sin utilizar inteligencia artificial.';
+        if(note)note.textContent='Las consultas con IA permanecen habilitadas exclusivamente para la administración.';
+        report.querySelector('label.flight-ai-consent')?.setAttribute('hidden','');
+        report.querySelector('.actions')?.setAttribute('hidden','');
+        byId('flight-essential-result')?.setAttribute('hidden','');
+      }
+      const accordion=document.querySelector('#ops-meteo .ops-accordion-name');
+      if(accordion){
+        const heading=accordion.querySelector('strong'),detail=accordion.querySelector('span');
+        if(heading)heading.textContent='Planilla final';
+        if(detail)detail.textContent='Impresión y descarga sin inteligencia artificial';
+      }
+      const quick=document.querySelector('[data-ops-target="#informe-esencial"] > strong');
+      if(quick)quick.textContent='Planilla final';
+      const jump=document.querySelector('.jump a[href="#informe-esencial"]');
+      if(jump)jump.textContent='5 · Planilla final';
+      const wizardLabels=()=>{
+        const last=byId('flight-wizard-steps')?.querySelector('button:last-child');
+        if(last)last.textContent='5 · Planilla final';
+        const advance=byId('flight-wizard-navigation')?.querySelector('.flight-wizard-continue-row button');
+        if(advance)advance.textContent='Guardar y continuar a la planilla final →';
+        const feedback=byId('flight-wizard-navigation')?.querySelector('.flight-wizard-continue-row .feedback');
+        if(feedback)feedback.textContent='Siguiente etapa: impresión o descarga del plan.';
+      };
+      if(document.readyState==='complete')wizardLabels();
+      else window.addEventListener('load',wizardLabels,{once:true});
     }
-    if(!admin){
-      status.textContent='Acceso restringido: esta prueba no está disponible para los integrantes.';
-      return;
-    }
+    document.dispatchEvent(new Event('gdv-flight-role-ready'));
     page.hidden=false;
     notice.hidden=true;
-  }catch(error){
-    status.textContent='No fue posible comprobar los permisos. Acceso bloqueado.';
+  }catch(_){
+    status.textContent='No fue posible comprobar la sesión. Acceso bloqueado.';
   }
 })();
 </script>
@@ -2113,7 +2165,7 @@ if(stage){
 <script src="../assets/flight-wmm2025.js?v=20261015a"></script>
 <script src="../assets/flight-vfr-altitude.js?v=20261015i"></script>
 <script src="../assets/flight-pronarea-wind.js?v=20261016a"></script>
-<script src="../assets/flight-essential-navigation.js?v=20261016c"></script>
+<script src="../assets/flight-essential-navigation.js?v=20261016d"></script>
 <script src="../assets/flight-fir-autoselect.js?v=20261015b"></script>
 <script src="../assets/flight-route-suggestions.js?v=20261015b"></script>
 <script defer src="../assets/flight-operations-wizard.js?v=20261016c"></script>
