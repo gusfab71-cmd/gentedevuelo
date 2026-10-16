@@ -27,7 +27,11 @@ const run = expression => vm.runInContext(expression, sandbox);
 
 const oldBackup = {ac:[{id:'a1',reg:'LV-ABC',type:'C150',h:200,c:300}],sv:[],ct:[],lg:[],rc:[]};
 assert.equal(run(`validData(${JSON.stringify(oldBackup)})`), true, 'Los respaldos anteriores deben continuar siendo válidos');
+assert.match(run('tabA()'), /1 · Crear aeronave/, 'El primer ingreso debe mostrar el formulario');
 run(`S.ac=${JSON.stringify(oldBackup.ac)};S.sel='a1'`);
+assert.doesNotMatch(run('tabA()'), /1 · Crear aeronave/, 'Después de tener una aeronave, ocultar el formulario 1');
+assert.doesNotMatch(run('tabA()'), /id="a_r"/, 'No debe permanecer el formulario oculto solamente por CSS');
+assert.match(run('tabA()'), /Agregar otra aeronave/, 'Debe existir una acción para agregar otra aeronave');
 assert.equal(run('opUse(A())'), 'unknown');
 assert.match(run('regimeNotice(A())'), /Definí el uso/);
 
@@ -152,4 +156,16 @@ assert.equal(run('CP(A()).p.tbo'), 1500, 'La recorrida de hélice tiene su propi
 assert.equal(run('CP(A()).m.tbo'), 1800, 'No se modifica el TBO de motor');
 assert.equal(run("tbos(A()).find(x=>x.cp==='p').ivM"), 72);
 
-console.log('PASS: uso, bitácora, aceite, inspecciones y mantenimiento independiente de estructura/motor/hélice');
+run('showAircraftForm=true');
+assert.match(run('tabA()'), /1 · Crear aeronave/, 'La acción permite volver a abrir el formulario');
+node('a_r').value='LV-DEF';node('a_t').value='Cessna 172';node('a_use').value='private';
+node('a_h').value='1000';node('a_c').value='500';node('a_hm').value='20';node('a_cm').value='20';
+run('addAc()');
+assert.equal(run('S.ac.length'), 2, 'La segunda aeronave se agrega sin perder la primera');
+assert.equal(run('S.sel'), run('S.ac[1].id'), 'La nueva aeronave queda seleccionada');
+assert.equal(run('showAircraftForm'), false, 'Crear otra aeronave vuelve a ocultar el formulario');
+assert.doesNotMatch(run('tabA()'), /id="a_r"/);
+run('S.ac=[];S.sel=null');
+assert.match(run('tabA()'), /1 · Crear aeronave/, 'Sin aeronaves, el formulario reaparece automáticamente');
+
+console.log('PASS: formularios condicionales, uso, bitácora, aceite, inspecciones y mantenimiento por componente');
