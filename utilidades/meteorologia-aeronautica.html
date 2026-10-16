@@ -1755,7 +1755,9 @@ el('copy-report').addEventListener('click',async()=>{
      route:routeText,planned_at_utc:iso('flight-time'),
      ...(mode==='essential'?{route_legs:legHeights.map((alt,index)=>({
        from:nodes[index],to:nodes[index+1],altitude_ft:alt
-     })),navigation_summary_text:essentialNavigationSummary()}:{}),
+     }))}:{}),
+     ...(['essential','pilot_question'].includes(mode)?{navigation_summary_text:essentialNavigationSummary()}:{}),
+     ...(mode==='pilot_question'?{navigation_scenarios:window.GDV_FLIGHT_NAV?.navigationScenarios?.()||[]}:{}),
      cruise_altitude_ft:Number($('flight-alt').value),
      flight_rules:$('flight-rules').value,firs,question,
      pronarea_text:$('flight-pronarea').value.trim(),
@@ -2096,7 +2098,7 @@ if(stage){
 <script src="../assets/flight-wmm2025.js?v=20261015a"></script>
 <script src="../assets/flight-vfr-altitude.js?v=20261015i"></script>
 <script src="../assets/flight-pronarea-wind.js?v=20261016a"></script>
-<script src="../assets/flight-essential-navigation.js?v=20261015s"></script>
+<script src="../assets/flight-essential-navigation.js?v=20261016b"></script>
 <script src="../assets/flight-fir-autoselect.js?v=20261015b"></script>
 <script src="../assets/flight-route-suggestions.js?v=20261015b"></script>
 <script defer src="../assets/flight-operations-wizard.js?v=20261016c"></script>

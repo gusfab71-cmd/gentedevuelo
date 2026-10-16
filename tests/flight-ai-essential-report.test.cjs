@@ -17,7 +17,7 @@ test('essential AI report has six agreed sections and strict evidence rules',()=
  assert.ok(edge.includes('vuelo autorizado/seguro'));
  assert.match(edge,/JAMÁS como certificación de autenticidad o seguridad/);
  assert.match(edge,/NAVEGACIÓN Y COMBUSTIBLE ESTIMADOS POR LA INTERFAZ/);
- assert.match(edge,/const navigationSummary=mode==="essential"\?asString\(input\?\.navigation_summary_text,2400\)/);
+ assert.match(edge,/const navigationSummary=\["essential","pilot_question"\]\.includes\(mode\)\?asString\(input\?\.navigation_summary_text,2400\)/);
  assert.match(edge,/pronarea_valid_from_date_utc/);
  assert.match(edge,/if\(input\?\.confirm_ai_cost!==true\)/);
  assert.match(edge,/wind_legs/);
@@ -52,4 +52,14 @@ test('departure window date and deterministic navigation/fuel summary are sent w
  assert.match(html,/navigation_summary_text:essentialNavigationSummary\(\)/);
  assert.match(html,/pronarea_valid_from_date_utc:pronareaStartDateUtc\(\)/);
  assert.match(html,/flight-ai-severity/);
+});
+
+test('pilot questions include local wind scenarios, NAV summary and destination ETA',()=>{
+ assert.match(html,/navigation_scenarios:window\.GDV_FLIGHT_NAV\?\.navigationScenarios\?\.\(\)\|\|\[\]/);
+ assert.match(html,/\['essential','pilot_question'\]\.includes\(mode\)\?\{navigation_summary_text:essentialNavigationSummary\(\)\}/);
+ assert.match(edge,/const arrivalEstimate=asString\(input\?\.planned_end_utc,40\)/);
+ assert.match(edge,/ESCENARIOS WIND\/T CONTRASTADOS CON EL TEXTO CARGADO/);
+ assert.match(edge,/verifiedNavigationScenarios\(input\?\.navigation_scenarios,pronarea\|\|"",via\)/);
+ assert.match(edge,/NIVEL PUBLICADO MÁS CERCANO/);
+ assert.match(edge,/if\(input\?\.confirm_ai_cost!==true\)/);
 });

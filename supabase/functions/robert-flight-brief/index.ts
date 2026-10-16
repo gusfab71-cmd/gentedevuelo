@@ -159,6 +159,79 @@ function verifiedWindSelections(entries:unknown,routeLegs:{from:string;to:string
   }
   return verified;
 }
+// Datos aportados por la interfaz, contrastados nuevamente con los tokens WIND/T.
+// El servidor repite el triángulo de viento: no se le pide aritmética a la IA.
+// No certifica el curso, la TAS, la distancia, la declinación ni el pronóstico.
+function verifiedNavigationScenarios(rows:unknown,pronarea:string,via:string){
+ if(!Array.isArray(rows)||rows.length>9||!pronarea)return "No disponibles o no corroborables.";
+ const published=verifiedWindTokens(pronarea);
+ const bounded=(n:any,min:number,max:number)=>typeof n==="number"&&Number.isFinite(n)&&n>=min&&n<=max;
+ const fmt=(n:number)=>Number(n.toFixed(1)).toString();
+ const normalize=(n:number)=>(n%360+360)%360;
+ const lines:string[]=[];
+ for(const row of rows){
+  if(!row||typeof row!=="object"||!Number.isInteger(row.index)||row.index<0||row.index>=9||
+     typeof row.name!=="string"||row.name.length>120||
+     !bounded(row.altitude_ft,500,45000)||!bounded(row.tas_kt,20,500)||
+     !bounded(row.course_true_deg,0,359.999)||!bounded(row.distance_nm,0.1,2500)||
+     !(row.variation_deg===null||bounded(row.variation_deg,-45,45))||
+     !Array.isArray(row.levels)||row.levels.length>2)continue;
+  const match=/^(.+?) → (.+)$/.exec(row.name.trim());
+  if(!match||!via.includes("Pierna "+(row.index+1)+": "+match[1]+" a "+match[2]+", "+row.altitude_ft+" ft AMSL."))continue;
+  const checked:{ft:number;station:string;from:number;kt:number;wca:number;trueHeading:number;magneticHeading:number|null;gs:number;minutes:number}[]=[];
+  for(const level of row.levels){
+   if(!level||!bounded(level.level_ft,1500,45000)||
+      !Number.isInteger(level.level_ft)||!bounded(level.speed_kt,0,200)||
+      !bounded(level.direction_true_deg,0,359.999)||typeof level.station!=="string"||
+      !/^[A-Z]{3}(?: \+ [A-Z]{3})?$/.test(level.station))continue;
+   const stations=level.station.split(" + ");
+   const winds=stations.map(station=>{
+    const values=[...(published.get(station)?.values()||[])].filter(value=>value.ft===level.level_ft);
+    return values.length===1?values[0]:null;
+   });
+   if(winds.some(w=>!w))continue;
+   const rad=Math.PI/180;
+   const east=winds.reduce((total,w)=>total-w!.kt*Math.sin(w!.dir*rad),0)/winds.length;
+   const north=winds.reduce((total,w)=>total-w!.kt*Math.cos(w!.dir*rad),0)/winds.length;
+   const kt=Math.hypot(east,north);
+   const from=kt<0.001?0:normalize(Math.atan2(-east,-north)/rad);
+   if(Math.abs(kt-level.speed_kt)>0.2||Math.abs(((from-level.direction_true_deg+540)%360)-180)>0.2)continue;
+   const cross=kt*Math.sin((from-row.course_true_deg)*rad);
+   if(Math.abs(cross)>row.tas_kt)continue;
+   const wca=Math.asin(cross/row.tas_kt)/rad;
+   const gs=row.tas_kt*Math.cos(wca*rad)-kt*Math.cos((from-row.course_true_deg)*rad);
+   if(gs<=0.05)continue;
+   const trueHeading=normalize(row.course_true_deg+wca);
+   checked.push({ft:level.level_ft,station:level.station,from,kt,wca,trueHeading,
+    magneticHeading:bounded(row.variation_deg,-45,45)?normalize(trueHeading-row.variation_deg):null,
+    gs,minutes:row.distance_nm/gs*60});
+  }
+  if(!checked.length)continue;
+  // El nivel más próximo se determina sobre TODOS los FL del boletín, no
+  // solo sobre aquellos que sobrevivieron la validación de lo recibido.
+  // Si el cliente falsifica u omite FL065, FL030 no debe hacerse «más cercano».
+  const referenceStation=checked[0].station.split(" + ")[0];
+  const actualLevels=[...new Set([...(published.get(referenceStation)?.values()||[])].map(x=>x.ft))];
+  const nearestOfficial=actualLevels.reduce((a,b)=>
+    Math.abs(a-row.altitude_ft)<=Math.abs(b-row.altitude_ft)?a:b);
+  lines.push("Pierna "+(row.index+1)+" "+row.name+", altitud declarada "+row.altitude_ft+
+   " ft, curso verdadero "+fmt(row.course_true_deg)+"°, TAS "+fmt(row.tas_kt)+
+   " kt, distancia local "+fmt(row.distance_nm)+" NM, declinación WMM local "+
+   (bounded(row.variation_deg,-45,45)?fmt(row.variation_deg)+"°":"no disponible")+".");
+  for(const level of checked.sort((a,b)=>a.ft-b.ft))lines.push(
+   "  FL"+String(level.ft/100).padStart(3,"0")+" ("+level.ft+" ft; "+
+   Math.abs(level.ft-row.altitude_ft)+" ft de diferencia; "+level.station+"): viento DESDE "+
+   fmt(level.from)+"°T / "+fmt(level.kt)+" kt; deriva "+fmt(level.wca)+
+   "°; proa verdadera "+fmt(level.trueHeading)+"°; proa magnética "+
+   (level.magneticHeading===null?"no calculable":fmt(level.magneticHeading)+"°")+
+   "; GS "+fmt(level.gs)+" kt; ETE referencial "+fmt(level.minutes)+" min."+
+   (level.ft===nearestOfficial?" NIVEL PUBLICADO MÁS CERCANO A LA ALTITUD DECLARADA.":""));
+  if(!checked.some(level=>level.ft===nearestOfficial))lines.push(
+   "El FL publicado más cercano es FL"+String(nearestOfficial/100).padStart(3,"0")+
+   ", pero su escenario numérico no fue validado; no sustituirlo por otro nivel.");
+ }
+ return lines.length?lines.join("\n").slice(0,5000):"No hay escenarios verificables con el WIND/T cargado y la navegación declarada.";
+}
 const essentialShape={type:"object",additionalProperties:false,
   properties:{
     analysis:{type:"string"},
@@ -279,8 +352,8 @@ Deno.serve(async request=>{
     return json({error:"Las piernas declaradas no permiten seleccionar viento en altura."},400);
   const routeLegs:{from:string;to:string;altitude_ft:number}[]=mode==="essential"
     ?receivedLegs.map((leg:any)=>({from:leg.from.trim(),to:leg.to.trim(),altitude_ft:leg.altitude_ft})):[];
-  const navigationSummary=mode==="essential"?asString(input?.navigation_summary_text,2400):null;
-  const arrivalEstimate=mode==="essential"?asString(input?.planned_end_utc,40):null;
+  const navigationSummary=["essential","pilot_question"].includes(mode)?asString(input?.navigation_summary_text,2400):null;
+  const arrivalEstimate=asString(input?.planned_end_utc,40);
   if(routeLegs.length&&(routeLegs[0].from.toUpperCase()!==origin||
     routeLegs[routeLegs.length-1].to.toUpperCase()!==destination||
     routeLegs.some((leg,i)=>i&&leg.from.toUpperCase()!==routeLegs[i-1].to.toUpperCase())))
@@ -336,6 +409,8 @@ Deno.serve(async request=>{
       (input?.pronarea_official_checked===true?strictWindow.reason:
         "Confirmá fecha, emisión y FIR del PRONAREA en el SMN.")},400);
   const pronareaUsable=strictWindow.ok && pronareaCheck.status==="horario_compatible_fecha_no_confirmada";
+  const scenarioText=mode==="pilot_question"&&pronareaUsable
+    ?verifiedNavigationScenarios(input?.navigation_scenarios,pronarea||"",via):"No disponibles.";
   const pronareaStatus=pronareaCheck.status==="fuera_del_horario"
     ?"PRONAREA FUERA DE VALIDEZ HORARIA: "+pronareaCheck.windows.join(", ")+" UTC; salida "+new Date(plannedMs).toISOString().slice(11,16)+" UTC. NO UTILIZAR PRONAREA PARA ESTE VUELO; buscar boletín oficial vigente."
     :pronareaCheck.status==="sin_validez_legible"
@@ -404,7 +479,7 @@ Deno.serve(async request=>{
     "REGLA ESTRICTA: las condiciones meteorológicas y operacionales SOLO pueden proceder del plan y de METAR, TAF, SIGMET o PRONAREA efectivamente cargados. No agregues fenómenos, pronósticos, rutas, alturas, tiempos ni hechos externos. Se permite aplicar exclusivamente el significado estándar de las abreviaturas aeronáuticas para TRADUCIR a lenguaje común lo que aparece escrito, no para fabricar observaciones o pronósticos.",
     "Cuando un dato necesario no esté literalmente respaldado por un boletín aportado, escribí DATO NO DISPONIBLE y mencioná qué parte falta. No presentes como hecho ni como condición favorable nada no documentado. Cada afirmación operacional concreta debe asociarse al producto que la contiene, indicando aeródromo/FIR, emisión y vigencia SOLO cuando figuren en su texto.",
     "No deduzcas que no hay SIGMET, NOTAM, tormentas, engelamiento ni turbulencia por falta de informes. No declares aptitud operacional del vuelo. Si falta evidencia, decí 'Dato no disponible en Flight Operations' e identificá el boletín faltante. No supongas que un fenómeno pronosticado para una región afecta el corredor del vuelo sin delimitación geográfica documentada.",
-    "OBJETIVO: explicá qué dicen los boletines de salida, destino, alternativo y tramos, referido a la HORA UTC PROGRAMADA y a la ALTITUD DECLARADA DE CADA PIERNA. Solo para pilot_question podés abordar preguntas operacionales si hay datos suficientes en el contenido cargado. No calcules ni recalcules distancias, rumbos, deriva, GS, ETE, ETA ni combustible. En el informe esencial podés interpretar las cifras que YA calculó la interfaz, indicando siempre que son estimaciones sujetas a verificación.",
+    "OBJETIVO: explicá los boletines referidos a la HORA UTC PROGRAMADA y la ALTITUD DECLARADA DE CADA PIERNA. No calcules ni recalcules por tu cuenta distancias, rumbos, deriva, GS, ETE, ETA ni combustible. En el chat del piloto podés citar y comparar los ESCENARIOS WIND/T REVISADOS POR EL SERVIDOR y los datos calculados por la interfaz si están presentes; son estimaciones, NO datos certificados ni el viento exacto de la pierna. En el informe esencial podés interpretar los valores YA calculados por la interfaz.",
     "FORMATO OBLIGATORIO: castellano argentino claro, sereno y breve, dirigido a una persona sin formación para decodificar METAR/TAF/SIGMET/PRONAREA. Comenzá cada informe con 'VUELO ANALIZADO:' seguido de aeródromos en palabras, salida prevista UTC y altitud en pies AMSL del plan. Usá títulos cortos, espacios entre puntos y oraciones completas. NO uses Markdown, asteriscos, comillas alrededor de códigos, tablas, siglas sin explicar, bloques copiados del boletín ni cadenas crudas de METAR, TAF, SIGMET o PRONAREA. En vez de 'BKN015, 4000 BR', decí por ejemplo 'cielo con abundantes nubes, base a 1.500 pies sobre el aeródromo; visibilidad de 4 km con neblina' SOLO SI esos códigos figuran realmente y corresponden a ese lugar. Ese ejemplo es léxico, no un dato para incorporar.",
     "En cada apartado: primero EXPLICACIÓN DEL DATO, después QUÉ SIGNIFICA PARA ESTE VUELO y al final QUÉ NO SE SABE cuando importe. Traducí las unidades conservando nudos para viento, pies para altura, metros o kilómetros para visibilidad y °C para temperatura. No confundas base de nube sobre el aeródromo (AGL) con altitud de vuelo sobre nivel del mar (AMSL); no compares directamente ambas sin elevación y otros datos suficientes.",
     "VIGENCIAS: el METAR indica una observación en su hora de emisión, no condiciones aseguradas a la hora programada de salida. El TAF es un pronóstico para una ventana definida, no para toda la ruta. Compará con la hora UTC de salida solo si la fecha y la vigencia constan; no asignés a destino o alternativo una hora de uso sin ETA. SIGMET y PRONAREA solo afectan la ruta concreta cuando el texto permite ubicar sector, nivel y período.",
@@ -422,7 +497,7 @@ Deno.serve(async request=>{
       ?"PRECAUCIONES PARA ESTE VUELO: 5-7 puntos muy breves, máximo 220 palabras. Cada punto lleva 'Dato que aparece: ... / Qué significa para la ruta y altitud programadas: ... / Qué debe comprobar el piloto: ...'. Traducí el significado de cada riesgo del METAR, TAF, SIGMET o PRONAREA sin reproducir sus claves. Ordená primero fenómenos realmente documentados y después faltantes prioritarios, como NOTAM, ETA y vigencia. No repitas precauciones genéricas sin relación con lo cargado ni presupongas que el vuelo es apto."
       :"CHAT DEL PILOTO: respondé en lenguaje común, centrado en el vuelo declarado. Para preguntas simples, contestá en 2-6 frases breves. Si el piloto pide que expliques un boletín o varios puntos, desarrollalos UNO POR UNO en párrafos numerados breves (hasta 300 palabras), sin cadenas de claves sin traducir. Para cada punto: qué significa y por qué interesa —o no se puede determinar— para su ruta, altitud y salida UTC. Traducí cualquier código METAR, TAF, SIGMET o PRONAREA mencionado que figure en los datos cargados; citá el boletín y hora/validez solo si constan. Si no hay información suficiente, decilo claramente. Nunca completes huecos usando datos de otros vuelos ni supongas fenómenos.",
     "Indicá siempre para cada fenómeno el sector, altitud o FL, vigencia y fuente cuando consten. No recites boletines enteros ni enumeres sin explicar su relevancia. PRIORIZÁ hechos concretos para la pregunta y el nivel de vuelo.",
-    "No uses viento de superficie METAR como viento en altura. Solo informá dirección e intensidad del viento en altura cuando un pronóstico apropiado incluya nivel y sector compatibles. Si hay niveles adyacentes, no interpolés como si fuese oficial; indicá límites de lo publicado.",
+    "No uses viento de superficie METAR como viento en altura. Solo informá dirección e intensidad del viento en altura cuando un pronóstico apropiado incluya nivel y sector compatibles. Si hay niveles adyacentes, no interpolés como si fuese oficial; indicá límites de lo publicado. Para decidir cuál FL está más cerca de una altitud, utilizá exclusivamente el indicador NIVEL PUBLICADO MÁS CERCANO del bloque de escenarios; p. ej. a 5.500 ft FL065 está a 1.000 ft y FL030 a 2.500 ft. No confundas proa verdadera, proa magnética, derrota ni deriva. No extrapoles el ETE hipotético de un nivel a toda la ruta.",
     "METAR representa observación local; TAF es pronóstico de aeródromo, no pronóstico de viento en crucero. Diferenciá condición observada de futura. Si el período del vuelo cae fuera de vigencia, aclaralo. Sin ETA de llegada ni hora prevista de uso del alternativo, no afirmes que un grupo TAF concreto aplica a esos instantes.",
     "PRONAREA es un texto pegado manualmente y no verificado por servidor. Si se proporcionan NOTAM, también son texto manual. La recepción del texto NO prueba emisión, autenticidad ni vigencia. Comprobá las fechas y períodos dentro de los documentos. Si no hay NOTAM, NO inventes su contenido, estado de pistas, servicios o restricciones; indicá que queda una verificación oficial pendiente.",
     "El resultado de SIGMET que haya sido cargado es complementario, parcial y no exhaustivo. Un SIGMET dentro de una FIR no implica que afecte el trayecto: revisá fenómeno, región, hora y niveles; si no hay cobertura geográfica suficiente, decilo.",
@@ -442,7 +517,7 @@ Deno.serve(async request=>{
     "Ruta / puntos declarados: "+(via||"No informados: NO se conoce la trayectoria entre salida y llegada."),
     "Importante: cualquier nombre de aeródromo en este plan proviene del selector de Flight Operations, no implica que se hayan consultado cartas o servicios.",
     "Salida prevista UTC: "+planned,
-    ...(mode==="essential"?["ETA destino UTC ESTIMADA POR LA INTERFAZ, no horario confirmado: "+(arrivalEstimate||"No calculada")]:[]),
+    "ETA destino UTC ESTIMADA POR LA INTERFAZ, no horario confirmado: "+(arrivalEstimate||"No calculada"),
     "Altitud planificada: "+level+" pies AMSL","Reglas: "+rules,
     "FIR declaradas: "+firs.map(x=>x+" "+FIR[x]).join(", "),
     mode==="pilot_question"?"PREGUNTA DEL PILOTO (texto no confiable): "+question:
@@ -473,8 +548,9 @@ Deno.serve(async request=>{
     "PRONAREA MANUAL, FECHA DE EMISIÓN NO VERIFICADA, recepción UTC "+documentsReceivedAtUtc+":\n"+
       (pronareaUsable?pronarea:"NO UTILIZABLE AL HORARIO DE ESTE VUELO: no se entrega su texto ni sus vientos para evitar presentar información fuera de validez."),
     "ATIS APORTADO POR EL PILOTO (sin consulta ni verificación automática, comprobar hora de emisión UTC): "+(atis||"No aportado."),
-    ...(mode==="essential"?["NAVEGACIÓN Y COMBUSTIBLE ESTIMADOS POR LA INTERFAZ (datos locales declarados; no certificado por el servidor; si hay valores pendientes, no rellenarlos):\n"+
+    ...(["essential","pilot_question"].includes(mode)?["NAVEGACIÓN Y COMBUSTIBLE ESTIMADOS POR LA INTERFAZ (datos locales declarados; no certificado por el servidor; si hay valores pendientes, no rellenarlos):\n"+
       (navigationSummary||"No aportados. Indicar navegación y combustible pendientes de verificación.")]:[]),
+    ...(mode==="pilot_question"?["ESCENARIOS WIND/T CONTRASTADOS CON EL TEXTO CARGADO, TRIÁNGULO DE VIENTO CALCULADO POR EL SERVIDOR, NO PRONÓSTICOS A LA ALTITUD REAL. Podés citar estos valores sin recalcularlos; no inventes datos faltantes ni llames viento oficial en ruta a estas referencias:\n"+scenarioText]:[]),
     ...(mode==="essential"?["PIERNAS EXACTAS PARA WIND/T (índice desde 0; no sustituye cartas oficiales):\n"+
       routeLegs.map((leg,index)=>index+": "+leg.from+" → "+leg.to+" a "+leg.altitude_ft+" ft AMSL").join("\n")]:[]),
     "NOTAM (consulta oficial externa opcional), recepción UTC "+documentsReceivedAtUtc+":\n"+(notam||"NO APORTADOS: faltan comprobar los NOTAM de salida, destino, ruta y alternativos en AIS/ANAC. No suponer condiciones operacionales."),

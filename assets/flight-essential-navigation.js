@@ -312,13 +312,53 @@ function distanceNm(a,b){
  const q=Math.sin(dLat/2)**2+Math.cos(lat1)*Math.cos(lat2)*Math.sin(dLon/2)**2;
  return 3440.065*2*Math.asin(Math.min(1,Math.sqrt(q)));
 }
+// Escenarios a niveles WIND/T publicados, para responder preguntas del piloto.
+// Se reutilizan exactamente la selección espacial y el triángulo de viento de
+// la planilla. No se interpola ni se atribuye a la altitud real un viento de FL.
+function navigationScenarios(){
+ const raw=$('flight-pronarea')?.value||'',date=flightDate();
+ const parsed=windSource?.validity(raw,date)?.ok?windSource?.parse(raw)||[]:[];
+ const levels=[...new Set(parsed.map(row=>row.level_ft))].sort((a,b)=>a-b);
+ return currentRoute().slice(0,9).map(leg=>{
+  const base=computeLeg(leg),altitude=Number(leg.alt);
+  const distance=window.GDV_FLIGHT_DISTANCE?.get?.(leg.index)??distanceNm(leg.from,leg.to);
+  const result={index:leg.index,name:leg.name,altitude_ft:altitude,
+   course_true_deg:base.course,variation_deg:base.variation,
+   magnetic_track_deg:base.magneticTrack,distance_nm:distance,
+   tas_kt:readTAS(),selected_level_ft:base.forecastLevelFt??null,
+   selected_wind_source:base.windSource||base.missing||base.reason||'No disponible',levels:[]};
+  if(!Number.isFinite(altitude)||altitude<500||altitude>45000||
+     !Number.isFinite(base.course)||!Number.isFinite(result.tas_kt)||
+     !leg.from||!leg.to||!levels.length)return result;
+  const below=levels.filter(fl=>fl<=altitude).at(-1);
+  const above=levels.find(fl=>fl>=altitude);
+  const surrounding=[...new Set([below,above].filter(Number.isFinite))];
+  const midpoint=[(leg.from[0]+leg.to[0])/2,(leg.from[1]+leg.to[1])/2];
+  for(const fl of surrounding){
+   const reference=windSource.pick(raw,fl,midpoint,airports,date,[leg.from,leg.to]);
+   // Un nivel publicado en otra zona NO vale para esta pierna.
+   if(!reference?.ok||reference.level_ft!==fl)continue;
+   const triangle=windTriangle(base.course,result.tas_kt,reference.direction_true_deg,reference.speed_kt);
+   if(!triangle?.possible)continue;
+   const minutes=Number.isFinite(distance)&&distance>0?distance/triangle.groundSpeed*60:null;
+   result.levels.push({level_ft:fl,level_gap_ft:Math.abs(fl-altitude),
+    station:reference.station,reference_type:reference.reference_type||'nearest_station',
+    direction_true_deg:reference.direction_true_deg,speed_kt:reference.speed_kt,
+    wca_deg:triangle.wca,heading_true_deg:triangle.trueHeading,
+    heading_magnetic_deg:Number.isFinite(base.variation)?normalize(triangle.trueHeading-base.variation):null,
+    gs_kt:triangle.groundSpeed,ete_min:minutes});
+  }
+  result.levels.sort((a,b)=>a.level_ft-b.level_ft);
+  return result;
+ });
+}
 window.GDV_FLIGHT_NAV=Object.freeze({saveWind:()=>[...windValues.entries()].map(([key,value])=>({key,value:{...value}})),restoreWind:entries=>{
   windValues.clear();if(Array.isArray(entries))for(const row of entries.slice(0,9)){
    if(row&&typeof row.key==='string'&&row.key.length<150&&row.value&&typeof row.value==='object')
     windValues.set(row.key,{mode:row.value.mode==='manual'?'manual':'auto',direction:String(row.value.direction??'').slice(0,4),speed:String(row.value.speed??'').slice(0,4)});
   }
   currentSignature='';windInputs();output();
- },snapshot:()=>currentRoute().map(leg=>{
+ },navigationScenarios,snapshot:()=>currentRoute().map(leg=>{
  const result=computeLeg(leg);
  return {index:leg.index,name:leg.name,altitude_ft:Number(leg.alt),distance_nm:window.GDV_FLIGHT_DISTANCE?.get?.(leg.index)??distanceNm(leg.from,leg.to),distance_source:window.GDV_FLIGHT_DISTANCE?.getSource?.(leg.index)||'geometric',magnetic_track_deg:result.magneticTrack,course_source:result.courseSource,
    course_true_deg:result.course,heading_true_deg:result.trueHeading,
