@@ -58,6 +58,9 @@ css.textContent='.ops-accordion[hidden],.flight-wizard-nav-panel[hidden],.flight
 '.flight-wizard-back-row button:hover,.flight-wizard-back-row button:focus-visible,.flight-wizard-toolbar button:hover:not(:disabled),.flight-wizard-steps button:hover:not(:disabled){background:#476b86;color:#fff}'+
 '.flight-report-stale{margin:15px 0;padding:12px 15px;border:1px solid #e1b76e;border-radius:11px;background:#56472e;color:#fff0d3;line-height:1.55}'+
 '.flight-report-stale[hidden]{display:none!important}'+
+'.flight-pronarea-confirm-missing{border:2px solid #f3b258!important;box-shadow:0 0 0 3px #f3b25844!important}'+
+'.flight-pronarea-confirm-error{flex:0 0 100%;box-sizing:border-box;padding:10px 13px;margin:0;border:1px solid #f3b258;border-radius:9px;background:#5a4029;color:#fff1d7;font-size:13px;font-weight:700}'+
+'.flight-pronarea-confirm-error[hidden]{display:none!important}'+
 '.flight-wizard-continue-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin:14px 0;padding:14px;border:1px solid #6793ad;border-radius:13px;background:#203b4d}'+
 '.flight-wizard-continue-row button{border:1px solid #bbdfed;border-radius:10px;padding:12px 18px;background:#b3d6e8;color:#102c3d;font:inherit;font-weight:800;cursor:pointer}'+
 '.flight-wizard-continue-row button:disabled{opacity:.55;cursor:wait}.flight-wizard-continue-row .feedback{flex:1 1 190px;color:#d7e9f3;font-size:12px}'+
@@ -138,6 +141,24 @@ if($('flight-essential-analysis'))new MutationObserver(()=>{if(!$('flight-essent
 const base=plan.querySelector('.form'),editor=plan.querySelector('.flight-leg-editor');
 if(base)base.classList.add('flight-base-fields');
 const notify=s=>$('flight-wizard-status').textContent=s;
+const pronareaConfirm=$('flight-pronarea-confirm');
+const pronareaConfirmLabel=pronareaConfirm?.closest('label');
+const pronareaConfirmError=document.createElement('p');
+pronareaConfirmError.className='flight-pronarea-confirm-error';
+pronareaConfirmError.id='flight-pronarea-confirm-error';
+pronareaConfirmError.setAttribute('role','alert');
+pronareaConfirmError.textContent='Para pasar a Cálculos y combustible, confirmá que verificaste en el SMN la FIR, la emisión y la vigencia del PRONAREA.';
+pronareaConfirmError.hidden=true;
+pronareaConfirmLabel?.after(pronareaConfirmError);
+function clearPronareaConfirmationError(){
+ pronareaConfirmError.hidden=true;
+ pronareaConfirmLabel?.classList.remove('flight-pronarea-confirm-missing');
+ pronareaConfirm?.removeAttribute('aria-invalid');
+ pronareaConfirm?.removeAttribute('aria-describedby');
+}
+pronareaConfirm?.addEventListener('change',()=>{
+ if(pronareaConfirm.checked){clearPronareaConfirmationError();notify('PRONAREA confirmado. Ya podés continuar a Cálculos y combustible.');}
+});
 function display(s){
  step=s;all.forEach(x=>x.hidden=true);
  const visible=s===0||s===1?[plan]:s===2?[weather,$('ops-boletines'),$('nubosidad'),$('ops-fuentes')]:s===3?[nav]:[report,$('ops-piloto'),$('fuentes'),$('ops-cartas')];
@@ -306,6 +327,16 @@ function valid(){
    notify('Completá las distancias en millas náuticas (NM) de cada pierna.');return false;
   }
   if(waypoints.some(e=>!e.value.trim())||legs.some(e=>!e.value||!e.checkValidity())){notify('Completá todas las piernas y altitudes.');return false;}
+ }
+ if(step===2&& !pronareaConfirm?.checked){
+  pronareaConfirmError.hidden=false;
+  pronareaConfirmLabel?.classList.add('flight-pronarea-confirm-missing');
+  pronareaConfirm?.setAttribute('aria-invalid','true');
+  pronareaConfirm?.setAttribute('aria-describedby',pronareaConfirmError.id);
+  pronareaConfirm?.focus({preventScroll:true});
+  pronareaConfirmLabel?.scrollIntoView({behavior:'smooth',block:'center'});
+  notify('Falta confirmar la verificación del PRONAREA en el SMN. Marcá la casilla resaltada para continuar.');
+  return false;
  }
  if(step===3){
   const burn=Number($('flight-fuel-burn')?.value),available=Number($('flight-fuel-available')?.value);

@@ -28,7 +28,7 @@ test('official links and chart controls remain intact', () => {
  }
  assert.match(html, /https:\/\/ais\.anac\.gob\.ar\//);
  assert.match(html, /https:\/\/redemet\.decea\.mil\.br\//);
- assert.match(html, /flight-operations-wizard\.js\?v=20261016a/);
+ assert.match(html, /flight-operations-wizard\.js\?v=20261016b/);
 });
 
 test('fuel chart displays a real time-versus-liters curve and labels a one-hour projection when the route is incomplete', () => {
@@ -180,6 +180,29 @@ test('PRONAREA confirmation remains, without a duplicate warning below the check
  assert.match(html, /Confirmé en el SMN la FIR, la emisión y la vigencia real/);
  assert.doesNotMatch(html, /id="flight-pronarea-gate"/);
  assert.match(wizard, /if\(b\)\{b\.disabled=!result\.ok/);
+});
+
+test('an unchecked SMN confirmation blocks meteorology to calculations and highlights the control', () => {
+ const from = wizard.indexOf('function valid(){');
+ const to = wizard.indexOf('\nfunction pack(){', from);
+ const messages=[];
+ const attributes={};
+ const state={
+  step:2,
+  pronareaConfirm:{checked:false,focus(){this.focused=true;},setAttribute(key,value){attributes[key]=value;}},
+  pronareaConfirmError:{hidden:true,id:'flight-pronarea-confirm-error'},
+  pronareaConfirmLabel:{classList:{add(name){state.highlight=name;}},scrollIntoView(){state.scrolled=true;}},
+  notify:message=>messages.push(message)
+ };
+ const valid=vm.runInNewContext(wizard.slice(from,to)+'\nvalid;',state);
+ assert.equal(valid(),false);
+ assert.equal(state.pronareaConfirmError.hidden,false);
+ assert.equal(state.highlight,'flight-pronarea-confirm-missing');
+ assert.equal(attributes['aria-invalid'],'true');
+ assert.equal(state.pronareaConfirm.focused,true);
+ assert.match(messages.at(-1),/Falta confirmar/);
+ state.pronareaConfirm.checked=true;
+ assert.equal(valid(),true);
 });
 
 test('alternate fuel is not estimated and the remaining fuel still includes contingency and reserve', () => {
