@@ -161,7 +161,7 @@ pronareaConfirm?.addEventListener('change',()=>{
 });
 function display(s){
  step=s;all.forEach(x=>x.hidden=true);
- const visible=s===0||s===1?[plan]:s===2?[weather,$('ops-boletines'),$('nubosidad'),$('ops-fuentes')]:s===3?[nav]:[report,$('ops-piloto'),$('fuentes'),$('ops-cartas')];
+ const visible=s===0||s===1?[plan]:s===2?[weather,$('ops-boletines'),$('nubosidad'),$('ops-fuentes')]:s===3?[nav]:(document.documentElement.dataset.flightRole==='member'?[report,$('fuentes'),$('ops-cartas')]:[report,$('ops-piloto'),$('fuentes'),$('ops-cartas')]);
  visible.forEach(x=>{if(x){x.hidden=false;if(x.tagName==='DETAILS')x.open=true;}});
  if(base)base.hidden=s===1;if(editor)editor.hidden=s===0;
  const title=$('plan-vuelo')?.querySelector('h2');if(title)title.textContent=s===1?'Planificación asistida de piernas':'Datos del vuelo';
@@ -169,7 +169,7 @@ function display(s){
  steps.forEach((b,i)=>b.setAttribute('aria-current',i===s?'step':'false'));
  $('flight-wizard-back').disabled=s===0;$('flight-wizard-next').textContent=s===4?'Guardar planificación':s===2?'Guardar y pasar a cálculos →':'Guardar y continuar →';
  bottomBackRows.forEach((row,i)=>{if(row)row.hidden=(i===0?s===0:i!==s-1);});
- $('consumo-ia').hidden=s!==4;
+ $('consumo-ia').hidden=s!==4||document.documentElement.dataset.flightRole!=='admin';
  if(s>=3)calcFuel();if(s===4)refreshGate();
  ui.scrollIntoView({behavior:'smooth',block:'start'});
 }
