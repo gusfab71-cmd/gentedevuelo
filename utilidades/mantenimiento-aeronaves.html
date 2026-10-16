@@ -242,6 +242,7 @@ function regimeNotice(a){
 }
 
 const CN={f:'Fuselaje',m:'Motor',p:'Hélice'};
+const SERVICE_BY_COMPONENT={f:'Estructura',m:'Motor',p:'Hélice'};
 function CP(a){
  if(!a)return null;if(!a.cp||typeof a.cp!=='object')a.cp={};
  const def={f:{mod:'',ser:''},m:{mod:'',ser:'',h:a.h,c:a.c,tso:a.h,tbo:0,tboY:0,oh:'',tboRef:''},p:{mod:'',ser:'',h:a.h,c:a.c,tso:a.h,tbo:0,tboY:0,oh:'',tboRef:''}};
@@ -260,6 +261,9 @@ const allC=a=>S.sv.filter(s=>s.ac==a.id).flatMap(s=>S.ct.filter(c=>c.sv==s.id).m
 
 function info(c,a){const t0=Date.now(),D=30.44*864e5,d=[],z=cnt(a,c.cp);
 
+ if(c.id&&(!c.lastRef||!c.lastDate||(c.ivH&&(!Number.isFinite(Number(c.lastH))||c.lastH===null||c.lastH===undefined||c.lastH===''))||(c.ivC&&(!Number.isFinite(Number(c.lastC))||c.lastC===null||c.lastC===undefined||c.lastC===''))))
+  return{remH:null,remC:null,calD:null,due:Infinity,by:'sin constancia',days:Infinity,st:3,missingRecord:true};
+
  const remH=c.ivH?c.lastH+c.ivH-z.h:null,remC=c.ivC?c.lastC+c.ivC-z.c:null;let calD=null;
 
  if(c.ivM&&c.lastDate){const x=new Date(c.lastDate+'T12:00:00');x.setMonth(x.getMonth()+c.ivM);calD=x.getTime();d.push([calD,'calendario'])}
@@ -272,7 +276,7 @@ function info(c,a){const t0=Date.now(),D=30.44*864e5,d=[],z=cnt(a,c.cp);
 
  return{remH,remC,calD,due:m[0],by:m[1],days,st:over?2:days<=45?1:0}}
 
-const ST=[['SIN ALERTA','emerald'],['PRÓXIMO','amber'],['REVISAR VENCIMIENTO','rose']];
+const ST=[['SIN ALERTA','emerald'],['PRÓXIMO','amber'],['REVISAR VENCIMIENTO','rose'],['SIN CONSTANCIA','rose']];
 
 function entry(a,e){const t=e.t||'fmp';CP(a);S.lg.push({id:uid(),ac:a.id,...e,t});if(t.includes('f')){a.h+=e.h;a.c+=e.c}for(const k of ['m','p'])if(t.includes(k)){const z=a.cp[k];z.h+=e.h;z.c+=e.c;z.tso+=e.h}}
 
@@ -314,17 +318,48 @@ function delSv(id){if(confirm('¿Borrar el servicio y sus controles?')){S.sv=S.s
 function addCt(){
  const nm=v('c_n').trim(),basis=recordValue('c_basis',250),lastDoc=recordValue('c_lastdoc',250);
  if(!nm||!v('c_s'))return alert('Elija un servicio e ingrese el nombre del control.');
- if(/cambio de aceite/i.test(nm)&&(!basis||!lastDoc||!v('c_ld')||v('c_lh').trim()===''))
-  return alert('Para seguimiento de cambio de aceite indicá manual o boletín aplicable, fecha, horas de motor y referencia del último cambio documentado.');
- S.ct.push({id:uid(),sv:v('c_s'),name:nm,cp:v('c_k'),ivH:n('c_ih'),ivC:n('c_ic'),ivM:n('c_im'),lastDate:v('c_ld'),lastH:n('c_lh'),lastC:n('c_lc'),basis,lastRef:lastDoc});save();R();
+ const cp=v('c_k'),ivH=n('c_ih'),ivC=n('c_ic'),ivM=n('c_im');
+ if(!['f','m','p'].includes(cp)||!ivH&&!ivC&&!ivM)return alert('Elegí componente y al menos un intervalo de horas, ciclos o meses.');
+ if(!basis)return alert('Identificá el manual, boletín o programa que fija el intervalo para este componente.');
+ const lastDate=v('c_ld'),hRaw=v('c_lh').trim(),cRaw=v('c_lc').trim();
+ if(/cambio de aceite/i.test(nm)&&(!lastDoc||!lastDate||!hRaw))
+  return alert('Para seguimiento de cambio de aceite indicá fecha, horas de motor y referencia del último cambio documentado.');
+ if(!lastDoc&&(lastDate||hRaw||cRaw))return alert('Si aún no tenés una constancia técnica, dejá vacíos fecha, horas y ciclos del último cumplimiento. El control quedará pendiente de documentar.');
+ if(lastDoc&&(!lastDate||(ivH&&!hRaw)||(ivC&&!cRaw)))return alert('Para calcular el vencimiento completá fecha y los contadores aplicables del último asiento firmado.');
+ if(lastDoc&&((hRaw&&!Number.isFinite(Number(hRaw)))||(cRaw&&!Number.isFinite(Number(cRaw)))))return alert('Las horas y los ciclos del último cumplimiento deben ser valores numéricos válidos.');
+ const z=cnt(A(),cp);
+ if(lastDoc&&(lastDate>today()||(hRaw&&(Number(hRaw)>z.h||Number(hRaw)<0))||(cRaw&&(Number(cRaw)>z.c||Number(cRaw)<0))))return alert('Verificá fecha y contadores: no pueden superar los actuales ni estar en el futuro.');
+ const selected=v('c_s');let service=S.sv.find(s=>s.id===selected&&s.ac===S.sel);
+ if(selected==='new:'+cp){
+  const name=SERVICE_BY_COMPONENT[cp];service=S.sv.find(s=>s.ac===S.sel&&s.name.toLowerCase()===name.toLowerCase());
+  if(!service){service={id:uid(),ac:S.sel,name};S.sv.push(service)}
+ }
+ if(!service)return alert('Seleccioná un servicio perteneciente a esta aeronave y componente.');
+ S.ct.push({id:uid(),sv:service.id,name:nm,cp,ivH,ivC,ivM,lastDate:lastDoc?lastDate:'',lastH:lastDoc&&hRaw?Number(hRaw):null,lastC:lastDoc&&cRaw?Number(cRaw):null,basis,lastRef:lastDoc});save();R();
 }
 
 function prefillOilChange(){
  const type=v('c_oilkind');if(!['full','screen'].includes(type))return;
  $('c_n').value=type==='full'?'Cambio de aceite y filtro':'Cambio de aceite y limpieza de malla de presión';
  $('c_k').value='m';$('c_ih').value=type==='full'?'50':'25';$('c_ic').value='0';$('c_im').value='4';
+ $('c_s').value='new:m';
  $('c_ld').value='';$('c_lh').value='';$('c_lc').value='';$('c_basis').value='';$('c_lastdoc').value='';
  alert('Plantilla orientativa Lycoming cargada. Confirmá modelo, excepciones, manual vigente y último asiento firmado antes de guardar.');
+}
+
+function prefillComponentControl(kind){
+ const defaults={structure:{name:'Inspección programada de estructura y mandos',cp:'f'},propeller:{name:'Inspección programada de hélice, palas y buje',cp:'p'}};
+ const item=defaults[kind];if(!item)return;
+ $('c_n').value=item.name;$('c_k').value=item.cp;
+ $('c_s').value='new:'+item.cp;
+ for(const id of ['c_ih','c_ic','c_im'])$(id).value='0';
+ for(const id of ['c_ld','c_lh','c_lc','c_basis','c_lastdoc'])$(id).value='';
+ alert('Plantilla de '+(kind==='structure'?'estructura':'hélice')+' cargada sin intervalos prefijados. Completá los límites por horas, ciclos y/o calendario según manual, DA y programa aplicable.');
+}
+
+function startComponentControl(k){
+ if(!['f','p'].includes(k))return;
+ S.tab='s';R();prefillComponentControl(k==='f'?'structure':'propeller');
 }
 
 function delCt(id){if(!confirm('¿Retirar este control y sus vencimientos del registro privado?'))return;S.ct=S.ct.filter(c=>c.id!=id);save();R()}
@@ -353,7 +388,6 @@ function delRc(id){S.rc=S.rc.filter(r=>r.id!=id);save();R()}
 function runRc(){const k=applyRc();R();if(k)alert(k+' registro(s) confirmados.')}
 
 
-function fillLast(){const z=cnt(A(),v('c_k'));$('c_lh').value=z.h;$('c_lc').value=z.c}
 function setComp(k){
  const a=A(),z=CP(a)[k],before=z.ser;
  if(k!=='f'){
@@ -449,7 +483,7 @@ function closeDiscrepancy(id){
 function renderOverview(){
  const node=$('maintOverview');if(!node)return;
  const a=A();if(!currentUser||!a){node.innerHTML='';return;}
- const cs=allC(a),over=cs.filter(x=>x.i.st===2).length,soon=cs.filter(x=>x.i.st===1).length;
+ const cs=allC(a),over=cs.filter(x=>x.i.st===2||x.i.st===3).length,soon=cs.filter(x=>x.i.st===1).length;
  const ads=(S.ad||[]).filter(x=>x.ac===a.id);
  const pending=ads.filter(d=>['warn','danger'].includes(adState(d,a).level)).length;
  const tile=(value,description,level='')=>'<article class="maint-metric '+level+'"><strong>'+esc(value)+'</strong><span>'+description+'</span></article>';
@@ -569,26 +603,29 @@ ${a?`<div class="card p-4 space-y-2"><h2 class="font-bold text-amber-300">4 · H
 function tabK(){const a=A(),cp=CP(a);
  const cards=['f','m','p'].map(k=>{
  const z=k==='f'?{...cp.f,h:a.h,c:a.c}:cp[k],m=k!=='f';
+ const scheduled=allC(a).filter(x=>x.c.cp===k),pending=scheduled.filter(x=>x.i.st!==0).length;
+ const note={f:'Estructura: inspecciones, corrosión, tren, mandos y partes con vida limitada; seguimiento por TTAF, ciclos y calendario según programa.',m:'Motor: aceite, inspecciones y recorrida según modelo, serie y documentación técnica.',p:'Hélice: inspecciones de palas y buje, partes con vida limitada y recorrida propia, independiente del TBO del motor.'}[k];
  const bar=(p,label)=>'<p class="text-xs mt-2 text-slate-400">'+label+'</p><div class="h-2 bg-slate-800 rounded overflow-hidden"><div class="h-full '+(p>=95?'bg-rose-500':p>=80?'bg-amber-500':'bg-emerald-500')+'" style="width:'+Math.min(100,Math.max(0,p))+'%"></div></div>';
- return '<section class="card p-4 space-y-2"><h2 class="text-lg font-bold text-amber-300">'+CN[k]+'</h2><div class="grid grid-cols-2 gap-2">'+
+ return '<section class="card p-4 space-y-2"><h2 class="text-lg font-bold text-amber-300">'+CN[k]+'</h2><p class="text-xs text-slate-300">'+note+'</p><div class="maint-record-line text-xs">'+scheduled.length+' control(es) configurado(s) · '+(pending?pending+' requiere(n) revisión':'sin alertas pendientes')+'</div><div class="grid grid-cols-2 gap-2">'+
  F(k+'_mod','Modelo','text',esc(z.mod||''))+F(k+'_ser','N° de serie','text',esc(z.ser||''))+F(k+'_h','Horas totales (TT)','number',z.h)+F(k+'_c','Ciclos totales','number',z.c)+
  (m?F(k+'_tso','Horas desde recorrida (TSO)','number',z.tso)+F(k+'_tbo','TBO (horas)','number',z.tbo||0)+F(k+'_y','TBO (años)','number',z.tboY||0)+F(k+'_oh','Última recorrida documentada','date',z.oh||''):'')+'</div>'+
  (m?'<div>'+F(k+'_tboref','Manual / boletín y revisión que fija el TBO','text',esc(z.tboRef||''),'maxlength="250"')+'</div>':'')+
  (m&&z.tbo>0?bar(100*z.tso/z.tbo,'TBO horas: '+f1(z.tso)+' / '+z.tbo+' (restan '+f1(z.tbo-z.tso)+' h)'):'')+
  (m&&z.tboY>0&&z.oh?bar(100*(Date.now()-new Date(z.oh+'T12:00:00'))/(365.25*864e5)/z.tboY,'TBO calendario'):'')+
  '<div class="flex gap-2"><button class="btn bg-amber-600 flex-1" onclick="setComp(\''+k+'\')">Guardar '+CN[k]+'</button>'+
- (m?'<button class="btn bg-sky-700" onclick="overhaul(\''+k+'\')">Registrar recorrida</button>':'')+'</div></section>';
+ (m?'<button class="btn bg-sky-700" onclick="overhaul(\''+k+'\')">Registrar recorrida</button>':'')+'</div>'+
+ (k!=='m'?'<button class="btn bg-slate-700 w-full" onclick="startComponentControl(\''+k+'\')">Programar control de '+CN[k]+'</button>':'')+'</section>';
  }).join('');
- return '<div class="maint-regime mb-3"><strong>Recorrida general del motor (overhaul)</strong><p>Se revisa y reacondiciona integralmente el motor en un taller habilitado, según sus datos técnicos. El TBO no es universal: puede ser de 1.200–2.000 h o tener otros valores, según modelo, serie y programa aplicable. Cargá el límite en horas y, cuando corresponda, años; se alerta al alcanzar cualquiera de los dos. No se asigna un TBO automáticamente. Para Lycoming consultá la <a class="underline" target="_blank" rel="noopener noreferrer" href="https://www.lycoming.com/service-instruction-1009-bf">SI 1009BF vigente</a> y las DA aplicables.</p></div><p class="text-xs text-slate-400 mb-3">Los valores de motor, fuselaje y hélice se registran independientemente. Completá los límites oficiales de acuerdo con el programa de mantenimiento de cada aeronave.</p><div class="grid lg:grid-cols-3 gap-4">'+cards+'</div><section class="card p-3 mt-4"><b class="text-amber-300">Historial de componentes</b>'+
+ return '<div class="maint-regime mb-3"><strong>Mantenimiento de estructura, motor y hélice</strong><p>Los tres componentes requieren seguimiento de inspecciones, directivas, mantenimiento y límites de vida aplicables, pero no comparten necesariamente los mismos intervalos. La estructura no tiene un TBO general universal: sus tareas y límites se programan en Controles por horas, ciclos o calendario. Motor y hélice pueden tener recorridas generales independientes por horas y/o años; se alerta al primer límite. No se asignan intervalos automáticamente. Para motores Lycoming consultá la <a class="underline" target="_blank" rel="noopener noreferrer" href="https://www.lycoming.com/service-instruction-1009-bf">SI 1009BF</a>, y para la hélice su propio manual y boletines.</p></div><p class="text-xs text-slate-400 mb-3">Los valores de fuselaje, motor y hélice se registran independientemente. Completá los límites oficiales según manual, DA y programa aplicable.</p><div class="grid lg:grid-cols-3 gap-4">'+cards+'</div><section class="card p-3 mt-4"><b class="text-amber-300">Historial de componentes</b>'+
  (a.hist||[]).slice().reverse().map(h=>'<div class="text-xs text-slate-300 mt-2">'+esc(h.d)+' · '+(CN[h.k]||'Componente')+' — '+esc(h.tx)+(h.ref?'<div>Constancia: '+esc(h.ref)+' · '+esc(h.who||'')+'</div>':'')+'</div>').join('')+
  (!(a.hist||[]).length?'<p class="text-xs text-slate-500">Sin eventos.</p>':'')+'</section>';
 }
 
 function tabS(){const a=A(),sv=S.sv.filter(s=>s.ac==a.id);return`<div class="grid lg:grid-cols-3 gap-4"><div class="space-y-4"><div class="card p-4 space-y-2"><h2 class="font-bold text-amber-300">Servicio de mantenimiento</h2><p class="maint-note">Para inspecciones reglamentarias y su constancia firmada, usá la pestaña <b>Inspecciones</b>.</p>${F('s_n','Nombre (ej. Inspección 100 h, Anual)','text')}<button class="btn bg-amber-600 w-full" onclick="addSv()">Crear servicio</button></div>
 
-<div class="card p-4 space-y-2"><h2 class="font-bold text-amber-300">3 · Crear control</h2>${SEL('c_s','Servicio',sv.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join(''))}<div class="maint-regime"><strong>Referencia rápida · aceite de motor Lycoming</strong><p>Con filtro de flujo total: 50 h. Con malla de presión: 25 h. Referencia de calendario: 4 meses. El intervalo depende del modelo, condiciones y documentación vigente, no de la antigüedad. Existen excepciones (p. ej. TIO-540-AF1A/-AF1B y cambios iniciales). <a href="https://www.lycoming.com/content/oil-and-filter-change-recommendations" target="_blank" rel="noopener noreferrer" class="underline">Consultar fabricante</a>.</p><div class="mt-3">${SEL('c_oilkind','Tipo de sistema (solo si aplica Lycoming)','<option value="">Elegir sistema</option><option value="full">Filtro de flujo total · 50 h</option><option value="screen">Malla de presión · 25 h</option>')}</div><button class="btn bg-sky-700 mt-2 w-full" onclick="prefillOilChange()">Cargar intervalos orientativos</button></div>${F('c_n','Control (ej. Cambio de aceite)','text')}${SEL('c_k','Componente','<option value="f">Fuselaje</option><option value="m">Motor</option><option value="p">Hélice</option>').replace('<select','<select onchange="fillLast()"')}<div class="text-[11px] text-slate-500">Intervalo configurable (deje 0 lo que no aplique)</div><div class="grid grid-cols-3 gap-2">${F('c_ih','Horas',"number",0)}${F('c_ic','Ciclos','number',0)}${F('c_im','Meses','number',0)}</div><div class="text-[11px] text-slate-500">Última aplicación según asiento original</div><div class="grid grid-cols-3 gap-2">${F('c_ld','Fecha','date',today())}${F('c_lh','Horas del componente','number',a.h)}${F('c_lc','Ciclos del componente','number',a.c)}</div>${F('c_basis','Manual / boletín aplicable (obligatorio para aceite)','text','','maxlength="250"')}${F('c_lastdoc','Referencia al último cambio documentado','text','','maxlength="250"')}<button class="btn bg-amber-600 w-full" onclick="addCt()">Crear control</button></div></div>
+<div class="card p-4 space-y-2"><h2 class="font-bold text-amber-300">3 · Crear control</h2>${SEL('c_s','Servicio',sv.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('')+Object.entries(SERVICE_BY_COMPONENT).map(([k,name])=>`<option value="new:${k}">Crear/usar grupo ${name}</option>`).join(''))}<div class="maint-regime"><strong>Controles por componente</strong><p>La estructura y la hélice también se controlan por horas, ciclos o calendario, según el manual y las limitaciones aplicables. Elegí una plantilla para completar los límites reales; no se precargan horas ficticias.</p><div class="grid grid-cols-2 gap-2 mt-2"><button class="btn bg-sky-700" onclick="prefillComponentControl('structure')">Estructura</button><button class="btn bg-sky-700" onclick="prefillComponentControl('propeller')">Hélice</button></div></div><div class="maint-regime"><strong>Referencia rápida · aceite de motor Lycoming</strong><p>Con filtro de flujo total: 50 h. Con malla de presión: 25 h. Referencia de calendario: 4 meses. El intervalo depende del modelo, condiciones y documentación vigente, no de la antigüedad. Existen excepciones (p. ej. TIO-540-AF1A/-AF1B y cambios iniciales). <a href="https://www.lycoming.com/content/oil-and-filter-change-recommendations" target="_blank" rel="noopener noreferrer" class="underline">Consultar fabricante</a>.</p><div class="mt-3">${SEL('c_oilkind','Tipo de sistema (solo si aplica Lycoming)','<option value="">Elegir sistema</option><option value="full">Filtro de flujo total · 50 h</option><option value="screen">Malla de presión · 25 h</option>')}</div><button class="btn bg-sky-700 mt-2 w-full" onclick="prefillOilChange()">Cargar intervalos orientativos</button></div>${F('c_n','Control (ej. Inspección de hélice)','text')}${SEL('c_k','Componente','<option value="f">Fuselaje</option><option value="m">Motor</option><option value="p">Hélice</option>')}<div class="text-[11px] text-slate-500">Intervalo según documentación técnica (dejá 0 cuando no aplique)</div><div class="grid grid-cols-3 gap-2">${F('c_ih','Horas',"number",0)}${F('c_ic','Ciclos','number',0)}${F('c_im','Meses','number',0)}</div><p class="maint-note">Dejá el último cumplimiento en blanco si todavía no tenés un asiento firmado: el control se mostrará como SIN CONSTANCIA, sin inventar un vencimiento. Para aceite se exige un último cambio documentado.</p><div class="grid grid-cols-3 gap-2">${F('c_ld','Fecha del último cumplimiento','date','')}${F('c_lh','Horas en ese cumplimiento','number','')}${F('c_lc','Ciclos en ese cumplimiento','number','')}</div>${F('c_basis','Manual, boletín o programa aplicable (obligatorio)','text','','maxlength="250"')}${F('c_lastdoc','Referencia al último asiento firmado (si existe)','text','','maxlength="250"')}<button class="btn bg-amber-600 w-full" onclick="addCt()">Crear control</button></div></div>
 
-<div class="lg:col-span-2 space-y-3">${sv.map(s=>{const cs=S.ct.filter(c=>c.sv==s.id);return`<div class="card p-3"><div class="flex justify-between"><b class="text-amber-300">${esc(s.name)}</b><button class="text-rose-400 text-xs" onclick="delSv('${s.id}')">Borrar servicio</button></div><div class="overflow-x-auto"><table class="w-full"><thead><tr><th>Control</th><th>Intervalo</th><th>Última</th><th>Resta h</th><th>Resta ciclos</th><th>Vence (proy.)</th><th>Estado</th><th></th></tr></thead><tbody class="divide-y divide-white/5">${cs.map(c=>{const i=info(c,a),[tx,co]=ST[i.st];return`<tr><td class="font-semibold">${CN[c.cp||'f']||'Fuselaje'} · ${esc(c.name)}${c.basis?'<div class="text-[10px] font-normal text-slate-400">Programa: '+esc(c.basis)+'</div>':''}</td><td class="text-slate-400">${[c.ivH&&c.ivH+' h',c.ivC&&c.ivC+' c',c.ivM&&c.ivM+' m'].filter(Boolean).join(' / ')}</td><td class="text-slate-400">${c.lastDate||'—'} · ${f1(c.lastH)}h/${c.lastC}c${c.lastRef?'<div class="text-[10px] text-slate-400">Ref.: '+esc(c.lastRef)+'</div>':''}</td><td>${i.remH==null?'—':f1(i.remH)}</td><td>${i.remC==null?'—':Math.round(i.remC)}</td><td>${fd(i.due)} <span class="text-[10px] text-slate-500">(${i.by})</span></td><td><span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-${co}-500/20 text-${co}-300">${tx}</span></td><td><button class="text-emerald-400 text-xs" title="Registrar cumplimiento hoy" onclick="renew('${c.id}')"> Registrar con constancia</button> <button class="text-rose-400 px-1" onclick="delCt('${c.id}')">✕</button></td></tr>`}).join('')||'<tr><td colspan="8" class="text-slate-500">Sin controles.</td></tr>'}</tbody></table></div></div>`}).join('')||'<div class="text-slate-500 text-sm">Cree primero un servicio de mantenimiento.</div>'}</div></div>`}
+<div class="lg:col-span-2 space-y-3">${sv.map(s=>{const cs=S.ct.filter(c=>c.sv==s.id);return`<div class="card p-3"><div class="flex justify-between"><b class="text-amber-300">${esc(s.name)}</b><button class="text-rose-400 text-xs" onclick="delSv('${s.id}')">Borrar servicio</button></div><div class="overflow-x-auto"><table class="w-full"><thead><tr><th>Control</th><th>Intervalo</th><th>Última</th><th>Resta h</th><th>Resta ciclos</th><th>Vence (proy.)</th><th>Estado</th><th></th></tr></thead><tbody class="divide-y divide-white/5">${cs.map(c=>{const i=info(c,a),[tx,co]=ST[i.st];return`<tr><td class="font-semibold">${CN[c.cp||'f']||'Fuselaje'} · ${esc(c.name)}${c.basis?'<div class="text-[10px] font-normal text-slate-400">Programa: '+esc(c.basis)+'</div>':''}</td><td class="text-slate-400">${[c.ivH&&c.ivH+' h',c.ivC&&c.ivC+' c',c.ivM&&c.ivM+' m'].filter(Boolean).join(' / ')}</td><td class="text-slate-400">${c.lastRef?esc(c.lastDate)+' · '+(c.lastH==null?'—':f1(c.lastH))+' h / '+(c.lastC==null?'—':c.lastC)+' c':'Sin constancia'}${c.lastRef?'<div class="text-[10px] text-slate-400">Ref.: '+esc(c.lastRef)+'</div>':''}</td><td>${i.remH==null?'—':f1(i.remH)}</td><td>${i.remC==null?'—':Math.round(i.remC)}</td><td>${fd(i.due)} <span class="text-[10px] text-slate-500">(${i.by})</span></td><td><span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-${co}-500/20 text-${co}-300">${tx}</span></td><td><button class="text-emerald-400 text-xs" title="Registrar cumplimiento hoy" onclick="renew('${c.id}')"> Registrar con constancia</button> <button class="text-rose-400 px-1" onclick="delCt('${c.id}')">✕</button></td></tr>`}).join('')||'<tr><td colspan="8" class="text-slate-500">Sin controles.</td></tr>'}</tbody></table></div></div>`}).join('')||'<div class="text-slate-500 text-sm">Cree primero un servicio de mantenimiento.</div>'}</div></div>`}
 
 
 
@@ -612,7 +649,7 @@ function tabR(){const a=A(),L=S.rc.filter(r=>r.ac==a.id);return`<div class="grid
 
 
 
-function tabP(){const a=A(),H=S.hz||12,D=30.44*864e5,t0=Date.now(),all=allC(a).filter(x=>isFinite(x.i.due)).sort((x,y)=>x.i.due-y.i.due);
+function tabP(){const a=A(),H=S.hz||12,D=30.44*864e5,t0=Date.now(),controls=allC(a),pending=controls.filter(x=>x.i.missingRecord),all=controls.filter(x=>isFinite(x.i.due)).sort((x,y)=>x.i.due-y.i.due);
 
  const W=560,Ht=250,L=46,Rr=12,T=22,B=30,ymax=a.h+a.hpm*H||1,ymin=a.h,sx=m=>L+m/H*(W-L-Rr),sy=y=>Ht-B-(y-ymin)/Math.max(ymax-ymin,1)*(Ht-B-T);let s='';
 
@@ -628,7 +665,7 @@ function tabP(){const a=A(),H=S.hz||12,D=30.44*864e5,t0=Date.now(),all=allC(a).f
 
  return`<div class="grid lg:grid-cols-3 gap-4"><div class="card p-4 space-y-2 h-fit"><h2 class="font-bold text-amber-300">5 · Proyección de vuelo — ${esc(a.reg)}</h2><div class="text-sm">Actual: <b class="text-sky-300">${f1(a.h)} h · ${Math.round(a.c)} ciclos</b></div>${F('p_h','Horas proyectadas por mes','number',a.hpm)}${F('p_c','Ciclos proyectados por mes','number',a.cpm)}${SEL('p_z','Horizonte','<option value="12">12 meses</option><option value="24">24 meses</option><option value="36">36 meses</option>')}<button class="btn bg-amber-600 w-full" onclick="setProj()">Aplicar proyección</button><div class="text-[11px] text-slate-500">En ${H} meses: ${f1(a.h+a.hpm*H)} h · ${Math.round(a.c+a.cpm*H)} ciclos.</div></div>
 
-<div class="lg:col-span-2 space-y-3"><div class="card p-3"><svg viewBox="0 0 ${W} ${Ht}" class="w-full rounded-xl bg-[#050810]">${s}<text x="${W/2}" y="${Ht-3}" fill="#64748b" font-size="9" text-anchor="middle">Horas totales proyectadas y vencimientos de controles (números = tabla)</text></svg></div>
+<div class="lg:col-span-2 space-y-3">${pending.length?`<div class="maint-flag danger"><b>${pending.length} control(es) sin último cumplimiento documentado.</b> No se calculan vencimientos ficticios. Revisá las constancias de estructura, motor o hélice en Controles: ${pending.slice(0,5).map(x=>esc(CN[x.c.cp]+' · '+x.c.name)).join('; ')}${pending.length>5?'…':''}.</div>`:''}<div class="card p-3"><svg viewBox="0 0 ${W} ${Ht}" class="w-full rounded-xl bg-[#050810]">${s}<text x="${W/2}" y="${Ht-3}" fill="#64748b" font-size="9" text-anchor="middle">Horas totales proyectadas y vencimientos de controles (números = tabla)</text></svg></div>
 
 <div class="card p-3 overflow-x-auto"><b class="text-amber-300 text-sm">Próximos vencimientos</b><table class="w-full mt-1"><thead><tr><th>#</th><th>Control</th><th>Servicio</th><th>Vence</th><th>Por</th><th>Estado</th></tr></thead><tbody class="divide-y divide-white/5">${all.slice(0,40).map((x,k)=>{const[tx,co]=ST[x.i.st];return`<tr><td>${k<15&&(x.i.due-t0)/D<=H?k+1:''}</td><td class="font-semibold">${CN[x.c.cp||'f']||'Fuselaje'} · ${esc(x.c.name)}</td><td class="text-slate-400">${esc(x.s.name)}</td><td>${fd(x.i.due)}</td><td class="text-slate-400">${x.i.by}</td><td><span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-${co}-500/20 text-${co}-300">${tx}</span></td></tr>`}).join('')||'<tr><td colspan="6" class="text-slate-500">Sin vencimientos calculables: cargue intervalos y la proyección.</td></tr>'}</tbody></table></div></div></div>`}
 

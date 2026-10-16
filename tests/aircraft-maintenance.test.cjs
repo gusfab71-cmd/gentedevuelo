@@ -96,7 +96,8 @@ run(`S.ie.push({id:'insp2',ac:'a1',planId:'hour100',date:'2026-10-02',h:275,resu
 assert.equal(run('inspectionState(S.ip[1],A()).nextH'), 375);
 assert.equal(run('inspectionState(S.ip[0],A()).nextDate'), '2027-09-01', 'La inspección de 100 h no reemplaza la anual');
 
-assert.match(run('tabK()'), /El TBO no es universal/);
+assert.match(run('tabK()'), /La estructura no tiene un TBO general universal/);
+assert.match(run('tabK()'), /recorrida propia, independiente del TBO del motor/);
 for(const id of ['m_mod','m_ser','m_h','m_c','m_tso','m_tbo','m_y','m_oh','m_tboref'])node(id).value='';
 node('m_mod').value='O-320';node('m_ser').value='M-123';node('m_h').value='281';node('m_c').value='320';
 node('m_tso').value='100';node('m_tbo').value='1800';node('m_y').value='12';node('m_oh').value='2026-02-02';
@@ -109,4 +110,46 @@ assert.equal(run('CP(A()).m.tboY'), 12);
 assert.equal(run('tbos(A())[0].basis'), 'Lycoming SI 1009BF / programa validado');
 assert.equal(run('tbos(A())[0].ivM'), 144, 'El TBO incorpora el calendario registrado');
 
-console.log('PASS: uso, respaldo, bitácora, novedades, aceite 50/25 h, anual/100 h y TBO documentado');
+assert.match(run('tabS()'), /Controles por componente/);
+assert.match(run('tabS()'), /SIN CONSTANCIA/);
+run("prefillComponentControl('structure')");
+assert.equal(node('c_k').value, 'f');
+assert.equal(node('c_s').value, 'new:f');
+assert.equal(node('c_ih').value, '0', 'La estructura no recibe una cantidad de horas inventada');
+assert.equal(node('c_ld').value, '', 'La plantilla no acredita una inspección previa');
+node('c_basis').value='Programa estructural C150 vigente';
+run('addCt()');
+assert.equal(run('S.ct.length'), 1, 'No se puede guardar sin intervalos del manual');
+node('c_ih').value='100';node('c_im').value='12';
+run('addCt()');
+assert.equal(run('S.ct.length'), 2);
+assert.equal(run("S.sv.find(s=>s.id===S.ct[1].sv).name"), 'Estructura');
+assert.equal(run('S.ct[1].lastRef'), '', 'Un control se puede planificar sin constancia, pero no dar por cumplido');
+assert.equal(run('info(S.ct[1],A()).st'), 3);
+assert.equal(run('info(S.ct[1],A()).by'), 'sin constancia');
+assert.match(run('tabP()'), /No se calculan vencimientos ficticios/);
+
+run("prefillComponentControl('propeller')");
+assert.equal(node('c_k').value, 'p');
+assert.equal(node('c_s').value, 'new:p');
+assert.equal(node('c_ih').value, '0', 'La hélice no hereda el intervalo del motor');
+node('c_ih').value='200';node('c_im').value='6';
+node('c_basis').value='Manual de hélice / programa aprobado';
+node('c_ld').value='2026-09-10';node('c_lh').value='190';node('c_lc').value='200';node('c_lastdoc').value='Libreta hélice 777';
+run('addCt()');
+assert.equal(run('S.ct[2].cp'), 'p');
+assert.equal(run("S.sv.find(s=>s.id===S.ct[2].sv).name"), 'Hélice');
+assert.equal(run('S.ct[2].lastRef'), 'Libreta hélice 777');
+assert.equal(run('info(S.ct[2],A()).st'), 0);
+assert.equal(run('info(S.ct[2],A()).by'), 'calendario', 'Se respeta el primer límite aplicable para la hélice');
+
+for(const id of ['p_mod','p_ser','p_h','p_c','p_tso','p_tbo','p_y','p_oh','p_tboref'])node(id).value='';
+node('p_mod').value='Hélice modelo propio';node('p_ser').value='P-123';node('p_h').value='201.2';
+node('p_c').value='302';node('p_tso').value='50';node('p_tbo').value='1500';node('p_y').value='6';node('p_oh').value='2026-09-10';
+node('p_tboref').value='Manual y boletín del fabricante de la hélice';
+run("setComp('p')");
+assert.equal(run('CP(A()).p.tbo'), 1500, 'La recorrida de hélice tiene su propio TBO');
+assert.equal(run('CP(A()).m.tbo'), 1800, 'No se modifica el TBO de motor');
+assert.equal(run("tbos(A()).find(x=>x.cp==='p').ivM"), 72);
+
+console.log('PASS: uso, bitácora, aceite, inspecciones y mantenimiento independiente de estructura/motor/hélice');

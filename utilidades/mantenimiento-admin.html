@@ -94,7 +94,7 @@ function render(userId){
   const block=section(container,'Servicios y controles · '+title);
   table(block,['Servicio','Componente','Control','Intervalo','Última aplicación','Últimas horas/ciclos','Constancia'],controls.map(x=>[
    x.service.name,comp(x.c.cp),x.c.name,[x.c.ivH?n(x.c.ivH)+' h':'',x.c.ivC?n(x.c.ivC)+' ciclos':'',x.c.ivM?n(x.c.ivM)+' meses':''].filter(Boolean).join(' / ')||'—',
-   date(x.c.lastDate),n(x.c.lastH)+' h / '+n(x.c.lastC)+' c',(x.c.basis?'Programa: '+x.c.basis+' · ':'')+(x.c.lastRef?x.c.lastRef+' · '+(x.c.lastBy||''):'Sin constancia cargada')
+   x.c.lastRef?date(x.c.lastDate):'Sin constancia',x.c.lastRef?(x.c.lastH==null?'—':n(x.c.lastH))+' h / '+(x.c.lastC==null?'—':n(x.c.lastC))+' c':'—',(x.c.basis?'Programa: '+x.c.basis+' · ':'')+(x.c.lastRef?x.c.lastRef+' · '+(x.c.lastBy||''):'Sin constancia cargada')
   ]));
   const bit=section(container,'Bitácora · '+title);
   table(bit,['Fecha','Tipo','Componentes','Desde','Hasta','Piloto / instructor','Horas','Ciclos','Observaciones'],
