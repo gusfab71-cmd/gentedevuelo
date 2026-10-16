@@ -4,7 +4,9 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title>Mantenimiento de Aeronaves</title>
+<title>Aircraft Maintenance · Developed by Gente de Vuelo</title>
+<meta name="description" content="Registro privado de mantenimiento aeronáutico: componentes, controles, intervenciones documentadas y directivas de aeronavegabilidad.">
+<meta name="theme-color" content="#101719">
 
 <script src="https://cdn.tailwindcss.com"></script>
 <style id="auth-pending-style">html.auth-pending body{visibility:hidden}</style>
@@ -31,25 +33,119 @@ body{background:radial-gradient(1000px 500px at 0 -10%,#0e749055,transparent),ra
 
 th{font-size:10px;text-transform:uppercase;color:#94a3b8;padding:.35rem;text-align:left;white-space:nowrap}td{padding:.35rem;white-space:nowrap;font-size:.8rem}
 
-</style></head>
+</style>
+
+<style id="maintenance-operations-style">
+:root{--op-bg:#101719;--op-surface:#1a2426;--op-surface2:#212d2f;--op-line:#46575a;--op-text:#edf0ee;--op-muted:#bac6c5;--op-accent:#ff994b;--op-accent2:#ffbc78;color-scheme:dark}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0!important;background:#101719!important;color:var(--op-text)!important;font:15px/1.55 system-ui,-apple-system,Segoe UI,Roboto,sans-serif!important}
+[hidden]{display:none!important}
+button,input,select,textarea{font:inherit;min-width:0}
+button{cursor:pointer}button:disabled{opacity:.6;cursor:wait}
+button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{outline:2px solid var(--op-accent);outline-offset:3px}
+.maint-header{max-width:100%;border-bottom:1px solid #465556;background:#141d20}
+.maint-topline{max-width:1260px;padding:13px 22px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.maint-identity{display:flex;align-items:center;gap:11px;text-decoration:none;color:var(--op-text);font-weight:850;font-size:13px;letter-spacing:.08em}
+.maint-mark{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;color:#101b1d;background:var(--op-accent);font-size:16px;letter-spacing:-.07em}
+.maint-identity small{display:block;font-weight:520;letter-spacing:.02em;color:#c0cccb;margin-top:1px;font-size:11px}
+.maint-links{display:flex;gap:11px;flex-wrap:wrap;align-items:center}
+.maint-links a{font-size:12px;text-decoration:none;color:#dfe7e5;border:1px solid #586666;border-radius:9px;padding:8px 11px}
+.maint-links a:hover{color:var(--op-accent2);border-color:#d18d54}
+.maint-hero{max-width:1260px;margin:auto;display:grid;grid-template-columns:minmax(0,1.6fr) minmax(275px,.65fr);gap:16px;padding:19px 22px 21px}
+.maint-hero-main{border:1px solid #566163;border-radius:20px;padding:26px 29px;background:radial-gradient(100% 135% at 100% 0%,#584030 0%,#253033 36%,#1a2426 72%);position:relative;overflow:hidden}
+.maint-hero-main:after{content:"";position:absolute;right:-160px;top:-140px;width:330px;height:330px;border:1px solid #f4ad713d;border-radius:50%;box-shadow:0 0 0 40px #ffaa6608,0 0 0 90px #ffaa6605;pointer-events:none}
+.maint-eyebrow{color:var(--op-accent2);text-transform:uppercase;letter-spacing:.18em;font-weight:800;font-size:10px}
+.maint-hero h1{font-size:clamp(27px,3.6vw,43px);font-weight:900;letter-spacing:-.047em;margin:8px 0 6px;color:#f2f2ec;line-height:1.15}
+.maint-hero h1 em{font-style:normal;color:var(--op-accent)}
+.maint-hero p{font-size:13px;line-height:1.6;color:#cdd7d5;max-width:610px;margin:9px 0 0}
+.maint-tag{display:inline-flex;align-items:center;border:1px solid #876648;background:#3a2e25;color:#ffe0bd;border-radius:20px;padding:6px 11px;font-weight:720;font-size:11px;margin-top:15px}
+.maint-hero-side{border-radius:20px;border:1px solid #516062;background:#222d2f;padding:20px 23px;display:flex;align-items:center;gap:20px}
+.maint-dial{width:91px;height:91px;border-radius:50%;border:1px solid #92a1a2;flex:none;background:repeating-radial-gradient(circle,transparent 0,transparent 17px,#ffffff1a 18px,#ffffff1a 19px),linear-gradient(90deg,transparent 49%,#ffffff26 50%,transparent 51%),linear-gradient(transparent 49%,#ffffff26 50%,transparent 51%);display:grid;place-items:center;color:var(--op-accent2);font-weight:900;letter-spacing:.06em;font-size:20px}
+.maint-hero-side strong{display:block;font-size:18px;letter-spacing:-.02em;color:#f8eee5}
+.maint-hero-side span{display:block;font-size:12px;color:#c2cdcc;margin-top:7px;line-height:1.5}
+.maint-toolbar{max-width:1260px;margin:auto;padding:0 22px 18px;display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+.maint-toolbar label{color:#dce5e3;font-size:12px;font-weight:700;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.maint-toolbar select{width:min(300px,100%);min-height:39px}
+.maint-toolbar-actions{display:flex;gap:8px;flex-wrap:wrap}
+.maint-toolbar-actions .btn{border:1px solid #667677!important;background:#283639!important;color:#f0f3f0!important;font-size:12px;padding:9px 13px;border-radius:10px}
+#nav{max-width:1260px;margin:auto;padding:8px 22px 0!important;gap:6px;border-bottom:1px solid #425153;scrollbar-color:#647170 transparent}
+body .tab{color:#c8d1ce!important;border:1px solid transparent!important;border-radius:10px 10px 0 0;font-weight:750!important;font-size:12px!important;padding:11px 14px!important;white-space:nowrap}
+body .tab:hover{color:#fff!important;background:#293337}
+body .tab.on{color:#ffcfaa!important;background:#362e2a!important;border:1px solid #8d6b50!important;border-bottom-color:#362e2a!important}
+.maint-status-wrap{max-width:1260px;margin:auto;padding:14px 22px 2px}
+#sync{color:#c9d9d6;font-size:12px}
+.maint-notice{font-size:12px;color:#c1cbca;background:#1a292c;border-left:3px solid #d99a62;border-radius:3px 10px 10px 3px;padding:11px 14px;margin-top:10px;line-height:1.55}
+.maint-notice a{color:#ffca9f;text-decoration:underline}
+.maint-overview{max-width:1260px;margin:14px auto 3px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;padding:0 22px}
+.maint-metric{border:1px solid #4c5c5e;border-radius:14px;background:#1b282b;padding:13px 15px;min-width:0}
+.maint-metric strong{display:block;font-size:20px;letter-spacing:-.03em;font-variant-numeric:tabular-nums;color:#f5f2eb}
+.maint-metric span{display:block;font-size:11px;color:#c0cecb;margin-top:4px;line-height:1.4}
+.maint-metric.alert{border-color:#aa665b;background:#322627}.maint-metric.alert strong{color:#ffc5a8}
+.maint-metric.caution{border-color:#9d744b;background:#312b25}
+#app{max-width:1260px!important;padding:17px 22px 60px!important}
+body .card{background:var(--op-surface)!important;border:1px solid var(--op-line)!important;border-radius:17px!important;box-shadow:0 8px 25px #060c0e22;min-width:0}
+body .card h2{font-size:16px;letter-spacing:-.025em;color:#ffd0a9!important}
+body .card b{overflow-wrap:anywhere}
+body .fld{background:#131e21!important;border:1px solid #6a7a79!important;border-radius:10px!important;color:#f2f5f2!important;padding:10px 11px!important;font-size:13px!important;min-height:40px;font-weight:600}
+body .fld:hover{border-color:#90a7a3!important}
+body .fld:focus{outline:2px solid #ff995c!important;outline-offset:1px}
+body .btn{padding:10px 14px;border-radius:10px;font-size:12px;font-weight:780;min-height:39px}
+body .btn.bg-amber-600{background:#ff994b!important;color:#22201c!important}
+body .btn.bg-amber-600:hover{background:#ffb174!important}
+body .btn.bg-emerald-600{background:#388c77!important}
+body .btn.bg-sky-700{background:#385a68!important}
+body .btn.bg-rose-800{background:#703e43!important}
+body .btn.bg-slate-700,body .btn.bg-slate-800{background:#344347!important}
+body th{font-size:10px;color:#b9c8c7;letter-spacing:.05em;padding:12px 10px;text-align:left}
+body td{font-size:12px;color:#e0e9e7;padding:12px 10px;white-space:normal;vertical-align:top;overflow-wrap:anywhere}
+body tbody tr{border-top:1px solid #3e4b4b}
+body table{min-width:610px}
+body .overflow-x-auto{scrollbar-color:#697e7d transparent}
+.maint-record-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.maint-record-grid label{display:grid;align-content:start;gap:4px}
+.maint-record-grid .wide{grid-column:1/-1}
+.maint-note{border-left:3px solid #e69c61;border-radius:3px 9px 9px 3px;background:#2c2926;color:#e3d5c9;padding:11px 13px;font-size:12px;line-height:1.55}
+.maint-record-line{font-size:12px;color:#d4e1de;background:#172427;border:1px solid #475859;border-radius:10px;padding:12px}
+.maint-record-line strong{color:#ffd2ac}
+.maint-pill{display:inline-block;padding:3px 8px;border-radius:14px;border:1px solid #748781;color:#f2f5ef;font-weight:750;font-size:10px;white-space:nowrap}
+.maint-pill.warn{border-color:#9e7452;color:#ffd5ad}.maint-pill.danger{border-color:#bb675c;color:#ffbdb4}
+@media(max-width:950px){.maint-hero{grid-template-columns:minmax(0,1fr)}.maint-hero-side{display:none}.maint-overview{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:650px){.maint-topline,.maint-hero,.maint-toolbar,.maint-status-wrap,#nav,.maint-overview{padding-left:13px!important;padding-right:13px!important}.maint-hero-main{padding:22px 19px}.maint-toolbar{align-items:stretch}.maint-toolbar label,.maint-toolbar select,.maint-toolbar-actions{width:100%}.maint-toolbar-actions .btn{flex:1}#app{padding:14px 13px 52px!important}.maint-overview{gap:8px}.maint-metric{padding:11px}.maint-metric strong{font-size:18px}.maint-record-grid{grid-template-columns:1fr}.maint-record-grid .wide{grid-column:auto}body .tab{padding:10px 13px!important}}
+@media(max-width:420px){#app .grid-cols-2{grid-template-columns:1fr!important}#app .grid-cols-3{grid-template-columns:repeat(2,minmax(0,1fr))!important}.maint-overview{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
 
 <body class="min-h-screen">
-
-<header class="px-5 py-3 border-b border-white/10 flex flex-wrap gap-3 items-center"><a href="index.html" class="text-sm font-semibold text-slate-200 border border-slate-600 rounded-lg px-3 py-2">Volver a Utilidades</a><a href="../comunidad.html#hangar" class="text-sm text-amber-300">Mi Hangar</a>
-
-  <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-600 grid place-items-center text-xl"></div>
-
-  <div><h1 class="font-extrabold text-white leading-tight">MANTENIMIENTO DE AERONAVES</h1><p class="text-[11px] text-slate-400">Controles · Horas y ciclos · Proyección de vuelo</p></div>
-
-  <div class="ml-auto flex flex-wrap gap-2 items-center"><select id="sel" class="fld !w-auto" onchange="S.sel=this.value;save();R()"></select>
-
-  <button class="btn bg-slate-700" onclick="expo()">⬇ Respaldo</button><label class="btn bg-slate-800 cursor-pointer">⬆ Importar<input type="file" accept=".json" class="hidden" onchange="impo(this)"></label></div>
-
+<header class="maint-header">
+  <div class="maint-topline">
+    <a href="../index.html" class="maint-identity"><span class="maint-mark">GDV</span><span>GENTE DE VUELO<small>Comunidad aeronáutica</small></span></a>
+    <div class="maint-links"><a href="index.html">Utilidades</a><a href="../comunidad.html#hangar">Mi Hangar</a><a href="meteorologia-aeronautica.html">Flight Operations</a></div>
+  </div>
+  <div class="maint-hero">
+    <div class="maint-hero-main">
+      <div class="maint-eyebrow">HANGAR DIGITAL / REGISTROS TÉCNICOS</div>
+      <h1>AIRCRAFT <em>MAINTENANCE</em></h1>
+      <p>Controlá las horas, los componentes, las intervenciones y los próximos vencimientos de tu aeronave desde un solo lugar.</p>
+      <span class="maint-tag">Registro auxiliar · RAAC 43 y 91</span>
+    </div>
+    <aside class="maint-hero-side" aria-label="Descripción de la herramienta">
+      <div class="maint-dial" aria-hidden="true">MX</div>
+      <div><strong>Tu aeronave, organizada.</strong><span>Historial privado, trazabilidad documental y vencimientos orientativos.</span></div>
+    </aside>
+  </div>
+  <div class="maint-toolbar">
+    <label for="sel">Aeronave activa <select id="sel" class="fld" onchange="S.sel=this.value;save();R()"></select></label>
+    <div class="maint-toolbar-actions">
+      <button class="btn bg-slate-700" onclick="expo()">Descargar respaldo</button>
+      <label class="btn bg-slate-800 cursor-pointer">Importar respaldo<input type="file" accept=".json" class="hidden" onchange="impo(this)"></label>
+    </div>
+  </div>
 </header>
-
 <nav id="nav" class="flex overflow-x-auto border-b border-white/10 px-3"></nav>
 
-<div class="max-w-7xl mx-auto px-4 pt-3"><p id="sync" role="status" class="text-sm text-slate-300">Cargando tu información...</p><p class="text-xs text-slate-400 mt-1">Registro orientativo. No reemplaza las libretas oficiales de aeronave, motor y hélice, los programas aprobados, ni las verificaciones por personal aeronáutico habilitado.</p></div>
+<div class="maint-status-wrap"><p id="sync" role="status">Cargando tu información...</p><p class="maint-notice">Esta herramienta es un registro auxiliar privado: no certifica aeronavegabilidad, no autoriza retorno al servicio ni reemplaza libretas, firmas, programas aprobados ni la documentación exigida por ANAC. <a href="https://www.argentina.gob.ar/anac/resoluciones-disposiciones-y-otras-normas-aeronauticas/raac" target="_blank" rel="noopener noreferrer">Consultar RAAC oficiales</a>.</p></div><section id="maintOverview" class="maint-overview" aria-label="Resumen de mantenimiento"></section>
 <main id="app" class="max-w-7xl mx-auto p-4"></main>
 
 
@@ -58,13 +154,14 @@ th{font-size:10px;text-transform:uppercase;color:#94a3b8;padding:.35rem;text-ali
 
 const $=i=>document.getElementById(i),uid=()=>crypto.randomUUID(),today=()=>{const d=new Date();return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')},v=i=>$(i).value,n=i=>Math.min(1e6,Math.max(0,parseFloat($(i).value)||0));
 
-let S={ac:[],sv:[],ct:[],lg:[],rc:[],sel:null,tab:'a',hz:12};
+let S={ac:[],sv:[],ct:[],lg:[],rc:[],mx:[],ad:[],sel:null,tab:'a',hz:12};
 
 let db=null,currentUser=null,hangarAircraft='',saveQueue=Promise.resolve();
 const showStatus=message=>{const x=$('sync');if(x)x.textContent=message};
 const validData=d=>d&&typeof d==='object'&&['ac','sv','ct','lg','rc'].every(k=>Array.isArray(d[k])&&d[k].length<=({ac:50,sv:300,ct:2000,lg:6000,rc:200}[k]))&&
  ['ac','sv','ct','lg','rc'].every(k=>d[k].every(x=>x&&typeof x==='object'&&typeof x.id==='string'&&/^[a-zA-Z0-9_-]{1,64}$/.test(x.id)))&&
- d.ac.every(a=>typeof a.reg==='string'&&a.reg.length<=50);
+ d.ac.every(a=>typeof a.reg==='string'&&a.reg.length<=50)&&
+ ['mx','ad'].every(k=>d[k]===undefined||(Array.isArray(d[k])&&d[k].length<=({mx:3000,ad:1000}[k])&&d[k].every(x=>x&&typeof x==='object'&&typeof x.id==='string'&&/^[a-zA-Z0-9_-]{1,64}$/.test(x.id))));
 function save(){
  if(!currentUser||!db){showStatus('Sin conexión: los cambios no están guardados.');return}
  const payload=JSON.parse(JSON.stringify(S));
@@ -105,7 +202,7 @@ const SEL=(id,l,o)=>`<label class="text-[11px] text-slate-400">${l}<select id="$
 
 const fd=t=>isFinite(t)?new Date(t).toLocaleDateString('es-AR'):'—',f1=x=>(+x).toFixed(1);
 
-const TABS=[['a',' Aeronaves'],['k',' Componentes'],['s',' Servicios y controles'],['b',' Bitácora'],['r',' Recurrentes'],['p',' Proyección']];
+const TABS=[['a','Aeronaves'],['k','Componentes'],['s','Controles'],['b','Bitácora'],['i','Intervenciones'],['d','Directivas DA'],['r','Recurrentes'],['p','Proyección']];
 
 const CN={f:'Fuselaje',m:'Motor',p:'Hélice'};
 function CP(a){
@@ -138,7 +235,7 @@ function info(c,a){const t0=Date.now(),D=30.44*864e5,d=[],z=cnt(a,c.cp);
 
  return{remH,remC,calD,due:m[0],by:m[1],days,st:over?2:days<=45?1:0}}
 
-const ST=[['OK','emerald'],['PRÓXIMO','amber'],['VENCIDO','rose']];
+const ST=[['SIN ALERTA','emerald'],['PRÓXIMO','amber'],['REVISAR VENCIMIENTO','rose']];
 
 function entry(a,e){const t=e.t||'fmp';CP(a);S.lg.push({id:uid(),ac:a.id,...e,t});if(t.includes('f')){a.h+=e.h;a.c+=e.c}for(const k of ['m','p'])if(t.includes(k)){const z=a.cp[k];z.h+=e.h;z.c+=e.c;z.tso+=e.h}}
 
@@ -161,7 +258,7 @@ function applyRc(){
 
 function addAc(){const r=v('a_r').trim().toUpperCase();if(!r)return alert('Ingrese la matrícula.');if(S.ac.some(a=>a.reg===r))return alert('Esa matrícula ya está registrada.');const a={id:uid(),reg:r,type:v('a_t'),h:n('a_h'),c:n('a_c'),hpm:n('a_hm'),cpm:n('a_cm')};S.ac.push(a);S.sel=a.id;save();R()}
 
-function delAc(id){if(!confirm('¿Borrar la aeronave y todos sus datos?'))return;S.ac=S.ac.filter(a=>a.id!=id);const sv=S.sv.filter(s=>s.ac==id).map(s=>s.id);S.sv=S.sv.filter(s=>s.ac!=id);S.ct=S.ct.filter(c=>!sv.includes(c.sv));S.lg=S.lg.filter(l=>l.ac!=id);S.rc=S.rc.filter(r=>r.ac!=id);S.sel=S.ac[0]?.id||null;save();R()}
+function delAc(id){if(!confirm('¿Borrar la aeronave y todos sus datos?'))return;S.ac=S.ac.filter(a=>a.id!=id);const sv=S.sv.filter(s=>s.ac==id).map(s=>s.id);S.sv=S.sv.filter(s=>s.ac!=id);S.ct=S.ct.filter(c=>!sv.includes(c.sv));S.lg=S.lg.filter(l=>l.ac!=id);S.rc=S.rc.filter(r=>r.ac!=id);S.mx=S.mx.filter(r=>r.ac!=id);S.ad=S.ad.filter(r=>r.ac!=id);S.sel=S.ac[0]?.id||null;save();R()}
 
 function addManual(){const a=A(),h=n('m_h'),c=n('m_c');if(!h&&!c)return alert('Ingrese horas y/o ciclos.');entry(a,{kind:'m',t:v('m_t'),date:v('m_d')||today(),h,c,from:'',to:'',pilot:'',note:v('m_n')||'Control manual'});save();R()}
 
@@ -171,13 +268,24 @@ function delSv(id){if(confirm('¿Borrar el servicio y sus controles?')){S.sv=S.s
 
 function addCt(){const nm=v('c_n').trim();if(!nm||!v('c_s'))return alert('Elija un servicio e ingrese el nombre del control.');S.ct.push({id:uid(),sv:v('c_s'),name:nm,cp:v('c_k'),ivH:n('c_ih'),ivC:n('c_ic'),ivM:n('c_im'),lastDate:v('c_ld'),lastH:n('c_lh'),lastC:n('c_lc')});save();R()}
 
-function delCt(id){S.ct=S.ct.filter(c=>c.id!=id);save();R()}
+function delCt(id){if(!confirm('¿Retirar este control y sus vencimientos del registro privado?'))return;S.ct=S.ct.filter(c=>c.id!=id);save();R()}
 
-function renew(id){if(!confirm('¿Este control fue realizado efectivamente hoy?'))return;const c=S.ct.find(x=>x.id==id),a=A(),z=cnt(a,c.cp);c.lastDate=today();c.lastH=z.h;c.lastC=z.c;save();R()}
+function renew(id){
+ const c=S.ct.find(x=>x.id===id),a=A();if(!c||!a)return;
+ const ref=prompt('Referencia del asiento firmado en libreta, orden de trabajo u otra constancia técnica de este control (obligatoria):');
+ if(ref===null)return;
+ if(!ref.trim())return alert('Sin una constancia técnica no se marcará el control como cumplido.');
+ const resp=prompt('Responsable técnico que figura en la constancia (nombre, licencia o registro ANAC):');
+ if(resp===null)return;
+ if(!resp.trim())return alert('Indicá quién figura como responsable en la constancia oficial.');
+ if(!confirm('Se anotará una referencia a un control ya realizado. Esta acción no certifica el trabajo ni aprueba el retorno al servicio. ¿Continuar?'))return;
+ const z=cnt(a,c.cp);c.lastDate=today();c.lastH=z.h;c.lastC=z.c;c.lastRef=ref.trim().slice(0,200);c.lastBy=resp.trim().slice(0,150);
+ save();R();
+}
 
 function addLog(){const a=A(),h=n('l_h'),c=n('l_c');if(!h&&!c)return alert('Ingrese horas de vuelo y/o ciclos.');entry(a,{kind:'f',date:v('l_d')||today(),h,c,from:v('l_f').toUpperCase(),to:v('l_t').toUpperCase(),pilot:v('l_p'),note:v('l_n')});save();R()}
 
-function delLog(id){const l=S.lg.find(x=>x.id==id);if(!l)return;const a=S.ac.find(x=>x.id==l.ac);if(a){const t=l.t||'fmp';CP(a);if(t.includes('f')){a.h-=l.h;a.c-=l.c}for(const k of ['m','p'])if(t.includes(k)){const z=a.cp[k];z.h-=l.h;z.c-=l.c;z.tso-=l.h}}S.lg=S.lg.filter(x=>x.id!=id);save();R()}
+function delLog(id){const l=S.lg.find(x=>x.id==id);if(!l)return;if(!confirm('¿Retirar esta anotación privada y recalcular las horas y ciclos?'))return;const a=S.ac.find(x=>x.id==l.ac);if(a){const t=l.t||'fmp';CP(a);if(t.includes('f')){a.h-=l.h;a.c-=l.c}for(const k of ['m','p'])if(t.includes(k)){const z=a.cp[k];z.h-=l.h;z.c-=l.c;z.tso-=l.h}}S.lg=S.lg.filter(x=>x.id!=id);save();R()}
 
 function addRc(){const h=n('r_h'),c=n('r_c');if(!h&&!c)return alert('Ingrese horas y/o ciclos.');S.rc.push({id:uid(),ac:S.sel,kind:v('r_k'),t:v('r_a')||'fmp',every:v('r_e'),next:v('r_s')||today(),h,c,from:v('r_f').toUpperCase(),to:v('r_t').toUpperCase(),note:v('r_n')});save();R();alert('Recurrente programado. No se suman horas sin confirmar su realización.')}
 
@@ -188,7 +296,17 @@ function runRc(){const k=applyRc();R();if(k)alert(k+' registro(s) confirmados.')
 
 function fillLast(){const z=cnt(A(),v('c_k'));$('c_lh').value=z.h;$('c_lc').value=z.c}
 function setComp(k){const a=A(),z=CP(a)[k],before=z.ser;z.mod=v(k+'_mod').trim().slice(0,100);z.ser=v(k+'_ser').trim().slice(0,100);if(k==='f'){a.h=n('f_h');a.c=n('f_c')}else{z.h=n(k+'_h');z.c=n(k+'_c');z.tso=n(k+'_tso');z.tbo=n(k+'_tbo');z.tboY=n(k+'_y');z.oh=v(k+'_oh')}if(before!==z.ser)(a.hist=a.hist||[]).push({d:today(),k,tx:'Serie '+(before||'—')+' → '+(z.ser||'—')});save();R()}
-function overhaul(k){if(k!=='m'&&k!=='p')return;const a=A(),z=CP(a)[k];if(!confirm('¿Confirmás la recorrida general efectivamente realizada de '+CN[k]+' hoy? Se reiniciarán las horas TSO.'))return;(a.hist=a.hist||[]).push({d:today(),k,tx:'Recorrida general con '+f1(z.tso)+' h TSO'});z.tso=0;z.oh=today();save();R()}
+function overhaul(k){
+ if(k!=='m'&&k!=='p')return;
+ const a=A(),z=CP(a)[k];if(!a)return;
+ const ref=prompt('Referencia a la recorrida general documentada (libreta, orden de trabajo / taller):');
+ if(ref===null)return;if(!ref.trim())return alert('No se reiniciará el TSO sin referencia documental.');
+ const resp=prompt('Organización y responsable técnico identificados en el registro:');
+ if(resp===null)return;if(!resp.trim())return alert('Identificá al responsable que consta en el registro.');
+ if(!confirm('¿La recorrida está concluida y documentada? Registrar aquí no equivale a una aprobación de retorno al servicio.'))return;
+ (a.hist=a.hist||[]).push({d:today(),k,tx:'Recorrida documentada a '+f1(z.tso)+' h TSO',ref:ref.trim().slice(0,200),who:resp.trim().slice(0,150)});
+ z.tso=0;z.oh=today();save();R();
+}
 
 function setProj(){const a=A();a.hpm=n('p_h');a.cpm=n('p_c');S.hz=n('p_z')||12;save();R()}
 
@@ -198,10 +316,64 @@ function impo(i){const f=i.files[0];if(!f)return;
  if(f.size>500000){alert('El respaldo supera el tamaño permitido.');i.value='';return}
  const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!validData(d))throw 0;
  if(!confirm('¿Reemplazar tus registros actuales por este respaldo?'))return;
- S={ac:d.ac,sv:d.sv,ct:d.ct,lg:d.lg,rc:d.rc,sel:d.sel||null,tab:'a',hz:d.hz||12};
+ S={ac:d.ac,sv:d.sv,ct:d.ct,lg:d.lg,rc:d.rc,mx:d.mx||[],ad:d.ad||[],sel:d.sel||null,tab:'a',hz:d.hz||12};
  if(!S.ac.some(a=>a.id===S.sel))S.sel=S.ac[0]?.id||null;save();R();
  }catch(e){alert('Archivo no válido.')}};r.readAsText(f);i.value=''}
 
+
+
+
+function recordValue(id,max){return v(id).trim().slice(0,max)}
+function addIntervention(){
+ if(!A())return;
+ const desc=recordValue('mx_desc',800),ref=recordValue('mx_ref',250),who=recordValue('mx_who',160),lic=recordValue('mx_lic',100),reg=recordValue('mx_reg',80);
+ if(!v('mx_date')||!desc||!ref||!who||!lic||!reg)return alert('Completá fecha, trabajo, referencia documental y datos del responsable que figuran en la constancia.');
+ if(!confirm('Se guardará una TRANSCRIPCIÓN PRIVADA de un trabajo ya documentado. No reemplaza firmas ni aprobaciones. ¿Continuar?'))return;
+ S.mx.push({id:uid(),ac:S.sel,date:v('mx_date'),kind:v('mx_kind'),cp:v('mx_cp'),desc,tech:recordValue('mx_tech',350),ref,who,lic,reg,added:new Date().toISOString()});
+ save();R();
+}
+function removeIntervention(id){
+ if(!confirm('¿Retirar esta copia digital de la intervención? Conservá los registros oficiales originales.'))return;
+ S.mx=S.mx.filter(x=>x.id!==id);save();R();
+}
+function adState(d,a){
+ if(d.applies==='unknown')return {label:'POR EVALUAR',level:'warn'};
+ if(d.applies==='no')return {label:'NO APLICA (DECLARADO)',level:''};
+ if(!d.compDate||!d.doc||!d.method)return {label:'SIN CONSTANCIA',level:'danger'};
+ const h=Number(d.nextH),cur=cnt(a,d.cp).h,hasH=d.nextH!==''&&d.nextH!==null&&d.nextH!==undefined&&Number.isFinite(h);
+ const hasDate=!!d.nextDate;
+ if((hasH&&h<=cur)||(hasDate&&d.nextDate<=today()))return {label:'REVISAR VENCIMIENTO',level:'danger'};
+ const soonDate=hasDate&&(new Date(d.nextDate+'T12:00:00').getTime()-Date.now())/864e5<=45;
+ if((hasH&&h-cur<=10)||soonDate)return {label:'PRÓXIMA REVISIÓN',level:'warn'};
+ return {label:'CON CONSTANCIA DECLARADA',level:''};
+}
+function addAD(){
+ if(!A())return;
+ const number=recordValue('ad_number',90),rev=recordValue('ad_rev',70),method=recordValue('ad_method',350),doc=recordValue('ad_doc',250),notes=recordValue('ad_notes',350);
+ const applies=v('ad_applies'),date=v('ad_date'),nextDate=v('ad_nextdate'),nextH=v('ad_nexth').trim();
+ if(!number)return alert('Ingresá el número de directiva de aeronavegabilidad.');
+ if(applies==='no'&&!notes&&!doc)return alert('Para declarar No aplica, agregá el fundamento o la referencia documental.');
+ if(applies==='yes'&&date&&(!method||!doc))return alert('Para registrar cumplimiento, indicá método y constancia del asiento firmado.');
+ if(nextH&&(!Number.isFinite(Number(nextH))||Number(nextH)<0))return alert('Ingresá una hora futura válida.');
+ S.ad.push({id:uid(),ac:S.sel,number,rev,cp:v('ad_cp'),applies,method,doc,compDate:date,nextDate,nextH,notes,added:new Date().toISOString()});
+ save();R();
+}
+function removeAD(id){
+ if(!confirm('¿Retirar esta anotación auxiliar de directiva de aeronavegabilidad?'))return;
+ S.ad=S.ad.filter(x=>x.id!==id);save();R();
+}
+function renderOverview(){
+ const node=$('maintOverview');if(!node)return;
+ const a=A();if(!currentUser||!a){node.innerHTML='';return;}
+ const cs=allC(a),over=cs.filter(x=>x.i.st===2).length,soon=cs.filter(x=>x.i.st===1).length;
+ const ads=(S.ad||[]).filter(x=>x.ac===a.id);
+ const pending=ads.filter(d=>['warn','danger'].includes(adState(d,a).level)).length;
+ const tile=(value,description,level='')=>'<article class="maint-metric '+level+'"><strong>'+esc(value)+'</strong><span>'+description+'</span></article>';
+ node.innerHTML=tile(f1(a.h)+' h','Fuselaje · tiempo total')+
+ tile(String(cs.length),'Controles configurados')+
+ tile(over?String(over)+' por revisar':soon?String(soon)+' próximos':cs.length?'Sin alertas calculadas':'Sin controles cargados','Vencimientos de controles',over?'alert':soon?'caution':'')+
+ tile(pending?String(pending)+' por revisar':ads.length?String(ads.length)+' registradas':'Sin directivas cargadas','DA · estado declarado',pending?'caution':'');
+}
 
 
 // ---------- VISTAS ----------
@@ -210,7 +382,7 @@ function tabA(){const a=A();return`<div class="grid lg:grid-cols-2 gap-4"><div c
 
 <div class="space-y-3">${S.ac.map(x=>`<div class="card p-3 flex items-center gap-3 ${x.id==S.sel?'!border-amber-400':''}"><div class="flex-1"><b class="text-lg">${esc(x.reg)}</b> <span class="text-xs text-slate-400">${esc(x.type)}</span><div class="text-sm text-sky-300 font-bold">Fuselaje ${f1(x.h)} h · ${Math.round(x.c)} ciclos</div><div class="text-xs text-slate-400">Motor TSO ${f1(CP(x).m.tso)} h · Hélice TSO ${f1(CP(x).p.tso)} h</div></div><button class="btn bg-sky-700" onclick="S.sel='${x.id}';save();R()">Seleccionar</button><button class="btn bg-rose-800" onclick="delAc('${x.id}')">✕</button></div>`).join('')||'<div class="text-slate-500 text-sm">Aún no hay aeronaves.</div>'}
 
-${a?`<div class="card p-4 space-y-2"><h2 class="font-bold text-amber-300">4 · Horas y ciclos de control manual — ${esc(a.reg)}</h2><p class="text-[11px] text-slate-500">Se suman a los componentes elegidos y quedan registrados.</p><div class="grid grid-cols-2 gap-2">${F('m_d','Fecha','date',today())}${SEL('m_t','Aplica a','<option value="fmp">Todos</option><option value="f">Fuselaje</option><option value="m">Motor</option><option value="p">Hélice</option><option value="mp">Motor + Hélice</option>')}</div><div class="grid grid-cols-2 gap-2">${F('m_h','Horas')}${F('m_c','Ciclos')}</div>${F('m_n','Motivo / nota','text')}<button class="btn bg-emerald-600 w-full" onclick="addManual()">Agregar</button></div>`:''}</div></div>`}
+${a?`<div class="card p-4 space-y-2"><h2 class="font-bold text-amber-300">4 · Horas y ciclos de control manual — ${esc(a.reg)}</h2><p class="text-[11px] text-slate-500">Se actualizan los contadores de los componentes elegidos. Esta anotación manual no acredita una intervención de mantenimiento.</p><div class="grid grid-cols-2 gap-2">${F('m_d','Fecha','date',today())}${SEL('m_t','Aplica a','<option value="fmp">Todos</option><option value="f">Fuselaje</option><option value="m">Motor</option><option value="p">Hélice</option><option value="mp">Motor + Hélice</option>')}</div><div class="grid grid-cols-2 gap-2">${F('m_h','Horas')}${F('m_c','Ciclos')}</div>${F('m_n','Motivo / nota','text')}<button class="btn bg-emerald-600 w-full" onclick="addManual()">Agregar</button></div>`:''}</div></div>`}
 
 
 
@@ -228,7 +400,7 @@ function tabK(){const a=A(),cp=CP(a);
  (m?'<button class="btn bg-sky-700" onclick="overhaul(\''+k+'\')">Registrar recorrida</button>':'')+'</div></section>';
  }).join('');
  return '<p class="text-xs text-slate-400 mb-3">Los valores de motor, fuselaje y hélice se registran independientemente. Completá los límites oficiales de acuerdo con el programa de mantenimiento de cada aeronave.</p><div class="grid lg:grid-cols-3 gap-4">'+cards+'</div><section class="card p-3 mt-4"><b class="text-amber-300">Historial de componentes</b>'+
- (a.hist||[]).slice().reverse().map(h=>'<div class="text-xs text-slate-300 mt-2">'+esc(h.d)+' · '+(CN[h.k]||'Componente')+' — '+esc(h.tx)+'</div>').join('')+
+ (a.hist||[]).slice().reverse().map(h=>'<div class="text-xs text-slate-300 mt-2">'+esc(h.d)+' · '+(CN[h.k]||'Componente')+' — '+esc(h.tx)+(h.ref?'<div>Constancia: '+esc(h.ref)+' · '+esc(h.who||'')+'</div>':'')+'</div>').join('')+
  (!(a.hist||[]).length?'<p class="text-xs text-slate-500">Sin eventos.</p>':'')+'</section>';
 }
 
@@ -236,7 +408,7 @@ function tabS(){const a=A(),sv=S.sv.filter(s=>s.ac==a.id);return`<div class="gri
 
 <div class="card p-4 space-y-2"><h2 class="font-bold text-amber-300">3 · Crear control</h2>${SEL('c_s','Servicio',sv.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join(''))}${F('c_n','Control (ej. Cambio de aceite)','text')}${SEL('c_k','Componente','<option value="f">Fuselaje</option><option value="m">Motor</option><option value="p">Hélice</option>').replace('<select','<select onchange="fillLast()"')}<div class="text-[11px] text-slate-500">Intervalo (deje 0 lo que no aplique)</div><div class="grid grid-cols-3 gap-2">${F('c_ih','Horas',"number",0)}${F('c_ic','Ciclos','number',0)}${F('c_im','Meses','number',0)}</div><div class="text-[11px] text-slate-500">Última aplicación</div><div class="grid grid-cols-3 gap-2">${F('c_ld','Fecha','date',today())}${F('c_lh','Horas del componente','number',a.h)}${F('c_lc','Ciclos del componente','number',a.c)}</div><button class="btn bg-amber-600 w-full" onclick="addCt()">Crear control</button></div></div>
 
-<div class="lg:col-span-2 space-y-3">${sv.map(s=>{const cs=S.ct.filter(c=>c.sv==s.id);return`<div class="card p-3"><div class="flex justify-between"><b class="text-amber-300">${esc(s.name)}</b><button class="text-rose-400 text-xs" onclick="delSv('${s.id}')">Borrar servicio</button></div><div class="overflow-x-auto"><table class="w-full"><thead><tr><th>Control</th><th>Intervalo</th><th>Última</th><th>Resta h</th><th>Resta ciclos</th><th>Vence (proy.)</th><th>Estado</th><th></th></tr></thead><tbody class="divide-y divide-white/5">${cs.map(c=>{const i=info(c,a),[tx,co]=ST[i.st];return`<tr><td class="font-semibold">${CN[c.cp||'f']||'Fuselaje'} · ${esc(c.name)}</td><td class="text-slate-400">${[c.ivH&&c.ivH+' h',c.ivC&&c.ivC+' c',c.ivM&&c.ivM+' m'].filter(Boolean).join(' / ')}</td><td class="text-slate-400">${c.lastDate||'—'} · ${f1(c.lastH)}h/${c.lastC}c</td><td>${i.remH==null?'—':f1(i.remH)}</td><td>${i.remC==null?'—':Math.round(i.remC)}</td><td>${fd(i.due)} <span class="text-[10px] text-slate-500">(${i.by})</span></td><td><span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-${co}-500/20 text-${co}-300">${tx}</span></td><td><button class="text-emerald-400 text-xs" title="Registrar cumplimiento hoy" onclick="renew('${c.id}')"> Cumplido hoy</button> <button class="text-rose-400 px-1" onclick="delCt('${c.id}')">✕</button></td></tr>`}).join('')||'<tr><td colspan="8" class="text-slate-500">Sin controles.</td></tr>'}</tbody></table></div></div>`}).join('')||'<div class="text-slate-500 text-sm">Cree primero un servicio de mantenimiento.</div>'}</div></div>`}
+<div class="lg:col-span-2 space-y-3">${sv.map(s=>{const cs=S.ct.filter(c=>c.sv==s.id);return`<div class="card p-3"><div class="flex justify-between"><b class="text-amber-300">${esc(s.name)}</b><button class="text-rose-400 text-xs" onclick="delSv('${s.id}')">Borrar servicio</button></div><div class="overflow-x-auto"><table class="w-full"><thead><tr><th>Control</th><th>Intervalo</th><th>Última</th><th>Resta h</th><th>Resta ciclos</th><th>Vence (proy.)</th><th>Estado</th><th></th></tr></thead><tbody class="divide-y divide-white/5">${cs.map(c=>{const i=info(c,a),[tx,co]=ST[i.st];return`<tr><td class="font-semibold">${CN[c.cp||'f']||'Fuselaje'} · ${esc(c.name)}</td><td class="text-slate-400">${[c.ivH&&c.ivH+' h',c.ivC&&c.ivC+' c',c.ivM&&c.ivM+' m'].filter(Boolean).join(' / ')}</td><td class="text-slate-400">${c.lastDate||'—'} · ${f1(c.lastH)}h/${c.lastC}c${c.lastRef?'<div class="text-[10px] text-slate-400">Ref.: '+esc(c.lastRef)+'</div>':''}</td><td>${i.remH==null?'—':f1(i.remH)}</td><td>${i.remC==null?'—':Math.round(i.remC)}</td><td>${fd(i.due)} <span class="text-[10px] text-slate-500">(${i.by})</span></td><td><span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-${co}-500/20 text-${co}-300">${tx}</span></td><td><button class="text-emerald-400 text-xs" title="Registrar cumplimiento hoy" onclick="renew('${c.id}')"> Registrar con constancia</button> <button class="text-rose-400 px-1" onclick="delCt('${c.id}')">✕</button></td></tr>`}).join('')||'<tr><td colspan="8" class="text-slate-500">Sin controles.</td></tr>'}</tbody></table></div></div>`}).join('')||'<div class="text-slate-500 text-sm">Cree primero un servicio de mantenimiento.</div>'}</div></div>`}
 
 
 
@@ -274,6 +446,74 @@ function tabP(){const a=A(),H=S.hz||12,D=30.44*864e5,t0=Date.now(),all=allC(a).f
 
 
 
+
+function tabI(){
+ const a=A(),rows=(S.mx||[]).filter(x=>x.ac===a.id).slice().sort((x,y)=>String(y.date||'').localeCompare(String(x.date||'')));
+ return `<div class="grid lg:grid-cols-3 gap-4">
+ <section class="card p-4 space-y-3 h-fit">
+ <h2 class="font-bold">Intervención documentada</h2>
+ <p class="maint-note">RAAC 43.9 y 43.11: registrá los datos del trabajo y la referencia al asiento oficial firmado. Esta carga no es una firma electrónica ni una aprobación de retorno al servicio.</p>
+ <div class="maint-record-grid">
+ ${F('mx_date','Fecha de finalización','date',today())}
+ ${SEL('mx_kind','Tipo de trabajo','<option value="Mantenimiento">Mantenimiento</option><option value="Inspección">Inspección</option><option value="Reparación">Reparación</option><option value="Alteración">Alteración</option><option value="Recorrida general">Recorrida general</option>')}
+ ${SEL('mx_cp','Componente','<option value="f">Fuselaje / aeronave</option><option value="m">Motor</option><option value="p">Hélice</option>')}
+ ${F('mx_tech','Manual / datos técnicos (ref.)','text','','maxlength="350"')}
+ <div class="wide">${F('mx_desc','Descripción del trabajo realizado','text','','maxlength="800"')}</div>
+ <div class="wide">${F('mx_ref','Asiento firmado / orden de trabajo / DA 337','text','','maxlength="250"')}</div>
+ ${F('mx_who','Responsable que figura en la constancia','text','','maxlength="160"')}
+ ${F('mx_lic','Tipo y número de licencia / matrícula','text','','maxlength="100"')}
+ <div class="wide">${F('mx_reg','Registro profesional ANAC','text','','maxlength="80"')}</div>
+ </div>
+ <button class="btn bg-amber-600 w-full" onclick="addIntervention()">Guardar referencia privada</button>
+ </section>
+ <section class="lg:col-span-2 card p-4">
+ <div class="flex items-center justify-between gap-3 flex-wrap"><h2 class="font-bold">Historial técnico referenciado · ${esc(a.reg)}</h2><span class="maint-pill">${rows.length} registros</span></div>
+ <p class="text-xs text-slate-400 mb-3">Copias informativas cargadas por el usuario. Para comprobar la conformidad, consultá el original firmado.</p>
+ <div class="overflow-x-auto"><table class="w-full"><thead><tr><th>Fecha / trabajo</th><th>Componente</th><th>Documentación</th><th>Responsable técnico</th><th></th></tr></thead>
+ <tbody>${rows.map(x=>`<tr>
+ <td><strong>${esc(x.date)}</strong><div class="text-slate-400">${esc(x.kind)}</div><div class="mt-2">${esc(x.desc)}</div></td>
+ <td>${esc(CN[x.cp]||'Aeronave')}</td>
+ <td><strong>${esc(x.ref)}</strong><div class="text-slate-400 mt-1">${esc(x.tech||'Sin dato técnico cargado')}</div></td>
+ <td>${esc(x.who)}<div class="text-slate-400">Lic.: ${esc(x.lic)} / Reg. ANAC: ${esc(x.reg)}</div></td>
+ <td><button class="text-rose-400 text-xs" onclick="removeIntervention('${x.id}')">Retirar</button></td>
+ </tr>`).join('')||'<tr><td colspan="5">Todavía no hay intervenciones documentadas.</td></tr>'}</tbody></table></div>
+ </section></div>`;
+}
+function tabD(){
+ const a=A(),rows=(S.ad||[]).filter(x=>x.ac===a.id).slice().sort((x,y)=>String(x.number).localeCompare(String(y.number)));
+ return `<div class="grid lg:grid-cols-3 gap-4">
+ <section class="card p-4 space-y-3 h-fit">
+ <h2 class="font-bold">Seguimiento de Directivas (DA)</h2>
+ <p class="maint-note">RAAC 39 y 91.417: comprobá primero las directivas aplicables al modelo y número de serie en fuentes ANAC y del Estado de diseño. No se determina la aplicabilidad automáticamente.</p>
+ <div class="maint-record-grid">
+ ${F('ad_number','Número de DA','text','','maxlength="90"')}
+ ${F('ad_rev','Revisión / enmienda','text','','maxlength="70"')}
+ ${SEL('ad_cp','Aplica al componente','<option value="f">Aeronave / fuselaje</option><option value="m">Motor</option><option value="p">Hélice</option>')}
+ ${SEL('ad_applies','Aplicabilidad','<option value="unknown">Pendiente de determinar</option><option value="yes">Aplica</option><option value="no">No aplica (justificar)</option>')}
+ <div class="wide">${F('ad_method','Método de cumplimiento / referencia técnica','text','','maxlength="350"')}</div>
+ ${F('ad_date','Fecha del último cumplimiento','date','')}
+ ${F('ad_nexth','Próxima hora total del componente','number','')}
+ ${F('ad_nextdate','Próxima fecha (si es recurrente)','date','')}
+ <div class="wide">${F('ad_doc','Referencia del asiento oficial / OT','text','','maxlength="250"')}</div>
+ <div class="wide">${F('ad_notes','Observaciones / fundamento de aplicabilidad','text','','maxlength="350"')}</div>
+ </div>
+ <button class="btn bg-amber-600 w-full" onclick="addAD()">Agregar directiva</button>
+ </section>
+ <section class="lg:col-span-2 card p-4">
+ <div class="flex items-center justify-between gap-3 flex-wrap"><h2 class="font-bold">Estado declarado de DA · ${esc(a.reg)}</h2><span class="maint-pill">${rows.length} entradas</span></div>
+ <p class="text-xs text-slate-400 mb-3">Sin carga de una directiva no significa que no exista. Horas y fechas son una ayuda visual, no una determinación reglamentaria.</p>
+ <div class="overflow-x-auto"><table class="w-full"><thead><tr><th>Directiva / revisión</th><th>Aplicabilidad</th><th>Cumplimiento y fuente</th><th>Próxima acción</th><th>Seguimiento</th><th></th></tr></thead>
+ <tbody>${rows.map(x=>{const st=adState(x,a);return `<tr>
+ <td><strong>${esc(x.number)}</strong><div class="text-slate-400">${esc(x.rev||'Sin revisión informada')} · ${esc(CN[x.cp]||'Aeronave')}</div></td>
+ <td>${x.applies==='yes'?'Aplica':x.applies==='no'?'No aplica':'Por determinar'}<div class="text-slate-400">${esc(x.notes||'')}</div></td>
+ <td>${esc(x.method||'—')}<div class="text-slate-400">${esc(x.doc||'Sin referencia')}</div><div>${esc(x.compDate||'Sin fecha')}</div></td>
+ <td>${x.nextDate?'Fecha: '+esc(x.nextDate):''}${x.nextH?' · '+esc(x.nextH)+' h':''}${!x.nextDate&&!x.nextH?'Sin recurrencia cargada':''}</td>
+ <td><span class="maint-pill ${st.level}">${st.label}</span></td>
+ <td><button class="text-rose-400 text-xs" onclick="removeAD('${x.id}')">Retirar</button></td>
+ </tr>`}).join('')||'<tr><td colspan="6">Todavía no se cargaron directivas.</td></tr>'}</tbody></table></div>
+ </section></div>`;
+}
+
 function R(){
 
  $('sel').innerHTML=S.ac.map(a=>`<option value="${a.id}" ${a.id==S.sel?'selected':''}>${esc(a.reg)}</option>`).join('')||'<option>Sin aeronaves</option>';
@@ -282,11 +522,13 @@ function R(){
 
  if(!S.sel&&S.ac[0])S.sel=S.ac[0].id;
 
- const f={a:tabA,k:tabK,s:tabS,b:tabB,r:tabR,p:tabP}[S.tab];
+ const f={a:tabA,k:tabK,s:tabS,b:tabB,i:tabI,d:tabD,r:tabR,p:tabP}[S.tab];
 
  $('app').innerHTML=!currentUser?'<div class="card p-6">Iniciando sesión y recuperando tus datos...</div>':S.tab=='a'||A()?f():'<div class="card p-6 text-center text-slate-400">Primero cree una aeronave en la pestaña “Aeronaves”.</div>';
 
- if(S.tab=='p'&&$('p_z'))$('p_z').value=S.hz}
+ if(S.tab=='p'&&$('p_z'))$('p_z').value=S.hz;
+ renderOverview();
+}
 
 R();loadApp();
 
