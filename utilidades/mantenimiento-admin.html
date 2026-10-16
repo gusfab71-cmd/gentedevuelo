@@ -81,9 +81,9 @@ function render(userId){
   const title=(a.reg||'Aeronave')+' · '+(a.type||'');
   const cp=a.cp||{};
   const cmpSection=section(container,'Componentes · '+title);
-  table(cmpSection,['Componente','Modelo','N° de serie','Horas totales','Ciclos','TSO','TBO horas','TBO años','Última recorrida'],[
+  table(cmpSection,['Componente','Modelo','N° de serie','Horas totales','Ciclos','TSO','TBO horas','TBO años','Última recorrida','Documento TBO'],[
    ['f',cp.f||{}],['m',cp.m||{}],['p',cp.p||{}]
-  ].map(([k,z])=>[comp(k),z.mod||'—',z.ser||'—',n(k==='f'?a.h:(z.h??a.h)),n(k==='f'?a.c:(z.c??a.c)),k==='f'?'—':n(z.tso??a.h),k==='f'?'—':n(z.tbo??0),k==='f'?'—':n(z.tboY??0),k==='f'?'—':date(z.oh)]));
+  ].map(([k,z])=>[comp(k),z.mod||'—',z.ser||'—',n(k==='f'?a.h:(z.h??a.h)),n(k==='f'?a.c:(z.c??a.c)),k==='f'?'—':n(z.tso??a.h),k==='f'?'—':n(z.tbo??0),k==='f'?'—':n(z.tboY??0),k==='f'?'—':date(z.oh),k==='f'?'—':z.tboRef||'—']));
   const events=safeArray(a.hist);
   if(events.length){
    const histSection=section(container,'Historial de componentes · '+title);
@@ -94,7 +94,7 @@ function render(userId){
   const block=section(container,'Servicios y controles · '+title);
   table(block,['Servicio','Componente','Control','Intervalo','Última aplicación','Últimas horas/ciclos','Constancia'],controls.map(x=>[
    x.service.name,comp(x.c.cp),x.c.name,[x.c.ivH?n(x.c.ivH)+' h':'',x.c.ivC?n(x.c.ivC)+' ciclos':'',x.c.ivM?n(x.c.ivM)+' meses':''].filter(Boolean).join(' / ')||'—',
-   date(x.c.lastDate),n(x.c.lastH)+' h / '+n(x.c.lastC)+' c',x.c.lastRef?x.c.lastRef+' · '+(x.c.lastBy||''):'Sin constancia cargada'
+   date(x.c.lastDate),n(x.c.lastH)+' h / '+n(x.c.lastC)+' c',(x.c.basis?'Programa: '+x.c.basis+' · ':'')+(x.c.lastRef?x.c.lastRef+' · '+(x.c.lastBy||''):'Sin constancia cargada')
   ]));
   const bit=section(container,'Bitácora · '+title);
   table(bit,['Fecha','Tipo','Componentes','Desde','Hasta','Piloto / instructor','Horas','Ciclos','Observaciones'],
