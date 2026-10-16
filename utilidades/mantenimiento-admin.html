@@ -74,9 +74,9 @@ function render(userId){
  if(!record)return;
  const p=record.payload||{};
  container.append(el('h3',(labels.get(userId)||'Integrante')+' · Última actualización: '+date(record.updated_at)));
- const planes=safeArray(p.ac),sv=safeArray(p.sv),ct=safeArray(p.ct),lg=safeArray(p.lg),rc=safeArray(p.rc),mx=safeArray(p.mx),ad=safeArray(p.ad),ip=safeArray(p.ip),ie=safeArray(p.ie);
+ const planes=safeArray(p.ac),sv=safeArray(p.sv),ct=safeArray(p.ct),lg=safeArray(p.lg),rc=safeArray(p.rc),mx=safeArray(p.mx),ad=safeArray(p.ad),ip=safeArray(p.ip),ie=safeArray(p.ie),dx=safeArray(p.dx);
  const acSection=section(container,'Aeronaves');
- table(acSection,['Matrícula','Modelo','Horas totales','Ciclos','Horas/mes previstas'],planes.map(a=>[a.reg,a.type,n(a.h),n(a.c),n(a.hpm)]));
+ table(acSection,['Matrícula','Modelo','Uso declarado','Explotador / escuela','Programa / manual','Horas totales','Ciclos'],planes.map(a=>[a.reg,a.type,{private:'Privado',instruction:'Instrucción',mixed:'Privado e instrucción'}[a.operation?.use]||'Por definir',a.operation?.operator||'—',a.operation?.program||'—',n(a.h),n(a.c)]));
  for(const a of planes){
   const title=(a.reg||'Aeronave')+' · '+(a.type||'');
   const cp=a.cp||{};
@@ -97,9 +97,17 @@ function render(userId){
    date(x.c.lastDate),n(x.c.lastH)+' h / '+n(x.c.lastC)+' c',x.c.lastRef?x.c.lastRef+' · '+(x.c.lastBy||''):'Sin constancia cargada'
   ]));
   const bit=section(container,'Bitácora · '+title);
-  table(bit,['Fecha','Tipo','Componentes','Desde','Hasta','Piloto','Horas','Ciclos','Observaciones'],
+  table(bit,['Fecha','Tipo','Componentes','Desde','Hasta','Piloto / instructor','Horas','Ciclos','Observaciones'],
    lg.filter(x=>x.ac===a.id).slice().sort((x,y)=>String(y.date||'').localeCompare(String(x.date||'')))
-     .map(x=>[date(x.date),x.kind==='m'?'Carga manual':'Vuelo',compApply(x.t),x.from,x.to,x.pilot,n(x.h),n(x.c),x.note]));
+     .map(x=>[date(x.date),x.kind==='m'?'Carga manual':x.use==='instruction'?'Instrucción':x.use==='private'?'Privado':'Vuelo sin clasificar',compApply(x.t),x.from,x.to,(x.pilot||'—')+(x.instructor?' / '+x.instructor:''),n(x.h),n(x.c),x.note]));
+  const discrepancies=dx.filter(x=>x.ac===a.id);
+  if(discrepancies.length){
+   const dSection=section(container,'Novedades técnicas · '+title);
+   dSection.append(el('p','Seguimiento auxiliar de discrepancias: ningún estado acredita aeronavegabilidad o retorno al servicio.'));
+   table(dSection,['Fecha','Sector','Observación','Informante','Estado','Referencia de resolución'],discrepancies.map(x=>[
+    date(x.date),comp(x.component),x.description||'—',x.reportedBy||'—',x.status==='closed'?'Cerrada con referencia':'Pendiente',x.status==='closed'?(date(x.closedDate)+' · '+(x.reference||'')+' · '+(x.responsible||'')):'—'
+   ]));
+  }
   const inspections=ip.filter(x=>x.ac===a.id);
   if(inspections.length){
    const iSection=section(container,'Inspecciones reglamentarias · '+title);

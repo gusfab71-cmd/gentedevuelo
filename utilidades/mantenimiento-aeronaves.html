@@ -130,6 +130,11 @@ body .overflow-x-auto{scrollbar-color:#697e7d transparent}
 .maint-guidance .maint-note{color:#ecd9ca}
 .maint-guidance input,.maint-guidance select{color:#f3f5f3}
 .maint-pill.warn{background:#49362b}.maint-pill.danger{background:#4a292b}
+.maint-regime{border:1px solid #55686b;background:linear-gradient(110deg,#203135,#202729);border-radius:15px;padding:16px;color:#e5eeea}
+.maint-regime strong{color:#ffd2a8}.maint-regime p{font-size:12px;line-height:1.6;margin:6px 0 0;color:#ced9d7}
+.maint-regime .maint-pill{margin-left:6px}
+.maint-flag{border-left:4px solid #db8861;background:#342823;padding:11px 13px;border-radius:6px 11px 11px 6px;font-size:12px;color:#ffe3cd}
+.maint-flag.danger{border-left-color:#e97573;background:#38282b;color:#ffdcdb}
 @media(max-width:750px){.maint-inspection-stats{grid-template-columns:1fr 1fr}.maint-inspection-stats>div:first-child{grid-column:1/-1}}
 @media(max-width:480px){.maint-inspection-stats{grid-template-columns:1fr}.maint-inspection-stats>div:first-child{grid-column:auto}}
 </style>
@@ -163,7 +168,7 @@ body .overflow-x-auto{scrollbar-color:#697e7d transparent}
 </header>
 <nav id="nav" class="flex overflow-x-auto border-b border-white/10 px-3"></nav>
 
-<div class="maint-status-wrap"><p id="sync" role="status">Cargando tu información...</p><p class="maint-notice">Esta herramienta es un registro auxiliar privado: no certifica aeronavegabilidad, no autoriza retorno al servicio ni reemplaza libretas, firmas, programas aprobados ni la documentación exigida por ANAC. <a href="https://www.argentina.gob.ar/anac/resoluciones-disposiciones-y-otras-normas-aeronauticas/raac" target="_blank" rel="noopener noreferrer">Consultar RAAC oficiales</a>.</p></div><section id="maintOverview" class="maint-overview" aria-label="Resumen de mantenimiento"></section>
+<div class="maint-status-wrap"><p id="sync" role="status">Cargando tu información...</p><p class="maint-notice">Apta para seguimiento de uso privado, instrucción o ambos, con el régimen declarado por el usuario. Es un registro auxiliar privado: no certifica aeronavegabilidad, no autoriza retorno al servicio ni reemplaza libretas, firmas, programas aprobados ni la documentación exigida por ANAC. <a href="https://www.argentina.gob.ar/anac/resoluciones-disposiciones-y-otras-normas-aeronauticas/raac" target="_blank" rel="noopener noreferrer">Consultar RAAC oficiales</a>.</p></div><section id="maintOverview" class="maint-overview" aria-label="Resumen de mantenimiento"></section>
 <main id="app" class="max-w-7xl mx-auto p-4"></main>
 
 
@@ -172,14 +177,14 @@ body .overflow-x-auto{scrollbar-color:#697e7d transparent}
 
 const $=i=>document.getElementById(i),uid=()=>crypto.randomUUID(),today=()=>{const d=new Date();return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')},v=i=>$(i).value,n=i=>Math.min(1e6,Math.max(0,parseFloat($(i).value)||0));
 
-let S={ac:[],sv:[],ct:[],lg:[],rc:[],mx:[],ad:[],ip:[],ie:[],sel:null,tab:'a',hz:12};
+let S={ac:[],sv:[],ct:[],lg:[],rc:[],mx:[],ad:[],ip:[],ie:[],dx:[],sel:null,tab:'a',hz:12};
 
 let db=null,currentUser=null,hangarAircraft='',saveQueue=Promise.resolve();
 const showStatus=message=>{const x=$('sync');if(x)x.textContent=message};
 const validData=d=>d&&typeof d==='object'&&['ac','sv','ct','lg','rc'].every(k=>Array.isArray(d[k])&&d[k].length<=({ac:50,sv:300,ct:2000,lg:6000,rc:200}[k]))&&
  ['ac','sv','ct','lg','rc'].every(k=>d[k].every(x=>x&&typeof x==='object'&&typeof x.id==='string'&&/^[a-zA-Z0-9_-]{1,64}$/.test(x.id)))&&
  d.ac.every(a=>typeof a.reg==='string'&&a.reg.length<=50)&&
- ['mx','ad','ip','ie'].every(k=>d[k]===undefined||(Array.isArray(d[k])&&d[k].length<=({mx:3000,ad:1000,ip:250,ie:3000}[k])&&d[k].every(x=>x&&typeof x==='object'&&typeof x.id==='string'&&/^[a-zA-Z0-9_-]{1,64}$/.test(x.id))));
+ ['mx','ad','ip','ie','dx'].every(k=>d[k]===undefined||(Array.isArray(d[k])&&d[k].length<=({mx:3000,ad:1000,ip:250,ie:3000,dx:2000}[k])&&d[k].every(x=>x&&typeof x==='object'&&typeof x.id==='string'&&/^[a-zA-Z0-9_-]{1,64}$/.test(x.id))));
 function save(){
  if(!currentUser||!db){showStatus('Sin conexión: los cambios no están guardados.');return}
  const payload=JSON.parse(JSON.stringify(S));
@@ -220,7 +225,21 @@ const SEL=(id,l,o)=>`<label class="text-[11px] text-slate-400">${l}<select id="$
 
 const fd=t=>isFinite(t)?new Date(t).toLocaleDateString('es-AR'):'—',f1=x=>(+x).toFixed(1);
 
-const TABS=[['a','Aeronaves'],['x','Inspecciones'],['k','Componentes'],['s','Controles'],['b','Bitácora'],['i','Intervenciones'],['d','Directivas DA'],['r','Recurrentes'],['p','Proyección']];
+const TABS=[['a','Aeronaves'],['x','Inspecciones'],['n','Novedades'],['k','Componentes'],['s','Controles'],['b','Bitácora'],['i','Intervenciones'],['d','Directivas DA'],['r','Recurrentes'],['p','Proyección']];
+const OP_LABELS={unknown:'Régimen por definir',private:'Uso privado',instruction:'Instrucción',mixed:'Privado e instrucción'};
+const OP_OPTIONS='<option value="unknown">Por definir</option><option value="private">Uso privado</option><option value="instruction">Instrucción</option><option value="mixed">Privado e instrucción</option>';
+const COMP_OPTIONS='<option value="unknown">Por confirmar</option><option value="yes">Sí, por compensación y aeronave provista</option><option value="no">No se dan ambas condiciones</option>';
+const opUse=a=>OP_LABELS[a?.operation?.use]?a.operation.use:'unknown';
+const hasInstruction=a=>['instruction','mixed'].includes(opUse(a));
+const flightOptions=a=>opUse(a)==='private'?'<option value="private">Privado</option>':opUse(a)==='instruction'?'<option value="instruction">Instrucción</option>':'<option value="private">Privado</option><option value="instruction">Instrucción</option>';
+function regimeNotice(a){
+ const o=a?.operation||{},use=opUse(a),comp=o.compensation||'unknown';
+ if(use==='unknown')return 'Definí el uso de la aeronave para identificar qué inspecciones corresponde verificar. No se infiere el régimen a partir del modelo.';
+ if(hasInstruction(a)&&comp==='unknown')return 'Hay actividad de instrucción: confirmá si se imparte por compensación en una aeronave provista por quien la brinda; esa condición puede activar la inspección de 100 horas de RAAC 91.409(b).';
+ if(hasInstruction(a)&&comp==='yes')return 'Instrucción por compensación con aeronave provista: verificá inspección de 100 horas conforme a RAAC 91.409(b), o el régimen alternativo expresamente aplicable, además del resto de exigencias.';
+ if(hasInstruction(a))return 'El uso de instrucción por sí solo no demuestra que corresponda la regla de 100 horas de 91.409(b). Confirmá las condiciones de operación y el programa aplicable.';
+ return 'Uso privado: seguí la inspección anual o el programa aplicable, las DA y las limitaciones de aeronavegabilidad. No se presume inspección de 100 horas solo por uso privado.';
+}
 
 const CN={f:'Fuselaje',m:'Motor',p:'Hélice'};
 function CP(a){
@@ -274,9 +293,17 @@ function applyRc(){
 
 // ---------- ACCIONES ----------
 
-function addAc(){const r=v('a_r').trim().toUpperCase();if(!r)return alert('Ingrese la matrícula.');if(S.ac.some(a=>a.reg===r))return alert('Esa matrícula ya está registrada.');const a={id:uid(),reg:r,type:v('a_t'),h:n('a_h'),c:n('a_c'),hpm:n('a_hm'),cpm:n('a_cm')};S.ac.push(a);S.sel=a.id;save();R()}
+function addAc(){const r=v('a_r').trim().toUpperCase();if(!r)return alert('Ingrese la matrícula.');if(S.ac.some(a=>a.reg===r))return alert('Esa matrícula ya está registrada.');const a={id:uid(),reg:r,type:v('a_t'),h:n('a_h'),c:n('a_c'),hpm:n('a_hm'),cpm:n('a_cm'),operation:{use:v('a_use'),compensation:'unknown',operator:'',program:'',updated:today()}};S.ac.push(a);S.sel=a.id;save();R()}
 
-function delAc(id){if(!confirm('¿Borrar la aeronave y todos sus datos?'))return;S.ac=S.ac.filter(a=>a.id!=id);const sv=S.sv.filter(s=>s.ac==id).map(s=>s.id);S.sv=S.sv.filter(s=>s.ac!=id);S.ct=S.ct.filter(c=>!sv.includes(c.sv));S.lg=S.lg.filter(l=>l.ac!=id);S.rc=S.rc.filter(r=>r.ac!=id);S.mx=S.mx.filter(r=>r.ac!=id);S.ad=S.ad.filter(r=>r.ac!=id);S.ip=S.ip.filter(r=>r.ac!=id);S.ie=S.ie.filter(r=>r.ac!=id);S.sel=S.ac[0]?.id||null;save();R()}
+function saveOperation(){const a=A();if(!a)return;
+ const use=v('op_use'),compensation=v('op_comp'),operator=recordValue('op_operator',140),program=recordValue('op_program',250);
+ if(hasInstruction({operation:{use}})&&compensation==='unknown'&&!confirm('Aún no se confirmó si la instrucción es por compensación con aeronave provista. La app mostrará el régimen como pendiente de verificar. ¿Continuar?'))return;
+ if(!confirm('¿Guardar este perfil de operación? La aplicabilidad reglamentaria debe ser corroborada con documentación vigente.'))return;
+ a.operation={use,compensation:hasInstruction({operation:{use}})?compensation:'unknown',operator,program,updated:today()};
+ save();R();
+}
+
+function delAc(id){if(!confirm('¿Borrar la aeronave y todos sus datos?'))return;S.ac=S.ac.filter(a=>a.id!=id);const sv=S.sv.filter(s=>s.ac==id).map(s=>s.id);S.sv=S.sv.filter(s=>s.ac!=id);S.ct=S.ct.filter(c=>!sv.includes(c.sv));S.lg=S.lg.filter(l=>l.ac!=id);S.rc=S.rc.filter(r=>r.ac!=id);S.mx=S.mx.filter(r=>r.ac!=id);S.ad=S.ad.filter(r=>r.ac!=id);S.ip=S.ip.filter(r=>r.ac!=id);S.ie=S.ie.filter(r=>r.ac!=id);S.dx=S.dx.filter(r=>r.ac!=id);S.sel=S.ac[0]?.id||null;save();R()}
 
 function addManual(){const a=A(),h=n('m_h'),c=n('m_c');if(!h&&!c)return alert('Ingrese horas y/o ciclos.');entry(a,{kind:'m',t:v('m_t'),date:v('m_d')||today(),h,c,from:'',to:'',pilot:'',note:v('m_n')||'Control manual'});save();R()}
 
@@ -301,7 +328,7 @@ function renew(id){
  save();R();
 }
 
-function addLog(){const a=A(),h=n('l_h'),c=n('l_c');if(!h&&!c)return alert('Ingrese horas de vuelo y/o ciclos.');entry(a,{kind:'f',date:v('l_d')||today(),h,c,from:v('l_f').toUpperCase(),to:v('l_t').toUpperCase(),pilot:v('l_p'),note:v('l_n')});save();R()}
+function addLog(){const a=A(),h=n('l_h'),c=n('l_c');if(!h&&!c)return alert('Ingrese horas de vuelo y/o ciclos.');const use=v('l_use');if(opUse(a)==='private'&&use!=='private'||opUse(a)==='instruction'&&use!=='instruction')return alert('Verificá el uso de la aeronave antes de registrar este vuelo.');entry(a,{kind:'f',date:v('l_d')||today(),h,c,from:v('l_f').toUpperCase(),to:v('l_t').toUpperCase(),pilot:v('l_p'),instructor:recordValue('l_instructor',140),use,note:v('l_n')});save();R()}
 
 function delLog(id){const l=S.lg.find(x=>x.id==id);if(!l)return;if(!confirm('¿Retirar esta anotación privada y recalcular las horas y ciclos?'))return;const a=S.ac.find(x=>x.id==l.ac);if(a){const t=l.t||'fmp';CP(a);if(t.includes('f')){a.h-=l.h;a.c-=l.c}for(const k of ['m','p'])if(t.includes(k)){const z=a.cp[k];z.h-=l.h;z.c-=l.c;z.tso-=l.h}}S.lg=S.lg.filter(x=>x.id!=id);save();R()}
 
@@ -334,7 +361,7 @@ function impo(i){const f=i.files[0];if(!f)return;
  if(f.size>500000){alert('El respaldo supera el tamaño permitido.');i.value='';return}
  const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!validData(d))throw 0;
  if(!confirm('¿Reemplazar tus registros actuales por este respaldo?'))return;
- S={ac:d.ac,sv:d.sv,ct:d.ct,lg:d.lg,rc:d.rc,mx:d.mx||[],ad:d.ad||[],ip:d.ip||[],ie:d.ie||[],sel:d.sel||null,tab:'a',hz:d.hz||12};
+ S={ac:d.ac,sv:d.sv,ct:d.ct,lg:d.lg,rc:d.rc,mx:d.mx||[],ad:d.ad||[],ip:d.ip||[],ie:d.ie||[],dx:d.dx||[],sel:d.sel||null,tab:'a',hz:d.hz||12};
  if(!S.ac.some(a=>a.id===S.sel))S.sel=S.ac[0]?.id||null;save();R();
  }catch(e){alert('Archivo no válido.')}};r.readAsText(f);i.value=''}
 
@@ -380,6 +407,20 @@ function removeAD(id){
  if(!confirm('¿Retirar esta anotación auxiliar de directiva de aeronavegabilidad?'))return;
  S.ad=S.ad.filter(x=>x.id!==id);save();R();
 }
+function addDiscrepancy(){
+ if(!A())return;
+ const desc=recordValue('dx_desc',650),reportedBy=recordValue('dx_who',140),date=v('dx_date');
+ if(!date||date>today()||!desc||!reportedBy)return alert('Registrá fecha válida, descripción y persona que comunicó la novedad.');
+ S.dx.push({id:uid(),ac:S.sel,date,reportedBy,component:v('dx_component'),description:desc,operation:v('dx_use'),status:'open',added:new Date().toISOString()});
+ save();R();
+}
+function closeDiscrepancy(id){
+ const item=S.dx.find(x=>x.id===id&&x.ac===S.sel);if(!item||item.status==='closed')return;
+ const reference=recordValue('dx_ref_'+id,250),responsible=recordValue('dx_tech_'+id,160),date=v('dx_closed_'+id);
+ if(!reference||!responsible||!date||date<item.date||date>today())return alert('Para cerrar el seguimiento, transcribí la fecha, la referencia documental y el responsable de la resolución asentada.');
+ if(!confirm('¿Consta la resolución en un registro técnico firmado? Esta acción solo cierra la novedad digital; no aprueba el retorno al servicio.'))return;
+ Object.assign(item,{status:'closed',closedDate:date,reference,responsible});save();R();
+}
 function renderOverview(){
  const node=$('maintOverview');if(!node)return;
  const a=A();if(!currentUser||!a){node.innerHTML='';return;}
@@ -389,10 +430,11 @@ function renderOverview(){
  const tile=(value,description,level='')=>'<article class="maint-metric '+level+'"><strong>'+esc(value)+'</strong><span>'+description+'</span></article>';
  const plans=(S.ip||[]).filter(x=>x.ac===a.id&&!x.archived);
  const inspFlag=plans.filter(x=>['danger','warn'].includes(inspectionState(x,a).level)).length;
+ const openDx=(S.dx||[]).filter(x=>x.ac===a.id&&x.status!=='closed').length;
  node.innerHTML=tile(f1(a.h)+' h','Fuselaje · tiempo total')+
  tile(inspFlag?String(inspFlag)+' por revisar':plans.length?String(plans.length)+(plans.length===1?' configurada':' configuradas'):'Sin inspecciones','Seguimiento reglamentario',inspFlag?'caution':'')+
  tile(over?String(over)+' por revisar':soon?String(soon)+' próximos':cs.length?String(cs.length)+' configurados':'Sin controles cargados','Controles de mantenimiento',over?'alert':soon?'caution':'')+
- tile(pending?String(pending)+' por revisar':ads.length?String(ads.length)+' registradas':'Sin directivas cargadas','DA · estado declarado',pending?'caution':'');
+ tile(openDx?String(openDx)+' abierta(s)':pending?String(pending)+' DA por revisar':'Sin novedades abiertas','Novedades técnicas / DA',openDx?'alert':pending?'caution':'');
 }
 
 
@@ -480,9 +522,11 @@ function restoreInspection(id){
 
 // ---------- VISTAS ----------
 
-function tabA(){const a=A();return`<div class="grid lg:grid-cols-2 gap-4"><div class="card p-4 space-y-2"><h2 class="font-bold text-amber-300">1 · Crear aeronave</h2>${hangarAircraft?`<div class="text-xs text-slate-300 bg-slate-900/70 p-2 rounded-lg">En Mi Hangar figura: <b>${esc(hangarAircraft)}</b><button class="btn bg-slate-700 ml-2" onclick="fromHangar()">Usar como modelo</button></div>`:''}<div class="grid grid-cols-2 gap-2">${F('a_r','Matrícula','text')}${F('a_t','Tipo / modelo','text')}${F('a_h','Horas totales fuselaje (TTAF)','number',0)}${F('a_c','Ciclos / aterrizajes totales','number',0)}${F('a_hm','Proyección: horas/mes','number',20)}${F('a_cm','Proyección: ciclos/mes','number',20)}</div><p class="text-xs text-slate-400 mt-2">Las horas iniciales de motor y hélice pueden ajustarse por separado en Componentes.</p><button class="btn bg-amber-600 w-full" onclick="addAc()">Crear aeronave</button></div>
+function tabA(){const a=A(),o=a?.operation||{};return`<div class="grid lg:grid-cols-2 gap-4"><div class="card p-4 space-y-2"><h2 class="font-bold text-amber-300">1 · Crear aeronave</h2>${hangarAircraft?`<div class="text-xs text-slate-300 bg-slate-900/70 p-2 rounded-lg">En Mi Hangar figura: <b>${esc(hangarAircraft)}</b><button class="btn bg-slate-700 ml-2" onclick="fromHangar()">Usar como modelo</button></div>`:''}<div class="grid grid-cols-2 gap-2">${F('a_r','Matrícula','text')}${F('a_t','Tipo / modelo','text')}<div class="col-span-2">${SEL('a_use','Uso previsto',OP_OPTIONS.replace('value="unknown"','value="unknown" selected'))}</div>${F('a_h','Horas totales fuselaje (TTAF)','number',0)}${F('a_c','Ciclos / aterrizajes totales','number',0)}${F('a_hm','Proyección: horas/mes','number',20)}${F('a_cm','Proyección: ciclos/mes','number',20)}</div><p class="text-xs text-slate-400 mt-2">Las horas iniciales de motor y hélice pueden ajustarse por separado en Componentes.</p><button class="btn bg-amber-600 w-full" onclick="addAc()">Crear aeronave</button></div>
 
-<div class="space-y-3">${S.ac.map(x=>`<div class="card p-3 flex items-center gap-3 ${x.id==S.sel?'!border-amber-400':''}"><div class="flex-1"><b class="text-lg">${esc(x.reg)}</b> <span class="text-xs text-slate-400">${esc(x.type)}</span><div class="text-sm text-sky-300 font-bold">Fuselaje ${f1(x.h)} h · ${Math.round(x.c)} ciclos</div><div class="text-xs text-slate-400">Motor TSO ${f1(CP(x).m.tso)} h · Hélice TSO ${f1(CP(x).p.tso)} h</div></div><button class="btn bg-sky-700" onclick="S.sel='${x.id}';save();R()">Seleccionar</button><button class="btn bg-rose-800" onclick="delAc('${x.id}')">✕</button></div>`).join('')||'<div class="text-slate-500 text-sm">Aún no hay aeronaves.</div>'}
+<div class="space-y-3">${S.ac.map(x=>`<div class="card p-3 flex items-center gap-3 ${x.id==S.sel?'!border-amber-400':''}"><div class="flex-1"><b class="text-lg">${esc(x.reg)}</b> <span class="text-xs text-slate-400">${esc(x.type)}</span><div class="text-[11px] text-amber-200">${esc(OP_LABELS[opUse(x)])}</div><div class="text-sm text-sky-300 font-bold">Fuselaje ${f1(x.h)} h · ${Math.round(x.c)} ciclos</div><div class="text-xs text-slate-400">Motor TSO ${f1(CP(x).m.tso)} h · Hélice TSO ${f1(CP(x).p.tso)} h</div></div><button class="btn bg-sky-700" onclick="S.sel='${x.id}';save();R()">Seleccionar</button><button class="btn bg-rose-800" aria-label="Eliminar aeronave ${esc(x.reg)}" onclick="delAc('${x.id}')">✕</button></div>`).join('')||'<div class="text-slate-500 text-sm">Aún no hay aeronaves.</div>'}
+
+${a?`<section class="card p-4 space-y-3"><h2 class="font-bold">2 · Perfil de operación — ${esc(a.reg)}</h2><div class="maint-regime"><strong>${esc(OP_LABELS[opUse(a)])}</strong><p>${esc(regimeNotice(a))}</p></div><div class="maint-record-grid"><div class="wide">${SEL('op_use','Modalidad de uso',OP_OPTIONS.replace('value="'+opUse(a)+'"','value="'+opUse(a)+'" selected'))}</div><div class="wide">${SEL('op_comp','¿Instrucción por compensación en aeronave provista?',COMP_OPTIONS.replace('value="'+(o.compensation||'unknown')+'"','value="'+(o.compensation||'unknown')+'" selected'))}</div><div class="wide">${F('op_operator','Propietario / explotador / escuela (si corresponde)','text',esc(o.operator||''),'maxlength="140"')}</div><div class="wide">${F('op_program','Programa, manual y revisión aplicable','text',esc(o.program||''),'maxlength="250"')}</div></div><p class="text-xs text-slate-400">Si elegís uso mixto, cada vuelo se clasifica en Bitácora, pero las horas y las inspecciones siguen perteneciendo a la misma aeronave.</p><button class="btn bg-amber-600 w-full" onclick="saveOperation()">Guardar régimen</button></section>`:''}
 
 ${a?`<div class="card p-4 space-y-2"><h2 class="font-bold text-amber-300">4 · Horas y ciclos de control manual — ${esc(a.reg)}</h2><p class="text-[11px] text-slate-500">Se actualizan los contadores de los componentes elegidos. Esta anotación manual no acredita una intervención de mantenimiento.</p><div class="grid grid-cols-2 gap-2">${F('m_d','Fecha','date',today())}${SEL('m_t','Aplica a','<option value="fmp">Todos</option><option value="f">Fuselaje</option><option value="m">Motor</option><option value="p">Hélice</option><option value="mp">Motor + Hélice</option>')}</div><div class="grid grid-cols-2 gap-2">${F('m_h','Horas')}${F('m_c','Ciclos')}</div>${F('m_n','Motivo / nota','text')}<button class="btn bg-emerald-600 w-full" onclick="addManual()">Agregar</button></div>`:''}</div></div>`}
 
@@ -514,9 +558,17 @@ function tabS(){const a=A(),sv=S.sv.filter(s=>s.ac==a.id);return`<div class="gri
 
 
 
-function tabB(){const a=A(),L=S.lg.filter(l=>l.ac==a.id).sort((x,y)=>y.date.localeCompare(x.date)).slice(0,60);return`<div class="grid lg:grid-cols-3 gap-4"><div class="card p-4 space-y-2 h-fit"><h2 class="font-bold text-amber-300">Hoja de vuelo (bitácora)</h2><div class="grid grid-cols-2 gap-2">${F('l_d','Fecha','date',today())}${F('l_p','Piloto','text')}${F('l_f','Desde','text')}${F('l_t','Hasta','text')}${F('l_h','Horas de vuelo')}${F('l_c','Ciclos / aterrizajes','number',1)}</div>${F('l_n','Observaciones','text')}<button class="btn bg-amber-600 w-full" onclick="addLog()">Registrar vuelo</button></div>
+function tabB(){const a=A(),L=S.lg.filter(l=>l.ac==a.id).sort((x,y)=>y.date.localeCompare(x.date)).slice(0,60);return`<div class="grid lg:grid-cols-3 gap-4"><div class="card p-4 space-y-2 h-fit"><h2 class="font-bold text-amber-300">Hoja de vuelo (bitácora)</h2><div class="grid grid-cols-2 gap-2">${F('l_d','Fecha','date',today())}${F('l_p','Piloto','text')}${F('l_f','Desde','text')}${F('l_t','Hasta','text')}${F('l_h','Horas de vuelo')}${F('l_c','Ciclos / aterrizajes','number',1)}<div class="col-span-2">${SEL('l_use','Uso de este vuelo',flightOptions(a))}</div><div class="col-span-2">${F('l_instructor','Instructor (si corresponde)','text','','maxlength="140"')}</div></div>${F('l_n','Observaciones','text')}<p class="text-xs text-slate-400">Los vuelos privados y de instrucción suman horas al mismo fuselaje, motor y hélice.</p><button class="btn bg-amber-600 w-full" onclick="addLog()">Registrar vuelo</button></div>
 
-<div class="lg:col-span-2 card p-3 overflow-x-auto"><table class="w-full"><thead><tr><th>Fecha</th><th>Tipo</th><th>Componente</th><th>Ruta</th><th>Piloto</th><th>Horas</th><th>Ciclos</th><th>Nota</th><th></th></tr></thead><tbody class="divide-y divide-white/5">${L.map(l=>`<tr><td>${l.date}</td><td>${l.kind=='m'?'Manual':'Vuelo'}</td><td>${compName(l.t)}</td><td>${esc(l.from)}${l.to?' → '+esc(l.to):''}</td><td>${esc(l.pilot)}</td><td>${f1(l.h)}</td><td>${l.c}</td><td class="text-slate-400">${esc(l.note)}</td><td><button class="text-rose-400" onclick="delLog('${l.id}')">✕</button></td></tr>`).join('')||'<tr><td colspan="8" class="text-slate-500">Sin registros.</td></tr>'}</tbody></table></div></div>`}
+<div class="lg:col-span-2 card p-3 overflow-x-auto"><table class="w-full"><thead><tr><th>Fecha</th><th>Tipo de vuelo</th><th>Componente</th><th>Ruta</th><th>Piloto / instructor</th><th>Horas</th><th>Ciclos</th><th>Nota</th><th></th></tr></thead><tbody class="divide-y divide-white/5">${L.map(l=>`<tr><td>${esc(l.date)}</td><td>${l.kind==='m'?'Manual':l.use==='instruction'?'Instrucción':l.use==='private'?'Privado':'Vuelo sin clasificar'}</td><td>${compName(l.t)}</td><td>${esc(l.from)}${l.to?' → '+esc(l.to):''}</td><td>${esc(l.pilot)}${l.instructor?'<div class="text-slate-400">Instructor: '+esc(l.instructor)+'</div>':''}</td><td>${f1(l.h)}</td><td>${l.c}</td><td class="text-slate-400">${esc(l.note)}</td><td><button class="text-rose-400" aria-label="Retirar anotación" onclick="delLog('${l.id}')">✕</button></td></tr>`).join('')||'<tr><td colspan="9" class="text-slate-500">Sin registros.</td></tr>'}</tbody></table></div></div>`}
+
+function tabN(){
+ const a=A(),items=(S.dx||[]).filter(d=>d.ac===a.id).slice().sort((x,y)=>(x.status==='closed')-(y.status==='closed')||String(y.date).localeCompare(String(x.date)));
+ const open=items.filter(x=>x.status!=='closed').length;
+ return `<div class="grid lg:grid-cols-3 gap-4"><section class="card p-4 h-fit space-y-3"><div class="maint-eyebrow">CONTROL DE DISCREPANCIAS</div><h2 class="font-bold">Registrar novedad</h2><p class="maint-note">Para aeronaves privadas y de instrucción. Registrá una observación informada por un piloto, instructor o responsable. No es una autorización de despacho.</p><div class="maint-record-grid">${F('dx_date','Fecha','date',today())}${SEL('dx_component','Sector','<option value="f">Fuselaje / cabina</option><option value="m">Motor</option><option value="p">Hélice</option><option value="other">Otro sistema</option>')}<div class="wide">${SEL('dx_use','Detectada durante','<option value="private">Uso privado</option><option value="instruction">Instrucción</option><option value="ground">En tierra / inspección</option>')}</div><div class="wide">${F('dx_who','Informada por','text','','maxlength="140"')}</div><div class="wide">${F('dx_desc','Descripción de la novedad','text','','maxlength="650"')}</div></div><button class="btn bg-amber-600 w-full" onclick="addDiscrepancy()">Agregar al seguimiento</button></section>
+ <section class="lg:col-span-2 space-y-3"><div class="maint-regime"><strong>${open?open+' novedad(es) abierta(s)':'Sin novedades abiertas'}</strong><p>Una novedad abierta exige evaluación conforme al procedimiento aplicable. El estado mostrado aquí no determina por sí solo la aeronavegabilidad ni habilita vuelos.</p></div>
+ ${items.map(d=>`<article class="card p-4 space-y-2"><div class="flex items-center justify-between flex-wrap gap-2"><strong>${esc(d.date)} · ${esc(d.component==='m'?'Motor':d.component==='p'?'Hélice':d.component==='f'?'Fuselaje / cabina':'Otro sistema')}</strong><span class="maint-pill ${d.status==='closed'?'':'danger'}">${d.status==='closed'?'Cerrada con referencia':'Pendiente de evaluar'}</span></div><p class="text-sm">${esc(d.description)}</p><p class="text-xs text-slate-400">Informó: ${esc(d.reportedBy)} · ${esc({private:'Privado',instruction:'Instrucción',ground:'En tierra'}[d.operation]||'Sin clasificar')}</p>${d.status==='closed'?`<div class="maint-record-line">Resolución documentada: ${esc(d.closedDate)} · ${esc(d.reference)} · ${esc(d.responsible)}</div>`:`<details class="maint-guidance"><summary>Cerrar seguimiento con constancia</summary><p>Solo si la resolución ya consta en un registro técnico firmado. Esto no supone aprobación operativa desde la aplicación.</p><div class="maint-record-grid">${F('dx_closed_'+d.id,'Fecha de resolución','date',today())}${F('dx_tech_'+d.id,'Responsable que figura en constancia','text','','maxlength="160"')}<div class="wide">${F('dx_ref_'+d.id,'Referencia a documento firmado','text','','maxlength="250"')}</div></div><button class="btn bg-amber-600 mt-3" onclick="closeDiscrepancy('${d.id}')">Registrar resolución documentada</button></details>`}</article>`).join('')||'<div class="card p-4 text-sm text-slate-400">Todavía no hay novedades técnicas registradas.</div>'}</section></div>`;
+}
 
 
 
@@ -620,11 +672,12 @@ function tabD(){
 function tabX(){
  const a=A(),plans=(S.ip||[]).filter(x=>x.ac===a.id&&!x.archived);
  const archived=(S.ip||[]).filter(x=>x.ac===a.id&&x.archived);
- return `<div class="grid lg:grid-cols-3 gap-4">
+ const needs100h=hasInstruction(a)&&a.operation?.compensation==='yes'&&!plans.some(p=>p.applies==='yes'&&['cien','prog'].includes(p.kind));
+ return `<div class="maint-regime mb-4"><strong>Régimen declarado: ${esc(OP_LABELS[opUse(a)])}</strong><p>${esc(regimeNotice(a))}</p>${a.operation?.program?`<p>Programa / manual informado: ${esc(a.operation.program)}</p>`:''}${needs100h?'<div class="maint-flag danger mt-3">No se registró seguimiento de 100 horas ni programa alternativo aplicable. Verificá el régimen vigente y su documentación antes de operar.</div>':''}</div><div class="grid lg:grid-cols-3 gap-4">
  <section class="card p-4 space-y-3 h-fit">
  <div class="maint-eyebrow">SEGUIMIENTO DE AERONAVEGABILIDAD</div>
  <h2 class="font-bold">Configurar inspección</h2>
- <p class="maint-note">Seleccioná la plantilla y confirmá su aplicabilidad según matrícula, categoría, operación y programa autorizado. Los intervalos se pueden ajustar; nunca se presuponen exigibles.</p>
+ <p class="maint-note">Seleccioná la plantilla y confirmá su aplicabilidad según matrícula, categoría, operación y programa autorizado. Los intervalos se pueden ajustar; nunca se presuponen exigibles. La inspección de 100 horas de 91.409(b) se vincula, entre otros supuestos, con instrucción por compensación en aeronave provista por quien la imparte.</p>
  ${SEL('ip_kind','Tipo / referencia','<option value="anual">Inspección anual · RAAC 91.409</option><option value="cien">Inspección de 100 horas · RAAC 91.409</option><option value="prog">Inspección progresiva o programa aprobado</option><option value="alt">Altímetro / sistema estático (IFR) · 91.411</option><option value="trans">Transpondedor ATC · 91.413</option><option value="manual">Otra inspección según programa</option>').replace('<select','<select onchange="inspectionTemplateChanged()"')}
  <div class="maint-record-grid">
  <div class="wide">${F('ip_title','Nombre de la inspección','text','Inspección anual','maxlength="140"')}</div>
@@ -637,7 +690,8 @@ function tabX(){
  <button class="btn bg-amber-600 w-full" onclick="createInspectionPlan()">Incorporar al seguimiento</button>
  <details class="maint-guidance"><summary>Guía de alcance de inspección</summary>
  <p>Para inspecciones anual y de 100 horas, el <a target="_blank" rel="noopener noreferrer" href="https://www.argentina.gob.ar/sites/default/files/raac_parte_43.pdf">Apéndice D de RAAC 43</a> aborda, según corresponda: documentación y condición general, célula y mandos, cabina, motor, hélice, tren, alas y equipamiento.</p>
- <p>El programa y las instrucciones de aeronavegabilidad continuada aplicables a cada modelo determinan el procedimiento. Esta guía no es una lista de inspección para ejecutar trabajos.</p>
+ <p>El <a href="https://www.argentina.gob.ar/node/361158" target="_blank" rel="noopener noreferrer">material ANAC sobre programas de inspección</a> distingue un programa de inspección del programa de mantenimiento completo. También deben seguirse componentes con vida limitada, DA y limitaciones de aeronavegabilidad.</p>
+ <p>En operaciones de instrucción, verificá además las exigencias del centro o escuela, si corresponde. Esta guía no es una lista de inspección para ejecutar trabajos. La proyección por TTAF debe contrastarse con el tiempo en servicio y el programa oficial de la aeronave.</p>
  </details>
  </section>
  <div class="lg:col-span-2 space-y-3">
@@ -699,7 +753,7 @@ function R(){
 
  if(!S.sel&&S.ac[0])S.sel=S.ac[0].id;
 
- const f={a:tabA,x:tabX,k:tabK,s:tabS,b:tabB,i:tabI,d:tabD,r:tabR,p:tabP}[S.tab];
+ const f={a:tabA,x:tabX,n:tabN,k:tabK,s:tabS,b:tabB,i:tabI,d:tabD,r:tabR,p:tabP}[S.tab];
 
  $('app').innerHTML=!currentUser?'<div class="card p-6">Iniciando sesión y recuperando tus datos...</div>':S.tab=='a'||A()?f():'<div class="card p-6 text-center text-slate-400">Primero cree una aeronave en la pestaña “Aeronaves”.</div>';
 
