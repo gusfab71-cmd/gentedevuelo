@@ -381,6 +381,10 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
 .flight-essential-card .flight-ai-consent{background:#1e3441}
 .flight-essential-result{border-top:1px solid #607b90;margin-top:17px;padding-top:16px}
 .flight-essential-result .flight-ai-text{white-space:pre-wrap;line-height:1.75;color:#edf4f8}
+.flight-ai-severity{display:inline-block;padding:0 7px;border-radius:5px;font-weight:800;line-height:1.55;border:1px solid currentColor}
+.flight-ai-severity[data-level="attention"]{color:#ffadab;background:#603339}
+.flight-ai-severity[data-level="caution"]{color:#ffdb92;background:#4f442e}
+.flight-ai-severity[data-level="checked"]{color:#a8dfcc;background:#25483e}
 .flight-essential-pronarea-alert{background:#203646;border:1px solid #688aa3;padding:10px 13px;border-radius:10px;color:#e3edf5;font-size:12px;line-height:1.65;font-weight:700;margin:10px 0 15px}
 .flight-essential-pronarea-alert[data-status="fuera_del_horario"],.flight-essential-pronarea-alert[data-status="sin_validez_legible"]{background:#283e4c;border-color:#93b4cd;color:#fff}
 .flight-nav-settings{border:1px solid #65879d;background:#1c3443;border-radius:12px;padding:15px 16px;margin:15px 0}
@@ -850,7 +854,7 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
 <details class="ops-accordion" id="ops-meteo"><summary class="ops-accordion-toggle"><span class="ops-accordion-number">05</span><span class="ops-accordion-name"><strong>Informe esencial del vuelo</strong><span>Una síntesis meteorológica con navegación estimada para tu plan</span></span><span class="ops-accordion-arrow" aria-hidden="true"></span></summary><div class="ops-accordion-content">
 <div class="flight-essential-card" id="informe-esencial" aria-labelledby="flight-essential-heading">
   <div class="card-header"><div><span class="card-kicker">RECOMENDADO · UNA SOLA CONSULTA A LA IA</span><h2 id="flight-essential-heading">Informe esencial del vuelo</h2></div></div>
-  <p class="sub">Resumen claro de los puntos realmente importantes para tu origen, destino, alternativo, ruta, altitudes y salida UTC. Reúne tiempo observado, pronósticos disponibles, peligros significativos, precauciones y verificaciones pendientes, sin generar varios informes por separado.</p>
+  <p class="sub">Un solo briefing de 200 a 300 palabras: plan, meteorología, riesgos, navegación y combustible, información pendiente y precauciones. Las advertencias explican qué se detectó, dónde y en qué boletín; no autorizan el vuelo.</p>
   <p class="flight-essential-note">El informe utiliza únicamente los boletines y el plan cargados. Si faltan horarios de llegada o datos oficiales, lo aclarará. Es orientativo y no autoriza el vuelo. <strong>Una solicitud consume tokens de la API compartida con Shimoda.</strong></p>
   <section class="flight-nav-settings" id="flight-nav-settings" aria-labelledby="flight-nav-title">
     <div class="card-header"><div><span class="card-kicker">COMPLEMENTO DE NAVEGACIÓN · CÁLCULO LOCAL</span><h3 id="flight-nav-title">Rumbo corregido y GS estimada</h3></div></div>
@@ -1629,6 +1633,39 @@ el('copy-report').addEventListener('click',async()=>{
    if($('flight-pilot-question').value.trim())
      $('flight-pilot-status').textContent='Confirmá el consumo de tokens antes de enviar.';
  });
+ function pronareaStartDateUtc(){
+   const source=$('flight-pronarea').value.toUpperCase();
+   const header=/\bPRONAREA\s+FIR\s+[A-Z]{3,4}\s+VALIDEZ\s+(\d{4})(?!\d)/.exec(source);
+   if(!header)return null;
+   const period=window.GDV_PRONAREA_WIND?.resolveWindow?.(header[1],new Date(iso('flight-time')));
+   return period?new Date(period.start).toISOString().slice(0,10):null;
+ }
+ function essentialNavigationSummary(){
+   const number=(value,unit)=>Number.isFinite(value)?String(Math.round(value*10)/10)+' '+unit:'Pendiente';
+   const tas=Number($('flight-nav-tas')?.value);
+   const snapshots=window.GDV_FLIGHT_NAV?.snapshot?.()||[];
+   const legs=snapshots.slice(0,9).map((r,index)=>
+     'Pierna '+(index+1)+' '+String(r.name||'').slice(0,80)+': '+
+     number(r.distance_nm,'NM')+', GS '+number(r.gs_kt,'kt')+', viento '+
+     number(r.wind_true_from_deg,'°T')+' / '+number(r.wind_speed_kt,'kt')+
+     ', tiempo '+number(Number.isFinite(r.distance_nm)&&Number.isFinite(r.gs_kt)&&r.gs_kt>0?r.distance_nm/r.gs_kt*60:null,'min')+'.');
+   const fuel=$('flight-fuel-details')?.textContent?.trim()||'Combustible pendiente de cálculo.';
+   return ['DATOS ESTIMADOS POR CÁLCULO LOCAL; NO SON FUENTES OFICIALES',
+     'TAS declarada: '+(tas>0&&Number.isFinite(tas)?number(tas,'kt'):'Pendiente'),
+     ...legs,'Resumen de combustible y horario:\n'+fuel.slice(0,1100)].join('\n').slice(0,2400);
+ }
+ function setEssentialAnalysis(target,answer){
+   const levels={ATENCIÓN:'attention',PRECAUCIÓN:'caution',VERIFICADO:'checked'};
+   const parts=answer.split(/(ATENCIÓN|PRECAUCIÓN|VERIFICADO)(?=\s*:)/g);
+   const fragment=document.createDocumentFragment();
+   for(const part of parts){
+     if(levels[part]){
+       const badge=document.createElement('span');badge.className='flight-ai-severity';
+       badge.dataset.level=levels[part];badge.textContent=part;fragment.append(badge);
+     }else fragment.append(document.createTextNode(part));
+   }
+   target.replaceChildren(fragment);
+ }
  function preparePayload(mode,targetStatus){
    // El informe esencial tiene su propio consentimiento. PRONAREA puede
    // omitirse si ya se han cargado boletines meteorológicos automáticos.
@@ -1718,11 +1755,12 @@ el('copy-report').addEventListener('click',async()=>{
      route:routeText,planned_at_utc:iso('flight-time'),
      ...(mode==='essential'?{route_legs:legHeights.map((alt,index)=>({
        from:nodes[index],to:nodes[index+1],altitude_ft:alt
-     }))}:{}),
+     })),navigation_summary_text:essentialNavigationSummary()}:{}),
      cruise_altitude_ft:Number($('flight-alt').value),
      flight_rules:$('flight-rules').value,firs,question,
      pronarea_text:$('flight-pronarea').value.trim(),
       pronarea_official_checked:$('flight-pronarea-confirm').checked,
+      pronarea_valid_from_date_utc:pronareaStartDateUtc(),
       atis_text:$('flight-atis').value.trim(),
       planned_end_utc:window.GDV_FLIGHT_PRONAREA_GATE?.estimatedArrivalUtc()||null,
      source_snapshot:loadedReports,
@@ -1786,7 +1824,8 @@ el('copy-report').addEventListener('click',async()=>{
        .replace(/^\s*#{1,4}\s+/gm,'')
        .replace(/\n{3,}/g,'\n\n')
        .trim();
-     $(elements.text).textContent=answer;
+     if(mode==='essential')setEssentialAnalysis($(elements.text),answer);
+     else $(elements.text).textContent=answer;
      $(elements.time).textContent='Generado: '+
        new Date(response.generated_at_utc).toLocaleString('es-AR',{
          timeZone:'America/Argentina/Buenos_Aires'

@@ -53,6 +53,36 @@ function pronareaHourCheck(text:string,plannedAtUtc:string){
  }
  return {status:"horario_compatible_fecha_no_confirmada",windows};
 }
+// Verificación UTC local y determinística antes de usar IA.
+function verifiedPronareaWindow(text:string,plannedAtUtc:string,validFromDate:string,arrivalUtc:string){
+ if(!text||text.length<40)return {ok:false,reason:"Pegá un PRONAREA completo y actualizado."};
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(validFromDate))return {ok:false,reason:"Indicá la fecha UTC de inicio de validez del PRONAREA."};
+ const startDay=new Date(validFromDate+"T00:00:00Z");
+ if(!Number.isFinite(startDay.getTime())||startDay.toISOString().slice(0,10)!==validFromDate)
+  return {ok:false,reason:"Fecha del PRONAREA incorrecta."};
+ const departure=new Date(plannedAtUtc),end=new Date(arrivalUtc);
+ if(!Number.isFinite(departure.getTime())||!Number.isFinite(end.getTime())||end<=departure||
+    end.getTime()-departure.getTime()>72*3600000)
+  return {ok:false,reason:"Falta una ETA UTC válida de las piernas. Completá navegación antes de usar IA."};
+ const windows=[...text.toUpperCase().matchAll(/\bPRONAREA\s+FIR\s+([A-Z]{3,4})\s+VALIDEZ\s+(\d{4})(?!\d)/g)];
+ if(!windows.length)return {ok:false,reason:"No se encuentra la cabecera FIR / VALIDEZ HH-HH del PRONAREA."};
+ for(const m of windows){
+  const from=Number(m[2].slice(0,2)),to=Number(m[2].slice(2));
+  if(from>23||to>24||from===to)return {ok:false,reason:"El PRONAREA tiene horas de validez incorrectas."};
+  const begin=startDay.getTime()+from*3600000,finish=startDay.getTime()+to*3600000+(to<=from?86400000:0);
+  if(departure.getTime()<begin||departure.getTime()>=finish)
+   return {ok:false,reason:"PRONAREA "+m[1]+" "+m[2]+" no cubre la salida UTC. Actualizá el boletín."};
+  if(end.getTime()>=finish)
+   return {ok:false,reason:"PRONAREA "+m[1]+" "+m[2]+" no cubre el arribo previsto UTC. Actualizá el boletín."};
+ }
+ return {ok:true,reason:"Fecha declarada y horas compatibles, pendiente confirmación documental oficial."};
+}
+function pronareaCoversFirs(text:string,firs:string[]){
+ const headers=[...text.toUpperCase().matchAll(/\bPRONAREA\s+FIR\s+([A-Z]{3,4})\s+VALIDEZ\s+\d{4}(?!\d)/g)].map(m=>m[1]);
+ const aliases:Record<string,string[]>={SAEF:["EZE","SAEF"],SACF:["CBA","COR","SACF"],
+   SAMF:["MZA","SAMF"],SARR:["RES","SARR"],SAVF:["CRV","SAVF"]};
+ return firs.every(fir=>(aliases[fir]||[fir]).some(token=>headers.includes(token)));
+}
 // TAF: solo descartar cuando se pudo interpretar sin ambigüedad su
 // encabezado ICAO + DDHHMMZ + DDHH/DDHH y termina ANTES del despegue UTC.
 // No se asignan grupos a un arribo sin ETA.
@@ -249,6 +279,8 @@ Deno.serve(async request=>{
     return json({error:"Las piernas declaradas no permiten seleccionar viento en altura."},400);
   const routeLegs:{from:string;to:string;altitude_ft:number}[]=mode==="essential"
     ?receivedLegs.map((leg:any)=>({from:leg.from.trim(),to:leg.to.trim(),altitude_ft:leg.altitude_ft})):[];
+  const navigationSummary=mode==="essential"?asString(input?.navigation_summary_text,2400):null;
+  const arrivalEstimate=mode==="essential"?asString(input?.planned_end_utc,40):null;
   if(routeLegs.length&&(routeLegs[0].from.toUpperCase()!==origin||
     routeLegs[routeLegs.length-1].to.toUpperCase()!==destination||
     routeLegs.some((leg,i)=>i&&leg.from.toUpperCase()!==routeLegs[i-1].to.toUpperCase())))
@@ -275,6 +307,7 @@ Deno.serve(async request=>{
       :[];
   const pronarea=asString(input?.pronarea_text,12000);
   const notam=asString(input?.notam_text,12000);
+  const atis=asString(input?.atis_text,2500)||"";
   // La recepción se registra en el servidor; no es fecha de emisión ni certificación de vigencia.
   const documentsReceivedAtUtc = new Date().toISOString();
   const firs=input?.firs;
@@ -294,13 +327,21 @@ Deno.serve(async request=>{
   if(pronarea&&pronarea.length<40)
     return json({error:"El PRONAREA manual es incompleto; cargalo entero o dejalo vacío."},400);
   const pronareaCheck=pronareaHourCheck(pronarea||"",planned);
-  const pronareaUsable=pronareaCheck.status==="horario_compatible_fecha_no_confirmada";
+  const strictWindow=verifiedPronareaWindow(pronarea||"",planned||"",
+    asString(input?.pronarea_valid_from_date_utc,10)||"",asString(input?.planned_end_utc,40)||"");
+  if(strictWindow.ok&&!pronareaCoversFirs(pronarea||"",firs))
+    return json({error:"IA bloqueada sin consumo de tokens: faltan PRONAREA de una o más FIR declaradas en el plan."},400);
+  if(input?.pronarea_official_checked!==true||!strictWindow.ok)
+    return json({error:"IA bloqueada sin consumo de tokens: "+
+      (input?.pronarea_official_checked===true?strictWindow.reason:
+        "Confirmá fecha, emisión y FIR del PRONAREA en el SMN.")},400);
+  const pronareaUsable=strictWindow.ok && pronareaCheck.status==="horario_compatible_fecha_no_confirmada";
   const pronareaStatus=pronareaCheck.status==="fuera_del_horario"
     ?"PRONAREA FUERA DE VALIDEZ HORARIA: "+pronareaCheck.windows.join(", ")+" UTC; salida "+new Date(plannedMs).toISOString().slice(11,16)+" UTC. NO UTILIZAR PRONAREA PARA ESTE VUELO; buscar boletín oficial vigente."
     :pronareaCheck.status==="sin_validez_legible"
       ?"PRONAREA SIN VALIDEZ LEGIBLE; no se usa para pronóstico ni viento hasta confirmar horario y fecha."
       :pronareaCheck.status==="horario_compatible_fecha_no_confirmada"
-        ?"Horario compatible con PRONAREA "+pronareaCheck.windows.join(", ")+" UTC, pero fecha de emisión y vigencia real NO verificadas; consultar SMN."
+        ?"PRONAREA "+pronareaCheck.windows.join(", ")+" UTC: fecha y emisión declaradas por el piloto. La autenticidad y vigencia documental real NO están certificadas por el servidor; verificar SMN."
         :"PRONAREA no aportado.";
   // Única fuente documental de la IA: datos cargados en la Mesa.
   // La función NO hace nuevas consultas meteorológicas ni consulta sitios externos.
@@ -363,7 +404,7 @@ Deno.serve(async request=>{
     "REGLA ESTRICTA: las condiciones meteorológicas y operacionales SOLO pueden proceder del plan y de METAR, TAF, SIGMET o PRONAREA efectivamente cargados. No agregues fenómenos, pronósticos, rutas, alturas, tiempos ni hechos externos. Se permite aplicar exclusivamente el significado estándar de las abreviaturas aeronáuticas para TRADUCIR a lenguaje común lo que aparece escrito, no para fabricar observaciones o pronósticos.",
     "Cuando un dato necesario no esté literalmente respaldado por un boletín aportado, escribí DATO NO DISPONIBLE y mencioná qué parte falta. No presentes como hecho ni como condición favorable nada no documentado. Cada afirmación operacional concreta debe asociarse al producto que la contiene, indicando aeródromo/FIR, emisión y vigencia SOLO cuando figuren en su texto.",
     "No deduzcas que no hay SIGMET, NOTAM, tormentas, engelamiento ni turbulencia por falta de informes. No declares aptitud operacional del vuelo. Si falta evidencia, decí 'Dato no disponible en Flight Operations' e identificá el boletín faltante. No supongas que un fenómeno pronosticado para una región afecta el corredor del vuelo sin delimitación geográfica documentada.",
-    "OBJETIVO: explicá qué dicen los boletines de salida, destino, alternativo y tramos, referido a la HORA UTC PROGRAMADA y a la ALTITUD DECLARADA DE CADA PIERNA. Solo para pilot_question podés abordar preguntas operacionales si hay datos suficientes en el contenido cargado. No calcules distancias, rumbos, deriva, GS, ETE, ETA ni combustible: para eso existe FlightPrep NAV.",
+    "OBJETIVO: explicá qué dicen los boletines de salida, destino, alternativo y tramos, referido a la HORA UTC PROGRAMADA y a la ALTITUD DECLARADA DE CADA PIERNA. Solo para pilot_question podés abordar preguntas operacionales si hay datos suficientes en el contenido cargado. No calcules ni recalcules distancias, rumbos, deriva, GS, ETE, ETA ni combustible. En el informe esencial podés interpretar las cifras que YA calculó la interfaz, indicando siempre que son estimaciones sujetas a verificación.",
     "FORMATO OBLIGATORIO: castellano argentino claro, sereno y breve, dirigido a una persona sin formación para decodificar METAR/TAF/SIGMET/PRONAREA. Comenzá cada informe con 'VUELO ANALIZADO:' seguido de aeródromos en palabras, salida prevista UTC y altitud en pies AMSL del plan. Usá títulos cortos, espacios entre puntos y oraciones completas. NO uses Markdown, asteriscos, comillas alrededor de códigos, tablas, siglas sin explicar, bloques copiados del boletín ni cadenas crudas de METAR, TAF, SIGMET o PRONAREA. En vez de 'BKN015, 4000 BR', decí por ejemplo 'cielo con abundantes nubes, base a 1.500 pies sobre el aeródromo; visibilidad de 4 km con neblina' SOLO SI esos códigos figuran realmente y corresponden a ese lugar. Ese ejemplo es léxico, no un dato para incorporar.",
     "En cada apartado: primero EXPLICACIÓN DEL DATO, después QUÉ SIGNIFICA PARA ESTE VUELO y al final QUÉ NO SE SABE cuando importe. Traducí las unidades conservando nudos para viento, pies para altura, metros o kilómetros para visibilidad y °C para temperatura. No confundas base de nube sobre el aeródromo (AGL) con altitud de vuelo sobre nivel del mar (AMSL); no compares directamente ambas sin elevación y otros datos suficientes.",
     "VIGENCIAS: el METAR indica una observación en su hora de emisión, no condiciones aseguradas a la hora programada de salida. El TAF es un pronóstico para una ventana definida, no para toda la ruta. Compará con la hora UTC de salida solo si la fecha y la vigencia constan; no asignés a destino o alternativo una hora de uso sin ETA. SIGMET y PRONAREA solo afectan la ruta concreta cuando el texto permite ubicar sector, nivel y período.",
@@ -372,7 +413,7 @@ Deno.serve(async request=>{
     "La comprobación horaria de SIGMET del servidor prevalece: si indica VENCIDO ANTES de la salida NO lo presentes como fenómeno actual ni riesgo SIGMET vigente. Podés mencionar que hubo un aviso antiguo ya vencido, indicando que corresponde comprobar nuevos avisos oficiales. Si indica vigencia no confirmable, NO lo declares vigente. Tampoco confundas engelamiento por encima de FL070 con afectación confirmada de un vuelo a 4.500 pies.",
     "Mantené el estado de METAR y TAF como observación o pronóstico en sus instantes correspondientes: una observación antigua no describe las condiciones presentes. No afirmes que un TAF garantiza el tiempo real a una hora concreta.",
     mode==="essential"
-      ?"INFORME ÚNICO ESENCIAL: hacé UNA SOLA síntesis de 140 a 220 palabras en castellano común, específica para el origen, destino, alternativo, las piernas y altitudes declaradas, y la hora UTC prevista. Estructurala en seis rótulos cortos: 1. PLAN (exclusivamente ruta, escalas, hora UTC, altitudes y reglas; PROHIBIDO repetir en este punto meteorología de salida, METAR ni TAF); 2. SALIDA (describí UNA SOLA VEZ en este apartado el METAR observado y el TAF solo para la hora prevista si está vigente); 3. EN RUTA Y ALTITUDES (PRONAREA y SIGMET realmente relacionados con las piernas, sin suposiciones geográficas); 4. DESTINO Y ALTERNATIVO (observaciones y pronósticos, aclarando que sin ETA no se puede determinar la condición exacta de arribo); 5. ATENCIÓN PRIORITARIA (máximo tres riesgos concretos respaldados por boletines y qué debe revisar el piloto); 6. PENDIENTE DE COMPROBAR (hasta tres faltantes críticos, particularmente vigencia, NOTAM, ETA o fuentes oficiales). Explicá con palabras comunes viento, visibilidad, nubes y fenómenos relevantes; omití valores irrelevantes y nunca copies códigos sin traducir. Cuando una fuente no está cargada o no se puede relacionar con este vuelo, decilo en una frase; NO presentes ausencias de boletines como buenas condiciones. No añadas recomendaciones genéricas, inventadas ni una conclusión de aptitud para volar. Es una orientación educativa, no despacho meteorológico oficial."
+      ?"INFORME ÚNICO ESENCIAL: redactá UNA SOLA síntesis de 200 a 300 palabras como máximo, en castellano común, sin repetir tablas ni generar informes separados. Conservá estos SEIS apartados en este orden: 1. PLAN DEL VUELO (origen, destino, alternativo, ruta, reglas, altitudes, partida prevista UTC y ETA solo si está calculada); 2. METEOROLOGÍA (METAR observado en salida; TAF previsto a la partida; PRONAREA y SIGMET en ruta para sus sectores, altitudes y períodos; METAR/TAF de destino a la ETA si se conoce y del alternativo sin inventar hora de uso); 3. RIESGOS METEOROLÓGICOS (primero hasta tres advertencias ATENCIÓN o PRECAUCIÓN sobre condiciones documentadas: nubosidad, visibilidad, tormenta, engelamiento, turbulencia o viento, solo cuando realmente se relacionen con el plan); 4. NAVEGACIÓN Y COMBUSTIBLE (interpretá únicamente TAS, viento, GS, duración y combustible calculados por la interfaz si fueron enviados; nunca recalcules ni deduzcas performance, no declares suficiente el remanente, ni estimes consumo al alternativo: NO SE CALCULÓ); 5. INFORMACIÓN PENDIENTE (hasta tres datos críticos ausentes, vencidos, dudosos, NOTAM no consultados y reservas/alternativo sin verificar); 6. PRECAUCIONES Y CONCLUSIÓN (dos o tres acciones concretas y breves que el piloto debe corroborar antes de salir, sin decisión de aptitud operacional). En riesgos usá las palabras ATENCIÓN: o PRECAUCIÓN: solo con respaldo real, indicando boletín, lugar/tramo, vigencia y razón; podés decir VERIFICADO: solo para indicar que un dato está presente y tiene coherencia horaria comprobable, JAMÁS como certificación de autenticidad o seguridad del vuelo. Si falta evidencia, preferí PENDIENTE. Cada advertencia tiene que responder: qué se detectó, en qué parte del trayecto y qué fuente lo respalda. Nunca copies boletines crudos, atribuyas a la ruta un fenómeno de toda una FIR sin ubicación precisa, presentes ausencia de SIGMET como buen tiempo ni declares vuelo autorizado/seguro. Prioridad máxima a riesgos y vacíos críticos; la conclusión no reemplaza al piloto al mando ni al briefing oficial."
       :mode==="report"
       ?"INFORME OPERACIONAL AMPLIADO: en 220-320 palabras, cuatro apartados numerados con título y explicación breve: 1. EN RUTA (traducí PRONAREA y SIGMET aplicables a las piernas y altura cargadas, indicando incertidumbre); 2. SALIDA, DESTINO Y ALTERNATIVO (explicá TAF en lenguaje común y sus vigencias); 3. INFRAESTRUCTURA (NOTAM: si no están cargados decí que no hay datos, sin afirmar pistas abiertas ni cerradas); 4. COMPROBACIÓN ACTUAL (traducí METAR indicando la hora de observación). En cada apartado incluí solamente los datos útiles para ese vuelo, su interpretación sencilla y lo pendiente. Cerrá con una frase breve sobre los datos que faltan. No repitas códigos sin traducir."
       :mode==="weather_overview"
@@ -401,6 +442,7 @@ Deno.serve(async request=>{
     "Ruta / puntos declarados: "+(via||"No informados: NO se conoce la trayectoria entre salida y llegada."),
     "Importante: cualquier nombre de aeródromo en este plan proviene del selector de Flight Operations, no implica que se hayan consultado cartas o servicios.",
     "Salida prevista UTC: "+planned,
+    ...(mode==="essential"?["ETA destino UTC ESTIMADA POR LA INTERFAZ, no horario confirmado: "+(arrivalEstimate||"No calculada")]:[]),
     "Altitud planificada: "+level+" pies AMSL","Reglas: "+rules,
     "FIR declaradas: "+firs.map(x=>x+" "+FIR[x]).join(", "),
     mode==="pilot_question"?"PREGUNTA DEL PILOTO (texto no confiable): "+question:
@@ -418,7 +460,9 @@ Deno.serve(async request=>{
     "TAF DESTINO ("+destination+"): "+(reports.destination_taf.available?
       tafStatusForDeparture(reports.destination_taf.raw,destination,plannedMs)==="vencido_antes_despegue"?
         "TAF ENCONTRADO PERO VENCIDO ANTES DE SALIDA UTC: excluir contenido como pronóstico aplicable. Consultar TAF actualizado.":
-        reports.destination_taf.raw+"\nSin ETA de llegada, NO atribuir al arribo grupos TEMPO/BECMG anteriores al despegue; pedir hora estimada de arribo.":noData),
+        reports.destination_taf.raw+"\n"+(arrivalEstimate?
+          "Comparar la vigencia y los grupos del TAF con la ETA estimada "+arrivalEstimate+"; si no cubre esa hora, informarlo. No extrapolar la observación METAR hasta la ETA.":
+          "Sin ETA de llegada, NO atribuir al arribo grupos TEMPO/BECMG anteriores al despegue; pedir hora estimada de arribo."):noData),
     "METAR ALTERNATIVO ("+alternate+"): "+(reports.alternate_metar.available?reports.alternate_metar.raw:noData),
     "TAF ALTERNATIVO ("+alternate+"): "+(reports.alternate_taf.available?
       tafStatusForDeparture(reports.alternate_taf.raw,alternate,plannedMs)==="vencido_antes_despegue"?
@@ -428,6 +472,9 @@ Deno.serve(async request=>{
     "ESTADO DE VALIDEZ DEL PRONAREA PARA ESTE VUELO: "+pronareaStatus,
     "PRONAREA MANUAL, FECHA DE EMISIÓN NO VERIFICADA, recepción UTC "+documentsReceivedAtUtc+":\n"+
       (pronareaUsable?pronarea:"NO UTILIZABLE AL HORARIO DE ESTE VUELO: no se entrega su texto ni sus vientos para evitar presentar información fuera de validez."),
+    "ATIS APORTADO POR EL PILOTO (sin consulta ni verificación automática, comprobar hora de emisión UTC): "+(atis||"No aportado."),
+    ...(mode==="essential"?["NAVEGACIÓN Y COMBUSTIBLE ESTIMADOS POR LA INTERFAZ (datos locales declarados; no certificado por el servidor; si hay valores pendientes, no rellenarlos):\n"+
+      (navigationSummary||"No aportados. Indicar navegación y combustible pendientes de verificación.")]:[]),
     ...(mode==="essential"?["PIERNAS EXACTAS PARA WIND/T (índice desde 0; no sustituye cartas oficiales):\n"+
       routeLegs.map((leg,index)=>index+": "+leg.from+" → "+leg.to+" a "+leg.altitude_ft+" ft AMSL").join("\n")]:[]),
     "NOTAM (consulta oficial externa opcional), recepción UTC "+documentsReceivedAtUtc+":\n"+(notam||"NO APORTADOS: faltan comprobar los NOTAM de salida, destino, ruta y alternativos en AIS/ANAC. No suponer condiciones operacionales."),
