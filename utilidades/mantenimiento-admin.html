@@ -74,7 +74,7 @@ function render(userId){
  if(!record)return;
  const p=record.payload||{};
  container.append(el('h3',(labels.get(userId)||'Integrante')+' · Última actualización: '+date(record.updated_at)));
- const planes=safeArray(p.ac),sv=safeArray(p.sv),ct=safeArray(p.ct),lg=safeArray(p.lg),rc=safeArray(p.rc),mx=safeArray(p.mx),ad=safeArray(p.ad);
+ const planes=safeArray(p.ac),sv=safeArray(p.sv),ct=safeArray(p.ct),lg=safeArray(p.lg),rc=safeArray(p.rc),mx=safeArray(p.mx),ad=safeArray(p.ad),ip=safeArray(p.ip),ie=safeArray(p.ie);
  const acSection=section(container,'Aeronaves');
  table(acSection,['Matrícula','Modelo','Horas totales','Ciclos','Horas/mes previstas'],planes.map(a=>[a.reg,a.type,n(a.h),n(a.c),n(a.hpm)]));
  for(const a of planes){
@@ -100,6 +100,24 @@ function render(userId){
   table(bit,['Fecha','Tipo','Componentes','Desde','Hasta','Piloto','Horas','Ciclos','Observaciones'],
    lg.filter(x=>x.ac===a.id).slice().sort((x,y)=>String(y.date||'').localeCompare(String(x.date||'')))
      .map(x=>[date(x.date),x.kind==='m'?'Carga manual':'Vuelo',compApply(x.t),x.from,x.to,x.pilot,n(x.h),n(x.c),x.note]));
+  const inspections=ip.filter(x=>x.ac===a.id);
+  if(inspections.length){
+   const iSection=section(container,'Inspecciones reglamentarias · '+title);
+   iSection.append(el('p','Regímenes, aplicabilidad y resultados declarados por el usuario. No equivalen a aprobaciones aeronáuticas.'));
+   table(iSection,['Inspección','Norma / programa','Intervalos','Aplicabilidad','Observación'],inspections.map(x=>[
+    x.title||'—',x.ref||'—',[x.months?n(x.months)+' meses':'',x.hours?n(x.hours)+' horas':''].filter(Boolean).join(' / ')||'Según programa',
+    x.archived?'Archivada':({yes:'Aplica',no:'No aplica',undecided:'Por confirmar'}[x.applies]||'Por confirmar'),x.note||'—'
+   ]));
+   const ids=new Set(inspections.map(x=>x.id));
+   const all=ie.filter(x=>ids.has(x.planId));
+   if(all.length){
+    const eSection=section(container,'Constancias de inspección · '+title);
+    table(eSection,['Fecha','TTAF','Inspección','Resultado declarado','Alcance','Datos técnicos','Asiento original','Responsable','Licencia','Registro ANAC','Discrepancias'],all.map(x=>[
+     date(x.date),n(x.h),inspections.find(i=>i.id===x.planId)?.title||'—',
+     x.result==='approved'?'Aprobada según constancia':'No aprobada',x.scope||'—',x.tech||'—',x.doc||'—',x.who||'—',x.lic||'—',x.reg||'—',x.discrepancies||'—'
+    ]));
+   }
+  }
   const interventions=mx.filter(x=>x.ac===a.id);
   if(interventions.length){
    const mSection=section(container,'Intervenciones referenciadas · '+title);
