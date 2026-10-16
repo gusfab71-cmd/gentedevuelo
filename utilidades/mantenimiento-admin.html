@@ -74,7 +74,7 @@ function render(userId){
  if(!record)return;
  const p=record.payload||{};
  container.append(el('h3',(labels.get(userId)||'Integrante')+' · Última actualización: '+date(record.updated_at)));
- const planes=safeArray(p.ac),sv=safeArray(p.sv),ct=safeArray(p.ct),lg=safeArray(p.lg),rc=safeArray(p.rc);
+ const planes=safeArray(p.ac),sv=safeArray(p.sv),ct=safeArray(p.ct),lg=safeArray(p.lg),rc=safeArray(p.rc),mx=safeArray(p.mx),ad=safeArray(p.ad);
  const acSection=section(container,'Aeronaves');
  table(acSection,['Matrícula','Modelo','Horas totales','Ciclos','Horas/mes previstas'],planes.map(a=>[a.reg,a.type,n(a.h),n(a.c),n(a.hpm)]));
  for(const a of planes){
@@ -92,14 +92,28 @@ function render(userId){
   const cs=sv.filter(x=>x.ac===a.id);
   const controls=cs.flatMap(service=>ct.filter(c=>c.sv===service.id).map(c=>({service,c})));
   const block=section(container,'Servicios y controles · '+title);
-  table(block,['Servicio','Componente','Control','Intervalo','Última aplicación','Últimas horas/ciclos'],controls.map(x=>[
+  table(block,['Servicio','Componente','Control','Intervalo','Última aplicación','Últimas horas/ciclos','Constancia'],controls.map(x=>[
    x.service.name,comp(x.c.cp),x.c.name,[x.c.ivH?n(x.c.ivH)+' h':'',x.c.ivC?n(x.c.ivC)+' ciclos':'',x.c.ivM?n(x.c.ivM)+' meses':''].filter(Boolean).join(' / ')||'—',
-   date(x.c.lastDate),n(x.c.lastH)+' h / '+n(x.c.lastC)+' c'
+   date(x.c.lastDate),n(x.c.lastH)+' h / '+n(x.c.lastC)+' c',x.c.lastRef?x.c.lastRef+' · '+(x.c.lastBy||''):'Sin constancia cargada'
   ]));
   const bit=section(container,'Bitácora · '+title);
   table(bit,['Fecha','Tipo','Componentes','Desde','Hasta','Piloto','Horas','Ciclos','Observaciones'],
    lg.filter(x=>x.ac===a.id).slice().sort((x,y)=>String(y.date||'').localeCompare(String(x.date||'')))
      .map(x=>[date(x.date),x.kind==='m'?'Carga manual':'Vuelo',compApply(x.t),x.from,x.to,x.pilot,n(x.h),n(x.c),x.note]));
+  const interventions=mx.filter(x=>x.ac===a.id);
+  if(interventions.length){
+   const mSection=section(container,'Intervenciones referenciadas · '+title);
+   mSection.append(el('p','Transcripciones privadas: la conformidad se verifica en el asiento original firmado.'));
+   table(mSection,['Fecha','Trabajo','Componente','Datos técnicos','Referencia documental','Responsable','Licencia','Registro ANAC'],
+    interventions.map(x=>[date(x.date),x.kind+' · '+(x.desc||''),comp(x.cp),x.tech||'—',x.ref||'—',x.who||'—',x.lic||'—',x.reg||'—']));
+  }
+  const directives=ad.filter(x=>x.ac===a.id);
+  if(directives.length){
+   const dSection=section(container,'Directivas de aeronavegabilidad · '+title);
+   dSection.append(el('p','Aplicabilidad y cumplimiento declarados por el usuario, no verificados automáticamente.'));
+   table(dSection,['DA','Revisión','Componente','Aplicabilidad','Método','Constancia','Último cumplimiento','Próxima fecha / horas','Notas'],
+    directives.map(x=>[x.number||'—',x.rev||'—',comp(x.cp),{yes:'Aplica',no:'No aplica',unknown:'Por determinar'}[x.applies]||'—',x.method||'—',x.doc||'—',date(x.compDate),date(x.nextDate)+' / '+(x.nextH||'—')+' h',x.notes||'—']));
+  }
   const recurrent=rc.filter(x=>x.ac===a.id);
   if(recurrent.length){
    const recSection=section(container,'Registros recurrentes · '+title);
