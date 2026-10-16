@@ -161,6 +161,7 @@
 .flight-chart-options button[aria-pressed="true"]{background:#f5a869;color:#172024;border-color:#f5a869;font-weight:750}
 .flight-chart-figure{margin:13px 0;border:1px solid #52696c;border-radius:12px;background:#eaeef0;overflow:hidden;padding:9px}
 .flight-chart-image{display:block;width:100%;height:auto;max-height:740px;object-fit:contain;background:#fff}
+.flight-wind-frame{display:block;width:100%;height:clamp(340px,56vw,570px);border:0;border-radius:8px;background:#101c23}
 .flight-chart-caption{padding:9px 7px 3px;color:#202e30;font-size:12px;line-height:1.5}
 .flight-chart-placeholder{border:1px dashed #637676;border-radius:12px;background:#172528;padding:21px;color:#d5e0de;font-size:13px;margin:14px 0}
 @media(max-width:620px){#boletines .status-grid{grid-template-columns:repeat(5,minmax(120px,1fr));gap:7px}.flight-chart-options button{width:100%}}
@@ -944,29 +945,33 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
 <a href="https://redemet.decea.mil.br/" target="_blank" rel="noopener noreferrer"><strong>Cartas SIGWX · REDEMET</strong><span>Tiempo significativo SFC/FL250 (Brasil); comprobar cobertura, validez y región.</span></a>
 </div>
 </section>
-<details class="ops-accordion" id="ops-cartas"><summary class="ops-accordion-toggle"><span class="ops-accordion-number">09</span><span class="ops-accordion-name"><strong>Cartas meteorológicas</strong><span>Superficie, altura y tiempo significativo</span></span><span class="ops-accordion-arrow" aria-hidden="true"></span></summary><div class="ops-accordion-content">
+<details class="ops-accordion" id="ops-cartas"><summary class="ops-accordion-toggle"><span class="ops-accordion-number">09</span><span class="ops-accordion-name"><strong>Cartas meteorológicas</strong><span>Superficie, altura, vientos y frentes</span></span><span class="ops-accordion-arrow" aria-hidden="true"></span></summary><div class="ops-accordion-content">
 <section class="card flight-chart" id="cartas-oficiales">
-<div class="card-header"><div><span class="card-kicker">CARTAS METEOROLÓGICAS · CONSULTA OFICIAL</span><h2>Mapas de superficie, altura y tiempo significativo</h2></div></div>
-<p class="sub">Las cartas de superficie y altura se solicitan automáticamente como imágenes oficiales ECMWF, sin insertar páginas ni consumir tokens de IA. Para SIGWX se ofrecen alternativas oficiales cuando el enlace del SMN no muestra las cartas. <strong>Comprobá región, hora base, validez y nivel.</strong> Los niveles de las cartas no coinciden necesariamente con la altitud planificada.</p>
+<div class="card-header"><div><span class="card-kicker">CARTAS METEOROLÓGICAS · CONSULTA</span><h2>Mapas de superficie, altura y vientos</h2></div></div>
+<p class="sub">Las cartas de superficie y altura se obtienen de ECMWF. El mapa interactivo de Windy permite explorar el viento pronosticado en altura sobre Argentina; para identificar <strong>frentes fríos y cálidos</strong> consultá Ventusky y las cartas sinópticas de la Fuerza Aérea Argentina en los enlaces inferiores. No consume tokens de IA. <strong>Comprobá región, modelo, hora y nivel.</strong> Los niveles de presión no equivalen necesariamente a la altitud de vuelo.</p>
 <div class="flight-chart-options" role="group" aria-label="Carta meteorológica oficial">
 <button class="secondary" type="button" data-chart="surface" aria-pressed="true">Isobaras y viento · ECMWF</button>
 <button class="secondary" type="button" data-chart="height" aria-pressed="false">Topografía 500 hPa · ECMWF</button>
-<button class="secondary" type="button" data-chart="sigwx" aria-pressed="false">Tiempo significativo · fuentes oficiales</button>
+<button class="secondary" type="button" data-chart="upperwind" aria-pressed="false">Vientos en altura · Windy 850 hPa</button>
 </div>
 <p class="sub" id="flight-chart-status" role="status" aria-live="polite">La imagen se solicitará automáticamente al llegar a esta sección.</p>
 <figure class="flight-chart-figure" id="flight-chart-figure" hidden>
 <img class="flight-chart-image" id="flight-chart-image" alt="Carta meteorológica oficial ECMWF de Sudamérica" decoding="async" referrerpolicy="no-referrer">
 <figcaption id="flight-chart-description" class="flight-chart-caption"></figcaption>
 </figure>
+<figure class="flight-chart-figure" id="flight-wind-figure" hidden>
+<iframe class="flight-wind-frame" id="flight-wind-frame" title="Mapa interactivo Windy: pronóstico de vientos a 850 hPa sobre Argentina" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+<figcaption class="flight-chart-caption">Viento previsto a 850 hPa (aprox. 1.500 m en atmósfera estándar), modelo ECMWF. Podés explorar el mapa y la línea de tiempo; para otras alturas, abrí Windy. No sustituye un pronóstico aeronáutico oficial.</figcaption>
+</figure>
 <div class="flight-chart-placeholder" id="flight-chart-placeholder" hidden></div>
 <div class="actions">
 <a id="flight-chart-source" class="secondary" href="https://charts.ecmwf.int/products/medium-mslp-wind850?projection=opencharts_south_america" target="_blank" rel="noopener noreferrer">Abrir carta en la fuente oficial ↗</a>
 <button class="secondary" id="flight-chart-refresh" type="button">Actualizar carta</button>
-<a class="secondary" href="https://redemet.decea.mil.br/" target="_blank" rel="noopener noreferrer">SIGWX SFC/FL250 · REDEMET Brasil ↗</a>
-<a class="secondary" href="https://aviationweather.gov/sigwx/" target="_blank" rel="noopener noreferrer">SIGWX WAFS · NOAA/AWC ↗</a>
+<a class="secondary" href="https://www.ventusky.com/" target="_blank" rel="noopener noreferrer">Frentes fríos y cálidos · Ventusky ↗</a>
 <a class="secondary" href="https://imagenesmeteorologicas.faa.mil.ar/app/model/index.php" target="_blank" rel="noopener noreferrer">Cartas sinópticas · Fuerza Aérea Argentina ↗</a>
+<a class="secondary" href="https://www.windy.com/" target="_blank" rel="noopener noreferrer">Vientos a otros niveles · Windy ↗</a>
 </div>
-<p class="source-notes">Fuente ECMWF OpenCharts (CC BY 4.0). Se verifican la región y la antigüedad de la emisión antes de mostrar cada imagen. El enlace SIGWX del SMN no muestra los mapas al consultar. REDEMET ofrece SIGWX SFC/FL250 de Brasil, cuya cobertura geográfica puede no abarcar la ruta argentina completa y cuya API requiere credenciales. El visor WAFS de NOAA/AWC corresponde a otros niveles, en general FL100–FL600, y no sustituye una carta nacional de baja altura. La Fuerza Aérea Argentina ofrece cartas sinópticas, que tampoco reemplazan las SIGWX. La Mesa no muestra una carta sin poder comprobar su vigencia. Verificá siempre el briefing aeronáutico oficial.</p>
+<p class="source-notes">Cartas ECMWF OpenCharts (CC BY 4.0): se comprueban emisión, antigüedad y región antes de mostrar la imagen. Mapa de vientos: Windy (modelo ECMWF, visualización de pronóstico). Frentes: Ventusky los estima a partir de modelos meteorológicos; su interpretación requiere contrastar con las cartas sinópticas de la Fuerza Aérea Argentina. Los frentes se analizan en superficie, mientras el viento mostrado corresponde a un nivel de presión en altura. Estas herramientas no sustituyen la documentación ni el briefing aeronáutico oficial vigente.</p>
 </section>
 </div></details>
 
@@ -2005,6 +2010,8 @@ el('copy-report').addEventListener('click',async()=>{
 'use strict';
 const panel=document.getElementById('cartas-oficiales');
 const figure=document.getElementById('flight-chart-figure');
+const windFigure=document.getElementById('flight-wind-figure');
+const windFrame=document.getElementById('flight-wind-frame');
 const image=document.getElementById('flight-chart-image');
 const caption=document.getElementById('flight-chart-description');
 const status=document.getElementById('flight-chart-status');
@@ -2014,10 +2021,10 @@ const refresh=document.getElementById('flight-chart-refresh');
 const urls={
  surface:'https://charts.ecmwf.int/products/medium-mslp-wind850?projection=opencharts_south_america',
  height:'https://charts.ecmwf.int/products/medium-z500-t850?projection=opencharts_south_america',
- sigwx:'https://redemet.decea.mil.br/'
+ upperwind:'https://www.windy.com/'
 };
 let selected='surface',activated=false,requestId=0;
-function clearChart(){figure.hidden=true;image.removeAttribute('src');caption.textContent='';placeholder.hidden=true;}
+function clearChart(){figure.hidden=true;windFigure.hidden=true;windFrame.removeAttribute('src');image.removeAttribute('src');caption.textContent='';placeholder.hidden=true;}
 function failure(message){
  clearChart();status.textContent=message;
  placeholder.textContent='No se pudo visualizar una imagen reciente y verificada. Abrí la fuente oficial para comprobar su emisión y validez.';
@@ -2025,11 +2032,12 @@ function failure(message){
 }
 async function load(){
  if(!activated)return;
- const key=selected,id=++requestId;source.href=urls[key];clearChart();
- if(key==='sigwx'){
-  status.textContent='Cartas SIGWX: consultá las fuentes oficiales alternativas y verificá la zona, nivel y fecha.';
-  placeholder.textContent='REDEMET (Brasil) publica cartas SIGWX SFC/FL250, pero su API necesita clave y la cobertura puede no incluir toda tu ruta en Argentina. Usá los enlaces oficiales debajo para consultar allí. NOAA/AWC ofrece WAFS de niveles superiores: no es equivalente al SIGWX nacional de baja altura. La Mesa no puede certificar una imagen actual para mostrarla aquí.';
-  placeholder.hidden=false;refresh.disabled=false;return;
+ const key=selected,id=++requestId;source.href=urls[key];source.textContent=key==='upperwind'?'Abrir mapa en Windy ↗':'Abrir carta en la fuente oficial ↗';clearChart();
+ if(key==='upperwind'){
+  status.textContent='Mapa de viento en altura: modelo ECMWF, 850 hPa sobre Argentina. Revisá el horario y la vigencia del pronóstico.';
+  windFigure.hidden=false;
+  windFrame.src='https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=mm&metricTemp=%C2%B0C&metricWind=kt&zoom=4&overlay=wind&product=ecmwf&level=850h&lat=-38.5&lon=-63.5';
+  refresh.disabled=false;return;
  }
  refresh.disabled=true;status.textContent='Consultando ECMWF OpenCharts para Sudamérica…';
  try{
