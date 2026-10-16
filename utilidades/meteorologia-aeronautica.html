@@ -370,9 +370,15 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
 .ops-developer{font-size:13px!important;color:#d6e6f2!important;margin:0 0 12px!important;letter-spacing:.02em}
 .ops-developer strong{color:#fff}
 .ops-intro{max-width:630px;font-size:14px;margin-bottom:0!important}
-.hero-side{padding:22px 23px;background:linear-gradient(145deg,#24394b,#1b2a36)}
-.ops-hero-monogram{font-size:44px;font-weight:850;letter-spacing:-.08em;color:#daeaf5}
-.ops-hero-monogram span{font-size:12px;letter-spacing:.14em;color:#9cb9cd;font-weight:700}
+.hero-side{padding:17px 20px;background:linear-gradient(145deg,#24394b,#1b2a36);gap:10px}
+.ops-radar{position:relative;width:clamp(76px,8.4vw,100px);aspect-ratio:1;flex:none;overflow:hidden;border-radius:50%;border:1px solid #739bb1;background:radial-gradient(circle at center,#183a4b 0%,#102532 65%,#0c1b27 100%);box-shadow:inset 0 0 18px #060f1cb3,0 0 0 3px #90c2d410}
+.ops-radar-grid{position:absolute;inset:0;background:repeating-radial-gradient(circle,transparent 0 19px,#8ec9df30 20px 21px),linear-gradient(90deg,transparent 49.5%,#8ec9df30 50%,transparent 50.5%),linear-gradient(transparent 49.5%,#8ec9df30 50%,transparent 50.5%)}
+.ops-radar-sweep{position:absolute;inset:0;border-radius:50%;background:conic-gradient(from -49deg,transparent 0deg,#60cce509 9deg,#60cce529 30deg,#8ae6f478 45deg,#c5fbff 49deg,transparent 50deg);animation:ops-radar-rotate 6s linear infinite}
+.ops-radar-plane{position:absolute;z-index:2;left:58%;top:17%;width:28%;height:28%;fill:#d0faff;opacity:0;filter:drop-shadow(0 0 5px #78d8ef);animation:ops-radar-contact 6s linear infinite}
+.ops-radar:after{content:"";position:absolute;z-index:3;width:5px;height:5px;top:50%;left:50%;transform:translate(-50%,-50%);border-radius:50%;background:#a3edfa;box-shadow:0 0 8px #a3edfa80}
+@keyframes ops-radar-rotate{to{transform:rotate(360deg)}}
+@keyframes ops-radar-contact{0%,9%,23%,100%{opacity:0}13%,17%{opacity:1}}
+@media(prefers-reduced-motion:reduce){.ops-radar-sweep,.ops-radar-plane{animation:none}.ops-radar-plane{opacity:1}}
 .ops-dashboard{border:1px solid #48657a;border-radius:20px;padding:23px;background:linear-gradient(150deg,#1b2b39,#17232e);box-shadow:0 15px 34px #030a1240;margin-bottom:17px;scroll-margin-top:14px}
 .flight-essential-card{padding:19px 20px;margin:18px 0 20px;border:1px solid #83a9c0;border-radius:15px;background:linear-gradient(140deg,#263e4e,#1b303f);box-shadow:0 5px 18px #07101933}
 .flight-essential-card h2{color:#f2f7fb;font-size:21px;margin:5px 0 9px}
@@ -560,7 +566,11 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
 <body>
 <header class="top"><div class="top-inner"><a class="brand" href="../index.html"><span class="mark">GDV</span><span class="brand-name">GENTE DE VUELO<span>Centro de consulta aeronáutica</span></span></a><nav class="toplinks"><a href="index.html">Utilidades</a><a href="../index.html">Portada</a></nav></div></header>
 <main class="wrap" id="gdv-meteo-private" hidden>
-<section class="hero"><div class="hero-main"><span class="eyebrow">Centro de operaciones aeronáuticas</span><h1>Flight <em>Operations</em></h1><p class="ops-developer">Developed by <strong>Gente de Vuelo</strong></p><p class="ops-intro">Planificación, evaluación meteorológica y consulta operacional en un entorno claro y profesional. La información debe verificarse siempre en las fuentes oficiales.</p></div><aside class="hero-side"><div class="ops-hero-monogram" aria-hidden="true">FO<span> / GDV</span></div><div><span class="eyebrow">Criterio operacional</span><p>Comprobá <strong>emisión, validez, FIR, ruta y nivel</strong>. La evaluación y decisión de vuelo corresponden al piloto.</p></div></aside></section>
+<section class="hero"><div class="hero-main"><span class="eyebrow">Centro de operaciones aeronáuticas</span><h1>Flight <em>Operations</em></h1><p class="ops-developer">Developed by <strong>Gente de Vuelo</strong></p><p class="ops-intro">Planificación, evaluación meteorológica y consulta operacional en un entorno claro y profesional. La información debe verificarse siempre en las fuentes oficiales.</p></div><aside class="hero-side"><div class="ops-radar" role="img" aria-label="Radar decorativo con barrido giratorio y silueta de avión">
+  <span class="ops-radar-grid" aria-hidden="true"></span>
+  <span class="ops-radar-sweep" aria-hidden="true"></span>
+  <svg class="ops-radar-plane" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 1.5c.8 0 1.35 1.1 1.35 3v4.9L21 14v2l-7.65-2.35V20l2.85 1.7V23L12 22.1 7.8 23v-1.3L10.65 20v-6.35L3 16v-2l7.65-4.6V4.5c0-1.9.55-3 1.35-3Z"/></svg>
+</div><div><span class="eyebrow">Criterio operacional</span><p>Comprobá <strong>emisión, validez, FIR, ruta y nivel</strong>. La evaluación y decisión de vuelo corresponden al piloto.</p></div></aside></section>
 <section class="ops-dashboard" aria-label="Tablero de acceso rápido">
   <div class="ops-dashboard-heading"><div><h2>Centro de operaciones</h2><p class="sub">Los datos se actualizan al completar el plan de vuelo. Las tarjetas abren información existente; no hacen consultas automáticas.</p></div><span class="ops-dashboard-marker">VISTA OPERACIONAL</span></div>
   <div class="ops-route-strip" aria-label="Datos del vuelo planificado">
