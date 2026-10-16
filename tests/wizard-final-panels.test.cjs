@@ -28,7 +28,7 @@ test('official links and chart controls remain intact', () => {
  }
  assert.match(html, /https:\/\/ais\.anac\.gob\.ar\//);
  assert.match(html, /https:\/\/redemet\.decea\.mil\.br\//);
- assert.match(html, /flight-operations-wizard\.js\?v=20261015u/);
+ assert.match(html, /flight-operations-wizard\.js\?v=20261016a/);
 });
 
 test('fuel chart displays a real time-versus-liters curve and labels a one-hour projection when the route is incomplete', () => {

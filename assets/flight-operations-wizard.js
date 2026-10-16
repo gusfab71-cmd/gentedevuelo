@@ -53,6 +53,11 @@ css.textContent='.ops-accordion[hidden],.flight-wizard-nav-panel[hidden],.flight
 '.flight-wizard-steps button[aria-current=step]{background:#b3c9d8;color:#162f41;font-weight:700}'+
 '.flight-wizard-toolbar{display:flex;gap:12px;flex-wrap:wrap;align-items:center;padding-top:13px;border-top:1px solid #526879}'+
 '.flight-wizard-toolbar #flight-wizard-status{flex:1 1 230px;font-size:13px;color:#d8e9f4}'+
+'.flight-wizard-back-row{display:flex;justify-content:flex-start;margin:20px 0 6px;padding-top:14px;border-top:1px solid #526879}'+
+'.flight-wizard-back-row[hidden]{display:none!important}.flight-wizard-back-row button{padding:11px 17px;border:1px solid #91b3ca;border-radius:11px;background:#354c5f;color:#ecf5fa;font:inherit;font-weight:700;cursor:pointer}'+
+'.flight-wizard-back-row button:hover,.flight-wizard-back-row button:focus-visible,.flight-wizard-toolbar button:hover:not(:disabled),.flight-wizard-steps button:hover:not(:disabled){background:#476b86;color:#fff}'+
+'.flight-report-stale{margin:15px 0;padding:12px 15px;border:1px solid #e1b76e;border-radius:11px;background:#56472e;color:#fff0d3;line-height:1.55}'+
+'.flight-report-stale[hidden]{display:none!important}'+
 '.flight-wizard-continue-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin:14px 0;padding:14px;border:1px solid #6793ad;border-radius:13px;background:#203b4d}'+
 '.flight-wizard-continue-row button{border:1px solid #bbdfed;border-radius:10px;padding:12px 18px;background:#b3d6e8;color:#102c3d;font:inherit;font-weight:800;cursor:pointer}'+
 '.flight-wizard-continue-row button:disabled{opacity:.55;cursor:wait}.flight-wizard-continue-row .feedback{flex:1 1 190px;color:#d7e9f3;font-size:12px}'+
@@ -107,6 +112,29 @@ essentialRow.append(essentialButton,essentialFeedback);nav.append(essentialRow);
 const all=[plan,weather,$('ops-boletines'),$('nubosidad'),$('fuentes'),$('ops-fuentes'),report,$('ops-piloto'),$('ops-precauciones'),$('ops-cartas'),nav].filter(Boolean);
 const titles=['Datos del vuelo','Planificar piernas','Meteorología','Cálculos y combustible','Informe esencial'];
 const steps=titles.map((x,i)=>{const b=document.createElement('button');b.textContent=(i+1)+' · '+x;b.type='button';b.onclick=()=>{if(i<=step)void go(i);else notify('Avanzá utilizando Guardar y continuar.');};$('flight-wizard-steps').append(b);return b;});
+// Un acceso de regreso al pie de cada etapa, además del botón superior.
+// No desmontamos los formularios al navegar: los valores editados permanecen.
+const bottomBackRows=[plan,$('ops-boletines'),nav,$('ops-cartas')].map(section=>{
+ if(!section)return null;
+ const row=document.createElement('div');row.className='flight-wizard-back-row';
+ const button=document.createElement('button');button.type='button';button.textContent='← Volver a la etapa anterior';
+ button.addEventListener('click',()=>{void go(step-1);});
+ row.append(button);section.append(row);
+ return row;
+});
+const reportStale=document.createElement('p');
+reportStale.className='flight-report-stale';reportStale.hidden=true;reportStale.setAttribute('role','status');
+reportStale.textContent='Se modificaron datos del vuelo después de generar este informe. La evaluación anterior puede estar desactualizada: revisá nuevamente los boletines y generá otro informe solo si lo autorizás.';
+$('informe-esencial')?.insertBefore(reportStale,$('flight-essential-result'));
+for(const section of [plan,weather,$('ops-boletines'),nav].filter(Boolean)){
+ const markStale=()=>{if(!$('flight-essential-result')?.hidden)reportStale.hidden=false;};
+ section.addEventListener('input',markStale);
+ section.addEventListener('change',markStale);
+}
+// Una respuesta nueva de la IA reemplaza la advertencia; nunca se solicita
+// automáticamente, para respetar el consentimiento y el consumo de tokens.
+if($('flight-essential-analysis'))new MutationObserver(()=>{if(!$('flight-essential-result')?.hidden)reportStale.hidden=true;})
+ .observe($('flight-essential-analysis'),{childList:true,characterData:true,subtree:true});
 const base=plan.querySelector('.form'),editor=plan.querySelector('.flight-leg-editor');
 if(base)base.classList.add('flight-base-fields');
 const notify=s=>$('flight-wizard-status').textContent=s;
@@ -119,6 +147,7 @@ function display(s){
  if(s===1)refreshDistanceFields();
  steps.forEach((b,i)=>b.setAttribute('aria-current',i===s?'step':'false'));
  $('flight-wizard-back').disabled=s===0;$('flight-wizard-next').textContent=s===4?'Guardar planificación':s===2?'Guardar y pasar a cálculos →':'Guardar y continuar →';
+ bottomBackRows.forEach((row,i)=>{if(row)row.hidden=(i===0?s===0:i!==s-1);});
  $('consumo-ia').hidden=s!==4;
  if(s>=3)calcFuel();if(s===4)refreshGate();
  ui.scrollIntoView({behavior:'smooth',block:'start'});
@@ -308,8 +337,11 @@ async function save(targetStep=step){
  if(error)throw Error('No se guardó el borrador: '+error.message);
 }
 async function go(n){
- if(busy||n===step)return;
- if(n>step&&!valid())return;
+ if(busy||n===step||n<0||n>=titles.length)return;
+ // Retroceder es una acción local: nunca debe depender de Supabase ni de una
+ // validación de campos que el piloto precisamente volvió para corregir.
+ if(n<step){display(n);notify('Etapa '+(step+1)+' de cinco. Revisá o modificá los datos; se guardarán al continuar.');return;}
+ if(!valid())return;
  busy=true;notify('Guardando borrador privado…');
  try{await save(n);display(n);notify('Plan guardado. Etapa '+(step+1)+' de cinco.');}
  catch(e){notify(e?.message||'Error al guardar. No se cambió de etapa.');}
