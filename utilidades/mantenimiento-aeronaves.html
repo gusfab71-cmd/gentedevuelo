@@ -115,6 +115,24 @@ body .overflow-x-auto{scrollbar-color:#697e7d transparent}
 @media(max-width:420px){#app .grid-cols-2{grid-template-columns:1fr!important}#app .grid-cols-3{grid-template-columns:repeat(2,minmax(0,1fr))!important}.maint-overview{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
 </style>
+
+<style id="maintenance-inspections-style">
+.maint-inspection-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.maint-inspection-stats>div{border:1px solid #4c5e60;border-radius:12px;background:#172528;padding:12px 13px;min-width:0}
+.maint-inspection-stats b{display:block;color:#ffe0c2;font-size:15px;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.maint-inspection-stats span{font-size:11px;line-height:1.45;color:#bfccca;display:block;margin-top:4px}
+.maint-guidance{background:#172326;border:1px solid #536365;border-radius:12px;padding:11px 14px;color:#d9e3e0;font-size:12px}
+.maint-guidance summary{font-weight:750;font-size:13px;cursor:pointer;color:#ffcca2;padding:3px 0;list-style-position:inside}
+.maint-guidance[open] summary{border-bottom:1px solid #47595b;padding-bottom:12px;margin-bottom:13px}
+.maint-guidance .maint-record-grid{margin-top:12px}
+.maint-guidance p{line-height:1.65;color:#d0ddda}
+.maint-guidance a{color:#ffcf9f;text-decoration:underline}
+.maint-guidance .maint-note{color:#ecd9ca}
+.maint-guidance input,.maint-guidance select{color:#f3f5f3}
+.maint-pill.warn{background:#49362b}.maint-pill.danger{background:#4a292b}
+@media(max-width:750px){.maint-inspection-stats{grid-template-columns:1fr 1fr}.maint-inspection-stats>div:first-child{grid-column:1/-1}}
+@media(max-width:480px){.maint-inspection-stats{grid-template-columns:1fr}.maint-inspection-stats>div:first-child{grid-column:auto}}
+</style>
 </head>
 
 <body class="min-h-screen">
@@ -154,14 +172,14 @@ body .overflow-x-auto{scrollbar-color:#697e7d transparent}
 
 const $=i=>document.getElementById(i),uid=()=>crypto.randomUUID(),today=()=>{const d=new Date();return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')},v=i=>$(i).value,n=i=>Math.min(1e6,Math.max(0,parseFloat($(i).value)||0));
 
-let S={ac:[],sv:[],ct:[],lg:[],rc:[],mx:[],ad:[],sel:null,tab:'a',hz:12};
+let S={ac:[],sv:[],ct:[],lg:[],rc:[],mx:[],ad:[],ip:[],ie:[],sel:null,tab:'a',hz:12};
 
 let db=null,currentUser=null,hangarAircraft='',saveQueue=Promise.resolve();
 const showStatus=message=>{const x=$('sync');if(x)x.textContent=message};
 const validData=d=>d&&typeof d==='object'&&['ac','sv','ct','lg','rc'].every(k=>Array.isArray(d[k])&&d[k].length<=({ac:50,sv:300,ct:2000,lg:6000,rc:200}[k]))&&
  ['ac','sv','ct','lg','rc'].every(k=>d[k].every(x=>x&&typeof x==='object'&&typeof x.id==='string'&&/^[a-zA-Z0-9_-]{1,64}$/.test(x.id)))&&
  d.ac.every(a=>typeof a.reg==='string'&&a.reg.length<=50)&&
- ['mx','ad'].every(k=>d[k]===undefined||(Array.isArray(d[k])&&d[k].length<=({mx:3000,ad:1000}[k])&&d[k].every(x=>x&&typeof x==='object'&&typeof x.id==='string'&&/^[a-zA-Z0-9_-]{1,64}$/.test(x.id))));
+ ['mx','ad','ip','ie'].every(k=>d[k]===undefined||(Array.isArray(d[k])&&d[k].length<=({mx:3000,ad:1000,ip:250,ie:3000}[k])&&d[k].every(x=>x&&typeof x==='object'&&typeof x.id==='string'&&/^[a-zA-Z0-9_-]{1,64}$/.test(x.id))));
 function save(){
  if(!currentUser||!db){showStatus('Sin conexión: los cambios no están guardados.');return}
  const payload=JSON.parse(JSON.stringify(S));
@@ -202,7 +220,7 @@ const SEL=(id,l,o)=>`<label class="text-[11px] text-slate-400">${l}<select id="$
 
 const fd=t=>isFinite(t)?new Date(t).toLocaleDateString('es-AR'):'—',f1=x=>(+x).toFixed(1);
 
-const TABS=[['a','Aeronaves'],['k','Componentes'],['s','Controles'],['b','Bitácora'],['i','Intervenciones'],['d','Directivas DA'],['r','Recurrentes'],['p','Proyección']];
+const TABS=[['a','Aeronaves'],['x','Inspecciones'],['k','Componentes'],['s','Controles'],['b','Bitácora'],['i','Intervenciones'],['d','Directivas DA'],['r','Recurrentes'],['p','Proyección']];
 
 const CN={f:'Fuselaje',m:'Motor',p:'Hélice'};
 function CP(a){
@@ -258,7 +276,7 @@ function applyRc(){
 
 function addAc(){const r=v('a_r').trim().toUpperCase();if(!r)return alert('Ingrese la matrícula.');if(S.ac.some(a=>a.reg===r))return alert('Esa matrícula ya está registrada.');const a={id:uid(),reg:r,type:v('a_t'),h:n('a_h'),c:n('a_c'),hpm:n('a_hm'),cpm:n('a_cm')};S.ac.push(a);S.sel=a.id;save();R()}
 
-function delAc(id){if(!confirm('¿Borrar la aeronave y todos sus datos?'))return;S.ac=S.ac.filter(a=>a.id!=id);const sv=S.sv.filter(s=>s.ac==id).map(s=>s.id);S.sv=S.sv.filter(s=>s.ac!=id);S.ct=S.ct.filter(c=>!sv.includes(c.sv));S.lg=S.lg.filter(l=>l.ac!=id);S.rc=S.rc.filter(r=>r.ac!=id);S.mx=S.mx.filter(r=>r.ac!=id);S.ad=S.ad.filter(r=>r.ac!=id);S.sel=S.ac[0]?.id||null;save();R()}
+function delAc(id){if(!confirm('¿Borrar la aeronave y todos sus datos?'))return;S.ac=S.ac.filter(a=>a.id!=id);const sv=S.sv.filter(s=>s.ac==id).map(s=>s.id);S.sv=S.sv.filter(s=>s.ac!=id);S.ct=S.ct.filter(c=>!sv.includes(c.sv));S.lg=S.lg.filter(l=>l.ac!=id);S.rc=S.rc.filter(r=>r.ac!=id);S.mx=S.mx.filter(r=>r.ac!=id);S.ad=S.ad.filter(r=>r.ac!=id);S.ip=S.ip.filter(r=>r.ac!=id);S.ie=S.ie.filter(r=>r.ac!=id);S.sel=S.ac[0]?.id||null;save();R()}
 
 function addManual(){const a=A(),h=n('m_h'),c=n('m_c');if(!h&&!c)return alert('Ingrese horas y/o ciclos.');entry(a,{kind:'m',t:v('m_t'),date:v('m_d')||today(),h,c,from:'',to:'',pilot:'',note:v('m_n')||'Control manual'});save();R()}
 
@@ -316,7 +334,7 @@ function impo(i){const f=i.files[0];if(!f)return;
  if(f.size>500000){alert('El respaldo supera el tamaño permitido.');i.value='';return}
  const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!validData(d))throw 0;
  if(!confirm('¿Reemplazar tus registros actuales por este respaldo?'))return;
- S={ac:d.ac,sv:d.sv,ct:d.ct,lg:d.lg,rc:d.rc,mx:d.mx||[],ad:d.ad||[],sel:d.sel||null,tab:'a',hz:d.hz||12};
+ S={ac:d.ac,sv:d.sv,ct:d.ct,lg:d.lg,rc:d.rc,mx:d.mx||[],ad:d.ad||[],ip:d.ip||[],ie:d.ie||[],sel:d.sel||null,tab:'a',hz:d.hz||12};
  if(!S.ac.some(a=>a.id===S.sel))S.sel=S.ac[0]?.id||null;save();R();
  }catch(e){alert('Archivo no válido.')}};r.readAsText(f);i.value=''}
 
@@ -369,12 +387,96 @@ function renderOverview(){
  const ads=(S.ad||[]).filter(x=>x.ac===a.id);
  const pending=ads.filter(d=>['warn','danger'].includes(adState(d,a).level)).length;
  const tile=(value,description,level='')=>'<article class="maint-metric '+level+'"><strong>'+esc(value)+'</strong><span>'+description+'</span></article>';
+ const plans=(S.ip||[]).filter(x=>x.ac===a.id&&!x.archived);
+ const inspFlag=plans.filter(x=>['danger','warn'].includes(inspectionState(x,a).level)).length;
  node.innerHTML=tile(f1(a.h)+' h','Fuselaje · tiempo total')+
- tile(String(cs.length),'Controles configurados')+
- tile(over?String(over)+' por revisar':soon?String(soon)+' próximos':cs.length?'Sin alertas calculadas':'Sin controles cargados','Vencimientos de controles',over?'alert':soon?'caution':'')+
+ tile(inspFlag?String(inspFlag)+' por revisar':plans.length?String(plans.length)+(plans.length===1?' configurada':' configuradas'):'Sin inspecciones','Seguimiento reglamentario',inspFlag?'caution':'')+
+ tile(over?String(over)+' por revisar':soon?String(soon)+' próximos':cs.length?String(cs.length)+' configurados':'Sin controles cargados','Controles de mantenimiento',over?'alert':soon?'caution':'')+
  tile(pending?String(pending)+' por revisar':ads.length?String(ads.length)+' registradas':'Sin directivas cargadas','DA · estado declarado',pending?'caution':'');
 }
 
+
+
+const INSPECTION_TEMPLATES={
+ anual:{title:'Inspección anual',ref:'RAAC 91.409 / 43.11 / Apéndice D',m:12,h:0},
+ cien:{title:'Inspección de 100 horas',ref:'RAAC 91.409 / 43.11 / Apéndice D',m:0,h:100},
+ prog:{title:'Inspección progresiva / programa aprobado',ref:'RAAC 91.409 (según programa)',m:0,h:0},
+ alt:{title:'Altímetro y sistema estático (IFR)',ref:'RAAC 91.411 / Apéndice E de Parte 43',m:24,h:0},
+ trans:{title:'Transpondedor ATC',ref:'RAAC 91.413 / Apéndice F de Parte 43',m:24,h:0},
+ manual:{title:'Otra inspección según programa',ref:'Programa / ICA aplicable',m:0,h:0}
+};
+function inspectionTemplateChanged(){
+ const z=INSPECTION_TEMPLATES[v('ip_kind')]||INSPECTION_TEMPLATES.manual;
+ $('ip_title').value=z.title;$('ip_ref').value=z.ref;
+ $('ip_months').value=z.m;$('ip_hours').value=z.h;
+}
+function createInspectionPlan(){
+ if(!A())return;
+ const kind=v('ip_kind'),title=recordValue('ip_title',140),ref=recordValue('ip_ref',250),
+       months=n('ip_months'),hours=n('ip_hours'),applies=v('ip_applies'),note=recordValue('ip_note',350);
+ if(!title||!ref)return alert('Completá el nombre de la inspección y la norma o programa de referencia.');
+ if(!months&&!hours&&!['prog','manual'].includes(kind))return alert('Para esta inspección indicá un intervalo de horas y/o meses según el programa aplicable.');
+ if(kind==='prog'&&!note)return alert('Para un programa progresivo identificá en observaciones el programa aprobado y el alcance.');
+ if(applies==='no'&&!note)return alert('Justificá por qué esta inspección no resulta aplicable.');
+ if(S.ip.some(p=>p.ac===S.sel&&p.kind===kind&&!p.archived&&p.title.toLowerCase()===title.toLowerCase()))
+   return alert('Ya hay una inspección activa con ese nombre. Podés utilizarla para registrar el último cumplimiento.');
+ S.ip.push({id:uid(),ac:S.sel,kind,title,ref,months,hours,applies,note,archived:false});
+ save();R();
+}
+function inspectionRecords(planId){return (S.ie||[]).filter(e=>e.planId===planId).slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))||String(b.added||'').localeCompare(String(a.added||'')));}
+function addMonthsConservative(date,months){
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||!months)return '';
+ const [y,m,d]=date.split('-').map(Number);
+ const target=new Date(Date.UTC(y,m-1+Number(months),1,12));
+ if(!Number.isFinite(target.getTime()))return '';
+ const last=new Date(Date.UTC(target.getUTCFullYear(),target.getUTCMonth()+1,0,12)).getUTCDate();
+ target.setUTCDate(Math.min(d,last));return target.toISOString().slice(0,10);
+}
+function inspectionState(p,a){
+ if(p.archived)return {label:'ARCHIVADA',level:'',last:null,nextDate:'',nextH:null};
+ if(p.applies==='no')return {label:'NO APLICA (SEGÚN USUARIO)',level:'',last:null,nextDate:'',nextH:null};
+ if(p.applies!=='yes')return {label:'APLICABILIDAD POR CONFIRMAR',level:'warn',last:null,nextDate:'',nextH:null};
+ const last=inspectionRecords(p.id)[0];
+ if(!last)return {label:'SIN CONSTANCIA CARGADA',level:'danger',last:null,nextDate:'',nextH:null};
+ if(last.result==='rejected')return {label:'NO APROBADA (SEGÚN CONSTANCIA)',level:'danger',last,nextDate:'',nextH:null};
+ const nextDate=p.months>0?addMonthsConservative(last.date,p.months):'';
+ const nextH=p.hours>0?Number(last.h)+Number(p.hours):null;
+ if(Number(last.h)>Number(a.h)+.01)return {label:'VERIFICAR HORAS DEL FUSELAJE',level:'danger',last,nextDate,nextH};
+ if((nextDate&&nextDate<=today())||(nextH!==null&&Number(a.h)>=nextH))
+   return {label:'REVISAR VENCIMIENTO',level:'danger',last,nextDate,nextH};
+ const soonDate=nextDate&&(new Date(nextDate+'T12:00:00').getTime()-Date.now())/864e5<=45;
+ if(soonDate||(nextH!==null&&nextH-Number(a.h)<=10))
+   return {label:'PRÓXIMA REVISIÓN',level:'warn',last,nextDate,nextH};
+ return {label:!nextDate&&nextH===null?'SIN PLAZO CONFIGURADO':'SIN ALERTAS CALCULADAS',level:!nextDate&&nextH===null?'warn':'',last,nextDate,nextH};
+}
+function addInspectionRecord(planId){
+ const p=S.ip.find(x=>x.id===planId&&x.ac===S.sel),a=A();
+ if(!p||!a)return;
+ const date=recordValue('ir_date_'+planId,20),h=n('ir_h_'+planId),scope=recordValue('ir_scope_'+planId,650),
+  tech=recordValue('ir_tech_'+planId,300),doc=recordValue('ir_doc_'+planId,250),who=recordValue('ir_who_'+planId,150),
+  lic=recordValue('ir_lic_'+planId,110),reg=recordValue('ir_reg_'+planId,90),
+  result=v('ir_result_'+planId),discrepancies=recordValue('ir_discrep_'+planId,650);
+ if(p.applies!=='yes')return alert('Primero indicá que esta inspección aplica a la aeronave, según su régimen de mantenimiento.');
+ if(!date||!scope||!doc||!who||!lic||!reg||!tech)return alert('La constancia debe identificar fecha, alcance, datos técnicos, documento firmado y responsable habilitado.');
+ if(v('ir_h_'+planId).trim()===''||!Number.isFinite(Number(v('ir_h_'+planId)))||Number(v('ir_h_'+planId))<0)return alert('Ingresá las horas reales de fuselaje (TTAF) indicadas en la inspección.');
+ if(date>today())return alert('La fecha de la inspección realizada no puede ser futura.');
+ if(h>Number(a.h)+.01)return alert('Las horas de la inspección no pueden superar el contador actual. Verificá los datos de fuselaje.');
+ if(result==='rejected'&&!discrepancies)return alert('Si no fue aprobada, referenciá las discrepancias registradas.');
+ if(!confirm('¿Transcribir los datos de la inspección que ya consta firmada en la documentación técnica? No estás aprobando aquí el retorno al servicio.'))return;
+ S.ie.push({id:uid(),ac:S.sel,planId,date,h,scope,tech,doc,who,lic,reg,result,discrepancies,added:new Date().toISOString()});
+ save();R();
+}
+function archiveInspection(id){
+ const p=S.ip.find(x=>x.id===id);if(!p)return;
+ const last=inspectionRecords(id)[0];
+ if(last?.result==='rejected')return alert('Hay una inspección no aprobada en el historial reciente. No archives esta configuración hasta revisar su tratamiento documental.');
+ if(!confirm('¿Archivar esta configuración? El historial de inspecciones continuará guardado.'))return;
+ p.archived=true;save();R();
+}
+function restoreInspection(id){
+ const p=S.ip.find(x=>x.id===id);if(!p)return;
+ p.archived=false;save();R();
+}
 
 // ---------- VISTAS ----------
 
@@ -404,7 +506,7 @@ function tabK(){const a=A(),cp=CP(a);
  (!(a.hist||[]).length?'<p class="text-xs text-slate-500">Sin eventos.</p>':'')+'</section>';
 }
 
-function tabS(){const a=A(),sv=S.sv.filter(s=>s.ac==a.id);return`<div class="grid lg:grid-cols-3 gap-4"><div class="space-y-4"><div class="card p-4 space-y-2"><h2 class="font-bold text-amber-300">2 · Crear servicio de mantenimiento</h2>${F('s_n','Nombre (ej. Inspección 100 h, Anual)','text')}<button class="btn bg-amber-600 w-full" onclick="addSv()">Crear servicio</button></div>
+function tabS(){const a=A(),sv=S.sv.filter(s=>s.ac==a.id);return`<div class="grid lg:grid-cols-3 gap-4"><div class="space-y-4"><div class="card p-4 space-y-2"><h2 class="font-bold text-amber-300">Servicio de mantenimiento</h2><p class="maint-note">Para inspecciones reglamentarias y su constancia firmada, usá la pestaña <b>Inspecciones</b>.</p>${F('s_n','Nombre (ej. Inspección 100 h, Anual)','text')}<button class="btn bg-amber-600 w-full" onclick="addSv()">Crear servicio</button></div>
 
 <div class="card p-4 space-y-2"><h2 class="font-bold text-amber-300">3 · Crear control</h2>${SEL('c_s','Servicio',sv.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join(''))}${F('c_n','Control (ej. Cambio de aceite)','text')}${SEL('c_k','Componente','<option value="f">Fuselaje</option><option value="m">Motor</option><option value="p">Hélice</option>').replace('<select','<select onchange="fillLast()"')}<div class="text-[11px] text-slate-500">Intervalo (deje 0 lo que no aplique)</div><div class="grid grid-cols-3 gap-2">${F('c_ih','Horas',"number",0)}${F('c_ic','Ciclos','number',0)}${F('c_im','Meses','number',0)}</div><div class="text-[11px] text-slate-500">Última aplicación</div><div class="grid grid-cols-3 gap-2">${F('c_ld','Fecha','date',today())}${F('c_lh','Horas del componente','number',a.h)}${F('c_lc','Ciclos del componente','number',a.c)}</div><button class="btn bg-amber-600 w-full" onclick="addCt()">Crear control</button></div></div>
 
@@ -514,6 +616,81 @@ function tabD(){
  </section></div>`;
 }
 
+
+function tabX(){
+ const a=A(),plans=(S.ip||[]).filter(x=>x.ac===a.id&&!x.archived);
+ const archived=(S.ip||[]).filter(x=>x.ac===a.id&&x.archived);
+ return `<div class="grid lg:grid-cols-3 gap-4">
+ <section class="card p-4 space-y-3 h-fit">
+ <div class="maint-eyebrow">SEGUIMIENTO DE AERONAVEGABILIDAD</div>
+ <h2 class="font-bold">Configurar inspección</h2>
+ <p class="maint-note">Seleccioná la plantilla y confirmá su aplicabilidad según matrícula, categoría, operación y programa autorizado. Los intervalos se pueden ajustar; nunca se presuponen exigibles.</p>
+ ${SEL('ip_kind','Tipo / referencia','<option value="anual">Inspección anual · RAAC 91.409</option><option value="cien">Inspección de 100 horas · RAAC 91.409</option><option value="prog">Inspección progresiva o programa aprobado</option><option value="alt">Altímetro / sistema estático (IFR) · 91.411</option><option value="trans">Transpondedor ATC · 91.413</option><option value="manual">Otra inspección según programa</option>').replace('<select','<select onchange="inspectionTemplateChanged()"')}
+ <div class="maint-record-grid">
+ <div class="wide">${F('ip_title','Nombre de la inspección','text','Inspección anual','maxlength="140"')}</div>
+ <div class="wide">${F('ip_ref','Norma / programa aplicable','text','RAAC 91.409 / 43.11 / Apéndice D','maxlength="250"')}</div>
+ ${F('ip_months','Intervalo orientativo (meses)','number',12)}
+ ${F('ip_hours','Intervalo orientativo (horas TTAF)','number',0)}
+ <div class="wide">${SEL('ip_applies','¿Aplica a esta aeronave?','<option value="undecided">Por confirmar</option><option value="yes">Sí, según documentación</option><option value="no">No aplica (justificar)</option>')}</div>
+ <div class="wide">${F('ip_note','Programa aprobado / motivo / referencia adicional','text','','maxlength="350"')}</div>
+ </div>
+ <button class="btn bg-amber-600 w-full" onclick="createInspectionPlan()">Incorporar al seguimiento</button>
+ <details class="maint-guidance"><summary>Guía de alcance de inspección</summary>
+ <p>Para inspecciones anual y de 100 horas, el <a target="_blank" rel="noopener noreferrer" href="https://www.argentina.gob.ar/sites/default/files/raac_parte_43.pdf">Apéndice D de RAAC 43</a> aborda, según corresponda: documentación y condición general, célula y mandos, cabina, motor, hélice, tren, alas y equipamiento.</p>
+ <p>El programa y las instrucciones de aeronavegabilidad continuada aplicables a cada modelo determinan el procedimiento. Esta guía no es una lista de inspección para ejecutar trabajos.</p>
+ </details>
+ </section>
+ <div class="lg:col-span-2 space-y-3">
+ <section class="card p-4"><h2 class="font-bold">Inspecciones de ${esc(a.reg)}</h2>
+ <p class="text-xs text-slate-400">No equivale a certificado de aeronavegabilidad, aprobación de retorno al servicio ni asiento oficial. Las constancias deben estar firmadas por quien corresponda.</p>
+ </section>
+ ${plans.map(p=>{
+  const st=inspectionState(p,a),history=inspectionRecords(p.id);
+  return `<section class="card p-4 space-y-3">
+  <div class="flex items-start justify-between gap-3 flex-wrap">
+    <div><h2 class="font-bold">${esc(p.title)}</h2><span class="text-xs text-slate-400">${esc(p.ref)}</span></div>
+    <span class="maint-pill ${st.level}">${st.label}</span>
+  </div>
+  <div class="maint-inspection-stats">
+   <div><b>${st.last?esc(st.last.date):'No registrada'}</b><span>Última inspección en constancia</span></div>
+   <div><b>${st.nextDate||'—'}</b><span>Próxima fecha orientativa</span></div>
+   <div><b>${st.nextH!==null?f1(st.nextH)+' h':'—'}</b><span>Próxima hora TTAF orientativa</span></div>
+  </div>
+  ${p.note?'<p class="maint-record-line">Programa / aplicabilidad: '+esc(p.note)+'</p>':''}
+  <div class="text-xs text-slate-400">Intervalo cargado: ${p.months?esc(p.months)+' meses':''}${p.months&&p.hours?' / ':''}${p.hours?esc(p.hours)+' horas':''}${!p.months&&!p.hours?'según programa específico':''}. Se toma el primer límite alcanzado.</div>
+  ${p.applies==='yes'?`<details class="maint-guidance">
+     <summary>Registrar inspección ya realizada</summary>
+     <p class="maint-note">Transcribí únicamente una inspección terminada y asentada en la documentación técnica. La firma y aprobación no se realizan dentro de esta aplicación.</p>
+     <div class="maint-record-grid">
+     ${F('ir_date_'+p.id,'Fecha de inspección','date',today())}
+     ${F('ir_h_'+p.id,'Horas TTAF en la inspección','number',a.h)}
+     <div class="wide">${F('ir_scope_'+p.id,'Tipo y alcance verificado','text',esc(p.title),'maxlength="650"')}</div>
+     <div class="wide">${F('ir_tech_'+p.id,'Manual, capítulo o programa aplicable','text','','maxlength="300"')}</div>
+     <div class="wide">${F('ir_doc_'+p.id,'Referencia al asiento original firmado','text','','maxlength="250"')}</div>
+     ${F('ir_who_'+p.id,'Responsable técnico del asiento','text','','maxlength="150"')}
+     ${F('ir_lic_'+p.id,'Tipo y número de licencia / habilitación','text','','maxlength="110"')}
+     <div class="wide">${F('ir_reg_'+p.id,'Número de registro ANAC','text','','maxlength="90"')}</div>
+     <div class="wide">${SEL('ir_result_'+p.id,'Resultado según el asiento firmado','<option value="approved">Aprobada para retorno al servicio según constancia</option><option value="rejected">No aprobada / discrepancias</option>')}</div>
+     <div class="wide">${F('ir_discrep_'+p.id,'Discrepancias y referencia al listado entregado','text','','maxlength="650"')}</div>
+     </div>
+     <button class="btn bg-amber-600 w-full mt-3" onclick="addInspectionRecord('${p.id}')">Guardar transcripción privada</button>
+   </details>`:'<p class="maint-note">La aplicabilidad aún no está confirmada (o se declaró no aplicable). Para cargar una inspección, verificá el régimen y creá una configuración aplicable.</p>'}
+  <details class="maint-guidance"><summary>Historial de inspecciones (${history.length})</summary>
+   <div class="overflow-x-auto"><table class="w-full"><thead><tr><th>Fecha / TTAF</th><th>Resultado y alcance</th><th>Documento</th><th>Responsable</th><th></th></tr></thead><tbody>
+   ${history.map(e=>`<tr>
+   <td><strong>${esc(e.date)}</strong><div>${f1(e.h)} h</div></td>
+   <td><span class="maint-pill ${e.result==='rejected'?'danger':''}">${e.result==='approved'?'Aprobada según constancia':'No aprobada'}</span><div class="mt-2">${esc(e.scope)}</div>${e.discrepancies?'<div class="text-rose-300 mt-1">Discrepancias: '+esc(e.discrepancies)+'</div>':''}</td>
+   <td>${esc(e.doc)}<div class="text-slate-400">${esc(e.tech)}</div></td>
+   <td>${esc(e.who)}<div class="text-slate-400">Lic.: ${esc(e.lic)}<br>Reg. ANAC: ${esc(e.reg)}</div></td><td></td>
+   </tr>`).join('')||'<tr><td colspan="5">No hay constancias transcriptas.</td></tr>'}
+   </tbody></table></div>
+  </details>
+  <div class="text-right"><button class="text-xs text-slate-400 underline" onclick="archiveInspection('${p.id}')">Archivar configuración (conservar historial)</button></div>
+ </section>`}).join('')||'<section class="card p-4"><p class="maint-note">Todavía no configuraste inspecciones. Agregá las aplicables según el programa de esta aeronave y transcribí sus últimas constancias.</p></section>'}
+ ${archived.length?`<details class="maint-guidance"><summary>Configuraciones archivadas (${archived.length})</summary>${archived.map(p=>`<div class="maint-record-line mt-2">${esc(p.title)} · ${inspectionRecords(p.id).length} anotaciones <button class="btn bg-slate-700 ml-2" onclick="restoreInspection('${p.id}')">Restaurar</button></div>`).join('')}</details>`:''}
+ </div></div>`;
+}
+
 function R(){
 
  $('sel').innerHTML=S.ac.map(a=>`<option value="${a.id}" ${a.id==S.sel?'selected':''}>${esc(a.reg)}</option>`).join('')||'<option>Sin aeronaves</option>';
@@ -522,7 +699,7 @@ function R(){
 
  if(!S.sel&&S.ac[0])S.sel=S.ac[0].id;
 
- const f={a:tabA,k:tabK,s:tabS,b:tabB,i:tabI,d:tabD,r:tabR,p:tabP}[S.tab];
+ const f={a:tabA,x:tabX,k:tabK,s:tabS,b:tabB,i:tabI,d:tabD,r:tabR,p:tabP}[S.tab];
 
  $('app').innerHTML=!currentUser?'<div class="card p-6">Iniciando sesión y recuperando tus datos...</div>':S.tab=='a'||A()?f():'<div class="card p-6 text-center text-slate-400">Primero cree una aeronave en la pestaña “Aeronaves”.</div>';
 
