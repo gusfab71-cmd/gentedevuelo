@@ -91,9 +91,12 @@ function parse(text){
          direction_true_deg:heading===360?0:heading,speed_kt:speed,source:'PRONAREA WIND/T'});
      }
     }
-   }else if(/^[A-Z]{3}$/.test(token)&&referenceStations[token]){
+   }else if(/^[A-Z]{3,4}$/.test(token)){
+     // Un grupo WIND/T nuevo comienza también con estaciones que no están
+     // en el directorio local (p. ej. NIN). No heredarles el grupo previo:
+     // eso asignaría a EZE/FDO el viento de NIN y crearía falsos conflictos.
      if(hasLevel){group=[];hasLevel=false;}
-     if(!group.includes(token))group.push(token);
+     if(referenceStations[token]&&!group.includes(token))group.push(token);
    }
   }
  }

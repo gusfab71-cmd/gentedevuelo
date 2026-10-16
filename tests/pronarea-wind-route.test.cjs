@@ -80,6 +80,66 @@ test('conflicting reports from the same endpoint station cannot yield an automat
  assert.match(result.reason, /contradictorios/);
 });
 
+test('PRONAREA rosa: an unlisted NIN group must not alter EZE/FDO wind for any leg', () => {
+ const api = load();
+ const routeAirports = {
+  SAEZ: eze, SAAR: airports.SAAR,
+  SADF: [-34.4545, -58.5909], SADP: [-34.61, -58.6125],
+  SADM: [-34.6792, -58.6436], SABE: [-34.5589, -58.4164],
+  SAAP: [-31.7947, -60.4803], SAAV: [-31.7108, -60.8114],
+  SAAG: [-33.0056, -58.6128]
+ };
+ const pronarea = [
+  'PRONAREA FIR EZE VALIDEZ 1022 SOBRE MAPA 0600 UTC.',
+  'WIND/T: DIA FL030/16020P07 FL065/19015P03',
+  'SVO-PAR-ROS-GUA FL030/17015P09 FL065/19015P01',
+  'PAL-MOR-ENO-PTA-AER-EZE-FDO-CPO FL030/16015P06 FL065/18015M00',
+  'NIN FL030/15015P06 FL065/18015P01',
+  'GPI-LYE-PEH-OSA FL030/13010P06 FL065/16005M00',
+  'FCST: DIA(EST) 1022 18010KT'
+ ].join(' ');
+ const entries = api.parse(pronarea);
+ const fdoFl030 = entries.filter(x => x.station === 'FDO' && x.level_ft === 3000);
+ assert.equal(fdoFl030.length, 1, 'NIN must not be misattributed to FDO');
+ assert.equal(fdoFl030[0].direction_true_deg, 160);
+ assert.equal(fdoFl030[0].speed_kt, 15);
+ const midpointOf = (a, b) => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+ const flight = '2026-10-16T12:30:00Z';
+ const first = api.pick(pronarea, 4500, midpointOf(eze, routeAirports.SAAR), routeAirports, flight,
+  [eze, routeAirports.SAAR]);
+ assert.equal(first.ok, true, first.reason);
+ assert.equal(first.station, 'FDO');
+ assert.equal(first.level_ft, 3000);
+ assert.equal(first.direction_true_deg, 160);
+ assert.equal(first.speed_kt, 15);
+ const second = api.pick(pronarea, 3500, midpointOf(routeAirports.SAAR, routeAirports.SAAP), routeAirports,
+  flight, [routeAirports.SAAR, routeAirports.SAAP]);
+ assert.equal(second.ok, true, second.reason);
+ assert.equal(second.direction_true_deg, 170);
+ assert.equal(second.speed_kt, 15);
+});
+
+test('unknown 3- and 4-letter station codes always delimit subsequent WIND/T groups', () => {
+ const api = load();
+ const pronarea = [
+  'PRONAREA FIR EZE VALIDEZ 1022 WIND/T:',
+  'EZE FL030/09014P12 FL065/12020P08',
+  'XXXX FL030/18012P12 FL065/20012P07',
+  'ROS FL030/21025P10 FL065/24030P05',
+  'CPO FL030/08010P10',
+  'PAR FL030/26022P10 FCST: EZE 1022 CAVOK'
+ ].join(' ');
+ const entries = api.parse(pronarea);
+ for (const [station, direction, speed] of [
+  ['EZE', 90, 14], ['ROS', 210, 25], ['PAR', 260, 22]
+ ]) {
+  const rows = entries.filter(x => x.station === station && x.level_ft === 3000);
+  assert.equal(rows.length, 1, station + ' must not inherit another station group');
+  assert.equal(rows[0].direction_true_deg, direction);
+  assert.equal(rows[0].speed_kt, speed);
+ }
+});
+
 test('end to end: changing a leg course refreshes navigation and GS from endpoint WIND/T', () => {
  const elements = new Map();
  const makeElement = props => ({value: '', dataset: {}, hidden: false, children: [],
