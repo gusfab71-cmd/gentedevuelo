@@ -205,26 +205,26 @@
 </section>
 
       <section class="panel" id="gdvStolAdmin" hidden style="margin:0 0 24px;border-color:rgba(232,187,104,.75);">
-        <h2 style="margin-top:0;">Video de portada</h2>
+        <h2 style="margin-top:0;">Foto o video de portada</h2>
         <p><a href="index.html?editar-tarjetas=1#inicio" class="link">Editar ubicación y tamaño de Shimoda, Instituciones Amigas y CompraVenta</a> (solo PC, exclusivo del administrador).</p>
         <p><a href="index.html?editar-marca=1#inicio" class="link">Mover logo de la portada junto a «Gente de Vuelo», «Comunidad Aeronáutica» y «Pasión que nos une»</a> (solo PC, administrador).</p>
         <p><a href="moderacion.html" class="link">Volver al panel completo</a></p>
-        <p class="intro">Administrá el video de la portada sin editar código. Podés subir un MP4/WebM vertical 9:16 de hasta 40 MB a Cloudflare, o pegar un enlace de YouTube Shorts, Vimeo o Cloudflare Stream. En celulares el recuadro sigue al final de la portada. Para ocultarlo, desmarcá «Mostrar».</p>
+        <p class="intro">Administrá la foto o el video destacado de la portada sin editar código. Podés subir una imagen JPG/PNG/WEBP de hasta 4 MB o un video MP4/WebM vertical 9:16 de hasta 40 MB. También podés pegar un enlace HTTPS compatible. Se muestra un solo contenido por vez; el actual permanece hasta que guardes el nuevo. En celulares el recuadro sigue al final de la portada. Para ocultarlo, desmarcá «Mostrar».</p>
          <div class="panel" style="margin:14px 0 20px;background:#1a242b;border:1px solid #a88655;padding:18px;border-radius:14px;">
            <h3 style="margin:0 0 8px">Ubicación y tamaño del video</h3>
            <p style="margin:0 0 12px;">Abrí la portada en la computadora, arrastrá el video con el mouse y ajustá su tamaño desde la esquina o el control. Después pulsá <strong>Guardar posición</strong>. El cambio se verá para todos y no modificará su ubicación en celulares.</p>
            <a class="button" href="index.html?editar-video=1#inicio" style="display:inline-flex;background:#d6a75b;color:#172028;border-radius:10px;padding:11px 17px;font-weight:750;text-decoration:none;">Editar ubicación y tamaño en la portada</a>
-           <p style="margin:10px 0 0;font-size:12px;color:#b9c6d1">Para cambiar el video, usá el formulario de esta sección. Para volver a la ubicación original, seleccioná «Restaurar original» en la portada.</p>
+           <p style="margin:10px 0 0;font-size:12px;color:#b9c6d1">Para cambiar la foto o el video, usá el formulario de esta sección. Para volver a la ubicación original, seleccioná «Restaurar original» en la portada.</p>
          </div>
         <form id="gdvStolForm" style="display:grid;gap:12px;">
-          <label>Nombre interno del video (no se muestra en la portada)
-            <input id="gdvStolInputTitle" type="text" maxlength="90" value="Video de portada" required>
+          <label>Nombre interno de la foto o video (no se muestra en la portada)
+            <input id="gdvStolInputTitle" type="text" maxlength="90" value="Contenido de portada" required>
           </label>
-          <label>Enlace HTTPS del video
-            <input id="gdvStolInputUrl" type="url" maxlength="2048" placeholder="https://www.youtube.com/watch?v=..." autocomplete="off">
+          <label>Enlace HTTPS de la foto o video
+            <input id="gdvStolInputUrl" type="url" maxlength="2048" placeholder="https://ejemplo.com/imagen.webp o video de YouTube" autocomplete="off">
           </label>
-          <label>O subir un video vertical 9:16 a Cloudflare R2 (MP4 o WebM, máximo 40 MB)
-            <input id="gdvStolUpload" type="file" accept="video/mp4,video/webm,.mp4,.webm">
+          <label>O subir una foto (JPG, PNG o WEBP, hasta 4 MB) o video vertical 9:16 (MP4/WebM, hasta 40 MB)
+            <input id="gdvStolUpload" type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,.jpg,.jpeg,.png,.webp,.mp4,.webm">
           </label>
           <div class="acciones" style="margin-top:0;flex-wrap:wrap;">
             <button type="button" id="gdvStolUploadBtn" class="secundario">Subir archivo</button>
@@ -232,10 +232,10 @@
           </div>
           <label style="display:flex;align-items:center;gap:8px;">
             <input id="gdvStolActive" type="checkbox" checked style="width:auto;">
-            Mostrar el video en la portada
+            Mostrar la foto o video en la portada
           </label>
           <div id="gdvStolPreview" hidden style="aspect-ratio:9/16;width:min(100%,270px);overflow:hidden;background:#060c11;border:0;border-radius:16px;"></div>
-          <div class="acciones"><button type="submit" id="gdvStolSave">Guardar video</button></div>
+          <div class="acciones"><button type="submit" id="gdvStolSave">Guardar contenido</button></div>
           <p id="gdvStolAdminStatus" role="status" aria-live="polite" class="estado"></p>
         </form>
       </section>
@@ -331,7 +331,7 @@
   </main>
 
   <script src="assets/r2-media.js"></script>
-  <script src="assets/home-video.js?v=20261013loop1"></script>
+  <script src="assets/home-video.js?v=20261016foto1"></script>
   <script>
     const client = window.GDV_AUTH.client;
     const secciones = [
@@ -1275,8 +1275,8 @@
       if (modoVideo && administrador) {
         const tituloPanel = $("panel")?.querySelector("h1");
         const introPanel = $("panel")?.querySelector(".intro");
-        if (tituloPanel) tituloPanel.textContent = "Administración · Video de portada";
-        if (introPanel) introPanel.textContent = "Cargá o reemplazá el video cuando quieras. El video sigue pendiente mientras no guardes un enlace.";
+        if (tituloPanel) tituloPanel.textContent = "Administración · Foto o video de portada";
+        if (introPanel) introPanel.textContent = "Cargá o reemplazá una foto o video cuando quieras. El contenido actual se mantiene mientras no guardes uno nuevo.";
         if ($("panelFotosHangar")) $("panelFotosHangar").hidden = true;
         for (const selector of [".pestanas", ".filtros", "#resumen", "#lista"]) {
           const element = document.querySelector(selector);
