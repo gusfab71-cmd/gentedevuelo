@@ -175,6 +175,13 @@ test('a missing PRONAREA never traps the pilot in the calculations stage', () =>
  assert.equal(valid(), true);
 });
 
+test('PRONAREA confirmation remains, without a duplicate warning below the checkbox', () => {
+ assert.match(html, /id="flight-pronarea-confirm"/);
+ assert.match(html, /Confirmé en el SMN la FIR, la emisión y la vigencia real/);
+ assert.doesNotMatch(html, /id="flight-pronarea-gate"/);
+ assert.match(wizard, /if\(b\)\{b\.disabled=!result\.ok/);
+});
+
 test('alternate fuel is not estimated and the remaining fuel still includes contingency and reserve', () => {
  assert.doesNotMatch(wizard, /flight-fuel-alternate-gs|altNm|altFuel|Alternativo directo/);
  assert.match(wizard, /Remanente para alternativo \(sin calcular consumo\)/);
