@@ -368,6 +368,12 @@ Deno.serve(async request=>{
   const question=asString(input?.question,500)??"";
   if(mode==="pilot_question"&&question.length<2)
     return json({error:"Escribí una pregunta para el chat del vuelo."},400);
+  // Una pestaña abierta antes de la actualización no manda la navegación.
+  // Avisar ANTES de llamar a OpenAI: evita gastar tokens en una respuesta
+  // aparentemente completa que en realidad no recibió los cálculos locales.
+  if(mode==="pilot_question"&&(!Array.isArray(input?.navigation_scenarios)||
+    typeof input?.navigation_summary_text!=="string"))
+    return json({error:"Esta pestaña usa una versión anterior de Flight Operations y no envía los cálculos de navegación. Guardá el borrador, recargá la página y recuperá el plan. No se consumieron tokens."},409);
   const rawHistory=input?.conversation_history;
   if(mode==="pilot_question"&&rawHistory!==undefined&&
     (!Array.isArray(rawHistory)||rawHistory.length>8||

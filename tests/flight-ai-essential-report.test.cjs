@@ -56,10 +56,15 @@ test('departure window date and deterministic navigation/fuel summary are sent w
 
 test('pilot questions include local wind scenarios, NAV summary and destination ETA',()=>{
  assert.match(html,/navigation_scenarios:window\.GDV_FLIGHT_NAV\?\.navigationScenarios\?\.\(\)\|\|\[\]/);
+ assert.match(html,/No se cargó el motor de navegación de Flight Operations/);
  assert.match(html,/\['essential','pilot_question'\]\.includes\(mode\)\?\{navigation_summary_text:essentialNavigationSummary\(\)\}/);
  assert.match(edge,/const arrivalEstimate=asString\(input\?\.planned_end_utc,40\)/);
  assert.match(edge,/ESCENARIOS WIND\/T CONTRASTADOS CON EL TEXTO CARGADO/);
  assert.match(edge,/verifiedNavigationScenarios\(input\?\.navigation_scenarios,pronarea\|\|"",via\)/);
  assert.match(edge,/NIVEL PUBLICADO MÁS CERCANO/);
  assert.match(edge,/if\(input\?\.confirm_ai_cost!==true\)/);
+ assert.match(edge,/mode==="pilot_question"&&\(!Array\.isArray\(input\?\.navigation_scenarios\)\|\|/);
+ assert.match(edge,/Esta pestaña usa una versión anterior de Flight Operations/);
+ assert.ok(edge.indexOf('Esta pestaña usa una versión anterior de Flight Operations')<edge.indexOf('const response=await fetch("https://api.openai.com/v1/responses"'),
+  'version check must reject old frontend before paid AI call');
 });

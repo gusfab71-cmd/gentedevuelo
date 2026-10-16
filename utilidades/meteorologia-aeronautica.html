@@ -1745,6 +1745,11 @@ el('copy-report').addEventListener('click',async()=>{
      $('flight-pilot-question').focus();
      return null;
    }
+   if(mode==='pilot_question' && (typeof window.GDV_FLIGHT_NAV?.navigationScenarios!=='function'||
+     typeof window.GDV_FLIGHT_NAV?.snapshot!=='function')){
+     targetStatus.textContent='No se cargó el motor de navegación de Flight Operations. Guardá el plan y recargá la página antes de usar IA; no se consumieron tokens.';
+     return null;
+   }
    return {
      mode,origin:airportCode('flight-origin'),destination:airportCode('flight-dest'),alternate:alternateCode,
      airport_labels:{
@@ -2098,7 +2103,7 @@ if(stage){
 <script src="../assets/flight-wmm2025.js?v=20261015a"></script>
 <script src="../assets/flight-vfr-altitude.js?v=20261015i"></script>
 <script src="../assets/flight-pronarea-wind.js?v=20261016a"></script>
-<script src="../assets/flight-essential-navigation.js?v=20261016b"></script>
+<script src="../assets/flight-essential-navigation.js?v=20261016c"></script>
 <script src="../assets/flight-fir-autoselect.js?v=20261015b"></script>
 <script src="../assets/flight-route-suggestions.js?v=20261015b"></script>
 <script defer src="../assets/flight-operations-wizard.js?v=20261016c"></script>
