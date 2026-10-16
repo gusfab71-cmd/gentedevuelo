@@ -20,6 +20,7 @@
       return {type:'iframe',src:'https://iframe.videodelivery.net/'+p[0]};
     if (/^customer-[a-z0-9]+\.cloudflarestream\.com$/.test(h) && /^[a-zA-Z0-9]+$/.test(p[0] || ''))
       return {type:'iframe',src:'https://'+h+'/'+p[0]+'/iframe'};
+    if (/\.(jpe?g|png|webp)$/i.test(u.pathname)) return {type:'image',src:u.href};
     if (/\.(mp4|webm|ogv)$/i.test(u.pathname)) return {type:'video',src:u.href};
     return null;
   }
@@ -260,15 +261,20 @@
     card.hidden=true; // No dejar un recuadro vacío mientras falta cargar el video.
     try {
       const {data,error}=await db.from('gdv_home_video')
-        .select('video_url,is_active,pos_x_pct,pos_y_pct,width_px').eq('id',1).maybeSingle();
+        .select('title,video_url,is_active,pos_x_pct,pos_y_pct,width_px').eq('id',1).maybeSingle();
       if(error||data?.is_active===false)return;
       savedPosition=data?{pos_x_pct:data.pos_x_pct,pos_y_pct:data.pos_y_pct,width_px:data.width_px}:{...originalPosition};
       const r=parseVideo(data?.video_url||'');
       if(!r)return;
-      const node=document.createElement(r.type==='video'?'video':'iframe');
+      const node=document.createElement(r.type==='video'?'video':r.type==='image'?'img':'iframe');
       node.src=r.type==='iframe'?autoplayIframeSrc(r.src):r.src;
-      node.setAttribute('title','Video de portada');
-      if(r.type==='video'){
+      card.setAttribute('aria-label',r.type==='image'?'Foto destacada: '+(data.title||'Portada'):'Video de portada');
+      if(r.type==='image'){
+        node.alt=data.title||'Foto destacada de Gente de Vuelo';
+        node.decoding='async';
+        node.loading='eager';
+      } else if(r.type==='video'){
+        node.title='Video de portada';
         node.controls=true;
         node.autoplay=true;
         node.loop=true;
@@ -280,6 +286,7 @@
         node.setAttribute('playsinline','');
         node.preload='auto';
       } else {
+        node.title='Video de portada';
         node.loading='eager';
         node.allow='autoplay; encrypted-media; picture-in-picture; web-share';
         node.allowFullscreen=true;
@@ -289,7 +296,7 @@
       applyPosition();
       syncEditor();
       if(r.type==='video')node.play().catch(()=>{});
-    } catch(err) { console.warn('No se pudo cargar el video de portada:',err); }
+    } catch(err) { console.warn('No se pudo cargar el contenido de portada:',err); }
   }
   async function admin() {
     const box=el('gdvStolAdmin'); if(!box||!db)return;box.hidden=false;
@@ -300,21 +307,23 @@
   async function save(evt) {
     evt.preventDefault();
     const url=el('gdvStolInputUrl').value.trim(),title=el('gdvStolInputTitle').value.trim(), status=el('gdvStolAdminStatus');
-    if(url&&!parseVideo(url)){status.textContent='Enlace no compatible. Usá YouTube, Vimeo, Cloudflare Stream o MP4/WebM.';return;}
+    const media=url?parseVideo(url):null;
+    if(url&&!media){status.textContent='Enlace no compatible. Usá YouTube, Vimeo, Cloudflare Stream, MP4/WebM o una foto JPG/PNG/WEBP.';return;}
     if(!title){status.textContent='Ingresá un título.';return;}
     const btn=el('gdvStolSave');btn.disabled=true;
     const {data,error}=await db.from('gdv_home_video').update({title,video_url:url,is_active:el('gdvStolActive').checked,updated_at:new Date().toISOString()}).eq('id',1).select('id').maybeSingle();
     btn.disabled=false;
-    status.textContent=error?'No se pudo guardar: '+error.message:!data?'Permiso denegado.':'Video actualizado en la portada.';
+    status.textContent=error?'No se pudo guardar: '+error.message:!data?'Permiso denegado.':media?.type==='image'?'Foto publicada en la portada.':'Video actualizado en la portada.';
   }
   function preview() {
     const area=el('gdvStolPreview'),status=el('gdvStolAdminStatus');
     if(!area)return;
     const r=parseVideo(el('gdvStolInputUrl').value.trim());
     if(!r){status.textContent='Agregá un enlace compatible para previsualizar.';area.hidden=true;return;}
-    const node=document.createElement(r.type==='video'?'video':'iframe');
-    node.src=r.src;node.title='Vista previa del video de portada';node.style.cssText='width:100%;height:100%;border:0;display:block;';
-    if(r.type==='video'){node.controls=true;node.playsInline=true;node.preload='metadata';}
+    const node=document.createElement(r.type==='video'?'video':r.type==='image'?'img':'iframe');
+    node.src=r.src;node.title='Vista previa del contenido de portada';node.style.cssText='width:100%;height:100%;border:0;display:block;object-fit:contain;';
+    if(r.type==='image'){node.alt='Vista previa de la foto';node.decoding='async';}
+    else if(r.type==='video'){node.controls=true;node.playsInline=true;node.preload='metadata';}
     else {node.allow='encrypted-media; picture-in-picture; web-share';node.allowFullscreen=true;}
     area.replaceChildren(node);area.hidden=false;
     status.textContent='Vista previa. Guardá para publicar el cambio.';
@@ -343,21 +352,27 @@
   }
   async function upload() {
     const file=el('gdvStolUpload')?.files?.[0],status=el('gdvStolAdminStatus'),btn=el('gdvStolUploadBtn');
-    if(!file){status.textContent='Elegí primero un video MP4 o WebM.';return;}
-    if(!['video/mp4','video/webm'].includes(file.type)||file.size>40*1024*1024||file.size===0){
-      status.textContent='Usá un video MP4 o WebM de hasta 40 MB.';return;
+    if(!file){status.textContent='Elegí primero una foto o un video.';return;}
+    const isImage=['image/jpeg','image/png','image/webp'].includes(file.type);
+    const isVideo=['video/mp4','video/webm'].includes(file.type);
+    const maxSize=isImage?4*1024*1024:40*1024*1024;
+    if((!isImage&&!isVideo)||file.size===0||file.size>maxSize){
+      status.textContent='Usá una foto JPG/PNG/WEBP de hasta 4 MB o un video MP4/WebM de hasta 40 MB.';return;
     }
     if(!window.GDV_R2_MEDIA?.upload){status.textContent='No está disponible el servicio de carga a Cloudflare.';return;}
-    btn.disabled=true;status.textContent='Comprobando formato vertical 9:16…';
+    btn.disabled=true;
     try{
-      await validatePortrait(file);
-      status.textContent='Subiendo video vertical a Cloudflare R2…';
+      if(isVideo){status.textContent='Comprobando video vertical 9:16…';await validatePortrait(file);}
+      status.textContent='Subiendo '+(isImage?'foto':'video')+' a Cloudflare R2…';
       const cfg=window.GDV_CONFIG;
       const uploaded=await window.GDV_R2_MEDIA.upload(file,db,cfg.url,cfg.key);
+      const parsed=parseVideo(uploaded.url);
+      if(!parsed||(isImage&&parsed.type!=='image')||(isVideo&&parsed.type!=='video'))
+        throw Error('Cloudflare devolvió un formato inesperado.');
       el('gdvStolInputUrl').value=uploaded.url;
       preview();
-      status.textContent='Video vertical cargado en Cloudflare. Guardá para publicarlo en la portada.';
-    }catch(err){status.textContent='Error al subir video: '+(err.message||'Reintentá.');}
+      status.textContent=(isImage?'Foto':'Video')+' cargado. Pulsá Guardar contenido para publicarlo en la portada.';
+    }catch(err){status.textContent='Error al subir archivo: '+(err.message||'Reintentá.');}
     finally{btn.disabled=false;}
   }
   window.GDV_STOL_VIDEO={admin,parseVideo};
