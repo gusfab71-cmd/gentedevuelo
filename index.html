@@ -20,6 +20,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gente de Vuelo</title>
+<script src="assets/portada-horaria.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&display=swap" rel="stylesheet">
   <style>
     * {
@@ -80,7 +81,7 @@
     }
 .portada-completa {
   position: relative;
-  background-image: url('portada-cessna-dos-palas.webp');
+  background-image: var(--gdv-portada-imagen, url('portada-tarde-tres-palas.webp'));
   background-size: cover;
   background-position: center 65%;
   background-repeat: no-repeat;
@@ -10759,7 +10760,7 @@ footer .contacto-pie-movil { display: none; }
         rgba(5,10,14,.16) 55%,
         rgba(5,10,14,.78) 87%,
         #0d1216 100%),
-      url('portada-cessna-dos-palas.webp') !important;
+      var(--gdv-portada-imagen, url('portada-tarde-tres-palas.webp')) !important;
     background-size: auto 120% !important;
     background-position: 54% bottom !important;
     background-repeat: no-repeat !important;
