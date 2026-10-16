@@ -4915,7 +4915,7 @@ img, video { max-width: 100%; }
     <div class="cuenta-opciones" id="opcionesCuenta">
       <a href="comunidad.html#hangar">Mi Hangar</a><a href="comunidad.html#perfil">Editar perfil</a><a href="comunidad.html#preferencias-correo">Correos y avisos</a>
       <a href="comunidad.html#almacenamiento" id="gdvStorageLink" hidden>Almacenamiento</a>
-       <a href="moderacion.html#video-portada" id="gdvStolAdminLink" hidden>Video de portada</a>
+       <a href="moderacion.html#video-portada" id="gdvStolAdminLink" hidden>Foto o video de portada</a>
        <a href="index.html?editar-tarjetas=1#inicio" id="gdvCardsEditLink" hidden>Editar tarjetas de portada</a>
        <a href="index.html?editar-marca=1#inicio" id="gdvBrandEditLink" hidden>Mover logo y textos</a>
         <a href="index.html?editar-meteo=1#inicio" id="gdvWeatherEditorLink" hidden>Mover y cambiar tamaño de tarjetas meteorológicas (PC)</a>
@@ -5020,7 +5020,7 @@ img, video { max-width: 100%; }
     <span class="gdv-online-badge" data-gdv-online-badge hidden aria-live="off"><i class="gdv-online-dot" aria-hidden="true"></i><span data-gdv-online-number></span></span>
   </a>
 </nav>
- <section class="gdv-stol-portada" id="stolEnAccion" aria-label="Video de portada" hidden>
+ <section class="gdv-stol-portada" id="stolEnAccion" aria-label="Contenido destacado de portada" hidden>
    <div class="gdv-stol-player" id="gdvStolPlayer"></div>
  </section>
 
@@ -11611,7 +11611,7 @@ body.modo-anexo-clasificados #clasificados-seccion {
   display: block; aspect-ratio: 9 / 16; width: 100%; overflow: hidden;
   border: 0; border-radius: 18px; background: transparent; box-shadow: none;
 }
-.gdv-stol-player iframe,.gdv-stol-player video {
+.gdv-stol-player iframe,.gdv-stol-player video,.gdv-stol-player img {
   display: block; width: 100%; height: 100%; border: 0;
   border-radius: inherit; object-fit: contain; background: #080c10;
 }
@@ -11755,7 +11755,7 @@ body.modo-anexo-clasificados #clasificados-seccion {
 }
 .gdv-stol-portada.gdv-video-editing:active{cursor:grabbing!important;}
 .gdv-stol-portada.gdv-video-editing .gdv-stol-player,
-.gdv-stol-portada.gdv-video-editing .gdv-stol-player :is(iframe,video){pointer-events:none!important;}
+.gdv-stol-portada.gdv-video-editing .gdv-stol-player :is(iframe,video,img){pointer-events:none!important;}
 #gdvVideoResizeHandle{
   position:absolute;right:-9px;bottom:-9px;width:37px;height:37px;
   z-index:10;border:2px solid #d5ab69;border-radius:10px;
@@ -11776,7 +11776,7 @@ body.modo-anexo-clasificados #clasificados-seccion {
 #gdvVideoLayoutTools strong{font-size:12px;letter-spacing:1.1px;color:#ffdca2;}
 #gdvVideoNudges{display:flex;gap:3px;align-items:center;}
 #gdvVideoNudges button{min-width:32px;padding:8px!important;font-size:16px;font-weight:800;}
-.gdv-stol-portada.gdv-video-editing::before{content:"ARRASTRÁ EL VIDEO";position:absolute;top:8px;left:50%;transform:translateX(-50%);z-index:9;pointer-events:none;white-space:nowrap;background:#18252ddd;color:#ffe1a2;border:1px solid #d6af74;border-radius:8px;padding:4px 8px;font:700 11px system-ui,sans-serif;}
+.gdv-stol-portada.gdv-video-editing::before{content:"ARRASTRÁ EL RECUADRO";position:absolute;top:8px;left:50%;transform:translateX(-50%);z-index:9;pointer-events:none;white-space:nowrap;background:#18252ddd;color:#ffe1a2;border:1px solid #d6af74;border-radius:8px;padding:4px 8px;font:700 11px system-ui,sans-serif;}
 #gdvVideoLayoutTools span{max-width:260px;}
 #gdvVideoLayoutTools label{display:flex;align-items:center;gap:6px;color:#e1e7ed;}
 #gdvVideoLayoutTools input[type="range"]{width:105px;accent-color:#e6b673;}
@@ -11920,7 +11920,7 @@ body.modo-anexo-clasificados #clasificados-seccion {
 <script src="assets/home-online-count.js?v=20261013conectados1"></script>
 <link rel="stylesheet" href="assets/home-card-editor.css?v=20261013cards2">
 <link rel="stylesheet" href="assets/home-instituciones-logo.css?v=20261013marcos-unificados1">
-<script src="assets/home-video.js?v=20261013loop1"></script>
+<script src="assets/home-video.js?v=20261016foto1"></script>
 <script src="assets/home-card-editor.js?v=20261013cards2"></script>
 <link rel="stylesheet" href="assets/home-brand-editor.css?v=20261013marca1">
 <script src="assets/home-brand-editor.js?v=20261013marca2"></script>
