@@ -492,6 +492,7 @@ function calcFuel(){
  const reserveFuel=burn!==null&&reserve!==null?burn*reserve/60:null;
  const {planned,remainder}=fuelRemainder(available,trip,ground,extra,reserveFuel);
  $('flight-fuel-details').textContent='Ruta: '+fmt(distance)+' NM · '+fmt(hours===null?null:hours*60)+' min'+
+ '\nPartida prevista: '+(date()?.toISOString().slice(0,16).replace('T',' ')||'Pendiente')+' UTC'+
  '\nETA destino: '+(eta()?.slice(0,16).replace('T',' ')||'Pendiente')+' UTC'+
  '\nRuta: '+fmt(trip)+' L · Inicial: '+fmt(ground)+' L'+
  '\nContingencia: '+fmt(extra)+' L · Reserva final: '+fmt(reserveFuel)+' L'+
