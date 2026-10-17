@@ -6,6 +6,7 @@ const path = require('node:path');
 
 const source = fs.readFileSync(path.join(__dirname, '../assets/flight-pronarea-wind.js'), 'utf8');
 const navigationSource = fs.readFileSync(path.join(__dirname, '../assets/flight-essential-navigation.js'), 'utf8');
+const calculatorSource = fs.readFileSync(path.join(__dirname, '../assets/flight-tas-calculator.js'), 'utf8');
 const eze = [-34.8222, -58.5358];
 const cba = [-31.31, -64.2083];
 const airports = {SAEZ: eze, SACO: cba, SAAR: [-32.9036, -60.7844]};
@@ -36,6 +37,7 @@ test('SAEZ–SACO: use official endpoint WIND/T despite midpoint being over 300 
  assert.equal(result.reference_type, 'route_endpoints_average');
  assert.equal(result.station, 'EZE + CBA');
  assert.equal(result.level_ft, 3000);
+ assert.equal(result.temperature_c,17.5);
  assert.equal(Math.round(result.direction_true_deg), 270);
  assert.ok(Math.abs(result.speed_kt - 15) < 0.0001);
  assert.match(result.notice, /NO un pronóstico confirmado/);
@@ -152,7 +154,9 @@ test('end to end: changing a leg course refreshes navigation and GS from endpoin
  elements.set('flight-pronarea-validity', makeElement({dataset: {}}));
  elements.set('flight-origin', makeElement({value: 'SAEZ'}));
  elements.set('flight-dest', makeElement({value: 'SACO'}));
- elements.set('flight-nav-tas', makeElement({value: '100'}));
+ elements.set('flight-nav-ias', makeElement({value: '100'}));
+ elements.set('flight-nav-qnh', makeElement({value: ''}));
+ elements.set('flight-nav-cas-correction', makeElement({value: '0'}));
  elements.set('flight-essential-result', makeElement({hidden: false}));
  elements.set('flight-essential-navigation-content', makeElement());
  elements.set('flight-nav-wind-legs', makeElement());
@@ -172,6 +176,7 @@ test('end to end: changing a leg course refreshes navigation and GS from endpoin
   MutationObserver: class {observe() {}},queueMicrotask: fn => fn()
  };
  vm.runInNewContext(source, context);
+ vm.runInNewContext(calculatorSource, context);
  vm.runInNewContext(navigationSource, context);
  const [pending] = context.window.GDV_FLIGHT_NAV.snapshot();
  assert.equal(pending.course_true_deg, null);
@@ -181,7 +186,8 @@ test('end to end: changing a leg course refreshes navigation and GS from endpoin
  legListeners.input();
  const [leg] = context.window.GDV_FLIGHT_NAV.snapshot();
  assert.equal(leg.name, 'SAEZ → SACO');
- assert.ok(leg.gs_kt > 86 && leg.gs_kt < 89, `GS should be about 87.5 kt, got ${leg.gs_kt}`);
+ assert.ok(leg.tas_kt > 108 && leg.tas_kt < 111, `TAS should be about 109 kt, got ${leg.tas_kt}`);
+ assert.ok(leg.gs_kt > 95 && leg.gs_kt < 99, `GS should be about 97 kt, got ${leg.gs_kt}`);
  assert.match(leg.wind_source, /promedio vectorial/);
  assert.ok(leg.heading_true_deg > 290 && leg.heading_true_deg < 315);
  assert.ok(Number.isFinite(leg.wind_correction_deg));
@@ -200,7 +206,7 @@ test('end to end: changing a leg course refreshes navigation and GS from endpoin
  assert.equal(manual.magnetic_track_deg, 83);
  assert.equal(manual.heading_true_deg, 90);
  assert.equal(manual.heading_magnetic_deg, 83);
- assert.ok(Math.abs(manual.gs_kt-115) < 0.0001);
+ assert.ok(Math.abs(manual.gs_kt-(manual.tas_kt+15)) < 0.0001);
  assert.ok(Math.abs(manual.wind_correction_deg) < 0.0001);
  assert.match(navText(), /Curso verdadero manual: 90/);
  assert.doesNotMatch(navText(), /Curso verdadero manual: 300/);

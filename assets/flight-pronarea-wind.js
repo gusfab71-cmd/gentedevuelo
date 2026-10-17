@@ -82,13 +82,15 @@ function parse(text){
     if(!group.length)continue;
     hasLevel=true;
     const level=Number(match[1])*100,heading=Number(match[2])*10,speed=Number(match[3]);
+    const temperature=(match[4]==='M'?-1:1)*Number(match[5]);
     if(![3000,6500,10000,16500,23000,30000,36000,39000,45000].includes(level))continue;
     // 99: variable direction, cannot compute a wind correction reliably.
     if(heading>360||speed>200)continue;
     for(const station of group){
      if(referenceStations[station]){
        results.push({station,airport:referenceStations[station],level_ft:level,
-         direction_true_deg:heading===360?0:heading,speed_kt:speed,source:'PRONAREA WIND/T'});
+         direction_true_deg:heading===360?0:heading,speed_kt:speed,
+         temperature_c:temperature,source:'PRONAREA WIND/T'});
      }
     }
    }else if(/^[A-Z]{3,4}$/.test(token)){
@@ -145,7 +147,7 @@ function pick(text,altitude_ft,midpoint,airports,departureUtc,routeEndpoints){
    return {ok:false,reason:'La estación WIND/T más próxima se encuentra a '+Math.round(minDistance)+' km del centro del tramo y no corresponde al origen o destino de la pierna. Verificá viento oficial en ruta.'};
   for(const ref of references){
    if(options.some(x=>x.station===ref.station&&x.level_ft===ref.level_ft&&
-       (x.direction_true_deg!==ref.direction_true_deg||x.speed_kt!==ref.speed_kt)))
+       (x.direction_true_deg!==ref.direction_true_deg||x.speed_kt!==ref.speed_kt||x.temperature_c!==ref.temperature_c)))
     return {ok:false,reason:'Hay pronósticos WIND/T contradictorios para '+ref.station+' a FL'+ref.level_ft/100+'. Verificá el boletín.'};
    if(Math.abs(ref.level_ft-altitude_ft)>5000)
     return {ok:false,reason:'El nivel WIND/T de '+ref.station+' está demasiado alejado de la altitud seleccionada. Verificá el pronóstico.'};
@@ -157,8 +159,10 @@ function pick(text,altitude_ft,midpoint,airports,departureUtc,routeEndpoints){
   const from=speed<0.001?0:((Math.atan2(-east,-north)/rad)%360+360)%360;
   const summary=references.map(r=>r.station+' FL'+String(r.level_ft/100).padStart(3,'0')).join(' + ');
   const both=references.length===2;
+  const sameLevel=references.every(r=>r.level_ft===references[0].level_ft);
   return {ok:true,station:references.map(r=>r.station).join(' + '),
-   level_ft:references.every(r=>r.level_ft===references[0].level_ft)?references[0].level_ft:null,
+   level_ft:sameLevel?references[0].level_ft:null,
+   temperature_c:sameLevel?references.reduce((sum,r)=>sum+r.temperature_c,0)/references.length:null,
    level_summary:summary,reference_type:both?'route_endpoints_average':'route_endpoint',
    direction_true_deg:from,speed_kt:speed,source:'PRONAREA WIND/T',
    distance_km:Math.max(...references.map(r=>r.distance_km)),
@@ -172,7 +176,7 @@ function pick(text,altitude_ft,midpoint,airports,departureUtc,routeEndpoints){
  const chosen=candidates[0];
  // Si hay fuentes contradictorias para misma estación/nivel, no elegir arbitrariamente.
  const equals=options.filter(x=>x.station===chosen.station&&x.level_ft===chosen.level_ft);
- if(equals.some(x=>x.direction_true_deg!==chosen.direction_true_deg||x.speed_kt!==chosen.speed_kt))
+ if(equals.some(x=>x.direction_true_deg!==chosen.direction_true_deg||x.speed_kt!==chosen.speed_kt||x.temperature_c!==chosen.temperature_c))
   return {ok:false,reason:'Se encontraron pronósticos WIND/T diferentes para la misma estación y nivel. Verificá el boletín.'};
  if(Math.abs(chosen.level_ft-altitude_ft)>5000)
   return {ok:false,reason:'El nivel WIND/T más cercano es '+chosen.level_ft+' ft, demasiado alejado de la altitud seleccionada; comprobar el pronóstico.'};

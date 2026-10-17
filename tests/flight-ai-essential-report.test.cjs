@@ -29,7 +29,7 @@ test('departure window date and deterministic navigation/fuel summary are sent w
  assert.ok(start>0&&end>start);
  const nodes={
   'flight-pronarea':{value:'PRONAREA FIR EZE VALIDEZ 2206'},
-  'flight-nav-tas':{value:'100'},
+  'flight-nav-ias':{value:'100'},
   'flight-fuel-details':{textContent:'Partida prevista: 2026-10-16 02:00 UTC\nETA destino: 2026-10-16 03:30 UTC\nRemanente para alternativo (sin calcular consumo): 16.8 L'}
  };
  let called=false;
@@ -39,13 +39,14 @@ test('departure window date and deterministic navigation/fuel summary are sent w
     called=digits==='2206'&&departure.toISOString()==='2026-10-16T02:00:00.000Z';
     return {start:Date.parse('2026-10-15T22:00:00.000Z')};
   }},GDV_FLIGHT_NAV:{snapshot:()=>[{
-    name:'SAEZ → SAAR',distance_nm:158,gs_kt:102,wind_true_from_deg:270,wind_speed_kt:12
+    name:'SAEZ → SAAR',distance_nm:158,tas_kt:108,gs_kt:102,wind_true_from_deg:270,wind_speed_kt:12
   }]}}
  });
  assert.equal(fn.pronareaStartDateUtc(),'2026-10-15');
  assert.equal(called,true);
  const report=fn.essentialNavigationSummary();
- assert.match(report,/TAS declarada: 100 kt/);
+ assert.match(report,/IAS prevista: 100 kt/);
+ assert.match(report,/TAS 108 kt/);
  assert.match(report,/GS 102 kt/);
  assert.match(report,/tiempo 92\.9 min/);
  assert.match(report,/Remanente para alternativo \(sin calcular consumo\)/);

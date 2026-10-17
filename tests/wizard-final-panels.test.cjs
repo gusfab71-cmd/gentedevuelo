@@ -28,7 +28,7 @@ test('official links and chart controls remain intact', () => {
  }
  assert.match(html, /https:\/\/ais\.anac\.gob\.ar\//);
  assert.match(html, /https:\/\/redemet\.decea\.mil\.br\//);
- assert.match(html, /flight-operations-wizard\.js\?v=20261016c/);
+ assert.match(html, /flight-operations-wizard\.js\?v=20261017a/);
 });
 
 test('fuel summary includes the planned UTC departure before the destination ETA', () => {
@@ -145,14 +145,16 @@ test('the magnetic heading follows the magnetic track, before NM, GS, ETE, ETA a
   ['RM','Rumbo magnético a mantener: dirección hacia la que apunta la nariz']
  ])assert.ok(header.includes("['"+label+"','"+description+"']"));
  const labels=[...header.matchAll(/\['([^']+)','[^']+'\]/g)].map(match=>match[1]);
- assert.deepEqual(labels,['Pierna','CV','Alt. ft','Viento °T/kt','CD','RV','Var','DM','RM','NM','GS kt','ETE min','ETA UTC','Cons. L']);
+ assert.deepEqual(labels,['Pierna','CV','Alt. ft','Viento °T/kt','CD','RV','Var','DM','RM','NM','TAS kt','GS kt','ETE min','ETA UTC','Cons. L']);
  assert.ok(header.indexOf("['RM'") < header.indexOf("['NM'"));
  assert.ok(header.indexOf("['NM'") < header.indexOf("['GS kt'"));
+ assert.ok(header.indexOf("['NM'") < header.indexOf("['TAS kt'"));
+ assert.ok(header.indexOf("['TAS kt'") < header.indexOf("['GS kt'"));
  assert.ok(header.indexOf("['GS kt'") < header.indexOf("['ETE min'"));
  assert.ok(header.indexOf("['ETE min'") < header.indexOf("['ETA UTC'"));
  assert.ok(header.indexOf("['ETA UTC'") < header.indexOf("['Cons. L'"));
  const values = wizard.slice(wizard.indexOf('const vals=[r.name,fmtBearing(r.course_true_deg)'), wizard.indexOf('const row=document.createElement', wizard.indexOf('const vals=[r.name,fmtBearing(r.course_true_deg)')));
- assert.match(values, /fmtBearing\(r.magnetic_track_deg\),fmtBearing\(r.heading_magnetic_deg\),fmt\(r.distance_nm\),fmt\(r.gs_kt\)/);
+ assert.match(values, /fmtBearing\(r.magnetic_track_deg\),fmtBearing\(r.heading_magnetic_deg\),fmt\(r.distance_nm\),fmt\(r.tas_kt\),fmt\(r.gs_kt\)/);
  assert.match(wizard, /flight-magnetic-heading/);
 });
 
@@ -176,6 +178,7 @@ test('a missing PRONAREA never traps the pilot in the calculations stage', () =>
  const source = wizard.slice(wizard.indexOf('function valid(){'), wizard.indexOf('\nfunction pack(){'));
  const context = {
   step: 3,
+  rows: () => [{tas_kt:108}],
   $: id => ({value: id==='flight-fuel-burn'?'28':'80'}),
   gate: () => {throw new Error('Gate must only control AI, not stage navigation');},
   notify: () => {},

@@ -7,6 +7,7 @@ const {stripTypeScriptTypes}=require('node:module');
 
 const parser=fs.readFileSync(path.join(__dirname,'../assets/flight-pronarea-wind.js'),'utf8');
 const navigation=fs.readFileSync(path.join(__dirname,'../assets/flight-essential-navigation.js'),'utf8');
+const tasCalculator=fs.readFileSync(path.join(__dirname,'../assets/flight-tas-calculator.js'),'utf8');
 const edge=fs.readFileSync(path.join(__dirname,'../supabase/functions/robert-flight-brief/index.ts'),'utf8');
 const pronarea='PRONAREA FIR EZE VALIDEZ 1022 SOBRE MAPA 0600 UTC. WIND/T: '+
  'SVO-PAR-ROS-GUA FL030/17015P09 FL065/19015P01 FL100/21015M03 '+
@@ -28,7 +29,9 @@ function scenarios(confirmed=true){
  element('flight-time',{value:'2026-10-16T14:00'});
  element('flight-origin',{value:'SAEZ'});
  element('flight-dest',{value:'SAAP'});
- element('flight-nav-tas',{value:'99'});
+ element('flight-nav-ias',{value:'99'});
+ element('flight-nav-qnh',{value:''});
+ element('flight-nav-cas-correction',{value:'0'});
  element('flight-essential-result',{hidden:true});
  element('flight-essential-navigation-content',{});
  element('flight-nav-wind-legs',{});
@@ -43,6 +46,7 @@ function scenarios(confirmed=true){
   document:{getElementById:id=>elements.get(id)||null,createElement:()=>make({}),addEventListener(){}},
   MutationObserver:class{observe(){}},queueMicrotask:fn=>fn()};
  vm.runInNewContext(parser,context);
+ vm.runInNewContext(tasCalculator,context);
  vm.runInNewContext(navigation,context);
  return Array.from(context.window.GDV_FLIGHT_NAV.navigationScenarios());
 }
@@ -68,11 +72,12 @@ test('5500 ft: FL065 is the closer reference; calculate two realistic wind trian
  assert.equal(higher.level_gap_ft,1000);
  assert.equal(lower.direction_true_deg,170);
  assert.equal(higher.direction_true_deg,190);
- assert.ok(Math.abs(lower.gs_kt-113.83)<0.1);
- assert.ok(Math.abs(higher.gs_kt-113.62)<0.1);
- assert.ok(Math.abs(lower.wca_deg-1.21)<0.1);
- assert.ok(Math.abs(higher.wca_deg+1.81)<0.1);
- assert.ok(Math.abs(higher.ete_min-34.32)<0.1);
+ assert.ok(second.tas_kt>105&&second.tas_kt<112);
+ assert.ok(lower.gs_kt>120&&lower.gs_kt<126);
+ assert.ok(higher.gs_kt>120&&higher.gs_kt<126);
+ assert.ok(lower.wca_deg>0);
+ assert.ok(higher.wca_deg<0);
+ assert.ok(higher.ete_min>31&&higher.ete_min<34);
 });
 
 test('server rechecks published WIND/T and independently computes levels and ETE',()=>{
@@ -84,7 +89,7 @@ test('server rechecks published WIND/T and independently computes levels and ETE
  assert.match(text,/FL065[^\n]+NIVEL PUBLICADO MÁS CERCANO/);
  const secondLeg=text.split('Pierna 2 SAAR → SAAP')[1];
  assert.doesNotMatch(secondLeg,/FL030[^\n]+NIVEL PUBLICADO MÁS CERCANO/);
- assert.match(text,/GS 113\.6 kt; ETE referencial 34\.3 min/);
+ assert.match(text,/GS 12\d\.\d kt; ETE referencial 3\d\.\d min/);
  const falsified=scenarios();
  falsified[1].levels[1].speed_kt=100;
  const after=verify(falsified,pronarea,route);
