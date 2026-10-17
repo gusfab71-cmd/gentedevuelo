@@ -869,12 +869,22 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
   <p class="flight-essential-note">El informe utiliza únicamente los boletines y el plan cargados. Si faltan horarios de llegada o datos oficiales, lo aclarará. Es orientativo y no autoriza el vuelo. <strong>Una solicitud consume tokens de la API compartida con Shimoda.</strong></p>
   <section class="flight-nav-settings" id="flight-nav-settings" aria-labelledby="flight-nav-title">
     <div class="card-header"><div><span class="card-kicker">COMPLEMENTO DE NAVEGACIÓN · CÁLCULO LOCAL</span><h3 id="flight-nav-title">Rumbo corregido y GS estimada</h3></div></div>
-    <p class="sub">Ingresá la TAS: cuando el PRONAREA confirmado aporte dirección <strong>y velocidad</strong> del viento en altura, el sistema calculará automáticamente el rumbo corregido, la GS orientativa y los tiempos por pierna. En rutas largas puede estimar el viento con estaciones WIND/T del origen y destino, indicando las referencias usadas. También podés ingresar viento oficial manualmente. Sin IA ni tokens.</p>
-    <label class="field" for="flight-nav-tas">Velocidad verdadera · TAS (nudos)
-      <input id="flight-nav-tas" form="flight-analysis-form" type="number" min="20" max="500" step="1" inputmode="numeric" placeholder="Ej.: 100" aria-describedby="flight-nav-help">
+    <p class="sub">Ingresá la velocidad indicada (IAS). El sistema estima la TAS para la altitud de presión de <strong>cada pierna</strong> y, con viento WIND/T confirmado o manual, calcula rumbo corregido, GS y tiempos. Cálculos locales, sin IA ni tokens.</p>
+    <label class="field" for="flight-nav-ias">Velocidad indicada · IAS (nudos)
+      <input id="flight-nav-ias" form="flight-analysis-form" type="number" min="20" max="500" step="1" inputmode="numeric" placeholder="Ej.: 100" aria-describedby="flight-nav-help">
     </label>
+    <details class="flight-airdata-details"><summary>Condiciones atmosféricas para afinar la TAS (opcional)</summary>
+      <div class="flight-data-grid">
+        <label class="field" for="flight-nav-qnh">QNH (hPa)
+          <input id="flight-nav-qnh" form="flight-analysis-form" type="number" min="870" max="1085" step="0.1" inputmode="decimal" placeholder="1013,25 (ISA)">
+        </label>
+        <label class="field" for="flight-nav-isa-offset">Desviación de temperatura respecto de ISA (°C)
+          <input id="flight-nav-isa-offset" form="flight-analysis-form" type="number" min="-50" max="50" step="1" inputmode="decimal" placeholder="0 (ISA)">
+        </label>
+      </div>
+    </details>
     <div id="flight-nav-wind-legs" aria-live="polite"></div>
-    <p class="flight-essential-note" id="flight-nav-help">El viento automático procede exclusivamente de <strong>WIND/T</strong> del PRONAREA cargado, <strong>no de METAR ni TAF</strong>. Se selecciona el FL más próximo y una estación cercana al centro; si la pierna es larga y sólo hay referencias oficiales en el origen o destino, se usa ese viento o el promedio vectorial de ambos, claramente identificado. Son <strong>estimaciones</strong>: el viento en las estaciones puede no representar todo el recorrido. Verificá emisión, vigencia UTC, FIR, sector, hora de paso y altitud; si el viento falta o es dudoso, la GS quedará pendiente y podrás ingresar viento oficial manualmente.</p>
+    <p class="flight-essential-note" id="flight-nav-help">La TAS es <strong>estimada</strong>: sin QNH o desviación térmica se supone atmósfera ISA. Se aproxima IAS ≈ CAS/EAS; para mayor precisión corregí IAS según el POH/AFM de tu aeronave. La altitud de presión se deriva de la altitud prevista y QNH. El viento automático procede exclusivamente del <strong>WIND/T</strong> del PRONAREA, no de METAR ni TAF. Verificá vigencia, zona, nivel y representatividad. Si falta viento válido, la GS queda pendiente.</p>
   </section>
   <label class="flight-ai-consent"><input id="flight-essential-consent" type="checkbox" aria-describedby="flight-essential-status"><span><strong>1. Autorizo</strong> generar el informe único con IA y consumir tokens. Luego presioná <strong>2. Generar informe</strong>.</span></label>
   <div class="actions"><button class="primary" id="flight-essential-ask" type="button">Generar informe único con IA</button><span class="feedback ai-validation-status" id="flight-essential-status" role="status" aria-live="polite">Marcá «Autorizo» para generar el informe.</span></div>
@@ -1606,7 +1616,8 @@ el('copy-report').addEventListener('click',async()=>{
  function contextFingerprint(){
    return JSON.stringify({
      origin:airportCode('flight-origin'),destination:airportCode('flight-dest'),
-     alternate:airportCode('flight-alternate'),time:$('flight-time').value,alt:$('flight-alt').value,tas:$('flight-nav-tas').value,
+     alternate:airportCode('flight-alternate'),time:$('flight-time').value,alt:$('flight-alt').value,
+     ias:$('flight-nav-ias').value,qnh:$('flight-nav-qnh').value,isaOffset:$('flight-nav-isa-offset').value,
      rules:$('flight-rules').value,
      stops,legHeights,
      firs:[...document.querySelectorAll('.flight-fir:checked')].map(el=>el.value),
@@ -1629,7 +1640,7 @@ el('copy-report').addEventListener('click',async()=>{
  }
  const tripInputIds=new Set([
    'flight-origin','flight-dest','flight-alternate','flight-origin-other','flight-dest-other','flight-alternate-other',
-   'flight-alt','flight-nav-tas','flight-time','flight-rules','flight-pronarea','flight-atis','flight-pronarea-confirm'
+   'flight-alt','flight-nav-ias','flight-nav-qnh','flight-nav-isa-offset','flight-time','flight-rules','flight-pronarea','flight-atis','flight-pronarea-confirm'
  ]);
  function handleChangedField(event){
    const node=event.target;
@@ -1639,8 +1650,10 @@ el('copy-report').addEventListener('click',async()=>{
  }
  form.addEventListener('input',handleChangedField);
  form.addEventListener('change',handleChangedField);
- $('flight-nav-tas')?.addEventListener('input',handleChangedField);
- $('flight-nav-tas')?.addEventListener('change',handleChangedField);
+ for(const id of ['flight-nav-ias','flight-nav-qnh','flight-nav-isa-offset']){
+   $(id)?.addEventListener('input',handleChangedField);
+   $(id)?.addEventListener('change',handleChangedField);
+ }
  $('flight-pronarea').addEventListener('input',handleChangedField);
  $('flight-pronarea-confirm')?.addEventListener('change',handleChangedField);
  $('flight-atis')?.addEventListener('input',handleChangedField);
@@ -1662,16 +1675,16 @@ el('copy-report').addEventListener('click',async()=>{
  }
  function essentialNavigationSummary(){
    const number=(value,unit)=>Number.isFinite(value)?String(Math.round(value*10)/10)+' '+unit:'Pendiente';
-   const tas=Number($('flight-nav-tas')?.value);
+   const ias=Number($('flight-nav-ias')?.value);
    const snapshots=window.GDV_FLIGHT_NAV?.snapshot?.()||[];
    const legs=snapshots.slice(0,9).map((r,index)=>
      'Pierna '+(index+1)+' '+String(r.name||'').slice(0,80)+': '+
-     number(r.distance_nm,'NM')+', GS '+number(r.gs_kt,'kt')+', viento '+
+     number(r.distance_nm,'NM')+', TAS estimada '+number(r.tas_kt,'kt')+', GS '+number(r.gs_kt,'kt')+', viento '+
      number(r.wind_true_from_deg,'°T')+' / '+number(r.wind_speed_kt,'kt')+
      ', tiempo '+number(Number.isFinite(r.distance_nm)&&Number.isFinite(r.gs_kt)&&r.gs_kt>0?r.distance_nm/r.gs_kt*60:null,'min')+'.');
    const fuel=$('flight-fuel-details')?.textContent?.trim()||'Combustible pendiente de cálculo.';
    return ['DATOS ESTIMADOS POR CÁLCULO LOCAL; NO SON FUENTES OFICIALES',
-     'TAS declarada: '+(tas>0&&Number.isFinite(tas)?number(tas,'kt'):'Pendiente'),
+     'IAS declarada: '+(ias>0&&Number.isFinite(ias)?number(ias,'kt'):'Pendiente')+'; TAS calculada según presión/temperatura por pierna (aproximación IAS≈EAS).',
      ...legs,'Resumen de combustible y horario:\n'+fuel.slice(0,1100)].join('\n').slice(0,2400);
  }
  function setEssentialAnalysis(target,answer){
@@ -2173,9 +2186,9 @@ if(stage){
 <script src="../assets/flight-wmm2025.js?v=20261015a"></script>
 <script src="../assets/flight-vfr-altitude.js?v=20261015i"></script>
 <script src="../assets/flight-pronarea-wind.js?v=20261016a"></script>
-<script src="../assets/flight-essential-navigation.js?v=20261016d"></script>
+<script src="../assets/flight-essential-navigation.js?v=20261017a"></script>
 <script src="../assets/flight-fir-autoselect.js?v=20261015b"></script>
 <script src="../assets/flight-route-suggestions.js?v=20261015b"></script>
-<script defer src="../assets/flight-operations-wizard.js?v=20261016d"></script>
+<script defer src="../assets/flight-operations-wizard.js?v=20261017a"></script>
 </body>
 </html>

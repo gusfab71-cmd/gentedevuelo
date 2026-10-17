@@ -1,7 +1,7 @@
 /* Flight Operations - Navigation appendix for Essential Flight Report.
  * This is a LOCAL calculation; never uses OpenAI or fetch.
  * Sources: airport coordinates from GDV reference (ANAC 2021);
- * WMM2025 magnetic variation (2025-2030); TAS declared by pilot;
+ * WMM2025 magnetic variation (2025-2030); TAS estimated from pilot IAS;
  * WIND/T forecast from loaded PRONAREA at nearest published flight level
  * and nearby reporting location (manual fallback explicitly identified).
  * No wind is inferred from METAR or TAF.
@@ -11,13 +11,13 @@
 'use strict';
 const $=id=>document.getElementById(id);
 const target=$('flight-essential-navigation-content');
-const settings=$('flight-nav-wind-legs'),tasInput=$('flight-nav-tas');
+const settings=$('flight-nav-wind-legs'),iasInput=$('flight-nav-ias');
 const legs=$('flight-legs-list'),waypoints=$('flight-waypoints');
 const result=$('flight-essential-result'),wmm=window.GDV_WMM2025;
 const airports=window.GDV_FLIGHT_FIR_GEODATA?.airports;
 const namedPoints=window.GDV_FLIGHT_NAMED_POINTS||{};
 const windSource=window.GDV_PRONAREA_WIND;
-if(!target||!settings||!tasInput||!legs||!waypoints)return;
+if(!target||!settings||!iasInput||!legs||!waypoints)return;
 const rad=Math.PI/180,deg=180/Math.PI;
 const normalize=d=>((d%360)+360)%360;
 const num=(v,digits=0)=>Number(v).toLocaleString('es-AR',{minimumFractionDigits:digits,maximumFractionDigits:digits});
@@ -70,10 +70,30 @@ function currentRoute(){
  }
  return result;
 }
-function readTAS(){
- const raw=tasInput.value.trim();
- const n=Number(raw);
- return raw!==''&&Number.isFinite(n)&&n>=20&&n<=500?n:null;
+function airDataForLeg(leg){
+ const raw=iasInput.value.trim(),ias=Number(raw);
+ if(raw===''||!Number.isFinite(ias)||ias<20||ias>500)
+  return {error:'Falta IAS válida en la etapa 4 (20 a 500 kt).'};
+ const altitude=String(leg.alt??'').trim(),altFt=Number(altitude);
+ if(altitude===''||!Number.isFinite(altFt)||altFt<0||altFt>35000)
+  return {error:'Falta una altitud prevista válida (0 a 35.000 ft) para esta pierna.'};
+ const qnhRaw=$('flight-nav-qnh')?.value?.trim()||'',offsetRaw=$('flight-nav-isa-offset')?.value?.trim()||'';
+ const qnh=qnhRaw===''?1013.25:Number(qnhRaw),offset=offsetRaw===''?0:Number(offsetRaw);
+ if(!Number.isFinite(qnh)||qnh<870||qnh>1085||!Number.isFinite(offset)||offset< -50||offset>50)
+  return {error:'Revisá QNH (870–1085 hPa) y desviación ISA (−50 a +50 °C).'};
+ // Atmósfera estándar troposférica. QNH convierte AMSL a altitud de presión;
+ // la densidad se ajusta con temperatura real estimada (ISA + desviación).
+ // IAS ≈ EAS sólo como aproximación: para usar CAS/EAS se necesita el POH/AFM.
+ const lapse=0.0065,t0=288.15,p0=1013.25,exponent=5.25588;
+ const p=qnh*Math.pow(1-lapse*(altFt*0.3048)/t0,exponent);
+ const pressureAltitudeM=t0/lapse*(1-Math.pow(p/p0,1/exponent));
+ const isaTempK=t0-lapse*pressureAltitudeM,actualTempK=isaTempK+offset;
+ const pressureRatio=p/p0,densityRatio=pressureRatio*t0/actualTempK;
+ if(!Number.isFinite(densityRatio)||densityRatio<=0||actualTempK<=0)
+  return {error:'No se puede estimar la densidad atmosférica con estos datos.'};
+ return {ias,tas:ias/Math.sqrt(densityRatio),pressureAltitudeFt:pressureAltitudeM/0.3048,
+  temperatureC:actualTempK-273.15,qnh,isaOffset:offset,
+  assumedQnh:qnhRaw==='',assumedIsa:offsetRaw===''};
 }
 function validatedAiWind(leg){
  const check=windSource?.validity($('flight-pronarea')?.value||'',flightDate());
@@ -146,12 +166,13 @@ function computeLeg(leg){
   'Curso verdadero pendiente de ingreso';
  if(course===null)return {leg,course:null,magneticTrack,variation,courseSource,
   reason:'Ingresá el curso verdadero (°T) de esta pierna en Planificar piernas. Sin ese dato no se calcula rumbo ni GS.'};
- const tas=readTAS(),windInfo=windForLeg(leg),wind=windInfo.wind;
- if(tas===null||wind===null)
-   return {leg,course,variation,magneticTrack,courseSource,missing:tas===null?'Falta TAS válida en la etapa 4 (nudos); completala para calcular rumbo con viento y GS.':windInfo.reason};
+ const airData=airDataForLeg(leg),tas=airData.tas,windInfo=windForLeg(leg),wind=windInfo.wind;
+ if(!Number.isFinite(tas)||wind===null)
+   return {leg,course,variation,magneticTrack,courseSource,airData,
+    missing:airData.error||windInfo.reason};
  const solution=windTriangle(course,tas,wind.from,wind.speed);
  if(!solution?.possible)return {leg,course,variation,magneticTrack,courseSource,missing:solution?.reason||'Datos del viento o TAS insuficientes.'};
- return {leg,course,variation,magneticTrack,courseSource,wind,tas,windSource:windInfo.source,windNotice:windInfo.notice,
+ return {leg,course,variation,magneticTrack,courseSource,wind,tas,airData,windSource:windInfo.source,windNotice:windInfo.notice,
    forecastLevelFt:windInfo.forecastLevelFt,stationDistanceKm:windInfo.stationDistanceKm,altitudeGapFt:windInfo.altitudeGapFt,
    wca:solution.wca,trueHeading:solution.trueHeading,
    magneticHeading:Number.isFinite(variation)?normalize(solution.trueHeading-variation):null,
@@ -168,8 +189,15 @@ function describe(r){
    '. Declinación magnética (WMM2025): '+(Number.isFinite(r.variation)?num(r.variation,1)+'° (este +, oeste −)':'No disponible')+
    '. Derrota magnética de referencia: '+asLine(r.magneticTrack)+'.'
  ];
- if(r.missing){lines.push('Rumbo corregido y GS: no calculables. '+r.missing);return {title:name,lines};}
- lines.push('Datos: TAS '+num(r.tas)+' kt; viento de altura desde '+String(Math.round(r.wind.from)%360).padStart(3,'0')+'° verdaderos a '+num(r.wind.speed,1)+' kt. '+r.windSource);
+ if(r.missing){
+  if(Number.isFinite(r.airData?.tas))lines.push('IAS '+num(r.airData.ias)+' kt → TAS estimada '+num(r.airData.tas,1)+
+    ' kt (altitud de presión '+num(r.airData.pressureAltitudeFt)+' ft, temperatura '+num(r.airData.temperatureC,1)+' °C).');
+  lines.push('Rumbo corregido y GS: no calculables. '+r.missing);return {title:name,lines};
+ }
+ lines.push('Datos: IAS '+num(r.airData.ias)+' kt → TAS estimada '+num(r.tas,1)+' kt'+
+   ' (altitud de presión '+num(r.airData.pressureAltitudeFt)+' ft; temperatura '+num(r.airData.temperatureC,1)+' °C'+
+   (r.airData.assumedQnh||r.airData.assumedIsa?'; supuestos ISA según campos vacíos':'')+'). '+
+   'Viento de altura desde '+String(Math.round(r.wind.from)%360).padStart(3,'0')+'° verdaderos a '+num(r.wind.speed,1)+' kt. '+r.windSource);
  lines.push('Corrección de deriva estimada: '+(r.wca>=0?'+':'')+num(r.wca,1)+'°; rumbo verdadero de proa: '+asLine(r.trueHeading)+
    '; rumbo magnético de proa: '+asLine(r.magneticHeading)+
    '; GS ORIENTATIVA DE REFERENCIA: '+num(r.gs,1)+' kt (NO confirmada para todo el vuelo).');
@@ -291,7 +319,9 @@ for(const id of ['flight-pronarea-confirm']){
  $(id)?.addEventListener('input',()=>{aiWindValues.clear();currentSignature='';schedule();output();});
  $(id)?.addEventListener('change',()=>{aiWindValues.clear();currentSignature='';schedule();output();});
 }
-tasInput.addEventListener('input',output);
+for(const input of [iasInput,$('flight-nav-qnh'),$('flight-nav-isa-offset')].filter(Boolean)){
+ input.addEventListener('input',output);
+}
 document.addEventListener('gdv-flight-essential-generated',(event)=>{
  aiWindValues.clear();
  const entries=Array.isArray(event.detail?.winds)?event.detail.winds:[];
@@ -325,7 +355,7 @@ function navigationScenarios(){
   const result={index:leg.index,name:leg.name,altitude_ft:altitude,
    course_true_deg:base.course,variation_deg:base.variation,
    magnetic_track_deg:base.magneticTrack,distance_nm:distance,
-   tas_kt:readTAS(),selected_level_ft:base.forecastLevelFt??null,
+   tas_kt:base.airData?.tas??null,selected_level_ft:base.forecastLevelFt??null,
    selected_wind_source:base.windSource||base.missing||base.reason||'No disponible',levels:[]};
   if(!Number.isFinite(altitude)||altitude<500||altitude>45000||
      !Number.isFinite(base.course)||!Number.isFinite(result.tas_kt)||
@@ -358,12 +388,15 @@ window.GDV_FLIGHT_NAV=Object.freeze({saveWind:()=>[...windValues.entries()].map(
     windValues.set(row.key,{mode:row.value.mode==='manual'?'manual':'auto',direction:String(row.value.direction??'').slice(0,4),speed:String(row.value.speed??'').slice(0,4)});
   }
   currentSignature='';windInputs();output();
- },navigationScenarios,snapshot:()=>currentRoute().map(leg=>{
+ },airDataForLeg,navigationScenarios,snapshot:()=>currentRoute().map(leg=>{
  const result=computeLeg(leg);
  return {index:leg.index,name:leg.name,altitude_ft:Number(leg.alt),distance_nm:window.GDV_FLIGHT_DISTANCE?.get?.(leg.index)??distanceNm(leg.from,leg.to),distance_source:window.GDV_FLIGHT_DISTANCE?.getSource?.(leg.index)||'geometric',magnetic_track_deg:result.magneticTrack,course_source:result.courseSource,
    course_true_deg:result.course,heading_true_deg:result.trueHeading,
    heading_magnetic_deg:result.magneticHeading,variation_deg:result.variation,
    wind_correction_deg:result.wca,wind_true_from_deg:result.wind?.from,wind_speed_kt:result.wind?.speed,
+   ias_kt:result.airData?.ias,tas_kt:result.airData?.tas,
+   pressure_altitude_ft:result.airData?.pressureAltitudeFt,
+   temperature_c:result.airData?.temperatureC,
    gs_kt:result.gs,wind_source:result.windSource||result.missing||result.reason||'Sin viento verificable',
    from:leg.from,to:leg.to};
 })});
