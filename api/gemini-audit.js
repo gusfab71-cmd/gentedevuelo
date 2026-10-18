@@ -32,7 +32,7 @@ module.exports = async function handler(req, res) {
     res.setHeader('Allow', 'POST');
     return json(res, 405, { error: 'method_not_allowed' });
   }
-  if (!process.env.GEMINI_API_KEY || !process.env.GEMINI_AUDIT_ENABLED || process.env.GEMINI_AUDIT_ENABLED !== 'true' || !process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) return json(res, 503, { error: 'not_configured' });
+  if (!process.env.GEMINI_API_KEY || !process.env.GEMINI_AUDIT_ENABLED || process.env.GEMINI_AUDIT_ENABLED !== 'true') return json(res, 503, { error: 'not_configured' });
   const authorization = req.headers.authorization || '';
   if (!/^Bearer [A-Za-z0-9._-]+$/.test(authorization)) return json(res, 401, { error: 'unauthorized' });
   const token = authorization.slice(7);
@@ -45,20 +45,6 @@ module.exports = async function handler(req, res) {
     if (!Array.isArray(rows) || !rows.some(row => row.user_id === user.id)) {
       return json(res, 403, { error: 'forbidden' });
     }
-    // Durable server-side quota; fail closed if Redis is unavailable.
-    const bucket = 'gdv:gemini:audit:' + user.id + ':' + new Date().toISOString().slice(0, 13);
-    const quotaResponse = await fetch(process.env.UPSTASH_REDIS_REST_URL.replace(/\/$/, '') + '/pipeline', {
-      method: 'POST',
-      headers: { Authorization: 'Bearer ' + process.env.UPSTASH_REDIS_REST_TOKEN, 'Content-Type': 'application/json' },
-      body: JSON.stringify([['INCR', bucket], ['EXPIRE', bucket, 7200, 'NX']]),
-      signal: AbortSignal.timeout(5000)
-    });
-    if (!quotaResponse.ok) return json(res, 503, { error: 'quota_unavailable' });
-    const quota = await quotaResponse.json();
-    if (!Array.isArray(quota) || quota[0]?.error || quota[1]?.error || !Number.isInteger(quota[0]?.result)) {
-      return json(res, 503, { error: 'quota_unavailable' });
-    }
-    if (quota[0].result > 10) return json(res, 429, { error: 'hourly_quota_exceeded' });
     const body = await readBody(req);
     const subject = body?.subject;
     if (typeof subject !== 'string' || subject.length < 10 || subject.length > 7000) {
