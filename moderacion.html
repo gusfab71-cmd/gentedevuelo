@@ -178,6 +178,7 @@
       <p id="mensaje" class="estado" role="status"></p>
       <p id="comunicadosAccesoModeracion" style="margin:0 0 24px;"><a class="link" href="comunidad.html#gestion/comunicados">Enviar comunicado a todos los integrantes</a></p>
       <p id="gdvRobertShortcut" hidden style="margin:0 0 24px;"><a class="link" href="moderacion.html#conocimiento-robert">Conocimiento de Robert Shimoda · Subir manuales PDF</a></p>
+      <p id="gdvGeminiCodeReviewLink" hidden style="margin:0 0 24px;"><a class="link" href="auditoria-codigo.html">Auditoría de nuevas aplicaciones con Gemini</a></p>
 
 <section class="panel" id="gdvManualRegistration" hidden style="margin:0 0 24px">
 <h2>Registro manual de integrantes</h2><p><a class="link" href="moderacion.html#registros-incompletos">Ver registros incompletos y recuperar cuentas existentes</a></p>
@@ -1187,6 +1188,7 @@
         return;
       }
       administrador = esAdministrador;
+      $("gdvGeminiCodeReviewLink").hidden = !administrador;
       moderador = !esAdministrador;
       const tituloBase = $("panel")?.querySelector("h1");
       const introBase = $("panel")?.querySelector(".intro");

@@ -1,0 +1,35 @@
+name: Gemini second review of new developments
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: gemini-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  audit:
+    # Off by default: both a GitHub secret and an explicit opt-in variable are required.
+    # Fork PRs do not receive our Google key. Flight Operations files are excluded by the script.
+    if: ${{ vars.GEMINI_PR_REVIEW_ENABLED == 'true' && github.event.pull_request.head.repo.full_name == github.repository }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Run reviewer code from the trusted base commit, never from untrusted PR code.
+          ref: ${{ github.event.pull_request.base.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Gemini audit, comment on PR (no automatic code changes)
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/gemini-pr-review.cjs
