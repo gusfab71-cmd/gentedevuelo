@@ -1,0 +1,29 @@
+name: Gemini code review tests
+on:
+  push:
+    branches:
+      - feature/gemini-auditoria-preparacion
+  pull_request:
+    paths:
+      - 'api/gemini-code-review.js'
+      - 'tests/gemini-code-review.test.cjs'
+      - 'assets/gemini-code-review.js'
+      - 'auditoria-codigo.html'
+      - '.github/workflows/gemini-code-review-tests.yml'
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax check
+        run: |
+          node --check api/gemini-code-review.js
+          node --check assets/gemini-code-review.js
+          node --check tests/gemini-code-review.test.cjs
+      - name: Unit tests (no Gemini API call)
+        run: node tests/gemini-code-review.test.cjs
