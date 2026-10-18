@@ -7,6 +7,10 @@ on:
     paths:
       - 'api/gemini-audit.js'
       - 'tests/gemini-audit.test.cjs'
+      - 'tests/gemini-audit-ui.test.cjs'
+      - 'assets/gemini-audit-panel.js'
+      - 'assets/gemini-audit.css'
+      - 'utilidades/meteorologia-aeronautica.html'
       - '.github/workflows/gemini-audit-tests.yml'
 permissions:
   contents: read
@@ -22,5 +26,6 @@ jobs:
         run: |
           node --check api/gemini-audit.js
           node --check tests/gemini-audit.test.cjs
+          node --check assets/gemini-audit-panel.js
       - name: Unit tests (no Gemini API call)
-        run: node --test tests/gemini-audit.test.cjs
+        run: node --test tests/gemini-audit.test.cjs tests/gemini-audit-ui.test.cjs
