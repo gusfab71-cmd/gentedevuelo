@@ -105,3 +105,25 @@ test('malformed JSON is rejected without calling Gemini',async()=>{
     assert.equal(res.body.error,'invalid_json');
   });
 });
+
+test('Google setup errors are classified without disclosing upstream details',async()=>{
+  await enabled(async()=>{
+    const previousWarn=console.warn;
+    const warnings=[];
+    console.warn=(...args)=>warnings.push(args);
+    try {
+      global.fetch=async url=>{
+        if(url.includes('/auth/v1/user'))return {ok:true,json:async()=>({id:'admin-google-error'})};
+        if(url.includes('/site_admins'))return {ok:true,json:async()=>[{user_id:'admin-google-error'}]};
+        return {ok:false,status:403,json:async()=>({error:{status:'PERMISSION_DENIED',message:'Private project details'}})};
+      };
+      const res=response();await handler(request('POST','Bearer mock-token'),res);
+      assert.equal(res.statusCode,502);
+      assert.equal(res.body.error,'google_key_rejected');
+      assert.ok(!JSON.stringify(res.body).includes('Private project details'));
+      assert.equal(warnings[0][1].httpStatus,403);
+      assert.equal(warnings[0][1].googleStatus,'PERMISSION_DENIED');
+      assert.ok(!JSON.stringify(warnings).includes('Private project details'));
+    } finally {console.warn=previousWarn;}
+  });
+});

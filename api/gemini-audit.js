@@ -108,7 +108,19 @@ module.exports = async function handler(req, res) {
         signal: controller.signal
       });
     } finally { clearTimeout(timeout); }
-    if (!response.ok) return json(res, response.status === 429 ? 429 : 502, { error: response.status === 429 ? 'google_quota' : 'gemini_unavailable' });
+    if (!response.ok) {
+      // Keep Google error text private: it may contain account or project details.
+      // A narrow status classification is enough to diagnose setup problems.
+      const upstream = await response.json().catch(() => ({}));
+      const googleStatus = typeof upstream?.error?.status === 'string' ? upstream.error.status.slice(0, 60) : 'unknown';
+      console.warn('Gemini audit upstream failure', { httpStatus: response.status, googleStatus });
+      const error = response.status === 429 ? 'google_quota'
+        : response.status === 400 ? 'google_bad_request'
+        : [401, 403].includes(response.status) ? 'google_key_rejected'
+        : response.status === 404 ? 'google_model_unavailable'
+        : 'gemini_unavailable';
+      return json(res, response.status === 429 ? 429 : 502, { error });
+    }
     const result = await response.json();
     const answer = (result.candidates?.[0]?.content?.parts || []).map(part => typeof part.text === 'string' ? part.text : '').join('').slice(0, 5000);
     if (!answer) return json(res, 502, { error: 'empty_response' });

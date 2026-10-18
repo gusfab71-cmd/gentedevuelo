@@ -60,6 +60,9 @@
             unauthorized: 'La sesión no es válida. Ingresá nuevamente.',
             slow_down: 'Esperá un minuto antes de otra auditoría.',
             google_quota: 'Google informa que se alcanzó la cuota disponible.',
+            google_bad_request: 'Google rechazó la solicitud del modelo. Revisaremos su configuración.',
+            google_key_rejected: 'Google rechazó la clave o el acceso a Gemini API. Revisaremos los permisos.',
+            google_model_unavailable: 'Este modelo Gemini no está disponible para la clave configurada.',
             gemini_unavailable: 'Gemini no respondió correctamente. Intentá más tarde.',
             temporarily_unavailable: 'El servicio no está disponible por ahora.'
           };
