@@ -9,6 +9,9 @@ on:
       - 'tests/gemini-code-review.test.cjs'
       - 'assets/gemini-code-review.js'
       - 'auditoria-codigo.html'
+      - 'scripts/gemini-pr-review.cjs'
+      - 'tests/gemini-pr-review.test.cjs'
+      - '.github/workflows/gemini-pr-review.yml'
       - '.github/workflows/gemini-code-review-tests.yml'
 permissions:
   contents: read
@@ -25,5 +28,9 @@ jobs:
           node --check api/gemini-code-review.js
           node --check assets/gemini-code-review.js
           node --check tests/gemini-code-review.test.cjs
+          node --check scripts/gemini-pr-review.cjs
+          node --check tests/gemini-pr-review.test.cjs
       - name: Unit tests (no Gemini API call)
-        run: node tests/gemini-code-review.test.cjs
+        run: |
+          node tests/gemini-code-review.test.cjs
+          node tests/gemini-pr-review.test.cjs
