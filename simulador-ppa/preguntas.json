@@ -1,1 +1,15 @@
-[]
+[
+  {
+    "id": "ANAC-PPA-001",
+    "materia": "Controles de vuelo",
+    "pregunta": "¿Cuáles son los sistemas de control de vuelo primarios, esenciales para el control del avión?",
+    "opciones": [
+      "Elevador - Alerón - Timón de Dirección",
+      "Elevador - Flaps - Aletas Compensadoras",
+      "Timón - Flaps - Elevador"
+    ],
+    "correcta": 0,
+    "fundamento": "El elevador controla el cabeceo, los alerones el alabeo y el timón la guiñada. Esta explicación didáctica preliminar está pendiente de revisión editorial.",
+    "fuente": "ANAC PPA RAAC 61.105, pregunta 1, banco histórico; validación pendiente."
+  }
+]
