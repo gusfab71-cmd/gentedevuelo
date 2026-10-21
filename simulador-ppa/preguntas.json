@@ -9,7 +9,254 @@
       "Timón - Flaps - Elevador"
     ],
     "correcta": 0,
-    "fundamento": "El elevador controla el cabeceo, los alerones el alabeo y el timón la guiñada. Esta explicación didáctica preliminar está pendiente de revisión editorial.",
-    "fuente": "ANAC PPA RAAC 61.105, pregunta 1, banco histórico; validación pendiente."
+    "fundamento": "El elevador controla el cabeceo, los alerones el alabeo y el timón la guiñada. Explicación preliminar pendiente de revisión.",
+    "fuente": "ANAC PPA RAAC 61.105, pregunta 1, banco histórico."
+  },
+  {
+    "id": "ANAC-PPA-005",
+    "materia": "Motores",
+    "pregunta": "En el ciclo Otto, la combustión ideal se realiza a:",
+    "opciones": [
+      "Volumen constante",
+      "Presión constante",
+      "Volumen y presión constantes"
+    ],
+    "correcta": 0,
+    "fundamento": "En el ciclo Otto ideal, la adición de calor se modela a volumen constante. En un motor real la combustión dura un intervalo de giro del cigüeñal; es una idealización termodinámica.",
+    "fuente": "ANAC PPA RAAC 61.105, pregunta 5 (2014). Explicación didáctica preliminar."
+  },
+  {
+    "id": "ANAC-PPA-006",
+    "materia": "Motores",
+    "pregunta": "Una manera de detectar una falla en el corte de magnetos es:",
+    "opciones": [
+      "Poner el motor en ralentí y cortar momentáneamente la ignición",
+      "Llevar el motor a máxima potencia y apagar la ignición",
+      "Hacer funcionar un magneto y empobrecer la mezcla"
+    ],
+    "correcta": 0,
+    "fundamento": "La comprobación del corte de magnetos busca verificar que el interruptor efectivamente conecte a masa los magnetos. Debe seguirse el procedimiento específico del manual de vuelo y la lista de chequeo, evitando manipulaciones inseguras.",
+    "fuente": "ANAC PPA RAAC 61.105, pregunta 6 (2014). Explicación didáctica preliminar."
+  },
+  {
+    "id": "ANAC-PPA-007",
+    "materia": "Motores",
+    "pregunta": "Si se desconecta el cable de masa entre el magneto y el interruptor de ignición, el motor:",
+    "opciones": [
+      "No operará con un solo magneto",
+      "No arrancará con BOTH",
+      "Podría arrancar accidentalmente al mover la hélice"
+    ],
+    "correcta": 2,
+    "fundamento": "Un magneto sin conexión efectiva a masa puede quedar activo incluso con la llave en OFF. Por seguridad, toda hélice debe tratarse como si el motor pudiera arrancar.",
+    "fuente": "ANAC PPA RAAC 61.105, pregunta 7 (2014). Explicación didáctica preliminar."
+  },
+  {
+    "id": "ANAC-PPA-008",
+    "materia": "Motores",
+    "pregunta": "¿Qué indica el número de octanos de un combustible?",
+    "opciones": [
+      "Calidad antidetonante",
+      "Calidad de la mezcla aire-combustible",
+      "Ninguna de las anteriores"
+    ],
+    "correcta": 0,
+    "fundamento": "El octanaje expresa resistencia a la detonación bajo condiciones normalizadas; no indica directamente la proporción aire-combustible.",
+    "fuente": "ANAC PPA RAAC 61.105, pregunta 8 (2014). Explicación didáctica preliminar."
+  },
+  {
+    "id": "ANAC-PPA-009",
+    "materia": "Motores",
+    "pregunta": "Es más probable que se empasten las bujías si:",
+    "opciones": [
+      "La aeronave asciende sin ajustar la mezcla",
+      "La aeronave desciende sin ajustar la mezcla",
+      "Se mueve abruptamente el acelerador"
+    ],
+    "correcta": 0,
+    "fundamento": "Al ascender disminuye la densidad del aire. Sin ajustar la mezcla, esta se vuelve relativamente rica y puede favorecer depósitos en bujías, aunque también influyen potencia, temperatura y operación.",
+    "fuente": "ANAC PPA RAAC 61.105, pregunta 9 (2014). Explicación didáctica preliminar."
+  },
+  {
+    "id": "ANAC-PPA-010",
+    "materia": "Motores",
+    "pregunta": "El piloto controla la relación aire-combustible con:",
+    "opciones": [
+      "El acelerador",
+      "La presión del múltiple",
+      "El control de mezcla"
+    ],
+    "correcta": 2,
+    "fundamento": "En motores equipados con mando manual de mezcla, este modifica el caudal de combustible respecto del aire admitido. El acelerador regula principalmente la admisión y potencia.",
+    "fuente": "ANAC PPA RAAC 61.105, pregunta 10 (2014). Explicación didáctica preliminar."
+  },
+  {
+    "id": "ANAC-PPA-011",
+    "materia": "Motores",
+    "pregunta": "Ajustar el control de mezcla:",
+    "opciones": [
+      "Evita un enriquecimiento excesivo en altura",
+      "Regula el flujo de aire por el venturi",
+      "Evita el empobrecimiento al ascender"
+    ],
+    "correcta": 0,
+    "fundamento": "Al ascender cae la densidad del aire. Reducir adecuadamente el combustible mediante el mando de mezcla evita que la proporción se enriquezca en exceso; seguir el POH/AFM.",
+    "fuente": "ANAC PPA RAAC 61.105, pregunta 11 (2014). Explicación didáctica preliminar."
+  },
+  {
+    "id": "ANAC-PPA-012",
+    "materia": "Motores",
+    "pregunta": "Si se asciende sin empobrecer la mezcla, generalmente:",
+    "opciones": [
+      "Disminuyen aire y combustible proporcionalmente",
+      "Baja la densidad del aire y aumenta el combustible",
+      "Baja la densidad del aire y el combustible permanece aproximadamente constante"
+    ],
+    "correcta": 2,
+    "fundamento": "En la simplificación del banco, la menor densidad de aire sin reducción equivalente de combustible produce mezcla más rica. El comportamiento exacto depende del sistema de alimentación.",
+    "fuente": "ANAC PPA RAAC 61.105, pregunta 12 (2014). Explicación didáctica preliminar."
+  },
+  {
+    "id": "ANAC-PPA-013",
+    "materia": "Motores",
+    "pregunta": "Sin regulación, la mezcla se enriquece al ascender porque el combustible:",
+    "opciones": [
+      "Disminuye con el volumen de aire",
+      "Permanece constante mientras disminuye el volumen",
+      "Permanece aproximadamente constante mientras baja la densidad del aire"
+    ],
+    "correcta": 2,
+    "fundamento": "La masa de aire admitida disminuye con la densidad; si el suministro de combustible no se reduce proporcionalmente, la mezcla se enriquece.",
+    "fuente": "ANAC PPA RAAC 61.105, pregunta 13 (2014). Explicación didáctica preliminar."
+  },
+  {
+    "id": "ANAC-PPA-014",
+    "materia": "Motores",
+    "pregunta": "El propósito principal de ajustar la mezcla en altura es:",
+    "opciones": [
+      "Reducir combustible para compensar menor densidad del aire",
+      "Reducir combustible por mayor densidad del aire",
+      "Aumentar combustible por menor presión"
+    ],
+    "correcta": 0,
+    "fundamento": "Se reduce el combustible para adecuarlo a la menor masa de aire disponible y mantener la relación apropiada según el manual de la aeronave.",
+    "fuente": "ANAC PPA RAAC 61.105, pregunta 14 (2014). Explicación didáctica preliminar."
+  },
+  {
+    "id": "ANAC-PPA-015",
+    "materia": "Motores",
+    "pregunta": "Dejar aplicado aire caliente al carburador durante el despegue normalmente:",
+    "opciones": [
+      "Empobrece la mezcla y aumenta potencia",
+      "Reduce la distancia de despegue",
+      "Incrementa la carrera de despegue"
+    ],
+    "correcta": 2,
+    "fundamento": "El aire caliente es menos denso, lo que suele reducir la potencia disponible y alargar la carrera. Hay excepciones operativas según el manual y las condiciones.",
+    "fuente": "ANAC PPA RAAC 61.105, pregunta 15 (2014). Explicación didáctica preliminar."
+  },
+  {
+    "id": "ANAC-PPA-016",
+    "materia": "Motores",
+    "pregunta": "Aplicar aire caliente al carburador normalmente:",
+    "opciones": [
+      "Enriquece la mezcla aire-combustible",
+      "Empobrece la mezcla",
+      "No afecta la mezcla"
+    ],
+    "correcta": 0,
+    "fundamento": "El aire calentado tiene menor densidad; con un carburador convencional puede entrar menos masa de aire respecto del combustible y enriquecerse la mezcla.",
+    "fuente": "ANAC PPA RAAC 61.105, pregunta 16 (2014). Explicación didáctica preliminar."
+  },
+  {
+    "id": "ANAC-PPA-017",
+    "materia": "Motores",
+    "pregunta": "Aplicar aire caliente al carburador:",
+    "opciones": [
+      "No afecta la mezcla",
+      "Empobrece la mezcla",
+      "Enriquece la mezcla"
+    ],
+    "correcta": 2,
+    "fundamento": "En un carburador convencional el aire caliente es menos denso y tiende a enriquecer la mezcla. Es una pregunta equivalente a la anterior en el banco histórico.",
+    "fuente": "ANAC PPA RAAC 61.105, pregunta 17 (2014). Explicación didáctica preliminar."
+  },
+  {
+    "id": "ANAC-PPA-018",
+    "materia": "Motores",
+    "pregunta": "La detonación puede producirse por:",
+    "opciones": [
+      "Mezcla rica",
+      "Baja temperatura del motor",
+      "Combustible de octanaje inferior al recomendado"
+    ],
+    "correcta": 2,
+    "fundamento": "Un combustible con resistencia antidetonante insuficiente aumenta el riesgo de combustión anormal y presiones perjudiciales. También influyen temperatura, presión y operación.",
+    "fuente": "ANAC PPA RAAC 61.105, pregunta 18 (2014). Explicación didáctica preliminar."
+  },
+  {
+    "id": "ANAC-PPA-019",
+    "materia": "Motores",
+    "pregunta": "El encendido de la mezcla antes de la chispa normal se conoce como:",
+    "opciones": [
+      "Combustión instantánea",
+      "Detonación",
+      "Preignición"
+    ],
+    "correcta": 2,
+    "fundamento": "La preignición es el encendido anticipado por un punto caliente antes de la chispa prevista. Es distinta de la detonación, que es combustión anormal de la mezcla remanente.",
+    "fuente": "ANAC PPA RAAC 61.105, pregunta 19 (2014). Explicación didáctica preliminar."
+  },
+  {
+    "id": "ANAC-PPA-020",
+    "materia": "Motores",
+    "pregunta": "Para el enfriamiento interno, los motores alternativos dependen especialmente de:",
+    "opciones": [
+      "Aletas de ventilación",
+      "Circulación del aceite lubricante",
+      "Relación freón-compresor"
+    ],
+    "correcta": 1,
+    "fundamento": "El aceite lubrica y transporta calor desde componentes internos. El enfriamiento externo depende además del flujo de aire y de los sistemas específicos del motor.",
+    "fuente": "ANAC PPA RAAC 61.105, pregunta 20 (2014). Explicación didáctica preliminar."
+  },
+  {
+    "id": "ANAC-PPA-021",
+    "materia": "Motores",
+    "pregunta": "Una temperatura de aceite anormalmente alta puede deberse a:",
+    "opciones": [
+      "Rodaje defectuoso",
+      "Nivel de aceite demasiado bajo",
+      "Mezcla excesivamente rica"
+    ],
+    "correcta": 1,
+    "fundamento": "Con aceite insuficiente puede disminuir la capacidad de lubricación y disipación térmica. Una indicación anormal exige seguir el procedimiento del manual de vuelo.",
+    "fuente": "ANAC PPA RAAC 61.105, pregunta 21 (2014). Explicación didáctica preliminar."
+  },
+  {
+    "id": "ANAC-PPA-022",
+    "materia": "Hélices",
+    "pregunta": "La eficiencia de la hélice es:",
+    "opciones": [
+      "Potencia útil de empuje dividida por potencia al eje",
+      "Distancia real por revolución",
+      "Paso geométrico dividido por paso efectivo"
+    ],
+    "correcta": 0,
+    "fundamento": "La eficiencia propulsiva es la relación entre potencia útil de empuje (empuje × velocidad) y potencia mecánica suministrada al eje; las otras respuestas describen conceptos de avance o paso.",
+    "fuente": "ANAC PPA RAAC 61.105, pregunta 22 (2014). Explicación didáctica preliminar."
+  },
+  {
+    "id": "ANAC-PPA-025",
+    "materia": "Hélices",
+    "pregunta": "¿Cuándo son especialmente importantes los efectos asociados al torque de la hélice en un monomotor?",
+    "opciones": [
+      "Alta velocidad y gran ángulo de ataque",
+      "Baja velocidad, alta potencia y gran ángulo de ataque",
+      "Baja velocidad, baja potencia y bajo ángulo de ataque"
+    ],
+    "correcta": 1,
+    "fundamento": "Con alta potencia y baja velocidad se hacen más notables los efectos de hélice y motor, incluidos torque, flujo helicoidal y factor P; cada efecto tiene un mecanismo distinto.",
+    "fuente": "ANAC PPA RAAC 61.105, pregunta 25 (2014). Explicación didáctica preliminar."
   }
 ]
