@@ -4,7 +4,7 @@
 <style>
 :root{font-family:system-ui,Arial;color:#e9eef7;background:#141c27}*{box-sizing:border-box}body{margin:0}main{max-width:850px;margin:32px auto;padding:20px}.panel{background:#243143;border:1px solid #45556c;border-radius:18px;padding:24px;margin:18px 0}h1{margin:0 0 8px}p{line-height:1.5;color:#c8d4e3}button,select{font:inherit;border-radius:10px;padding:12px;border:1px solid #64748b;background:#34465c;color:white}button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}.choice{display:block;width:100%;text-align:left;margin:10px 0}.choice.selected{outline:2px solid #d8b86a}.primary{background:#c6a458;color:#121923;font-weight:700}.hidden{display:none}.meta{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}.notice{color:#f4d48a}#feedback{border-left:4px solid #c6a458;padding-left:15px}small{color:#cbd5e1}
 </style></head><body><main id="ppa-app" hidden><h1>GdV Tools · Simulador PPA</h1><p>Prototipo privado para pruebas del administrador.</p>
-<div class="panel" id="gate"><h2>Acceso restringido</h2><p>Esta pantalla no reemplaza la autorización del servidor. Para publicarla, integrar autenticación Supabase y validar el rol administrador mediante una política del backend.</p><p class="notice">En esta versión de desarrollo no hay preguntas oficiales cargadas.</p></div>
+<div class="panel" id="gate"><h2>Acceso restringido</h2><p>Esta pantalla no reemplaza la autorización del servidor. Para publicarla, integrar autenticación Supabase y validar el rol administrador mediante una política del backend.</p><p class="notice">Banco PPA en revisión técnica. Uso exclusivo del administrador.</p></div>
 <section class="panel"><h2>Configuración</h2><label for="subject">Materia</label> <select id="subject"><option value="all">Todas las materias</option></select> <label for="count">Preguntas</label> <select id="count"><option>10</option><option>20</option><option>40</option></select> <button id="start" class="primary">Comenzar examen</button><p id="status"></p></section>
 <section class="panel hidden" id="exam"><div class="meta"><strong id="progress"></strong><strong id="score"></strong></div><h2 id="question"></h2><div id="options"></div><button id="submit" class="primary" disabled>Responder</button><div id="feedback" class="hidden" aria-live="polite"></div><button id="next" class="hidden">Siguiente pregunta</button></section>
 <section class="panel hidden" id="results"><h2>Resultado</h2><p id="summary"></p><button id="again">Nuevo examen</button></section>
@@ -13,11 +13,15 @@ const $=id=>document.getElementById(id);
 let bank=[],exam=[],index=0,points=0,selected=null,answered=false;
 function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 async function load(){
- try{const res=await fetch('./preguntas.json',{cache:'no-store'});if(!res.ok)throw Error('No se pudo leer preguntas.json');
- const data=await res.json();if(!Array.isArray(data))throw Error('El banco debe ser un arreglo');
- bank=data.filter(q=>q.id&&q.materia&&q.pregunta&&Array.isArray(q.opciones)&&q.opciones.length>=2&&Number.isInteger(q.correcta)&&q.correcta>=0&&q.correcta<q.opciones.length&&q.fundamento&&q.fuente);
- const subjects=[...new Set(bank.map(q=>q.materia))].sort();subjects.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;$('subject').append(o)});
- $('status').textContent=bank.length+' preguntas verificadas disponibles.';
+ try{
+ const client=window.GDV_AUTH.client;
+ const {data,error}=await client.from('gdv_ppa_questions').select('id,materia,pregunta,opciones,correcta,fundamento,fuente,estado').neq('estado','retirada').order('id');
+ if(error)throw Error('No se pudo consultar el banco privado: '+error.message);
+ bank=(data||[]).filter(q=>q.id&&q.materia&&q.pregunta&&Array.isArray(q.opciones)&&q.opciones.length>=2&&Number.isInteger(q.correcta)&&q.correcta>=0&&q.correcta<q.opciones.length&&q.fundamento&&q.fuente);
+ const subjects=[...new Set(bank.map(q=>q.materia))].sort();
+ subjects.forEach(name=>{const o=document.createElement('option');o.value=name;o.textContent=name;$('subject').append(o)});
+ $('status').textContent=bank.length+' preguntas disponibles (revisión técnica pendiente).';
+ if(!bank.length)$('start').disabled=true;
  }catch(e){$('status').textContent=e.message;$('start').disabled=true}
 }
 function show(){answered=false;selected=null;const q=exam[index];$('progress').textContent='Pregunta '+(index+1)+' de '+exam.length;$('score').textContent='Puntos: '+points;$('question').textContent=q.pregunta;$('options').replaceChildren();q.opciones.forEach((v,i)=>{const b=document.createElement('button');b.className='choice';b.textContent=String.fromCharCode(65+i)+'. '+v;b.onclick=()=>{if(answered)return;selected=i;document.querySelectorAll('.choice').forEach(x=>x.classList.remove('selected'));b.classList.add('selected');$('submit').disabled=false};$('options').append(b)});$('submit').disabled=true;$('submit').classList.remove('hidden');$('feedback').classList.add('hidden');$('next').classList.add('hidden')}
