@@ -207,6 +207,7 @@ const fleet=[{id:'LV-ABC',model:'Cessna 172',blocked:false,insuranceUntil:'2027-
 const products=[{id:'avgas',name:'AVGAS 100LL',qty:180,unit:'L',min:60,cost:1800,sale:2300},
 {id:'oil',name:'Aceite aeronáutico',qty:16,unit:'L',min:5,cost:12500,sale:15700}];
 let reservations=[],flights=[],movements=[],lessons=[],groundActivities=[],tab='inicio',week=now();
+let flightModeFilter='all';
 const demoPacks=[{id:'pack-demo-10h',studentId:'p2',description:'Pack de 10 horas (ejemplo)',acquiredHours:10,remainingHours:10}];
 let trainingGoals=validateTrainingGoals(DEFAULT_TRAINING_GOALS),trainingGoalsOpen=false;
 const trainingGoalsStorageKey=()=>demoAdminId?'gdv-gestion-metas-v1-'+demoAdminId:'';
@@ -563,20 +564,42 @@ function calendar(){
 }
 function flightScreen(){
  const open=reservations.filter(r=>r.status==='confirmada'&&(!r.type||r.type==='flight')&&!flights.some(f=>f.reservationId===r.id));
- return '<section class="panel"><h2>Registrar y cerrar vuelo · Demo</h2><p>El cierre de un vuelo actualiza los totales demostrativos de aeronave y piloto. El tiempo entre horas se contabiliza como <b>tiempo de bloque declarado</b>; el tacómetro se calcula aparte.</p>'+
+ const types=[
+  ['all','Todos los vuelos'],['instruction','Instrucción con instructor'],
+  ['private','Piloto privado sin instructor'],['coached','Piloto con instructor']];
+ const shown=flights.filter(x=>flightModeFilter==='all'||x.operationType===flightModeFilter)
+  .slice().sort((a,b)=>b.date.localeCompare(a.date)||String(b.createdAt).localeCompare(String(a.createdAt)));
+ const total=(type)=>flights.filter(f=>f.operationType===type).reduce((n,f)=>n+(Number(f.blockMinutes)||Math.round(f.blockHours*60)),0)/60;
+ return '<div class="flight-summary">'+metric(total('instruction').toFixed(2)+' h','Vuelo de instrucción · bloque')+
+  metric(total('private').toFixed(2)+' h','Piloto privado solo · bloque')+
+  metric(flights.length,'Vuelos totales · Demo')+'</div>'+
+ '<section class="panel"><h2>Registrar y cerrar vuelo · Demo</h2>'+
+ '<p>Dos actividades principales: <b>alumno con instructor</b> y <b>piloto privado sin instructor</b>. La modalidad se determina por el titular y la reserva. El tiempo de bloque se calcula por separado del tacómetro; no se acredita automáticamente como experiencia reglamentaria.</p>'+
  (open.length?'<form id="flightform"><div class="formgrid">'+
- '<label>Reserva realizada<select id="flightBooking">'+open.map(r=>'<option value="'+safe(r.id)+'">'+safe(r.date)+' · '+safe(r.aircraft)+' · '+safe(members.find(x=>x.id===r.pilot)?.name)+'</option>').join('')+'</select></label>'+
+ '<label>Reserva de vuelo confirmada<select id="flightBooking">'+open.map(r=>'<option value="'+safe(r.id)+'">'+safe(r.date)+' · '+safe(r.aircraft)+' · '+safe(members.find(x=>x.id===r.pilot)?.name||r.pilot)+(r.instructor?' · Con instructor':' · Sin instructor')+'</option>').join('')+'</select></label>'+
  '<label>Origen<input id="flightFrom" maxlength="8" value="SADF" required></label>'+
  '<label>Destino<input id="flightTo" maxlength="8" value="SADF" required></label>'+
  '<label>Inicio de bloque<input id="flightStart" type="time" value="10:00" required></label>'+
- '<label>Final de bloque<input id="flightEnd" type="time" value="11:00" required></label>'+
+ '<label>Fin de bloque<input id="flightEnd" type="time" value="11:00" required></label>'+
  '<label>Tacómetro inicial<input id="tachStart" type="number" step=".01" min="0" value="1350.0" required></label>'+
  '<label>Tacómetro final<input id="tachEnd" type="number" step=".01" min="0" value="1351.0" required></label>'+
  '<label>Aterrizajes<input id="landings" type="number" min="0" max="30" value="1" required></label></div>'+
- '<button type="submit" class="action">Cerrar vuelo de demostración</button></form>':'<div class="card"><p>Primero cargá una reserva en la Agenda. Una reserva solo puede cerrarse una vez.</p><button class="secondary" data-go="reservas">Ir a reservas</button></div>')+'</section>'+
- '<section class="panel"><div class="toolbar"><h2>Historial de vuelos de prueba</h2><button id="flightExport" class="secondary" '+(!flights.length?'disabled':'')+'>Exportar CSV (no es RAV oficial)</button></div><div class="table-scroll"><table><thead><tr><th>Fecha</th><th>Matrícula</th><th>Piloto</th><th>Origen / destino</th><th>Bloque</th><th>Tacómetro Δ</th><th>Importe orientativo</th></tr></thead><tbody>'+
- flights.map(f=>'<tr><td>'+safe(f.date)+'</td><td>'+safe(f.aircraft)+'</td><td>'+safe(members.find(x=>x.id===f.pilot)?.name)+'</td><td>'+safe(f.from)+' → '+safe(f.to)+'</td><td>'+safe(f.blockHours)+' h</td><td>'+safe(f.tachDifference)+' h</td><td>'+money(f.cost)+'</td></tr>').join('')+
- (flights.length?'':'<tr><td colspan="7">Sin vuelos cerrados.</td></tr>')+'</tbody></table></div><p class="muted">Generar RAV oficial requiere verificar formato, datos, firmas y procedimiento con ANAC; todavía no está implementado.</p></section>';
+ '<button type="submit" class="action">Cerrar vuelo de demostración</button></form>':
+ '<div class="card"><p>Primero necesitás una reserva de vuelo confirmada. Un vuelo ya cerrado no se puede duplicar.</p><button class="secondary" data-go="reservas">Ir a reservas</button></div>')+'</section>'+
+ '<section class="panel"><div class="toolbar"><h2>Historial de vuelos y RAV · DEMO</h2>'+
+ '<div class="agenda-controls"><label>Modalidad<select id="flightModeFilter">'+types.map(([key,label])=>
+  '<option value="'+key+'" '+(key===flightModeFilter?'selected':'')+'>'+label+'</option>').join('')+'</select></label>'+
+ '<button id="flightExport" class="secondary" '+(!shown.length?'disabled':'')+'>Exportar CSV (no RAV oficial)</button></div></div>'+
+ '<div class="table-scroll"><table><thead><tr><th>Fecha</th><th>Modalidad</th><th>Matrícula</th><th>Titular e instructor</th><th>Ruta</th><th>Bloque</th><th>Tacómetro Δ</th><th>Aterrizajes</th></tr></thead><tbody>'+
+ shown.map(f=>'<tr><td>'+safe(f.date)+'</td><td>'+safe(FLIGHT_MODE_LABELS[f.operationType]||'Anterior sin clasificar')+'</td>'+
+ '<td>'+safe(f.aircraft)+'</td><td>'+safe(members.find(x=>x.id===f.pilot)?.name||f.pilot)+
+ (f.instructor?'<div class="muted">Instructor: '+safe(members.find(x=>x.id===f.instructor)?.name||f.instructor)+'</div>':'<div class="muted">Sin instructor</div>')+
+ '</td><td>'+safe(f.from)+' → '+safe(f.to)+'</td><td>'+safe(f.blockHours.toFixed(2))+' h</td><td>'+
+ safe(f.tachDifference.toFixed(2))+' h</td><td>'+safe(f.landings)+'</td></tr>').join('')+
+ (shown.length?'':'<tr><td colspan="8">Sin vuelos para este filtro.</td></tr>')+'</tbody></table></div>'+
+ '<div class="training-actions"><button class="secondary" data-go="alumno">Ver historial del alumno</button>'+
+ '<button class="secondary" data-go="piloto">Ver historial del piloto privado</button></div>'+
+ '<p class="muted">CSV de demostración, no RAV oficial. La asignación de horas habilitantes y la documentación ANAC requerirán validación técnica, normativa y permisos individuales.</p></section>';
 }
 function fleetScreen(){
  const totals=flightTotals(flights,'aircraft');
