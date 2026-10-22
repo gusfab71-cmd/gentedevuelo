@@ -106,7 +106,7 @@ const fleet=[{id:'LV-ABC',model:'Cessna 172',blocked:false,insuranceUntil:'2027-
 const products=[{id:'avgas',name:'AVGAS 100LL',qty:180,unit:'L',min:60,cost:1800,sale:2300},
 {id:'oil',name:'Aceite aeronáutico',qty:16,unit:'L',min:5,cost:12500,sale:15700}];
 let reservations=[],flights=[],movements=[],lessons=[],tab='inicio',week=now();
-let trainingForm='',trainingStudent='p2';
+let trainingForm='',trainingStudent='p2',trainingPreselectFlight='';
 const chiefDemoId='jefe-instructores-demo';
 const navs=[['inicio','Panel general'],['reservas','Agenda y reservas'],['vuelos','Vuelos y RAV'],['flota','Aeronaves y mantenimiento'],['personas','Pilotos y alumnos'],['finanzas','Contabilidad y horas'],['stock','Combustible y aceite'],['academia','Academia y Simu PPA'],['documentos','Documentos y avisos']];
 function notice(message){$('alert').textContent=message}
@@ -174,7 +174,8 @@ function trainingFormMarkup(){
  if(trainingForm!=='new'&&!editing)return '';
  const student=editing?.studentId||trainingStudent;
  const instructors=members.filter(p=>p.kind==='instructor');
- const classes=flights.filter(f=>f.pilot===student&&(!editing||f.instructor===editing.instructorId));
+ const classes=flights.filter(f=>f.pilot===student&&f.instructor&&(!editing||f.instructor===editing.instructorId));
+ const selectedFlight=classes.find(f=>f.id===(editing?.flightId||trainingPreselectFlight));
  const option=(p,selected)=>'<option value="'+safe(p.id)+'" '+(p.id===selected?'selected':'')+'>'+safe(p.name)+'</option>';
  const assessmentOpts=Object.entries(ASSESSMENTS).map(([key,label])=>'<option value="'+key+'" '+(editing?.assessment===key?'selected':'')+'>'+safe(label)+'</option>').join('');
  const input=(label,id,type,value='',more='')=>'<label>'+label+'<input id="'+id+'" type="'+type+'" value="'+safe(value)+'" '+more+' '+(id==='lessonAircraft'?'':'required')+'></label>';
@@ -183,12 +184,12 @@ function trainingFormMarkup(){
  '<p class="training-note">Prototipo: el rol de instructor está simulado desde la cuenta administradora. No utilices datos reales; para operar en una escuela se habilitarán cuentas individuales y autorización en servidor.</p>'+
  '<form id="training-form" class="training-form"><div class="formgrid">'+
  '<label>Alumno<select id="lessonStudent" '+(editing?'disabled':'')+'>'+members.filter(m=>m.kind==='alumno').map(p=>option(p,student)).join('')+'</select></label>'+
- '<label>Instructor responsable<select id="lessonInstructor" '+(editing?'disabled':'')+'>'+instructors.map(p=>option(p,editing?.instructorId||instructors[0]?.id)).join('')+'</select></label>'+
- input('Fecha de la clase','lessonDate','date',editing?.date||now())+
+ '<label>Instructor responsable<select id="lessonInstructor" '+(editing?'disabled':'')+'>'+instructors.map(p=>option(p,editing?.instructorId||selectedFlight?.instructor||instructors[0]?.id)).join('')+'</select></label>'+
+ input('Fecha de la clase','lessonDate','date',editing?.date||selectedFlight?.date||now())+
  input('Duración pedagógica (minutos)','lessonMinutes','number',editing?.minutes||60,'min="1" max="600"')+
- input('Matrícula de práctica (si aplica)','lessonAircraft','text',editing?.aircraft||'','maxlength="50"')+
+ input('Matrícula de práctica (si aplica)','lessonAircraft','text',editing?.aircraft||selectedFlight?.aircraft||'','maxlength="50"')+
  '<label>Vuelo asociado (opcional)<select id="lessonFlight" '+(editing?'disabled':'')+'><option value="">Clase teórica o sin vuelo asociado</option>'+
- classes.map(f=>'<option value="'+safe(f.id)+'" '+(editing?.flightId===f.id?'selected':'')+'>'+safe(f.date)+' · '+safe(f.aircraft)+' · '+safe(f.blockHours)+' h bloque · '+safe(personName(f.instructor))+'</option>').join('')+'</select></label>'+
+ classes.map(f=>'<option value="'+safe(f.id)+'" '+((editing?.flightId||trainingPreselectFlight)===f.id?'selected':'')+'>'+safe(f.date)+' · '+safe(f.aircraft)+' · '+safe(f.blockHours)+' h bloque · '+safe(personName(f.instructor))+'</option>').join('')+'</select></label>'+
  '</div><div class="formgrid"><div class="wide">'+area('Temas, ejercicios y maniobras trabajados','lessonTopics',editing?.topics||'')+'</div>'+
  '<div class="wide">'+area('Evolución respecto de clases anteriores','lessonEvolution',editing?.evolution||'')+'</div>'+
  '<div class="wide"><label>Dificultades observadas (opcional)<textarea id="lessonDifficulties" maxlength="1000">'+safe(editing?.difficulties||'')+'</textarea></label></div>'+
@@ -198,6 +199,9 @@ function trainingFormMarkup(){
 }
 function trainingTimeline(){
  const student=trainingStudent,entries=studentTimeline(lessons,student),summary=studentSummary(lessons,student);
+ const unreported=flights.filter(f=>f.pilot===student&&f.instructor&&!lessons.some(l=>l.flightId===f.id));
+ const missingBlock=unreported.length?'<div class="training-note"><strong>'+unreported.length+' vuelo(s) de instrucción sin ficha de evolución</strong><p>El instructor debe documentar el progreso y enviarlo a jefatura.</p>'+
+ unreported.map(f=>'<div class="training-actions"><span>'+safe(f.date)+' · '+safe(f.aircraft)+' · '+safe(personName(f.instructor))+'</span><button class="secondary" type="button" data-prepare-lesson="'+safe(f.id)+'">Preparar ficha pendiente</button></div>').join('')+'</div>':'';
  const cards=entries.map(l=>{
   const status=LESSON_STATUS[l.status]||'Estado pendiente';
   const audit=l.history.map(h=>{
@@ -232,12 +236,17 @@ function trainingTimeline(){
  metric(summary.pending,'Pendientes del jefe')+metric(Math.round(summary.trainingMinutes/60*10)/10+' h','Instrucción pedagógica')+'</div>'+
  '<div class="training-actions"><button type="button" class="action" id="newTraining">Registrar clase</button></div>'+
  '<p class="muted">Cada clase guarda instructor, fecha, duración, evolución, dificultades, objetivos y estado de aprobación. Las horas de instrucción pedagógica no se suman automáticamente a la bitácora oficial.</p>'+
- (cards||'<div class="card"><p>Aún no hay clases registradas para este alumno de demostración.</p></div>')+'</section>';
+ missingBlock+(cards||'<div class="card"><p>Aún no hay clases registradas para este alumno de demostración.</p></div>')+'</section>';
 }
 function chiefReviewSection(){
  const pending=lessons.filter(l=>l.status==='submitted');
+ const missing=flights.filter(f=>members.some(p=>p.id===f.pilot&&p.kind==='alumno')&&f.instructor&&!lessons.some(l=>l.flightId===f.id));
  return '<section class="panel"><div class="toolbar"><h2>Jefatura de Instructores · Control de calidad</h2>'+
  '<span class="training-status submitted">'+pending.length+' por revisar</span></div>'+
+ '<p class="training-note"><b>'+missing.length+' vuelo(s) de alumno sin ficha</b>. La jefatura puede detectar y solicitar la evaluación pendiente.</p>'+
+ missing.map(f=>'<div class="training-record"><b>'+safe(f.date)+' · '+safe(personName(f.pilot))+' · '+safe(f.aircraft)+'</b>'+
+ '<p>Instructor: '+safe(personName(f.instructor))+' · Sin registro pedagógico vinculado</p>'+
+ '<button class="secondary" data-prepare-lesson="'+safe(f.id)+'">Preparar ficha para el instructor</button></div>').join('')+
  '<p class="training-note"><strong>Rol simulado:</strong> las acciones de jefatura son pruebas realizadas por el administrador. En producción solo el jefe de instructores de la institución podrá aprobar o devolver fichas con su propia identidad y permisos de servidor.</p>'+
  (pending.map(l=>'<article class="training-record"><h3>'+safe(personName(l.studentId))+' · Clase '+safe(l.date)+'</h3>'+
  '<p>Instructor: '+safe(personName(l.instructorId))+' · Revisión '+safe(l.revision)+'</p>'+
