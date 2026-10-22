@@ -40,6 +40,8 @@ export function buildLesson(data,students,instructors,flights=[],existing=[]){
  if(!instructors.some(s=>s.id===data.instructorId&&s.kind==='instructor'))
   throw Error('Seleccioná un instructor registrado.');
  if(!dateOK(data.date))throw Error('Fecha de clase inválida.');
+ const now=new Date(),today=[now.getFullYear(),String(now.getMonth()+1).padStart(2,'0'),String(now.getDate()).padStart(2,'0')].join('-');
+ if(data.date>today)throw Error('No se pueden registrar clases futuras como realizadas.');
  const duration=Number(data.minutes);
  if(!Number.isInteger(duration)||duration<1||duration>600)throw Error('Duración de instrucción inválida.');
  if(!Object.hasOwn(ASSESSMENTS,data.assessment))throw Error('Estado de evolución inválido.');
@@ -83,7 +85,7 @@ export function reviseLesson(lesson,changes,instructorId){
  const revision=lesson.revision+1;
  return {
   ...revised,revision,status:'draft',chiefReview:null,updatedAt:new Date().toISOString(),
-  history:[...lesson.history,logEvent('edited',instructorId,'Ficha corregida · revisión '+revision,revision)]
+  history:[...lesson.history,logEvent('edited',instructorId,JSON.stringify({before:withoutDraft(lesson),after:withoutDraft({...revised,revision})}),revision)]
  };
 }
 export function submitLesson(lesson,instructorId){
