@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gestión Aeronáutica · Gente de Vuelo</title>
+<style>
+:root{font-family:Inter,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;color:#e8f0f4;background:#111b22;color-scheme:dark}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(130deg,#141f29 0%,#101922 70%);min-height:100vh}
+[hidden],.hidden{display:none!important}
+a{color:#cde8ed}a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #a6d1da;outline-offset:2px}
+header{padding:19px max(20px,calc((100vw - 1380px)/2));display:flex;justify-content:space-between;align-items:center;gap:14px;border-bottom:1px solid #36515b;background:#18242e}
+header a{text-decoration:none}header .brand{font-weight:850;letter-spacing:1.5px;color:#f2d6a3;font-size:14px}
+header span{color:#b6c7cd;font-size:13px}
+main{max-width:1380px;margin:0 auto;padding:24px 22px 64px}
+.eyebrow{font-size:11px;letter-spacing:2px;color:#8fb5c2;font-weight:800;text-transform:uppercase}
+h1{font-size:clamp(27px,3.2vw,42px);letter-spacing:-.035em;margin:8px 0 5px}
+h2{font-size:19px;margin:0 0 12px;color:#f0f7f9}
+p{color:#c7d5d9;line-height:1.55}
+.sub{color:#a8bcc4;font-size:14px;margin:4px 0}
+.tag{display:inline-flex;border:1px solid #6a8992;color:#cfe6ec;border-radius:999px;padding:6px 11px;font-size:11px;font-weight:750;white-space:nowrap}
+.status{display:flex;align-items:center;gap:9px;color:#b7dbe4;font-size:12px}
+.status:before{content:"";width:8px;height:8px;border-radius:50%;background:#f1bd78}
+.breadcrumb{margin-bottom:20px}.hero{display:flex;justify-content:space-between;gap:20px;align-items:center;margin-bottom:22px}
+.notice{border-left:3px solid #d7b47a;padding:13px 16px;border-radius:8px;background:#293033;color:#e8e0cf;font-size:13px;line-height:1.55;margin-bottom:20px}
+.layout{display:grid;grid-template-columns:225px minmax(0,1fr);gap:22px}
+nav{align-self:start;position:sticky;top:20px;border:1px solid #344c56;background:#18252e;border-radius:16px;padding:10px;display:grid;gap:3px}
+nav button{background:transparent;color:#c8d5db;border:1px solid transparent;text-align:left;padding:12px 13px;border-radius:10px;font:inherit;font-size:13px;cursor:pointer}
+nav button.active{background:#304955;border-color:#547582;color:white;font-weight:800}
+nav button:hover{background:#263b46}
+main button.action,main button.secondary{font:inherit;cursor:pointer;border:1px solid #6d9ba7;padding:10px 15px;border-radius:9px;font-size:13px}
+.action{color:#101820;background:#e1bd82;font-weight:800}
+.secondary{color:#dfebef;background:#30444e}
+button:disabled{opacity:.5;cursor:not-allowed}
+.content{min-width:0}.panel{background:#1c2b34;border:1px solid #36515e;border-radius:16px;padding:22px;margin-bottom:15px}
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}
+.metric{padding:17px;background:#1f323d;border:1px solid #3e5c68;border-radius:13px}
+.metric strong{font-size:24px;display:block;color:#ffdfad}.metric span{font-size:12px;color:#b8cad2}
+.cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
+.card{background:#182630;border:1px solid #3e5861;border-radius:13px;padding:17px}
+.card h3{font-size:15px;margin:0 0 7px}
+.card p{font-size:13px;margin:0 0 10px}
+label{display:grid;gap:6px;font-size:12px;color:#c6d7dc}
+input,select{width:100%;border:1px solid #5b7481;border-radius:8px;padding:10px 11px;background:#101c24;color:white;font:inherit;font-size:13px}
+form{display:grid;gap:15px}.formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.formgrid .wide{grid-column:1/-1}
+.toolbar{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-bottom:15px;flex-wrap:wrap}
+.muted{font-size:12px;color:#9fb5bd}
+table{border-collapse:collapse;width:100%;min-width:570px;font-size:13px}
+td,th{padding:12px 10px;border-bottom:1px solid #354b55;text-align:left;vertical-align:top}
+th{color:#a9c3cc;font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+.table-scroll{overflow-x:auto}
+.daygrid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:7px;margin:15px 0 18px}
+.day{min-height:145px;border:1px solid #47616b;border-radius:11px;padding:8px;background:#152630;min-width:0}
+.day.current{border-color:#c9ae7e}.day h3{font-size:12px;color:#dfedf1;margin:0 0 8px}
+.slot{font-size:10px;line-height:1.35;background:#345766;border-left:3px solid #d4b57d;border-radius:6px;padding:7px;margin-bottom:5px;overflow-wrap:anywhere}
+.empty{font-size:11px;color:#7d9aa5}
+.pill{display:inline-block;padding:4px 8px;border-radius:8px;background:#274b46;border:1px solid #4a8679;color:#d2f3e8;font-size:11px}
+.pill.uncertain{background:#4b3e30;border-color:#8d714d;color:#ffe0b1}
+form details{padding:10px 14px;background:#16232c;border:1px solid #425d66;border-radius:10px}
+summary{cursor:pointer;color:#e2c499;font-weight:700;font-size:13px}
+ol{color:#bbccd0;font-size:13px;line-height:1.85}
+#alert{min-height:22px;margin-top:9px;font-size:13px;color:#f5d8a8}
+@media(max-width:1020px){.metrics{grid-template-columns:repeat(2,1fr)}.layout{grid-template-columns:180px minmax(0,1fr)}.daygrid{grid-template-columns:repeat(4,1fr)}}
+@media(max-width:690px){header{padding:14px}main{padding:15px}.hero{align-items:start;flex-direction:column}.layout{display:block}nav{position:static;display:flex;overflow:auto;margin-bottom:16px}nav button{flex-shrink:0}.cols,.grid3,.formgrid{grid-template-columns:1fr}.formgrid .wide{grid-column:auto}.daygrid{grid-template-columns:repeat(2,1fr)}.panel{padding:15px}}
+</style>
+<script>document.documentElement.classList.add("auth-pending")</script>
+<style>html.auth-pending body{visibility:hidden}</style>
+<script src="../../assets/supabase-2.117.2.min.js"></script>
+<script src="../../assets/community-config.js"></script>
+<script src="../../assets/auth-guard.js"></script>
+</head><body>
+<header><a class="brand" href="../../index.html">GENTE DE VUELO</a><span>UTILIDADES / GESTIÓN AERONÁUTICA</span><a href="../index.html">Volver a Utilidades</a></header>
+<main id="app" hidden>
+<div class="hero"><div><div class="eyebrow">Gente de Vuelo · AeroSuite</div><h1>Gestión Aeronáutica</h1><p class="sub">Reservas, actividad, flota, formación y administración · Una sola plataforma</p></div><span class="tag">Prototipo privado · Administrador</span></div>
+<div class="notice"><strong>Entorno de demostración.</strong> Los datos que cargues aquí son ficticios y se pierden al recargar. No hay reservas multiusuario reales, validación directa con ANAC, facturación ni RAV oficial. La confirmación de una reserva NO autoriza un vuelo. Utilizá solamente datos de prueba.</div>
+<div class="layout"><nav id="sidebar" aria-label="Módulos de Gestión Aeronáutica"></nav><div class="content"><p id="alert" role="status" aria-live="polite"></p><section id="screen" aria-live="polite"></section></div></div>
+</main>
+<script type="module">
+import {createReservation,closeFlight,flightTotals,stockMove,validDate} from './src/operacion.js';
+const $=id=>document.getElementById(id);
+const safe=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[ch]));
+const isoDay=d=>[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');
+const now=()=>isoDay(new Date());
+const addDays=(day,n)=>{const d=new Date(day+'T12:00:00');d.setDate(d.getDate()+n);return isoDay(d)};
+const shortDay=s=>new Date(s+'T12:00:00').toLocaleDateString('es-AR',{weekday:'short',day:'numeric',month:'short'});
+const money=n=>Number(n).toLocaleString('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0});
+const members=[{id:'p1',name:'Piloto Demo',kind:'piloto',licenseUntil:'2027-06-01',cmaUntil:'2027-05-01'},
+{id:'p2',name:'Alumno Demo',kind:'alumno',licenseUntil:'2027-06-01',cmaUntil:'2027-05-01'},
+{id:'i1',name:'Instructor Demo',kind:'instructor',licenseUntil:'2027-06-01',cmaUntil:'2027-05-01'}];
+const fleet=[{id:'LV-ABC',model:'Cessna 172',blocked:false,insuranceUntil:'2027-06-01',rate:95000},
+{id:'LV-XYZ',model:'Piper PA-11',blocked:false,insuranceUntil:'2027-05-01',rate:70000}];
+const products=[{id:'avgas',name:'AVGAS 100LL',qty:180,unit:'L',min:60,cost:1800,sale:2300},
+{id:'oil',name:'Aceite aeronáutico',qty:16,unit:'L',min:5,cost:12500,sale:15700}];
+let reservations=[],flights=[],movements=[],tab='inicio',week=now();
+const navs=[['inicio','Panel general'],['reservas','Agenda y reservas'],['vuelos','Vuelos y RAV'],['flota','Aeronaves y mantenimiento'],['personas','Pilotos y alumnos'],['finanzas','Contabilidad y horas'],['stock','Combustible y aceite'],['academia','Academia y Simu PPA'],['documentos','Documentos y avisos']];
+function notice(message){$('alert').textContent=message}
+const metric=(value,label)=>'<div class="metric"><strong>'+safe(value)+'</strong><span>'+safe(label)+'</span></div>';
+const options=(rows,value='id',label='name')=>rows.map(row=>'<option value="'+safe(row[value])+'">'+safe(row[label])+'</option>').join('');
+function switchTab(value){tab=value;notice('');render()}
+function render(){
+ $('sidebar').innerHTML=navs.map(([key,label])=>'<button type="button" data-tab="'+key+'" class="'+(key===tab?'active':'')+'">'+label+'</button>').join('');
+ $('sidebar').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>switchTab(b.dataset.tab)));
+ const sections={inicio:dashboard,reservas:calendar,vuelos:flightScreen,flota:fleetScreen,personas:memberScreen,finanzas:financeScreen,stock:stockScreen,academia:academyScreen,documentos:documentsScreen};
+ $('screen').innerHTML=sections[tab]();wire();
+}
+function dashboard(){
+ const hours=flights.reduce((sum,x)=>sum+x.blockHours,0),turns=reservations.filter(r=>r.status==='confirmada').length;
+ return '<div class="metrics">'+metric(fleet.length,'Aeronaves demo')+metric(turns,'Reservas de prueba')+metric(flights.length,'Vuelos cerrados demo')+metric(hours.toFixed(1)+' h','Horas registradas demo')+'</div>'+
+ '<div class="cols"><section class="panel"><h2>Operación diaria</h2><p>Una agenda central para coordinar aeronaves, pilotos e instructores. Al registrar un vuelo se refleja en el historial y en un resumen económico provisional.</p><button class="action" data-go="reservas">Abrir agenda</button></section>'+
+ '<section class="panel"><h2>Formación y legajos</h2><p>El seguimiento de alumnos, las evaluaciones PPA y las fichas originales se incorporarán por etapas, sin exponer datos personales hasta implementar permisos de institución.</p><button class="secondary" data-go="academia">Ver Academia</button></section></div>'+
+ '<section class="panel"><h2>Estado de implementación</h2><div class="grid3">'+
+ '<div class="card"><h3>En este prototipo</h3><p>Agenda semanal interactiva, detección de conflictos, cierre de vuelos, acumulados, movimientos de stock simulados y resumen de importes.</p><span class="pill">Demo funcional</span></div>'+
+ '<div class="card"><h3>Reutilizable de Gente de Vuelo</h3><p>Motor de reservas de prueba, mantenimiento de aeronaves y Simu PPA. Todavía funcionan sobre datos independientes.</p><span class="pill uncertain">Integración pendiente</span></div>'+
+ '<div class="card"><h3>Para operar con instituciones</h3><p>Usuarios, permisos, base multiinstitución, disponibilidad en tiempo real, conciliación, documentos y RAV conforme a ANAC.</p><span class="pill uncertain">Desarrollo posterior</span></div></div></section>';
+}
+function calendar(){
+ let start=week;const dow=(new Date(start+'T12:00:00').getDay()+6)%7;start=addDays(start,-dow);
+ const grid=Array.from({length:7},(_,i)=>{const date=addDays(start,i),rows=reservations.filter(r=>r.date===date&&r.status==='confirmada');
+ return '<div class="day '+(date===week?'current':'')+'"><h3>'+shortDay(date)+'</h3>'+rows.map(r=>'<div class="slot"><b>'+safe(r.aircraft)+'</b> · '+safe(r.start)+'–'+safe(r.end)+'<div>'+safe(members.find(p=>p.id===r.pilot)?.name)+'</div></div>').join('')+(rows.length?'':'<span class="empty">Sin reservas</span>')+'</div>'}).join('');
+ const field=(label,id,type,extra='')=>'<label>'+label+'<input id="'+id+'" type="'+type+'" '+extra+' required></label>';
+ return '<section class="panel"><div class="toolbar"><h2>Agenda inteligente de turnos · Demo</h2><label>Semana de referencia<input type="date" id="week" value="'+week+'"></label></div><div class="daygrid">'+grid+'</div>'+
+ '<p class="muted">Los turnos y conflictos se calculan solo con datos de esta pestaña; no existe disponibilidad multiusuario en tiempo real.</p></section>'+
+ '<section class="panel"><h2>Solicitar reserva de prueba</h2><form id="booking"><div class="formgrid"><label>Aeronave<select id="bookAircraft">'+fleet.map(a=>'<option value="'+safe(a.id)+'">'+safe(a.id)+' · '+safe(a.model)+'</option>').join('')+'</select></label>'+
+ '<label>Piloto o alumno<select id="bookPilot">'+options(members.filter(x=>x.kind!=='instructor'))+'</select></label>'+
+ '<label>Instructor (opcional)<select id="bookInstructor"><option value="">Sin instructor</option>'+options(members.filter(x=>x.kind==='instructor'))+'</select></label>'+
+ field('Fecha','bookDate','date','value="'+week+'"')+field('Desde','bookStart','time','value="10:00"')+field('Hasta','bookEnd','time','value="11:00"')+'</div>'+
+ '<button class="action" type="submit">Confirmar reserva de demostración</button></form></section>'+
+ '<section class="panel"><h2>Reservas registradas</h2><div class="table-scroll"><table><thead><tr><th>Fecha</th><th>Aeronave</th><th>Piloto</th><th>Hora</th><th>Estado</th><th>Acción</th></tr></thead><tbody>'+
+ reservations.map(r=>'<tr><td>'+safe(r.date)+'</td><td>'+safe(r.aircraft)+'</td><td>'+safe(members.find(x=>x.id===r.pilot)?.name)+'</td><td>'+safe(r.start)+'–'+safe(r.end)+'</td><td>'+safe(r.status)+'</td><td>'+(r.status==='confirmada'&&!flights.some(f=>f.reservationId===r.id)?'<button class="secondary" data-cancel="'+safe(r.id)+'">Cancelar</button>':'—')+'</td></tr>').join('')+
+ (reservations.length?'':'<tr><td colspan="6">No hay reservas de demostración.</td></tr>')+'</tbody></table></div></section>';
+}
+function flightScreen(){
+ const open=reservations.filter(r=>r.status==='confirmada'&&!flights.some(f=>f.reservationId===r.id));
+ return '<section class="panel"><h2>Registrar y cerrar vuelo · Demo</h2><p>El cierre de un vuelo actualiza los totales demostrativos de aeronave y piloto. El tiempo entre horas se contabiliza como <b>tiempo de bloque declarado</b>; el tacómetro se calcula aparte.</p>'+
+ (open.length?'<form id="flightform"><div class="formgrid">'+
+ '<label>Reserva realizada<select id="flightBooking">'+open.map(r=>'<option value="'+safe(r.id)+'">'+safe(r.date)+' · '+safe(r.aircraft)+' · '+safe(members.find(x=>x.id===r.pilot)?.name)+'</option>').join('')+'</select></label>'+
+ '<label>Origen<input id="flightFrom" maxlength="8" value="SADF" required></label>'+
+ '<label>Destino<input id="flightTo" maxlength="8" value="SADF" required></label>'+
+ '<label>Inicio de bloque<input id="flightStart" type="time" value="10:00" required></label>'+
+ '<label>Final de bloque<input id="flightEnd" type="time" value="11:00" required></label>'+
+ '<label>Tacómetro inicial<input id="tachStart" type="number" step=".01" min="0" value="1350.0" required></label>'+
+ '<label>Tacómetro final<input id="tachEnd" type="number" step=".01" min="0" value="1351.0" required></label>'+
+ '<label>Aterrizajes<input id="landings" type="number" min="0" max="30" value="1" required></label></div>'+
+ '<button type="submit" class="action">Cerrar vuelo de demostración</button></form>':'<div class="card"><p>Primero cargá una reserva en la Agenda. Una reserva solo puede cerrarse una vez.</p><button class="secondary" data-go="reservas">Ir a reservas</button></div>')+'</section>'+
+ '<section class="panel"><div class="toolbar"><h2>Historial de vuelos de prueba</h2><button id="flightExport" class="secondary" '+(!flights.length?'disabled':'')+'>Exportar CSV (no es RAV oficial)</button></div><div class="table-scroll"><table><thead><tr><th>Fecha</th><th>Matrícula</th><th>Piloto</th><th>Origen / destino</th><th>Bloque</th><th>Tacómetro Δ</th><th>Importe orientativo</th></tr></thead><tbody>'+
+ flights.map(f=>'<tr><td>'+safe(f.date)+'</td><td>'+safe(f.aircraft)+'</td><td>'+safe(members.find(x=>x.id===f.pilot)?.name)+'</td><td>'+safe(f.from)+' → '+safe(f.to)+'</td><td>'+safe(f.blockHours)+' h</td><td>'+safe(f.tachDifference)+' h</td><td>'+money(f.cost)+'</td></tr>').join('')+
+ (flights.length?'':'<tr><td colspan="7">Sin vuelos cerrados.</td></tr>')+'</tbody></table></div><p class="muted">Generar RAV oficial requiere verificar formato, datos, firmas y procedimiento con ANAC; todavía no está implementado.</p></section>';
+}
+function fleetScreen(){
+ const totals=flightTotals(flights,'aircraft');
+ return '<section class="panel"><h2>Flota, mantenimiento y seguros</h2><div class="grid3">'+fleet.map(a=>'<div class="card"><h3>'+safe(a.id)+' · '+safe(a.model)+'</h3><p>Estado de muestra: '+(a.blocked?'Bloqueado':'Disponible administrativamente')+'</p><p>Seguro declarado hasta: '+safe(a.insuranceUntil)+'</p><p>Horas de bloque demo: '+(totals[a.id]||0).toFixed(2)+'</p><p>Tarifa de muestra: '+money(a.rate)+'/h</p><span class="pill uncertain">Datos ficticios</span></div>').join('')+'</div>'+
+ '<p class="muted">Ya existe Mantenimiento de Aeronaves en Utilidades, pero sus datos personales todavía NO están sincronizados con esta demostración.</p>'+
+ '<a class="secondary" href="../mantenimiento-aeronaves.html">Abrir herramienta actual de mantenimiento</a></section>';
+}
+function memberScreen(){
+ const totals=flightTotals(flights,'pilot');
+ return '<section class="panel"><h2>Pilotos, alumnos e instructores</h2><p>Los legajos reales, documentos e historiales requerirán roles e información privada protegida por institución.</p><div class="table-scroll"><table><thead><tr><th>Perfil de prueba</th><th>Rol</th><th>Licencia declarada</th><th>CMA declarada</th><th>Horas de bloque</th></tr></thead><tbody>'+
+ members.map(p=>'<tr><td>'+safe(p.name)+'</td><td>'+safe(p.kind)+'</td><td>'+safe(p.licenseUntil)+'</td><td>'+safe(p.cmaUntil)+'</td><td>'+(totals[p.id]||0).toFixed(2)+'</td></tr>').join('')+'</tbody></table></div><p class="muted">El control de vigencia compara solo fechas de demostración, no valida identidad ni documentación con ANAC.</p></section>';
+}
+function financeScreen(){
+ const gross=flights.reduce((a,b)=>a+b.cost,0);
+ return '<div class="metrics">'+metric(money(gross),'Vuelos valorizados · Demo')+metric('0','Cobros efectuados')+metric('0','Egresos registrados')+metric('—','Saldo real no disponible')+'</div>'+
+ '<section class="panel"><h2>Contabilidad, packs de horas y cuentas corrientes</h2><p>Etapa de diseño: ingresos/egresos categorizados, cajas, cheques, proveedores, horas prepagas y saldos en pesos. Los importes mostrados son solo cálculos de tarifa sobre horas de bloque de demostración, <strong>no facturación ni cobranzas</strong>.</p><div class="table-scroll"><table><thead><tr><th>Reserva / vuelo</th><th>Horas bloque</th><th>Tarifa vigente de prueba</th><th>Importe calculado</th></tr></thead><tbody>'+
+ flights.map(f=>'<tr><td>'+safe(f.date)+' · '+safe(f.aircraft)+'</td><td>'+f.blockHours+'</td><td>'+money(f.cost/f.blockHours)+'/h</td><td>'+money(f.cost)+'</td></tr>').join('')+
+ (flights.length?'':'<tr><td colspan="4">Cerrá un vuelo de prueba para ver el cálculo.</td></tr>')+'</tbody></table></div></section>';
+}
+function stockScreen(){
+ return '<section class="panel"><h2>Combustible, aceite y stock institucional · Demo</h2><p>Registrar entradas y salidas de prueba con mínimos configurables. Las cargas a aeronaves, compras de proveedor, costo y venta por litro y su vínculo con contabilidad se conectarán en una etapa posterior.</p>'+
+ '<div class="grid3">'+products.map(p=>'<div class="card"><h3>'+safe(p.name)+'</h3><p>Disponible: <b>'+safe(p.qty)+' '+safe(p.unit)+'</b></p><p>Mínimo configurado: '+p.min+' '+safe(p.unit)+'</p><p>Precio de compra demo: '+money(p.cost)+' / '+safe(p.unit)+'</p><p>Venta demo: '+money(p.sale)+' / '+safe(p.unit)+'</p><span class="pill '+(p.qty<p.min?'uncertain':'')+'">'+(p.qty<p.min?'Reponer':'Stock registrado')+'</span></div>').join('')+'</div></section>'+
+ '<section class="panel"><h2>Movimiento de stock · Sin guardado real</h2><form id="stockform"><div class="formgrid"><label>Producto<select id="stockItem">'+options(products)+'</select></label><label>Movimiento<select id="stockKind"><option value="entrada">Ingreso / compra</option><option value="salida">Salida / utilización</option></select></label><label>Cantidad<input type="number" id="stockQty" min=".01" step=".01" required></label></div><button type="submit" class="action">Registrar movimiento de prueba</button></form></section>'+
+ '<section class="panel"><h2>Historial de movimientos de prueba</h2><div class="table-scroll"><table><thead><tr><th>Producto</th><th>Movimiento</th><th>Cantidad</th></tr></thead><tbody>'+movements.map(m=>'<tr><td>'+safe(m.item)+'</td><td>'+safe(m.kind)+'</td><td>'+safe(m.qty)+'</td></tr>').join('')+
+ (movements.length?'':'<tr><td colspan="3">Sin movimientos.</td></tr>')+'</tbody></table></div></section>';
+}
+function academyScreen(){
+ return '<div class="cols"><section class="panel"><h2>Academia y Simu PPA</h2><p>El Simulador PPA ya existe en Gente de Vuelo y está restringido a administración mientras revisamos las respuestas ANAC. Luego podremos integrar actividades por materia, evaluaciones y progreso de cada alumno con permisos adecuados.</p><a class="secondary" href="../../simulador-ppa/">Abrir Simu PPA · Solo administrador</a></section>'+
+ '<section class="panel"><h2>Fichas didácticas</h2><p>Prepararemos fichas originales de teoría de vuelo, motor, meteorología, navegación y normativa. No se copiarán textos o ilustraciones protegidos de los manuales aportados.</p><span class="pill uncertain">Diseño pendiente</span></section></div>';
+}
+function documentsScreen(){
+ return '<section class="panel"><h2>Documentación, vencimientos, mensajes y auditoría</h2><div class="grid3">'+
+ '<div class="card"><h3>Licencias y CMA</h3><p>Identificación, vigencia, evidencia documental y verificación humana por rol.</p><span class="pill uncertain">Integración pendiente</span></div>'+
+ '<div class="card"><h3>Seguro y mantenimiento</h3><p>Vencimientos por calendario, horas y ciclos, según registros reales de aeronave.</p><span class="pill uncertain">Integración pendiente</span></div>'+
+ '<div class="card"><h3>Comunicaciones</h3><p>Avisos de reservas, cancelaciones y eventos, sin mensajes automáticos hasta contar con consentimiento y permisos.</p><span class="pill uncertain">Diseño pendiente</span></div></div></section>';
+}
+function wire(){
+ $('screen').querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>switchTab(b.dataset.go)));
+ if(tab==='reservas'){
+  $('week').addEventListener('change',e=>{if(validDate(e.target.value)){week=e.target.value;render()}});
+  $('booking').addEventListener('submit',e=>{e.preventDefault();try{
+   const b=createReservation({aircraft:$('bookAircraft').value,pilot:$('bookPilot').value,instructor:$('bookInstructor').value,
+    date:$('bookDate').value,start:$('bookStart').value,end:$('bookEnd').value},reservations,fleet,members);
+   reservations.push(b);week=b.date;render();notice('Reserva de DEMOSTRACIÓN confirmada localmente; no constituye autorización de vuelo.');
+  }catch(err){notice(err.message)}});
+  $('screen').querySelectorAll('[data-cancel]').forEach(b=>b.addEventListener('click',()=>{const x=reservations.find(r=>r.id===b.dataset.cancel);if(x){x.status='cancelada';render();notice('Reserva de demostración cancelada.')}}));
+ }
+ if(tab==='vuelos'){
+  if($('flightform'))$('flightform').addEventListener('submit',e=>{e.preventDefault();try{
+   const booking=reservations.find(r=>r.id===$('flightBooking').value);
+   const f=closeFlight({from:$('flightFrom').value,to:$('flightTo').value,start:$('flightStart').value,end:$('flightEnd').value,
+    tachStart:$('tachStart').value,tachEnd:$('tachEnd').value,landings:$('landings').value},booking,flights,fleet);
+   flights.push(f);render();notice('Vuelo de DEMOSTRACIÓN cerrado. No se modificaron registros oficiales ni de Mantenimiento.');
+  }catch(err){notice(err.message)}});
+  $('flightExport')?.addEventListener('click',()=>{
+   const cols=['Fecha','Aeronave','Piloto','Origen','Destino','Inicio bloque','Fin bloque','Horas bloque','Delta Tacometro','Aterrizajes','Costo orientativo'];
+   const quote=v=>'"'+String(v??'').replace(/[\r\n]/g,' ').replace(/"/g,'""').replace(/^[=+@-]/,"'$&")+'"';
+   const data=[cols,...flights.map(f=>[f.date,f.aircraft,f.pilot,f.from,f.to,f.start,f.end,f.blockHours,f.tachDifference,f.landings,f.cost])];
+   const blob=new Blob(['\ufeff'+data.map(r=>r.map(quote).join(';')).join('\r\n')],{type:'text/csv;charset=utf-8'});
+   const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='vuelos-demo-no-rav.csv';a.click();URL.revokeObjectURL(url);
+  });
+ }
+ if(tab==='stock')$('stockform').addEventListener('submit',e=>{e.preventDefault();try{
+  const item=products.find(p=>p.id===$('stockItem').value);
+  if(!item)throw Error('Producto inexistente.');
+  const qty=Number($('stockQty').value),kind=$('stockKind').value;
+  item.qty=stockMove(item,qty,kind);movements.push({item:item.name,kind,qty});render();notice('Movimiento de stock ficticio registrado para esta sesión.');
+ }catch(err){notice(err.message)}});
+}
+(async()=>{
+ try{
+  await window.GDV_AUTH.ready;
+  const client=window.GDV_AUTH.client;
+  if(!client)throw Error('Autenticación no disponible.');
+  const {data:{user},error}=await client.auth.getUser();
+  if(error||!user)throw Error('Se requiere iniciar sesión.');
+  const {data,error:roleError}=await client.from('site_admins').select('user_id').eq('user_id',user.id).maybeSingle();
+  if(roleError||!data)throw Error('Acceso exclusivo del administrador.');
+  $('app').hidden=false;document.documentElement.classList.remove('auth-pending');render();
+ }catch(err){
+  document.documentElement.classList.remove('auth-pending');
+  document.body.innerHTML='<main><h1>Gestión Aeronáutica</h1><p>Esta primera versión es privada para administración. Iniciá sesión con una cuenta autorizada desde Gente de Vuelo.</p><a href="../index.html">Volver a Utilidades</a></main>';
+ }
+})();
+</script></body></html>
