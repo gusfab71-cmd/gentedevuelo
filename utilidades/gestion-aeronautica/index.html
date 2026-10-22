@@ -161,6 +161,10 @@ ol{color:#bbccd0;font-size:13px;line-height:1.85}
 .portal-actions{display:flex;flex-wrap:wrap;gap:8px}
 .portal-private{border-left:3px solid #8ab5c2;background:#1b333e;padding:12px 15px;border-radius:8px;font-size:12px;color:#c7d9df}
 @media(max-width:690px){.portal-metrics{grid-template-columns:1fr}}
+.training-progress-list{display:grid;gap:13px;margin:13px 0}.training-progress-entry .toolbar{margin-bottom:6px;font-size:12px}.training-progress-entry .toolbar span{color:#cadde4}.training-progress-track{height:11px;border:1px solid #527383;border-radius:999px;overflow:hidden;background:#0e1e27}.training-progress-track span{display:block;height:100%;background:linear-gradient(90deg,#64a4b7,#eccb8e);border-radius:999px}.training-progress-entry .muted{margin-top:5px}
+.portal-metrics:has(.metric:nth-child(4)){grid-template-columns:repeat(4,minmax(0,1fr))}
+@media(max-width:900px){.portal-metrics:has(.metric:nth-child(4)){grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){.portal-metrics:has(.metric:nth-child(4)){grid-template-columns:1fr}}
 @media print{#screen>section:not(#training-ledger){display:none!important}body{background:#fff;color:#000}header,nav,.hero,.notice,.training-actions,form,#alert,button{display:none!important}.layout{display:block}.panel,.card,.training-record{break-inside:avoid;background:#fff!important;color:#111!important;border:1px solid #999!important}p,h1,h2,h3,span{color:#111!important}}
 </style>
 <script>document.documentElement.classList.add("auth-pending")</script>
@@ -178,7 +182,7 @@ ol{color:#bbccd0;font-size:13px;line-height:1.85}
 <script type="module">
 import {createReservation,closeFlight,flightTotals,stockMove,validDate,minutes,reservationMinimumMinutes,reservationSuggestedMinutes,STUDENT_RESERVATION_MINUTES,DEFAULT_RESERVATION_POLICY,validateReservationPolicy} from './src/operacion.js';
 import {mondayOf,shiftDate,listWeek,visibleBookings,timeWindow,layoutDay,hhmm} from './src/agenda.js';
-import {ACTIVITY_TYPES,DEMO_RESOURCES,requestStudentBooking,takeStudentBooking,finishGroundLesson,studentPortalProjection,instructorPortalProjection} from './src/portales.js';
+import {ACTIVITY_TYPES,DEMO_RESOURCES,requestStudentBooking,takeStudentBooking,finishGroundLesson,studentPortalProjection,instructorPortalProjection,DEFAULT_TRAINING_GOALS,validateTrainingGoals,trainingHours,trainingProgress} from './src/portales.js';
 import {ASSESSMENTS,LESSON_STATUS,buildLesson,reviseLesson,submitLesson,closeLessonByInstructor,reviewLesson,studentTimeline,studentSummary} from './src/formacion.js';
 const $=id=>document.getElementById(id);
 const safe=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[ch]));
@@ -196,6 +200,7 @@ const products=[{id:'avgas',name:'AVGAS 100LL',qty:180,unit:'L',min:60,cost:1800
 {id:'oil',name:'Aceite aeronáutico',qty:16,unit:'L',min:5,cost:12500,sale:15700}];
 let reservations=[],flights=[],movements=[],lessons=[],groundActivities=[],tab='inicio',week=now();
 const demoPacks=[{id:'pack-demo-10h',studentId:'p2',description:'Pack de 10 horas (ejemplo)',acquiredHours:10,remainingHours:10}];
+let trainingGoals=validateTrainingGoals(DEFAULT_TRAINING_GOALS),trainingGoalsOpen=false;
 let schoolPolicy=validateReservationPolicy(DEFAULT_RESERVATION_POLICY),schoolSettingsOpen=false,demoAdminId='';
 const schoolPolicyStorageKey=()=>demoAdminId?'gdv-gestion-turnera-v1-'+demoAdminId:'';
 function rememberSchoolPolicy(){
@@ -231,8 +236,30 @@ const portalLabel=(id)=>members.find(m=>m.id===id)?.name||id;
 const portalType=(kind)=>ACTIVITY_TYPES[kind]||ACTIVITY_TYPES.flight;
 const portalResource=(booking)=>booking.aircraft||DEMO_RESOURCES.find(x=>x.id===booking.resourceId)?.name||'Recurso por asignar';
 const portalDate=(d)=>safe(d.date+' · '+d.start+'–'+d.end);
+function trainingProgressWidget(progress){
+ const items=[['flightHours','Horas de vuelo','plane'],['simulatorHours','Horas de simulador','monitor'],['theoryHours','Horas de teoría','book']];
+ return '<div class="training-progress-list">'+items.map(([key,label])=>{
+  const p=progress[key],n=p.required?String(p.required)+' h':'Sin objetivo exigido';
+  return '<div class="training-progress-entry"><div class="toolbar"><strong>'+label+'</strong><span>'+
+   p.completed.toFixed(2)+' h / '+n+'</span></div>'+
+   '<div class="training-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+(p.percentage??0)+'" aria-label="'+label+'">'+
+   '<span style="width:'+(p.percentage??0)+'%"></span></div>'+
+   '<div class="muted">Restantes según el plan de prueba: '+p.remaining.toFixed(2)+' h'+
+   (!p.required?' · Sin meta numérica':'')+'</div></div>';
+ }).join('')+'</div>';
+}
+function trainingGoalSettings(){
+ if(!trainingGoalsOpen)return '';
+ const names=[['flightHours','Objetivo de horas de vuelo'],['simulatorHours','Objetivo de horas de simulador'],['theoryHours','Objetivo de horas de teoría']];
+ return '<section class="panel"><div class="toolbar"><h2>Plan de formación · Objetivos de la escuela</h2>'+
+ '<button type="button" class="secondary" id="closeTrainingGoals">Cerrar</button></div>'+
+ '<p>Configuración demostrativa; el programa real debe ser aprobado por la institución según la normativa y su régimen aplicable. Las horas de simulador no se convierten automáticamente en horas de vuelo.</p>'+
+ '<form id="trainingGoalsForm"><div class="formgrid">'+names.map(([key,label])=>
+  '<label>'+label+'<input type="number" id="goal-'+key+'" min="0" max="500" step="0.25" value="'+trainingGoals[key]+'" required></label>').join('')+
+ '</div><button class="action" type="submit">Guardar objetivos (demo)</button></form></section>';
+}
 function studentPortal(){
- const d=studentPortalProjection(portalStudent,reservations,flights,lessons,demoPacks,groundActivities);
+ const d=studentPortalProjection(portalStudent,reservations,flights,lessons,demoPacks,groundActivities,trainingGoals);
  const stages={solicitada:'Pendiente de instructor',confirmada:'Confirmada',cancelada:'Cancelada'};
  const options=Object.entries(ACTIVITY_TYPES).map(([id,label])=>'<option value="'+id+'">'+safe(label)+'</option>').join('');
  const resources=[...fleet.map(a=>({id:a.id,label:a.id+' · '+a.model,kind:'flight'})),
@@ -242,9 +269,13 @@ function studentPortal(){
   '<span class="agenda-pill">'+safe(stages[b.status]||b.status)+'</span></div>').join('');
  return '<section class="panel"><div class="portal-title"><h2>Mi espacio de alumno · Demostración</h2><span class="tag">Vista alumno · Datos ficticios</span></div>'+
  '<p class="portal-private">Aquí el alumno puede solicitar turnos y consultar únicamente sus reservas, horas de vuelo, prácticas registradas y packs comprados. Las notas de instructores, sus correcciones y la supervisión interna no se muestran.</p>'+
- '<div class="portal-metrics">'+metric(d.flightHours.toFixed(2)+' h','Horas de vuelo registradas')+
- metric(d.practices.length,'Prácticas evaluadas')+
- metric(d.packs.reduce((n,p)=>n+p.remainingHours,0)+' h','Horas disponibles en packs demo')+'</div></section>'+
+ '<div class="portal-metrics">'+metric(d.flightHours.toFixed(2)+' h','Horas de vuelo · demo')+
+ metric(d.simulatorHours.toFixed(2)+' h','Horas de simulador · demo')+
+ metric(d.theoryHours.toFixed(2)+' h','Horas de teoría · demo')+
+ metric(d.packs.reduce((n,p)=>n+p.remainingHours,0)+' h','Packs disponibles · demo')+'</div>'+
+ '<div class="portal-box"><div class="toolbar"><h3>Mi avance según el programa de la escuela</h3>'+
+ '<span class="tag">Objetivos de demostración</span></div>'+trainingProgressWidget(d.progress)+
+ '<p class="muted">El ejemplo parte de 40 h de vuelo y 5 h de simulador; cada escuela puede ajustar ambos requisitos. No certifica habilitaciones ni permite sustituir horas de avión por simulador.</p></div></section>'+
  '<section class="panel"><div class="toolbar"><h2>Mis reservas</h2>'+
  '<button id="openStudentBooking" class="action">+ Solicitar turno</button></div>'+
  (bookings||'<p class="muted">No tenés solicitudes registradas en esta demostración.</p>')+'</section>'+
@@ -266,7 +297,14 @@ function studentPortal(){
  '<span class="agenda-pill">Realizada (demo)</span></div>').join(''))+'</section>'+
  '<section class="panel"><h2>Mis packs de horas</h2>'+
  d.packs.map(p=>'<div class="portal-box"><h3>'+safe(p.description)+'</h3><p>Compradas: '+safe(p.acquiredHours)+' h · Disponibles: '+safe(p.remainingHours)+' h</p>'+
- '<p class="muted">Ejemplo ficticio. El descuento de horas se habilitará cuando existan movimientos contables reales.</p></div>').join('')+'</section></div>';
+ '<p class="muted">Ejemplo ficticio. El descuento de horas se habilitará cuando existan movimientos contables reales.</p></div>').join('')+'</section></div>'+
+ '<section class="panel"><h2>Mi biblioteca de teoría y práctica</h2>'+
+ '<p>Herramientas interactivas existentes en Utilidades y fichas didácticas originales. Las actividades no suman horas académicas automáticamente: debe registrarlas un instructor.</p>'+
+ '<div class="grid3">'+
+ '<a class="card" href="../rodaje-viento.html"><h3>Rodaje con viento</h3><p>Práctica interactiva de controles en rodaje.</p></a>'+
+ '<a class="card" href="../calculo-sustentacion.html"><h3>Cálculo de sustentación</h3><p>Perfiles, sustentación y pérdida.</p></a>'+
+ '<a class="card" href="fichas/fuerzas-del-vuelo.html"><h3>Ficha visual original: cuatro fuerzas</h3><p>Diagrama conceptual imprimible y breve autoevaluación.</p></a>'+
+ '</div></section>';
 }
 function instructorPortal(){
  const d=instructorPortalProjection(portalInstructor,reservations,lessons,groundActivities);
@@ -324,11 +362,15 @@ function directorPortal(){
    groundActivities.some(a=>a.bookingId===b.id))&&
   !lessons.some(l=>l.bookingId===b.id||flights.some(f=>f.reservationId===b.id&&l.flightId===f.id)));
  const counts=studentSummary(lessons,portalStudent);
+ const progress=trainingProgress(trainingHours(portalStudent,flights,groundActivities),trainingGoals);
  return '<section class="panel"><div class="portal-title"><h2>Seguimiento de Dirección / Jefatura</h2><span class="tag">Supervisión · Demo admin</span></div>'+
  '<p class="portal-private">Vista para director o jefe de instructores autorizado: progreso por alumno, fichas pendientes, devoluciones y clases sin evaluación. La jefatura puede ser opcional según el régimen de la escuela.</p>'+
  '<div class="portal-metrics">'+metric(counts.lessons,'Evaluaciones cargadas')+
  metric(pending.length,'Pendientes de revisión')+metric(missing.length,'Clases sin evaluación')+'</div></section>'+
- '<section class="panel"><h2>Avance del alumno de prueba</h2>'+
+ trainingGoalSettings()+
+ '<section class="panel"><div class="toolbar"><h2>Avance del alumno de prueba</h2>'+
+ '<button class="secondary" type="button" id="openTrainingGoals">Configurar programa</button></div>'+
+ trainingProgressWidget(progress)+
  '<p><strong>'+safe(portalLabel(portalStudent))+'</strong> · Clases registradas: '+counts.lessons+
  ' · Fichas revisadas: '+counts.approved+' · Cerradas por instructor: '+counts.instructorClosed+
  ' · Devueltas: '+counts.returned+'</p>'+
