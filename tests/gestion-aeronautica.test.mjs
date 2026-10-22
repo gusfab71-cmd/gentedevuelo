@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
-import {minutes,validDate,intersects,createReservation,closeFlight,flightTotals,stockMove} from '../utilidades/gestion-aeronautica/src/operacion.js';
+import {minutes,validDate,intersects,createReservation,closeFlight,flightTotals,stockMove,STUDENT_RESERVATION_MINUTES,reservationMinimumMinutes} from '../utilidades/gestion-aeronautica/src/operacion.js';
 import {mondayOf,shiftDate,listWeek,visibleBookings,timeWindow,layoutDay,hhmm} from '../utilidades/gestion-aeronautica/src/agenda.js';
 import {ASSESSMENTS,LESSON_STATUS,buildLesson,reviseLesson,submitLesson,closeLessonByInstructor,reviewLesson,studentTimeline,studentSummary} from '../utilidades/gestion-aeronautica/src/formacion.js';
 
@@ -15,6 +15,18 @@ const members=[{id:'p1',kind:'piloto',licenseUntil:'2027-01-01',cmaUntil:'2027-0
  {id:'p2',kind:'alumno',licenseUntil:'2027-01-01',cmaUntil:'2027-01-01'},
  {id:'i1',kind:'instructor',licenseUntil:'2027-01-01',cmaUntil:'2027-01-01'}];
 const req={date:'2026-10-30',aircraft:'LV-ABC',pilot:'p1',instructor:'i1',start:'10:00',end:'11:00'};
+assert.equal(STUDENT_RESERVATION_MINUTES,90);
+assert.equal(reservationMinimumMinutes(members.find(p=>p.id==='p2')),90);
+assert.equal(reservationMinimumMinutes(members.find(p=>p.id==='p1')),0);
+const studentBase={...req,pilot:'p2',start:'09:00',end:'10:30'};
+const student90=createReservation(studentBase,[],fleet,members);
+assert.equal(student90.status,'confirmada','90 minutos exactos deben aceptarse');
+assert.throws(()=>createReservation({...studentBase,end:'10:29'},[],fleet,members),/1 hora y 30 minutos/,'89 minutos deben rechazarse');
+assert.throws(()=>createReservation({...studentBase,end:'10:00'},[],fleet,members),/1 hora y 30 minutos/,'60 minutos deben rechazarse');
+assert.throws(()=>createReservation({...studentBase,start:'22:30',end:'23:59'},[],fleet,members),/1 hora y 30 minutos/,'89 minutos al finalizar el día deben rechazarse');
+assert.equal(createReservation({...req,instructor:''},[],fleet,members).status,'confirmada','No imponer mínimo alumno a pilotos');
+assert.equal(createReservation({...studentBase,end:'11:00'},[],fleet,members).status,'confirmada','Reservas más largas están permitidas');
+assert.throws(()=>createReservation({...studentBase,end:'10:00'},[student90],fleet,members),/1 hora y 30 minutos/,'También se exige el mínimo cuando una modificación intenta reducirla');
 const reservation=createReservation(req,[],fleet,members);
 assert.equal(reservation.status,'confirmada');
 assert.ok(reservation.id);
@@ -46,6 +58,10 @@ const matches=[...html.matchAll(/<script type="module">([\s\S]*?)<\/script>/g)];
 assert.equal(matches.length,1);
 const script=matches[0][1].replace(/^(?:\s*import[^\n]*\n)+/,'');
 new vm.Script(script,{filename:'gestion-aeronautica/index.html'});
+assert.match(html,/id="bookingDurationHint"/);
+assert.match(html,/const updateStudentDuration=\(\)=>/);
+assert.match(html,/\$\('bookPilot'\)\?\.addEventListener\('change',updateStudentDuration\)/);
+assert.match(html,/\$\('bookStart'\)\?\.addEventListener\('change',updateStudentDuration\)/);
 assert.match(html,/site_admins/,'Primera versión es solo administrador');
 assert.match(html,/Acceso exclusivo del administrador/);
 assert.match(html,/Datos ficticios/);
