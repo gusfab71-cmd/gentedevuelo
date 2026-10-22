@@ -312,7 +312,42 @@ function applyRc(){
 
 // ---------- ACCIONES ----------
 
-function addAc(){const r=v('a_r').trim().toUpperCase();if(!r)return alert('Ingrese la matrícula.');if(S.ac.some(a=>a.reg===r))return alert('Esa matrícula ya está registrada.');const a={id:uid(),reg:r,type:v('a_t'),h:n('a_h'),c:n('a_c'),hpm:n('a_hm'),cpm:n('a_cm'),operation:{use:v('a_use'),compensation:'unknown',operator:'',program:'',updated:today()}};S.ac.push(a);S.sel=a.id;showAircraftForm=false;save();R()}
+function addAc(){
+ const reg=v('a_r').trim().toUpperCase(),type=recordValue('a_t',100);
+ if(!reg)return alert('Ingrese la matrícula.');
+ if(!type)return alert('Indicá el modelo de aeronave, aunque no figure en las plantillas predefinidas.');
+ if(S.ac.some(a=>a.reg===reg))return alert('Esa matrícula ya está registrada.');
+ const technical={
+  manufacturer:recordValue('a_make',100),year:recordValue('a_year',4),
+  serial:recordValue('a_serial',100),base:recordValue('a_base',100),
+  engineManufacturer:recordValue('a_engine_make',100),propellerManufacturer:recordValue('a_prop_make',100),
+  source:recordValue('a_source',250)
+ };
+ if(technical.year&&!/^\d{4}$/.test(technical.year))return alert('El año de fabricación debe tener 4 dígitos.');
+ const a={id:uid(),reg,type,h:n('a_h'),c:n('a_c'),hpm:n('a_hm'),cpm:n('a_cm'),technical,
+  operation:{use:v('a_use'),compensation:'unknown',operator:'',program:'',updated:today()}};
+ CP(a);
+ a.cp.m.mod=recordValue('a_engine_model',120);a.cp.m.ser=recordValue('a_engine_serial',120);
+ a.cp.p.mod=recordValue('a_prop_model',120);a.cp.p.ser=recordValue('a_prop_serial',120);
+ // No crear controles ni TBO por defecto: requieren manual y registros técnicos aplicables.
+ S.ac.push(a);S.sel=a.id;showAircraftForm=false;save();R();
+}
+function updateAircraftTechnical(){
+ const a=A();if(!a)return;
+ const type=recordValue('ga_t',100);
+ if(!type)return alert('Indicá el tipo o modelo de aeronave.');
+ const year=recordValue('ga_year',4);
+ if(year&&!/^\d{4}$/.test(year))return alert('El año de fabricación debe tener 4 dígitos.');
+ a.type=type;
+ a.technical={
+  ...a.technical,
+  manufacturer:recordValue('ga_make',100),year,
+  serial:recordValue('ga_serial',100),base:recordValue('ga_base',100),
+  source:recordValue('ga_source',250)
+ };
+ // Motor y hélice se editan exclusivamente en Componentes para conservar sus historiales.
+ save();R();
+}
 
 function saveOperation(){const a=A();if(!a)return;
  const use=v('op_use'),compensation=v('op_comp'),operator=recordValue('op_operator',140),program=recordValue('op_program',250);
@@ -516,6 +551,16 @@ function renderOverview(){
 
 // Guías de preparación originales: no sustituyen las listas oficiales del fabricante.
 const GUIDE_MODELS={
+ generic:{
+  title:'Planilla genérica (otros modelos)',
+  engine:'No se presume el motor o hélice por el modelo: verificar configuración y números de serie realmente instalados.',
+  documents:'Manual de mantenimiento y programa aplicable a esta matrícula y número de serie; documentación vigente del motor, hélice, equipos y DA.',
+  areas:{
+   f:['Confirmar fabricante, modelo, año y número de serie de célula','Identificar materiales de estructura, uniones, corrosión y controles específicos','Verificar comandos de vuelo, tren y sistemas instalados según manual'],
+   m:['Identificar fabricante, modelo, número de serie y tiempo del motor instalado','Verificar lubricación, combustible, encendido, escape, refrigeración y accesorios aplicables','Confirmar intervalos y recorrida desde documentos técnicos de este motor'],
+   p:['Identificar fabricante, modelo, número de serie y tipo de hélice instalada','Verificar estado y sistemas de hélice que correspondan a su tipo','Confirmar inspecciones, vida limitada y TBO propios sin heredarlos del motor']
+  }
+ },
  c150:{
   title:'Cessna 150',engine:'Motor habitualmente Continental O-200; verificar placa, configuración y sustituciones.',
   documents:'Service Manual Cessna 150 correspondiente al año y número de serie; manual y boletines del motor y hélice efectivamente instalados.',
@@ -567,7 +612,7 @@ function detectGuideModel(type){
 }
 function toggleMaintenanceGuides(){
  guideOpen=!guideOpen;guideShown=false;guideChecked={};
- if(guideOpen&&A())guidePick.model=detectGuideModel(A().type)||'';
+ if(guideOpen&&A())guidePick.model=detectGuideModel(A().type)||'generic';
  R();
 }
 function guideItems(){
@@ -598,7 +643,7 @@ function prepareGuideControl(i){
  alert('Borrador de control preparado, SIN GUARDAR. Confirmá el intervalo exacto y transcribí el manual/boletín vigente y la constancia correspondiente antes de crearlo.');
 }
 function renderGuidePanel(a){
- let out='<section class="maint-guides mb-4"><div class="flex flex-wrap items-center justify-between gap-2"><div><strong>Planillas de consulta por modelo</strong><p class="text-xs text-slate-300 mt-1">Cessna 150 · Cessna 172 · Piper PA-11. Ocultas hasta solicitarlas.</p></div><button type="button" class="btn bg-sky-700" onclick="toggleMaintenanceGuides()" aria-expanded="'+guideOpen+'">'+(guideOpen?'Cerrar planillas':'Consultar planillas')+'</button></div>';
+ let out='<section class="maint-guides mb-4"><div class="flex flex-wrap items-center justify-between gap-2"><div><strong>Planillas de consulta por modelo</strong><p class="text-xs text-slate-300 mt-1">Cessna 150 · Cessna 172 · Piper PA-11 · Genérica. Ocultas hasta solicitarlas.</p></div><button type="button" class="btn bg-sky-700" onclick="toggleMaintenanceGuides()" aria-expanded="'+guideOpen+'">'+(guideOpen?'Cerrar planillas':'Consultar planillas')+'</button></div>';
  if(!guideOpen)return out+'</section>';
  const options=(dict,current,blank)=>blank+Object.entries(dict).map(([key,item])=>'<option value="'+key+'"'+(key===current?' selected':'')+'>'+esc(item.title||item)+'</option>').join('');
  out+='<div class="maint-guide-toolbar"><p class="maint-note">Guías originales de preparación. Elegí la planilla; NO equivalen a una checklist oficial, ejecución de mantenimiento ni aprobación de retorno al servicio. Consultá el manual, revisiones, DA y programa aprobados para matrícula, motor y hélice.</p><div class="maint-record-grid">';
@@ -608,7 +653,7 @@ function renderGuidePanel(a){
  out+='</div><button type="button" class="btn bg-amber-600" onclick="showMaintenanceGuide()">Mostrar planilla solicitada</button></div>';
  if(guideShown&&guideAircraft===a.id){
   const model=GUIDE_MODELS[guidePick.model],period=GUIDE_PERIODS[guidePick.period],items=guideItems();
-  out+='<article class="maint-guide-sheet"><div class="maint-eyebrow">REFERENCIA TÉCNICA / SIN VALOR CERTIFICANTE</div><h3>'+esc(model.title)+' · '+esc(period.title)+' · '+esc(GUIDE_COMPONENTS[guidePick.component])+'</h3>';
+  out+='<article class="maint-guide-sheet"><div class="maint-eyebrow">REFERENCIA TÉCNICA / SIN VALOR CERTIFICANTE</div><h3>'+esc(guidePick.model==='generic'?'Planilla genérica · '+a.type:model.title)+' · '+esc(period.title)+' · '+esc(GUIDE_COMPONENTS[guidePick.component])+'</h3>';
   out+='<p class="maint-note">'+esc(period.scope)+'</p><p class="text-xs text-slate-300 mt-2"><b>Configuración:</b> '+esc(model.engine)+'</p><p class="text-xs text-slate-300 mt-2"><b>Fuente a verificar:</b> '+esc(model.documents)+'</p>';
   out+='<p class="text-xs text-slate-400 mt-2">Referencia normativa: RAAC 43 (incl. Apéndice D si corresponde), RAAC 91, DA y documentación técnica vigente de los fabricantes. No se precargan TBO ni vencimientos sin identificación y fuente verificadas.</p>';
   out+='<div id="guide_count" role="status" class="text-xs text-sky-300 mt-3">0 / '+items.length+' puntos de consulta marcados (sin valor certificante)</div>';
@@ -709,9 +754,38 @@ function restoreInspection(id){
 
 // ---------- VISTAS ----------
 
-function tabA(){const a=A(),o=a?.operation||{},showForm=!S.ac.length||showAircraftForm;return`<div class="grid lg:grid-cols-2 gap-4">${S.ac.length?`<div class="lg:col-span-2 flex justify-end"><button class="btn bg-slate-700" onclick="showAircraftForm=!showAircraftForm;R()">${showForm?'Cancelar nueva aeronave':'+ Agregar otra aeronave'}</button></div>`:''}${showForm?`<div class="card p-4 space-y-2"><h2 class="font-bold text-amber-300">1 · Crear aeronave</h2>${hangarAircraft?`<div class="text-xs text-slate-300 bg-slate-900/70 p-2 rounded-lg">En Mi Hangar figura: <b>${esc(hangarAircraft)}</b><button class="btn bg-slate-700 ml-2" onclick="fromHangar()">Usar como modelo</button></div>`:''}<div class="grid grid-cols-2 gap-2">${F('a_r','Matrícula','text')}${F('a_t','Tipo / modelo','text')}<div class="col-span-2">${SEL('a_use','Uso previsto',OP_OPTIONS.replace('value="unknown"','value="unknown" selected'))}</div>${F('a_h','Horas totales fuselaje (TTAF)','number',0)}${F('a_c','Ciclos / aterrizajes totales','number',0)}${F('a_hm','Proyección: horas/mes','number',20)}${F('a_cm','Proyección: ciclos/mes','number',20)}</div><p class="text-xs text-slate-400 mt-2">Las horas iniciales de motor y hélice pueden ajustarse por separado en Componentes.</p><button class="btn bg-amber-600 w-full" onclick="addAc()">Crear aeronave</button></div>`:''}
+function tabA(){const a=A(),o=a?.operation||{},showForm=!S.ac.length||showAircraftForm;return`<div class="grid lg:grid-cols-2 gap-4">${S.ac.length?`<div class="lg:col-span-2 flex justify-end"><button class="btn bg-slate-700" onclick="showAircraftForm=!showAircraftForm;R()">${showForm?'Cancelar nueva aeronave':'+ Agregar otra aeronave'}</button></div>`:''}${showForm?`<div class="card p-4 space-y-2"><h2 class="font-bold text-amber-300">1 · Crear aeronave</h2>${hangarAircraft?`<div class="text-xs text-slate-300 bg-slate-900/70 p-2 rounded-lg">En Mi Hangar figura: <b>${esc(hangarAircraft)}</b><button class="btn bg-slate-700 ml-2" onclick="fromHangar()">Usar como modelo</button></div>`:''}<div class="grid grid-cols-2 gap-2">${F('a_r','Matrícula','text')}${F('a_t','Tipo / modelo','text')}<div class="col-span-2">${SEL('a_use','Uso previsto',OP_OPTIONS.replace('value="unknown"','value="unknown" selected'))}</div>${F('a_h','Horas totales fuselaje (TTAF)','number',0)}${F('a_c','Ciclos / aterrizajes totales','number',0)}${F('a_hm','Proyección: horas/mes','number',20)}${F('a_cm','Proyección: ciclos/mes','number',20)}</div><details class="maint-guidance"><summary>Ficha técnica ampliada (opcional · abrir si hace falta)</summary>
+<p>Planilla genérica para cualquier marca o modelo, incluso los que no tienen plantilla predefinida. Completá la identificación por etapas, sin asignar TBO ni crear mantenimientos ficticios.</p>
+<div class="maint-record-grid">
+${F('a_make','Fabricante de la aeronave','text','','maxlength="100"')}
+${F('a_year','Año de fabricación','number','','min="1900" max="2100"')}
+${F('a_serial','Número de serie del fuselaje','text','','maxlength="100"')}
+${F('a_base','Base / aeródromo habitual','text','','maxlength="100"')}
+<div class="wide"><b class="text-sm text-amber-200">Motor instalado</b></div>
+${F('a_engine_make','Fabricante del motor','text','','maxlength="100"')}
+${F('a_engine_model','Modelo del motor','text','','maxlength="120"')}
+<div class="wide">${F('a_engine_serial','Número de serie del motor','text','','maxlength="120"')}</div>
+<div class="wide"><b class="text-sm text-amber-200">Hélice instalada</b></div>
+${F('a_prop_make','Fabricante de la hélice','text','','maxlength="100"')}
+${F('a_prop_model','Modelo de hélice','text','','maxlength="120"')}
+<div class="wide">${F('a_prop_serial','Número de serie de hélice','text','','maxlength="120"')}</div>
+<div class="wide">${F('a_source','Referencia a manual y programa de mantenimiento vigente','text','','maxlength="250"')}</div>
+</div>
+<p>Configura las horas, últimos cumplimientos y recorridas reales en Componentes. Los intervalos no se asignan automáticamente.</p>
+</details><p class="text-xs text-slate-400 mt-2">Las horas iniciales de motor y hélice pueden ajustarse por separado en Componentes.</p><button class="btn bg-amber-600 w-full" onclick="addAc()">Crear aeronave</button></div>`:''}
 
-<div class="space-y-3 ${showForm?'':'lg:col-span-2'}">${S.ac.map(x=>`<div class="card p-3 flex items-center gap-3 ${x.id==S.sel?'!border-amber-400':''}"><div class="flex-1"><b class="text-lg">${esc(x.reg)}</b> <span class="text-xs text-slate-400">${esc(x.type)}</span><div class="text-[11px] text-amber-200">${esc(OP_LABELS[opUse(x)])}</div><div class="text-sm text-sky-300 font-bold">Fuselaje ${f1(x.h)} h · ${Math.round(x.c)} ciclos</div><div class="text-xs text-slate-400">Motor TSO ${f1(CP(x).m.tso)} h · Hélice TSO ${f1(CP(x).p.tso)} h</div></div><button class="btn bg-sky-700" onclick="S.sel='${x.id}';save();R()">Seleccionar</button><button class="btn bg-rose-800" aria-label="Eliminar aeronave ${esc(x.reg)}" onclick="delAc('${x.id}')">✕</button></div>`).join('')||'<div class="text-slate-500 text-sm">Aún no hay aeronaves.</div>'}
+<div class="space-y-3 ${showForm?'':'lg:col-span-2'}">${S.ac.map(x=>`<div class="card p-3 flex items-center gap-3 ${x.id==S.sel?'!border-amber-400':''}"><div class="flex-1"><b class="text-lg">${esc(x.reg)}</b> <span class="text-xs text-slate-400">${esc(x.type)}</span><div class="text-[11px] text-amber-200">${esc(OP_LABELS[opUse(x)])}</div>${x.technical?.manufacturer?'<div class="text-xs text-slate-400">Fabricante: '+esc(x.technical.manufacturer)+'</div>':''}${x.technical?.serial?'<div class="text-xs text-slate-400">Serie fuselaje: '+esc(x.technical.serial)+'</div>':''}<div class="text-sm text-sky-300 font-bold">Fuselaje ${f1(x.h)} h · ${Math.round(x.c)} ciclos</div><div class="text-xs text-slate-400">Motor TSO ${f1(CP(x).m.tso)} h · Hélice TSO ${f1(CP(x).p.tso)} h</div></div><button class="btn bg-sky-700" onclick="S.sel='${x.id}';save();R()">Seleccionar</button><button class="btn bg-rose-800" aria-label="Eliminar aeronave ${esc(x.reg)}" onclick="delAc('${x.id}')">✕</button></div>`).join('')||'<div class="text-slate-500 text-sm">Aún no hay aeronaves.</div>'}
+
+${a?`<details class="maint-guidance"><summary>Editar ficha genérica — ${esc(a.reg)}</summary>
+<p>Corregí los datos de la célula sin borrar historiales. Para cambiar motor, hélice o contadores usá Componentes y verificá nuevamente sus límites técnicos.</p>
+<div class="maint-record-grid">
+${F('ga_t','Modelo de aeronave','text',esc(a.type||''),'maxlength="100"')}
+${F('ga_make','Fabricante','text',esc(a.technical?.manufacturer||''),'maxlength="100"')}
+${F('ga_year','Año de fabricación','number',esc(a.technical?.year||''))}
+${F('ga_serial','Serie del fuselaje','text',esc(a.technical?.serial||''),'maxlength="100"')}
+${F('ga_base','Base / aeródromo','text',esc(a.technical?.base||''),'maxlength="100"')}
+<div class="wide">${F('ga_source','Referencia de manual y programa','text',esc(a.technical?.source||''),'maxlength="250"')}</div>
+</div><button class="btn bg-amber-600 mt-3" onclick="updateAircraftTechnical()">Guardar ficha</button><p class="text-xs text-slate-400 mt-2">No modifica las horas, inspecciones, DA ni registros anteriores.</p></details>`:''}
 
 ${a?`<section class="card p-4 space-y-3"><h2 class="font-bold">2 · Perfil de operación — ${esc(a.reg)}</h2><div class="maint-regime"><strong>${esc(OP_LABELS[opUse(a)])}</strong><p>${esc(regimeNotice(a))}</p></div><div class="maint-record-grid"><div class="wide">${SEL('op_use','Modalidad de uso',OP_OPTIONS.replace('value="'+opUse(a)+'"','value="'+opUse(a)+'" selected'))}</div><div class="wide">${SEL('op_comp','¿Instrucción por compensación en aeronave provista?',COMP_OPTIONS.replace('value="'+(o.compensation||'unknown')+'"','value="'+(o.compensation||'unknown')+'" selected'))}</div><div class="wide">${F('op_operator','Propietario / explotador / escuela (si corresponde)','text',esc(o.operator||''),'maxlength="140"')}</div><div class="wide">${F('op_program','Programa, manual y revisión aplicable','text',esc(o.program||''),'maxlength="250"')}</div></div><p class="text-xs text-slate-400">Si elegís uso mixto, cada vuelo se clasifica en Bitácora, pero las horas y las inspecciones siguen perteneciendo a la misma aeronave.</p><button class="btn bg-amber-600 w-full" onclick="saveOperation()">Guardar régimen</button></section>`:''}
 

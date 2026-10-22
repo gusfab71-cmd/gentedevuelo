@@ -185,7 +185,7 @@ assert.equal(run(`info(${JSON.stringify(nearCycles)},${JSON.stringify(fixtureAir
 assert.equal(run(`info(${JSON.stringify(nearHours)},${JSON.stringify({...fixtureAircraft,h:155})}).st`), 0, 'Sin horizonte y lejos del límite no generar una alerta inventada');
 
 // Guías por modelo: 36 combinaciones (3 aeronaves, 4 tipos de control y 3 componentes).
-assert.equal(run('Object.keys(GUIDE_MODELS).length'), 3);
+assert.equal(run('Object.keys(GUIDE_MODELS).length'), 4);
 assert.equal(run('Object.keys(GUIDE_PERIODS).length'), 4);
 assert.equal(run('Object.keys(GUIDE_COMPONENTS).length'), 3);
 assert.equal(run("detectGuideModel('Cessna 150M')"), 'c150');
@@ -220,4 +220,51 @@ assert.doesNotMatch(run('tabX()'), /class="maint-guide-sheet"/,'No mostrar check
 run('toggleMaintenanceGuides()');
 assert.doesNotMatch(run('tabX()'), /id="guide_model"/,'Cerrar oculta incluso el selector de planillas');
 
-console.log('PASS: formularios condicionales, uso, bitácora, aceite, inspecciones y mantenimiento por componente alertas preventivas y guías por modelo');
+
+// Alta genérica independiente de Cessna y Piper, sin TBO ni controles automáticos.
+run("S.ac=[];S.sel=null;S.tab='a';showAircraftForm=true");
+assert.match(run('tabA()'), /Ficha técnica ampliada \(opcional/, 'El alta ofrece una ficha genérica plegada');
+assert.match(run('tabA()'), /id="a_engine_model"/, 'Debe registrar motor independiente');
+assert.match(run('tabA()'), /id="a_prop_model"/, 'Debe registrar hélice independiente');
+node('a_r').value='LV-ZZZ';node('a_t').value='Beechcraft Bonanza A36';node('a_use').value='private';
+node('a_h').value='800';node('a_c').value='600';node('a_hm').value='12';node('a_cm').value='12';
+node('a_make').value='Beechcraft';node('a_year').value='1985';node('a_serial').value='E-1234';
+node('a_base').value='SABE';node('a_engine_make').value='Continental';
+node('a_engine_model').value='IO-520';node('a_engine_serial').value='M-500';
+node('a_prop_make').value='Hartzell';node('a_prop_model').value='HC-C3';node('a_prop_serial').value='P-500';
+node('a_source').value='Manual de mantenimiento, pendiente de revisión';
+run('addAc()');
+assert.equal(run('S.ac.length'),1);
+assert.equal(run('S.ac[0].technical.manufacturer'),'Beechcraft');
+assert.equal(run('S.ac[0].technical.serial'),'E-1234');
+assert.equal(run('CP(A()).m.mod'),'IO-520');
+assert.equal(run('CP(A()).m.ser'),'M-500');
+assert.equal(run('CP(A()).p.mod'),'HC-C3');
+assert.equal(run('CP(A()).p.ser'),'P-500');
+assert.equal(run('CP(A()).m.tbo'),0,'La creación no debe inventar TBO del motor');
+assert.equal(run('CP(A()).p.tbo'),0,'La creación no debe inventar TBO de hélice');
+assert.equal(run('S.ip.filter(x=>x.ac===S.sel).length'),0,'Alta no crea inspecciones automáticas');
+assert.equal(run('showAircraftForm'),false);
+assert.match(run('tabA()'), /Editar ficha genérica/);
+assert.doesNotMatch(run('tabA()'), /id="a_r"/, 'El formulario de alta se oculta tras crear la aeronave');
+node('ga_t').value='Bonanza A36';node('ga_make').value='Beechcraft';node('ga_year').value='1985';
+node('ga_serial').value='E-1234';node('ga_base').value='SADF';node('ga_source').value='Manual vigente revisado';
+run('updateAircraftTechnical()');
+assert.equal(run('A().type'),'Bonanza A36');
+assert.equal(run('A().technical.base'),'SADF');
+assert.equal(run('CP(A()).m.ser'),'M-500','Editar célula no debe reemplazar motor');
+assert.equal(run('A().h'),800,'Editar ficha no debe alterar TTAF');
+
+run("S.tab='x'");
+run('toggleMaintenanceGuides()');
+assert.equal(run('guidePick.model'),'generic','Otra aeronave debe elegir plantilla genérica');
+assert.doesNotMatch(run('tabX()'), /class="maint-guide-sheet"/, 'Plantilla sigue oculta hasta pedirla');
+node('guide_model').value='generic';node('guide_period').value='overhaul';node('guide_component').value='m';
+run('showMaintenanceGuide()');
+assert.match(run('tabX()'), /Planilla genérica · Bonanza A36/);
+assert.match(run('tabX()'), /No se precargan TBO/);
+assert.equal(run('S.ct.length'),3,'Consultar no debe guardar controles técnicos');
+run('toggleMaintenanceGuides()');
+assert.doesNotMatch(run('tabX()'), /id="guide_model"/,'Cerrar oculta la planilla genérica');
+
+console.log('PASS: formularios condicionales, uso, bitácora, aceite, inspecciones y mantenimiento por componente alertas preventivas y guías por modelo y alta genérica');
