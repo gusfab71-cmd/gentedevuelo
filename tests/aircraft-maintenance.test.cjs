@@ -184,4 +184,40 @@ assert.equal(run(`info(${JSON.stringify(nearHours)},${JSON.stringify(fixtureAirc
 assert.equal(run(`info(${JSON.stringify(nearCycles)},${JSON.stringify(fixtureAircraft)}).st`), 1, 'Advertir si faltan 5 ciclos aunque no exista una proyección');
 assert.equal(run(`info(${JSON.stringify(nearHours)},${JSON.stringify({...fixtureAircraft,h:155})}).st`), 0, 'Sin horizonte y lejos del límite no generar una alerta inventada');
 
-console.log('PASS: formularios condicionales, uso, bitácora, aceite, inspecciones y mantenimiento por componente y alertas preventivas');
+// Guías por modelo: 36 combinaciones (3 aeronaves, 4 tipos de control y 3 componentes).
+assert.equal(run('Object.keys(GUIDE_MODELS).length'), 3);
+assert.equal(run('Object.keys(GUIDE_PERIODS).length'), 4);
+assert.equal(run('Object.keys(GUIDE_COMPONENTS).length'), 3);
+assert.equal(run("detectGuideModel('Cessna 150M')"), 'c150');
+assert.equal(run("detectGuideModel('C-172SP')"), 'c172');
+assert.equal(run("detectGuideModel('Piper PA-11 Cub')"), 'pa11');
+assert.equal(run("detectGuideModel('Cessna 182')"), '', 'No sugerir modelo incorrecto');
+run("S.ac=[{id:'ref-a',reg:'LV-XXX',type:'Cessna 172N',h:300,c:450,hpm:20,cpm:20}];S.sel='ref-a';S.tab='x'");
+assert.doesNotMatch(run('tabX()'), /id="guide_model"/, 'No cargar el selector de plantillas al entrar');
+assert.doesNotMatch(run('tabX()'), /class="maint-guide-sheet"/, 'Todas las planillas quedan ocultas por defecto');
+assert.match(run('tabX()'), /Configurar inspección reglamentaria \(abrir cuando se necesite\)/);
+run('toggleMaintenanceGuides()');
+assert.match(run('tabX()'), /id="guide_model"/);
+assert.doesNotMatch(run('tabX()'), /class="maint-guide-sheet"/, 'Abrir el catálogo no abre una planilla');
+node('guide_model').value='c172';node('guide_period').value='p100';node('guide_component').value='f';
+run('showMaintenanceGuide()');
+assert.match(run('tabX()'), /class="maint-guide-sheet"/);
+assert.match(run('tabX()'), /Rieles y anclajes de asientos/, 'La planilla debe corresponder al modelo elegido');
+assert.match(run('tabX()'), /RAAC 43/, 'La referencia normativa debe mostrarse');
+assert.equal(run('Object.keys(guideChecked).length'),0,'No marcar controles automáticamente');
+run('updateGuideCheck(0,true)');
+assert.equal(run('Object.keys(guideChecked).length'),1,'El usuario puede marcar una consulta temporal');
+assert.match(node('guide_count').textContent,/1 \/ /);
+node('c_n').focus=()=>{};
+run('prepareGuideControl(0)');
+assert.equal(run('S.tab'),'s', 'Preparar un control lleva a la pestaña correspondiente');
+assert.equal(node('c_k').value,'f');
+assert.equal(node('c_ih').value,'0', 'No asumir intervalos de inspección');
+assert.equal(node('c_basis').value,'','El manual concreto debe consignarse por el usuario');
+assert.equal(run('S.ct.length'),3,'Una guía no debe generar un control sin datos confirmados');
+run("S.tab='x';S.ac.push({id:'ref-b',reg:'LV-YYY',type:'Piper PA-11',h:100,c:100,hpm:0,cpm:0});S.sel='ref-b'");
+assert.doesNotMatch(run('tabX()'), /class="maint-guide-sheet"/,'No mostrar checklist de otra aeronave tras cambiar de matrícula');
+run('toggleMaintenanceGuides()');
+assert.doesNotMatch(run('tabX()'), /id="guide_model"/,'Cerrar oculta incluso el selector de planillas');
+
+console.log('PASS: formularios condicionales, uso, bitácora, aceite, inspecciones y mantenimiento por componente alertas preventivas y guías por modelo');
