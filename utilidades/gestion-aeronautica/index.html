@@ -78,8 +78,9 @@ ol{color:#bbccd0;font-size:13px;line-height:1.85}
 import {createReservation,closeFlight,flightTotals,stockMove,validDate} from './src/operacion.js';
 const $=id=>document.getElementById(id);
 const safe=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[ch]));
-const now=()=>new Date().toLocaleDateString('en-CA');
-const addDays=(day,n)=>{const d=new Date(day+'T12:00:00');d.setDate(d.getDate()+n);return d.toLocaleDateString('en-CA')};
+const isoDay=d=>[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');
+const now=()=>isoDay(new Date());
+const addDays=(day,n)=>{const d=new Date(day+'T12:00:00');d.setDate(d.getDate()+n);return isoDay(d)};
 const shortDay=s=>new Date(s+'T12:00:00').toLocaleDateString('es-AR',{weekday:'short',day:'numeric',month:'short'});
 const money=n=>Number(n).toLocaleString('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0});
 const members=[{id:'p1',name:'Piloto Demo',kind:'piloto',licenseUntil:'2027-06-01',cmaUntil:'2027-05-01'},
