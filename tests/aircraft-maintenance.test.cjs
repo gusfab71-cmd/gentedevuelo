@@ -168,4 +168,20 @@ assert.doesNotMatch(run('tabA()'), /id="a_r"/);
 run('S.ac=[];S.sel=null');
 assert.match(run('tabA()'), /1 · Crear aeronave/, 'Sin aeronaves, el formulario reaparece automáticamente');
 
-console.log('PASS: formularios condicionales, uso, bitácora, aceite, inspecciones y mantenimiento por componente');
+// Los vencimientos por calendario no deben saltar de febrero a marzo al partir del 31 de enero.
+const endMonthControl = {id:'control-fecha',cp:'f',ivH:0,ivC:0,ivM:1,lastDate:'2026-01-31',lastRef:'Libreta fuselaje 10'};
+const fixtureAircraft = {h:191,c:315,hpm:0,cpm:0};
+assert.equal(
+  run(`info(${JSON.stringify(endMonthControl)},${JSON.stringify(fixtureAircraft)}).calD`),
+  new Date('2026-02-28T00:00:00').getTime(),
+  'Un mes desde el 31 de enero vence el último día de febrero'
+);
+
+// Sin proyección mensual, el sistema debe alertar si faltan pocas horas o ciclos.
+const nearHours = {id:'control-horas',cp:'f',ivH:50,ivC:0,ivM:0,lastDate:'2026-09-01',lastH:150,lastRef:'Libreta fuselaje 11'};
+const nearCycles = {id:'control-ciclos',cp:'f',ivH:0,ivC:20,ivM:0,lastDate:'2026-09-01',lastC:300,lastRef:'Libreta fuselaje 12'};
+assert.equal(run(`info(${JSON.stringify(nearHours)},${JSON.stringify(fixtureAircraft)}).st`), 1, 'Advertir si faltan 9 horas aunque no exista una proyección');
+assert.equal(run(`info(${JSON.stringify(nearCycles)},${JSON.stringify(fixtureAircraft)}).st`), 1, 'Advertir si faltan 5 ciclos aunque no exista una proyección');
+assert.equal(run(`info(${JSON.stringify(nearHours)},${JSON.stringify({...fixtureAircraft,h:155})}).st`), 0, 'Sin horizonte y lejos del límite no generar una alerta inventada');
+
+console.log('PASS: formularios condicionales, uso, bitácora, aceite, inspecciones y mantenimiento por componente y alertas preventivas');
