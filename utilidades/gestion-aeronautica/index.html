@@ -563,13 +563,71 @@ function wire(){
  if(tab==='personas')wireTraining();
  $('screen').querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>switchTab(b.dataset.go)));
  if(tab==='reservas'){
-  $('week').addEventListener('change',e=>{if(validDate(e.target.value)){week=e.target.value;render()}});
-  $('booking').addEventListener('submit',e=>{e.preventDefault();try{
-   const b=createReservation({aircraft:$('bookAircraft').value,pilot:$('bookPilot').value,instructor:$('bookInstructor').value,
-    date:$('bookDate').value,start:$('bookStart').value,end:$('bookEnd').value},reservations,fleet,members);
-   reservations.push(b);week=b.date;render();notice('Reserva de DEMOSTRACIÓN confirmada localmente; no constituye autorización de vuelo.');
-  }catch(err){notice(err.message)}});
-  $('screen').querySelectorAll('[data-cancel]').forEach(b=>b.addEventListener('click',()=>{const x=reservations.find(r=>r.id===b.dataset.cancel);if(x){x.status='cancelada';render();notice('Reserva de demostración cancelada.')}}));
+  $('week').addEventListener('change',e=>{
+   if(validDate(e.target.value)){week=e.target.value;agendaSelectedBooking='';render()}
+  });
+  $('screen').querySelectorAll('[data-agenda-shift]').forEach(b=>b.addEventListener('click',()=>{
+   const step=Number(b.dataset.agendaShift);
+   week=shiftDate(week,step*(agendaView==='week'?7:1));agendaSelectedBooking='';render();
+  }));
+  $('screen').querySelector('[data-agenda-today]')?.addEventListener('click',()=>{
+   week=now();agendaSelectedBooking='';render();
+  });
+  $('screen').querySelectorAll('[data-agenda-view]').forEach(b=>b.addEventListener('click',()=>{
+   agendaView=b.dataset.agendaView;agendaSelectedBooking='';render();
+  }));
+  $('agendaFilterAircraft').addEventListener('change',e=>{agendaAircraft=e.target.value;agendaSelectedBooking='';render()});
+  $('agendaFilterInstructor').addEventListener('change',e=>{agendaInstructor=e.target.value;agendaSelectedBooking='';render()});
+  const openForm=(date,start,id='')=>{
+   if(!validDate(date))return;
+   agendaDraftDate=date;agendaDraftStart=start;agendaFormOpen=true;agendaBookingId=id;
+   agendaSelectedBooking='';week=date;render();$('bookPilot')?.focus();
+  };
+  $('newBooking').addEventListener('click',()=>openForm(week,'10:00'));
+  $('screen').querySelectorAll('[data-agenda-time]').forEach(b=>b.addEventListener('click',()=>{
+   openForm(b.dataset.agendaDate,b.dataset.agendaTime);
+  }));
+  $('screen').querySelectorAll('[data-agenda-event]').forEach(b=>b.addEventListener('click',()=>{
+   const reservation=reservations.find(x=>x.id===b.dataset.agendaEvent&&x.status==='confirmada');
+   if(reservation){agendaSelectedBooking=reservation.id;agendaFormOpen=false;agendaBookingId='';week=reservation.date;render()}
+  }));
+  $('screen').querySelectorAll('[data-agenda-edit]').forEach(b=>b.addEventListener('click',()=>{
+   const reservation=reservations.find(x=>x.id===b.dataset.agendaEdit&&x.status==='confirmada');
+   if(reservation&&!flights.some(f=>f.reservationId===reservation.id))
+    openForm(reservation.date,reservation.start,reservation.id);
+  }));
+  $('screen').querySelector('[data-agenda-close]')?.addEventListener('click',()=>{agendaSelectedBooking='';render()});
+  const closeForm=()=>{agendaFormOpen=false;agendaBookingId='';render()};
+  $('closeBooking')?.addEventListener('click',closeForm);
+  $('cancelBooking')?.addEventListener('click',closeForm);
+  $('booking')?.addEventListener('submit',e=>{
+   e.preventDefault();
+   try{
+    const data={
+     aircraft:$('bookAircraft').value,pilot:$('bookPilot').value,instructor:$('bookInstructor').value,
+     date:$('bookDate').value,start:$('bookStart').value,end:$('bookEnd').value
+    };
+    const existing=agendaBookingId?reservations.find(x=>x.id===agendaBookingId&&x.status==='confirmada'):null;
+    if(agendaBookingId&&!existing)throw Error('La reserva original ya no está disponible.');
+    if(existing&&flights.some(f=>f.reservationId===existing.id))
+     throw Error('No se puede modificar una reserva cuyo vuelo ya fue cerrado.');
+    const checked=createReservation(data,reservations.filter(x=>x.id!==existing?.id),fleet,members);
+    if(existing)Object.assign(existing,data,{updatedAt:new Date().toISOString()});
+    else reservations.push(checked);
+    agendaSelectedBooking=existing?.id||checked.id;
+    agendaFormOpen=false;agendaBookingId='';week=data.date;render();
+    notice(existing?'Reserva de demostración modificada correctamente. No se enviaron notificaciones.':
+     'Reserva de DEMOSTRACIÓN confirmada solo en esta sesión; no constituye autorización de vuelo.');
+   }catch(err){notice(err.message)}
+  });
+  $('screen').querySelectorAll('[data-cancel]').forEach(b=>b.addEventListener('click',()=>{
+   const x=reservations.find(r=>r.id===b.dataset.cancel&&r.status==='confirmada');
+   if(!x||flights.some(f=>f.reservationId===x.id))return;
+   if(!confirm('¿Cancelar la reserva de demostración? La cancelación no envía notificaciones.'))return;
+   x.status='cancelada';x.cancelledAt=new Date().toISOString();
+   agendaSelectedBooking='';agendaFormOpen=false;agendaBookingId='';render();
+   notice('Reserva de demostración cancelada. No se enviaron notificaciones.');
+  }));
  }
  if(tab==='vuelos'){
   if($('flightform'))$('flightform').addEventListener('submit',e=>{e.preventDefault();try{
