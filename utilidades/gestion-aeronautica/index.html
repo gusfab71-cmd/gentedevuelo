@@ -116,6 +116,15 @@ ol{color:#bbccd0;font-size:13px;line-height:1.85}
 .agenda-event b,.agenda-event small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .agenda-event b{font-size:11px}.agenda-event small{font-size:10px;color:#e1eaf2}
 .agenda-viewnote{font-size:11px;color:#91adba;margin-top:10px}
+.school-settings{background:#1e303b;border:1px solid #526c79}
+.school-settings .formgrid{grid-template-columns:repeat(3,minmax(0,1fr))}
+.school-days{display:flex;flex-wrap:wrap;gap:9px;margin:8px 0}
+.school-days label{display:flex;align-items:center;gap:7px;padding:8px 10px;background:#172832;border:1px solid #496472;border-radius:9px;white-space:nowrap}
+.school-days input{width:15px;height:15px}
+.school-setting-info{font-size:12px;color:#e2c28c;margin-top:8px}
+.agenda-day-heading.day-closed{opacity:.6}
+.agenda-day-surface.day-closed{background-color:#25303a}
+.agenda-hour-slot:disabled{opacity:.25;cursor:not-allowed;background:#1b2630}
 .agenda-form-panel{border-color:#b6a079;background:#223139}
 .agenda-form-panel .formgrid{grid-template-columns:repeat(3,minmax(0,1fr))}
 .agenda-form-panel .formgrid>label{min-width:0}
@@ -134,10 +143,11 @@ ol{color:#bbccd0;font-size:13px;line-height:1.85}
  .agenda-controls input[type="date"]{width:135px}
  .agenda-filters .agenda-legend{margin-left:0}
  .agenda-form-panel .formgrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .school-settings .formgrid{grid-template-columns:repeat(2,minmax(0,1fr))}
  .agenda-columns.day-mode{min-width:0}
  .agenda-columns:not(.day-mode){min-width:970px}
 }
-@media(max-width:420px){.agenda-form-panel .formgrid{grid-template-columns:1fr}}
+@media(max-width:420px){.agenda-form-panel .formgrid,.school-settings .formgrid{grid-template-columns:1fr}}
 @media print{#screen>section:not(#training-ledger){display:none!important}body{background:#fff;color:#000}header,nav,.hero,.notice,.training-actions,form,#alert,button{display:none!important}.layout{display:block}.panel,.card,.training-record{break-inside:avoid;background:#fff!important;color:#111!important;border:1px solid #999!important}p,h1,h2,h3,span{color:#111!important}}
 </style>
 <script>document.documentElement.classList.add("auth-pending")</script>
@@ -153,7 +163,7 @@ ol{color:#bbccd0;font-size:13px;line-height:1.85}
 <div class="layout"><nav id="sidebar" aria-label="Módulos de Gestión Aeronáutica"></nav><div class="content"><p id="alert" role="status" aria-live="polite"></p><section id="screen" aria-live="polite"></section></div></div>
 </main>
 <script type="module">
-import {createReservation,closeFlight,flightTotals,stockMove,validDate,minutes,reservationMinimumMinutes,STUDENT_RESERVATION_MINUTES} from './src/operacion.js';
+import {createReservation,closeFlight,flightTotals,stockMove,validDate,minutes,reservationMinimumMinutes,reservationSuggestedMinutes,STUDENT_RESERVATION_MINUTES,DEFAULT_RESERVATION_POLICY,validateReservationPolicy} from './src/operacion.js';
 import {mondayOf,shiftDate,listWeek,visibleBookings,timeWindow,layoutDay,hhmm} from './src/agenda.js';
 import {ASSESSMENTS,LESSON_STATUS,buildLesson,reviseLesson,submitLesson,closeLessonByInstructor,reviewLesson,studentTimeline,studentSummary} from './src/formacion.js';
 const $=id=>document.getElementById(id);
@@ -171,6 +181,7 @@ const fleet=[{id:'LV-ABC',model:'Cessna 172',blocked:false,insuranceUntil:'2027-
 const products=[{id:'avgas',name:'AVGAS 100LL',qty:180,unit:'L',min:60,cost:1800,sale:2300},
 {id:'oil',name:'Aceite aeronáutico',qty:16,unit:'L',min:5,cost:12500,sale:15700}];
 let reservations=[],flights=[],movements=[],lessons=[],tab='inicio',week=now();
+let schoolPolicy=validateReservationPolicy(DEFAULT_RESERVATION_POLICY),schoolSettingsOpen=false;
 let agendaView=window.matchMedia('(max-width:720px)').matches?'day':'week';
 let agendaAircraft='all',agendaInstructor='all',agendaFormOpen=false,agendaBookingId='';
 let agendaSelectedBooking='',agendaDraftDate=week,agendaDraftStart='10:00';
