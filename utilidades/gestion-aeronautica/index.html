@@ -200,7 +200,7 @@ import {mondayOf,shiftDate,listWeek,visibleBookings,timeWindow,layoutDay,hhmm} f
 import {ACTIVITY_TYPES,DEMO_RESOURCES,requestStudentBooking,takeStudentBooking,finishGroundLesson,studentPortalProjection,instructorPortalProjection,DEFAULT_TRAINING_GOALS,validateTrainingGoals,trainingHours,trainingProgress} from './src/portales.js';
 import {ASSESSMENTS,LESSON_STATUS,buildLesson,reviseLesson,submitLesson,closeLessonByInstructor,reviewLesson,studentTimeline,studentSummary} from './src/formacion.js';
 import {FLIGHT_MODE_LABELS,flightActivityByRole,flightActivityProjection} from './src/vuelos.js';
-import {makeLogbookDetail,logbookRows,logbookSummary,LOGBOOK_AREAS,LOGBOOK_PURPOSES,LOGBOOK_DUTIES} from './src/libro-vuelo.js';
+import {makeLogbookDetail,logbookRows,logbookSummary,LOGBOOK_TIME_COLUMNS,LOGBOOK_SPECIAL_COLUMNS,LOGBOOK_SIMULATOR_COLUMNS,LOGBOOK_PURPOSES} from './src/libro-vuelo.js';
 const $=id=>document.getElementById(id);
 const safe=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[ch]));
 const isoDay=d=>[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');
@@ -579,48 +579,68 @@ function logbookFormScreen(){
  const booking=reservations.find(b=>b.id===flight.reservationId);
  if(!booking)return '';
  const stored=flight.logbook||{};
+ const person=members.find(m=>m.id===flight.pilot);
  const plane=fleet.find(a=>a.id===flight.aircraft);
+ const duration=flight.blockMinutes??Math.round(flight.blockHours*60);
  const options=(data,selected)=>Object.entries(data).map(([key,label])=>
   '<option value="'+safe(key)+'" '+(selected===key?'selected':'')+'>'+safe(label)+'</option>').join('');
- const person=members.find(m=>m.id===flight.pilot),role=person?.kind==='alumno'?'alumno':'piloto';
  const field=(label,id,val,extras='')=>'<label>'+label+'<input id="'+id+'" '+extras+' value="'+safe(val??'')+'"></label>';
- const duration=flight.blockMinutes??Math.round(flight.blockHours*60);
- return '<section class="panel logbook-form" id="flightLogbookPanel"><div class="toolbar"><h2>Planilla complementaria · Libro de Vuelo (borrador)</h2>'+
+ const timeFields=(columns,group,values)=>Object.entries(columns).map(([key,label])=>
+  '<label>'+safe(label)+' · minutos<input type="number" data-log-group="'+group+'" data-log-key="'+safe(key)+
+  '" min="0" max="'+duration+'" step="1" value="'+safe(values?.[key]??'')+'" placeholder="0"></label>').join('');
+ return '<section class="panel logbook-form" id="flightLogbookPanel">'+
+  '<div class="toolbar"><h2>Planilla completa · Libro de Vuelo (borrador)</h2>'+
   '<button class="secondary" id="closeFlightLogbook" type="button">Ocultar planilla</button></div>'+
-  '<p class="muted">'+safe(flight.date)+' · '+safe(person?.name||flight.pilot)+' · Matrícula '+safe(flight.aircraft)+
-  ' · Itinerario '+safe(flight.from)+' → '+safe(flight.to)+' · UTC '+safe(flight.start)+'–'+safe(flight.end)+
-  ' · Duración '+duration+' minutos</p>'+
-  '<p class="logbook-disclaimer">Se registra una copia auxiliar de los datos, no el libro oficial. Los horarios UTC y el tiempo de bloque provienen del vuelo cerrado. La categoría día/noche, finalidad y función del titular requieren declaración y revisión; nunca se asignan automáticamente horas de piloto al mando.</p>'+
+  '<p class="muted">'+safe(flight.date)+' · '+safe(person?.name||flight.pilot)+' · '+safe(flight.aircraft)+
+  ' · '+safe(flight.from)+' → '+safe(flight.to)+' · Horarios '+safe(flight.start)+'–'+safe(flight.end)+
+  ' (verificar UTC) · Bloque '+duration+' min</p>'+
+  '<p class="logbook-disclaimer">La hoja distingue tiempo de bloque, actividad asentada y casilleros especializados. No se atribuyen automáticamente las horas a piloto/copiloto ni a vuelo nocturno, instrumental o travesía. Los datos deben cotejarse con el libro en papel y los procedimientos aplicables.</p>'+
   '<form id="flightLogbookForm"><div class="formgrid">'+
-   '<label>Finalidad del vuelo<select id="logPurpose" required><option value="" '+(!stored.purpose?'selected':'')+' disabled>Elegí finalidad</option>'+options(LOGBOOK_PURPOSES,stored.purpose)+'</select></label>'+
-   '<label>Actividad<select id="logArea" required><option value="" '+(!stored.area?'selected':'')+' disabled>Elegí actividad</option>'+options(LOGBOOK_AREAS,stored.area)+'</select></label>'+
-   '<label>Función del titular<select id="logDuty">'+
-    options(role==='alumno'?{alumno:LOGBOOK_DUTIES.alumno}:{piloto:LOGBOOK_DUTIES.piloto,copiloto:LOGBOOK_DUTIES.copiloto},stored.duty||role)+
-   '</select></label>'+
+   '<label>Finalidad del vuelo<select id="logPurpose" required><option value="" '+(!stored.purpose?'selected':'')+
+    ' disabled>Elegí finalidad</option>'+options(LOGBOOK_PURPOSES,stored.purpose)+'</select></label>'+
    field('Licencia / certificado','logLicense',stored.license,'maxlength="80"')+
-   field('Marca de aeronave','logMake',stored.aircraftMake,'maxlength="90"')+
+   field('Marca','logMake',stored.aircraftMake,'maxlength="90"')+
    field('Modelo','logModel',stored.aircraftModel||plane?.model,'maxlength="90"')+
-   field('Potencia (dato documental)','logPower',stored.powerHp,'maxlength="30"')+
+   field('Potencia','logPower',stored.powerHp,'maxlength="30"')+
    field('Clase de aeronave','logClass',stored.aircraftClass,'maxlength="50"')+
-   '<label>Minutos diurnos<input type="number" id="logDay" min="0" max="'+duration+'" step="1" value="'+(stored.dayMinutes??'')+'" placeholder="Ingresar minutos" required></label>'+ 
-   '<label>Minutos nocturnos<input type="number" id="logNight" min="0" max="'+duration+'" step="1" value="'+(stored.nightMinutes??'')+'" placeholder="Ingresar minutos" required></label>'+ 
-   '</div><p class="muted">Los minutos diurnos + nocturnos deben sumar '+duration+
-   '. El sistema no determina día/noche por sí mismo. Datos faltantes quedarán identificados para completar con respaldo.</p>'+
-   '<div class="training-actions"><button class="action" type="submit">Guardar planilla auxiliar (demo)</button>'+
-   '<button id="cancelFlightLogbook" class="secondary" type="button">Cancelar</button></div></form></section>';
+   '<label>Minutos declarados en libro<input id="logRecordedFlightMinutes" type="number" min="1" max="'+duration+
+    '" step="1" placeholder="Sin completar" value="'+safe(stored.recordedFlightMinutes??'')+'" required></label>'+
+   '</div>'+
+   '<h3>Tiempos de vuelo · Ocho casilleros de la hoja</h3>'+
+   '<p class="muted">Distribuí los minutos declarados entre sobre aeródromo/travesía, día/noche y piloto/copiloto. La suma debe coincidir con los minutos declarados para el libro.</p>'+
+   '<div class="formgrid">'+timeFields(LOGBOOK_TIME_COLUMNS,'categoryMinutes',stored.categoryMinutes)+'</div>'+
+   '<details class="portal-box"><summary>Discriminación adicional · Instrumentos, instructor y clase de aeronave</summary>'+
+    '<p class="muted">Casilleros adicionales de la página derecha: pueden coincidir con horas ya distribuidas arriba, por lo que NO se suman dos veces al total. Dejá en blanco lo que no corresponda.</p>'+
+    '<div class="formgrid">'+timeFields(LOGBOOK_SPECIAL_COLUMNS,'specialMinutes',stored.specialMinutes)+'</div>'+
+   '</details>'+
+   '<details class="portal-box"><summary>Simulador y certificaciones</summary>'+
+    '<p class="muted">La página derecha incluye Adiestrador terrestre / Simulador (Instructor y Piloto en instrucción). Las horas se registran en la clase de simulador efectivamente realizada y se muestran aparte; no se cargan como horas de vuelo de avión.</p>'+
+    '<label>Referencia u observación para cotejo (NO es una firma certificante)<textarea id="logCertificationNote" maxlength="300">'+
+      safe(stored.certificationNote||'')+'</textarea></label>'+
+   '</details>'+
+   '<div class="training-actions"><button class="action" type="submit">Guardar borrador auxiliar</button>'+
+   '<button class="secondary" id="cancelFlightLogbook" type="button">Cancelar</button></div></form>'+
+   '<p class="logbook-disclaimer">El sistema no acredita piloto al mando, vuelo instrumental ni otras atribuciones aeronáuticas. La sección Certificaciones del papel no se reproduce como firma oficial.</p></section>';
 }
 function logbookSummaryScreen(){
  const people=members.filter(x=>x.kind==='alumno'||x.kind==='piloto');
  const id=people.some(x=>x.id===logbookPersonFilter)?logbookPersonFilter:people[0]?.id;
  if(!id)return '';
- const sum=logbookSummary(id,flights);
- const renderGroup=(label,part)=>'<span>'+label+': <b>'+part.dia+' min día / '+part.noche+' min noche</b></span>';
+ const sum=logbookSummary(id,flights,groundActivities);
+ const counts=(columns,values)=>Object.entries(columns).filter(([,label])=>label).map(([key,label])=>
+   '<span>'+safe(label)+': <b>'+safe(values?.[key]||0)+' min</b></span>').join('');
  return '<section class="panel"><div class="toolbar"><h2>Resumen del libro personal · Borrador</h2>'+
  '<label>Titular<select id="logbookPerson">'+people.map(p=>'<option value="'+safe(p.id)+'" '+(p.id===id?'selected':'')+'>'+safe(p.name)+'</option>').join('')+'</select></label></div>'+
- '<div class="logbook-summary"><span>Vuelos cargados: <b>'+sum.flights+'</b></span>'+
- '<span>Tiempo cargado aquí: <b>'+sum.minutes+' minutos</b></span>'+
- renderGroup('Sobre aeródromo',sum.byArea.aerodromo)+renderGroup('Travesía',sum.byArea.travesia)+'</div>'+
- '<p class="logbook-disclaimer">Total anterior del libro en papel: sin cargar. No presumimos que sea cero. Los registros aquí son borradores auxiliares no certificados; el acumulado oficial requiere cotejo y documentación ANAC.</p></section>';
+ '<div class="logbook-summary"><span>Vuelos con ficha: <b>'+sum.flights+'</b></span>'+
+ '<span>Tiempo declarado: <b>'+sum.minutes+' min</b></span>'+
+ '<span>Saldo página anterior: <b>Sin documentar</b></span></div>'+
+ '<details><summary>Distribución sobre aeródromo / travesía (día, noche, piloto, copiloto)</summary>'+
+ '<div class="logbook-summary">'+counts(LOGBOOK_TIME_COLUMNS,sum.categories)+'</div></details>'+
+ '<details><summary>Discriminación especial (instructor, multimotor, instrumentos y otros)</summary>'+
+ '<div class="logbook-summary">'+counts(LOGBOOK_SPECIAL_COLUMNS,sum.special)+'</div></details>'+
+ '<details><summary>Adiestrador terrestre / Simulador (actividad separada)</summary>'+
+ '<div class="logbook-summary">'+counts(LOGBOOK_SIMULATOR_COLUMNS,sum.simulator)+'</div></details>'+
+ '<p class="logbook-disclaimer">Total a página siguiente: pendiente de cotejo con saldo anterior y documentación firmada. Los registros son borradores de demostración, no certificados ni RAV ANAC.</p></section>';
 }
 function flightScreen(){
  const open=reservations.filter(r=>r.status==='confirmada'&&(!r.type||r.type==='flight')&&!flights.some(f=>f.reservationId===r.id));
@@ -1156,11 +1176,13 @@ function wire(){
     if(!f||!booking)throw Error('No se encontró el vuelo de la planilla.');
     const person=members.find(m=>m.id===f.pilot);
     const detail=makeLogbookDetail({
-     purpose:$('logPurpose').value,area:$('logArea').value,duty:$('logDuty').value,
+     purpose:$('logPurpose').value,recordedFlightMinutes:$('logRecordedFlightMinutes').value,
+     categoryMinutes:Object.fromEntries([...document.querySelectorAll('[data-log-group="categoryMinutes"]')].map(el=>[el.dataset.logKey,el.value])),
+     specialMinutes:Object.fromEntries([...document.querySelectorAll('[data-log-group="specialMinutes"]')].map(el=>[el.dataset.logKey,el.value])),
+     certificationNote:$('logCertificationNote').value,
      license:$('logLicense').value,aircraftMake:$('logMake').value,
      aircraftModel:$('logModel').value,aircraftClass:$('logClass').value,
-     powerHp:$('logPower').value,
-     dayMinutes:$('logDay').value,nightMinutes:$('logNight').value
+     powerHp:$('logPower').value
     },booking,f,person,fleet);
     f.logbook=detail;logbookEditingFlightId='';logbookPersonFilter=f.pilot;render();
     notice(detail.incomplete?'Planilla auxiliar guardada, aún faltan datos documentales. No está certificada.':
