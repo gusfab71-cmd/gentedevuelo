@@ -662,7 +662,7 @@ function wire(){
    agendaDraftDate=date;agendaDraftStart=start;agendaFormOpen=true;agendaBookingId=id;
    agendaSelectedBooking='';week=date;render();$('bookPilot')?.focus();
   };
-  $('newBooking').addEventListener('click',()=>openForm(week,'10:00'));
+  $('newBooking').addEventListener('click',()=>openForm(week,schoolPolicy.openTime));
   $('screen').querySelectorAll('[data-agenda-time]').forEach(b=>b.addEventListener('click',()=>{
    openForm(b.dataset.agendaDate,b.dataset.agendaTime);
   }));
@@ -682,19 +682,19 @@ function wire(){
   // Ajustar el horario sugerido cuando se elige un alumno, sin impedir que la validación rechace reservas más cortas.
   const updateStudentDuration=()=>{
    const selected=members.find(p=>p.id===$('bookPilot')?.value);
-   const min=reservationMinimumMinutes(selected),start=$('bookStart')?.value,end=$('bookEnd')?.value;
+   const min=reservationMinimumMinutes(selected,schoolPolicy),start=$('bookStart')?.value,end=$('bookEnd')?.value;
    const hint=$('bookingDurationHint');
    if(!hint||!start||!end)return;
-   if(min===0){hint.textContent='Para alumnos el mínimo de reserva es 1 h 30 min.';return}
+   if(min===0){hint.textContent='Duración sugerida por la escuela: '+schoolPolicy.pilotDefaultMinutes+' minutos. Alumnos: mínimo '+schoolPolicy.studentMinMinutes+' minutos.';return}
    try{
-    const t=minutes(start),finish=minutes(end),minEnd=t+STUDENT_RESERVATION_MINUTES;
-    if(minEnd>=24*60){
-     hint.textContent='Con este horario de inicio no quedan 90 minutos en el día. Elegí un horario anterior.';
+    const t=minutes(start),finish=minutes(end),suggestedEnd=t+reservationSuggestedMinutes(selected,schoolPolicy);
+    if(suggestedEnd>=24*60||suggestedEnd>minutes(schoolPolicy.closeTime)){
+     hint.textContent='Esta hora de inicio no permite completar el turno sugerido dentro de la jornada escolar. Elegí un horario anterior.';
     }else{
-     if(finish-t<min)$('bookEnd').value=String(Math.floor(minEnd/60)).padStart(2,'0')+':'+String(minEnd%60).padStart(2,'0');
-     hint.textContent='Alumno: duración mínima 1 h 30 min. Fin sugerido: '+$('bookEnd').value+'.';
+     if(finish-t<min)$('bookEnd').value=hhmm(suggestedEnd);
+     hint.textContent='Alumno: mínimo '+min+' minutos; sugerido '+schoolPolicy.studentDefaultMinutes+' minutos. Fin propuesto: '+$('bookEnd').value+'.';
     }
-   }catch(_){hint.textContent='Alumno: el turno debe durar al menos 1 hora y 30 minutos.'}
+   }catch(_){hint.textContent='Alumno: duración mínima de '+schoolPolicy.studentMinMinutes+' minutos según la escuela.'}
   };
   $('bookPilot')?.addEventListener('change',updateStudentDuration);
   $('bookStart')?.addEventListener('change',updateStudentDuration);
@@ -704,13 +704,14 @@ function wire(){
    try{
     const data={
      aircraft:$('bookAircraft').value,pilot:$('bookPilot').value,instructor:$('bookInstructor').value,
-     date:$('bookDate').value,start:$('bookStart').value,end:$('bookEnd').value
+     date:$('bookDate').value,start:$('bookStart').value,end:$('bookEnd').value,
+     activity:schoolPolicy.showActivity?$('bookActivity').value:'',notes:schoolPolicy.showNotes?$('bookNotes').value:''
     };
     const existing=agendaBookingId?reservations.find(x=>x.id===agendaBookingId&&x.status==='confirmada'):null;
     if(agendaBookingId&&!existing)throw Error('La reserva original ya no está disponible.');
     if(existing&&flights.some(f=>f.reservationId===existing.id))
      throw Error('No se puede modificar una reserva cuyo vuelo ya fue cerrado.');
-    const checked=createReservation(data,reservations.filter(x=>x.id!==existing?.id),fleet,members);
+    const checked=createReservation(data,reservations.filter(x=>x.id!==existing?.id),fleet,members,schoolPolicy);
     if(existing)Object.assign(existing,data,{updatedAt:new Date().toISOString()});
     else reservations.push(checked);
     agendaSelectedBooking=existing?.id||checked.id;
