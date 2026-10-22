@@ -71,23 +71,71 @@ export function takeStudentBooking(booking,instructor,bookings,members,policy=DE
   acceptedAt:new Date().toISOString(),
   history:[...(booking.history||[]),{event:'tomada',actor:instructor.id,at:new Date().toISOString()}]};
 }
-export function finishGroundLesson(booking,instructorId,completed=[]){
+export function finishGroundLesson(booking,instructorId,completed=[],actualMinutes=null){
  if(!booking||!['theory','simulator'].includes(booking.type)||booking.status!=='confirmada')
   throw Error('La clase de teoría o simulador debe estar confirmada.');
  if(booking.instructor!==instructorId)throw Error('Solo el instructor asignado puede registrar la clase.');
  if(completed.some(x=>x.bookingId===booking.id))throw Error('Esa actividad ya fue registrada.');
+ const reserved=minutes(booking.end)-minutes(booking.start);
+ const duration=actualMinutes===null?reserved:Number(actualMinutes);
+ if(!Number.isInteger(duration)||duration<1||duration>reserved)
+  throw Error('Indicá minutos efectivamente realizados, entre 1 y la duración reservada.');
  return {id:crypto.randomUUID(),bookingId:booking.id,type:booking.type,pilot:booking.pilot,
-  instructor:instructorId,date:booking.date,minutes:minutes(booking.end)-minutes(booking.start),
+  instructor:instructorId,date:booking.date,minutes:duration,
+  deviceId:booking.type==='simulator'?booking.resourceId:'', // Identificador de equipo; NO acredita horas de vuelo
   status:'realizada_demo',createdAt:new Date().toISOString()};
 }
-// Proyección: únicamente los campos que necesita un alumno; nunca se devuelve evaluación interna.
-export function studentPortalProjection(studentId,bookings,flights,lessons,packs=[] ,activities=[]){
+export const DEFAULT_TRAINING_GOALS=Object.freeze({
+ flightHours:40,simulatorHours:5,theoryHours:0
+});
+export function validateTrainingGoals(raw){
+ if(!raw||typeof raw!=='object')throw Error('Falta configurar el plan de formación.');
+ const goals={};
+ for(const field of ['flightHours','simulatorHours','theoryHours']){
+  const n=Number(raw[field]);
+  if(!Number.isFinite(n)||n<0||n>500||Math.round(n*4)!==n*4)
+   throw Error('Los objetivos de horas deben ser válidos, no negativos y en cuartos de hora.');
+  goals[field]=n;
+ }
+ return goals;
+}
+export function trainingHours(studentId,flights,activities){
+ const own=activities.filter(x=>x.pilot===studentId&&x.status==='realizada_demo');
+ const summation=(kind)=>own.filter(x=>x.type===kind).reduce((n,x)=>n+Number(x.minutes||0),0);
+ const simulatorMinutes=summation('simulator'),theoryMinutes=summation('theory');
+ const flightTotal=flights.filter(x=>x.pilot===studentId).reduce((n,x)=>n+(Number(x.blockHours)||0),0);
  return {
+  flightHours:Number(flightTotal.toFixed(2)),
+  simulatorMinutes,theoryMinutes,
+  simulatorHours:Number((simulatorMinutes/60).toFixed(2)),
+  theoryHours:Number((theoryMinutes/60).toFixed(2))
+ };
+}
+export function trainingProgress(hours,rawGoals=DEFAULT_TRAINING_GOALS){
+ const goals=validateTrainingGoals(rawGoals);
+ const progress={};
+ for(const [key,required] of Object.entries(goals)){
+  const completed=Math.max(0,Number(hours[key]||0));
+  progress[key]={
+   completed:Number(completed.toFixed(2)),required,
+   remaining:Number(Math.max(0,required-completed).toFixed(2)),
+   percentage:required?Math.min(100,Math.round(completed/required*100)):null
+  };
+ }
+ return progress;
+}
+// Proyección: únicamente los campos que necesita un alumno; nunca se devuelve evaluación interna.
+export function studentPortalProjection(studentId,bookings,flights,lessons,packs=[] ,activities=[],goals=DEFAULT_TRAINING_GOALS){
+ const hours=trainingHours(studentId,flights,activities);
+ return {
+  flightHours:hours.flightHours,
+  simulatorHours:hours.simulatorHours,theoryHours:hours.theoryHours,
+  simulatorMinutes:hours.simulatorMinutes,theoryMinutes:hours.theoryMinutes,
+  progress:trainingProgress(hours,goals),
   reservations:bookings.filter(x=>x.pilot===studentId).map(x=>({
    id:x.id,type:x.type||'flight',date:x.date,start:x.start,end:x.end,
    aircraft:x.aircraft||'',resourceId:x.resourceId||'',status:x.status
   })),
-  flightHours:Number(flights.filter(x=>x.pilot===studentId).reduce((sum,x)=>sum+(Number(x.blockHours)||0),0).toFixed(2)),
   practices:lessons.filter(x=>x.studentId===studentId&&['approved','instructor_closed'].includes(x.status))
    .map(x=>({id:x.id,date:x.date,topics:x.topics,minutes:x.minutes,
     type:x.classType||'flight',status:'registrada'})),

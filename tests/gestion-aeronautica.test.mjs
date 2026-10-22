@@ -4,7 +4,7 @@ import vm from 'node:vm';
 import {minutes,validDate,intersects,createReservation,closeFlight,flightTotals,stockMove,STUDENT_RESERVATION_MINUTES,reservationMinimumMinutes,DEFAULT_RESERVATION_POLICY,validateReservationPolicy,reservationSuggestedMinutes} from '../utilidades/gestion-aeronautica/src/operacion.js';
 import {mondayOf,shiftDate,listWeek,visibleBookings,timeWindow,layoutDay,hhmm} from '../utilidades/gestion-aeronautica/src/agenda.js';
 import {ASSESSMENTS,LESSON_STATUS,buildLesson,reviseLesson,submitLesson,closeLessonByInstructor,reviewLesson,studentTimeline,studentSummary} from '../utilidades/gestion-aeronautica/src/formacion.js';
-import {ACTIVITY_TYPES,DEMO_RESOURCES,requestStudentBooking,takeStudentBooking,finishGroundLesson,studentPortalProjection,instructorPortalProjection} from '../utilidades/gestion-aeronautica/src/portales.js';
+import {ACTIVITY_TYPES,DEMO_RESOURCES,requestStudentBooking,takeStudentBooking,finishGroundLesson,studentPortalProjection,instructorPortalProjection,DEFAULT_TRAINING_GOALS,validateTrainingGoals,trainingHours,trainingProgress} from '../utilidades/gestion-aeronautica/src/portales.js';
 
 assert.equal(minutes('09:30'),570);
 assert.throws(()=>minutes('25:61'),/Hora inválida/);
@@ -347,6 +347,54 @@ for(const required of ['Mi espacio de alumno','Área reservada para instructores
  assert.ok(html.includes(required),'Falta área o acción: '+required);
 assert.match(html,/if\(tab==='alumno'\|\|tab==='instructor'\)wirePortals\(\)/);
 assert.match(html,/const open=reservations\.filter\(r=>r\.status==='confirmada'&&\(!r\.type\|\|r\.type==='flight'\)/);
+
+// Las horas de simulador y teoría deben acreditarse como realizadas (no por reserva), sin mezclar vuelo.
+assert.deepEqual({...DEFAULT_TRAINING_GOALS},{flightHours:40,simulatorHours:5,theoryHours:0});
+const recordedSim=finishGroundLesson(completedSim,'i1',[],75);
+assert.equal(recordedSim.minutes,75);
+assert.equal(recordedSim.deviceId,'sim-1');
+assert.equal(recordedSim.status,'realizada_demo');
+assert.throws(()=>finishGroundLesson(completedSim,'i1',[],91),/efectivamente realizados/);
+assert.throws(()=>finishGroundLesson(completedSim,'i1',[],0),/efectivamente realizados/);
+assert.throws(()=>finishGroundLesson(completedSim,'i1',[],1.5),/efectivamente realizados/);
+const recordedTheory=finishGroundLesson(completedTheory,'i1',[],50);
+const counted=trainingHours('p2',[{...flight,pilot:'p2',blockHours:1.3}],[recordedSim,recordedTheory]);
+assert.deepEqual(counted,{
+ flightHours:1.3,simulatorMinutes:75,theoryMinutes:50,simulatorHours:1.25,theoryHours:0.83
+});
+const bookedOnly=studentPortalProjection('p2',[completedSim],[],[],[],[],DEFAULT_TRAINING_GOALS);
+assert.equal(bookedOnly.simulatorHours,0,'Reservar simulador no genera horas de simulador');
+assert.equal(bookedOnly.progress.simulatorHours.completed,0);
+const completedProjection=studentPortalProjection('p2',[],[],[],[],[recordedSim,recordedTheory],DEFAULT_TRAINING_GOALS);
+assert.equal(completedProjection.flightHours,0);
+assert.equal(completedProjection.simulatorHours,1.25);
+assert.equal(completedProjection.theoryHours,0.83);
+assert.equal(completedProjection.progress.simulatorHours.required,5);
+assert.equal(completedProjection.progress.simulatorHours.remaining,3.75);
+assert.equal(completedProjection.progress.flightHours.required,40);
+assert.equal(completedProjection.progress.flightHours.remaining,40);
+assert.equal(completedProjection.progress.theoryHours.percentage,null);
+assert.equal(studentPortalProjection('p1',[],[],[],[],[recordedSim]).simulatorHours,0);
+for(const field of ['evolution','difficulties','nextGoal','history','assessment','chiefReview','reviewMode'])
+ assert.doesNotMatch(JSON.stringify(completedProjection),new RegExp('"'+field+'":'));
+const customGoals=validateTrainingGoals({flightHours:40,simulatorHours:10,theoryHours:30});
+assert.equal(trainingProgress(counted,customGoals).simulatorHours.remaining,8.75);
+assert.equal(trainingProgress(counted,customGoals).theoryHours.remaining,29.17);
+assert.throws(()=>validateTrainingGoals({flightHours:40,simulatorHours:-1,theoryHours:0}),/no negativos/);
+assert.throws(()=>validateTrainingGoals({flightHours:40,simulatorHours:5.1,theoryHours:0}),/cuartos de hora/);
+assert.equal(trainingProgress({flightHours:45,simulatorHours:5,theoryHours:0},DEFAULT_TRAINING_GOALS).flightHours.percentage,100);
+for(const label of ['Horas de simulador','Horas de teoría','Configurar programa','Mi biblioteca de teoría y práctica',
+ 'rodaje-viento.html','calculo-sustentacion.html','fichas/fuerzas-del-vuelo.html','trainingGoalsForm'])
+ assert.ok(html.includes(label),'Falta interfaz de formación '+label);
+assert.match(html,/finishGroundLesson\(booking,portalInstructor,groundActivities,actual\)/);
+const teachingSheet=fs.readFileSync(new URL('../utilidades/gestion-aeronautica/fichas/fuerzas-del-vuelo.html',import.meta.url),'utf8');
+assert.match(teachingSheet,/<svg/);
+assert.match(teachingSheet,/Las cuatro fuerzas del vuelo/);
+assert.match(teachingSheet,/Imprimir ficha A4/);
+assert.match(teachingSheet,/Autoevaluación/);
+assert.doesNotMatch(teachingSheet,/AeroMaster|Aviacion pro|Pilotfy/);
+console.log('PASS: horas registradas de simulador y teoría, requisitos escolares y ficha visual original');
+
 console.log('PASS: tres tipos de reservas, recursos, aceptación por instructor, evaluación y datos aislados del alumno');
 
 console.log('PASS: agenda compacta con semana/día, filtros, turnos superpuestos y formulario oculto');
