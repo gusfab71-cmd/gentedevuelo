@@ -19,7 +19,7 @@ export const listWeek=iso=>Array.from({length:7},(_,i)=>shiftDate(mondayOf(iso),
 export function visibleBookings(bookings,dates,aircraft='all',instructor='all'){
  const days=new Set(dates);
  return bookings.filter(b=>b.status==='confirmada'&&days.has(b.date)&&
-  (aircraft==='all'||b.aircraft===aircraft)&&
+  (aircraft==='all'||b.aircraft===aircraft||b.resourceId===aircraft)&&
   (instructor==='all'||b.instructor===instructor))
   .slice().sort((a,b)=>a.date.localeCompare(b.date)||a.start.localeCompare(b.start)||a.aircraft.localeCompare(b.aircraft));
 }
