@@ -173,7 +173,7 @@ body .overflow-x-auto{scrollbar-color:#697e7d transparent}
     </aside>
   </div>
   <div class="maint-toolbar">
-    <label for="sel">Aeronave activa <select id="sel" class="fld" onchange="S.sel=this.value;save();R()"></select></label>
+    <label for="sel">Aeronave activa <select id="sel" class="fld" onchange="S.sel=this.value;consumableForm='';save();R()"></select></label>
     <div class="maint-toolbar-actions">
       <button class="btn bg-slate-700" onclick="expo()">Descargar respaldo</button>
       <label class="btn bg-slate-800 cursor-pointer">Importar respaldo<input type="file" accept=".json" class="hidden" onchange="impo(this)"></label>
@@ -191,7 +191,8 @@ body .overflow-x-auto{scrollbar-color:#697e7d transparent}
 
 const $=i=>document.getElementById(i),uid=()=>crypto.randomUUID(),today=()=>{const d=new Date();return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')},v=i=>$(i).value,n=i=>Math.min(1e6,Math.max(0,parseFloat($(i).value)||0));
 
-let S={ac:[],sv:[],ct:[],lg:[],rc:[],mx:[],ad:[],ip:[],ie:[],dx:[],sel:null,tab:'a',hz:12};
+let S={ac:[],sv:[],ct:[],lg:[],rc:[],mx:[],ad:[],ip:[],ie:[],dx:[],inv:[],mv:[],fuel:[],sel:null,tab:'a',hz:12};
+let consumableForm='';
 let showAircraftForm=false;
 
 let db=null,currentUser=null,hangarAircraft='',saveQueue=Promise.resolve();
@@ -199,7 +200,10 @@ const showStatus=message=>{const x=$('sync');if(x)x.textContent=message};
 const validData=d=>d&&typeof d==='object'&&['ac','sv','ct','lg','rc'].every(k=>Array.isArray(d[k])&&d[k].length<=({ac:50,sv:300,ct:2000,lg:6000,rc:200}[k]))&&
  ['ac','sv','ct','lg','rc'].every(k=>d[k].every(x=>x&&typeof x==='object'&&typeof x.id==='string'&&/^[a-zA-Z0-9_-]{1,64}$/.test(x.id)))&&
  d.ac.every(a=>typeof a.reg==='string'&&a.reg.length<=50)&&
- ['mx','ad','ip','ie','dx'].every(k=>d[k]===undefined||(Array.isArray(d[k])&&d[k].length<=({mx:3000,ad:1000,ip:250,ie:3000,dx:2000}[k])&&d[k].every(x=>x&&typeof x==='object'&&typeof x.id==='string'&&/^[a-zA-Z0-9_-]{1,64}$/.test(x.id))));
+ ['mx','ad','ip','ie','dx','inv','mv','fuel'].every(k=>d[k]===undefined||(Array.isArray(d[k])&&d[k].length<=({mx:3000,ad:1000,ip:250,ie:3000,dx:2000,inv:500,mv:5000,fuel:3000}[k])&&d[k].every(x=>x&&typeof x==='object'&&typeof x.id==='string'&&/^[a-zA-Z0-9_-]{1,64}$/.test(x.id))))&&
+ (d.inv||[]).every(x=>typeof x.ac==='string'&&typeof x.name==='string'&&x.name.length<=140&&['fuel','oil','filter','spark','part','other'].includes(x.category)&&['L','u','kg'].includes(x.unit)&&Number.isFinite(x.minimum)&&x.minimum>=0)&&
+ (d.mv||[]).every(x=>typeof x.ac==='string'&&typeof x.item==='string'&&['in','out'].includes(x.kind)&&Number.isFinite(x.qty)&&x.qty>0&&x.qty<=1e6)&&
+ (d.fuel||[]).every(x=>typeof x.ac==='string'&&Number.isFinite(x.loaded)&&Number.isFinite(x.used)&&x.loaded>=0&&x.used>=0&&x.loaded+x.used>0);
 function save(){
  if(!currentUser||!db){showStatus('Sin conexión: los cambios no están guardados.');return}
  const payload=JSON.parse(JSON.stringify(S));
@@ -223,7 +227,7 @@ async function loadApp(){
  ]);
  hangarAircraft=String(profile.data?.aircraft_flown||'').slice(0,200);
  if(stored.error){showStatus('No fue posible cargar tus registros: '+stored.error.message);return}
- if(stored.data?.payload&&validData(stored.data.payload))S={...S,...stored.data.payload};
+ if(stored.data?.payload&&validData(stored.data.payload)){S={...S,...stored.data.payload};S.inv||=[];S.mv||=[];S.fuel||=[];}
  else if(stored.data?.payload&&Object.keys(stored.data.payload).length)showStatus('El respaldo almacenado no tiene el formato esperado.');
  if(!S.ac.some(a=>a.id===S.sel))S.sel=S.ac[0]?.id||null;
  R();
@@ -240,7 +244,7 @@ const SEL=(id,l,o)=>`<label class="text-[11px] text-slate-400">${l}<select id="$
 
 const fd=t=>isFinite(t)?new Date(t).toLocaleDateString('es-AR'):'—',f1=x=>(+x).toFixed(1);
 
-const TABS=[['a','Aeronaves'],['x','Inspecciones'],['n','Novedades'],['k','Componentes'],['s','Controles'],['b','Bitácora'],['i','Intervenciones'],['d','Directivas DA'],['r','Recurrentes'],['p','Proyección']];
+const TABS=[['a','Aeronaves'],['x','Inspecciones'],['n','Novedades'],['k','Componentes'],['s','Controles'],['b','Bitácora'],['u','Consumibles'],['i','Intervenciones'],['d','Directivas DA'],['r','Recurrentes'],['p','Proyección']];
 const OP_LABELS={unknown:'Régimen por definir',private:'Uso privado',instruction:'Instrucción',mixed:'Privado e instrucción'};
 const OP_OPTIONS='<option value="unknown">Por definir</option><option value="private">Uso privado</option><option value="instruction">Instrucción</option><option value="mixed">Privado e instrucción</option>';
 const COMP_OPTIONS='<option value="unknown">Por confirmar</option><option value="yes">Sí, por compensación y aeronave provista</option><option value="no">No se dan ambas condiciones</option>';
@@ -357,7 +361,7 @@ function saveOperation(){const a=A();if(!a)return;
  save();R();
 }
 
-function delAc(id){if(!confirm('¿Borrar la aeronave y todos sus datos?'))return;S.ac=S.ac.filter(a=>a.id!=id);const sv=S.sv.filter(s=>s.ac==id).map(s=>s.id);S.sv=S.sv.filter(s=>s.ac!=id);S.ct=S.ct.filter(c=>!sv.includes(c.sv));S.lg=S.lg.filter(l=>l.ac!=id);S.rc=S.rc.filter(r=>r.ac!=id);S.mx=S.mx.filter(r=>r.ac!=id);S.ad=S.ad.filter(r=>r.ac!=id);S.ip=S.ip.filter(r=>r.ac!=id);S.ie=S.ie.filter(r=>r.ac!=id);S.dx=S.dx.filter(r=>r.ac!=id);S.sel=S.ac[0]?.id||null;save();R()}
+function delAc(id){if(!confirm('¿Borrar la aeronave y todos sus datos?'))return;S.ac=S.ac.filter(a=>a.id!=id);const sv=S.sv.filter(s=>s.ac==id).map(s=>s.id);S.sv=S.sv.filter(s=>s.ac!=id);S.ct=S.ct.filter(c=>!sv.includes(c.sv));S.lg=S.lg.filter(l=>l.ac!=id);S.rc=S.rc.filter(r=>r.ac!=id);S.mx=S.mx.filter(r=>r.ac!=id);S.ad=S.ad.filter(r=>r.ac!=id);S.ip=S.ip.filter(r=>r.ac!=id);S.ie=S.ie.filter(r=>r.ac!=id);S.dx=S.dx.filter(r=>r.ac!=id);S.inv=(S.inv||[]).filter(r=>r.ac!==id);S.mv=(S.mv||[]).filter(r=>r.ac!==id);S.fuel=(S.fuel||[]).filter(r=>r.ac!==id);S.sel=S.ac[0]?.id||null;save();R()}
 
 function addManual(){const a=A(),h=n('m_h'),c=n('m_c');if(!h&&!c)return alert('Ingrese horas y/o ciclos.');entry(a,{kind:'m',t:v('m_t'),date:v('m_d')||today(),h,c,from:'',to:'',pilot:'',note:v('m_n')||'Control manual'});save();R()}
 
@@ -467,10 +471,10 @@ function setProj(){const a=A();a.hpm=n('p_h');a.cpm=n('p_c');S.hz=n('p_z')||12;s
 function expo(){const x=document.createElement('a');x.href=URL.createObjectURL(new Blob([JSON.stringify(S,null,1)],{type:'application/json'}));x.download='mantenimiento-respaldo.json';x.click()}
 
 function impo(i){const f=i.files[0];if(!f)return;
- if(f.size>500000){alert('El respaldo supera el tamaño permitido.');i.value='';return}
+ if(f.size>5000000){alert('El respaldo supera el tamaño permitido.');i.value='';return}
  const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!validData(d))throw 0;
  if(!confirm('¿Reemplazar tus registros actuales por este respaldo?'))return;
- S={ac:d.ac,sv:d.sv,ct:d.ct,lg:d.lg,rc:d.rc,mx:d.mx||[],ad:d.ad||[],ip:d.ip||[],ie:d.ie||[],dx:d.dx||[],sel:d.sel||null,tab:'a',hz:d.hz||12};
+ S={ac:d.ac,sv:d.sv,ct:d.ct,lg:d.lg,rc:d.rc,mx:d.mx||[],ad:d.ad||[],ip:d.ip||[],ie:d.ie||[],dx:d.dx||[],inv:d.inv||[],mv:d.mv||[],fuel:d.fuel||[],sel:d.sel||null,tab:'a',hz:d.hz||12};
  if(!S.ac.some(a=>a.id===S.sel))S.sel=S.ac[0]?.id||null;save();R();
  }catch(e){alert('Archivo no válido.')}};r.readAsText(f);i.value=''}
 
@@ -774,7 +778,7 @@ ${F('a_prop_model','Modelo de hélice','text','','maxlength="120"')}
 <p>Configura las horas, últimos cumplimientos y recorridas reales en Componentes. Los intervalos no se asignan automáticamente.</p>
 </details><p class="text-xs text-slate-400 mt-2">Las horas iniciales de motor y hélice pueden ajustarse por separado en Componentes.</p><button class="btn bg-amber-600 w-full" onclick="addAc()">Crear aeronave</button></div>`:''}
 
-<div class="space-y-3 ${showForm?'':'lg:col-span-2'}">${S.ac.map(x=>`<div class="card p-3 flex items-center gap-3 ${x.id==S.sel?'!border-amber-400':''}"><div class="flex-1"><b class="text-lg">${esc(x.reg)}</b> <span class="text-xs text-slate-400">${esc(x.type)}</span><div class="text-[11px] text-amber-200">${esc(OP_LABELS[opUse(x)])}</div>${x.technical?.manufacturer?'<div class="text-xs text-slate-400">Fabricante: '+esc(x.technical.manufacturer)+'</div>':''}${x.technical?.serial?'<div class="text-xs text-slate-400">Serie fuselaje: '+esc(x.technical.serial)+'</div>':''}<div class="text-sm text-sky-300 font-bold">Fuselaje ${f1(x.h)} h · ${Math.round(x.c)} ciclos</div><div class="text-xs text-slate-400">Motor TSO ${f1(CP(x).m.tso)} h · Hélice TSO ${f1(CP(x).p.tso)} h</div></div><button class="btn bg-sky-700" onclick="S.sel='${x.id}';save();R()">Seleccionar</button><button class="btn bg-rose-800" aria-label="Eliminar aeronave ${esc(x.reg)}" onclick="delAc('${x.id}')">✕</button></div>`).join('')||'<div class="text-slate-500 text-sm">Aún no hay aeronaves.</div>'}
+<div class="space-y-3 ${showForm?'':'lg:col-span-2'}">${S.ac.map(x=>`<div class="card p-3 flex items-center gap-3 ${x.id==S.sel?'!border-amber-400':''}"><div class="flex-1"><b class="text-lg">${esc(x.reg)}</b> <span class="text-xs text-slate-400">${esc(x.type)}</span><div class="text-[11px] text-amber-200">${esc(OP_LABELS[opUse(x)])}</div>${x.technical?.manufacturer?'<div class="text-xs text-slate-400">Fabricante: '+esc(x.technical.manufacturer)+'</div>':''}${x.technical?.serial?'<div class="text-xs text-slate-400">Serie fuselaje: '+esc(x.technical.serial)+'</div>':''}<div class="text-sm text-sky-300 font-bold">Fuselaje ${f1(x.h)} h · ${Math.round(x.c)} ciclos</div><div class="text-xs text-slate-400">Motor TSO ${f1(CP(x).m.tso)} h · Hélice TSO ${f1(CP(x).p.tso)} h</div></div><button class="btn bg-sky-700" onclick="S.sel='${x.id}';consumableForm='';save();R()">Seleccionar</button><button class="btn bg-rose-800" aria-label="Eliminar aeronave ${esc(x.reg)}" onclick="delAc('${x.id}')">✕</button></div>`).join('')||'<div class="text-slate-500 text-sm">Aún no hay aeronaves.</div>'}
 
 ${a?`<details class="maint-guidance"><summary>Editar ficha genérica — ${esc(a.reg)}</summary>
 <p>Corregí los datos de la célula sin borrar historiales. Para cambiar motor, hélice o contadores usá Componentes y verificá nuevamente sus límites técnicos.</p>
@@ -1019,7 +1023,7 @@ function R(){
 
  if(!S.sel&&S.ac[0])S.sel=S.ac[0].id;
 
- const f={a:tabA,x:tabX,n:tabN,k:tabK,s:tabS,b:tabB,i:tabI,d:tabD,r:tabR,p:tabP}[S.tab];
+ const f={a:tabA,x:tabX,n:tabN,k:tabK,s:tabS,b:tabB,u:tabU,i:tabI,d:tabD,r:tabR,p:tabP}[S.tab];
 
  $('app').innerHTML=!currentUser?'<div class="card p-6">Iniciando sesión y recuperando tus datos...</div>':S.tab=='a'||A()?f():'<div class="card p-6 text-center text-slate-400">Primero cree una aeronave en la pestaña “Aeronaves”.</div>';
 
