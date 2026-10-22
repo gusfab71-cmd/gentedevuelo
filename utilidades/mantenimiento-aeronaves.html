@@ -551,6 +551,16 @@ function renderOverview(){
 
 // Guías de preparación originales: no sustituyen las listas oficiales del fabricante.
 const GUIDE_MODELS={
+ generic:{
+  title:'Planilla genérica (otros modelos)',
+  engine:'No se presume el motor o hélice por el modelo: verificar configuración y números de serie realmente instalados.',
+  documents:'Manual de mantenimiento y programa aplicable a esta matrícula y número de serie; documentación vigente del motor, hélice, equipos y DA.',
+  areas:{
+   f:['Confirmar fabricante, modelo, año y número de serie de célula','Identificar materiales de estructura, uniones, corrosión y controles específicos','Verificar comandos de vuelo, tren y sistemas instalados según manual'],
+   m:['Identificar fabricante, modelo, número de serie y tiempo del motor instalado','Verificar lubricación, combustible, encendido, escape, refrigeración y accesorios aplicables','Confirmar intervalos y recorrida desde documentos técnicos de este motor'],
+   p:['Identificar fabricante, modelo, número de serie y tipo de hélice instalada','Verificar estado y sistemas de hélice que correspondan a su tipo','Confirmar inspecciones, vida limitada y TBO propios sin heredarlos del motor']
+  }
+ },
  c150:{
   title:'Cessna 150',engine:'Motor habitualmente Continental O-200; verificar placa, configuración y sustituciones.',
   documents:'Service Manual Cessna 150 correspondiente al año y número de serie; manual y boletines del motor y hélice efectivamente instalados.',
@@ -602,7 +612,7 @@ function detectGuideModel(type){
 }
 function toggleMaintenanceGuides(){
  guideOpen=!guideOpen;guideShown=false;guideChecked={};
- if(guideOpen&&A())guidePick.model=detectGuideModel(A().type)||'';
+ if(guideOpen&&A())guidePick.model=detectGuideModel(A().type)||'generic';
  R();
 }
 function guideItems(){
@@ -633,7 +643,7 @@ function prepareGuideControl(i){
  alert('Borrador de control preparado, SIN GUARDAR. Confirmá el intervalo exacto y transcribí el manual/boletín vigente y la constancia correspondiente antes de crearlo.');
 }
 function renderGuidePanel(a){
- let out='<section class="maint-guides mb-4"><div class="flex flex-wrap items-center justify-between gap-2"><div><strong>Planillas de consulta por modelo</strong><p class="text-xs text-slate-300 mt-1">Cessna 150 · Cessna 172 · Piper PA-11. Ocultas hasta solicitarlas.</p></div><button type="button" class="btn bg-sky-700" onclick="toggleMaintenanceGuides()" aria-expanded="'+guideOpen+'">'+(guideOpen?'Cerrar planillas':'Consultar planillas')+'</button></div>';
+ let out='<section class="maint-guides mb-4"><div class="flex flex-wrap items-center justify-between gap-2"><div><strong>Planillas de consulta por modelo</strong><p class="text-xs text-slate-300 mt-1">Cessna 150 · Cessna 172 · Piper PA-11 · Genérica. Ocultas hasta solicitarlas.</p></div><button type="button" class="btn bg-sky-700" onclick="toggleMaintenanceGuides()" aria-expanded="'+guideOpen+'">'+(guideOpen?'Cerrar planillas':'Consultar planillas')+'</button></div>';
  if(!guideOpen)return out+'</section>';
  const options=(dict,current,blank)=>blank+Object.entries(dict).map(([key,item])=>'<option value="'+key+'"'+(key===current?' selected':'')+'>'+esc(item.title||item)+'</option>').join('');
  out+='<div class="maint-guide-toolbar"><p class="maint-note">Guías originales de preparación. Elegí la planilla; NO equivalen a una checklist oficial, ejecución de mantenimiento ni aprobación de retorno al servicio. Consultá el manual, revisiones, DA y programa aprobados para matrícula, motor y hélice.</p><div class="maint-record-grid">';
@@ -643,7 +653,7 @@ function renderGuidePanel(a){
  out+='</div><button type="button" class="btn bg-amber-600" onclick="showMaintenanceGuide()">Mostrar planilla solicitada</button></div>';
  if(guideShown&&guideAircraft===a.id){
   const model=GUIDE_MODELS[guidePick.model],period=GUIDE_PERIODS[guidePick.period],items=guideItems();
-  out+='<article class="maint-guide-sheet"><div class="maint-eyebrow">REFERENCIA TÉCNICA / SIN VALOR CERTIFICANTE</div><h3>'+esc(model.title)+' · '+esc(period.title)+' · '+esc(GUIDE_COMPONENTS[guidePick.component])+'</h3>';
+  out+='<article class="maint-guide-sheet"><div class="maint-eyebrow">REFERENCIA TÉCNICA / SIN VALOR CERTIFICANTE</div><h3>'+esc(guidePick.model==='generic'?'Planilla genérica · '+a.type:model.title)+' · '+esc(period.title)+' · '+esc(GUIDE_COMPONENTS[guidePick.component])+'</h3>';
   out+='<p class="maint-note">'+esc(period.scope)+'</p><p class="text-xs text-slate-300 mt-2"><b>Configuración:</b> '+esc(model.engine)+'</p><p class="text-xs text-slate-300 mt-2"><b>Fuente a verificar:</b> '+esc(model.documents)+'</p>';
   out+='<p class="text-xs text-slate-400 mt-2">Referencia normativa: RAAC 43 (incl. Apéndice D si corresponde), RAAC 91, DA y documentación técnica vigente de los fabricantes. No se precargan TBO ni vencimientos sin identificación y fuente verificadas.</p>';
   out+='<div id="guide_count" role="status" class="text-xs text-sky-300 mt-3">0 / '+items.length+' puntos de consulta marcados (sin valor certificante)</div>';
