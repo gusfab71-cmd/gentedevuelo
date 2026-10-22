@@ -199,20 +199,89 @@ function dashboard(){
  '<div class="card"><h3>Para operar con instituciones</h3><p>Usuarios, permisos, base multiinstitución, disponibilidad en tiempo real, conciliación, documentos y RAV conforme a ANAC.</p><span class="pill uncertain">Desarrollo posterior</span></div></div></section>';
 }
 function calendar(){
- let start=week;const dow=(new Date(start+'T12:00:00').getDay()+6)%7;start=addDays(start,-dow);
- const grid=Array.from({length:7},(_,i)=>{const date=addDays(start,i),rows=reservations.filter(r=>r.date===date&&r.status==='confirmada');
- return '<div class="day '+(date===week?'current':'')+'"><h3>'+shortDay(date)+'</h3>'+rows.map(r=>'<div class="slot"><b>'+safe(r.aircraft)+'</b> · '+safe(r.start)+'–'+safe(r.end)+'<div>'+safe(members.find(p=>p.id===r.pilot)?.name)+'</div></div>').join('')+(rows.length?'':'<span class="empty">Sin reservas</span>')+'</div>'}).join('');
- const field=(label,id,type,extra='')=>'<label>'+label+'<input id="'+id+'" type="'+type+'" '+extra+' required></label>';
- return '<section class="panel"><div class="toolbar"><h2>Agenda inteligente de turnos · Demo</h2><label>Semana de referencia<input type="date" id="week" value="'+week+'"></label></div><div class="daygrid">'+grid+'</div>'+
- '<p class="muted">Los turnos y conflictos se calculan solo con datos de esta pestaña; no existe disponibilidad multiusuario en tiempo real.</p></section>'+
- '<section class="panel"><h2>Solicitar reserva de prueba</h2><form id="booking"><div class="formgrid"><label>Aeronave<select id="bookAircraft">'+fleet.map(a=>'<option value="'+safe(a.id)+'">'+safe(a.id)+' · '+safe(a.model)+'</option>').join('')+'</select></label>'+
- '<label>Piloto o alumno<select id="bookPilot">'+options(members.filter(x=>x.kind!=='instructor'))+'</select></label>'+
- '<label>Instructor (opcional)<select id="bookInstructor"><option value="">Sin instructor</option>'+options(members.filter(x=>x.kind==='instructor'))+'</select></label>'+
- field('Fecha','bookDate','date','value="'+week+'"')+field('Desde','bookStart','time','value="10:00"')+field('Hasta','bookEnd','time','value="11:00"')+'</div>'+
- '<button class="action" type="submit">Confirmar reserva de demostración</button></form></section>'+
- '<section class="panel"><h2>Reservas registradas</h2><div class="table-scroll"><table><thead><tr><th>Fecha</th><th>Aeronave</th><th>Piloto</th><th>Hora</th><th>Estado</th><th>Acción</th></tr></thead><tbody>'+
- reservations.map(r=>'<tr><td>'+safe(r.date)+'</td><td>'+safe(r.aircraft)+'</td><td>'+safe(members.find(x=>x.id===r.pilot)?.name)+'</td><td>'+safe(r.start)+'–'+safe(r.end)+'</td><td>'+safe(r.status)+'</td><td>'+(r.status==='confirmada'&&!flights.some(f=>f.reservationId===r.id)?'<button class="secondary" data-cancel="'+safe(r.id)+'">Cancelar</button>':'—')+'</td></tr>').join('')+
- (reservations.length?'':'<tr><td colspan="6">No hay reservas de demostración.</td></tr>')+'</tbody></table></div></section>';
+ const dates=agendaView==='week'?listWeek(week):[week];
+ const shown=visibleBookings(reservations,dates,agendaAircraft,agendaInstructor);
+ const range=timeWindow(shown),px=52,boardHeight=(range.end-range.start)/60*px;
+ const startHour=Math.floor(range.start/60),endHour=Math.ceil(range.end/60);
+ const hours=Array.from({length:endHour-startHour},(_,i)=>startHour+i);
+ const short=s=>shortDay(s).replace(/\./g,'');
+ const eventHtml=date=>layoutDay(shown,date,range.start,px).map(b=>{
+  const pilot=members.find(p=>p.id===b.pilot)?.name||b.pilot;
+  const width=100/b.lanes,left=b.lane*width;
+  const styling='top:'+b.top+'px;height:'+b.height+'px;left:calc('+left+'% + 3px);width:calc('+width+'% - 6px)';
+  const title=b.start+'–'+b.end+' · '+b.aircraft+' · '+pilot+
+   (b.instructor?' · '+(members.find(p=>p.id===b.instructor)?.name||b.instructor):'');
+  return '<button type="button" class="agenda-event '+(b.instructor?'demo-flight ':'')+
+   (agendaSelectedBooking===b.id?'is-selected':'')+'" data-agenda-event="'+safe(b.id)+'" style="'+styling+
+   '" title="'+safe(title)+'" aria-label="Ver reserva de prueba: '+safe(title)+'">'+
+   '<small>'+safe(b.start)+'–'+safe(b.end)+'</small><b>'+safe(b.aircraft)+'</b>'+
+   '<small>'+safe(pilot)+'</small></button>';
+ }).join('');
+ const headings=dates.map(d=>'<div class="agenda-day-heading '+(d===now()?'today':'')+'"><strong>'+safe(short(d))+'</strong>'+
+  '<small>'+safe(d)+'</small></div>').join('');
+ const clock='<div class="agenda-clock" style="height:'+boardHeight+'px">'+
+  hours.map(h=>'<span class="agenda-clock-label" style="top:'+((h-startHour)*px)+'px">'+hhmm(h*60)+'</span>').join('')+
+  '<span class="agenda-clock-label" style="top:'+boardHeight+'px">'+hhmm(range.end)+'</span></div>';
+ const columns=dates.map(date=>'<div class="agenda-day-surface" style="height:'+boardHeight+'px" data-agenda-day="'+date+'">'+
+  hours.map(h=>'<button type="button" class="agenda-hour-slot" data-agenda-date="'+date+'" data-agenda-time="'+hhmm(h*60)+
+   '" aria-label="Nueva reserva el '+date+' a las '+hhmm(h*60)+'"><span>+ Reservar '+hhmm(h*60)+'</span></button>').join('')+
+  eventHtml(date)+'</div>').join('');
+ const controls='<div class="agenda-controls">'+
+  '<button type="button" data-agenda-shift="-1" title="Anterior" aria-label="Período anterior">‹</button>'+
+  '<button type="button" data-agenda-today>Hoy</button>'+
+  '<button type="button" data-agenda-shift="1" title="Siguiente" aria-label="Período siguiente">›</button>'+
+  '<label><span class="visually-hidden">Fecha de referencia</span><input id="week" aria-label="Fecha de referencia" type="date" value="'+safe(week)+'"></label>'+
+  '<button type="button" data-agenda-view="week" class="'+(agendaView==='week'?'agenda-active':'')+'" aria-pressed="'+(agendaView==='week')+'">Semana</button>'+
+  '<button type="button" data-agenda-view="day" class="'+(agendaView==='day'?'agenda-active':'')+'" aria-pressed="'+(agendaView==='day')+'">Día</button>'+
+  '<button type="button" class="agenda-create" id="newBooking">+ Nueva reserva</button></div>';
+ const filters='<div class="agenda-filters">'+
+  '<label>Aeronave<select id="agendaFilterAircraft"><option value="all">Todas las aeronaves</option>'+
+   fleet.map(a=>'<option value="'+safe(a.id)+'" '+(agendaAircraft===a.id?'selected':'')+'>'+safe(a.id)+' · '+safe(a.model)+'</option>').join('')+'</select></label>'+
+  '<label>Instructor<select id="agendaFilterInstructor"><option value="all">Todos los instructores</option>'+
+   members.filter(p=>p.kind==='instructor').map(p=>'<option value="'+safe(p.id)+'" '+(agendaInstructor===p.id?'selected':'')+'>'+safe(p.name)+'</option>').join('')+'</select></label>'+
+  '<div class="agenda-legend"><span><i class="agenda-dot"></i>Con instructor</span>'+
+   '<span><i class="agenda-dot gold"></i>Turnos particulares</span><span class="agenda-pill">'+shown.length+' turno(s) visibles</span></div></div>';
+ const active=reservations.find(b=>b.id===agendaSelectedBooking&&b.status==='confirmada');
+ const booked=active&&flights.some(f=>f.reservationId===active.id);
+ const selected=active?'<section class="agenda-selected"><div><strong>'+safe(active.aircraft)+' · '+safe(active.start)+'–'+safe(active.end)+'</strong>'+
+  '<p>'+safe(active.date)+' · '+safe(members.find(p=>p.id===active.pilot)?.name||'')+
+  (active.instructor?' · Instructor: '+safe(members.find(p=>p.id===active.instructor)?.name||''):'')+
+  ' · Confirmada (solo demo)</p></div><div class="agenda-small-actions">'+
+  (booked?'<span class="agenda-pill">Vuelo ya cerrado</span>':
+  '<button type="button" class="secondary" data-agenda-edit="'+safe(active.id)+'">Editar</button>'+
+  '<button type="button" class="secondary" data-cancel="'+safe(active.id)+'">Cancelar</button>')+
+  '<button type="button" class="secondary" data-agenda-close>Ocultar</button></div></section>':'';
+ const edit=agendaBookingId?reservations.find(x=>x.id===agendaBookingId&&x.status==='confirmada'):null;
+ const option=(item,value,title,selectedId)=>'<option value="'+safe(item[value])+'" '+(selectedId===item[value]?'selected':'')+'>'+safe(item[title])+'</option>';
+ const date=edit?.date||agendaDraftDate,start=edit?.start||agendaDraftStart;
+ const hour=Number(start.slice(0,2)),end=edit?.end||(hour>=23?'23:59':hhmm((hour+1)*60));
+ const formHtml=agendaFormOpen?'<section class="panel agenda-form-panel" id="bookingPanel"><div class="toolbar"><h2>'+(edit?'Modificar reserva · Demo':'Nueva reserva · Demo')+'</h2>'+
+  '<button type="button" class="secondary" id="closeBooking">Cerrar formulario</button></div>'+
+  '<form id="booking"><div class="formgrid">'+
+  '<label>Aeronave<select id="bookAircraft">'+fleet.map(a=>'<option value="'+safe(a.id)+'" '+((edit?.aircraft||agendaAircraft)===a.id?'selected':'')+'>'+safe(a.id)+' · '+safe(a.model)+'</option>').join('')+'</select></label>'+
+  '<label>Piloto / alumno<select id="bookPilot">'+members.filter(p=>p.kind!=='instructor').map(p=>option(p,'id','name',edit?.pilot||'p1')).join('')+'</select></label>'+
+  '<label>Instructor<select id="bookInstructor"><option value="">Sin instructor</option>'+members.filter(p=>p.kind==='instructor').map(p=>option(p,'id','name',edit?.instructor||'')).join('')+'</select></label>'+
+  '<label>Fecha<input type="date" id="bookDate" value="'+safe(date)+'" required></label>'+
+  '<label>Desde<input type="time" id="bookStart" value="'+safe(start)+'" required></label>'+
+  '<label>Hasta<input type="time" id="bookEnd" value="'+safe(end)+'" required></label></div>'+
+  '<div class="training-actions"><button type="submit" class="action">'+(edit?'Guardar cambios (demo)':'Confirmar reserva de prueba')+'</button>'+
+  '<button type="button" class="secondary" id="cancelBooking">Cancelar</button></div></form>'+
+  '<p class="agenda-booking-note">Validaciones locales de aeronave, instructor, piloto, fechas y conflictos. No comprueba licencias ante ANAC ni garantiza disponibilidad para otros usuarios.</p></section>':'';
+ const table='<details class="panel" id="agendaBookingList"><summary>Ver historial de reservas de demostración ('+reservations.length+')</summary>'+
+  '<div class="table-scroll" style="margin-top:12px"><table><thead><tr><th>Fecha</th><th>Aeronave</th><th>Piloto</th><th>Hora</th><th>Estado</th><th>Acción</th></tr></thead><tbody>'+
+  reservations.slice().sort((a,b)=>b.date.localeCompare(a.date)||b.start.localeCompare(a.start)).map(b=>
+   '<tr><td>'+safe(b.date)+'</td><td>'+safe(b.aircraft)+'</td><td>'+safe(members.find(x=>x.id===b.pilot)?.name||'')+'</td>'+
+   '<td>'+safe(b.start)+'–'+safe(b.end)+'</td><td>'+safe(b.status)+'</td><td>'+
+   (b.status==='confirmada'&&!flights.some(f=>f.reservationId===b.id)?'<button type="button" class="secondary" data-agenda-event="'+safe(b.id)+'">Ver</button>':'—')+
+   '</td></tr>').join('')+
+  (reservations.length?'':'<tr><td colspan="6">Todavía no hay reservas de prueba.</td></tr>')+
+  '</tbody></table></div></details>';
+ return '<section class="panel agenda-shell"><div class="agenda-toolbar"><div class="agenda-heading"><h2>Agenda inteligente de turnos</h2>'+
+  '<p>Reservas por aeronave e instructor · Calendario de demostración</p></div>'+controls+'</div>'+
+  filters+'<div class="agenda-scroll"><div class="agenda-columns '+(agendaView==='day'?'day-mode':'')+'">'+
+  '<div class="agenda-clock-heading">HORA</div>'+headings+clock+columns+'</div></div>'+
+  '<p class="agenda-viewnote">Seleccioná una hora libre para preparar un turno; seleccioná un turno para ver sus detalles. Los datos se pierden al recargar y no representan disponibilidad en tiempo real.</p></section>'+
+  formHtml+selected+table;
 }
 function flightScreen(){
  const open=reservations.filter(r=>r.status==='confirmada'&&!flights.some(f=>f.reservationId===r.id));
