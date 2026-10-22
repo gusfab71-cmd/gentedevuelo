@@ -19,7 +19,7 @@ let audioContext=null;
 let answerNoiseBuffer=null;
 function answerNoise(ctx){
  if(answerNoiseBuffer&&answerNoiseBuffer.sampleRate===ctx.sampleRate)return answerNoiseBuffer;
- const length=Math.ceil(ctx.sampleRate*1.65);
+ const length=Math.ceil(ctx.sampleRate*3.0);
  const buffer=ctx.createBuffer(1,length,ctx.sampleRate);
  const samples=buffer.getChannelData(0);
  // Original noise synthesized locally: no external files, licensing or fetches.
@@ -43,51 +43,51 @@ function playAnswerSound(correct){
    // Airplane flyby: a pulsing propeller engine, Doppler pitch shift,
    // swept wind noise and (if supported) movement from left to right.
    sound.gain.setValueAtTime(.0001,t);
-   sound.gain.exponentialRampToValueAtTime(.72,t+.39);
-   sound.gain.exponentialRampToValueAtTime(.0001,t+1.36);
+   sound.gain.exponentialRampToValueAtTime(.72,t+.72);
+   sound.gain.exponentialRampToValueAtTime(.0001,t+2.68);
    if(typeof ctx.createStereoPanner==='function'){
     const pan=ctx.createStereoPanner();
     pan.pan.setValueAtTime(-.85,t);
-    pan.pan.linearRampToValueAtTime(.85,t+1.36);
+    pan.pan.linearRampToValueAtTime(.85,t+2.68);
     sound.connect(pan);pan.connect(master);
    }else sound.connect(master);
    const engine=ctx.createOscillator();
    engine.type='sawtooth';
    engine.frequency.setValueAtTime(168,t);
-   engine.frequency.exponentialRampToValueAtTime(94,t+1.36);
+   engine.frequency.exponentialRampToValueAtTime(94,t+2.68);
    const engineFilter=ctx.createBiquadFilter();engineFilter.type='lowpass';
    engineFilter.frequency.setValueAtTime(930,t);
-   engineFilter.frequency.exponentialRampToValueAtTime(380,t+1.36);
+   engineFilter.frequency.exponentialRampToValueAtTime(380,t+2.68);
    const engineGain=ctx.createGain();engineGain.gain.value=.18;
    const pulse=ctx.createOscillator();pulse.type='sine';
    pulse.frequency.setValueAtTime(26,t);
-   pulse.frequency.linearRampToValueAtTime(17,t+1.36);
+   pulse.frequency.linearRampToValueAtTime(17,t+2.68);
    const pulseDepth=ctx.createGain();pulseDepth.gain.value=.09;
    pulse.connect(pulseDepth);pulseDepth.connect(engineGain.gain);
    engine.connect(engineFilter);engineFilter.connect(engineGain);engineGain.connect(sound);
-   engine.start(t);engine.stop(t+1.37);
-   pulse.start(t);pulse.stop(t+1.37);
+   engine.start(t);engine.stop(t+2.70);
+   pulse.start(t);pulse.stop(t+2.70);
    const wind=ctx.createBufferSource();wind.buffer=answerNoise(ctx);
    const windFilter=ctx.createBiquadFilter();windFilter.type='bandpass';windFilter.Q.value=.65;
    windFilter.frequency.setValueAtTime(1150,t);
-   windFilter.frequency.exponentialRampToValueAtTime(390,t+1.36);
+   windFilter.frequency.exponentialRampToValueAtTime(390,t+2.68);
    const windGain=ctx.createGain();windGain.gain.value=.22;
    wind.connect(windFilter);windFilter.connect(windGain);windGain.connect(sound);
-   wind.start(t);wind.stop(t+1.37);
+   wind.start(t);wind.stop(t+2.70);
   }else{
-   // Short stylized explosion: a sharp crack, downward thump, fading rumble.
+   // Longer stylized explosion: a short crack, downward thump, and extended fading rumble.
    sound.gain.setValueAtTime(.8,t);
    sound.connect(master);
    const blast=ctx.createBufferSource();blast.buffer=answerNoise(ctx);
    const blastFilter=ctx.createBiquadFilter();blastFilter.type='lowpass';
    blastFilter.frequency.setValueAtTime(2400,t);
-   blastFilter.frequency.exponentialRampToValueAtTime(115,t+1.2);
+   blastFilter.frequency.exponentialRampToValueAtTime(115,t+2.55);
    const blastGain=ctx.createGain();
    blastGain.gain.setValueAtTime(.0001,t);
    blastGain.gain.linearRampToValueAtTime(.7,t+.018);
-   blastGain.gain.exponentialRampToValueAtTime(.0001,t+1.2);
+   blastGain.gain.exponentialRampToValueAtTime(.0001,t+2.55);
    blast.connect(blastFilter);blastFilter.connect(blastGain);blastGain.connect(sound);
-   blast.start(t);blast.stop(t+1.22);
+   blast.start(t);blast.stop(t+2.60);
    const crack=ctx.createBufferSource();crack.buffer=answerNoise(ctx);
    const crackFilter=ctx.createBiquadFilter();crackFilter.type='highpass';crackFilter.frequency.value=1300;
    const crackGain=ctx.createGain();
@@ -98,13 +98,13 @@ function playAnswerSound(correct){
    crack.start(t);crack.stop(t+.17);
    const thud=ctx.createOscillator();thud.type='triangle';
    thud.frequency.setValueAtTime(108,t);
-   thud.frequency.exponentialRampToValueAtTime(38,t+.67);
+   thud.frequency.exponentialRampToValueAtTime(38,t+1.65);
    const thudGain=ctx.createGain();
    thudGain.gain.setValueAtTime(.0001,t);
    thudGain.gain.linearRampToValueAtTime(.55,t+.025);
-   thudGain.gain.exponentialRampToValueAtTime(.0001,t+.68);
+   thudGain.gain.exponentialRampToValueAtTime(.0001,t+1.70);
    thud.connect(thudGain);thudGain.connect(sound);
-   thud.start(t);thud.stop(t+.7);
+   thud.start(t);thud.stop(t+1.72);
   }
  }catch(e){/* El examen sigue funcionando aunque el navegador bloquee audio. */}
 }
