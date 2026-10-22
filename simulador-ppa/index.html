@@ -335,33 +335,35 @@ $('start').onclick=()=>{
 $('submit').onclick=()=>{
  if(answered||selected===null)return;
  const q=exam[index];
- if(!reviewMode&&needsFigure(q)&&!figureReady){
+ if(!reviewMode&&!sequentialMode&&needsFigure(q)&&!figureReady){
   $('status').textContent='La figura todavía no terminó de cargar. Intentá nuevamente luego de que aparezca la imagen.';
   return;
  }
  answered=true;
  const graded=!reviewMode&&hasValidKey(q)&&(!needsFigure(q)||figureReady);
  const ok=graded&&selected===q.correcta;
- if(ok)points++;if(graded){gradedCount++;playAnswerSound(ok)}
+ if(ok)points++;
+ if(graded){gradedCount++;playAnswerSound(ok)}
+ if(sequentialMode)sequentialAnswers[q.id]={selected,attempted:true,graded,correct:ok};
  document.querySelectorAll('.choice').forEach((b,i)=>{
   b.disabled=true;
   if(graded&&i===q.correcta)b.classList.add('correct');
   else if(graded&&i===selected&&!ok)b.classList.add('incorrect');
  });
- $('score').textContent=reviewMode?'Revisión · sin puntos':practiceMode?'Práctica: '+points+' puntos (provisionales)':'Puntos: '+points;
+ $('score').textContent=reviewMode?'Revisión · sin puntos':sequentialMode?'Correlativo: '+points+' puntos / '+gradedCount+' calificadas':practiceMode?'Práctica: '+points+' puntos (provisionales)':'Puntos: '+points;
  const f=$('feedback');f.replaceChildren();
  const heading=document.createElement('h3');
- heading.textContent=reviewMode?'Revisión del banco · sin puntaje':!graded?'Imagen no disponible · sin puntaje':ok?'Correcto · +1 punto':'Incorrecto · +0 puntos';
+ heading.textContent=reviewMode?'Revisión del banco · sin puntaje':!graded?(!hasValidKey(q)?'SIN CLAVE VÁLIDA · sin puntaje':'Figura no disponible · sin puntaje'):ok?'Correcto según clave · +1 punto':'Incorrecto según clave · +0 puntos';
  const answer=document.createElement('p');
  answer.textContent=hasValidKey(q)?
-  (practiceMode||reviewMode?'Clave histórica registrada (pendiente de validación): ':'Respuesta verificada: ')+q.opciones[q.correcta]:
-  'No hay clave de respuesta identificada.';
+  (practiceMode||reviewMode||sequentialMode?'Clave histórica registrada (pendiente de validación): ':'Respuesta verificada: ')+q.opciones[q.correcta]:
+  'No hay clave válida de respuesta identificada; marcá este registro para cotejar con ANAC.';
  const reason=document.createElement('p');
  reason.textContent=q.fundamento?'Fundamento en el banco: '+q.fundamento:
   'Fundamento todavía pendiente de cotejar con el material de ANAC.';
  const source=document.createElement('small');
  source.textContent='Fuente: '+q.fuente+' · Estado documental: '+q.estado+
-  '. '+(practiceMode?'Práctica con puntaje provisional, no examen verificado.':reviewMode?'Revisión sin puntos.':'Examen sobre preguntas verificadas.');
+  '. '+(sequentialMode?'Auditoría correlativa y puntaje PROVISIONAL: no valida la clave.':practiceMode?'Práctica con puntaje provisional, no examen verificado.':reviewMode?'Revisión sin puntos.':'Examen sobre preguntas verificadas.');
  f.append(heading,answer,reason,source);f.classList.remove('hidden');
  $('submit').classList.add('hidden');$('next').classList.remove('hidden');
  $('next').textContent=index===exam.length-1?'Ver resultado':'Siguiente pregunta';
