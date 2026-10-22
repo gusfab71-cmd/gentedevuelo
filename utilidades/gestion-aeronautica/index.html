@@ -293,8 +293,14 @@ function documentsScreen(){
 function wireTraining(){
  const studentSelect=$('trainingStudent');
  if(studentSelect)studentSelect.addEventListener('change',e=>{trainingStudent=e.target.value;trainingForm='';render()});
- $('newTraining')?.addEventListener('click',()=>{trainingForm='new';render();$('lessonTopics')?.focus()});
- $('closeTrainingForm')?.addEventListener('click',()=>{trainingForm='';render()});
+ $('newTraining')?.addEventListener('click',()=>{trainingPreselectFlight='';trainingForm='new';render();$('lessonTopics')?.focus()});
+ $('closeTrainingForm')?.addEventListener('click',()=>{trainingForm='';trainingPreselectFlight='';render()});
+ $('screen').querySelectorAll('[data-prepare-lesson]').forEach(button=>button.addEventListener('click',()=>{
+  const f=flights.find(x=>x.id===button.dataset.prepareLesson);
+  if(!f)return;
+  trainingStudent=f.pilot;trainingPreselectFlight=f.id;trainingForm='new';render();
+  $('lessonTopics')?.focus();
+ }));
  $('printTraining')?.addEventListener('click',()=>window.print());
  $('lessonFlight')?.addEventListener('change',e=>{
   const f=flights.find(x=>x.id===e.target.value);
@@ -326,7 +332,7 @@ function wireTraining(){
     lessons.push(lesson);trainingStudent=lesson.studentId;
     notice('Borrador de evolución creado (DEMO). El instructor debe enviarlo al jefe de instructores.');
    }
-   trainingForm='';render();
+   trainingForm='';trainingPreselectFlight='';render();
   }catch(err){notice(err.message)}
  });
  $('screen').querySelectorAll('[data-lesson-edit]').forEach(button=>button.addEventListener('click',()=>{
@@ -381,7 +387,9 @@ function wire(){
    const booking=reservations.find(r=>r.id===$('flightBooking').value);
    const f=closeFlight({from:$('flightFrom').value,to:$('flightTo').value,start:$('flightStart').value,end:$('flightEnd').value,
     tachStart:$('tachStart').value,tachEnd:$('tachEnd').value,landings:$('landings').value},booking,flights,fleet);
-   flights.push(f);render();notice('Vuelo de DEMOSTRACIÓN cerrado. No se modificaron registros oficiales ni de Mantenimiento.');
+   flights.push(f);render();notice('Vuelo de DEMOSTRACIÓN cerrado. '+(members.some(p=>p.id===f.pilot&&p.kind==='alumno')?
+ 'El instructor debe completar una ficha de evolución en Pilotos y alumnos.':
+ 'No se modificaron registros oficiales ni de Mantenimiento.'));
   }catch(err){notice(err.message)}});
   $('flightExport')?.addEventListener('click',()=>{
    const cols=['Fecha','Aeronave','Piloto','Origen','Destino','Inicio bloque','Fin bloque','Horas bloque','Delta Tacometro','Aterrizajes','Costo orientativo'];
