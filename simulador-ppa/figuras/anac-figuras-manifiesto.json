@@ -5,182 +5,182 @@
     "1": {
       "page": 1,
       "width": 1116,
-      "height": 558,
-      "bytes": 77943
+      "height": 555,
+      "bytes": 77928
     },
     "2": {
       "page": 1,
       "width": 1116,
-      "height": 781,
-      "bytes": 151302
+      "height": 724,
+      "bytes": 151159
     },
     "3": {
       "page": 2,
       "width": 1116,
-      "height": 499,
-      "bytes": 268897
+      "height": 496,
+      "bytes": 268876
     },
     "4": {
       "page": 2,
       "width": 1116,
-      "height": 781,
-      "bytes": 126328
+      "height": 529,
+      "bytes": 124913
     },
     "5": {
       "page": 3,
       "width": 1116,
-      "height": 588,
-      "bytes": 164144
+      "height": 585,
+      "bytes": 164127
     },
     "6": {
       "page": 3,
       "width": 1116,
-      "height": 722,
-      "bytes": 228416
+      "height": 636,
+      "bytes": 228113
     },
     "7": {
       "page": 4,
       "width": 1116,
-      "height": 1342,
-      "bytes": 148362
+      "height": 641,
+      "bytes": 145590
     },
     "8": {
       "page": 5,
       "width": 1116,
-      "height": 1342,
-      "bytes": 588067
+      "height": 1234,
+      "bytes": 587472
     },
     "9": {
       "page": 6,
       "width": 1116,
-      "height": 587,
-      "bytes": 67415
+      "height": 584,
+      "bytes": 67398
     },
     "29": {
       "page": 6,
       "width": 1116,
-      "height": 752,
-      "bytes": 251580
+      "height": 741,
+      "bytes": 251454
     },
     "30": {
       "page": 7,
       "width": 1116,
-      "height": 764,
-      "bytes": 204760
+      "height": 761,
+      "bytes": 204741
     },
     "31": {
       "page": 7,
       "width": 1116,
-      "height": 574,
-      "bytes": 170194
+      "height": 559,
+      "bytes": 170097
     },
     "33": {
       "page": 8,
       "width": 1116,
-      "height": 4006,
-      "bytes": 120615
+      "height": 3096,
+      "bytes": 117241
     },
     "34": {
       "page": 11,
       "width": 1116,
-      "height": 1342,
-      "bytes": 344385
+      "height": 1339,
+      "bytes": 344367
     },
     "35": {
       "page": 12,
       "width": 1116,
-      "height": 1342,
-      "bytes": 590217
+      "height": 1339,
+      "bytes": 590194
     },
     "36": {
       "page": 13,
       "width": 1116,
-      "height": 1254,
-      "bytes": 259211
+      "height": 701,
+      "bytes": 256701
     },
     "37": {
       "page": 14,
       "width": 1116,
-      "height": 1342,
-      "bytes": 432772
+      "height": 931,
+      "bytes": 431046
     },
     "38": {
       "page": 15,
       "width": 1116,
-      "height": 853,
-      "bytes": 388423
+      "height": 850,
+      "bytes": 388398
     },
     "39": {
       "page": 15,
       "width": 1116,
-      "height": 644,
-      "bytes": 45720
+      "height": 609,
+      "bytes": 45549
     },
     "41": {
       "page": 16,
       "width": 1116,
-      "height": 1165,
-      "bytes": 422385
+      "height": 891,
+      "bytes": 420886
     },
     "48": {
       "page": 17,
       "width": 1116,
-      "height": 1342,
-      "bytes": 195137
+      "height": 984,
+      "bytes": 193393
     },
     "49": {
       "page": 18,
       "width": 1116,
-      "height": 1313,
-      "bytes": 166287
+      "height": 953,
+      "bytes": 164693
     },
     "50": {
       "page": 19,
       "width": 1116,
-      "height": 1342,
-      "bytes": 58509
+      "height": 614,
+      "bytes": 55195
     },
     "59": {
       "page": 20,
       "width": 1116,
-      "height": 587,
-      "bytes": 115606
+      "height": 584,
+      "bytes": 115588
     },
     "61": {
       "page": 20,
       "width": 1116,
-      "height": 693,
-      "bytes": 78844
+      "height": 445,
+      "bytes": 77440
     },
     "62": {
       "page": 21,
       "width": 1116,
-      "height": 440,
-      "bytes": 80787
+      "height": 437,
+      "bytes": 80767
     },
     "63": {
       "page": 21,
       "width": 1116,
-      "height": 811,
-      "bytes": 79686
+      "height": 590,
+      "bytes": 78538
     },
     "65": {
       "page": 22,
       "width": 1116,
-      "height": 1283,
-      "bytes": 284328
+      "height": 1211,
+      "bytes": 283959
     },
     "66": {
       "page": 23,
       "width": 1116,
-      "height": 1254,
-      "bytes": 378608
+      "height": 1251,
+      "bytes": 378587
     },
     "67": {
       "page": 24,
       "width": 1116,
-      "height": 1283,
-      "bytes": 88472
+      "height": 590,
+      "bytes": 86775
     }
   },
   "figure_21": "preguntas-segun-raac-61-105.pdf página 52/108",
@@ -197,26 +197,26 @@
       "322": {
         "page": 91,
         "width": 1048,
-        "height": 933,
-        "bytes": 133900
+        "height": 921,
+        "bytes": 133360
       },
       "323": {
         "page": 92,
         "width": 1048,
-        "height": 933,
-        "bytes": 133900
+        "height": 921,
+        "bytes": 133360
       },
       "324": {
         "page": 93,
         "width": 1048,
-        "height": 828,
-        "bytes": 155262
+        "height": 774,
+        "bytes": 153603
       },
       "328": {
         "page": 94,
         "width": 793,
-        "height": 580,
-        "bytes": 38154
+        "height": 574,
+        "bytes": 38124
       },
       "329": {
         "page": 94,
