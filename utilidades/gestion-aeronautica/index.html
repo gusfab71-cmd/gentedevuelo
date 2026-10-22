@@ -276,8 +276,35 @@ function trainingGoalSettings(){
   '<label>'+label+'<input type="number" id="goal-'+key+'" min="0" max="500" step="0.25" value="'+trainingGoals[key]+'" required></label>').join('')+
  '</div><button class="action" type="submit">Guardar objetivos (demo)</button></form></section>';
 }
+function flightCards(projection){
+ if(!projection.rows.length)return '<p class="muted">Todavía no hay vuelos cerrados para este perfil de demostración.</p>';
+ return '<div class="flight-activity-list">'+projection.rows.map(f=>{
+  const instructor=f.instructor?portalLabel(f.instructor):'Sin instructor';
+  return '<article class="flight-activity-item"><div><strong>'+safe(f.date)+' · '+safe(f.aircraft)+'</strong>'+
+   '<p>'+safe(f.origin)+' → '+safe(f.destination)+' · '+safe(f.start)+'–'+safe(f.end)+'</p>'+
+   '<p>'+safe(instructor)+' · '+safe(FLIGHT_MODE_LABELS[f.operationType]||'Modalidad anterior sin clasificar')+'</p></div>'+
+   '<div><span class="flight-type-pill '+safe(f.operationType)+'">'+safe(f.blockHours.toFixed(2))+' h de bloque</span>'+
+   '<p>'+safe(f.landings)+' aterrizajes · Tacómetro Δ '+safe(f.tachDifference.toFixed(2))+' h</p></div></article>';
+ }).join('')+'</div>';
+}
+function privatePilotPortal(){
+ const p=flightActivityByRole(portalPrivatePilot,'piloto',flights);
+ const all=flightActivityProjection(portalPrivatePilot,flights);
+ return '<section class="panel"><div class="portal-title"><h2>Mi Hangar de Vuelo · Piloto privado</h2>'+
+ '<span class="tag">Vista individual · DEMO</span></div>'+
+ '<p class="portal-private">Historial personal de vuelos sin instructor del piloto privado. La aplicación separa estas horas de las clases del alumno, las del instructor y el tacómetro de la aeronave. No es Libro de Vuelo oficial ni prueba de atribuciones.</p>'+
+ '<div class="portal-metrics">'+metric(p.blockHours.toFixed(2)+' h','Bloque registrado · vuelos sin instructor')+
+ metric(p.flights,'Vuelos privados registrados')+
+ metric(p.landings,'Aterrizajes')+'</div>'+
+ '<div class="training-actions"><button class="action" data-go="reservas">Solicitar reserva de aeronave · Demo</button>'+
+ '<button class="secondary" data-go="vuelos">Ver Vuelos y RAV</button></div></section>'+
+ '<section class="panel"><h2>Mi historial de vuelos como piloto privado</h2>'+flightCards(p)+
+ '<p class="muted">Otros vuelos del perfil con instructor (si los hubiera): '+all.byMode.coached.flights+
+ '. Se contabilizan aparte de los vuelos sin instructor.</p></section>';
+}
 function studentPortal(){
  const d=studentPortalProjection(portalStudent,reservations,flights,lessons,demoPacks,groundActivities,trainingGoals);
+ const instruction=flightActivityByRole(portalStudent,'alumno',flights);
  const stages={solicitada:'Pendiente de instructor',confirmada:'Confirmada',cancelada:'Cancelada'};
  const options=Object.entries(ACTIVITY_TYPES).map(([id,label])=>'<option value="'+id+'">'+safe(label)+'</option>').join('');
  const resources=[...fleet.map(a=>({id:a.id,label:a.id+' · '+a.model,kind:'flight'})),
@@ -294,6 +321,8 @@ function studentPortal(){
  '<div class="portal-box"><div class="toolbar"><h3>Mi avance según el programa de la escuela</h3>'+
  '<span class="tag">Objetivos de demostración</span></div>'+trainingProgressWidget(d.progress)+
  '<p class="muted">El ejemplo parte de 40 h de vuelo y 5 h de simulador; cada escuela puede ajustar ambos requisitos. No certifica habilitaciones ni permite sustituir horas de avión por simulador.</p></div></section>'+
+ '<section class="panel"><h2>Mis vuelos de instrucción</h2>'+flightCards(instruction)+
+ '<p class="muted">Este historial muestra únicamente mis vuelos cerrados con instructor; no incluye las horas de teoría ni las sesiones de simulador.</p></section>'+
  '<section class="panel"><div class="toolbar"><h2>Mis reservas</h2>'+
  '<button id="openStudentBooking" class="action">+ Solicitar turno</button></div>'+
  (bookings||'<p class="muted">No tenés solicitudes registradas en esta demostración.</p>')+'</section>'+
