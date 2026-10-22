@@ -312,7 +312,42 @@ function applyRc(){
 
 // ---------- ACCIONES ----------
 
-function addAc(){const r=v('a_r').trim().toUpperCase();if(!r)return alert('Ingrese la matrícula.');if(S.ac.some(a=>a.reg===r))return alert('Esa matrícula ya está registrada.');const a={id:uid(),reg:r,type:v('a_t'),h:n('a_h'),c:n('a_c'),hpm:n('a_hm'),cpm:n('a_cm'),operation:{use:v('a_use'),compensation:'unknown',operator:'',program:'',updated:today()}};S.ac.push(a);S.sel=a.id;showAircraftForm=false;save();R()}
+function addAc(){
+ const reg=v('a_r').trim().toUpperCase(),type=recordValue('a_t',100);
+ if(!reg)return alert('Ingrese la matrícula.');
+ if(!type)return alert('Indicá el modelo de aeronave, aunque no figure en las plantillas predefinidas.');
+ if(S.ac.some(a=>a.reg===reg))return alert('Esa matrícula ya está registrada.');
+ const technical={
+  manufacturer:recordValue('a_make',100),year:recordValue('a_year',4),
+  serial:recordValue('a_serial',100),base:recordValue('a_base',100),
+  engineManufacturer:recordValue('a_engine_make',100),propellerManufacturer:recordValue('a_prop_make',100),
+  source:recordValue('a_source',250)
+ };
+ if(technical.year&&!/^\d{4}$/.test(technical.year))return alert('El año de fabricación debe tener 4 dígitos.');
+ const a={id:uid(),reg,type,h:n('a_h'),c:n('a_c'),hpm:n('a_hm'),cpm:n('a_cm'),technical,
+  operation:{use:v('a_use'),compensation:'unknown',operator:'',program:'',updated:today()}};
+ CP(a);
+ a.cp.m.mod=recordValue('a_engine_model',120);a.cp.m.ser=recordValue('a_engine_serial',120);
+ a.cp.p.mod=recordValue('a_prop_model',120);a.cp.p.ser=recordValue('a_prop_serial',120);
+ // No crear controles ni TBO por defecto: requieren manual y registros técnicos aplicables.
+ S.ac.push(a);S.sel=a.id;showAircraftForm=false;save();R();
+}
+function updateAircraftTechnical(){
+ const a=A();if(!a)return;
+ const type=recordValue('ga_t',100);
+ if(!type)return alert('Indicá el tipo o modelo de aeronave.');
+ const year=recordValue('ga_year',4);
+ if(year&&!/^\d{4}$/.test(year))return alert('El año de fabricación debe tener 4 dígitos.');
+ a.type=type;
+ a.technical={
+  ...a.technical,
+  manufacturer:recordValue('ga_make',100),year,
+  serial:recordValue('ga_serial',100),base:recordValue('ga_base',100),
+  source:recordValue('ga_source',250)
+ };
+ // Motor y hélice se editan exclusivamente en Componentes para conservar sus historiales.
+ save();R();
+}
 
 function saveOperation(){const a=A();if(!a)return;
  const use=v('op_use'),compensation=v('op_comp'),operator=recordValue('op_operator',140),program=recordValue('op_program',250);
