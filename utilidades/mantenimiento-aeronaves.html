@@ -560,8 +560,8 @@ let guideOpen=false,guideShown=false,guideAircraft=null;
 let guidePick={model:'',period:'p50',component:'m'},guideChecked={};
 function detectGuideModel(type){
  const t=String(type||'').toLowerCase();
- if(/(?:cessna\s*|^c\s*-?\s*)150\b/.test(t))return 'c150';
- if(/(?:cessna\s*|^c\s*-?\s*)172\b/.test(t))return 'c172';
+ if(/(?:cessna\s*(?:c\s*-?\s*)?|^c\s*-?\s*)150[a-z]?\b/.test(t))return 'c150';
+ if(/(?:cessna\s*(?:c\s*-?\s*)?|^c\s*-?\s*)172[a-z]{0,3}\b/.test(t))return 'c172';
  if(/\bpa\s*-?\s*11\b/.test(t))return 'pa11';
  return '';
 }
