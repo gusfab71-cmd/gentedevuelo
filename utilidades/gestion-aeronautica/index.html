@@ -261,10 +261,18 @@ function calendar(){
  const clock='<div class="agenda-clock" style="height:'+boardHeight+'px">'+
   hours.map(h=>'<span class="agenda-clock-label" style="top:'+((h-startHour)*px)+'px">'+hhmm(h*60)+'</span>').join('')+
   '<span class="agenda-clock-label" style="top:'+boardHeight+'px">'+hhmm(range.end)+'</span></div>';
- const columns=dates.map(date=>'<div class="agenda-day-surface" style="height:'+boardHeight+'px" data-agenda-day="'+date+'">'+
-  hours.map(h=>'<button type="button" class="agenda-hour-slot" data-agenda-date="'+date+'" data-agenda-time="'+hhmm(h*60)+
-   '" aria-label="Nueva reserva el '+date+' a las '+hhmm(h*60)+'"><span>+ Reservar '+hhmm(h*60)+'</span></button>').join('')+
-  eventHtml(date)+'</div>').join('');
+ const columns=dates.map(date=>{
+  const closed=!schoolPolicy.availableWeekdays.includes(new Date(date+'T12:00:00Z').getUTCDay());
+  const step=schoolPolicy.slotMinutes;
+  const cells=hours.flatMap(h=>Array.from({length:60/step},(_,i)=>h*60+i*step)).map(t=>{
+   const time=hhmm(t),disabled=closed||t<minutes(schoolPolicy.openTime)||t>=minutes(schoolPolicy.closeTime);
+   return '<button type="button" class="agenda-hour-slot" style="height:'+(52*step/60)+'px"'+
+    (disabled?' disabled':'')+' data-agenda-date="'+date+'" data-agenda-time="'+time+
+    '" aria-label="Nueva reserva el '+date+' a las '+time+'"><span>+ Reservar '+time+'</span></button>';
+  }).join('');
+  return '<div class="agenda-day-surface '+(closed?'day-closed':'')+'" style="height:'+boardHeight+'px" data-agenda-day="'+date+'">'+
+   cells+eventHtml(date)+'</div>';
+ }).join('');
  const controls='<div class="agenda-controls">'+
   '<button type="button" data-agenda-shift="-1" title="Anterior" aria-label="Período anterior">‹</button>'+
   '<button type="button" data-agenda-today>Hoy</button>'+
@@ -608,6 +616,32 @@ function wire(){
  if(tab==='personas')wireTraining();
  $('screen').querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>switchTab(b.dataset.go)));
  if(tab==='reservas'){
+  $('openSchoolSettings')?.addEventListener('click',()=>{schoolSettingsOpen=!schoolSettingsOpen;render()});
+  $('closeSchoolSettings')?.addEventListener('click',()=>{schoolSettingsOpen=false;render()});
+  $('schoolReset')?.addEventListener('click',()=>{
+   if(!confirm('¿Restaurar los horarios y duraciones iniciales de la escuela de prueba?'))return;
+   schoolPolicy=validateReservationPolicy(DEFAULT_RESERVATION_POLICY);
+   schoolSettingsOpen=false;render();
+   notice('Turnera de demostración restaurada. Las reservas ya confirmadas no se modificaron.');
+  });
+  $('schoolSettingsForm')?.addEventListener('submit',e=>{
+   e.preventDefault();
+   try{
+    const days=[...$('schoolSettingsForm').querySelectorAll('input[name="schoolDay"]:checked')].map(x=>Number(x.value));
+    const next=validateReservationPolicy({
+     schoolName:$('schoolName').value,
+     openTime:$('schoolOpen').value,closeTime:$('schoolClose').value,
+     studentMinMinutes:Number($('schoolStudentMin').value),
+     studentDefaultMinutes:Number($('schoolStudentSuggested').value),
+     pilotDefaultMinutes:Number($('schoolPilotSuggested').value),
+     slotMinutes:Number($('schoolSlot').value),
+     availableWeekdays:days,showActivity:$('schoolShowActivity').checked,
+     showNotes:$('schoolShowNotes').checked
+    });
+    schoolPolicy=next;schoolSettingsOpen=false;agendaFormOpen=false;agendaBookingId='';
+    render();notice('Turnera de '+next.schoolName+' adaptada correctamente (solo demo; no se guarda al recargar).');
+   }catch(err){notice(err.message)}
+  });
   $('week').addEventListener('change',e=>{
    if(validDate(e.target.value)){week=e.target.value;agendaSelectedBooking='';render()}
   });
