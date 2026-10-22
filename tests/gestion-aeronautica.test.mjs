@@ -359,7 +359,7 @@ assert.throws(()=>finishGroundLesson(completedSim,'i1',[],91),/efectivamente rea
 assert.throws(()=>finishGroundLesson(completedSim,'i1',[],0),/efectivamente realizados/);
 assert.throws(()=>finishGroundLesson(completedSim,'i1',[],1.5),/efectivamente realizados/);
 const recordedTheory=finishGroundLesson(completedTheory,'i1',[],50);
-const counted=trainingHours('p2',[{...flight,pilot:'p2',blockHours:1.3}],[recordedSim,recordedTheory]);
+const counted=trainingHours('p2',[{...flight,pilot:'p2',blockHours:1.3,blockMinutes:78}],[recordedSim,recordedTheory]);
 assert.deepEqual(counted,{
  flightHours:1.3,simulatorMinutes:75,theoryMinutes:50,simulatorHours:1.25,theoryHours:0.83
 });
