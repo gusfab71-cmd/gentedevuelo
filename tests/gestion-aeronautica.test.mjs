@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
 import {minutes,validDate,intersects,createReservation,closeFlight,flightTotals,stockMove} from '../utilidades/gestion-aeronautica/src/operacion.js';
-import {ASSESSMENTS,LESSON_STATUS,buildLesson,reviseLesson,submitLesson,reviewLesson,studentTimeline,studentSummary} from '../utilidades/gestion-aeronautica/src/formacion.js';
+import {ASSESSMENTS,LESSON_STATUS,buildLesson,reviseLesson,submitLesson,closeLessonByInstructor,reviewLesson,studentTimeline,studentSummary} from '../utilidades/gestion-aeronautica/src/formacion.js';
 
 assert.equal(minutes('09:30'),570);
 assert.throws(()=>minutes('25:61'),/Hora inválida/);
@@ -55,6 +55,7 @@ for(const label of ['Agenda y reservas','Vuelos y RAV','Aeronaves y mantenimient
 
 assert.equal(ASSESSMENTS.developing,'En práctica');
 assert.equal(LESSON_STATUS.approved,'Revisada por jefe de instructores');
+assert.equal(LESSON_STATUS.instructor_closed,'Cerrada por instructor (sin jefatura)');
 const sample={studentId:'p2',instructorId:'i1',flightId:'',date:'2026-10-20',minutes:60,
  aircraft:'LV-ABC',topics:'Virajes, despegues y aterrizajes',
  evolution:'Mayor precisión en las maniobras',difficulties:'Coordinación de alabeo',
@@ -113,4 +114,29 @@ assert.match(html,/if\(tab==='personas'\)wireTraining\(\)/);
 assert.match(html,/Solo administrador|Acceso exclusivo del administrador/);
 console.log('PASS: legajo alumno, evaluación de instructor, versiones, aprobación/observaciones de jefatura y vínculos de vuelo');
 
+
+const withoutChief={institutionType:'non_ciac',reviewMode:'instructor'};
+const independent=closeLessonByInstructor(lesson,'i1',withoutChief);
+assert.equal(independent.status,'instructor_closed','Escuela sin jefe puede cerrar ficha por instructor');
+assert.equal(independent.closedBy,'i1');
+assert.equal(independent.chiefReview,null);
+assert.equal(independent.history.at(-1).action,'instructor_closed');
+assert.match(independent.history.at(-1).detail,/Mayor precisión/,'Se archiva instantánea final del instructor');
+assert.equal(studentSummary([independent],'p2').instructorClosed,1);
+assert.throws(()=>closeLessonByInstructor(lesson,'other',withoutChief),/instructor responsable/);
+assert.throws(()=>closeLessonByInstructor(submitted,'i1',withoutChief),/borrador/);
+assert.throws(()=>closeLessonByInstructor(independent,'i1',withoutChief),/borrador/);
+assert.throws(()=>reviseLesson(independent,sample,'i1'),/no se puede editar/);
+assert.throws(()=>closeLessonByInstructor(lesson,'i1',{institutionType:'ciac',reviewMode:'instructor'}),/no CIAC/);
+assert.throws(()=>closeLessonByInstructor(lesson,'i1',{institutionType:'ciac',reviewMode:'chief'}),/no CIAC/);
+assert.throws(()=>closeLessonByInstructor(lesson,'i1',{institutionType:'non_ciac',reviewMode:'chief'}),/sin jefatura/);
+assert.match(html,/Organización de la instrucción · Demo/);
+assert.match(html,/id="trainingInstitutionType"/);
+assert.match(html,/id="trainingReviewMode"/);
+assert.match(html,/trainingInstitution\.institutionType/);
+assert.match(html,/trainingInstitution\.reviewMode/);
+assert.match(html,/trainingInstitution\.reviewMode==='chief'\?'Enviar al jefe de instructores':'Cerrar ficha como instructor \(sin jefe\)'/);
+assert.match(html,/No se puede omitir jefatura en un CIAC bajo RAAC 141/);
+assert.match(html,/Consulta administrativa de formación/);
+console.log('PASS: instituciones sin jefatura, bloqueo CIAC y cierre inmutable de instructor');
 console.log('PASS: gestión integrada, fechas, conflictos, cierre idempotente, stock, UX y acceso admin');
