@@ -4,12 +4,14 @@ on:
   pull_request:
     paths:
       - 'utilidades/mantenimiento-aeronaves.html'
+      - 'assets/maintenance-consumables.js'
       - 'tests/aircraft-maintenance.test.cjs'
       - '.github/workflows/mantenimiento-tests.yml'
   push:
     branches: [main]
     paths:
       - 'utilidades/mantenimiento-aeronaves.html'
+      - 'assets/maintenance-consumables.js'
       - 'tests/aircraft-maintenance.test.cjs'
       - '.github/workflows/mantenimiento-tests.yml'
 

@@ -22,6 +22,8 @@ const sandbox = vm.createContext({
   confirm: () => true,
   console
 });
+const consumablesScript = fs.readFileSync(path.join(__dirname, '../assets/maintenance-consumables.js'), 'utf8');
+vm.runInContext(consumablesScript, sandbox, { filename: 'maintenance-consumables.js' });
 vm.runInContext(script, sandbox, { filename: 'mantenimiento-aeronaves.html' });
 const run = expression => vm.runInContext(expression, sandbox);
 
@@ -267,4 +269,82 @@ assert.equal(run('S.ct.length'),3,'Consultar no debe guardar controles técnicos
 run('toggleMaintenanceGuides()');
 assert.doesNotMatch(run('tabX()'), /id="guide_model"/,'Cerrar oculta la planilla genérica');
 
-console.log('PASS: formularios condicionales, uso, bitácora, aceite, inspecciones y mantenimiento por componente alertas preventivas y guías por modelo y alta genérica');
+
+// Consumibles: los respaldos anteriores siguen funcionando y las nuevas series son opcionales.
+assert.equal(run('validData({ac:[],sv:[],ct:[],lg:[],rc:[]})'), true);
+run("S.inv=[];S.mv=[];S.fuel=[];S.ac=[{id:'ac-u',reg:'LV-CNS',type:'Cessna 172',h:100,c:120,hpm:5,cpm:5}];S.sel='ac-u';S.tab='u';consumableForm=''");
+assert.match(run('tabU()'), /Planillas de consumibles/);
+assert.doesNotMatch(run('tabU()'), /id="u_qty"/, 'Las planillas comienzan ocultas');
+run("openConsumables('item')");
+assert.match(run('tabU()'), /id="u_name"/);
+node('u_name').value='Aceite W100';node('u_cat').value='oil';node('u_unit').value='L';node('u_min').value='2';
+run('addConsumableItem()');
+assert.equal(run('S.inv.length'),1);
+assert.equal(run('S.inv[0].minimum'),2);
+assert.equal(run('balanceOf(S.inv[0])'),0);
+assert.equal(run('consumableForm'),'','El formulario vuelve a cerrarse');
+assert.match(run('tabU()'), /REPOSICIÓN/);
+
+run("openConsumables('move')");
+node('u_item').value=run('S.inv[0].id');node('u_kind').value='in';
+node('u_date').value=run('today()');node('u_qty').value='10';
+node('u_price').value='15000';node('u_currency').value='ARS';
+node('u_supplier').value='Proveedor A';node('u_ref').value='Factura 123';node('u_reason').value='Reposición';
+run('addConsumableMovement()');
+assert.equal(run('balanceOf(S.inv[0])'),10);
+assert.equal(run('S.mv[0].unitCost'),15000);
+assert.match(run('tabU()'), /150.000,00 ARS/);
+run("openConsumables('move')");
+node('u_item').value=run('S.inv[0].id');node('u_kind').value='out';
+node('u_date').value=run('today()');node('u_qty').value='3';
+node('u_price').value='';node('u_currency').value='ARS';
+node('u_supplier').value='';node('u_ref').value='OT-5';node('u_reason').value='Uso en aeronave';
+run('addConsumableMovement()');
+assert.equal(run('balanceOf(S.inv[0])'),7);
+assert.equal(run('S.mv.length'),2);
+run("openConsumables('move')");
+node('u_item').value=run('S.inv[0].id');node('u_kind').value='out';
+node('u_date').value=run('today()');node('u_qty').value='12';
+node('u_price').value='';node('u_currency').value='ARS';
+node('u_supplier').value='';node('u_ref').value='';node('u_reason').value='Error';
+run('addConsumableMovement()');
+assert.equal(run('balanceOf(S.inv[0])'),7,'No se permite stock negativo');
+assert.equal(run('S.mv.length'),2,'La operación fallida no guarda un movimiento');
+assert.equal(run('S.ac[0].h'),100,'Movimientos no incrementan horas de avión');
+
+node('u_name').value='AVGAS 100LL';node('u_cat').value='fuel';
+node('u_unit').value='L';node('u_min').value='20';
+run('addConsumableItem()');
+assert.equal(run('S.inv.length'),2);
+run("openConsumables('move')");
+node('u_item').value=run('S.inv[1].id');node('u_kind').value='in';
+node('u_date').value=run('today()');node('u_qty').value='50';
+node('u_price').value='1100';node('u_currency').value='ARS';
+node('u_supplier').value='Aeroclub';node('u_ref').value='Factura 456';node('u_reason').value='Stock';
+run('addConsumableMovement()');
+assert.equal(run('balanceOf(S.inv[1])'),50);
+run("S.lg.push({id:'flight-fuel',ac:'ac-u',kind:'f',date:today(),h:1.4,c:1,from:'SADF',to:'SADF',pilot:'Prueba'})");
+run("openConsumables('fuel')");
+assert.match(run('tabU()'), /id="fu_loaded"/);
+node('fu_date').value=run('today()');node('fu_flight').value='flight-fuel';
+node('fu_loaded').value='12';node('fu_used').value='7';node('fu_stock').value=run('S.inv[1].id');
+node('fu_price').value='';node('fu_currency').value='ARS';
+node('fu_supplier').value='';node('fu_ref').value='Ticket 7';node('fu_note').value='Medición del usuario';
+run('addFuelRecord()');
+assert.equal(run('S.fuel.length'),1);
+assert.equal(run('S.fuel[0].flightId'),'flight-fuel');
+assert.equal(run('S.fuel[0].loaded'),12);
+assert.equal(run('S.fuel[0].used'),7,'Lo consumido no se debe igualar a lo cargado');
+assert.equal(run('balanceOf(S.inv[1])'),38,'El inventario se descuenta exactamente una vez');
+assert.equal(run("S.mv.filter(m=>m.source==='fuel').length"),1);
+assert.equal(run('S.ac[0].h'),100,'Cargar combustible no modifica contadores de vuelo');
+sandbox.prompt=()=>'Asiento incorrecto';
+run('annulFuelRecord(S.fuel[0].id)');
+assert.equal(run('S.fuel[0].voided'),true);
+assert.equal(run('balanceOf(S.inv[1])'),50,'Anular carga restaura el stock de forma auditable');
+assert.equal(run("S.mv.filter(m=>m.source==='fuel'&&m.voided).length"),1);
+assert.equal(run('S.fuel.length'),1,'No se borra la historia de cargas anuladas');
+assert.equal(run('validData(S)'),true,'El esquema nuevo sigue siendo válido para respaldos');
+assert.match(run('tabU()'), /ANULADO/);
+
+console.log('PASS: mantenimiento, planillas y consumibles auditables');
