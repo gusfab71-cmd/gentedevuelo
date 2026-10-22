@@ -473,7 +473,7 @@ function calendar(){
   schoolTurneraSettings()+formHtml+selected+table;
 }
 function flightScreen(){
- const open=reservations.filter(r=>r.status==='confirmada'&&!flights.some(f=>f.reservationId===r.id));
+ const open=reservations.filter(r=>r.status==='confirmada'&&(!r.type||r.type==='flight')&&!flights.some(f=>f.reservationId===r.id));
  return '<section class="panel"><h2>Registrar y cerrar vuelo · Demo</h2><p>El cierre de un vuelo actualiza los totales demostrativos de aeronave y piloto. El tiempo entre horas se contabiliza como <b>tiempo de bloque declarado</b>; el tacómetro se calcula aparte.</p>'+
  (open.length?'<form id="flightform"><div class="formgrid">'+
  '<label>Reserva realizada<select id="flightBooking">'+open.map(r=>'<option value="'+safe(r.id)+'">'+safe(r.date)+' · '+safe(r.aircraft)+' · '+safe(members.find(x=>x.id===r.pilot)?.name)+'</option>').join('')+'</select></label>'+
@@ -641,6 +641,85 @@ function documentsScreen(){
  '<div class="card"><h3>Licencias y CMA</h3><p>Identificación, vigencia, evidencia documental y verificación humana por rol.</p><span class="pill uncertain">Integración pendiente</span></div>'+
  '<div class="card"><h3>Seguro y mantenimiento</h3><p>Vencimientos por calendario, horas y ciclos, según registros reales de aeronave.</p><span class="pill uncertain">Integración pendiente</span></div>'+
  '<div class="card"><h3>Comunicaciones</h3><p>Avisos de reservas, cancelaciones y eventos, sin mensajes automáticos hasta contar con consentimiento y permisos.</p><span class="pill uncertain">Diseño pendiente</span></div></div></section>';
+}
+function wirePortals(){
+ if(tab==='alumno'){
+  $('openStudentBooking')?.addEventListener('click',()=>{studentBookingOpen=true;render()});
+  $('closeStudentBooking')?.addEventListener('click',()=>{studentBookingOpen=false;render()});
+  const changeResources=()=>{
+   const type=$('studentBookingType')?.value,list=$('studentBookingResource');
+   if(!list)return;
+   [...list.options].forEach(o=>{o.hidden=o.dataset.kind!==type});
+   const first=[...list.options].find(o=>!o.hidden);
+   if(first)list.value=first.value;
+  };
+  $('studentBookingType')?.addEventListener('change',changeResources);
+  changeResources();
+  $('studentBookingForm')?.addEventListener('submit',e=>{
+   e.preventDefault();
+   try{
+    const type=$('studentBookingType').value,resource=$('studentBookingResource').value;
+    const draft={pilot:portalStudent,type,date:$('studentBookingDate').value,
+     start:$('studentBookingStart').value,end:$('studentBookingEnd').value,
+     aircraft:type==='flight'?resource:'',resourceId:type==='flight'?'':resource};
+    const student=members.find(m=>m.id===portalStudent);
+    const requested=requestStudentBooking(draft,student,reservations,fleet,DEMO_RESOURCES,schoolPolicy);
+    reservations.push(requested);studentBookingOpen=false;render();
+    notice('Solicitud de '+portalType(type)+' guardada solo en la demostración. Un instructor deberá tomarla.');
+   }catch(err){notice(err.message)}
+  });
+ }
+ if(tab==='instructor'){
+  $('screen').querySelectorAll('[data-instructor-take]').forEach(button=>button.addEventListener('click',()=>{
+   try{
+    const booking=reservations.find(x=>x.id===button.dataset.instructorTake);
+    const instructor=members.find(x=>x.id===portalInstructor);
+    const taken=takeStudentBooking(booking,instructor,reservations,members,schoolPolicy);
+    reservations=reservations.map(x=>x.id===taken.id?taken:x);
+    render();notice('Solicitud tomada por instructor de prueba. El alumno ya puede ver el turno confirmado.');
+   }catch(err){notice(err.message)}
+  }));
+  $('screen').querySelectorAll('[data-instructor-complete]').forEach(button=>button.addEventListener('click',()=>{
+   try{
+    const booking=reservations.find(x=>x.id===button.dataset.instructorComplete);
+    if(booking.date>now())throw Error('No se puede marcar realizada una clase programada para una fecha futura.');
+    const activity=finishGroundLesson(booking,portalInstructor,groundActivities);
+    groundActivities.push(activity);render();
+    notice('Clase de '+portalType(booking.type)+' registrada. Ahora podés completar la evolución del alumno.');
+   }catch(err){notice(err.message)}
+  }));
+  $('screen').querySelectorAll('[data-instructor-evaluate]').forEach(button=>button.addEventListener('click',()=>{
+   const booking=reservations.find(x=>x.id===button.dataset.instructorEvaluate&&x.instructor===portalInstructor);
+   if(!booking)return;
+   instructorEvaluationBooking=booking.id;render();$('evaluationTopics')?.focus();
+  }));
+  $('closeInstructorEvaluation')?.addEventListener('click',()=>{instructorEvaluationBooking='';render()});
+  $('instructorEvaluationForm')?.addEventListener('submit',e=>{
+   e.preventDefault();
+   try{
+    const booking=reservations.find(x=>x.id===instructorEvaluationBooking&&x.instructor===portalInstructor);
+    if(!booking)throw Error('Reserva de instructor inválida.');
+    const flight=flights.find(f=>f.reservationId===booking.id);
+    if((booking.type==='flight'||!booking.type)&&!flight)throw Error('Primero se debe cerrar el vuelo.');
+    if(booking.type!=='flight'&&booking.type&&!groundActivities.some(a=>a.bookingId===booking.id))
+     throw Error('Primero registrá la clase realizada.');
+    const draft=buildLesson({
+     bookingId:booking.id,studentId:booking.pilot,instructorId:portalInstructor,
+     date:booking.date,minutes:Number($('evaluationMinutes').value),
+     aircraft:booking.aircraft||'',flightId:flight?.id||'',
+     topics:$('evaluationTopics').value,evolution:$('evaluationProgress').value,
+     difficulties:$('evaluationDifficulties').value,
+     nextGoal:$('evaluationNextGoal').value,assessment:$('evaluationAssessment').value
+    },members,members,flights,lessons,reservations);
+    const saved=trainingInstitution.reviewMode==='chief'?submitLesson(draft,portalInstructor):
+     closeLessonByInstructor(draft,portalInstructor,trainingInstitution);
+    lessons.push(saved);instructorEvaluationBooking='';render();
+    notice(trainingInstitution.reviewMode==='chief'?
+     'Evolución del instructor registrada y enviada a dirección/jefatura para revisión (DEMO).':
+     'Evaluación pedagógica cerrada por instructor responsable (DEMO).');
+   }catch(err){notice(err.message)}
+  });
+ }
 }
 function wireTraining(){
  const setType=$('trainingInstitutionType'),setMode=$('trainingReviewMode');
