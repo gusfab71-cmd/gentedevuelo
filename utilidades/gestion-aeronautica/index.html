@@ -457,9 +457,9 @@ function calendar(){
   '<p id="bookingDurationHint" class="agenda-booking-note" role="status" aria-live="polite">'+(selectedPerson?.kind==='alumno'?'Alumno: mínimo '+schoolPolicy.studentMinMinutes+' minutos (turnera configurable).':'La duración mínima para alumnos es '+schoolPolicy.studentMinMinutes+' minutos, configurable por la escuela.')+'</p>'+ 
   '<p class="agenda-booking-note">Validaciones locales de aeronave, instructor, piloto, fechas y conflictos. No comprueba licencias ante ANAC ni garantiza disponibilidad para otros usuarios.</p></section>':'';
  const table='<details class="panel" id="agendaBookingList"><summary>Ver historial de reservas de demostración ('+reservations.length+')</summary>'+
-  '<div class="table-scroll" style="margin-top:12px"><table><thead><tr><th>Fecha</th><th>Aeronave</th><th>Piloto</th><th>Hora</th><th>Estado</th><th>Acción</th></tr></thead><tbody>'+
+  '<div class="table-scroll" style="margin-top:12px"><table><thead><tr><th>Fecha</th><th>Recurso</th><th>Alumno o piloto</th><th>Hora</th><th>Estado</th><th>Acción</th></tr></thead><tbody>'+
   reservations.slice().sort((a,b)=>b.date.localeCompare(a.date)||b.start.localeCompare(a.start)).map(b=>
-   '<tr><td>'+safe(b.date)+'</td><td>'+safe(b.aircraft)+'</td><td>'+safe(members.find(x=>x.id===b.pilot)?.name||'')+'</td>'+
+   '<tr><td>'+safe(b.date)+'</td><td>'+safe(portalResource(b))+'</td><td>'+safe(members.find(x=>x.id===b.pilot)?.name||'')+'</td>'+
    '<td>'+safe(b.start)+'–'+safe(b.end)+'</td><td>'+safe(b.status)+'</td><td>'+
    (b.status==='confirmada'&&!flights.some(f=>f.reservationId===b.id)?'<button type="button" class="secondary" data-agenda-event="'+safe(b.id)+'">Ver</button>':'—')+
    '</td></tr>').join('')+
