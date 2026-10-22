@@ -674,7 +674,7 @@ function wirePortals(){
    try{
     const booking=reservations.find(x=>x.id===button.dataset.instructorTake);
     const instructor=members.find(x=>x.id===portalInstructor);
-    const taken=takeStudentBooking(booking,instructor,reservations,members,schoolPolicy);
+    const taken=takeStudentBooking(booking,instructor,reservations,members,schoolPolicy,fleet);
     reservations=reservations.map(x=>x.id===taken.id?taken:x);
     render();notice('Solicitud tomada por instructor de prueba. El alumno ya puede ver el turno confirmado.');
    }catch(err){notice(err.message)}
