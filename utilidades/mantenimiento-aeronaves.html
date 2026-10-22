@@ -744,7 +744,25 @@ function restoreInspection(id){
 
 // ---------- VISTAS ----------
 
-function tabA(){const a=A(),o=a?.operation||{},showForm=!S.ac.length||showAircraftForm;return`<div class="grid lg:grid-cols-2 gap-4">${S.ac.length?`<div class="lg:col-span-2 flex justify-end"><button class="btn bg-slate-700" onclick="showAircraftForm=!showAircraftForm;R()">${showForm?'Cancelar nueva aeronave':'+ Agregar otra aeronave'}</button></div>`:''}${showForm?`<div class="card p-4 space-y-2"><h2 class="font-bold text-amber-300">1 · Crear aeronave</h2>${hangarAircraft?`<div class="text-xs text-slate-300 bg-slate-900/70 p-2 rounded-lg">En Mi Hangar figura: <b>${esc(hangarAircraft)}</b><button class="btn bg-slate-700 ml-2" onclick="fromHangar()">Usar como modelo</button></div>`:''}<div class="grid grid-cols-2 gap-2">${F('a_r','Matrícula','text')}${F('a_t','Tipo / modelo','text')}<div class="col-span-2">${SEL('a_use','Uso previsto',OP_OPTIONS.replace('value="unknown"','value="unknown" selected'))}</div>${F('a_h','Horas totales fuselaje (TTAF)','number',0)}${F('a_c','Ciclos / aterrizajes totales','number',0)}${F('a_hm','Proyección: horas/mes','number',20)}${F('a_cm','Proyección: ciclos/mes','number',20)}</div><p class="text-xs text-slate-400 mt-2">Las horas iniciales de motor y hélice pueden ajustarse por separado en Componentes.</p><button class="btn bg-amber-600 w-full" onclick="addAc()">Crear aeronave</button></div>`:''}
+function tabA(){const a=A(),o=a?.operation||{},showForm=!S.ac.length||showAircraftForm;return`<div class="grid lg:grid-cols-2 gap-4">${S.ac.length?`<div class="lg:col-span-2 flex justify-end"><button class="btn bg-slate-700" onclick="showAircraftForm=!showAircraftForm;R()">${showForm?'Cancelar nueva aeronave':'+ Agregar otra aeronave'}</button></div>`:''}${showForm?`<div class="card p-4 space-y-2"><h2 class="font-bold text-amber-300">1 · Crear aeronave</h2>${hangarAircraft?`<div class="text-xs text-slate-300 bg-slate-900/70 p-2 rounded-lg">En Mi Hangar figura: <b>${esc(hangarAircraft)}</b><button class="btn bg-slate-700 ml-2" onclick="fromHangar()">Usar como modelo</button></div>`:''}<div class="grid grid-cols-2 gap-2">${F('a_r','Matrícula','text')}${F('a_t','Tipo / modelo','text')}<div class="col-span-2">${SEL('a_use','Uso previsto',OP_OPTIONS.replace('value="unknown"','value="unknown" selected'))}</div>${F('a_h','Horas totales fuselaje (TTAF)','number',0)}${F('a_c','Ciclos / aterrizajes totales','number',0)}${F('a_hm','Proyección: horas/mes','number',20)}${F('a_cm','Proyección: ciclos/mes','number',20)}</div><details class="maint-guidance"><summary>Ficha técnica ampliada (opcional · abrir si hace falta)</summary>
+<p>Planilla genérica para cualquier marca o modelo, incluso los que no tienen plantilla predefinida. Completá la identificación por etapas, sin asignar TBO ni crear mantenimientos ficticios.</p>
+<div class="maint-record-grid">
+${F('a_make','Fabricante de la aeronave','text','','maxlength="100"')}
+${F('a_year','Año de fabricación','number','','min="1900" max="2100"')}
+${F('a_serial','Número de serie del fuselaje','text','','maxlength="100"')}
+${F('a_base','Base / aeródromo habitual','text','','maxlength="100"')}
+<div class="wide"><b class="text-sm text-amber-200">Motor instalado</b></div>
+${F('a_engine_make','Fabricante del motor','text','','maxlength="100"')}
+${F('a_engine_model','Modelo del motor','text','','maxlength="120"')}
+<div class="wide">${F('a_engine_serial','Número de serie del motor','text','','maxlength="120"')}</div>
+<div class="wide"><b class="text-sm text-amber-200">Hélice instalada</b></div>
+${F('a_prop_make','Fabricante de la hélice','text','','maxlength="100"')}
+${F('a_prop_model','Modelo de hélice','text','','maxlength="120"')}
+<div class="wide">${F('a_prop_serial','Número de serie de hélice','text','','maxlength="120"')}</div>
+<div class="wide">${F('a_source','Referencia a manual y programa de mantenimiento vigente','text','','maxlength="250"')}</div>
+</div>
+<p>Configura las horas, últimos cumplimientos y recorridas reales en Componentes. Los intervalos no se asignan automáticamente.</p>
+</details><p class="text-xs text-slate-400 mt-2">Las horas iniciales de motor y hélice pueden ajustarse por separado en Componentes.</p><button class="btn bg-amber-600 w-full" onclick="addAc()">Crear aeronave</button></div>`:''}
 
 <div class="space-y-3 ${showForm?'':'lg:col-span-2'}">${S.ac.map(x=>`<div class="card p-3 flex items-center gap-3 ${x.id==S.sel?'!border-amber-400':''}"><div class="flex-1"><b class="text-lg">${esc(x.reg)}</b> <span class="text-xs text-slate-400">${esc(x.type)}</span><div class="text-[11px] text-amber-200">${esc(OP_LABELS[opUse(x)])}</div><div class="text-sm text-sky-300 font-bold">Fuselaje ${f1(x.h)} h · ${Math.round(x.c)} ciclos</div><div class="text-xs text-slate-400">Motor TSO ${f1(CP(x).m.tso)} h · Hélice TSO ${f1(CP(x).p.tso)} h</div></div><button class="btn bg-sky-700" onclick="S.sel='${x.id}';save();R()">Seleccionar</button><button class="btn bg-rose-800" aria-label="Eliminar aeronave ${esc(x.reg)}" onclick="delAc('${x.id}')">✕</button></div>`).join('')||'<div class="text-slate-500 text-sm">Aún no hay aeronaves.</div>'}
 
