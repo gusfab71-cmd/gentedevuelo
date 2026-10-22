@@ -599,6 +599,8 @@ function logbookFormScreen(){
    '<label>Finalidad del vuelo<select id="logPurpose" required><option value="" '+(!stored.purpose?'selected':'')+
     ' disabled>Elegí finalidad</option>'+options(LOGBOOK_PURPOSES,stored.purpose)+'</select></label>'+
    field('Licencia / certificado','logLicense',stored.license,'maxlength="80"')+
+   field('Legajo Nº (referencia)','logLegajo',stored.legajoNumber,'maxlength="40"')+
+   field('Página Nº','logPage',stored.pageNumber,'maxlength="12"')+
    field('Marca','logMake',stored.aircraftMake,'maxlength="90"')+
    field('Modelo','logModel',stored.aircraftModel||plane?.model,'maxlength="90"')+
    field('Potencia','logPower',stored.powerHp,'maxlength="30"')+
@@ -1180,7 +1182,7 @@ function wire(){
      categoryMinutes:Object.fromEntries([...document.querySelectorAll('[data-log-group="categoryMinutes"]')].map(el=>[el.dataset.logKey,el.value])),
      specialMinutes:Object.fromEntries([...document.querySelectorAll('[data-log-group="specialMinutes"]')].map(el=>[el.dataset.logKey,el.value])),
      certificationNote:$('logCertificationNote').value,
-     license:$('logLicense').value,aircraftMake:$('logMake').value,
+     license:$('logLicense').value,legajoNumber:$('logLegajo').value,pageNumber:$('logPage').value,aircraftMake:$('logMake').value,
      aircraftModel:$('logModel').value,aircraftClass:$('logClass').value,
      powerHp:$('logPower').value
     },booking,f,person,fleet);
