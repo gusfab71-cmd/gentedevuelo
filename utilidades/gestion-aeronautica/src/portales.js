@@ -49,11 +49,16 @@ export function requestStudentBooking(data,student,bookings,fleet,resources=DEMO
   pilot:student.id,aircraft,resourceId,instructor:'',status:'solicitada',
   createdAt:new Date().toISOString(),history:[{event:'solicitada',actor:student.id,at:new Date().toISOString()}]};
 }
-export function takeStudentBooking(booking,instructor,bookings,members,policy=DEFAULT_RESERVATION_POLICY){
+export function takeStudentBooking(booking,instructor,bookings,members,policy=DEFAULT_RESERVATION_POLICY,fleet=[]){
  if(!booking||booking.status!=='solicitada')throw Error('Solo se pueden tomar solicitudes pendientes.');
  if(!instructor||instructor.kind!=='instructor'||!members.some(m=>m.id===instructor.id&&m.kind==='instructor'))
   throw Error('Se requiere un instructor autorizado.');
  checkSchool(booking,policy);
+ if(booking.type==='flight'&&fleet.length){
+  const plane=fleet.find(x=>x.id===booking.aircraft);
+  if(!plane||plane.blocked||plane.insuranceUntil<booking.date)
+   throw Error('La aeronave dejó de estar disponible; verificá mantenimiento y seguro.');
+ }
  if(!instructor.licenseUntil||!instructor.cmaUntil||
     instructor.licenseUntil<booking.date||instructor.cmaUntil<booking.date)
   throw Error('La documentación declarada del instructor requiere actualización.');
