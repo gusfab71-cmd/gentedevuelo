@@ -250,7 +250,7 @@ assert.doesNotMatch(singleDay,/data-agenda-date="2026-10-23"/);
 
 assert.match(html,/function schoolTurneraSettings\(\)/);
 assert.match(html,/id="schoolSettingsForm"/);
-assert.match(html,/id="schoolStudentMin"/);
+assert.match(html,/minutesField\('schoolStudentMin'/);
 assert.match(html,/id="schoolSlot"/);
 assert.match(html,/id="schoolShowNotes"/);
 assert.match(html,/id="openSchoolSettings"/);
