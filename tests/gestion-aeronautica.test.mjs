@@ -221,7 +221,8 @@ const calendarSrc=script.slice(script.indexOf('function calendar(){'),script.ind
 assert.ok(calendarSrc.startsWith('function calendar(){'));
 const calendarContext={
  schoolPolicy:DEFAULT_RESERVATION_POLICY,schoolSettingsOpen:false,
- schoolTurneraSettings:()=>'',minutes,reservationSuggestedMinutes,
+ schoolTurneraSettings:()=>'',minutes,reservationSuggestedMinutes,DEMO_RESOURCES,
+ portalResource:b=>b.aircraft||b.resourceId||'',portalType:t=>ACTIVITY_TYPES[t]||ACTIVITY_TYPES.flight,
  reservations:[],members:[{id:'p1',name:'Piloto Demo',kind:'piloto'}],
  fleet:[{id:'LV-ABC',model:'Cessna 172'}],
  agendaView:'week',agendaAircraft:'all',agendaInstructor:'all',
