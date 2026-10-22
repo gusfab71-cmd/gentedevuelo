@@ -105,7 +105,7 @@ ol{color:#bbccd0;font-size:13px;line-height:1.85}
 .agenda-day-heading.today{background:#324a55}
 .agenda-clock{position:relative;background:#152630;border-right:1px solid #3a545e}
 .agenda-clock-label{position:absolute;right:8px;font-size:10px;color:#8aa5b2;transform:translateY(-7px)}
-.agenda-day-surface{position:relative;min-width:0;border-left:1px solid #405963;background:repeating-linear-gradient(to bottom,#1a2a34 0,#1a2a34 51px,#354b55 52px)}
+.agenda-day-surface{position:relative;min-width:0;border-left:1px solid #405963;background:repeating-linear-gradient(to bottom,#1a2a34 0,#1a2a34 calc(var(--agenda-hour-height,52px) - 1px),#354b55 var(--agenda-hour-height,52px))}
 .agenda-hour-slot{display:block;width:100%;height:52px;border:0;border-bottom:0;background:transparent;position:relative;text-align:center;color:transparent;cursor:pointer}
 .agenda-hour-slot:hover,.agenda-hour-slot:focus-visible{background:#5e849238;color:#aac6cf;z-index:1;outline:1px dashed #80b5c8;outline-offset:-2px}
 .agenda-hour-slot span{font-size:11px}
@@ -116,6 +116,15 @@ ol{color:#bbccd0;font-size:13px;line-height:1.85}
 .agenda-event b,.agenda-event small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .agenda-event b{font-size:11px}.agenda-event small{font-size:10px;color:#e1eaf2}
 .agenda-viewnote{font-size:11px;color:#91adba;margin-top:10px}
+.school-settings{background:#1e303b;border:1px solid #526c79}
+.school-settings .formgrid{grid-template-columns:repeat(3,minmax(0,1fr))}
+.school-days{display:flex;flex-wrap:wrap;gap:9px;margin:8px 0}
+.school-days label{display:flex;align-items:center;gap:7px;padding:8px 10px;background:#172832;border:1px solid #496472;border-radius:9px;white-space:nowrap}
+.school-days input{width:15px;height:15px}
+.school-setting-info{font-size:12px;color:#e2c28c;margin-top:8px}
+.agenda-day-heading.day-closed{opacity:.6}
+.agenda-day-surface.day-closed{background-color:#25303a}
+.agenda-hour-slot:disabled{opacity:.25;cursor:not-allowed;background:#1b2630}
 .agenda-form-panel{border-color:#b6a079;background:#223139}
 .agenda-form-panel .formgrid{grid-template-columns:repeat(3,minmax(0,1fr))}
 .agenda-form-panel .formgrid>label{min-width:0}
@@ -134,10 +143,11 @@ ol{color:#bbccd0;font-size:13px;line-height:1.85}
  .agenda-controls input[type="date"]{width:135px}
  .agenda-filters .agenda-legend{margin-left:0}
  .agenda-form-panel .formgrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .school-settings .formgrid{grid-template-columns:repeat(2,minmax(0,1fr))}
  .agenda-columns.day-mode{min-width:0}
  .agenda-columns:not(.day-mode){min-width:970px}
 }
-@media(max-width:420px){.agenda-form-panel .formgrid{grid-template-columns:1fr}}
+@media(max-width:420px){.agenda-form-panel .formgrid,.school-settings .formgrid{grid-template-columns:1fr}}
 @media print{#screen>section:not(#training-ledger){display:none!important}body{background:#fff;color:#000}header,nav,.hero,.notice,.training-actions,form,#alert,button{display:none!important}.layout{display:block}.panel,.card,.training-record{break-inside:avoid;background:#fff!important;color:#111!important;border:1px solid #999!important}p,h1,h2,h3,span{color:#111!important}}
 </style>
 <script>document.documentElement.classList.add("auth-pending")</script>
@@ -153,7 +163,7 @@ ol{color:#bbccd0;font-size:13px;line-height:1.85}
 <div class="layout"><nav id="sidebar" aria-label="Módulos de Gestión Aeronáutica"></nav><div class="content"><p id="alert" role="status" aria-live="polite"></p><section id="screen" aria-live="polite"></section></div></div>
 </main>
 <script type="module">
-import {createReservation,closeFlight,flightTotals,stockMove,validDate} from './src/operacion.js';
+import {createReservation,closeFlight,flightTotals,stockMove,validDate,minutes,reservationMinimumMinutes,reservationSuggestedMinutes,STUDENT_RESERVATION_MINUTES,DEFAULT_RESERVATION_POLICY,validateReservationPolicy} from './src/operacion.js';
 import {mondayOf,shiftDate,listWeek,visibleBookings,timeWindow,layoutDay,hhmm} from './src/agenda.js';
 import {ASSESSMENTS,LESSON_STATUS,buildLesson,reviseLesson,submitLesson,closeLessonByInstructor,reviewLesson,studentTimeline,studentSummary} from './src/formacion.js';
 const $=id=>document.getElementById(id);
@@ -171,6 +181,17 @@ const fleet=[{id:'LV-ABC',model:'Cessna 172',blocked:false,insuranceUntil:'2027-
 const products=[{id:'avgas',name:'AVGAS 100LL',qty:180,unit:'L',min:60,cost:1800,sale:2300},
 {id:'oil',name:'Aceite aeronáutico',qty:16,unit:'L',min:5,cost:12500,sale:15700}];
 let reservations=[],flights=[],movements=[],lessons=[],tab='inicio',week=now();
+let schoolPolicy=validateReservationPolicy(DEFAULT_RESERVATION_POLICY),schoolSettingsOpen=false,demoAdminId='';
+const schoolPolicyStorageKey=()=>demoAdminId?'gdv-gestion-turnera-v1-'+demoAdminId:'';
+function rememberSchoolPolicy(){
+ try{if(schoolPolicyStorageKey())localStorage.setItem(schoolPolicyStorageKey(),JSON.stringify(schoolPolicy))}catch(_){}
+}
+function restoreSchoolPolicy(){
+ try{
+  const raw=schoolPolicyStorageKey()?localStorage.getItem(schoolPolicyStorageKey()):null;
+  if(raw)schoolPolicy=validateReservationPolicy(JSON.parse(raw));
+ }catch(_){schoolPolicy=validateReservationPolicy(DEFAULT_RESERVATION_POLICY)}
+}
 let agendaView=window.matchMedia('(max-width:720px)').matches?'day':'week';
 let agendaAircraft='all',agendaInstructor='all',agendaFormOpen=false,agendaBookingId='';
 let agendaSelectedBooking='',agendaDraftDate=week,agendaDraftStart='10:00';
@@ -199,10 +220,37 @@ function dashboard(){
  '<div class="card"><h3>Reutilizable de Gente de Vuelo</h3><p>Motor de reservas de prueba, mantenimiento de aeronaves y Simu PPA. Todavía funcionan sobre datos independientes.</p><span class="pill uncertain">Integración pendiente</span></div>'+
  '<div class="card"><h3>Para operar con instituciones</h3><p>Usuarios, permisos, base multiinstitución, disponibilidad en tiempo real, conciliación, documentos y RAV conforme a ANAC.</p><span class="pill uncertain">Desarrollo posterior</span></div></div></section>';
 }
+function schoolTurneraSettings(){
+ if(!schoolSettingsOpen)return '';
+ const p=schoolPolicy,dayNames=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+ const minutesField=(id,label,value)=>
+  '<label>'+label+'<input type="number" id="'+id+'" min="15" max="480" step="15" value="'+safe(value)+'" required></label>';
+ const weekdays=dayNames.map((day,i)=>'<label><input type="checkbox" name="schoolDay" value="'+i+'" '+
+  (p.availableWeekdays.includes(i)?'checked':'')+'><span>'+day+'</span></label>').join('');
+ return '<section class="panel school-settings" id="schoolTurneraPanel"><div class="toolbar"><h2>Configurar turnera · Escuela de prueba</h2>'+
+ '<button type="button" class="secondary" id="closeSchoolSettings">Cerrar configuración</button></div>'+
+ '<p>Adaptá los horarios y las duraciones según la organización de tu escuela. Los 90 minutos para alumnos son el valor inicial, pero podés cambiarlos. La configuración se conserva solo en este navegador para el administrador. No se comparte aún entre usuarios ni instituciones.</p>'+
+ '<form id="schoolSettingsForm"><div class="formgrid">'+
+ '<label>Nombre de la escuela<input id="schoolName" maxlength="80" value="'+safe(p.schoolName)+'" required></label>'+
+ '<label>Inicio de jornada<input type="time" id="schoolOpen" value="'+safe(p.openTime)+'" required></label>'+
+ '<label>Fin de jornada<input type="time" id="schoolClose" value="'+safe(p.closeTime)+'" required></label>'+
+ '<label>Intervalo para iniciar turnos<select id="schoolSlot">'+[15,30,60].map(x=>'<option value="'+x+'" '+(p.slotMinutes===x?'selected':'')+'>'+x+' minutos</option>').join('')+'</select></label>'+
+ minutesField('schoolStudentMin','Duración mínima alumno (min)',p.studentMinMinutes)+
+ minutesField('schoolStudentSuggested','Duración sugerida alumno (min)',p.studentDefaultMinutes)+
+ minutesField('schoolPilotSuggested','Duración sugerida piloto (min)',p.pilotDefaultMinutes)+
+ '</div><p class="muted" style="margin-top:12px">Días habilitados para recibir reservas</p>'+
+ '<div class="school-days">'+weekdays+'</div>'+
+ '<div class="school-days">'+
+ '<label><input type="checkbox" id="schoolShowActivity" '+(p.showActivity?'checked':'')+'>Campo actividad</label>'+
+ '<label><input type="checkbox" id="schoolShowNotes" '+(p.showNotes?'checked':'')+'>Campo observaciones</label></div>'+
+ '<div class="training-actions"><button class="action" type="submit">Guardar turnera (solo demo)</button>'+
+ '<button type="button" class="secondary" id="schoolReset">Restaurar valores iniciales</button></div></form>'+
+ '<p class="muted">Estas reglas se aplican a nuevas reservas y a modificaciones; las ya confirmadas mantienen sus horarios hasta que se editen. No sustituye validaciones documentales ni de aeronavegabilidad.</p></section>';
+}
 function calendar(){
  const dates=agendaView==='week'?listWeek(week):[week];
  const shown=visibleBookings(reservations,dates,agendaAircraft,agendaInstructor);
- const range=timeWindow(shown),px=52,boardHeight=(range.end-range.start)/60*px;
+ const range=timeWindow(shown,schoolPolicy.openTime,schoolPolicy.closeTime),px=schoolPolicy.slotMinutes===15?80:schoolPolicy.slotMinutes===30?64:52,boardHeight=(range.end-range.start)/60*px;
  const startHour=Math.floor(range.start/60),endHour=Math.ceil(range.end/60);
  const hours=Array.from({length:endHour-startHour},(_,i)=>startHour+i);
  const short=s=>shortDay(s).replace(/\./g,'');
@@ -218,15 +266,23 @@ function calendar(){
    '<small>'+safe(b.start)+'–'+safe(b.end)+'</small><b>'+safe(b.aircraft)+'</b>'+
    '<small>'+safe(pilot)+'</small></button>';
  }).join('');
- const headings=dates.map(d=>'<div class="agenda-day-heading '+(d===now()?'today':'')+'"><strong>'+safe(short(d))+'</strong>'+
-  '<small>'+safe(d)+'</small></div>').join('');
+ const headings=dates.map(d=>'<div class="agenda-day-heading '+(d===now()?'today':'')+' '+(schoolPolicy.availableWeekdays.includes(new Date(d+'T12:00:00Z').getUTCDay())?'':'day-closed')+'"><strong>'+safe(short(d))+'</strong>'+
+  '<small>'+safe(d)+(schoolPolicy.availableWeekdays.includes(new Date(d+'T12:00:00Z').getUTCDay())?'':' · cerrado')+'</small></div>').join('');
  const clock='<div class="agenda-clock" style="height:'+boardHeight+'px">'+
   hours.map(h=>'<span class="agenda-clock-label" style="top:'+((h-startHour)*px)+'px">'+hhmm(h*60)+'</span>').join('')+
   '<span class="agenda-clock-label" style="top:'+boardHeight+'px">'+hhmm(range.end)+'</span></div>';
- const columns=dates.map(date=>'<div class="agenda-day-surface" style="height:'+boardHeight+'px" data-agenda-day="'+date+'">'+
-  hours.map(h=>'<button type="button" class="agenda-hour-slot" data-agenda-date="'+date+'" data-agenda-time="'+hhmm(h*60)+
-   '" aria-label="Nueva reserva el '+date+' a las '+hhmm(h*60)+'"><span>+ Reservar '+hhmm(h*60)+'</span></button>').join('')+
-  eventHtml(date)+'</div>').join('');
+ const columns=dates.map(date=>{
+  const closed=!schoolPolicy.availableWeekdays.includes(new Date(date+'T12:00:00Z').getUTCDay());
+  const step=schoolPolicy.slotMinutes;
+  const cells=hours.flatMap(h=>Array.from({length:60/step},(_,i)=>h*60+i*step)).map(t=>{
+   const time=hhmm(t),disabled=closed||t<minutes(schoolPolicy.openTime)||t>=minutes(schoolPolicy.closeTime);
+   return '<button type="button" class="agenda-hour-slot" style="height:'+(px*step/60)+'px"'+
+    (disabled?' disabled':'')+' data-agenda-date="'+date+'" data-agenda-time="'+time+
+    '" aria-label="Nueva reserva el '+date+' a las '+time+'"><span>+ Reservar '+time+'</span></button>';
+  }).join('');
+  return '<div class="agenda-day-surface '+(closed?'day-closed':'')+'" style="height:'+boardHeight+'px;--agenda-hour-height:'+px+'px" data-agenda-day="'+date+'">'+
+   cells+eventHtml(date)+'</div>';
+ }).join('');
  const controls='<div class="agenda-controls">'+
   '<button type="button" data-agenda-shift="-1" title="Anterior" aria-label="Período anterior">‹</button>'+
   '<button type="button" data-agenda-today>Hoy</button>'+
@@ -234,7 +290,8 @@ function calendar(){
   '<label><span class="visually-hidden">Fecha de referencia</span><input id="week" aria-label="Fecha de referencia" type="date" value="'+safe(week)+'"></label>'+
   '<button type="button" data-agenda-view="week" class="'+(agendaView==='week'?'agenda-active':'')+'" aria-pressed="'+(agendaView==='week')+'">Semana</button>'+
   '<button type="button" data-agenda-view="day" class="'+(agendaView==='day'?'agenda-active':'')+'" aria-pressed="'+(agendaView==='day')+'">Día</button>'+
-  '<button type="button" class="agenda-create" id="newBooking">+ Nueva reserva</button></div>';
+  '<button type="button" class="agenda-create" id="newBooking">+ Nueva reserva</button>'+ 
+  '<button type="button" id="openSchoolSettings" title="Adaptar horarios y duraciones de la escuela">Configurar turnera</button></div>';
  const filters='<div class="agenda-filters">'+
   '<label>Aeronave<select id="agendaFilterAircraft"><option value="all">Todas las aeronaves</option>'+
    fleet.map(a=>'<option value="'+safe(a.id)+'" '+(agendaAircraft===a.id?'selected':'')+'>'+safe(a.id)+' · '+safe(a.model)+'</option>').join('')+'</select></label>'+
@@ -255,7 +312,9 @@ function calendar(){
  const edit=agendaBookingId?reservations.find(x=>x.id===agendaBookingId&&x.status==='confirmada'):null;
  const option=(item,value,title,selectedId)=>'<option value="'+safe(item[value])+'" '+(selectedId===item[value]?'selected':'')+'>'+safe(item[title])+'</option>';
  const date=edit?.date||agendaDraftDate,start=edit?.start||agendaDraftStart;
- const hour=Number(start.slice(0,2)),end=edit?.end||(hour>=23?'23:59':hhmm((hour+1)*60));
+ const selectedPerson=members.find(m=>m.id===(edit?.pilot||'p1'));
+ const proposedEnd=minutes(start)+reservationSuggestedMinutes(selectedPerson,schoolPolicy);
+ const end=edit?.end||(proposedEnd<1440?hhmm(proposedEnd):'23:59');
  const formHtml=agendaFormOpen?'<section class="panel agenda-form-panel" id="bookingPanel"><div class="toolbar"><h2>'+(edit?'Modificar reserva · Demo':'Nueva reserva · Demo')+'</h2>'+
   '<button type="button" class="secondary" id="closeBooking">Cerrar formulario</button></div>'+
   '<form id="booking"><div class="formgrid">'+
@@ -264,9 +323,12 @@ function calendar(){
   '<label>Instructor<select id="bookInstructor"><option value="">Sin instructor</option>'+members.filter(p=>p.kind==='instructor').map(p=>option(p,'id','name',edit?.instructor||'')).join('')+'</select></label>'+
   '<label>Fecha<input type="date" id="bookDate" value="'+safe(date)+'" required></label>'+
   '<label>Desde<input type="time" id="bookStart" value="'+safe(start)+'" required></label>'+
-  '<label>Hasta<input type="time" id="bookEnd" value="'+safe(end)+'" required></label></div>'+
+  '<label>Hasta<input type="time" id="bookEnd" value="'+safe(end)+'" required></label></div>'+ 
+  (schoolPolicy.showActivity?'<label>Actividad<select id="bookActivity"><option value="Instrucción">Instrucción</option><option value="Práctica">Práctica</option><option value="Vuelo particular">Vuelo particular</option><option value="Otra">Otra</option></select></label>':'')+
+  (schoolPolicy.showNotes?'<label>Observaciones (opcionales)<input id="bookNotes" maxlength="250" value="'+safe(edit?.notes||'')+'"></label>':'')+
   '<div class="training-actions"><button type="submit" class="action">'+(edit?'Guardar cambios (demo)':'Confirmar reserva de prueba')+'</button>'+
   '<button type="button" class="secondary" id="cancelBooking">Cancelar</button></div></form>'+
+  '<p id="bookingDurationHint" class="agenda-booking-note" role="status" aria-live="polite">'+(selectedPerson?.kind==='alumno'?'Alumno: mínimo '+schoolPolicy.studentMinMinutes+' minutos (turnera configurable).':'La duración mínima para alumnos es '+schoolPolicy.studentMinMinutes+' minutos, configurable por la escuela.')+'</p>'+ 
   '<p class="agenda-booking-note">Validaciones locales de aeronave, instructor, piloto, fechas y conflictos. No comprueba licencias ante ANAC ni garantiza disponibilidad para otros usuarios.</p></section>':'';
  const table='<details class="panel" id="agendaBookingList"><summary>Ver historial de reservas de demostración ('+reservations.length+')</summary>'+
   '<div class="table-scroll" style="margin-top:12px"><table><thead><tr><th>Fecha</th><th>Aeronave</th><th>Piloto</th><th>Hora</th><th>Estado</th><th>Acción</th></tr></thead><tbody>'+
@@ -278,11 +340,11 @@ function calendar(){
   (reservations.length?'':'<tr><td colspan="6">Todavía no hay reservas de prueba.</td></tr>')+
   '</tbody></table></div></details>';
  return '<section class="panel agenda-shell"><div class="agenda-toolbar"><div class="agenda-heading"><h2>Agenda inteligente de turnos</h2>'+
-  '<p>Reservas por aeronave e instructor · Calendario de demostración</p></div>'+controls+'</div>'+
+  '<p>'+safe(schoolPolicy.schoolName)+' · '+safe(schoolPolicy.openTime)+'–'+safe(schoolPolicy.closeTime)+' · Alumno: mínimo '+schoolPolicy.studentMinMinutes+' min · Demo</p></div>'+controls+'</div>'+
   filters+'<div class="agenda-scroll"><div class="agenda-columns '+(agendaView==='day'?'day-mode':'')+'">'+
   '<div class="agenda-clock-heading">HORA</div>'+headings+clock+columns+'</div></div>'+
   '<p class="agenda-viewnote">Seleccioná una hora libre para preparar un turno; seleccioná un turno para ver sus detalles. Los datos se pierden al recargar y no representan disponibilidad en tiempo real.</p></section>'+
-  formHtml+selected+table;
+  schoolTurneraSettings()+formHtml+selected+table;
 }
 function flightScreen(){
  const open=reservations.filter(r=>r.status==='confirmada'&&!flights.some(f=>f.reservationId===r.id));
@@ -564,6 +626,32 @@ function wire(){
  if(tab==='personas')wireTraining();
  $('screen').querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>switchTab(b.dataset.go)));
  if(tab==='reservas'){
+  $('openSchoolSettings')?.addEventListener('click',()=>{schoolSettingsOpen=!schoolSettingsOpen;render()});
+  $('closeSchoolSettings')?.addEventListener('click',()=>{schoolSettingsOpen=false;render()});
+  $('schoolReset')?.addEventListener('click',()=>{
+   if(!confirm('¿Restaurar los horarios y duraciones iniciales de la escuela de prueba?'))return;
+   schoolPolicy=validateReservationPolicy(DEFAULT_RESERVATION_POLICY);
+   rememberSchoolPolicy();schoolSettingsOpen=false;render();
+   notice('Turnera de demostración restaurada. Las reservas ya confirmadas no se modificaron.');
+  });
+  $('schoolSettingsForm')?.addEventListener('submit',e=>{
+   e.preventDefault();
+   try{
+    const days=[...$('schoolSettingsForm').querySelectorAll('input[name="schoolDay"]:checked')].map(x=>Number(x.value));
+    const next=validateReservationPolicy({
+     schoolName:$('schoolName').value,
+     openTime:$('schoolOpen').value,closeTime:$('schoolClose').value,
+     studentMinMinutes:Number($('schoolStudentMin').value),
+     studentDefaultMinutes:Number($('schoolStudentSuggested').value),
+     pilotDefaultMinutes:Number($('schoolPilotSuggested').value),
+     slotMinutes:Number($('schoolSlot').value),
+     availableWeekdays:days,showActivity:$('schoolShowActivity').checked,
+     showNotes:$('schoolShowNotes').checked
+    });
+    schoolPolicy=next;rememberSchoolPolicy();schoolSettingsOpen=false;agendaFormOpen=false;agendaBookingId='';
+    render();notice('Turnera de '+next.schoolName+' actualizada (solo demo; se conserva en este navegador).');
+   }catch(err){notice(err.message)}
+  });
   $('week').addEventListener('change',e=>{
    if(validDate(e.target.value)){week=e.target.value;agendaSelectedBooking='';render()}
   });
@@ -584,7 +672,7 @@ function wire(){
    agendaDraftDate=date;agendaDraftStart=start;agendaFormOpen=true;agendaBookingId=id;
    agendaSelectedBooking='';week=date;render();$('bookPilot')?.focus();
   };
-  $('newBooking').addEventListener('click',()=>openForm(week,'10:00'));
+  $('newBooking').addEventListener('click',()=>openForm(week,schoolPolicy.openTime));
   $('screen').querySelectorAll('[data-agenda-time]').forEach(b=>b.addEventListener('click',()=>{
    openForm(b.dataset.agendaDate,b.dataset.agendaTime);
   }));
@@ -601,18 +689,39 @@ function wire(){
   const closeForm=()=>{agendaFormOpen=false;agendaBookingId='';render()};
   $('closeBooking')?.addEventListener('click',closeForm);
   $('cancelBooking')?.addEventListener('click',closeForm);
+  // Ajustar el horario sugerido cuando se elige un alumno, sin impedir que la validación rechace reservas más cortas.
+  const updateStudentDuration=()=>{
+   const selected=members.find(p=>p.id===$('bookPilot')?.value);
+   const min=reservationMinimumMinutes(selected,schoolPolicy),start=$('bookStart')?.value,end=$('bookEnd')?.value;
+   const hint=$('bookingDurationHint');
+   if(!hint||!start||!end)return;
+   if(min===0){hint.textContent='Duración sugerida por la escuela: '+schoolPolicy.pilotDefaultMinutes+' minutos. Alumnos: mínimo '+schoolPolicy.studentMinMinutes+' minutos.';return}
+   try{
+    const t=minutes(start),finish=minutes(end),suggestedEnd=t+reservationSuggestedMinutes(selected,schoolPolicy);
+    if(suggestedEnd>=24*60||suggestedEnd>minutes(schoolPolicy.closeTime)){
+     hint.textContent='Esta hora de inicio no permite completar el turno sugerido dentro de la jornada escolar. Elegí un horario anterior.';
+    }else{
+     if(finish-t<min)$('bookEnd').value=hhmm(suggestedEnd);
+     hint.textContent='Alumno: mínimo '+min+' minutos; sugerido '+schoolPolicy.studentDefaultMinutes+' minutos. Fin propuesto: '+$('bookEnd').value+'.';
+    }
+   }catch(_){hint.textContent='Alumno: duración mínima de '+schoolPolicy.studentMinMinutes+' minutos según la escuela.'}
+  };
+  $('bookPilot')?.addEventListener('change',updateStudentDuration);
+  $('bookStart')?.addEventListener('change',updateStudentDuration);
+  updateStudentDuration();
   $('booking')?.addEventListener('submit',e=>{
    e.preventDefault();
    try{
     const data={
      aircraft:$('bookAircraft').value,pilot:$('bookPilot').value,instructor:$('bookInstructor').value,
-     date:$('bookDate').value,start:$('bookStart').value,end:$('bookEnd').value
+     date:$('bookDate').value,start:$('bookStart').value,end:$('bookEnd').value,
+     activity:schoolPolicy.showActivity?$('bookActivity').value:(reservations.find(x=>x.id===agendaBookingId)?.activity||''),notes:schoolPolicy.showNotes?$('bookNotes').value:(reservations.find(x=>x.id===agendaBookingId)?.notes||'')
     };
     const existing=agendaBookingId?reservations.find(x=>x.id===agendaBookingId&&x.status==='confirmada'):null;
     if(agendaBookingId&&!existing)throw Error('La reserva original ya no está disponible.');
     if(existing&&flights.some(f=>f.reservationId===existing.id))
      throw Error('No se puede modificar una reserva cuyo vuelo ya fue cerrado.');
-    const checked=createReservation(data,reservations.filter(x=>x.id!==existing?.id),fleet,members);
+    const checked=createReservation(data,reservations.filter(x=>x.id!==existing?.id),fleet,members,schoolPolicy);
     if(existing)Object.assign(existing,data,{updatedAt:new Date().toISOString()});
     else reservations.push(checked);
     agendaSelectedBooking=existing?.id||checked.id;
@@ -663,6 +772,7 @@ function wire(){
   if(error||!user)throw Error('Se requiere iniciar sesión.');
   const {data,error:roleError}=await client.from('site_admins').select('user_id').eq('user_id',user.id).maybeSingle();
   if(roleError||!data)throw Error('Acceso exclusivo del administrador.');
+  demoAdminId=user.id;restoreSchoolPolicy();
   $('app').hidden=false;document.documentElement.classList.remove('auth-pending');render();
  }catch(err){
   document.documentElement.classList.remove('auth-pending');

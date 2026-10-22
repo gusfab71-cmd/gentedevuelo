@@ -28,8 +28,8 @@ const asMinutes=s=>{
  const [h,m]=s.split(':').map(Number);return h*60+m;
 };
 // La escala cubre todos los turnos existentes; no ocultar turnos fuera de las horas normales.
-export function timeWindow(bookings){
- let min=8*60,max=20*60;
+export function timeWindow(bookings,openTime='08:00',closeTime='20:00'){
+ let min=Math.floor(asMinutes(openTime)/60)*60,max=Math.ceil(asMinutes(closeTime)/60)*60;
  for(const r of bookings){
   min=Math.min(min,Math.floor(asMinutes(r.start)/60)*60);
   max=Math.max(max,Math.ceil(asMinutes(r.end)/60)*60);
