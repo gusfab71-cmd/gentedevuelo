@@ -1,0 +1,28 @@
+name: Pruebas de mantenimiento aeronáutico
+
+on:
+  pull_request:
+    paths:
+      - 'utilidades/mantenimiento-aeronaves.html'
+      - 'tests/aircraft-maintenance.test.cjs'
+      - '.github/workflows/mantenimiento-tests.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'utilidades/mantenimiento-aeronaves.html'
+      - 'tests/aircraft-maintenance.test.cjs'
+      - '.github/workflows/mantenimiento-tests.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  maintenance-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Probar mantenimiento de aeronaves
+        run: node tests/aircraft-maintenance.test.cjs

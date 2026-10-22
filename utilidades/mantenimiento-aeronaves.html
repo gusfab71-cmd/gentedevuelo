@@ -138,6 +138,20 @@ body .overflow-x-auto{scrollbar-color:#697e7d transparent}
 @media(max-width:750px){.maint-inspection-stats{grid-template-columns:1fr 1fr}.maint-inspection-stats>div:first-child{grid-column:1/-1}}
 @media(max-width:480px){.maint-inspection-stats{grid-template-columns:1fr}.maint-inspection-stats>div:first-child{grid-column:auto}}
 </style>
+<style id="maintenance-guides-style">
+.maint-guides{background:#172528;border:1px solid #526669;border-radius:15px;padding:15px;color:#e5eeea}
+.maint-guides>div strong{color:#ffdab8}
+.maint-guide-toolbar{margin-top:15px;border-top:1px solid #44565b;padding-top:14px;display:grid;gap:12px}
+.maint-guide-toolbar label{font-size:12px;color:#d1dddb;display:grid;gap:6px}
+.maint-guide-sheet{background:#111d21;border:1px solid #698185;border-radius:12px;padding:16px;margin-top:15px}
+.maint-guide-sheet h3{font-size:17px;font-weight:800;color:#ffdac0;margin:8px 0 12px}
+.maint-guide-list{display:grid;gap:9px;margin-top:12px}
+.maint-guide-item{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:9px 10px;background:#203036;border:1px solid #4c6267;border-radius:9px}
+.maint-guide-item label{display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.45;flex:1;min-width:0}
+.maint-guide-item input{margin-top:3px;width:17px;height:17px;accent-color:#e9a869;flex-shrink:0}
+.maint-guide-item .btn{font-size:11px;padding:7px 10px;flex-shrink:0}
+@media(max-width:620px){.maint-guide-item{align-items:stretch;flex-direction:column}.maint-guide-item .btn{align-self:flex-end}}
+</style>
 </head>
 
 <body class="min-h-screen">
@@ -267,7 +281,7 @@ function info(c,a){const t0=Date.now(),D=30.44*864e5,d=[],z=cnt(a,c.cp);
 
  const remH=c.ivH?c.lastH+c.ivH-z.h:null,remC=c.ivC?c.lastC+c.ivC-z.c:null;let calD=null;
 
- if(c.ivM&&c.lastDate){const x=new Date(c.lastDate+'T12:00:00');x.setMonth(x.getMonth()+c.ivM);calD=x.getTime();d.push([calD,'calendario'])}
+ if(c.ivM&&c.lastDate){const dueDate=addMonthsConservative(c.lastDate,c.ivM);if(dueDate){calD=new Date(dueDate+'T00:00:00').getTime();d.push([calD,'calendario'])}}
 
  if(remH!=null)d.push([remH<=0?t0:a.hpm>0?t0+remH/a.hpm*D:Infinity,'horas']);
 
@@ -275,7 +289,7 @@ function info(c,a){const t0=Date.now(),D=30.44*864e5,d=[],z=cnt(a,c.cp);
 
  const m=d.length?d.reduce((x,y)=>y[0]<x[0]?y:x):[Infinity,'—'],days=(m[0]-t0)/864e5,over=(remH!=null&&remH<=0)||(remC!=null&&remC<=0)||(calD&&calD<t0);
 
- return{remH,remC,calD,due:m[0],by:m[1],days,st:over?2:days<=45?1:0}}
+ return{remH,remC,calD,due:m[0],by:m[1],days,st:over?2:(days<=45||(remH!==null&&remH<=10)||(remC!==null&&remC<=10))?1:0}}
 
 const ST=[['SIN ALERTA','emerald'],['PRÓXIMO','amber'],['REVISAR VENCIMIENTO','rose'],['SIN CONSTANCIA','rose']];
 
@@ -498,6 +512,111 @@ function renderOverview(){
 }
 
 
+
+
+// Guías de preparación originales: no sustituyen las listas oficiales del fabricante.
+const GUIDE_MODELS={
+ c150:{
+  title:'Cessna 150',engine:'Motor habitualmente Continental O-200; verificar placa, configuración y sustituciones.',
+  documents:'Service Manual Cessna 150 correspondiente al año y número de serie; manual y boletines del motor y hélice efectivamente instalados.',
+  areas:{
+   f:['Estructura metálica, fijaciones alares y empenaje','Rieles y anclajes de asientos; verificar DA aplicables','Tren triciclo, frenos y comandos de vuelo'],
+   m:['Identificación del motor Continental instalado y sus accesorios','Sistema de lubricación, admisión, escape y bancada','Encendido y componentes con intervalos propios'],
+   p:['Identificar fabricante, modelo y serie de hélice de paso fijo','Estado y fijación del conjunto hélice/cubo','Control de límites particulares de hélice y bulones']
+  }
+ },
+ c172:{
+  title:'Cessna 172',engine:'Según año y versión: motores Continental o Lycoming; no asumir TBO ni intervalo de aceite.',
+  documents:'Service/Maintenance Manual Cessna 172 de la serie/año correspondiente; documentación del motor y hélice por número de serie.',
+  areas:{
+   f:['Estructura metálica, alas, empenaje y corrosión','Rieles y anclajes de asientos; verificar DA aplicables','Tren triciclo, frenos, comandos y sistemas de cabina'],
+   m:['Confirmar variante instalada: Continental O-300, Lycoming O-320, IO-360 u otra aprobada','Lubricación, escape, admisión y bancada','Accesorios, magnetos y mangueras según limitaciones propias'],
+   p:['Confirmar fabricante y modelo; puede variar con la versión y STC','Palas, cubo, fijaciones y posibles limitaciones de operación','Inspecciones/recorridas según fabricante de hélice']
+  }
+ },
+ pa11:{
+  title:'Piper PA-11',engine:'Frecuentemente motor Continental C-90, sujeto a la placa y modificaciones aprobadas.',
+  documents:'Documentación Piper PA-11 aplicable y formulario de inspección 230-3000 como referencia de consulta; manual del motor y hélice reales.',
+  areas:{
+   f:['Estructura de tubos de acero y corrosión','Entelado, costuras, recubrimiento y fijaciones','Tren convencional, cables, tensores y comandos'],
+   m:['Confirmar motor Continental instalado y sus límites','Lubricación, escape, encendido, carburación y bancada','Mangueras, accesorios y registros históricos de intervenciones'],
+   p:['Identificar hélice por fabricante, modelo y número de serie','Superficies, cubo, fijaciones y condiciones de instalación','Verificar límites por calendario y horas propios de esa hélice']
+  }
+ }
+};
+const GUIDE_PERIODS={
+ p50:{title:'Servicio / controles 50 h',scope:'Intervalo de servicio condicionado por el manual; NO constituye una inspección reglamentaria universal.',items:['Identificar tareas que el manual programa a 50 horas','Verificar la última ejecución y su referencia firmada','Revisar DA, boletines y límites que vencen antes del próximo servicio']},
+ p100:{title:'Inspección 100 h',scope:'Confirmar aplicabilidad según RAAC 91.409, uso declarado y programa autorizado; incluye áreas contempladas en RAAC 43 Apéndice D.',items:['Verificar si corresponde inspección de 100 h para la operación','Relacionar constancia técnica, tiempo en servicio y horas restantes','Revisar cumplimiento de tareas de 50/100 h y especiales del programa']},
+ annual:{title:'Inspección anual',scope:'Inspección de aeronave completa según régimen aplicable. La fecha exacta se verifica en documentación oficial y programa aprobado.',items:['Verificar vigencia de la inspección anual o alternativa aplicable','Verificar correspondencia de la documentación y constancia firmada','Incluir inspecciones especiales, DA y límites vencidos del programa']},
+ overhaul:{title:'Recorrida general / TBO',scope:'No existe TBO universal para el fuselaje. Los límites de motor, hélice y componentes se determinan de forma independiente.',items:['Confirmar modelo, serie, TSN, TSO y fecha de última recorrida','Localizar documento vigente del fabricante y programa aceptado/aprobado','Comparar los límites por horas y calendario: considerar el primero que ocurra']}
+};
+const GUIDE_COMMON={
+ f:['Identificación de la célula y últimas constancias técnicas','Recubrimientos, estructura, alas, empenaje y unión de componentes','Comandos, cabina, asientos, cinturones y equipos','Tren, ruedas, neumáticos y frenos; según corresponda'],
+ m:['Identificación, horas y ciclos efectivos del motor','Lubricación, pérdidas visibles, fijaciones, mangueras y bancada','Encendido, combustible, admisión y escape','Controles internos y ensayos exigibles según alcance autorizado'],
+ p:['Identificación, horas y ciclos de la hélice instalada','Palas, cubo, fijaciones, corrosión y daños visibles','Configuración de paso, controles y lubricación cuando aplique','Directivas, limitaciones y recorridas propias del fabricante']
+};
+const GUIDE_COMPONENTS={f:'Fuselaje',m:'Motor',p:'Hélice'};
+let guideOpen=false,guideShown=false,guideAircraft=null;
+let guidePick={model:'',period:'p50',component:'m'},guideChecked={};
+function detectGuideModel(type){
+ const t=String(type||'').toLowerCase();
+ if(/(?:cessna\s*(?:c\s*-?\s*)?|^c\s*-?\s*)150[a-z]?\b/.test(t))return 'c150';
+ if(/(?:cessna\s*(?:c\s*-?\s*)?|^c\s*-?\s*)172[a-z]{0,3}\b/.test(t))return 'c172';
+ if(/\bpa\s*-?\s*11\b/.test(t))return 'pa11';
+ return '';
+}
+function toggleMaintenanceGuides(){
+ guideOpen=!guideOpen;guideShown=false;guideChecked={};
+ if(guideOpen&&A())guidePick.model=detectGuideModel(A().type)||'';
+ R();
+}
+function guideItems(){
+ const model=GUIDE_MODELS[guidePick.model],period=GUIDE_PERIODS[guidePick.period];
+ return model&&period&&GUIDE_COMPONENTS[guidePick.component]?
+  [...period.items,...GUIDE_COMMON[guidePick.component],...model.areas[guidePick.component]]:[];
+}
+function showMaintenanceGuide(){
+ const model=v('guide_model'),period=v('guide_period'),component=v('guide_component');
+ if(!GUIDE_MODELS[model]||!GUIDE_PERIODS[period]||!GUIDE_COMPONENTS[component])return alert('Seleccioná el modelo, el control y el componente.');
+ guidePick={model,period,component};guideShown=true;guideAircraft=S.sel;guideChecked={};R();
+}
+function updateGuideCheck(i,checked){
+ if(checked)guideChecked[i]=true;else delete guideChecked[i];
+ const counter=$('guide_count');if(counter)counter.textContent=Object.keys(guideChecked).length+' / '+guideItems().length+' puntos de consulta marcados (sin valor certificante)';
+}
+function prepareGuideControl(i){
+ if(guideAircraft!==S.sel||!guideShown)return;
+ const task=guideItems()[i];if(!task)return;
+ const component=guidePick.component;
+ S.tab='s';R();
+ $('c_n').value=task;
+ $('c_k').value=component;
+ $('c_s').value='new:'+component;
+ $('c_ih').value='0';$('c_ic').value='0';$('c_im').value='0';
+ $('c_basis').value='';$('c_lastdoc').value='';
+ $('c_n').focus();
+ alert('Borrador de control preparado, SIN GUARDAR. Confirmá el intervalo exacto y transcribí el manual/boletín vigente y la constancia correspondiente antes de crearlo.');
+}
+function renderGuidePanel(a){
+ let out='<section class="maint-guides mb-4"><div class="flex flex-wrap items-center justify-between gap-2"><div><strong>Planillas de consulta por modelo</strong><p class="text-xs text-slate-300 mt-1">Cessna 150 · Cessna 172 · Piper PA-11. Ocultas hasta solicitarlas.</p></div><button type="button" class="btn bg-sky-700" onclick="toggleMaintenanceGuides()" aria-expanded="'+guideOpen+'">'+(guideOpen?'Cerrar planillas':'Consultar planillas')+'</button></div>';
+ if(!guideOpen)return out+'</section>';
+ const options=(dict,current,blank)=>blank+Object.entries(dict).map(([key,item])=>'<option value="'+key+'"'+(key===current?' selected':'')+'>'+esc(item.title||item)+'</option>').join('');
+ out+='<div class="maint-guide-toolbar"><p class="maint-note">Guías originales de preparación. Elegí la planilla; NO equivalen a una checklist oficial, ejecución de mantenimiento ni aprobación de retorno al servicio. Consultá el manual, revisiones, DA y programa aprobados para matrícula, motor y hélice.</p><div class="maint-record-grid">';
+ out+='<label>Modelo de referencia<select id="guide_model" class="fld">'+options(GUIDE_MODELS,guidePick.model,'<option value="">Seleccionar aeronave</option>')+'</select></label>';
+ out+='<label>Tipo de control<select id="guide_period" class="fld">'+options(GUIDE_PERIODS,guidePick.period,'')+'</select></label>';
+ out+='<label>Componente<select id="guide_component" class="fld">'+options(GUIDE_COMPONENTS,guidePick.component,'')+'</select></label>';
+ out+='</div><button type="button" class="btn bg-amber-600" onclick="showMaintenanceGuide()">Mostrar planilla solicitada</button></div>';
+ if(guideShown&&guideAircraft===a.id){
+  const model=GUIDE_MODELS[guidePick.model],period=GUIDE_PERIODS[guidePick.period],items=guideItems();
+  out+='<article class="maint-guide-sheet"><div class="maint-eyebrow">REFERENCIA TÉCNICA / SIN VALOR CERTIFICANTE</div><h3>'+esc(model.title)+' · '+esc(period.title)+' · '+esc(GUIDE_COMPONENTS[guidePick.component])+'</h3>';
+  out+='<p class="maint-note">'+esc(period.scope)+'</p><p class="text-xs text-slate-300 mt-2"><b>Configuración:</b> '+esc(model.engine)+'</p><p class="text-xs text-slate-300 mt-2"><b>Fuente a verificar:</b> '+esc(model.documents)+'</p>';
+  out+='<p class="text-xs text-slate-400 mt-2">Referencia normativa: RAAC 43 (incl. Apéndice D si corresponde), RAAC 91, DA y documentación técnica vigente de los fabricantes. No se precargan TBO ni vencimientos sin identificación y fuente verificadas.</p>';
+  out+='<div id="guide_count" role="status" class="text-xs text-sky-300 mt-3">0 / '+items.length+' puntos de consulta marcados (sin valor certificante)</div>';
+  out+='<div class="maint-guide-list">'+items.map((task,i)=>'<div class="maint-guide-item"><label><input type="checkbox" '+(guideChecked[i]?'checked ':'')+'onchange="updateGuideCheck('+i+',this.checked)" aria-label="Marcar como revisado: '+esc(task)+'"><span>'+esc(task)+'</span></label><button type="button" class="btn bg-slate-700" onclick="prepareGuideControl('+i+')">Preparar control</button></div>').join('')+'</div>';
+  out+='<p class="text-xs text-slate-300 mt-3">Las marcas son temporales, no se guardan como cumplimiento. Al preparar un control se exige posteriormente intervalo y referencia del manual aplicable. El cierre técnico debe registrarse en las libretas por personal autorizado.</p></article>';
+ }
+ return out+'</section>';
+}
 
 const INSPECTION_TEMPLATES={
  anual:{title:'Inspección anual',ref:'RAAC 91.409 / 43.11 / Apéndice D',m:12,h:0},
@@ -746,8 +865,8 @@ function tabX(){
  const archived=(S.ip||[]).filter(x=>x.ac===a.id&&x.archived);
  const needs100h=hasInstruction(a)&&a.operation?.compensation==='yes'&&!plans.some(p=>p.applies==='yes'&&['cien','prog'].includes(p.kind));
  const needsAnnual=!plans.some(p=>p.applies==='yes'&&['anual','prog'].includes(p.kind));
- return `<div class="maint-regime mb-4"><strong>Régimen declarado: ${esc(OP_LABELS[opUse(a)])}</strong><p>${esc(regimeNotice(a))}</p>${a.operation?.program?`<p>Programa / manual informado: ${esc(a.operation.program)}</p>`:''}<p><strong>Inspecciones: 12 meses o 100 horas, según lo que venza primero cuando ambos controles correspondan.</strong> La anual y la de 100 horas se configuran por separado: una inspección anual puede satisfacer el requisito de las 100 horas, pero una de 100 horas no reemplaza la anual. Los límites se calculan desde los últimos asientos documentados y deben verificarse contra el régimen aplicable.</p>${needsAnnual?'<div class="maint-flag danger mt-3">No se registró seguimiento de la inspección anual ni programa alternativo aplicable. Confirmá el régimen y las constancias técnicas.</div>':''}${needs100h?'<div class="maint-flag danger mt-3">No se registró seguimiento de 100 horas ni programa alternativo aplicable. Verificá el régimen vigente y su documentación antes de operar.</div>':''}</div><div class="grid lg:grid-cols-3 gap-4">
- <section class="card p-4 space-y-3 h-fit">
+ return `<div class="maint-regime mb-4"><strong>Régimen declarado: ${esc(OP_LABELS[opUse(a)])}</strong><p>${esc(regimeNotice(a))}</p>${a.operation?.program?`<p>Programa / manual informado: ${esc(a.operation.program)}</p>`:''}<p><strong>Inspecciones: 12 meses o 100 horas, según lo que venza primero cuando ambos controles correspondan.</strong> La anual y la de 100 horas se configuran por separado: una inspección anual puede satisfacer el requisito de las 100 horas, pero una de 100 horas no reemplaza la anual. Los límites se calculan desde los últimos asientos documentados y deben verificarse contra el régimen aplicable.</p>${needsAnnual?'<div class="maint-flag danger mt-3">No se registró seguimiento de la inspección anual ni programa alternativo aplicable. Confirmá el régimen y las constancias técnicas.</div>':''}${needs100h?'<div class="maint-flag danger mt-3">No se registró seguimiento de 100 horas ni programa alternativo aplicable. Verificá el régimen vigente y su documentación antes de operar.</div>':''}</div>${renderGuidePanel(a)}<div class="grid lg:grid-cols-3 gap-4">
+ <details class="maint-guidance h-fit"><summary>Configurar inspección reglamentaria (abrir cuando se necesite)</summary><section class="space-y-3 mt-3">
  <div class="maint-eyebrow">SEGUIMIENTO DE AERONAVEGABILIDAD</div>
  <h2 class="font-bold">Configurar inspección</h2>
  <p class="maint-note">Seleccioná la plantilla y confirmá su aplicabilidad según matrícula, categoría, operación y programa autorizado. Los intervalos se pueden ajustar; nunca se presuponen exigibles. La inspección de 100 horas de 91.409(b) se vincula, entre otros supuestos, con instrucción por compensación en aeronave provista por quien la imparte.</p>
@@ -766,7 +885,7 @@ function tabX(){
  <p>El <a href="https://www.argentina.gob.ar/node/361158" target="_blank" rel="noopener noreferrer">material ANAC sobre programas de inspección</a> distingue un programa de inspección del programa de mantenimiento completo. También deben seguirse componentes con vida limitada, DA y limitaciones de aeronavegabilidad.</p>
  <p>En operaciones de instrucción, verificá además las exigencias del centro o escuela, si corresponde. Esta guía no es una lista de inspección para ejecutar trabajos. La proyección por TTAF debe contrastarse con el tiempo en servicio y el programa oficial de la aeronave.</p>
  </details>
- </section>
+ </section></details>
  <div class="lg:col-span-2 space-y-3">
  <section class="card p-4"><h2 class="font-bold">Inspecciones de ${esc(a.reg)}</h2>
  <p class="text-xs text-slate-400">No equivale a certificado de aeronavegabilidad, aprobación de retorno al servicio ni asiento oficial. Las constancias deben estar firmadas por quien corresponda.</p>
