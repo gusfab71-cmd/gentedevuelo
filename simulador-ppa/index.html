@@ -229,7 +229,14 @@ async function load(){
    .select('id,materia,pregunta,opciones,correcta,fundamento,fuente,estado,figura_r2_key,revision_detalle')
    .neq('estado','retirada').order('id');
   if(error)throw Error('No se pudo consultar el banco privado: '+error.message);
-  reviewBank=(data||[]).filter(q=>q.id&&q.materia&&q.pregunta&&Array.isArray(q.opciones)&&q.opciones.length>=2&&q.fuente);
+  // Para auditar integridad se conservan también los registros con campos incompletos.
+  rawBank=(data||[]).filter(q=>q&&q.id);
+  reviewBank=AUDIT.sortByNumber(rawBank).map(q=>({
+   ...q,materia:String(q.materia||'Sin materia'),
+   pregunta:String(q.pregunta||'ENUNCIADO AUSENTE: revisar registro '+q.id),
+   opciones:Array.isArray(q.opciones)?q.opciones:[],
+   fuente:String(q.fuente||'Fuente no identificada')
+  }));
   historicalBank=reviewBank.filter(q=>hasValidKey(q)&&(!needsFigure(q)||hasImage(q)));
   bank=historicalBank.filter(q=>q.estado==='verificada'&&typeof q.fundamento==='string'&&q.fundamento.trim()&&!/falta cotejo visual/i.test(q.revision_detalle||''));
   [...new Set(reviewBank.map(q=>q.materia))].sort().forEach(name=>{
@@ -237,14 +244,16 @@ async function load(){
   });
   $('practice').onchange=describeMode;
   $('mode').onchange=describeMode;
+  $('audit-export').onclick=exportAuditCsv;
   $('start').disabled=!reviewBank.length;
-  describeMode();
+  updateAuditSummary();describeMode();
   const questionId=new URLSearchParams(location.search).get('pregunta');
   if(questionId){
    const target=reviewBank.find(q=>q.id===questionId);
    if(target){
     practiceMode=historicalBank.some(q=>q.id===questionId)&&!bank.some(q=>q.id===questionId);
     reviewMode=!practiceMode&&!bank.some(q=>q.id===questionId);
+    sequentialMode=false;
     $('practice').value=reviewMode?'review':practiceMode?'practice':'exam';
     describeMode();
     exam=[target];index=0;points=0;gradedCount=0;
