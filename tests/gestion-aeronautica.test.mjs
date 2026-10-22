@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
-import {minutes,validDate,intersects,createReservation,closeFlight,flightTotals,stockMove,STUDENT_RESERVATION_MINUTES,reservationMinimumMinutes} from '../utilidades/gestion-aeronautica/src/operacion.js';
+import {minutes,validDate,intersects,createReservation,closeFlight,flightTotals,stockMove,STUDENT_RESERVATION_MINUTES,reservationMinimumMinutes,DEFAULT_RESERVATION_POLICY,validateReservationPolicy,reservationSuggestedMinutes} from '../utilidades/gestion-aeronautica/src/operacion.js';
 import {mondayOf,shiftDate,listWeek,visibleBookings,timeWindow,layoutDay,hhmm} from '../utilidades/gestion-aeronautica/src/agenda.js';
 import {ASSESSMENTS,LESSON_STATUS,buildLesson,reviseLesson,submitLesson,closeLessonByInstructor,reviewLesson,studentTimeline,studentSummary} from '../utilidades/gestion-aeronautica/src/formacion.js';
 
@@ -27,6 +27,39 @@ assert.throws(()=>createReservation({...studentBase,start:'22:30',end:'23:59'},[
 assert.equal(createReservation({...req,instructor:''},[],fleet,members).status,'confirmada','No imponer mínimo alumno a pilotos');
 assert.equal(createReservation({...studentBase,end:'11:00'},[],fleet,members).status,'confirmada','Reservas más largas están permitidas');
 assert.throws(()=>createReservation({...studentBase,end:'10:00'},[student90],fleet,members),/1 hora y 30 minutos/,'También se exige el mínimo cuando una modificación intenta reducirla');
+
+// Cada escuela puede cambiar el mínimo de alumno, duración sugerida, días y grilla.
+assert.equal(DEFAULT_RESERVATION_POLICY.studentMinMinutes,90);
+assert.equal(reservationSuggestedMinutes(members[1]),90);
+assert.equal(reservationSuggestedMinutes(members[0]),60);
+const custom=validateReservationPolicy({...DEFAULT_RESERVATION_POLICY,
+ schoolName:'Aeroclub Demo',studentMinMinutes:45,studentDefaultMinutes:60,
+ pilotDefaultMinutes:30,slotMinutes:15,openTime:'07:00',closeTime:'21:00',
+ availableWeekdays:[1,2,3,4,5],showNotes:true,showActivity:true});
+assert.equal(custom.schoolName,'Aeroclub Demo');
+assert.equal(custom.studentMinMinutes,45);
+assert.equal(reservationMinimumMinutes(members[1],custom),45);
+assert.equal(reservationSuggestedMinutes(members[1],custom),60);
+assert.equal(reservationSuggestedMinutes(members[0],custom),30);
+assert.equal(custom.showNotes,true);
+assert.equal(createReservation({...studentBase,end:'09:45'},[],fleet,members,custom).status,'confirmada',
+ 'Con 45 minutos mínimos, un turno alumno de 45 debe ser aceptado en esa escuela');
+assert.throws(()=>createReservation({...studentBase,end:'09:44'},[],fleet,members,custom),/45 minutos/);
+const changedPolicy=validateReservationPolicy({...DEFAULT_RESERVATION_POLICY,studentMinMinutes:120,studentDefaultMinutes:120});
+assert.throws(()=>createReservation(studentBase,[],fleet,members,changedPolicy),/120 minutos/);
+assert.equal(createReservation({...studentBase,end:'11:00'},[],fleet,members,changedPolicy).status,'confirmada');
+const weekdays=validateReservationPolicy({...DEFAULT_RESERVATION_POLICY,availableWeekdays:[1,2,3,4]});
+assert.throws(()=>createReservation(req,[],fleet,members,weekdays),/día de la semana/);
+const hoursPolicy=validateReservationPolicy({...DEFAULT_RESERVATION_POLICY,openTime:'09:00',closeTime:'17:00'});
+assert.throws(()=>createReservation({...req,start:'08:30',end:'10:00'},[],fleet,members,hoursPolicy),/horario de la escuela/);
+const slotPolicy=validateReservationPolicy({...DEFAULT_RESERVATION_POLICY,slotMinutes:30});
+assert.throws(()=>createReservation({...studentBase,start:'09:15',end:'10:45'},[],fleet,members,slotPolicy),/intervalos de 30/);
+assert.equal(createReservation({...req,start:'10:15',end:'11:15'},[],fleet,members,custom).status,'confirmada');
+assert.throws(()=>validateReservationPolicy({...DEFAULT_RESERVATION_POLICY,studentMinMinutes:120,studentDefaultMinutes:90}),/mayor o igual/);
+assert.throws(()=>validateReservationPolicy({...DEFAULT_RESERVATION_POLICY,availableWeekdays:[]}),/al menos un día/);
+assert.throws(()=>validateReservationPolicy({...DEFAULT_RESERVATION_POLICY,openTime:'18:00',closeTime:'17:00'}),/posterior/);
+assert.throws(()=>validateReservationPolicy({...DEFAULT_RESERVATION_POLICY,openTime:'09:15',slotMinutes:30}),/grilla/);
+assert.deepEqual(timeWindow([], '07:00','22:00'),{start:420,end:1320});
 const reservation=createReservation(req,[],fleet,members);
 assert.equal(reservation.status,'confirmada');
 assert.ok(reservation.id);
@@ -186,6 +219,8 @@ for(const label of ['Agenda inteligente de turnos','Nueva reserva','data-agenda-
 const calendarSrc=script.slice(script.indexOf('function calendar(){'),script.indexOf('function flightScreen(){'));
 assert.ok(calendarSrc.startsWith('function calendar(){'));
 const calendarContext={
+ schoolPolicy:DEFAULT_RESERVATION_POLICY,schoolSettingsOpen:false,
+ schoolTurneraSettings:()=>'',minutes,reservationSuggestedMinutes,
  reservations:[],members:[{id:'p1',name:'Piloto Demo',kind:'piloto'}],
  fleet:[{id:'LV-ABC',model:'Cessna 172'}],
  agendaView:'week',agendaAircraft:'all',agendaInstructor:'all',
@@ -212,6 +247,33 @@ const singleDay=vm.runInContext('calendar()',calendarContext);
 assert.match(singleDay,/class="agenda-columns day-mode"/);
 assert.match(singleDay,/data-agenda-date="2026-10-22"/);
 assert.doesNotMatch(singleDay,/data-agenda-date="2026-10-23"/);
+
+assert.match(html,/function schoolTurneraSettings\(\)/);
+assert.match(html,/id="schoolSettingsForm"/);
+assert.match(html,/id="schoolStudentMin"/);
+assert.match(html,/id="schoolSlot"/);
+assert.match(html,/id="schoolShowNotes"/);
+assert.match(html,/id="openSchoolSettings"/);
+assert.match(html,/function restoreSchoolPolicy\(\)/);
+assert.match(html,/createReservation\(data,reservations.filter\(x=>x.id!==existing\?\.id\),fleet,members,schoolPolicy\)/);
+assert.match(html,/data-agenda-time=/);
+assert.match(html,/rememberSchoolPolicy\(\)/);
+const settingsSource=script.slice(script.indexOf('function schoolTurneraSettings(){'),script.indexOf('function calendar(){'));
+vm.runInContext(settingsSource,calendarContext);
+assert.equal(vm.runInContext('schoolTurneraSettings()',calendarContext),'','Los ajustes están ocultos por defecto.');
+calendarContext.schoolSettingsOpen=true;
+const settingsOpen=vm.runInContext('schoolTurneraSettings()',calendarContext);
+assert.match(settingsOpen,/Configurar turnera/);
+assert.match(settingsOpen,/value="90"/);
+assert.match(settingsOpen,/name="schoolDay"/);
+calendarContext.schoolSettingsOpen=false;
+calendarContext.schoolPolicy=custom;
+const hourlyView=vm.runInContext('calendar()',calendarContext);
+assert.match(hourlyView,/Aeroclub Demo/);
+assert.match(hourlyView,/data-agenda-time="07:15"/,'La grilla respeta intervalo de 15 minutos');
+assert.match(hourlyView,/data-agenda-date="2026-10-22"/);
+assert.doesNotMatch(hourlyView,/<form id="booking">/,'El formulario sigue plegado.');
+
 console.log('PASS: agenda compacta con semana/día, filtros, turnos superpuestos y formulario oculto');
 
 console.log('PASS: gestión integrada, fechas, conflictos, cierre idempotente, stock, UX y acceso admin');
