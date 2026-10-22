@@ -592,9 +592,8 @@ function logbookFormScreen(){
   ' · Duración '+duration+' minutos</p>'+
   '<p class="logbook-disclaimer">Se registra una copia auxiliar de los datos, no el libro oficial. Los horarios UTC y el tiempo de bloque provienen del vuelo cerrado. La categoría día/noche, finalidad y función del titular requieren declaración y revisión; nunca se asignan automáticamente horas de piloto al mando.</p>'+
   '<form id="flightLogbookForm"><div class="formgrid">'+
-   '<label>Finalidad del vuelo<select id="logPurpose">'+options(LOGBOOK_PURPOSES,stored.purpose||(
-     flight.operationType==='instruction'?'instruccion':'particular'))+'</select></label>'+
-   '<label>Actividad<select id="logArea">'+options(LOGBOOK_AREAS,stored.area||'aerodromo')+'</select></label>'+
+   '<label>Finalidad del vuelo<select id="logPurpose" required><option value="" '+(!stored.purpose?'selected':'')+' disabled>Elegí finalidad</option>'+options(LOGBOOK_PURPOSES,stored.purpose)+'</select></label>'+
+   '<label>Actividad<select id="logArea" required><option value="" '+(!stored.area?'selected':'')+' disabled>Elegí actividad</option>'+options(LOGBOOK_AREAS,stored.area)+'</select></label>'+
    '<label>Función del titular<select id="logDuty">'+
     options(role==='alumno'?{alumno:LOGBOOK_DUTIES.alumno}:{piloto:LOGBOOK_DUTIES.piloto,copiloto:LOGBOOK_DUTIES.copiloto},stored.duty||role)+
    '</select></label>'+
@@ -603,8 +602,8 @@ function logbookFormScreen(){
    field('Modelo','logModel',stored.aircraftModel||plane?.model,'maxlength="90"')+
    field('Potencia (dato documental)','logPower',stored.powerHp,'maxlength="30"')+
    field('Clase de aeronave','logClass',stored.aircraftClass,'maxlength="50"')+
-   '<label>Minutos diurnos<input type="number" id="logDay" min="0" max="'+duration+'" step="1" value="'+(stored.dayMinutes??duration)+'" required></label>'+
-   '<label>Minutos nocturnos<input type="number" id="logNight" min="0" max="'+duration+'" step="1" value="'+(stored.nightMinutes??0)+'" required></label>'+
+   '<label>Minutos diurnos<input type="number" id="logDay" min="0" max="'+duration+'" step="1" value="'+(stored.dayMinutes??'')+'" placeholder="Ingresar minutos" required></label>'+ 
+   '<label>Minutos nocturnos<input type="number" id="logNight" min="0" max="'+duration+'" step="1" value="'+(stored.nightMinutes??'')+'" placeholder="Ingresar minutos" required></label>'+ 
    '</div><p class="muted">Los minutos diurnos + nocturnos deben sumar '+duration+
    '. El sistema no determina día/noche por sí mismo. Datos faltantes quedarán identificados para completar con respaldo.</p>'+
    '<div class="training-actions"><button class="action" type="submit">Guardar planilla auxiliar (demo)</button>'+
@@ -1140,6 +1139,34 @@ function wire(){
  }
  if(tab==='vuelos'){
   $('flightModeFilter')?.addEventListener('change',e=>{flightModeFilter=e.target.value;render()});
+  $('logbookPerson')?.addEventListener('change',e=>{logbookPersonFilter=e.target.value;render()});
+  $('screen').querySelectorAll('[data-edit-logbook]').forEach(button=>button.addEventListener('click',()=>{
+   const id=button.dataset.editLogbook;
+   if(!flights.some(f=>f.id===id))return;
+   logbookEditingFlightId=id;render();$('flightLogbookPanel')?.scrollIntoView({behavior:'smooth',block:'center'});
+  }));
+  const closeBook=()=>{logbookEditingFlightId='';render()};
+  $('closeFlightLogbook')?.addEventListener('click',closeBook);
+  $('cancelFlightLogbook')?.addEventListener('click',closeBook);
+  $('flightLogbookForm')?.addEventListener('submit',e=>{
+   e.preventDefault();
+   try{
+    const f=flights.find(x=>x.id===logbookEditingFlightId);
+    const booking=reservations.find(x=>x.id===f?.reservationId);
+    if(!f||!booking)throw Error('No se encontró el vuelo de la planilla.');
+    const person=members.find(m=>m.id===f.pilot);
+    const detail=makeLogbookDetail({
+     purpose:$('logPurpose').value,area:$('logArea').value,duty:$('logDuty').value,
+     license:$('logLicense').value,aircraftMake:$('logMake').value,
+     aircraftModel:$('logModel').value,aircraftClass:$('logClass').value,
+     powerHp:$('logPower').value,
+     dayMinutes:$('logDay').value,nightMinutes:$('logNight').value
+    },booking,f,person,fleet);
+    f.logbook=detail;logbookEditingFlightId='';logbookPersonFilter=f.pilot;render();
+    notice(detail.incomplete?'Planilla auxiliar guardada, aún faltan datos documentales. No está certificada.':
+     'Planilla auxiliar completa guardada (DEMO). No es Libro de Vuelo ni RAV oficial.');
+   }catch(err){notice(err.message)}
+  });
   if($('flightform'))$('flightform').addEventListener('submit',e=>{e.preventDefault();try{
    const booking=reservations.find(r=>r.id===$('flightBooking').value);
    const f=closeFlight({from:$('flightFrom').value,to:$('flightTo').value,start:$('flightStart').value,end:$('flightEnd').value,
