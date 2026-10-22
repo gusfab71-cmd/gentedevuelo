@@ -498,7 +498,7 @@ assert.equal(detail.sourceFlightId,'flight-log-1');
 assert.throws(()=>makeLogbookDetail({...exampleLog,recordedFlightMinutes:''},bookedFlight,recordedFlight,members[0],fleet),/Ingresá los minutos/);
 assert.throws(()=>makeLogbookDetail({...exampleLog,recordedFlightMinutes:62},bookedFlight,recordedFlight,members[0],fleet),/no superar el bloque/);
 assert.throws(()=>makeLogbookDetail({...exampleLog,categoryMinutes:{airportDayPilot:60}},bookedFlight,recordedFlight,members[0],fleet),/ocho casilleros/);
-assert.throws(()=>makeLogbookDetail({...exampleLog,specialMinutes:{instrumentHood:62}},bookedFlight,recordedFlight,members[0],fleet),/no puede superar/);
+assert.throws(()=>makeLogbookDetail({...exampleLog,specialMinutes:{instrumentHood:62}},bookedFlight,recordedFlight,members[0],fleet),/minutos enteros y válidos|no puede superar/);
 assert.throws(()=>makeLogbookDetail({...exampleLog,specialMinutes:{instrumentRealPilot:45,instrumentRealCopilot:30}},bookedFlight,recordedFlight,members[0],fleet),/instrumentos reales/);
 assert.throws(()=>makeLogbookDetail({...exampleLog,purpose:''},bookedFlight,recordedFlight,members[0],fleet),/finalidad/);
 const loggedFlights=[{...recordedFlight,logbook:detail},instructionFlight];
