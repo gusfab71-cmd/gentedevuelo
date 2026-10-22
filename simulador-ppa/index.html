@@ -16,7 +16,54 @@ const $=id=>document.getElementById(id);
 const ANAC_FIGURE_PDF='https://www.argentina.gob.ar/sites/default/files/2021/05/anexo-figuras-para-las-preguntas-ppa.pdf';
 const ANAC_PAGES={1:1,2:1,3:2,4:2,5:3,6:3,7:4,8:5,9:6,29:6,30:7,31:7,33:8,34:11,35:12,36:13,37:14,38:15,39:15,41:16,48:17,49:18,50:19,59:20,61:20,62:21,63:21,65:22,66:23,67:24};
 const figureDocUrl=page=>ANAC_FIGURE_PDF+'#page='+page+'&zoom=page-width';
-let bank=[],historicalBank=[],reviewBank=[],exam=[],index=0,points=0,selected=null,answered=false,figureReady=false,gradedCount=0,reviewMode=false,practiceMode=false;
+let bank=[],historicalBank=[],reviewBank=[],rawBank=[],exam=[],index=0,points=0,selected=null,answered=false,figureReady=false,gradedCount=0,reviewMode=false,practiceMode=false,sequentialMode=false;
+let sequentialAnswers={},sequentialFlags={},currentAdminId='',sequenceSignature='';
+const AUDIT=window.PPA_AUDIT;
+const seqStorageKey=()=>currentAdminId?'gdv-ppa-admin-correlativo-'+currentAdminId:'';
+function computeSequenceSignature(){
+ const data=exam.map(q=>String(q.id)+'/'+String(q.correcta)+'/'+String(q.pregunta)).join('|');
+ let hash=2166136261;
+ for(let j=0;j<data.length;j++){hash^=data.charCodeAt(j);hash=Math.imul(hash,16777619)}
+ return data.length+'-'+(hash>>>0).toString(16);
+}
+function saveSequential(){
+ if(!sequentialMode||!seqStorageKey())return;
+ try{localStorage.setItem(seqStorageKey(),JSON.stringify({version:sequenceSignature,cursor:index,answers:sequentialAnswers,flags:sequentialFlags}))}catch(_){}
+}
+function resumeSequential(){
+ sequentialAnswers={};sequentialFlags={};index=0;points=0;gradedCount=0;
+ try{
+  const saved=JSON.parse(localStorage.getItem(seqStorageKey())||'null');
+  if(saved&&saved.version===sequenceSignature&&saved.answers&&typeof saved.answers==='object'&&saved.flags&&typeof saved.flags==='object'){
+   sequentialAnswers=saved.answers;sequentialFlags=saved.flags;
+   index=Math.max(0,Math.min(exam.length,Math.floor(Number(saved.cursor)||0)));
+   for(const q of exam){const a=sequentialAnswers[q.id];if(a?.graded===true){gradedCount++;if(a.correct===true)points++}}
+  }
+ }catch(_){}
+}
+function updateAuditSummary(){
+ const audit=AUDIT.auditBank(rawBank);
+ $('audit-summary').classList.remove('hidden');
+ $('audit-stats').textContent='Registros: '+audit.total+' · Verificados: '+audit.verified+' · Sin verificación final: '+audit.unverified+
+  ' · Sin clave válida: '+audit.noKey+' · Sin fundamento: '+audit.noReason+' · Incompletos: '+audit.incomplete+
+  ' · Números posiblemente ausentes: '+(audit.missing.length?audit.missing.join(', '):'ninguno en el rango cargado')+
+  (audit.duplicate.length?' · Números duplicados: '+audit.duplicate.join(', '):'');
+}
+function exportAuditCsv(){
+ if(!reviewBank.length)return;
+ const csv=AUDIT.exportCsv(rawBank,sequentialAnswers,sequentialFlags);
+ const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+ const a=document.createElement('a');a.href=url;a.download='auditoria-ppa-'+new Date().toISOString().slice(0,10)+'.csv';
+ document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),500);
+}
+function updateFlagLabel(){
+ $('flag').classList.toggle('hidden',!sequentialMode);
+ if(!sequentialMode)return;
+ const flagged=Boolean(sequentialFlags[exam[index]?.id]);
+ $('flag').textContent=flagged?'Observación registrada · editar':'Marcar para cotejo';
+ $('flag').classList.toggle('flagged',flagged);
+}
+
 const usedQuestionIds=new Set(); // Evita repetir preguntas entre exámenes hasta agotar el conjunto filtrado.
 let audioContext=null;
 let activeAnswerMaster=null;
@@ -161,13 +208,18 @@ const localFigure=q=>/^\/simulador-ppa\/figuras\/[a-z0-9_-]+\.png$/i.test(q.figu
 const hasImage=q=>localFigure(q)||/^https:\/\/[^ ]+\.(png|jpe?g|webp)$/i.test(q.figura_r2_key||'');
 function describeMode(){
  const option=$('practice').value;
- $('start').textContent=option==='review'?'Comenzar revisión':option==='exam'?'Comenzar examen':'Comenzar práctica';
+ const sequential=option==='sequential';
+ $('start').textContent=sequential?'Comenzar / continuar revisión':option==='review'?'Comenzar revisión':option==='exam'?'Comenzar examen':'Comenzar práctica';
+ $('reset-seq').classList.toggle('hidden',!sequential);
+ for(const id of ['subject','mode','count'])$(id).disabled=sequential;
  $('mode-description').textContent=option==='practice'?
-  'Práctica puntuable (+1 por respuesta acertada) con claves históricas ANAC aún pendientes de revisión. El puntaje es provisional, no representa una evaluación oficial.':
+  'Práctica aleatoria puntuable (+1 por acierto) con claves históricas ANAC todavía pendientes de revisión.':
   option==='exam'?'Examen puntuable solo con respuestas y fundamentos marcados como verificados.':
-  'Revisión documental del banco completo, sin asignar puntos ni certificar respuestas.';
- if(option==='practice')$('status').textContent='Práctica: '+historicalBank.length+' preguntas con clave histórica; '+historicalBank.filter(needsFigure).length+' con figura integrada. Elegí Con figuras para practicar solo esas.';
+  sequential?'Revisión correlativa de TODO el banco, sin límite de 10. +1 por coincidencia con la clave registrada; puntaje PROVISIONAL. Se conserva avance en este navegador y podés exportar un informe CSV.':
+  'Revisión documental de preguntas seleccionadas, sin asignar puntos.';
+ if(option==='practice')$('status').textContent='Práctica: '+historicalBank.length+' preguntas con clave histórica; '+historicalBank.filter(needsFigure).length+' con figura integrada.';
  else if(option==='exam')$('status').textContent='Examen: '+bank.length+' preguntas verificadas; '+bank.filter(needsFigure).length+' con figura.';
+ else if(sequential)$('status').textContent='Correlativo: '+reviewBank.length+' registros, en orden numérico y sin omitir los de clave o campos incompletos.';
  else $('status').textContent='Revisión: '+reviewBank.length+' registros, incluidos los que todavía no tienen clave identificada.';
 }
 async function load(){
