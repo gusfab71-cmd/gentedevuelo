@@ -43,7 +43,7 @@ assert.throws(()=>stockMove({qty:20},25,'salida'),/stock/);
 const html=fs.readFileSync(new URL('../utilidades/gestion-aeronautica/index.html',import.meta.url),'utf8');
 const matches=[...html.matchAll(/<script type="module">([\s\S]*?)<\/script>/g)];
 assert.equal(matches.length,1);
-const script=matches[0][1].replace(/^\s*import[^\n]*\n/,'');
+const script=matches[0][1].replace(/^(?:\s*import[^\n]*\n)+/,'');
 new vm.Script(script,{filename:'gestion-aeronautica/index.html'});
 assert.match(html,/site_admins/,'Primera versión es solo administrador');
 assert.match(html,/Acceso exclusivo del administrador/);
