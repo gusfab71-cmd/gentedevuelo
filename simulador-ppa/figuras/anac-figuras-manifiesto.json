@@ -183,5 +183,41 @@
       "bytes": 88472
     }
   },
-  "figure_21": "preguntas-segun-raac-61-105.pdf página 52/108"
+  "figure_21": "preguntas-segun-raac-61-105.pdf página 52/108",
+  "raac_question_figures": {
+    "source": "https://www.argentina.gob.ar/sites/default/files/2021/05/preguntas-segun-raac-61-105.pdf",
+    "sha256": "0c2023bb318d70f73f3dc8e54aa67222efe10a883249e2256c1cbe202e34a3ed",
+    "questions": {
+      "320": {
+        "page": 90,
+        "width": 740,
+        "height": 506,
+        "bytes": 139904
+      },
+      "322": {
+        "page": 91,
+        "width": 1048,
+        "height": 933,
+        "bytes": 133900
+      },
+      "323": {
+        "page": 92,
+        "width": 1048,
+        "height": 933,
+        "bytes": 133900
+      },
+      "324": {
+        "page": 93,
+        "width": 1048,
+        "height": 828,
+        "bytes": 155262
+      },
+      "329": {
+        "page": 94,
+        "width": 1048,
+        "height": 410,
+        "bytes": 69868
+      }
+    }
+  }
 }
