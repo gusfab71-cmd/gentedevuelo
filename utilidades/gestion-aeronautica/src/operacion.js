@@ -24,7 +24,7 @@ export function createReservation(req,current,fleet,members){
    throw Error('Instructor con licencia o CMA declarada sin vigencia suficiente.');
  }
  if(pilot.kind==='alumno'&&!req.instructor)throw Error('La práctica de alumno requiere instructor asignado en esta demostración.');
- const conflict=current.some(x=>x.status==='confirmada'&&intersects(x,req)&&(x.aircraft===req.aircraft||Boolean(req.instructor)&&x.instructor===req.instructor));
+ const conflict=current.some(x=>x.status==='confirmada'&&intersects(x,req)&&(x.aircraft===req.aircraft||x.pilot===req.pilot||Boolean(req.instructor)&&x.instructor===req.instructor));
  if(conflict)throw Error('Conflicto de horario de aeronave o instructor.');
  return {...req,id:crypto.randomUUID(),status:'confirmada',createdAt:new Date().toISOString()};
 }

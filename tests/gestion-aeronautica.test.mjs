@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
 import {minutes,validDate,intersects,createReservation,closeFlight,flightTotals,stockMove} from '../utilidades/gestion-aeronautica/src/operacion.js';
+import {mondayOf,shiftDate,listWeek,visibleBookings,timeWindow,layoutDay,hhmm} from '../utilidades/gestion-aeronautica/src/agenda.js';
 import {ASSESSMENTS,LESSON_STATUS,buildLesson,reviseLesson,submitLesson,closeLessonByInstructor,reviewLesson,studentTimeline,studentSummary} from '../utilidades/gestion-aeronautica/src/formacion.js';
 
 assert.equal(minutes('09:30'),570);
@@ -139,4 +140,62 @@ assert.match(html,/trainingInstitution\.reviewMode==='chief'\?'Enviar al jefe de
 assert.match(html,/No se puede omitir jefatura en un CIAC bajo RAAC 141/);
 assert.match(html,/Consulta administrativa de formación/);
 console.log('PASS: instituciones sin jefatura, bloqueo CIAC y cierre inmutable de instructor');
+
+// Agenda compacta: rango semanal, filtros, solapamientos y formulario bajo demanda.
+assert.equal(mondayOf('2026-10-22'),'2026-10-19');
+assert.deepEqual(listWeek('2026-10-22'),['2026-10-19','2026-10-20','2026-10-21','2026-10-22','2026-10-23','2026-10-24','2026-10-25']);
+assert.equal(shiftDate('2026-10-22',7),'2026-10-29');
+assert.equal(shiftDate('2026-10-22',-1),'2026-10-21');
+assert.equal(shiftDate('2026-12-31',1),'2027-01-01');
+assert.equal(hhmm(420),'07:00');
+assert.throws(()=>mondayOf('2026-02-30'),/Fecha inválida/);
+const schedule=[reservation,{...reservation,id:'booking-other',aircraft:'LV-XYZ',instructor:'',pilot:'p2',start:'10:15',end:'10:45'}];
+assert.equal(visibleBookings(schedule,listWeek('2026-10-30')).length,2);
+assert.equal(visibleBookings(schedule,['2026-10-29']).length,0);
+assert.equal(visibleBookings(schedule,['2026-10-30'],'LV-ABC').length,1);
+assert.equal(visibleBookings(schedule,['2026-10-30'],'all','i1').length,1);
+const renderedDay=layoutDay(schedule,'2026-10-30',8*60);
+assert.equal(renderedDay.length,2);
+assert.equal(renderedDay[0].lanes,2);
+assert.equal(renderedDay[1].lanes,2);
+assert.equal(renderedDay[0].lane!==renderedDay[1].lane,true,'Turnos de aeronaves distintas no se tapan');
+const wider=timeWindow([{...reservation,start:'06:25',end:'21:30'}]);
+assert.deepEqual(wider,{start:360,end:1320},'La agenda expande el horario para mostrar reservas fuera del horario común');
+assert.deepEqual(timeWindow([]),{start:480,end:1200});
+assert.throws(()=>createReservation({...req,aircraft:'LV-XYZ',instructor:''},[reservation],fleet,members),/Conflicto/,
+ 'Un piloto no puede estar en dos aeronaves simultáneamente.');
+for(const label of ['Agenda inteligente de turnos','Nueva reserva','data-agenda-time','agendaFilterAircraft','agendaFilterInstructor',
+ 'data-agenda-edit','data-agenda-view','data-agenda-shift','agendaFormOpen'])
+ assert.ok(html.includes(label),'Falta UI de calendario: '+label);
+const calendarSrc=script.slice(script.indexOf('function calendar(){'),script.indexOf('function flightScreen(){'));
+assert.ok(calendarSrc.startsWith('function calendar(){'));
+const calendarContext={
+ reservations:[],members:[{id:'p1',name:'Piloto Demo',kind:'piloto'}],
+ fleet:[{id:'LV-ABC',model:'Cessna 172'}],
+ agendaView:'week',agendaAircraft:'all',agendaInstructor:'all',
+ agendaFormOpen:false,agendaBookingId:'',agendaSelectedBooking:'',agendaDraftDate:'2026-10-22',
+ agendaDraftStart:'10:00',week:'2026-10-22',
+ listWeek,visibleBookings,timeWindow,layoutDay,hhmm,now:()=>'2026-10-22',
+ shortDay:day=>day,safe:v=>String(v??''),
+ flights:[],validDate,money:n=>String(n)
+};
+vm.createContext(calendarContext);
+vm.runInContext(calendarSrc,calendarContext);
+const closedCalendar=vm.runInContext('calendar()',calendarContext);
+assert.match(closedCalendar,/id="newBooking"/);
+assert.match(closedCalendar,/class="agenda-scroll"/);
+assert.match(closedCalendar,/data-agenda-date="2026-10-22"/);
+assert.doesNotMatch(closedCalendar,/<form id="booking">/,'El formulario debe permanecer oculto hasta que se solicite.');
+calendarContext.agendaFormOpen=true;
+const openedCalendar=vm.runInContext('calendar()',calendarContext);
+assert.match(openedCalendar,/<form id="booking">/);
+assert.match(openedCalendar,/id="bookAircraft"/);
+assert.match(openedCalendar,/id="bookInstructor"/);
+calendarContext.agendaView='day';calendarContext.agendaFormOpen=false;
+const singleDay=vm.runInContext('calendar()',calendarContext);
+assert.match(singleDay,/class="agenda-columns day-mode"/);
+assert.match(singleDay,/data-agenda-date="2026-10-22"/);
+assert.doesNotMatch(singleDay,/data-agenda-date="2026-10-23"/);
+console.log('PASS: agenda compacta con semana/día, filtros, turnos superpuestos y formulario oculto');
+
 console.log('PASS: gestión integrada, fechas, conflictos, cierre idempotente, stock, UX y acceso admin');
