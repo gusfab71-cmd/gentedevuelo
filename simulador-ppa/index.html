@@ -37,7 +37,10 @@ function resumeSequential(){
   if(saved&&saved.version===sequenceSignature&&saved.answers&&typeof saved.answers==='object'&&saved.flags&&typeof saved.flags==='object'){
    sequentialAnswers=saved.answers;sequentialFlags=saved.flags;
    index=Math.max(0,Math.min(exam.length,Math.floor(Number(saved.cursor)||0)));
-   for(const q of exam){const a=sequentialAnswers[q.id];if(a?.graded===true){gradedCount++;if(a.correct===true)points++}}
+   // Solo se computan respuestas anteriores al cursor confirmado: evita dobles puntos al recargar.
+   const completed=new Set(exam.slice(0,index).map(q=>q.id));
+   for(const q of exam){const a=completed.has(q.id)?sequentialAnswers[q.id]:null;if(a?.graded===true){gradedCount++;if(a.correct===true)points++}}
+   if(index<exam.length)delete sequentialAnswers[exam[index].id];
   }
  }catch(_){}
 }
