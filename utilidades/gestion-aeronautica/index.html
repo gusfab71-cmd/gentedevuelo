@@ -318,6 +318,27 @@ function documentsScreen(){
  '<div class="card"><h3>Comunicaciones</h3><p>Avisos de reservas, cancelaciones y eventos, sin mensajes automáticos hasta contar con consentimiento y permisos.</p><span class="pill uncertain">Diseño pendiente</span></div></div></section>';
 }
 function wireTraining(){
+ const setType=$('trainingInstitutionType'),setMode=$('trainingReviewMode');
+ const setConfig=(type,mode)=>{
+  if(type!=='ciac'&&type!=='non_ciac')throw Error('Tipo de institución inválido.');
+  if(mode!=='chief'&&mode!=='instructor')throw Error('Modalidad de supervisión inválida.');
+  if(type==='ciac'&&mode!=='chief')throw Error('No se puede omitir jefatura en un CIAC bajo RAAC 141.');
+  if(mode==='instructor'&&lessons.some(l=>l.status==='submitted'))
+   throw Error('Hay fichas ya enviadas a jefatura; deben resolverse antes de pasar al modo sin jefe.');
+  trainingInstitution.institutionType=type;trainingInstitution.reviewMode=mode;
+  trainingForm='';render();
+  notice('Configuración de DEMOSTRACIÓN cambiada. No verifica condición CIAC ni se guarda permanentemente.');
+ };
+ setType?.addEventListener('change',e=>{
+  try{
+   const mode=e.target.value==='ciac'?'chief':trainingInstitution.reviewMode;
+   setConfig(e.target.value,mode);
+  }catch(err){render();notice(err.message)}
+ });
+ setMode?.addEventListener('change',e=>{
+  try{setConfig(trainingInstitution.institutionType,e.target.value)}
+  catch(err){render();notice(err.message)}
+ });
  const studentSelect=$('trainingStudent');
  if(studentSelect)studentSelect.addEventListener('change',e=>{trainingStudent=e.target.value;trainingForm='';render()});
  $('newTraining')?.addEventListener('click',()=>{trainingPreselectFlight='';trainingForm='new';render();$('lessonTopics')?.focus()});
@@ -353,11 +374,11 @@ function wireTraining(){
    if(editing){
     const revised=reviseLesson(editing,draft,editing.instructorId);
     lessons=lessons.map(l=>l.id===editing.id?revised:l);
-    notice('Corrección del instructor registrada (DEMO). Enviá nuevamente la ficha para revisión.');
+    notice('Corrección registrada (DEMO). '+(trainingInstitution.reviewMode==='chief'?'Enviá nuevamente la ficha para revisión.':'El instructor puede cerrar la ficha sin revisión de jefatura.'));
    }else{
     const lesson=buildLesson(draft,members,members,flights,lessons);
     lessons.push(lesson);trainingStudent=lesson.studentId;
-    notice('Borrador de evolución creado (DEMO). El instructor debe enviarlo al jefe de instructores.');
+    notice('Borrador creado (DEMO). '+(trainingInstitution.reviewMode==='chief'?'El instructor debe enviarlo al jefe de instructores.':'El instructor puede cerrar su evaluación pedagógica.'));
    }
    trainingForm='';trainingPreselectFlight='';render();
   }catch(err){notice(err.message)}
@@ -372,12 +393,16 @@ function wireTraining(){
   try{
    const selected=lessons.find(l=>l.id===button.dataset.lessonSend);
    if(!selected)throw Error('Ficha no encontrada.');
-   const changed=submitLesson(selected,selected.instructorId);
+   const chiefRequired=trainingInstitution.reviewMode==='chief';
+   const changed=chiefRequired?submitLesson(selected,selected.instructorId):
+    closeLessonByInstructor(selected,selected.instructorId,trainingInstitution);
    lessons=lessons.map(l=>l.id===selected.id?changed:l);
-   render();notice('Ficha de instrucción enviada al jefe de instructores para revisión (DEMO).');
+   render();notice(chiefRequired?'Ficha enviada al jefe para revisión (DEMO).':
+    'Evaluación pedagógica cerrada por el instructor responsable (DEMO; sin certificación ANAC).');
   }catch(err){notice(err.message)}
  }));
  $('screen').querySelectorAll('[data-chief-approve]').forEach(button=>button.addEventListener('click',()=>{
+  if(trainingInstitution.reviewMode!=='chief')return;
   if(!confirm('Simular aprobación por el jefe de instructores de esta ficha. No genera certificación real. ¿Continuar?'))return;
   try{
    const selected=lessons.find(l=>l.id===button.dataset.chiefApprove);
@@ -387,6 +412,7 @@ function wireTraining(){
   }catch(err){notice(err.message)}
  }));
  $('screen').querySelectorAll('[data-chief-return]').forEach(button=>button.addEventListener('click',()=>{
+  if(trainingInstitution.reviewMode!=='chief')return;
   const reason=prompt('Observación del jefe de instructores que deberá atender el instructor (DEMO):');
   if(reason===null)return;
   try{
