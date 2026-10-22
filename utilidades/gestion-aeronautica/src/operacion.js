@@ -22,6 +22,7 @@ export function validateReservationPolicy(value){
  if(![15,30,60].includes(step))throw Error('Los intervalos deben ser de 15, 30 o 60 minutos.');
  const from=minutes(value.openTime),to=minutes(value.closeTime);
  if(from>=to)throw Error('El horario de cierre debe ser posterior al horario de apertura.');
+ if(from%step!==0)throw Error('La apertura debe coincidir con la grilla de intervalos seleccionada.');
  if(to-from<min)throw Error('La jornada debe permitir al menos una reserva mínima de alumno.');
  if(!Array.isArray(value.availableWeekdays)||!value.availableWeekdays.length||
   value.availableWeekdays.some(d=>!Number.isInteger(d)||d<0||d>6)||
