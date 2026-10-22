@@ -90,7 +90,7 @@ ol{color:#bbccd0;font-size:13px;line-height:1.85}
 </main>
 <script type="module">
 import {createReservation,closeFlight,flightTotals,stockMove,validDate} from './src/operacion.js';
-import {ASSESSMENTS,LESSON_STATUS,buildLesson,reviseLesson,submitLesson,reviewLesson,studentTimeline,studentSummary} from './src/formacion.js';
+import {ASSESSMENTS,LESSON_STATUS,buildLesson,reviseLesson,submitLesson,closeLessonByInstructor,reviewLesson,studentTimeline,studentSummary} from './src/formacion.js';
 const $=id=>document.getElementById(id);
 const safe=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[ch]));
 const isoDay=d=>[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');
@@ -108,6 +108,8 @@ const products=[{id:'avgas',name:'AVGAS 100LL',qty:180,unit:'L',min:60,cost:1800
 let reservations=[],flights=[],movements=[],lessons=[],tab='inicio',week=now();
 let trainingForm='',trainingStudent='p2',trainingPreselectFlight='';
 const chiefDemoId='jefe-instructores-demo';
+// Demostración: configuración por institución. Sin persistencia ni validación ANAC.
+const trainingInstitution={institutionType:'non_ciac',reviewMode:'chief'};
 const navs=[['inicio','Panel general'],['reservas','Agenda y reservas'],['vuelos','Vuelos y RAV'],['flota','Aeronaves y mantenimiento'],['personas','Pilotos y alumnos'],['finanzas','Contabilidad y horas'],['stock','Combustible y aceite'],['academia','Academia y Simu PPA'],['documentos','Documentos y avisos']];
 function notice(message){$('alert').textContent=message}
 const metric=(value,label)=>'<div class="metric"><strong>'+safe(value)+'</strong><span>'+safe(label)+'</span></div>';
@@ -169,6 +171,23 @@ function fleetScreen(){
  '<a class="secondary" href="../mantenimiento-aeronaves.html">Abrir herramienta actual de mantenimiento</a></section>';
 }
 const personName=id=>id===chiefDemoId?'Jefe de Instructores (simulado)':members.find(p=>p.id===id)?.name||id;
+function trainingSettings(){
+ const type=trainingInstitution.institutionType,mode=trainingInstitution.reviewMode;
+ return '<section class="panel"><div class="toolbar"><h2>Organización de la instrucción · Demo</h2>'+
+ '<span class="tag">Configuración por institución</span></div>'+
+ '<p>Elegí cómo se supervisan los legajos. No modifica los registros existentes. En el modo no CIAC sin jefe, el instructor responsable puede cerrar su ficha pedagógica.</p>'+
+ '<div class="formgrid">'+
+ '<label>Régimen institucional declarado<select id="trainingInstitutionType">'+
+ '<option value="non_ciac" '+(type==='non_ciac'?'selected':'')+'>Escuela / aeroclub fuera del régimen CIAC 141</option>'+
+ '<option value="ciac" '+(type==='ciac'?'selected':'')+'>Centro certificado CIAC (RAAC 141)</option>'+
+ '</select></label>'+
+ '<label>Supervisión de fichas<select id="trainingReviewMode">'+
+ '<option value="chief" '+(mode==='chief'?'selected':'')+'>Con jefe de instructores (revisión y aprobación)</option>'+
+ '<option value="instructor" '+(mode==='instructor'?'selected':'')+(type==='ciac'?' disabled':'')+'>Sin jefe: cierre por instructor responsable</option>'+
+ '</select></label></div>'+
+ '<div class="training-note"><b>Advertencia reglamentaria:</b> un CIAC debe cumplir los cargos, designaciones y procedimientos de su MIP según RAAC 141 (edición mayo 2026). El modo sin jefe no habilita a omitir estos requisitos. Esta selección es solo una simulación y no valida la habilitación institucional.</div>'+
+ '</section>';
+}
 function trainingFormMarkup(){
  const editing=trainingForm.startsWith('edit:')?lessons.find(l=>l.id===trainingForm.slice(5)):null;
  if(trainingForm!=='new'&&!editing)return '';
@@ -200,12 +219,12 @@ function trainingFormMarkup(){
 function trainingTimeline(){
  const student=trainingStudent,entries=studentTimeline(lessons,student),summary=studentSummary(lessons,student);
  const unreported=flights.filter(f=>f.pilot===student&&f.instructor&&!lessons.some(l=>l.flightId===f.id));
- const missingBlock=unreported.length?'<div class="training-note"><strong>'+unreported.length+' vuelo(s) de instrucción sin ficha de evolución</strong><p>El instructor debe documentar el progreso y enviarlo a jefatura.</p>'+
+ const missingBlock=unreported.length?'<div class="training-note"><strong>'+unreported.length+' vuelo(s) de instrucción sin ficha de evolución</strong><p>El instructor debe documentar el progreso y finalizar la ficha según la modalidad de la institución.</p>'+
  unreported.map(f=>'<div class="training-actions"><span>'+safe(f.date)+' · '+safe(f.aircraft)+' · '+safe(personName(f.instructor))+'</span><button class="secondary" type="button" data-prepare-lesson="'+safe(f.id)+'">Preparar ficha pendiente</button></div>').join('')+'</div>':'';
  const cards=entries.map(l=>{
   const status=LESSON_STATUS[l.status]||'Estado pendiente';
   const audit=l.history.map(h=>{
-   const names={created:'Ficha creada',edited:'Ficha corregida',submitted:'Enviada al jefe de instructores',approved:'Revisada y aprobada por el jefe',returned:'Devuelta al instructor'};
+   const names={created:'Ficha creada',edited:'Ficha corregida',submitted:'Enviada al jefe de instructores',approved:'Revisada y aprobada por el jefe',returned:'Devuelta al instructor',instructor_closed:'Cerrada por instructor responsable'};
    const description=h.action==='submitted'?'Instantánea de la ficha preservada para auditoría':String(h.detail||'').slice(0,500);
    return '<div class="training-history-item"><b>'+safe(new Date(h.date).toLocaleString('es-AR'))+' · '+safe(names[h.action]||h.action)+'</b>'+
     '<p>Responsable: '+safe(personName(h.actor))+' · Revisión '+safe(h.revision)+'</p>'+
@@ -213,7 +232,7 @@ function trainingTimeline(){
   }).join('');
   const editable=['draft','returned'].includes(l.status);
   const buttons=editable?'<button type="button" class="secondary" data-lesson-edit="'+safe(l.id)+'">Corregir ficha</button>'+
-   (l.status==='draft'?'<button class="action" type="button" data-lesson-send="'+safe(l.id)+'">Enviar al jefe de instructores</button>':''):'';
+   (l.status==='draft'?'<button class="action" type="button" data-lesson-send="'+safe(l.id)+'">'+(trainingInstitution.reviewMode==='chief'?'Enviar al jefe de instructores':'Cerrar ficha como instructor (sin jefe)')+'</button>':''):'';
   return '<article class="training-record"><div class="toolbar"><h3>'+safe(l.date)+' · '+safe(personName(l.instructorId))+'</h3>'+
    '<span class="training-status '+safe(l.status)+'">'+safe(status)+'</span></div>'+
    '<p><strong>Clase:</strong> '+safe(l.minutes)+' min · '+(l.flightId?'Vuelo vinculado · '+safe(l.hours)+' h bloque':'Sin vuelo vinculado')+
@@ -232,13 +251,21 @@ function trainingTimeline(){
  '<label>Alumno a consultar<select id="trainingStudent">'+
  members.filter(m=>m.kind==='alumno').map(m=>'<option value="'+safe(m.id)+'" '+(student===m.id?'selected':'')+'>'+safe(m.name)+'</option>').join('')+
  '</select></label><div class="metrics" style="margin-top:16px">'+
- metric(summary.lessons,'Clases registradas')+metric(summary.approved,'Revisadas por jefe')+
+ metric(summary.lessons,'Clases registradas')+metric(summary.approved+summary.instructorClosed,'Fichas cerradas')+
  metric(summary.pending,'Pendientes del jefe')+metric(Math.round(summary.trainingMinutes/60*10)/10+' h','Instrucción pedagógica')+'</div>'+
+ '<p class="muted">Revisadas por jefe: '+summary.approved+' · Cerradas por instructor: '+summary.instructorClosed+' · Devueltas: '+summary.returned+'</p>'+
  '<div class="training-actions"><button type="button" class="action" id="newTraining">Registrar clase</button></div>'+
  '<p class="muted">Cada clase guarda instructor, fecha, duración, evolución, dificultades, objetivos y estado de aprobación. Las horas de instrucción pedagógica no se suman automáticamente a la bitácora oficial.</p>'+
  missingBlock+(cards||'<div class="card"><p>Aún no hay clases registradas para este alumno de demostración.</p></div>')+'</section>';
 }
 function chiefReviewSection(){
+ if(trainingInstitution.reviewMode!=='chief'){
+  const completed=lessons.filter(l=>l.status==='instructor_closed').length;
+  return '<section class="panel"><h2>Consulta administrativa de formación</h2>'+
+   '<p>'+completed+' fichas cerradas por instructores, con historial visible desde cada legajo. No requieren aprobación de jefatura en esta modalidad pedagógica de demostración.</p>'+
+   '<p class="training-note">La administración puede supervisar los legajos, pero el cierre corresponde al instructor asignado. Esto no acredita cumplimiento de requisitos de certificación ANAC.</p></section>';
+ }
+
  const pending=lessons.filter(l=>l.status==='submitted');
  const missing=flights.filter(f=>members.some(p=>p.id===f.pilot&&p.kind==='alumno')&&f.instructor&&!lessons.some(l=>l.flightId===f.id));
  return '<section class="panel"><div class="toolbar"><h2>Jefatura de Instructores · Control de calidad</h2>'+
@@ -264,7 +291,7 @@ function memberScreen(){
  '<div class="table-scroll"><table><thead><tr><th>Perfil de prueba</th><th>Rol</th><th>Licencia declarada</th><th>CMA declarada</th><th>Horas bloque</th></tr></thead><tbody>'+
  members.map(p=>'<tr><td>'+safe(p.name)+'</td><td>'+safe(p.kind)+'</td><td>'+safe(p.licenseUntil)+'</td><td>'+safe(p.cmaUntil)+'</td><td>'+(totals[p.id]||0).toFixed(2)+'</td></tr>').join('')+
  '</tbody></table></div></section>'+
- trainingTimeline()+trainingFormMarkup()+chiefReviewSection();
+ trainingSettings()+trainingTimeline()+trainingFormMarkup()+chiefReviewSection();
 }
 function financeScreen(){
  const gross=flights.reduce((a,b)=>a+b.cost,0);
