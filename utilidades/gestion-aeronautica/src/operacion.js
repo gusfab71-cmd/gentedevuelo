@@ -3,6 +3,9 @@ export const minutes = time => {
  if(!/^([01]\d|2[0-3]):[0-5]\d$/.test(time))throw Error('Hora inválida.');
  const [h,m]=time.split(':').map(Number);return 60*h+m;
 };
+// Regla de agenda institucional: toda reserva cuyo titular es alumno dura al menos 90 minutos.
+export const STUDENT_RESERVATION_MINUTES=90;
+export const reservationMinimumMinutes=person=>person?.kind==='alumno'?STUDENT_RESERVATION_MINUTES:0;
 export const validDate = date => {
  if(!/^\d{4}-\d{2}-\d{2}$/.test(date))return false;
  const d=new Date(date+'T12:00:00Z');
@@ -14,6 +17,8 @@ export function createReservation(req,current,fleet,members){
  if(minutes(req.start)>=minutes(req.end))throw Error('La hora de finalización debe ser posterior al inicio.');
  const plane=fleet.find(a=>a.id===req.aircraft),pilot=members.find(p=>p.id===req.pilot);
  if(!plane||!pilot||pilot.kind==='instructor')throw Error('Piloto o aeronave inexistente.');
+ if(minutes(req.end)-minutes(req.start)<reservationMinimumMinutes(pilot))
+  throw Error('Las reservas de alumnos deben tener una duración mínima de 1 hora y 30 minutos (90 minutos).');
  if(plane.blocked)throw Error('Aeronave bloqueada administrativamente.');
  if(plane.insuranceUntil<req.date)throw Error('Seguro declarado vencido: requiere validación técnica/administrativa.');
  if(!pilot.licenseUntil||!pilot.cmaUntil||pilot.licenseUntil<req.date||pilot.cmaUntil<req.date)throw Error('La licencia/habilitación o CMA declarada requiere actualización.');
