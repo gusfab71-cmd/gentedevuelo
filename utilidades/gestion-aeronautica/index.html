@@ -201,6 +201,16 @@ const products=[{id:'avgas',name:'AVGAS 100LL',qty:180,unit:'L',min:60,cost:1800
 let reservations=[],flights=[],movements=[],lessons=[],groundActivities=[],tab='inicio',week=now();
 const demoPacks=[{id:'pack-demo-10h',studentId:'p2',description:'Pack de 10 horas (ejemplo)',acquiredHours:10,remainingHours:10}];
 let trainingGoals=validateTrainingGoals(DEFAULT_TRAINING_GOALS),trainingGoalsOpen=false;
+const trainingGoalsStorageKey=()=>demoAdminId?'gdv-gestion-metas-v1-'+demoAdminId:'';
+function restoreTrainingGoals(){
+ try{
+  const source=trainingGoalsStorageKey()?localStorage.getItem(trainingGoalsStorageKey()):null;
+  if(source)trainingGoals=validateTrainingGoals(JSON.parse(source));
+ }catch(_){trainingGoals=validateTrainingGoals(DEFAULT_TRAINING_GOALS)}
+}
+function rememberTrainingGoals(){
+ try{if(trainingGoalsStorageKey())localStorage.setItem(trainingGoalsStorageKey(),JSON.stringify(trainingGoals))}catch(_){}
+}
 let schoolPolicy=validateReservationPolicy(DEFAULT_RESERVATION_POLICY),schoolSettingsOpen=false,demoAdminId='';
 const schoolPolicyStorageKey=()=>demoAdminId?'gdv-gestion-turnera-v1-'+demoAdminId:'';
 function rememberSchoolPolicy(){
@@ -725,7 +735,11 @@ function wirePortals(){
    try{
     const booking=reservations.find(x=>x.id===button.dataset.instructorComplete);
     if(booking.date>now())throw Error('No se puede marcar realizada una clase programada para una fecha futura.');
-    const activity=finishGroundLesson(booking,portalInstructor,groundActivities);
+    const reserved=minutes(booking.end)-minutes(booking.start);
+    const answer=prompt('Minutos efectivamente realizados de '+portalType(booking.type)+' (máximo '+reserved+'):',String(reserved));
+    if(answer===null)return;
+    const actual=Number(answer);
+    const activity=finishGroundLesson(booking,portalInstructor,groundActivities,actual);
     groundActivities.push(activity);render();
     notice('Clase de '+portalType(booking.type)+' registrada. Ahora podés completar la evolución del alumno.');
    }catch(err){notice(err.message)}
@@ -872,6 +886,22 @@ function wireTraining(){
 function wire(){
  if(tab==='personas')wireTraining();
  if(tab==='alumno'||tab==='instructor')wirePortals();
+ if(tab==='direccion'){
+  $('openTrainingGoals')?.addEventListener('click',()=>{trainingGoalsOpen=true;render()});
+  $('closeTrainingGoals')?.addEventListener('click',()=>{trainingGoalsOpen=false;render()});
+  $('trainingGoalsForm')?.addEventListener('submit',e=>{
+   e.preventDefault();
+   try{
+    trainingGoals=validateTrainingGoals({
+     flightHours:Number($('goal-flightHours').value),
+     simulatorHours:Number($('goal-simulatorHours').value),
+     theoryHours:Number($('goal-theoryHours').value)
+    });
+    rememberTrainingGoals();trainingGoalsOpen=false;render();
+    notice('Objetivos de la escuela actualizados (DEMO). Las horas registradas no se modificaron.');
+   }catch(err){notice(err.message)}
+  });
+ }
  $('screen').querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>switchTab(b.dataset.go)));
  if(tab==='reservas'){
   $('openSchoolSettings')?.addEventListener('click',()=>{schoolSettingsOpen=!schoolSettingsOpen;render()});
@@ -1020,7 +1050,7 @@ function wire(){
   if(error||!user)throw Error('Se requiere iniciar sesión.');
   const {data,error:roleError}=await client.from('site_admins').select('user_id').eq('user_id',user.id).maybeSingle();
   if(roleError||!data)throw Error('Acceso exclusivo del administrador.');
-  demoAdminId=user.id;restoreSchoolPolicy();
+  demoAdminId=user.id;restoreSchoolPolicy();restoreTrainingGoals();
   $('app').hidden=false;document.documentElement.classList.remove('auth-pending');render();
  }catch(err){
   document.documentElement.classList.remove('auth-pending');
