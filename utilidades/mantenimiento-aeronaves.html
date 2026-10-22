@@ -866,7 +866,7 @@ function tabX(){
  const needs100h=hasInstruction(a)&&a.operation?.compensation==='yes'&&!plans.some(p=>p.applies==='yes'&&['cien','prog'].includes(p.kind));
  const needsAnnual=!plans.some(p=>p.applies==='yes'&&['anual','prog'].includes(p.kind));
  return `<div class="maint-regime mb-4"><strong>Régimen declarado: ${esc(OP_LABELS[opUse(a)])}</strong><p>${esc(regimeNotice(a))}</p>${a.operation?.program?`<p>Programa / manual informado: ${esc(a.operation.program)}</p>`:''}<p><strong>Inspecciones: 12 meses o 100 horas, según lo que venza primero cuando ambos controles correspondan.</strong> La anual y la de 100 horas se configuran por separado: una inspección anual puede satisfacer el requisito de las 100 horas, pero una de 100 horas no reemplaza la anual. Los límites se calculan desde los últimos asientos documentados y deben verificarse contra el régimen aplicable.</p>${needsAnnual?'<div class="maint-flag danger mt-3">No se registró seguimiento de la inspección anual ni programa alternativo aplicable. Confirmá el régimen y las constancias técnicas.</div>':''}${needs100h?'<div class="maint-flag danger mt-3">No se registró seguimiento de 100 horas ni programa alternativo aplicable. Verificá el régimen vigente y su documentación antes de operar.</div>':''}</div>${renderGuidePanel(a)}<div class="grid lg:grid-cols-3 gap-4">
- <section class="card p-4 space-y-3 h-fit">
+ <details class="maint-guidance h-fit"><summary>Configurar inspección reglamentaria (abrir cuando se necesite)</summary><section class="space-y-3 mt-3">
  <div class="maint-eyebrow">SEGUIMIENTO DE AERONAVEGABILIDAD</div>
  <h2 class="font-bold">Configurar inspección</h2>
  <p class="maint-note">Seleccioná la plantilla y confirmá su aplicabilidad según matrícula, categoría, operación y programa autorizado. Los intervalos se pueden ajustar; nunca se presuponen exigibles. La inspección de 100 horas de 91.409(b) se vincula, entre otros supuestos, con instrucción por compensación en aeronave provista por quien la imparte.</p>
@@ -885,7 +885,7 @@ function tabX(){
  <p>El <a href="https://www.argentina.gob.ar/node/361158" target="_blank" rel="noopener noreferrer">material ANAC sobre programas de inspección</a> distingue un programa de inspección del programa de mantenimiento completo. También deben seguirse componentes con vida limitada, DA y limitaciones de aeronavegabilidad.</p>
  <p>En operaciones de instrucción, verificá además las exigencias del centro o escuela, si corresponde. Esta guía no es una lista de inspección para ejecutar trabajos. La proyección por TTAF debe contrastarse con el tiempo en servicio y el programa oficial de la aeronave.</p>
  </details>
- </section>
+ </section></details>
  <div class="lg:col-span-2 space-y-3">
  <section class="card p-4"><h2 class="font-bold">Inspecciones de ${esc(a.reg)}</h2>
  <p class="text-xs text-slate-400">No equivale a certificado de aeronavegabilidad, aprobación de retorno al servicio ni asiento oficial. Las constancias deben estar firmadas por quien corresponda.</p>
