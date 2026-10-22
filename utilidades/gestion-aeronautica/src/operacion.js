@@ -76,6 +76,7 @@ export function createReservation(req,current,fleet,members,schoolPolicy=DEFAULT
  return {...req,id:crypto.randomUUID(),status:'confirmada',createdAt:new Date().toISOString()};
 }
 export function closeFlight(data,booking,flights,fleet){
+ if(booking?.type&&booking.type!=='flight')throw Error('Solo las reservas de vuelo pueden generar horas de aeronave.');
  if(!booking||booking.status!=='confirmada')throw Error('Solo se pueden cerrar reservas confirmadas.');
  if(flights.some(f=>f.reservationId===booking.id))throw Error('Esta reserva ya tiene un vuelo cerrado.');
  if(!data.from?.trim()||!data.to?.trim())throw Error('Indicá origen y destino.');

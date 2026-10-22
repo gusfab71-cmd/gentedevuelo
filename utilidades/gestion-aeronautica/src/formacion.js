@@ -30,12 +30,13 @@ const logEvent=(action,by,detail,revision)=>Object.freeze({
 });
 const withoutDraft=(lesson)=>({
  id:lesson.id,studentId:lesson.studentId,instructorId:lesson.instructorId,
+ bookingId:lesson.bookingId||'',classType:lesson.classType||'flight',
  flightId:lesson.flightId,date:lesson.date,minutes:lesson.minutes,
  aircraft:lesson.aircraft,topics:lesson.topics,evolution:lesson.evolution,
  difficulties:lesson.difficulties,nextGoal:lesson.nextGoal,assessment:lesson.assessment,
  hours:lesson.hours,revision:lesson.revision
 });
-export function buildLesson(data,students,instructors,flights=[],existing=[]){
+export function buildLesson(data,students,instructors,flights=[],existing=[],bookings=[]){
  if(!students.some(s=>s.id===data.studentId&&s.kind==='alumno'))
   throw Error('Seleccioná un alumno registrado.');
  if(!instructors.some(s=>s.id===data.instructorId&&s.kind==='instructor'))
@@ -46,7 +47,17 @@ export function buildLesson(data,students,instructors,flights=[],existing=[]){
  const duration=Number(data.minutes);
  if(!Number.isInteger(duration)||duration<1||duration>600)throw Error('Duración de instrucción inválida.');
  if(!Object.hasOwn(ASSESSMENTS,data.assessment))throw Error('Estado de evolución inválido.');
+ const bookingId=clean(data.bookingId,100);
+ let classType='flight';
+ if(bookingId){
+  const booking=bookings.find(b=>b.id===bookingId&&b.status==='confirmada');
+  if(!booking||booking.pilot!==data.studentId||booking.instructor!==data.instructorId||booking.date!==data.date)
+   throw Error('La reserva no coincide con alumno, instructor y fecha.');
+  classType=booking.type||'flight';
+  if(existing.some(l=>l.bookingId===bookingId))throw Error('La clase de esa reserva ya tiene evaluación.');
+ }
  const flightId=clean(data.flightId,100);
+ if(classType!=='flight'&&flightId)throw Error('Las clases teóricas o de simulador no pueden sumar horas de vuelo.');
  let hours=0;
  if(flightId){
   const match=flights.find(f=>f.id===flightId&&f.pilot===data.studentId&&f.instructor===data.instructorId);
@@ -58,7 +69,7 @@ export function buildLesson(data,students,instructors,flights=[],existing=[]){
  }
  const record={
   id:crypto.randomUUID(),revision:1,studentId:data.studentId,instructorId:data.instructorId,
-  flightId,date:data.date,minutes:duration,hours,
+  bookingId,classType,flightId,date:data.date,minutes:duration,hours,
   aircraft:clean(data.aircraft,50),
   topics:required(data.topics,1000,'la actividad realizada'),
   evolution:required(data.evolution,1000,'la evolución observada'),

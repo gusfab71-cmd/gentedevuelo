@@ -4,6 +4,7 @@ import vm from 'node:vm';
 import {minutes,validDate,intersects,createReservation,closeFlight,flightTotals,stockMove,STUDENT_RESERVATION_MINUTES,reservationMinimumMinutes,DEFAULT_RESERVATION_POLICY,validateReservationPolicy,reservationSuggestedMinutes} from '../utilidades/gestion-aeronautica/src/operacion.js';
 import {mondayOf,shiftDate,listWeek,visibleBookings,timeWindow,layoutDay,hhmm} from '../utilidades/gestion-aeronautica/src/agenda.js';
 import {ASSESSMENTS,LESSON_STATUS,buildLesson,reviseLesson,submitLesson,closeLessonByInstructor,reviewLesson,studentTimeline,studentSummary} from '../utilidades/gestion-aeronautica/src/formacion.js';
+import {ACTIVITY_TYPES,DEMO_RESOURCES,requestStudentBooking,takeStudentBooking,finishGroundLesson,studentPortalProjection,instructorPortalProjection} from '../utilidades/gestion-aeronautica/src/portales.js';
 
 assert.equal(minutes('09:30'),570);
 assert.throws(()=>minutes('25:61'),/Hora inválida/);
@@ -220,7 +221,8 @@ const calendarSrc=script.slice(script.indexOf('function calendar(){'),script.ind
 assert.ok(calendarSrc.startsWith('function calendar(){'));
 const calendarContext={
  schoolPolicy:DEFAULT_RESERVATION_POLICY,schoolSettingsOpen:false,
- schoolTurneraSettings:()=>'',minutes,reservationSuggestedMinutes,
+ schoolTurneraSettings:()=>'',minutes,reservationSuggestedMinutes,DEMO_RESOURCES,
+ portalResource:b=>b.aircraft||b.resourceId||'',portalType:t=>ACTIVITY_TYPES[t]||ACTIVITY_TYPES.flight,
  reservations:[],members:[{id:'p1',name:'Piloto Demo',kind:'piloto'}],
  fleet:[{id:'LV-ABC',model:'Cessna 172'}],
  agendaView:'week',agendaAircraft:'all',agendaInstructor:'all',
@@ -273,6 +275,79 @@ assert.match(hourlyView,/Aeroclub Demo/);
 assert.match(hourlyView,/data-agenda-time="07:15"/,'La grilla respeta intervalo de 15 minutos');
 assert.match(hourlyView,/data-agenda-date="2026-10-22"/);
 assert.doesNotMatch(hourlyView,/<form id="booking">/,'El formulario sigue plegado.');
+
+
+// Tres tipos de reserva: avión, teoría y simulador, con límites escolares y ámbitos diferentes.
+assert.equal(Object.keys(ACTIVITY_TYPES).length,3);
+assert.equal(DEMO_RESOURCES.length,2);
+const alice=members.find(p=>p.id==='p2'),teacher=members.find(p=>p.id==='i1');
+const threeBase={pilot:'p2',date:'2026-10-30',start:'09:00',end:'10:30'};
+const schoolPlane=requestStudentBooking({...threeBase,type:'flight',aircraft:'LV-ABC'},alice,[],fleet);
+const schoolTheory=requestStudentBooking({...threeBase,type:'theory',resourceId:'aula-1'},alice,[],fleet);
+const schoolSim=requestStudentBooking({...threeBase,type:'simulator',resourceId:'sim-1'},alice,[],fleet);
+assert.equal(schoolPlane.status,'solicitada');
+assert.equal(schoolTheory.aircraft,'');
+assert.equal(schoolTheory.resourceId,'aula-1');
+assert.equal(schoolSim.resourceId,'sim-1');
+assert.throws(()=>requestStudentBooking({...threeBase,type:'theory',resourceId:'sim-1'},alice,[],fleet),/aula o simulador/);
+assert.throws(()=>requestStudentBooking({...threeBase,type:'airline',aircraft:'LV-ABC'},alice,[],fleet),/Seleccioná vuelo/);
+assert.throws(()=>requestStudentBooking({...threeBase,type:'theory',resourceId:'aula-1',end:'10:00'},alice,[],fleet),/90 minutos/);
+assert.throws(()=>requestStudentBooking({...threeBase,type:'simulator',resourceId:'sim-1'},alice,[schoolPlane],fleet),/otra actividad/);
+assert.throws(()=>requestStudentBooking({...threeBase,type:'flight',aircraft:'LV-ABC',pilot:'p1'},alice,[],fleet),/alumno/);
+const flightTaken=takeStudentBooking(schoolPlane,teacher,[schoolPlane],members);
+assert.equal(flightTaken.status,'confirmada');
+assert.equal(flightTaken.instructor,'i1');
+assert.equal(flightTaken.history.length,2);
+const externalFlight=requestStudentBooking({...threeBase,type:'flight',aircraft:'LV-ABC',start:'10:00',end:'11:30'},alice,[],fleet);
+assert.throws(()=>takeStudentBooking(externalFlight,teacher,[flightTaken,externalFlight],members),/Conflicto/,'Mismo instructor no puede tomar turnos superpuestos');
+const otherStudent={...alice,id:'p3'};
+const bTheory=requestStudentBooking({...threeBase,type:'theory',resourceId:'aula-1',pilot:'p3'},otherStudent,[],fleet);
+assert.throws(()=>takeStudentBooking(bTheory,teacher,[flightTaken,bTheory],[...members,otherStudent]),/Conflicto/);
+const bSim=requestStudentBooking({...threeBase,type:'simulator',resourceId:'sim-1',pilot:'p3'},otherStudent,[],fleet);
+assert.throws(()=>takeStudentBooking(bSim,teacher,[flightTaken,bSim],[...members,otherStudent]),/Conflicto/);
+assert.throws(()=>takeStudentBooking(schoolTheory,members[0],[schoolTheory],members),/instructor/);
+assert.throws(()=>takeStudentBooking(flightTaken,teacher,[flightTaken],members),/pendientes/);
+const completedTheory=takeStudentBooking(schoolTheory,teacher,[schoolTheory],members);
+const completedSim=takeStudentBooking(schoolSim,teacher,[schoolSim],members);
+const theoryActivity=finishGroundLesson(completedTheory,'i1');
+const simActivity=finishGroundLesson(completedSim,'i1');
+assert.equal(theoryActivity.minutes,90);
+assert.equal(simActivity.type,'simulator');
+assert.throws(()=>finishGroundLesson(completedTheory,'p1'),/instructor asignado/);
+assert.throws(()=>finishGroundLesson(completedTheory,'i1',[theoryActivity]),/ya fue registrada/);
+assert.throws(()=>closeFlight(data,completedTheory,[],fleet),/Solo las reservas de vuelo/);
+const proposedLesson={...sample,date:'2026-10-20',bookingId:completedTheory.id,flightId:'',studentId:'p2',instructorId:'i1'};
+const theoryBooking={...completedTheory,date:'2026-10-20'};
+const submittedTheory=buildLesson(proposedLesson,members,members,[],[],[theoryBooking]);
+assert.equal(submittedTheory.classType,'theory');
+assert.equal(submittedTheory.hours,0,'Teoría no crea horas oficiales');
+assert.equal(submittedTheory.bookingId,theoryBooking.id);
+assert.throws(()=>buildLesson(proposedLesson,members,members,[],[submittedTheory],[theoryBooking]),/ya tiene evaluación/);
+assert.throws(()=>buildLesson({...proposedLesson,instructorId:'p1'},members,members,[],[],[theoryBooking]),/instructor/);
+const privateNotes=reviewLesson(submitLesson(submittedTheory,'i1'),'chief-demo','approved','Observaciones internas del jefe');
+const studentOnly=studentPortalProjection('p2',[completedTheory,completedSim,flightTaken],[flight],[privateNotes],[{id:'pack1',studentId:'p2',description:'Pack demo',acquiredHours:10,remainingHours:8}],[theoryActivity]);
+assert.equal(studentOnly.reservations.length,3);
+assert.equal(studentOnly.packs.length,1);
+assert.equal(studentOnly.packs[0].remainingHours,8);
+assert.ok(studentOnly.practices.some(x=>x.type==='theory'));
+for(const forbidden of ['evolution','difficulties','nextGoal','chiefReview','history','assessment','instructorId','reviewMode']){
+ assert.equal(JSON.stringify(studentOnly).includes('"'+forbidden+'":'),false,'Alumno no debe recibir campo '+forbidden);
+}
+assert.equal(studentPortalProjection('p1',[completedTheory,completedSim],[],[privateNotes],[],[]).reservations.length,0);
+const teachingOnly=instructorPortalProjection('i1',[schoolPlane,completedTheory,completedSim],[privateNotes],[theoryActivity]);
+assert.equal(teachingOnly.pending.length,1);
+assert.equal(teachingOnly.assigned.length,2);
+assert.equal(teachingOnly.lessons.length,1);
+assert.ok(!teachingOnly.lessons.some(x=>x.studentId==='p3'));
+assert.equal(visibleBookings([completedTheory],['2026-10-30'],'aula-1').length,1);
+assert.equal(visibleBookings([completedSim],['2026-10-30'],'sim-1').length,1);
+for(const required of ['Mi espacio de alumno','Área reservada para instructores','Seguimiento de Dirección / Jefatura',
+ 'Solicitar reserva','Tomar reserva','Registrar clase realizada','Registrar evolución','Mis packs de horas',
+ 'Vuelos y RAV','data-instructor-take','studentBookingType'])
+ assert.ok(html.includes(required),'Falta área o acción: '+required);
+assert.match(html,/if\(tab==='alumno'\|\|tab==='instructor'\)wirePortals\(\)/);
+assert.match(html,/const open=reservations\.filter\(r=>r\.status==='confirmada'&&\(!r\.type\|\|r\.type==='flight'\)/);
+console.log('PASS: tres tipos de reservas, recursos, aceptación por instructor, evaluación y datos aislados del alumno');
 
 console.log('PASS: agenda compacta con semana/día, filtros, turnos superpuestos y formulario oculto');
 
