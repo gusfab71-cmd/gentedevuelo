@@ -10,7 +10,8 @@ export const LESSON_STATUS={
   draft:'Borrador',
   submitted:'Pendiente de revisión',
   returned:'Devuelta al instructor',
-  approved:'Revisada por jefe de instructores'
+  approved:'Revisada por jefe de instructores',
+  instructor_closed:'Cerrada por instructor (sin jefatura)'
 };
 const dateOK=(value)=>{
  if(!/^\d{4}-\d{2}-\d{2}$/.test(value))return false;
@@ -97,6 +98,22 @@ export function submitLesson(lesson,instructorId){
   history:[...lesson.history,logEvent('submitted',instructorId,JSON.stringify(snapshot),lesson.revision)]
  };
 }
+// En organizaciones no CIAC puede configurarse cierre pedagógico por instructor.
+// No sustituye las certificaciones requeridas para cursos regulados ni la firma del Libro de Vuelo.
+export function closeLessonByInstructor(lesson,instructorId,configuration){
+ if(configuration?.institutionType!=='non_ciac'||configuration?.reviewMode!=='instructor')
+  throw Error('El cierre por instructor solo está disponible en una institución no CIAC configurada sin jefatura.');
+ if(!lesson||lesson.instructorId!==instructorId)
+  throw Error('Solo el instructor responsable puede cerrar su propia ficha.');
+ if(lesson.status!=='draft')
+  throw Error('Solo pueden cerrarse fichas en borrador; los pendientes de jefatura requieren una resolución previa.');
+ const date=new Date().toISOString(),snapshot=JSON.stringify(withoutDraft(lesson));
+ return {
+  ...lesson,status:'instructor_closed',closedAt:date,closedBy:instructorId,
+  reviewMode:'instructor',chiefReview:null,
+  history:[...lesson.history,logEvent('instructor_closed',instructorId,snapshot,lesson.revision)]
+ };
+}
 export function reviewLesson(lesson,chiefId,decision,reason){
  if(!chiefId||typeof chiefId!=='string')throw Error('Falta identificación del jefe de instructores.');
  if(lesson.status!=='submitted')throw Error('Solo se pueden revisar fichas pendientes.');
@@ -119,6 +136,7 @@ export function studentSummary(lessons,studentId){
  return {
   lessons:entries.length,
   approved:entries.filter(x=>x.status==='approved').length,
+  instructorClosed:entries.filter(x=>x.status==='instructor_closed').length,
   pending:entries.filter(x=>x.status==='submitted').length,
   returned:entries.filter(x=>x.status==='returned').length,
   trainingMinutes:entries.reduce((n,x)=>n+x.minutes,0),
