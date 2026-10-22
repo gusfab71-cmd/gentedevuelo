@@ -33,7 +33,7 @@ assert.ok(reservation.id);
 assert.equal(intersects(req,{...req,start:'11:00',end:'12:00'}),false);
 assert.throws(()=>createReservation({...req,start:'10:30',end:'11:30'},[reservation],fleet,members),/Conflicto/);
 assert.throws(()=>createReservation({...req,aircraft:'LV-XYZ',start:'10:30',end:'11:30'},[reservation],fleet,members),/Conflicto/);
-assert.throws(()=>createReservation({...req,pilot:'p2',instructor:''},[],fleet,members),/instructor/);
+assert.throws(()=>createReservation({...req,pilot:'p2',instructor:'',end:'11:30'},[],fleet,members),/instructor/);
 assert.throws(()=>createReservation(req,[],[{...fleet[0],blocked:true}],members),/bloqueada/);
 assert.throws(()=>createReservation(req,[],[{...fleet[0],insuranceUntil:'2026-01-01'}],members),/Seguro/);
 assert.throws(()=>createReservation(req,[],fleet,[{...members[0],cmaUntil:'2026-01-01'},members[2]]),/CMA/);
