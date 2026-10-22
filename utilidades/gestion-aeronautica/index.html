@@ -225,6 +225,117 @@ function render(){
  const sections={inicio:dashboard,alumno:studentPortal,instructor:instructorPortal,direccion:directorPortal,reservas:calendar,vuelos:flightScreen,flota:fleetScreen,personas:memberScreen,finanzas:financeScreen,stock:stockScreen,academia:academyScreen,documentos:documentsScreen};
  $('screen').innerHTML=sections[tab]();wire();
 }
+// Portales independientes dentro de la demostración ADMIN: no hay suplantación de roles ni accesos reales.
+const portalStudent='p2',portalInstructor='i1';
+const portalLabel=(id)=>members.find(m=>m.id===id)?.name||id;
+const portalType=(kind)=>ACTIVITY_TYPES[kind]||ACTIVITY_TYPES.flight;
+const portalResource=(booking)=>booking.aircraft||DEMO_RESOURCES.find(x=>x.id===booking.resourceId)?.name||'Recurso por asignar';
+const portalDate=(d)=>safe(d.date+' · '+d.start+'–'+d.end);
+function studentPortal(){
+ const d=studentPortalProjection(portalStudent,reservations,flights,lessons,demoPacks,groundActivities);
+ const stages={solicitada:'Pendiente de instructor',confirmada:'Confirmada',cancelada:'Cancelada'};
+ const options=Object.entries(ACTIVITY_TYPES).map(([id,label])=>'<option value="'+id+'">'+safe(label)+'</option>').join('');
+ const resources=[...fleet.map(a=>({id:a.id,label:a.id+' · '+a.model,kind:'flight'})),
+ ...DEMO_RESOURCES.map(x=>({id:x.id,label:x.name,kind:x.type}))];
+ const bookings=d.reservations.slice().reverse().map(b=>'<div class="portal-task"><div><strong>'+safe(portalType(b.type))+'</strong>'+
+  '<div class="portal-small">'+portalDate(b)+' · '+safe(portalResource(b))+'</div></div>'+
+  '<span class="agenda-pill">'+safe(stages[b.status]||b.status)+'</span></div>').join('');
+ return '<section class="panel"><div class="portal-title"><h2>Mi espacio de alumno · Demostración</h2><span class="tag">Vista alumno · Datos ficticios</span></div>'+
+ '<p class="portal-private">Aquí el alumno puede solicitar turnos y consultar únicamente sus reservas, horas de vuelo, prácticas registradas y packs comprados. Las notas de instructores, sus correcciones y la supervisión interna no se muestran.</p>'+
+ '<div class="portal-metrics">'+metric(d.flightHours.toFixed(2)+' h','Horas de vuelo registradas')+
+ metric(d.practices.length+d.groundActivities.length,'Prácticas y actividades registradas')+
+ metric(d.packs.reduce((n,p)=>n+p.remainingHours,0)+' h','Horas disponibles en packs demo')+'</div></section>'+
+ '<section class="panel"><div class="toolbar"><h2>Mis reservas</h2>'+
+ '<button id="openStudentBooking" class="action">+ Solicitar turno</button></div>'+
+ (bookings||'<p class="muted">No tenés solicitudes registradas en esta demostración.</p>')+'</section>'+
+ '<section id="studentBookingPanel" class="panel" '+(!studentBookingOpen?'hidden':'')+'><div class="toolbar"><h2>Solicitar una actividad</h2>'+
+ '<button class="secondary" type="button" id="closeStudentBooking">Cerrar</button></div>'+
+ '<form id="studentBookingForm"><div class="formgrid">'+
+ '<label>Tipo de reserva<select id="studentBookingType">'+options+'</select></label>'+
+ '<label>Recurso<select id="studentBookingResource">'+resources.map(x=>'<option value="'+safe(x.id)+'" data-kind="'+safe(x.kind)+'">'+safe(x.label)+'</option>').join('')+'</select></label>'+
+ '<label>Fecha<input type="date" id="studentBookingDate" value="'+safe(now())+'" required></label>'+
+ '<label>Inicio<input type="time" id="studentBookingStart" value="'+safe(schoolPolicy.openTime)+'" required></label>'+
+ '<label>Final<input type="time" id="studentBookingEnd" value="'+safe(hhmm(minutes(schoolPolicy.openTime)+schoolPolicy.studentDefaultMinutes))+'" required></label></div>'+
+ '<p class="muted">Duración mínima: '+schoolPolicy.studentMinMinutes+' minutos según la turnera de la escuela. La solicitud queda pendiente hasta que un instructor la acepte.</p>'+
+ '<button class="action" type="submit">Solicitar reserva (demo)</button></form></section>'+
+ '<div class="cols"><section class="panel"><h2>Mi actividad realizada</h2>'+
+ (d.practices.map(x=>'<div class="portal-task"><div><strong>'+safe(x.topics)+'</strong><div class="portal-small">'+
+ safe(x.date)+' · '+safe(portalType(x.type))+' · '+safe(x.minutes)+' min</div></div>'+
+ '<span class="agenda-pill">Registrada</span></div>').join('')||'<p class="muted">Sin prácticas evaluadas todavía.</p>')+
+ (d.groundActivities.map(x=>'<div class="portal-task"><span>'+safe(portalType(x.type))+' · '+safe(x.date)+'</span>'+
+ '<span class="agenda-pill">Realizada (demo)</span></div>').join(''))+'</section>'+
+ '<section class="panel"><h2>Mis packs de horas</h2>'+
+ d.packs.map(p=>'<div class="portal-box"><h3>'+safe(p.description)+'</h3><p>Compradas: '+safe(p.acquiredHours)+' h · Disponibles: '+safe(p.remainingHours)+' h</p>'+
+ '<p class="muted">Ejemplo ficticio. El descuento de horas se habilitará cuando existan movimientos contables reales.</p></div>').join('')+'</section></div>';
+}
+function instructorPortal(){
+ const d=instructorPortalProjection(portalInstructor,reservations,lessons,groundActivities);
+ const assigned= d.assigned.map(b=>{
+  const flight=flights.find(f=>f.reservationId===b.id);
+  const classRecorded=groundActivities.some(a=>a.bookingId===b.id);
+  const assessed=lessons.some(l=>l.bookingId===b.id||flight&&l.flightId===flight.id);
+  const completed=b.type==='flight'||!b.type?Boolean(flight):classRecorded;
+  return '<div class="portal-task"><div><strong>'+safe(portalType(b.type))+' · '+safe(portalLabel(b.pilot))+'</strong>'+
+   '<div class="portal-small">'+portalDate(b)+' · '+safe(portalResource(b))+'</div>'+
+   '<div class="portal-small">'+(completed?'Actividad realizada (demo)':'Actividad pendiente de registro')+
+   (assessed?' · Evaluación registrada':' · Evolución pendiente')+'</div></div><div class="portal-actions">'+
+   (b.type!=='flight'&&b.type&&!classRecorded?
+    '<button class="secondary" type="button" data-instructor-complete="'+safe(b.id)+'">Registrar clase realizada</button>':'')+
+   (completed&&!assessed?'<button class="action" type="button" data-instructor-evaluate="'+safe(b.id)+'">Registrar evolución</button>':'')+
+   '</div></div>';
+ }).join('');
+ const pending=d.pending.map(b=>'<div class="portal-task"><div><strong>'+safe(portalType(b.type))+' · '+safe(portalLabel(b.pilot))+'</strong>'+
+ '<div class="portal-small">'+portalDate(b)+' · '+safe(portalResource(b))+'</div></div>'+
+ '<button class="action" type="button" data-instructor-take="'+safe(b.id)+'">Tomar reserva</button></div>').join('');
+ return '<section class="panel"><div class="portal-title"><h2>Área reservada para instructores · Demo</h2>'+
+ '<span class="tag">Solo perfil instructor en producción</span></div>'+
+ '<p class="portal-private">La vista de instructor está separada de la del alumno. Permite tomar reservas, registrar clases y evaluar la evolución de alumnos asignados. Las cuentas reales tendrán permisos de servidor y no dependerán de cambiar una pantalla.</p>'+
+ '<div class="portal-metrics">'+metric(d.pending.length,'Solicitudes sin asignar')+
+ metric(d.assigned.length,'Turnos tomados por mí')+
+ metric(d.lessons.length,'Evaluaciones realizadas')+'</div></section>'+
+ '<section class="panel"><h2>Solicitudes pendientes de instructor</h2>'+
+ (pending||'<p class="muted">No hay solicitudes pendientes de asignación.</p>')+'</section>'+
+ '<section class="panel"><h2>Mis turnos y seguimiento</h2>'+
+ (assigned||'<p class="muted">Todavía no tomaste reservas de demostración.</p>')+
+ '<p class="muted">Para vuelos, primero debe cerrarse la actividad en Vuelos y RAV. Para teoría y simulador, registrá la clase realizada antes de elaborar la evolución.</p></section>'+
+ (instructorEvaluationBooking?instructorEvaluationForm():'');
+}
+function instructorEvaluationForm(){
+ const b=reservations.find(x=>x.id===instructorEvaluationBooking);
+ if(!b||b.instructor!==portalInstructor)return '';
+ return '<section class="panel agenda-form-panel"><div class="toolbar"><h2>Seguimiento pedagógico · '+safe(portalLabel(b.pilot))+'</h2>'+
+ '<button class="secondary" type="button" id="closeInstructorEvaluation">Cerrar</button></div>'+
+ '<form id="instructorEvaluationForm"><div class="formgrid"><label>Actividad<input value="'+safe(portalType(b.type))+'" disabled></label>'+
+ '<label>Alumno<input value="'+safe(portalLabel(b.pilot))+'" disabled></label>'+
+ '<label>Fecha<input value="'+safe(b.date)+'" disabled></label>'+
+ '<label>Duración (minutos)<input id="evaluationMinutes" type="number" min="1" max="600" value="'+safe(minutes(b.end)-minutes(b.start))+'" required></label></div>'+
+ '<label>Temas y ejercicios<textarea id="evaluationTopics" maxlength="1000" required></textarea></label>'+
+ '<label>Evolución observada<textarea id="evaluationProgress" maxlength="1000" required></textarea></label>'+
+ '<label>Dificultades (opcional)<textarea id="evaluationDifficulties" maxlength="1000"></textarea></label>'+
+ '<label>Próximo objetivo<textarea id="evaluationNextGoal" maxlength="1000" required></textarea></label>'+
+ '<label>Valoración<select id="evaluationAssessment">'+Object.entries(ASSESSMENTS).map(([v,label])=>'<option value="'+v+'">'+safe(label)+'</option>').join('')+'</select></label>'+
+ '<button class="action" type="submit">Guardar evaluación del instructor (demo)</button></form>'+
+ '<p class="muted">La evaluación se integra al legajo, conservando la revisión posterior del jefe si corresponde. No acredita horas oficiales por sí sola.</p></section>';
+}
+function directorPortal(){
+ const pending=lessons.filter(x=>x.status==='submitted');
+ const missing=reservations.filter(b=>b.status==='confirmada'&&b.pilot===portalStudent&&
+  ((b.type==='flight'||!b.type)?flights.some(f=>f.reservationId===b.id):
+   groundActivities.some(a=>a.bookingId===b.id))&&
+  !lessons.some(l=>l.bookingId===b.id||flights.some(f=>f.reservationId===b.id&&l.flightId===f.id)));
+ const counts=studentSummary(lessons,portalStudent);
+ return '<section class="panel"><div class="portal-title"><h2>Seguimiento de Dirección / Jefatura</h2><span class="tag">Supervisión · Demo admin</span></div>'+
+ '<p class="portal-private">Vista para director o jefe de instructores autorizado: progreso por alumno, fichas pendientes, devoluciones y clases sin evaluación. La jefatura puede ser opcional según el régimen de la escuela.</p>'+
+ '<div class="portal-metrics">'+metric(counts.lessons,'Evaluaciones cargadas')+
+ metric(pending.length,'Pendientes de revisión')+metric(missing.length,'Clases sin evaluación')+'</div></section>'+
+ '<section class="panel"><h2>Avance del alumno de prueba</h2>'+
+ '<p><strong>'+safe(portalLabel(portalStudent))+'</strong> · Clases registradas: '+counts.lessons+
+ ' · Fichas revisadas: '+counts.approved+' · Cerradas por instructor: '+counts.instructorClosed+
+ ' · Devueltas: '+counts.returned+'</p>'+
+ '<p class="muted">Para aprobar o devolver evaluaciones, usá el circuito de jefatura en Pilotos y alumnos. Las notas completas solo estarán disponibles para dirección e instructores autorizados.</p>'+
+ '<button class="secondary" type="button" data-go="personas">Abrir seguimiento y revisiones</button></section>';
+}
+let studentBookingOpen=false,instructorEvaluationBooking='';
 function dashboard(){
  const hours=flights.reduce((sum,x)=>sum+x.blockHours,0),turns=reservations.filter(r=>r.status==='confirmada').length;
  return '<div class="metrics">'+metric(fleet.length,'Aeronaves demo')+metric(turns,'Reservas de prueba')+metric(flights.length,'Vuelos cerrados demo')+metric(hours.toFixed(1)+' h','Horas registradas demo')+'</div>'+
