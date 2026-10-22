@@ -39,7 +39,7 @@ OUT.mkdir(parents=True, exist_ok=True)
 def crop(page_no, top, bottom):
     page = doc[page_no - 1]
     box = fitz.Rect(55, max(125, top), 562, min(740, bottom))
-    if box.height < 65:
+    if box.height < 40:
         raise RuntimeError("Recorte anormal página " + str(page_no))
     pix = page.get_pixmap(matrix=fitz.Matrix(2.2, 2.2), clip=box, colorspace=fitz.csGRAY, alpha=False)
     return Image.frombytes("L", (pix.width, pix.height), pix.samples)
