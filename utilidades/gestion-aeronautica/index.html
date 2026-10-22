@@ -74,7 +74,7 @@ ol{color:#bbccd0;font-size:13px;line-height:1.85}
 .training-record{border:1px solid #45616f;border-radius:12px;padding:14px;background:#182630;margin:12px 0}
 .training-record h3{font-size:15px;margin:5px 0}
 .training-record p{font-size:12px;margin:4px 0}
-@media print{body{background:#fff;color:#000}header,nav,.hero,.notice,.training-actions,form,#alert,button{display:none!important}.layout{display:block}.panel,.card,.training-record{break-inside:avoid;background:#fff!important;color:#111!important;border:1px solid #999!important}p,h1,h2,h3,span{color:#111!important}}
+@media print{#screen>section:not(#training-ledger){display:none!important}body{background:#fff;color:#000}header,nav,.hero,.notice,.training-actions,form,#alert,button{display:none!important}.layout{display:block}.panel,.card,.training-record{break-inside:avoid;background:#fff!important;color:#111!important;border:1px solid #999!important}p,h1,h2,h3,span{color:#111!important}}
 </style>
 <script>document.documentElement.classList.add("auth-pending")</script>
 <style>html.auth-pending body{visibility:hidden}</style>
@@ -168,7 +168,7 @@ function fleetScreen(){
  '<p class="muted">Ya existe Mantenimiento de Aeronaves en Utilidades, pero sus datos personales todavía NO están sincronizados con esta demostración.</p>'+
  '<a class="secondary" href="../mantenimiento-aeronaves.html">Abrir herramienta actual de mantenimiento</a></section>';
 }
-const personName=id=>members.find(p=>p.id===id)?.name||id;
+const personName=id=>id===chiefDemoId?'Jefe de Instructores (simulado)':members.find(p=>p.id===id)?.name||id;
 function trainingFormMarkup(){
  const editing=trainingForm.startsWith('edit:')?lessons.find(l=>l.id===trainingForm.slice(5)):null;
  if(trainingForm!=='new'&&!editing)return '';
@@ -177,7 +177,7 @@ function trainingFormMarkup(){
  const classes=flights.filter(f=>f.pilot===student&&(!editing||f.instructor===editing.instructorId));
  const option=(p,selected)=>'<option value="'+safe(p.id)+'" '+(p.id===selected?'selected':'')+'>'+safe(p.name)+'</option>';
  const assessmentOpts=Object.entries(ASSESSMENTS).map(([key,label])=>'<option value="'+key+'" '+(editing?.assessment===key?'selected':'')+'>'+safe(label)+'</option>').join('');
- const input=(label,id,type,value='',more='')=>'<label>'+label+'<input id="'+id+'" type="'+type+'" value="'+safe(value)+'" '+more+' required></label>';
+ const input=(label,id,type,value='',more='')=>'<label>'+label+'<input id="'+id+'" type="'+type+'" value="'+safe(value)+'" '+more+' '+(id==='lessonAircraft'?'':'required')+'></label>';
  const area=(label,id,value='')=>'<label>'+label+'<textarea id="'+id+'" maxlength="1000" required>'+safe(value)+'</textarea></label>';
  return '<section class="panel"><h2>'+(editing?'Corregir ficha del instructor':'Registrar nueva clase de instrucción')+'</h2>'+
  '<p class="training-note">Prototipo: el rol de instructor está simulado desde la cuenta administradora. No utilices datos reales; para operar en una escuela se habilitarán cuentas individuales y autorización en servidor.</p>'+
@@ -223,7 +223,7 @@ function trainingTimeline(){
    '<div class="training-actions">'+buttons+'</div>'+
    '<details><summary>Ver trazabilidad y revisiones ('+l.history.length+')</summary><div class="training-history">'+audit+'</div></details></article>';
  }).join('');
- return '<section class="panel"><div class="toolbar"><h2>Legajo de evolución del alumno</h2>'+
+ return '<section class="panel" id="training-ledger"><div class="toolbar"><h2>Legajo de evolución del alumno</h2>'+
  '<button class="secondary" type="button" id="printTraining">Imprimir resumen</button></div>'+
  '<label>Alumno a consultar<select id="trainingStudent">'+
  members.filter(m=>m.kind==='alumno').map(m=>'<option value="'+safe(m.id)+'" '+(student===m.id?'selected':'')+'>'+safe(m.name)+'</option>').join('')+
@@ -281,7 +281,82 @@ function documentsScreen(){
  '<div class="card"><h3>Seguro y mantenimiento</h3><p>Vencimientos por calendario, horas y ciclos, según registros reales de aeronave.</p><span class="pill uncertain">Integración pendiente</span></div>'+
  '<div class="card"><h3>Comunicaciones</h3><p>Avisos de reservas, cancelaciones y eventos, sin mensajes automáticos hasta contar con consentimiento y permisos.</p><span class="pill uncertain">Diseño pendiente</span></div></div></section>';
 }
+function wireTraining(){
+ const studentSelect=$('trainingStudent');
+ if(studentSelect)studentSelect.addEventListener('change',e=>{trainingStudent=e.target.value;trainingForm='';render()});
+ $('newTraining')?.addEventListener('click',()=>{trainingForm='new';render();$('lessonTopics')?.focus()});
+ $('closeTrainingForm')?.addEventListener('click',()=>{trainingForm='';render()});
+ $('printTraining')?.addEventListener('click',()=>window.print());
+ $('lessonFlight')?.addEventListener('change',e=>{
+  const f=flights.find(x=>x.id===e.target.value);
+  if(!f)return;
+  if($('lessonDate'))$('lessonDate').value=f.date;
+  if($('lessonAircraft'))$('lessonAircraft').value=f.aircraft;
+  if($('lessonInstructor'))$('lessonInstructor').value=f.instructor;
+ });
+ const form=$('training-form');
+ form?.addEventListener('submit',e=>{
+  e.preventDefault();
+  try{
+   const editing=trainingForm.startsWith('edit:')?lessons.find(l=>l.id===trainingForm.slice(5)):null;
+   const draft={
+    studentId:editing?.studentId||$('lessonStudent').value,
+    instructorId:editing?.instructorId||$('lessonInstructor').value,
+    date:$('lessonDate').value,minutes:$('lessonMinutes').value,aircraft:$('lessonAircraft').value,
+    flightId:editing?.flightId||$('lessonFlight').value,
+    topics:$('lessonTopics').value,evolution:$('lessonEvolution').value,
+    difficulties:$('lessonDifficulties').value,nextGoal:$('lessonGoal').value,
+    assessment:$('lessonAssessment').value
+   };
+   if(editing){
+    const revised=reviseLesson(editing,draft,editing.instructorId);
+    lessons=lessons.map(l=>l.id===editing.id?revised:l);
+    notice('Corrección del instructor registrada (DEMO). Enviá nuevamente la ficha para revisión.');
+   }else{
+    const lesson=buildLesson(draft,members,members,flights,lessons);
+    lessons.push(lesson);trainingStudent=lesson.studentId;
+    notice('Borrador de evolución creado (DEMO). El instructor debe enviarlo al jefe de instructores.');
+   }
+   trainingForm='';render();
+  }catch(err){notice(err.message)}
+ });
+ $('screen').querySelectorAll('[data-lesson-edit]').forEach(button=>button.addEventListener('click',()=>{
+  const selected=lessons.find(l=>l.id===button.dataset.lessonEdit);
+  if(!selected||!['draft','returned'].includes(selected.status))return;
+  trainingStudent=selected.studentId;trainingForm='edit:'+selected.id;
+  render();$('lessonTopics')?.focus();
+ }));
+ $('screen').querySelectorAll('[data-lesson-send]').forEach(button=>button.addEventListener('click',()=>{
+  try{
+   const selected=lessons.find(l=>l.id===button.dataset.lessonSend);
+   if(!selected)throw Error('Ficha no encontrada.');
+   const changed=submitLesson(selected,selected.instructorId);
+   lessons=lessons.map(l=>l.id===selected.id?changed:l);
+   render();notice('Ficha de instrucción enviada al jefe de instructores para revisión (DEMO).');
+  }catch(err){notice(err.message)}
+ }));
+ $('screen').querySelectorAll('[data-chief-approve]').forEach(button=>button.addEventListener('click',()=>{
+  if(!confirm('Simular aprobación por el jefe de instructores de esta ficha. No genera certificación real. ¿Continuar?'))return;
+  try{
+   const selected=lessons.find(l=>l.id===button.dataset.chiefApprove);
+   const checked=reviewLesson(selected,chiefDemoId,'approved','Revisión sin observaciones en la demostración');
+   lessons=lessons.map(l=>l.id===checked.id?checked:l);
+   render();notice('Ficha marcada como revisada por Jefatura (DEMOSTRACIÓN; sin firma real).');
+  }catch(err){notice(err.message)}
+ }));
+ $('screen').querySelectorAll('[data-chief-return]').forEach(button=>button.addEventListener('click',()=>{
+  const reason=prompt('Observación del jefe de instructores que deberá atender el instructor (DEMO):');
+  if(reason===null)return;
+  try{
+   const selected=lessons.find(l=>l.id===button.dataset.chiefReturn);
+   const checked=reviewLesson(selected,chiefDemoId,'returned',reason);
+   lessons=lessons.map(l=>l.id===checked.id?checked:l);
+   render();notice('Ficha devuelta al instructor con observaciones (DEMOSTRACIÓN).');
+  }catch(err){notice(err.message)}
+ }));
+}
 function wire(){
+ if(tab==='personas')wireTraining();
  $('screen').querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>switchTab(b.dataset.go)));
  if(tab==='reservas'){
   $('week').addEventListener('change',e=>{if(validDate(e.target.value)){week=e.target.value;render()}});
