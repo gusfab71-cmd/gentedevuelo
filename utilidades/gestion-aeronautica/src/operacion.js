@@ -1,5 +1,6 @@
 // Lógica de DEMOSTRACIÓN. No autoriza operaciones ni consulta registros oficiales de ANAC.
 import {classifyFlightBooking} from './vuelos.js';
+import {makeLogbookDetail} from './libro-vuelo.js';
 export const minutes = time => {
  if(!/^([01]\d|2[0-3]):[0-5]\d$/.test(time))throw Error('Hora inválida.');
  const [h,m]=time.split(':').map(Number);return 60*h+m;
@@ -76,7 +77,7 @@ export function createReservation(req,current,fleet,members,schoolPolicy=DEFAULT
  if(conflict)throw Error('Conflicto de horario de aeronave o instructor.');
  return {...req,id:crypto.randomUUID(),status:'confirmada',createdAt:new Date().toISOString()};
 }
-export function closeFlight(data,booking,flights,fleet,members=[]){
+export function closeFlight(data,booking,flights,fleet,members=[],bookDraft=null){
  if(booking?.type&&booking.type!=='flight')throw Error('Solo las reservas de vuelo pueden generar horas de aeronave.');
  if(!booking||booking.status!=='confirmada')throw Error('Solo se pueden cerrar reservas confirmadas.');
  if(flights.some(f=>f.reservationId===booking.id))throw Error('Esta reserva ya tiene un vuelo cerrado.');
@@ -90,10 +91,12 @@ export function closeFlight(data,booking,flights,fleet,members=[]){
  if(!Number.isInteger(landings)||landings<0||landings>30)throw Error('Número de aterrizajes inválido.');
  const rate=Number(fleet.find(x=>x.id===booking.aircraft)?.rate??0);
  const blockHours=Number((elapsed/60).toFixed(2));
- return {id:crypto.randomUUID(),reservationId:booking.id,aircraft:booking.aircraft,pilot:booking.pilot,
+ const flight={id:crypto.randomUUID(),reservationId:booking.id,aircraft:booking.aircraft,pilot:booking.pilot,
  instructor:booking.instructor||'',date:booking.date,from:data.from.trim().toUpperCase(),to:data.to.trim().toUpperCase(),
  start:data.start,end:data.end,blockHours,tachDifference:Number((t1-t0).toFixed(2)),
  landings,blockMinutes:elapsed,operationType,cost:Number((blockHours*rate).toFixed(2)),status:'demo',createdAt:new Date().toISOString()};
+ if(bookDraft!==null)flight.logbook=makeLogbookDetail(bookDraft,booking,flight,members.find(m=>m.id===booking.pilot),fleet);
+ return flight;
 }
 export const flightTotals=(flights,key)=>flights.reduce((o,f)=>(o[f[key]]=(o[f[key]]||0)+f.blockHours,o),{});
 export function stockMove(item,qty,kind){

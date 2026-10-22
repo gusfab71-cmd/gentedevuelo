@@ -6,6 +6,7 @@ import {mondayOf,shiftDate,listWeek,visibleBookings,timeWindow,layoutDay,hhmm} f
 import {ASSESSMENTS,LESSON_STATUS,buildLesson,reviseLesson,submitLesson,closeLessonByInstructor,reviewLesson,studentTimeline,studentSummary} from '../utilidades/gestion-aeronautica/src/formacion.js';
 import {ACTIVITY_TYPES,DEMO_RESOURCES,requestStudentBooking,takeStudentBooking,finishGroundLesson,studentPortalProjection,instructorPortalProjection,DEFAULT_TRAINING_GOALS,validateTrainingGoals,trainingHours,trainingProgress} from '../utilidades/gestion-aeronautica/src/portales.js';
 import {classifyFlightBooking,flightActivityProjection,flightActivityByRole,FLIGHT_MODE_LABELS} from '../utilidades/gestion-aeronautica/src/vuelos.js';
+import {makeLogbookDetail,logbookRows,logbookSummary,LOGBOOK_TIME_COLUMNS,LOGBOOK_SPECIAL_COLUMNS,LOGBOOK_SIMULATOR_COLUMNS} from '../utilidades/gestion-aeronautica/src/libro-vuelo.js';
 
 assert.equal(minutes('09:30'),570);
 assert.throws(()=>minutes('25:61'),/Hora inválida/);
@@ -460,5 +461,72 @@ assert.match(html,/closeFlight\(\{from:\$\('flightFrom'\)\.value/);
 assert.match(html,/booking,flights,fleet,members\)/);
 assert.match(html,/const cols=\['Fecha','Modalidad','Aeronave','Titular','Instructor'/);
 console.log('PASS: alumno con instructor y piloto privado solo, horas separadas, filtros e historial individual');
+
+
+// Libro completo fotografiado: 8 casilleros de tiempo, discriminación derecha, simulador y arrastre.
+assert.equal(Object.keys(LOGBOOK_TIME_COLUMNS).length,8);
+assert.deepEqual(Object.keys(LOGBOOK_TIME_COLUMNS),[
+ 'airportDayPilot','airportDayCopilot','airportNightPilot','airportNightCopilot',
+ 'crosscountryDayPilot','crosscountryDayCopilot','crosscountryNightPilot','crosscountryNightCopilot']);
+assert.ok(Object.keys(LOGBOOK_SPECIAL_COLUMNS).includes('instrumentRealPilot'));
+assert.ok(Object.keys(LOGBOOK_SPECIAL_COLUMNS).includes('instrumentHood'));
+assert.ok(Object.keys(LOGBOOK_SIMULATOR_COLUMNS).includes('simulatorTrainee'));
+const bookedFlight={...soloBooking,id:'book-1'};
+const recordedFlight={...soloFlight,id:'flight-log-1',reservationId:'book-1'};
+const exampleLog={
+ purpose:'travesia',recordedFlightMinutes:61,
+ license:'PPA de ejemplo',aircraftMake:'Cessna',aircraftModel:'Cessna 172',
+ aircraftClass:'Monomotor terrestre',powerHp:'160 HP',
+ categoryMinutes:{
+  airportDayPilot:20,crosscountryDayPilot:31,crosscountryNightPilot:10
+ },
+ specialMinutes:{
+  instructorFlight:0,multiEngine:0,jet:0,turboprop:0,aerialApplication:0,
+  instrumentRealPilot:10,instrumentRealCopilot:0,instrumentHood:10
+ },
+ certificationNote:'Cotejar con documentación original'
+};
+const detail=makeLogbookDetail(exampleLog,bookedFlight,recordedFlight,members[0],fleet);
+assert.equal(detail.recordedFlightMinutes,61);
+assert.equal(detail.dayMinutes,51);
+assert.equal(detail.nightMinutes,10);
+assert.equal(detail.specialMinutes.instrumentRealPilot,10);
+assert.equal(detail.specialMinutes.instrumentHood,10);
+assert.equal(detail.status,'borrador_no_certificado');
+assert.equal(detail.incomplete,false);
+assert.equal(detail.sourceFlightId,'flight-log-1');
+assert.throws(()=>makeLogbookDetail({...exampleLog,recordedFlightMinutes:''},bookedFlight,recordedFlight,members[0],fleet),/Ingresá los minutos/);
+assert.throws(()=>makeLogbookDetail({...exampleLog,recordedFlightMinutes:62},bookedFlight,recordedFlight,members[0],fleet),/no superar el bloque/);
+assert.throws(()=>makeLogbookDetail({...exampleLog,categoryMinutes:{airportDayPilot:60}},bookedFlight,recordedFlight,members[0],fleet),/ocho casilleros/);
+assert.throws(()=>makeLogbookDetail({...exampleLog,specialMinutes:{instrumentHood:62}},bookedFlight,recordedFlight,members[0],fleet),/minutos enteros y válidos|no puede superar/);
+assert.throws(()=>makeLogbookDetail({...exampleLog,specialMinutes:{instrumentRealPilot:45,instrumentRealCopilot:30}},bookedFlight,recordedFlight,members[0],fleet),/instrumentos reales/);
+assert.throws(()=>makeLogbookDetail({...exampleLog,purpose:''},bookedFlight,recordedFlight,members[0],fleet),/finalidad/);
+const loggedFlights=[{...recordedFlight,logbook:detail},instructionFlight];
+const page=logbookSummary('p1',loggedFlights,[recordedSim]);
+assert.equal(page.flights,1);
+assert.equal(page.minutes,61);
+assert.equal(page.categories.airportDayPilot,20);
+assert.equal(page.categories.crosscountryNightPilot,10);
+assert.equal(page.special.instrumentRealPilot,10);
+assert.equal(page.special.instrumentHood,10);
+assert.equal(page.simulator.simulatorTrainee,0,'No mezclar simulación de otro titular');
+assert.equal(page.previousBalanceMinutes,null,'Saldo anterior en papel debe quedar desconocido');
+assert.equal(logbookRows('p2',loggedFlights).length,0);
+const pageSim=logbookSummary('p2',loggedFlights,[recordedSim,recordedTheory]);
+assert.equal(pageSim.minutes,0);
+assert.equal(pageSim.simulator.simulatorTrainee,75,'Simulador efectivo sí se registra en apartado separado');
+assert.equal(pageSim.simulator.simulatorInstructor,0);
+const pageTeacher=logbookSummary('i1',loggedFlights,[recordedSim]);
+assert.equal(pageTeacher.simulator.simulatorInstructor,75);
+assert.equal(pageTeacher.minutes,0,'Tiempo de instructor simulador no es tiempo de vuelo');
+for(const label of ['Planilla completa · Libro de Vuelo','logRecordedFlightMinutes',
+ 'LOGBOOK_TIME_COLUMNS','LOGBOOK_SPECIAL_COLUMNS','LOGBOOK_SIMULATOR_COLUMNS',
+ 'Discriminación adicional','Adiestrador terrestre / Simulador',
+ 'Certificaciones','data-edit-logbook','Resumen del libro personal']){
+ assert.ok(html.includes(label),'Falta sección de libro completo: '+label);
+}
+assert.match(html,/if\(!logbookEditingFlightId\)return ''/,'La planilla debe permanecer oculta hasta solicitarla.');
+assert.match(html,/sourceFlightId|makeLogbookDetail/);
+console.log('PASS: libro completo, ocho casilleros, instrumentos, simulador separado y saldo anterior pendiente');
 
 console.log('PASS: gestión integrada, fechas, conflictos, cierre idempotente, stock, UX y acceso admin');
