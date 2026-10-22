@@ -5,6 +5,7 @@ import {minutes,validDate,intersects,createReservation,closeFlight,flightTotals,
 import {mondayOf,shiftDate,listWeek,visibleBookings,timeWindow,layoutDay,hhmm} from '../utilidades/gestion-aeronautica/src/agenda.js';
 import {ASSESSMENTS,LESSON_STATUS,buildLesson,reviseLesson,submitLesson,closeLessonByInstructor,reviewLesson,studentTimeline,studentSummary} from '../utilidades/gestion-aeronautica/src/formacion.js';
 import {ACTIVITY_TYPES,DEMO_RESOURCES,requestStudentBooking,takeStudentBooking,finishGroundLesson,studentPortalProjection,instructorPortalProjection,DEFAULT_TRAINING_GOALS,validateTrainingGoals,trainingHours,trainingProgress} from '../utilidades/gestion-aeronautica/src/portales.js';
+import {classifyFlightBooking,flightActivityProjection,flightActivityByRole,FLIGHT_MODE_LABELS} from '../utilidades/gestion-aeronautica/src/vuelos.js';
 
 assert.equal(minutes('09:30'),570);
 assert.throws(()=>minutes('25:61'),/Hora inválida/);
@@ -358,7 +359,7 @@ assert.throws(()=>finishGroundLesson(completedSim,'i1',[],91),/efectivamente rea
 assert.throws(()=>finishGroundLesson(completedSim,'i1',[],0),/efectivamente realizados/);
 assert.throws(()=>finishGroundLesson(completedSim,'i1',[],1.5),/efectivamente realizados/);
 const recordedTheory=finishGroundLesson(completedTheory,'i1',[],50);
-const counted=trainingHours('p2',[{...flight,pilot:'p2',blockHours:1.3}],[recordedSim,recordedTheory]);
+const counted=trainingHours('p2',[{...flight,pilot:'p2',blockHours:1.3,blockMinutes:78}],[recordedSim,recordedTheory]);
 assert.deepEqual(counted,{
  flightHours:1.3,simulatorMinutes:75,theoryMinutes:50,simulatorHours:1.25,theoryHours:0.83
 });
@@ -398,5 +399,66 @@ console.log('PASS: horas registradas de simulador y teoría, requisitos escolare
 console.log('PASS: tres tipos de reservas, recursos, aceptación por instructor, evaluación y datos aislados del alumno');
 
 console.log('PASS: agenda compacta con semana/día, filtros, turnos superpuestos y formulario oculto');
+
+
+// Instrucción con instructor y vuelos solos de piloto privado: mismo avión no implica mismas horas.
+const soloBooking={...reservation,id:'solo-1',pilot:'p1',instructor:'',date:'2026-10-28',start:'09:00',end:'10:00'};
+const lessonBooking={...reservation,id:'student-1',pilot:'p2',instructor:'i1',date:'2026-10-28',start:'11:00',end:'12:30'};
+const coachedBooking={...reservation,id:'coached-1',pilot:'p1',instructor:'i1',date:'2026-10-29',start:'09:00',end:'10:00'};
+assert.equal(classifyFlightBooking(soloBooking,members),'private');
+assert.equal(classifyFlightBooking(lessonBooking,members),'instruction');
+assert.equal(classifyFlightBooking(coachedBooking,members),'coached');
+assert.match(FLIGHT_MODE_LABELS.private,/sin instructor/);
+assert.throws(()=>classifyFlightBooking({...lessonBooking,instructor:''},members),/debe tener instructor/);
+assert.throws(()=>classifyFlightBooking({...soloBooking,pilot:'i1'},members),/alumno o piloto/);
+assert.throws(()=>classifyFlightBooking({...soloBooking,instructor:'p1'},members),/mismo titular/);
+assert.throws(()=>classifyFlightBooking({...lessonBooking,instructor:'p1'},members),/Instructor de vuelo inválido/);
+const closeData={from:'SADF',to:'SAME',start:'09:00',end:'10:01',tachStart:1234,tachEnd:1234.8,landings:2};
+const closeDataStudent={...closeData,start:'11:00',end:'12:26',tachStart:1235,tachEnd:1236,landings:3};
+const soloFlight=closeFlight(closeData,soloBooking,[],fleet,members);
+const instructionFlight=closeFlight(closeDataStudent,lessonBooking,[],fleet,members);
+const coachedFlight=closeFlight(closeData,coachedBooking,[],fleet,members);
+assert.equal(soloFlight.operationType,'private');
+assert.equal(instructionFlight.operationType,'instruction');
+assert.equal(coachedFlight.operationType,'coached');
+assert.equal(soloFlight.blockMinutes,61);
+assert.equal(instructionFlight.blockMinutes,86);
+assert.equal(instructionFlight.instructor,'i1');
+assert.equal(soloFlight.instructor,'');
+assert.throws(()=>closeFlight(closeData,{...lessonBooking,instructor:''},[],fleet,members),/instructor/);
+assert.throws(()=>closeFlight(closeData,soloBooking,[soloFlight],fleet,members),/ya tiene un vuelo cerrado/);
+const allFlightDemo=[soloFlight,instructionFlight,coachedFlight];
+const soloPerson=flightActivityByRole('p1','piloto',allFlightDemo);
+assert.equal(soloPerson.blockMinutes,61);
+assert.equal(soloPerson.blockHours,1.02);
+assert.equal(soloPerson.flights,1);
+assert.equal(soloPerson.landings,2);
+assert.equal(soloPerson.rows.length,1);
+assert.equal(soloPerson.rows[0].instructor,'');
+assert.equal(soloPerson.rows[0].destination,'SAME');
+const coached=flightActivityProjection('p1',allFlightDemo,'coached');
+assert.equal(coached.flights,1);
+assert.equal(flightActivityProjection('p1',allFlightDemo).flights,2);
+assert.equal(flightActivityProjection('p1',allFlightDemo).blockMinutes,122);
+const studentTraining=flightActivityByRole('p2','alumno',allFlightDemo);
+assert.equal(studentTraining.blockMinutes,86);
+assert.equal(studentTraining.blockHours,1.43);
+assert.equal(studentTraining.landings,3);
+assert.equal(studentTraining.rows[0].instructor,'i1');
+assert.equal(flightActivityByRole('p3','alumno',allFlightDemo).flights,0);
+assert.throws(()=>flightActivityProjection('p1',allFlightDemo,'invalid'),/Filtro/);
+assert.throws(()=>flightActivityByRole('p1','instructor',allFlightDemo),/Rol/);
+assert.equal(trainingHours('p2',allFlightDemo,[]).flightHours,1.43);
+assert.equal(studentPortalProjection('p2',[],allFlightDemo,[],[],[]).flightHours,1.43);
+assert.equal(studentPortalProjection('p1',[],allFlightDemo,[],[],[]).flightHours,2.03);
+for(const label of ['Mi Hangar de Vuelo · Piloto privado','Mis vuelos de instrucción',
+ 'Mi historial de vuelos como piloto privado','flightModeFilter','Piloto privado sin instructor',
+ 'Sin instructor','data-go="piloto"']){
+ assert.ok(html.includes(label),'Falta seguimiento de vuelo: '+label);
+}
+assert.match(html,/closeFlight\(\{from:\$\('flightFrom'\)\.value/);
+assert.match(html,/booking,flights,fleet,members\)/);
+assert.match(html,/const cols=\['Fecha','Modalidad','Aeronave','Titular','Instructor'/);
+console.log('PASS: alumno con instructor y piloto privado solo, horas separadas, filtros e historial individual');
 
 console.log('PASS: gestión integrada, fechas, conflictos, cierre idempotente, stock, UX y acceso admin');
