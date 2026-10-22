@@ -74,6 +74,69 @@ ol{color:#bbccd0;font-size:13px;line-height:1.85}
 .training-record{border:1px solid #45616f;border-radius:12px;padding:14px;background:#182630;margin:12px 0}
 .training-record h3{font-size:15px;margin:5px 0}
 .training-record p{font-size:12px;margin:4px 0}
+
+/* Agenda visual original inspirada en la simplicidad de agendas aeronáuticas. */
+.agenda-shell{padding:17px 19px}
+.agenda-toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:13px}
+.agenda-heading h2{margin:0;font-size:21px;color:#f0f8f8}
+.agenda-heading p{margin:6px 0 0;font-size:12px;color:#a4bac5}
+.agenda-controls{display:flex;align-items:center;flex-wrap:wrap;gap:7px}
+.agenda-controls button,.agenda-controls select,.agenda-controls input{height:36px;font-size:12px}
+.agenda-controls button{padding:7px 11px;border:1px solid #476775;border-radius:8px;background:#243843;color:#dce8eb;cursor:pointer}
+.agenda-controls button:hover{background:#38535f}
+.agenda-controls .agenda-create{background:#edcf97;color:#152029;border-color:#edcf97;font-weight:800;padding:8px 15px}
+.agenda-controls .agenda-active{background:#3f5966;border-color:#a5c8d4;color:white}
+.agenda-controls input[type="date"]{width:145px;padding:5px 8px}
+.agenda-filters{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:15px}
+.agenda-filters label{min-width:155px;flex:0 1 205px}
+.agenda-filters select{height:38px}
+.agenda-filters .agenda-legend{display:flex;gap:14px;margin-left:auto;align-items:center;flex-wrap:wrap;padding:6px 0}
+.agenda-dot{width:8px;height:8px;border-radius:100%;display:inline-block;margin-right:6px;background:#79bcb2}
+.agenda-dot.gold{background:#deb980}
+.agenda-legend span{font-size:11px;color:#aebfc6;white-space:nowrap}
+.agenda-scroll{overflow-x:auto;overscroll-behavior-x:contain;border:1px solid #354f58;border-radius:13px;background:#13222c}
+.agenda-columns{display:grid;grid-template-columns:56px repeat(7,minmax(125px,1fr));min-width:970px}
+.agenda-columns.day-mode{grid-template-columns:56px minmax(320px,1fr);min-width:380px}
+.agenda-clock-heading{padding:14px 6px;background:#1e333d;font-size:10px;color:#98b1bc;text-align:center;border-bottom:1px solid #435c66}
+.agenda-day-heading{background:#1e333d;border-left:1px solid #3a545e;border-bottom:1px solid #435c66;text-align:center;padding:8px 4px;min-width:0}
+.agenda-day-heading strong{display:block;font-size:12px;color:#edf4f6}
+.agenda-day-heading small{font-size:10px;color:#9db8c3}
+.agenda-day-heading.today{background:#324a55}
+.agenda-clock{position:relative;background:#152630;border-right:1px solid #3a545e}
+.agenda-clock-label{position:absolute;right:8px;font-size:10px;color:#8aa5b2;transform:translateY(-7px)}
+.agenda-day-surface{position:relative;min-width:0;border-left:1px solid #405963;background:repeating-linear-gradient(to bottom,#1a2a34 0,#1a2a34 51px,#354b55 52px)}
+.agenda-hour-slot{display:block;width:100%;height:52px;border:0;border-bottom:0;background:transparent;position:relative;text-align:center;color:transparent;cursor:pointer}
+.agenda-hour-slot:hover,.agenda-hour-slot:focus-visible{background:#5e849238;color:#aac6cf;z-index:1;outline:1px dashed #80b5c8;outline-offset:-2px}
+.agenda-hour-slot span{font-size:11px}
+.agenda-event{position:absolute;border:1px solid #7991ad;border-left:3px solid #b1b3d5;border-radius:7px;background:#444b6b;color:#f3f6ff;text-align:left;padding:5px 6px;overflow:hidden;cursor:pointer;z-index:2;box-shadow:0 2px 6px #08151d33;line-height:1.3;min-width:0}
+.agenda-event:hover,.agenda-event:focus-visible{outline:2px solid #f9e3b1;outline-offset:1px}
+.agenda-event.demo-flight{background:#245465;border-color:#5aabbf;border-left-color:#91d9d1}
+.agenda-event.is-selected{outline:2px solid #f1cd91}
+.agenda-event b,.agenda-event small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.agenda-event b{font-size:11px}.agenda-event small{font-size:10px;color:#e1eaf2}
+.agenda-viewnote{font-size:11px;color:#91adba;margin-top:10px}
+.agenda-form-panel{border-color:#b6a079;background:#223139}
+.agenda-form-panel .formgrid{grid-template-columns:repeat(3,minmax(0,1fr))}
+.agenda-form-panel .formgrid>label{min-width:0}
+.agenda-selected{border:1px solid #63808e;background:#203540;border-radius:12px;padding:13px 16px;display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;align-items:center}
+.agenda-selected strong{font-size:14px;color:#fce1ab}
+.agenda-selected p{font-size:12px;margin:4px 0 0}
+.agenda-empty-note{color:#9fb5bd;font-size:12px}
+.agenda-pill{border:1px solid #67808b;color:#bbd4db;border-radius:8px;padding:4px 7px;font-size:11px}
+.agenda-small-actions{display:flex;flex-wrap:wrap;gap:7px}
+.agenda-booking-note{font-size:11px;color:#b6cbd1;margin-top:9px}
+@media(max-width:750px){
+ .agenda-shell{padding:12px}
+ .agenda-toolbar{align-items:flex-start}
+ .agenda-controls{width:100%}
+ .agenda-controls .agenda-create{margin-left:auto}
+ .agenda-controls input[type="date"]{width:135px}
+ .agenda-filters .agenda-legend{margin-left:0}
+ .agenda-form-panel .formgrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .agenda-columns.day-mode{min-width:0}
+ .agenda-columns:not(.day-mode){min-width:970px}
+}
+@media(max-width:420px){.agenda-form-panel .formgrid{grid-template-columns:1fr}}
 @media print{#screen>section:not(#training-ledger){display:none!important}body{background:#fff;color:#000}header,nav,.hero,.notice,.training-actions,form,#alert,button{display:none!important}.layout{display:block}.panel,.card,.training-record{break-inside:avoid;background:#fff!important;color:#111!important;border:1px solid #999!important}p,h1,h2,h3,span{color:#111!important}}
 </style>
 <script>document.documentElement.classList.add("auth-pending")</script>
@@ -90,6 +153,7 @@ ol{color:#bbccd0;font-size:13px;line-height:1.85}
 </main>
 <script type="module">
 import {createReservation,closeFlight,flightTotals,stockMove,validDate} from './src/operacion.js';
+import {mondayOf,shiftDate,listWeek,visibleBookings,timeWindow,layoutDay,hhmm} from './src/agenda.js';
 import {ASSESSMENTS,LESSON_STATUS,buildLesson,reviseLesson,submitLesson,closeLessonByInstructor,reviewLesson,studentTimeline,studentSummary} from './src/formacion.js';
 const $=id=>document.getElementById(id);
 const safe=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[ch]));
@@ -106,6 +170,9 @@ const fleet=[{id:'LV-ABC',model:'Cessna 172',blocked:false,insuranceUntil:'2027-
 const products=[{id:'avgas',name:'AVGAS 100LL',qty:180,unit:'L',min:60,cost:1800,sale:2300},
 {id:'oil',name:'Aceite aeronáutico',qty:16,unit:'L',min:5,cost:12500,sale:15700}];
 let reservations=[],flights=[],movements=[],lessons=[],tab='inicio',week=now();
+let agendaView=window.matchMedia('(max-width:720px)').matches?'day':'week';
+let agendaAircraft='all',agendaInstructor='all',agendaFormOpen=false,agendaBookingId='';
+let agendaSelectedBooking='',agendaDraftDate=week,agendaDraftStart='10:00';
 let trainingForm='',trainingStudent='p2',trainingPreselectFlight='';
 const chiefDemoId='jefe-instructores-demo';
 // Demostración: configuración por institución. Sin persistencia ni validación ANAC.
