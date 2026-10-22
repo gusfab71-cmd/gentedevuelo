@@ -103,9 +103,10 @@ export function trainingHours(studentId,flights,activities){
  const own=activities.filter(x=>x.pilot===studentId&&x.status==='realizada_demo');
  const summation=(kind)=>own.filter(x=>x.type===kind).reduce((n,x)=>n+Number(x.minutes||0),0);
  const simulatorMinutes=summation('simulator'),theoryMinutes=summation('theory');
- const flightTotal=flights.filter(x=>x.pilot===studentId).reduce((n,x)=>n+(Number(x.blockHours)||0),0);
+ const flightTotalMinutes=flights.filter(x=>x.pilot===studentId).reduce((n,x)=>
+  n+(Number.isInteger(x.blockMinutes)&&x.blockMinutes>=0?x.blockMinutes:Math.round(Number(x.blockHours||0)*60)),0);
  return {
-  flightHours:Number(flightTotal.toFixed(2)),
+  flightHours:Number((flightTotalMinutes/60).toFixed(2)),
   simulatorMinutes,theoryMinutes,
   simulatorHours:Number((simulatorMinutes/60).toFixed(2)),
   theoryHours:Number((theoryMinutes/60).toFixed(2))
