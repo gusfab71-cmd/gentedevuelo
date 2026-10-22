@@ -60,6 +60,17 @@ async function load(){
  $('status').textContent=bank.length+' preguntas disponibles para la prueba interna (con clave, fundamento y figura cuando corresponde). El resto del banco continúa en revisión documental. Las figuras incorporadas se presentan junto a la pregunta.';
  const figureOption=$('mode').querySelector('option[value="figure"]'); if(figureOption)figureOption.disabled=!bank.some(needsFigure);
  if(!bank.length)$('start').disabled=true;
+ const questionId=new URLSearchParams(location.search).get('pregunta');
+ if(questionId){
+  const target=bank.find(q=>q.id===questionId);
+  if(target){
+   exam=[target];index=0;points=0;gradedCount=0;
+   $('results').classList.add('hidden');$('exam').classList.remove('hidden');show();
+   $('status').textContent='Modo prueba de pregunta individual: '+target.id+'.';
+  }else{
+   $('status').textContent='La pregunta indicada no está habilitada para pruebas puntuables.';
+  }
+ }
  }catch(e){$('status').textContent=e.message;$('start').disabled=true}
 }
 function show(){answered=false;selected=null;figureReady=false;const q=exam[index];const requiresFigure=needsFigure(q);
