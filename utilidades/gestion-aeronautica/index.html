@@ -243,7 +243,7 @@ function studentPortal(){
  return '<section class="panel"><div class="portal-title"><h2>Mi espacio de alumno · Demostración</h2><span class="tag">Vista alumno · Datos ficticios</span></div>'+
  '<p class="portal-private">Aquí el alumno puede solicitar turnos y consultar únicamente sus reservas, horas de vuelo, prácticas registradas y packs comprados. Las notas de instructores, sus correcciones y la supervisión interna no se muestran.</p>'+
  '<div class="portal-metrics">'+metric(d.flightHours.toFixed(2)+' h','Horas de vuelo registradas')+
- metric(d.practices.length+d.groundActivities.length,'Prácticas y actividades registradas')+
+ metric(d.practices.length,'Prácticas evaluadas')+
  metric(d.packs.reduce((n,p)=>n+p.remainingHours,0)+' h','Horas disponibles en packs demo')+'</div></section>'+
  '<section class="panel"><div class="toolbar"><h2>Mis reservas</h2>'+
  '<button id="openStudentBooking" class="action">+ Solicitar turno</button></div>'+
