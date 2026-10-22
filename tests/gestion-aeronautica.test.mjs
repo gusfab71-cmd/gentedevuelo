@@ -298,7 +298,7 @@ const flightTaken=takeStudentBooking(schoolPlane,teacher,[schoolPlane],members);
 assert.equal(flightTaken.status,'confirmada');
 assert.equal(flightTaken.instructor,'i1');
 assert.equal(flightTaken.history.length,2);
-const externalFlight=requestStudentBooking({...threeBase,type:'flight',aircraft:'LV-ABC',start:'10:30',end:'12:00'},alice,[],fleet);
+const externalFlight=requestStudentBooking({...threeBase,type:'flight',aircraft:'LV-ABC',start:'10:00',end:'11:30'},alice,[],fleet);
 assert.throws(()=>takeStudentBooking(externalFlight,teacher,[flightTaken,externalFlight],members),/Conflicto/,'Mismo instructor no puede tomar turnos superpuestos');
 const otherStudent={...alice,id:'p3'};
 const bTheory=requestStudentBooking({...threeBase,type:'theory',resourceId:'aula-1',pilot:'p3'},otherStudent,[],fleet);
