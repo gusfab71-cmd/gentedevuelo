@@ -1,0 +1,29 @@
+name: Pruebas simulador PPA correlativo
+
+on:
+  pull_request:
+    paths:
+      - 'simulador-ppa/index.html'
+      - 'simulador-ppa/auditoria.js'
+      - 'tests/ppa-correlative-audit.test.cjs'
+      - '.github/workflows/ppa-auditoria-tests.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'simulador-ppa/index.html'
+      - 'simulador-ppa/auditoria.js'
+      - 'tests/ppa-correlative-audit.test.cjs'
+      - '.github/workflows/ppa-auditoria-tests.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node tests/ppa-correlative-audit.test.cjs
