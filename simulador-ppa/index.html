@@ -310,7 +310,16 @@ if(q.opciones.length<2){
 }
 $('start').onclick=()=>{
  const option=$('practice').value;
- reviewMode=option==='review';practiceMode=option==='practice';
+ reviewMode=option==='review';practiceMode=option==='practice';sequentialMode=option==='sequential';
+ if(sequentialMode){
+  exam=AUDIT.sortByNumber(reviewBank);
+  sequenceSignature=computeSequenceSignature();
+  resumeSequential();
+  $('status').textContent='Revisión correlativa: '+exam.length+' registros. '+(index?'Retomando desde el número '+(AUDIT.numericId(exam[Math.min(index,exam.length-1)])??exam[Math.min(index,exam.length-1)].id)+'. ':'')+'Las claves sin validar proporcionan puntaje provisional.';
+  if(index>=exam.length){finishSession();return}
+  $('results').classList.add('hidden');$('exam').classList.remove('hidden');show();
+  return;
+ }
  const activeBank=reviewMode?reviewBank:practiceMode?historicalBank:bank;
  const filtered=activeBank.filter(q=>($('subject').value==='all'||q.materia===$('subject').value)&&($('mode').value==='all'||($('mode').value==='figure'?needsFigure(q):!needsFigure(q))));
  if(!filtered.length){$('status').textContent='No hay preguntas para esta combinación. Podés cambiar el tipo, materia o modalidad.';return}
