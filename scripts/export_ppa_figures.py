@@ -89,3 +89,39 @@ if not (OUT / "figura-21.png").exists():
     encoding="utf-8",
 )
 print("Exportadas", len(sizes), "figuras originales, más Figura 21.")
+
+
+# Five other illustrations belong to the separate 108-page RAAC 61.105 question PDF.
+# These are NOT Figure 4 of the 24-page annex: they are question-specific drawings.
+RAAC_URL = "https://www.argentina.gob.ar/sites/default/files/2021/05/preguntas-segun-raac-61-105.pdf"
+RAAC_SHA = "0c2023bb318d70f73f3dc8e54aa67222efe10a883249e2256c1cbe202e34a3ed"
+RAAC_CROPS = {
+    320: (90, (73.70, 170.54, 409.71, 400.15)),
+    322: (91, (73.70, 76.53, 549.93, 500.32)),
+    323: (92, (73.70, 76.53, 549.93, 500.32)),
+    324: (93, (73.70, 76.53, 549.93, 452.48)),
+    329: (94, (73.70, 508.57, 549.93, 694.32)),
+}
+req = urllib.request.Request(RAAC_URL, headers={"User-Agent": "GenteDeVuelo-PPA-educational/1.0"})
+with urllib.request.urlopen(req, timeout=90) as resp:
+    raac_bytes = resp.read()
+raac_hash = hashlib.sha256(raac_bytes).hexdigest()
+if raac_hash != RAAC_SHA:
+    raise RuntimeError("El PDF ANAC RAAC cambió; no generar imágenes sin revisar SHA=" + raac_hash)
+raac = fitz.open(stream=raac_bytes, filetype="pdf")
+if len(raac) != 108:
+    raise RuntimeError("Se esperaban 108 páginas en el banco RAAC 61.105")
+special = {}
+for identifier, (page_no, coordinates) in RAAC_CROPS.items():
+    pix = raac[page_no-1].get_pixmap(
+        matrix=fitz.Matrix(2.2,2.2), clip=fitz.Rect(*coordinates),
+        colorspace=fitz.csGRAY, alpha=False)
+    image = Image.frombytes("L", (pix.width, pix.height), pix.samples)
+    dest = OUT / ("figura-raac-%d.png" % identifier)
+    image.save(dest, format="PNG", optimize=True)
+    special[str(identifier)] = {"page": page_no, "width": image.width, "height": image.height, "bytes": dest.stat().st_size}
+manifest_path = OUT / "anac-figuras-manifiesto.json"
+manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+manifest["raac_question_figures"] = {"source": RAAC_URL, "sha256":raac_hash, "questions":special}
+manifest_path.write_text(json.dumps(manifest,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
+print("Además, exportadas",len(special),"figuras RAAC 61.105 por pregunta.")
