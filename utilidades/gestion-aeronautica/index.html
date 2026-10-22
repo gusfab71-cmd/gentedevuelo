@@ -61,6 +61,20 @@ ol{color:#bbccd0;font-size:13px;line-height:1.85}
 #alert{min-height:22px;margin-top:9px;font-size:13px;color:#f5d8a8}
 @media(max-width:1020px){.metrics{grid-template-columns:repeat(2,1fr)}.layout{grid-template-columns:180px minmax(0,1fr)}.daygrid{grid-template-columns:repeat(4,1fr)}}
 @media(max-width:690px){header{padding:14px}main{padding:15px}.hero{align-items:start;flex-direction:column}.layout{display:block}nav{position:static;display:flex;overflow:auto;margin-bottom:16px}nav button{flex-shrink:0}.cols,.grid3,.formgrid{grid-template-columns:1fr}.formgrid .wide{grid-column:auto}.daygrid{grid-template-columns:repeat(2,1fr)}.panel{padding:15px}}
+.training-status{padding:5px 9px;border-radius:999px;font-size:11px;border:1px solid #65828a;background:#263d45;display:inline-block}
+.training-status.submitted{border-color:#c6ae79;color:#ffe3a6}.training-status.returned{border-color:#b87966;color:#ffd2be}
+.training-status.approved{border-color:#73a991;color:#b0f0d6}
+.training-history{border-left:2px solid #547080;margin:10px 0;padding-left:14px}
+.training-history-item{margin-bottom:13px;font-size:12px;line-height:1.5}
+.training-history-item p{font-size:12px;margin:4px 0}
+.training-form{display:grid;gap:12px;margin-top:15px}
+.training-form textarea,.training-review textarea{min-height:88px;padding:10px;border-radius:9px;border:1px solid #5b7481;background:#101c24;color:white;font:inherit;resize:vertical;width:100%}
+.training-actions{display:flex;gap:9px;flex-wrap:wrap;margin:14px 0}
+.training-note{background:#182c37;border-left:3px solid #cfb179;padding:11px 13px;font-size:12px;margin:10px 0;color:#d7e1e7}
+.training-record{border:1px solid #45616f;border-radius:12px;padding:14px;background:#182630;margin:12px 0}
+.training-record h3{font-size:15px;margin:5px 0}
+.training-record p{font-size:12px;margin:4px 0}
+@media print{body{background:#fff;color:#000}header,nav,.hero,.notice,.training-actions,form,#alert,button{display:none!important}.layout{display:block}.panel,.card,.training-record{break-inside:avoid;background:#fff!important;color:#111!important;border:1px solid #999!important}p,h1,h2,h3,span{color:#111!important}}
 </style>
 <script>document.documentElement.classList.add("auth-pending")</script>
 <style>html.auth-pending body{visibility:hidden}</style>
@@ -76,6 +90,7 @@ ol{color:#bbccd0;font-size:13px;line-height:1.85}
 </main>
 <script type="module">
 import {createReservation,closeFlight,flightTotals,stockMove,validDate} from './src/operacion.js';
+import {ASSESSMENTS,LESSON_STATUS,buildLesson,reviseLesson,submitLesson,reviewLesson,studentTimeline,studentSummary} from './src/formacion.js';
 const $=id=>document.getElementById(id);
 const safe=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[ch]));
 const isoDay=d=>[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');
@@ -90,7 +105,9 @@ const fleet=[{id:'LV-ABC',model:'Cessna 172',blocked:false,insuranceUntil:'2027-
 {id:'LV-XYZ',model:'Piper PA-11',blocked:false,insuranceUntil:'2027-05-01',rate:70000}];
 const products=[{id:'avgas',name:'AVGAS 100LL',qty:180,unit:'L',min:60,cost:1800,sale:2300},
 {id:'oil',name:'Aceite aeronáutico',qty:16,unit:'L',min:5,cost:12500,sale:15700}];
-let reservations=[],flights=[],movements=[],tab='inicio',week=now();
+let reservations=[],flights=[],movements=[],lessons=[],tab='inicio',week=now();
+let trainingForm='',trainingStudent='p2';
+const chiefDemoId='jefe-instructores-demo';
 const navs=[['inicio','Panel general'],['reservas','Agenda y reservas'],['vuelos','Vuelos y RAV'],['flota','Aeronaves y mantenimiento'],['personas','Pilotos y alumnos'],['finanzas','Contabilidad y horas'],['stock','Combustible y aceite'],['academia','Academia y Simu PPA'],['documentos','Documentos y avisos']];
 function notice(message){$('alert').textContent=message}
 const metric=(value,label)=>'<div class="metric"><strong>'+safe(value)+'</strong><span>'+safe(label)+'</span></div>';
