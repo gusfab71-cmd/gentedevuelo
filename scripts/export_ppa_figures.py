@@ -13,6 +13,21 @@ import urllib.request
 import fitz
 from PIL import Image
 
+def trim_white_vertical(image, margin=14):
+    """Recorta exclusivamente márgenes verticales casi blancos.
+
+    Conserva toda fila que contenga tinta, incluso líneas finas y leyendas
+    bajo el gráfico. Nunca elimina contenido horizontal ni modifica el
+    dibujo o las escalas de las figuras originales.
+    """
+    ink = image.convert("L").point(lambda value: 255 if value < 246 else 0)
+    bounds = ink.getbbox()
+    if bounds is None:
+        return image
+    top = max(0, bounds[1] - margin)
+    bottom = min(image.height, bounds[3] + margin)
+    return image.crop((0, top, image.width, bottom))
+
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 OUT = ROOT / "simulador-ppa" / "figuras"
 URL = "https://www.argentina.gob.ar/sites/default/files/2021/05/anexo-figuras-para-las-preguntas-ppa.pdf"
@@ -42,7 +57,7 @@ def crop(page_no, top, bottom):
     if box.height < 40:
         raise RuntimeError("Recorte anormal página " + str(page_no))
     pix = page.get_pixmap(matrix=fitz.Matrix(2.2, 2.2), clip=box, colorspace=fitz.csGRAY, alpha=False)
-    return Image.frombytes("L", (pix.width, pix.height), pix.samples)
+    return trim_white_vertical(Image.frombytes("L", (pix.width, pix.height), pix.samples))
 
 def stack(parts):
     if len(parts) == 1:
@@ -77,7 +92,7 @@ for page_no, numbers in FIGURES.items():
             first = doc[15].search_for("Figura 41.")
             if not first: raise RuntimeError("Falta referencia Figura 41")
             parts.append(crop(16, 142, first[0].y0 - 9))
-        final = stack(parts)
+        final = trim_white_vertical(stack(parts))
         dest = OUT / ("figura-%d.png" % number)
         final.save(dest, format="PNG", optimize=True)
         sizes[str(number)] = {"page": page_no, "width": final.width, "height": final.height, "bytes": dest.stat().st_size}
@@ -117,7 +132,7 @@ for identifier, (page_no, coordinates) in RAAC_CROPS.items():
     pix = raac[page_no-1].get_pixmap(
         matrix=fitz.Matrix(2.2,2.2), clip=fitz.Rect(*coordinates),
         colorspace=fitz.csGRAY, alpha=False)
-    image = Image.frombytes("L", (pix.width, pix.height), pix.samples)
+    image = trim_white_vertical(Image.frombytes("L", (pix.width, pix.height), pix.samples))
     dest = OUT / ("figura-raac-%d.png" % identifier)
     image.save(dest, format="PNG", optimize=True)
     special[str(identifier)] = {"page": page_no, "width": image.width, "height": image.height, "bytes": dest.stat().st_size}
