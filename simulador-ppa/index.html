@@ -368,14 +368,17 @@ $('submit').onclick=()=>{
  $('submit').classList.add('hidden');$('next').classList.remove('hidden');
  $('next').textContent=index===exam.length-1?'Ver resultado':'Siguiente pregunta';
 };
-$('next').onclick=()=>{
- index++;
- if(index<exam.length){show();return}
+function finishSession(){
  $('exam').classList.add('hidden');$('results').classList.remove('hidden');
- if(reviewMode){
-  $('perfect-bonus').classList.add('hidden');
+ $('perfect-bonus').classList.add('hidden');
+ if(reviewMode||sequentialMode){
   $('result-face').className='result-face';$('result-face').textContent='';
-  $('summary').textContent='Revisión completada: '+exam.length+' preguntas consultadas, sin puntaje.';
+  if(sequentialMode){
+   const reviewed=Object.keys(sequentialAnswers).filter(id=>sequentialAnswers[id]?.attempted).length;
+   $('summary').textContent='REVISIÓN CORRELATIVA COMPLETADA · '+reviewed+' de '+exam.length+
+    ' registros recorridos. '+points+' puntos en '+gradedCount+' preguntas calificables. '+
+    (reviewed-gradedCount)+' registros sin calificar. El puntaje es provisional porque las claves históricas requieren cotejo oficial. Exportá el informe CSV para verificar cada registro.';
+  }else $('summary').textContent='Revisión completada: '+exam.length+' preguntas consultadas, sin puntaje.';
   return;
  }
  const passed=gradedCount>0&&points/gradedCount>=0.7;
@@ -386,7 +389,34 @@ $('next').onclick=()=>{
  $('result-face').setAttribute('aria-label',passed?'Piloto feliz':'Piloto triste');
  playResultSound(passed);
  $('summary').textContent=(practiceMode?'PRÁCTICA HISTÓRICA · PUNTAJE PROVISIONAL. ':'EXAMEN VERIFICADO. ')+points+' de '+gradedCount+' respuestas correctas. '+(practiceMode?'Las claves históricas deben cotejarse antes de considerarlas definitivas.':'Resultados de las preguntas verificadas en el banco.');
+}
+$('next').onclick=()=>{
+ if(sequentialMode&&exam[index]&&!sequentialAnswers[exam[index].id])
+  sequentialAnswers[exam[index].id]={selected:null,attempted:true,graded:false,correct:false};
+ index++;
+ if(sequentialMode)saveSequential();
+ if(index<exam.length){show();return}
+ finishSession();
 };
-$('again').onclick=()=>$('start').click();
-(async()=>{try{await window.GDV_AUTH.ready;const client=window.GDV_AUTH.client;const {data:{user},error}=await client.auth.getUser();if(error||!user)throw Error("Acceso denegado");const {data,error:roleError}=await client.from("site_admins").select("user_id").eq("user_id",user.id).maybeSingle();if(roleError||!data)throw Error("Solo administrador");$("ppa-app").hidden=false;load()}catch(e){document.body.textContent="Simulador PPA: acceso exclusivo del administrador."}})();
+$('flag').onclick=()=>{
+ if(!sequentialMode||!exam[index])return;
+ const id=exam[index].id,prev=sequentialFlags[id]||'';
+ const note=prompt('Observación para cotejar con ANAC. Dejá el campo vacío para retirar la marca:',prev);
+ if(note===null)return;
+ if(note.trim())sequentialFlags[id]=note.trim().slice(0,500);
+ else delete sequentialFlags[id];
+ updateFlagLabel();
+ saveSequential();
+};
+$('reset-seq').onclick=()=>{
+ if(!confirm('¿Reiniciar la revisión correlativa desde la primera pregunta y borrar el puntaje y las marcas guardadas en este navegador?'))return;
+ try{localStorage.removeItem(seqStorageKey())}catch(_){}
+ sequentialAnswers={};sequentialFlags={};points=0;gradedCount=0;index=0;
+ $('practice').value='sequential';$('start').click();
+};
+$('again').onclick=()=>{
+ $('results').classList.add('hidden');$('exam').classList.add('hidden');
+ $('practice').focus();
+};
+(async()=>{try{await window.GDV_AUTH.ready;const client=window.GDV_AUTH.client;const {data:{user},error}=await client.auth.getUser();if(error||!user)throw Error("Acceso denegado");const {data,error:roleError}=await client.from("site_admins").select("user_id").eq("user_id",user.id).maybeSingle();if(roleError||!data)throw Error("Solo administrador");currentAdminId=user.id;$("ppa-app").hidden=false;load()}catch(e){document.body.textContent="Simulador PPA: acceso exclusivo del administrador."}})();
 </script></body></html>
