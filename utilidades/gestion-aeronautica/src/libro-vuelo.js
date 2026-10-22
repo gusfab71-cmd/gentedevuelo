@@ -61,12 +61,13 @@ export function makeLogbookDetail(draft,booking,flight,person,fleet=[]){
  if(person?.id&&person.id!==flight.pilot)throw Error('El detalle debe pertenecer al titular del vuelo.');
  const plane=fleet.find(a=>a.id===flight.aircraft);
  const make=str(draft.aircraftMake,90),model=str(draft.aircraftModel||plane?.model,90),
-  license=str(draft.license,80),className=str(draft.aircraftClass,50),power=str(draft.powerHp,30);
+  license=str(draft.license,80),className=str(draft.aircraftClass,50),power=str(draft.powerHp,30),
+  legajoNumber=str(draft.legajoNumber,40),pageNumber=str(draft.pageNumber,12);
  const record={
   date:flight.date,departureUtc:flight.start,arrivalUtc:flight.end,
   from:flight.from,to:flight.to,purpose,
   aircraftMake:make,aircraftModel:model,registration:flight.aircraft,
-  powerHp:power,aircraftClass:className,license,
+  powerHp:power,aircraftClass:className,license,legajoNumber,pageNumber,
   recordedFlightMinutes:credited,
   categoryMinutes,specialMinutes,
   dayMinutes:categoryMinutes.airportDayPilot+categoryMinutes.airportDayCopilot+
