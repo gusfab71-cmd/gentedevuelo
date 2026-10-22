@@ -105,7 +105,7 @@ ol{color:#bbccd0;font-size:13px;line-height:1.85}
 .agenda-day-heading.today{background:#324a55}
 .agenda-clock{position:relative;background:#152630;border-right:1px solid #3a545e}
 .agenda-clock-label{position:absolute;right:8px;font-size:10px;color:#8aa5b2;transform:translateY(-7px)}
-.agenda-day-surface{position:relative;min-width:0;border-left:1px solid #405963;background:repeating-linear-gradient(to bottom,#1a2a34 0,#1a2a34 51px,#354b55 52px)}
+.agenda-day-surface{position:relative;min-width:0;border-left:1px solid #405963;background:repeating-linear-gradient(to bottom,#1a2a34 0,#1a2a34 calc(var(--agenda-hour-height,52px) - 1px),#354b55 var(--agenda-hour-height,52px))}
 .agenda-hour-slot{display:block;width:100%;height:52px;border:0;border-bottom:0;background:transparent;position:relative;text-align:center;color:transparent;cursor:pointer}
 .agenda-hour-slot:hover,.agenda-hour-slot:focus-visible{background:#5e849238;color:#aac6cf;z-index:1;outline:1px dashed #80b5c8;outline-offset:-2px}
 .agenda-hour-slot span{font-size:11px}
@@ -250,7 +250,7 @@ function schoolTurneraSettings(){
 function calendar(){
  const dates=agendaView==='week'?listWeek(week):[week];
  const shown=visibleBookings(reservations,dates,agendaAircraft,agendaInstructor);
- const range=timeWindow(shown,schoolPolicy.openTime,schoolPolicy.closeTime),px=52,boardHeight=(range.end-range.start)/60*px;
+ const range=timeWindow(shown,schoolPolicy.openTime,schoolPolicy.closeTime),px=schoolPolicy.slotMinutes===15?80:schoolPolicy.slotMinutes===30?64:52,boardHeight=(range.end-range.start)/60*px;
  const startHour=Math.floor(range.start/60),endHour=Math.ceil(range.end/60);
  const hours=Array.from({length:endHour-startHour},(_,i)=>startHour+i);
  const short=s=>shortDay(s).replace(/\./g,'');
@@ -276,11 +276,11 @@ function calendar(){
   const step=schoolPolicy.slotMinutes;
   const cells=hours.flatMap(h=>Array.from({length:60/step},(_,i)=>h*60+i*step)).map(t=>{
    const time=hhmm(t),disabled=closed||t<minutes(schoolPolicy.openTime)||t>=minutes(schoolPolicy.closeTime);
-   return '<button type="button" class="agenda-hour-slot" style="height:'+(52*step/60)+'px"'+
+   return '<button type="button" class="agenda-hour-slot" style="height:'+(px*step/60)+'px"'+
     (disabled?' disabled':'')+' data-agenda-date="'+date+'" data-agenda-time="'+time+
     '" aria-label="Nueva reserva el '+date+' a las '+time+'"><span>+ Reservar '+time+'</span></button>';
   }).join('');
-  return '<div class="agenda-day-surface '+(closed?'day-closed':'')+'" style="height:'+boardHeight+'px" data-agenda-day="'+date+'">'+
+  return '<div class="agenda-day-surface '+(closed?'day-closed':'')+'" style="height:'+boardHeight+'px;--agenda-hour-height:'+px+'px" data-agenda-day="'+date+'">'+
    cells+eventHtml(date)+'</div>';
  }).join('');
  const controls='<div class="agenda-controls">'+
