@@ -267,7 +267,7 @@ function info(c,a){const t0=Date.now(),D=30.44*864e5,d=[],z=cnt(a,c.cp);
 
  const remH=c.ivH?c.lastH+c.ivH-z.h:null,remC=c.ivC?c.lastC+c.ivC-z.c:null;let calD=null;
 
- if(c.ivM&&c.lastDate){const x=new Date(c.lastDate+'T12:00:00');x.setMonth(x.getMonth()+c.ivM);calD=x.getTime();d.push([calD,'calendario'])}
+ if(c.ivM&&c.lastDate){const dueDate=addMonthsConservative(c.lastDate,c.ivM);if(dueDate){calD=new Date(dueDate+'T00:00:00').getTime();d.push([calD,'calendario'])}}
 
  if(remH!=null)d.push([remH<=0?t0:a.hpm>0?t0+remH/a.hpm*D:Infinity,'horas']);
 
@@ -275,7 +275,7 @@ function info(c,a){const t0=Date.now(),D=30.44*864e5,d=[],z=cnt(a,c.cp);
 
  const m=d.length?d.reduce((x,y)=>y[0]<x[0]?y:x):[Infinity,'—'],days=(m[0]-t0)/864e5,over=(remH!=null&&remH<=0)||(remC!=null&&remC<=0)||(calD&&calD<t0);
 
- return{remH,remC,calD,due:m[0],by:m[1],days,st:over?2:days<=45?1:0}}
+ return{remH,remC,calD,due:m[0],by:m[1],days,st:over?2:(days<=45||(remH!==null&&remH<=10)||(remC!==null&&remC<=10))?1:0}}
 
 const ST=[['SIN ALERTA','emerald'],['PRÓXIMO','amber'],['REVISAR VENCIMIENTO','rose'],['SIN CONSTANCIA','rose']];
 
