@@ -153,7 +153,7 @@ ol{color:#bbccd0;font-size:13px;line-height:1.85}
 <div class="layout"><nav id="sidebar" aria-label="Módulos de Gestión Aeronáutica"></nav><div class="content"><p id="alert" role="status" aria-live="polite"></p><section id="screen" aria-live="polite"></section></div></div>
 </main>
 <script type="module">
-import {createReservation,closeFlight,flightTotals,stockMove,validDate} from './src/operacion.js';
+import {createReservation,closeFlight,flightTotals,stockMove,validDate,minutes,reservationMinimumMinutes,STUDENT_RESERVATION_MINUTES} from './src/operacion.js';
 import {mondayOf,shiftDate,listWeek,visibleBookings,timeWindow,layoutDay,hhmm} from './src/agenda.js';
 import {ASSESSMENTS,LESSON_STATUS,buildLesson,reviseLesson,submitLesson,closeLessonByInstructor,reviewLesson,studentTimeline,studentSummary} from './src/formacion.js';
 const $=id=>document.getElementById(id);
@@ -267,6 +267,7 @@ function calendar(){
   '<label>Hasta<input type="time" id="bookEnd" value="'+safe(end)+'" required></label></div>'+
   '<div class="training-actions"><button type="submit" class="action">'+(edit?'Guardar cambios (demo)':'Confirmar reserva de prueba')+'</button>'+
   '<button type="button" class="secondary" id="cancelBooking">Cancelar</button></div></form>'+
+  '<p id="bookingDurationHint" class="agenda-booking-note" role="status" aria-live="polite">'+(members.find(m=>m.id===(edit?.pilot||'p1'))?.kind==='alumno'?'Reserva de alumno: mínimo 1 h 30 min.':'Al seleccionar un alumno se exige un turno de al menos 1 h 30 min.')+'</p>'+ 
   '<p class="agenda-booking-note">Validaciones locales de aeronave, instructor, piloto, fechas y conflictos. No comprueba licencias ante ANAC ni garantiza disponibilidad para otros usuarios.</p></section>':'';
  const table='<details class="panel" id="agendaBookingList"><summary>Ver historial de reservas de demostración ('+reservations.length+')</summary>'+
   '<div class="table-scroll" style="margin-top:12px"><table><thead><tr><th>Fecha</th><th>Aeronave</th><th>Piloto</th><th>Hora</th><th>Estado</th><th>Acción</th></tr></thead><tbody>'+
@@ -601,6 +602,26 @@ function wire(){
   const closeForm=()=>{agendaFormOpen=false;agendaBookingId='';render()};
   $('closeBooking')?.addEventListener('click',closeForm);
   $('cancelBooking')?.addEventListener('click',closeForm);
+  // Ajustar el horario sugerido cuando se elige un alumno, sin impedir que la validación rechace reservas más cortas.
+  const updateStudentDuration=()=>{
+   const selected=members.find(p=>p.id===$('bookPilot')?.value);
+   const min=reservationMinimumMinutes(selected),start=$('bookStart')?.value,end=$('bookEnd')?.value;
+   const hint=$('bookingDurationHint');
+   if(!hint||!start||!end)return;
+   if(min===0){hint.textContent='Para alumnos el mínimo de reserva es 1 h 30 min.';return}
+   try{
+    const t=minutes(start),finish=minutes(end),minEnd=t+STUDENT_RESERVATION_MINUTES;
+    if(minEnd>=24*60){
+     hint.textContent='Con este horario de inicio no quedan 90 minutos en el día. Elegí un horario anterior.';
+    }else{
+     if(finish-t<min)$('bookEnd').value=String(Math.floor(minEnd/60)).padStart(2,'0')+':'+String(minEnd%60).padStart(2,'0');
+     hint.textContent='Alumno: duración mínima 1 h 30 min. Fin sugerido: '+$('bookEnd').value+'.';
+    }
+   }catch(_){hint.textContent='Alumno: el turno debe durar al menos 1 hora y 30 minutos.'}
+  };
+  $('bookPilot')?.addEventListener('change',updateStudentDuration);
+  $('bookStart')?.addEventListener('change',updateStudentDuration);
+  updateStudentDuration();
   $('booking')?.addEventListener('submit',e=>{
    e.preventDefault();
    try{
