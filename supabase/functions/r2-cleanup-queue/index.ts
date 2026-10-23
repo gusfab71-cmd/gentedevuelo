@@ -31,6 +31,11 @@ Deno.serve(async (req: Request) => {
  const {data:{user},error:authError} = await auth.auth.getUser(token);
  if (authError || !user) return json({error:"Sesión inválida"},401,h);
  const service = createClient(url,serviceRole,{auth:{persistSession:false}});
+ // El borrado físico solo puede iniciarlo un administrador autenticado.
+ // La tarea semanal dispone de su propio endpoint/token independiente.
+ const {data:admin,error:adminError}=await service.from("site_admins")
+   .select("user_id").eq("user_id",user.id).maybeSingle();
+ if(adminError||!admin)return json({error:"Solo administración puede iniciar la limpieza R2"},403,h);
  const {data:tasks,error:queueError} = await service.from("r2_cleanup_queue")
    .select("path,url,attempts").order("created_at",{ascending:true}).limit(20);
  if (queueError) return json({error:"No se pudo leer la cola de limpieza"},503,h);
