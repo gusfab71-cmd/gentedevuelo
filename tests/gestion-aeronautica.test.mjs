@@ -164,7 +164,7 @@ assert.throws(()=>buildLesson({...sample,flightId:'flight-class-1',date:'2026-10
 assert.equal(studentSummary([classWithFlight],'p2').flightBlockHours,1.1);
 for(const term of ['Legajo de evolución del alumno','Jefatura de Instructores','Evolución respecto de clases anteriores','Enviar al jefe de instructores','Devolver con observaciones'])
  assert.ok(html.includes(term),'Falta función visual: '+term);
-assert.match(html,/if\(tab==='personas'\)wireTraining\(\)/);
+assert.match(html,/if\(tab==='personas'\)\{wireTraining\(\);wireInstitutionalRav\(\);\}/);
 assert.match(html,/Solo administrador|Acceso exclusivo del administrador/);
 console.log('PASS: legajo alumno, evaluación de instructor, versiones, aprobación/observaciones de jefatura y vínculos de vuelo');
 
