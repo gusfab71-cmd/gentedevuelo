@@ -161,6 +161,13 @@ ol{color:#bbccd0;font-size:13px;line-height:1.85}
 .portal-actions{display:flex;flex-wrap:wrap;gap:8px}
 .portal-private{border-left:3px solid #8ab5c2;background:#1b333e;padding:12px 15px;border-radius:8px;font-size:12px;color:#c7d9df}
 @media(max-width:690px){.portal-metrics{grid-template-columns:1fr}}
+.rav-institution-panel{border:1px solid #587888;background:#1b303d}
+.rav-process{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.rav-process span{padding:7px 10px;border:1px solid #506f7d;border-radius:9px;color:#cae0e7;font-size:12px}
+.rav-status-label{color:#ecd099;font-size:12px;font-weight:650}
+.rav-item{padding:15px;margin:11px 0;background:#162b37;border:1px solid #3c5c6b;border-radius:12px}
+.rav-item .training-actions{margin-top:8px}
+.rav-item p{font-size:12px;color:#b9ced8;margin:5px 0}
 .flight-activity-list{display:grid;gap:10px}.flight-activity-item{padding:12px 14px;border-radius:11px;border:1px solid #486471;background:#192c37;display:flex;justify-content:space-between;align-items:start;gap:12px;flex-wrap:wrap}
 .flight-activity-item p{margin:4px 0;font-size:12px;color:#bed0d8}.flight-activity-item strong{font-size:13px;color:#f0f6f9}
 .flight-type-pill{display:inline-flex;padding:4px 9px;border:1px solid #7b949e;border-radius:999px;font-size:11px;color:#d9e9ef}
@@ -201,6 +208,7 @@ import {ACTIVITY_TYPES,DEMO_RESOURCES,requestStudentBooking,takeStudentBooking,f
 import {ASSESSMENTS,LESSON_STATUS,buildLesson,reviseLesson,submitLesson,closeLessonByInstructor,reviewLesson,studentTimeline,studentSummary} from './src/formacion.js';
 import {FLIGHT_MODE_LABELS,flightActivityByRole,flightActivityProjection} from './src/vuelos.js';
 import {makeLogbookDetail,logbookRows,logbookSummary,LOGBOOK_TIME_COLUMNS,LOGBOOK_SPECIAL_COLUMNS,LOGBOOK_SIMULATOR_COLUMNS,LOGBOOK_PURPOSES} from './src/libro-vuelo.js';
+import {RAV_STATES,ravCandidates,ravFlightTotals,createRavDraft,submitRavForReview,institutionalReviewRav} from './src/rav-institucional.js';
 const $=id=>document.getElementById(id);
 const safe=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[ch]));
 const isoDay=d=>[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');
@@ -246,9 +254,10 @@ let agendaAircraft='all',agendaInstructor='all',agendaFormOpen=false,agendaBooki
 let agendaSelectedBooking='',agendaDraftDate=week,agendaDraftStart='10:00';
 let trainingForm='',trainingStudent='p2',trainingPreselectFlight='';
 const chiefDemoId='jefe-instructores-demo';
+let ravRecords=[],ravFormOpen=false;
 // Demostración: configuración por institución. Sin persistencia ni validación ANAC.
 const trainingInstitution={institutionType:'non_ciac',reviewMode:'chief'};
-const navs=[['inicio','Panel general'],['alumno','Portal del alumno · Demo'],['piloto','Mi actividad · Piloto privado'],['instructor','Área de instructores · Demo'],['direccion','Seguimiento dirección · Demo'],['reservas','Agenda y reservas'],['vuelos','Vuelos y RAV'],['flota','Aeronaves y mantenimiento'],['personas','Pilotos y alumnos'],['finanzas','Contabilidad y horas'],['stock','Combustible y aceite'],['academia','Academia y Simu PPA'],['documentos','Documentos y avisos']];
+const navs=[['inicio','Panel general'],['alumno','Portal del alumno · Demo'],['piloto','Mi actividad · Piloto privado'],['instructor','Área de instructores · Demo'],['direccion','Seguimiento dirección · Demo'],['reservas','Agenda y reservas'],['vuelos','Registro de vuelo'],['flota','Aeronaves y mantenimiento'],['personas','Pilotos y alumnos'],['finanzas','Contabilidad y horas'],['stock','Combustible y aceite'],['academia','Academia y Simu PPA'],['documentos','Documentos y avisos']];
 function notice(message){$('alert').textContent=message}
 const metric=(value,label)=>'<div class="metric"><strong>'+safe(value)+'</strong><span>'+safe(label)+'</span></div>';
 const options=(rows,value='id',label='name')=>rows.map(row=>'<option value="'+safe(row[value])+'">'+safe(row[label])+'</option>').join('');
@@ -432,8 +441,8 @@ function directorPortal(){
  '<p><strong>'+safe(portalLabel(portalStudent))+'</strong> · Clases registradas: '+counts.lessons+
  ' · Fichas revisadas: '+counts.approved+' · Cerradas por instructor: '+counts.instructorClosed+
  ' · Devueltas: '+counts.returned+'</p>'+
- '<p class="muted">Para aprobar o devolver evaluaciones, usá el circuito de jefatura en Pilotos y alumnos. Las notas completas solo estarán disponibles para dirección e instructores autorizados.</p>'+
- '<button class="secondary" type="button" data-go="personas">Abrir seguimiento y revisiones</button></section>';
+ '<p class="muted">Para revisar evaluaciones o gestionar el RAV institucional, usá Pilotos y alumnos. El alumno no puede aprobar documentación institucional.</p>'+
+ '<button class="secondary" type="button" data-go="personas">Abrir seguimiento y gestión de RAV</button></section>';
 }
 let studentBookingOpen=false,instructorEvaluationBooking='';
 function dashboard(){
@@ -668,7 +677,7 @@ function flightScreen(){
  '<label>Aterrizajes<input id="landings" type="number" min="0" max="30" value="1" required></label></div>'+
  '<button type="submit" class="action">Cerrar vuelo de demostración</button></form>':
  '<div class="card"><p>Primero necesitás una reserva de vuelo confirmada. Un vuelo ya cerrado no se puede duplicar.</p><button class="secondary" data-go="reservas">Ir a reservas</button></div>')+'</section>'+
- '<section class="panel"><div class="toolbar"><h2>Historial de vuelos y RAV · DEMO</h2>'+
+ '<section class="panel"><div class="toolbar"><h2>Historial de registros de vuelo · DEMO</h2>'+
  '<div class="agenda-controls"><label>Modalidad<select id="flightModeFilter">'+types.map(([key,label])=>
   '<option value="'+key+'" '+(key===flightModeFilter?'selected':'')+'>'+label+'</option>').join('')+'</select></label>'+
  '<button id="flightExport" class="secondary" '+(!shown.length?'disabled':'')+'>Exportar CSV (no RAV oficial)</button></div></div>'+
@@ -681,7 +690,7 @@ function flightScreen(){
  (shown.length?'':'<tr><td colspan="9">Sin vuelos para este filtro.</td></tr>')+'</tbody></table></div>'+
  '<div class="training-actions"><button class="secondary" data-go="alumno">Ver historial del alumno</button>'+
  '<button class="secondary" data-go="piloto">Ver historial del piloto privado</button></div>'+
- '<p class="muted">CSV de demostración, no RAV oficial. La asignación de horas habilitantes y la documentación ANAC requerirán validación técnica, normativa y permisos individuales.</p></section>'+logbookFormScreen()+logbookSummaryScreen();
+ '<p class="muted">CSV auxiliar de registros de vuelo. El RAV institucional se prepara y revisa en Pilotos y alumnos → Gestión de RAV. No certifica horas ante ANAC.</p></section>'+logbookFormScreen()+logbookSummaryScreen();
 }
 function fleetScreen(){
  const totals=flightTotals(flights,'aircraft');
@@ -810,7 +819,7 @@ function memberScreen(){
  '<div class="table-scroll"><table><thead><tr><th>Perfil de prueba</th><th>Rol</th><th>Licencia declarada</th><th>CMA declarada</th><th>Horas bloque</th></tr></thead><tbody>'+
  members.map(p=>'<tr><td>'+safe(p.name)+'</td><td>'+safe(p.kind)+'</td><td>'+safe(p.licenseUntil)+'</td><td>'+safe(p.cmaUntil)+'</td><td>'+(totals[p.id]||0).toFixed(2)+'</td></tr>').join('')+
  '</tbody></table></div></section>'+
- trainingSettings()+trainingTimeline()+trainingFormMarkup()+chiefReviewSection();
+ trainingSettings()+trainingTimeline()+trainingFormMarkup()+chiefReviewSection()+ravInstitutionScreen();
 }
 function financeScreen(){
  const gross=flights.reduce((a,b)=>a+b.cost,0);
