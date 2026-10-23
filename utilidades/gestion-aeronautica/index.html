@@ -317,7 +317,7 @@ function privatePilotPortal(){
  metric(p.flights,'Vuelos privados registrados')+
  metric(p.landings,'Aterrizajes')+'</div>'+
  '<div class="training-actions"><button class="action" data-go="reservas">Solicitar reserva de aeronave · Demo</button>'+
- '<button class="secondary" data-go="vuelos">Ver Vuelos y RAV</button></div></section>'+
+ '<button class="secondary" data-go="vuelos">Ver Registro de vuelo</button></div></section>'+
  '<section class="panel"><h2>Mi historial de vuelos como piloto privado</h2>'+flightCards(p)+
  '<p class="muted">Otros vuelos del perfil con instructor (si los hubiera): '+all.byMode.coached.flights+
  '. Se contabilizan aparte de los vuelos sin instructor.</p></section>';
@@ -402,7 +402,7 @@ function instructorPortal(){
  (pending||'<p class="muted">No hay solicitudes pendientes de asignación.</p>')+'</section>'+
  '<section class="panel"><h2>Mis turnos y seguimiento</h2>'+
  (assigned||'<p class="muted">Todavía no tomaste reservas de demostración.</p>')+
- '<p class="muted">Para vuelos, primero debe cerrarse la actividad en Vuelos y RAV. Para teoría y simulador, registrá la clase realizada antes de elaborar la evolución.</p></section>'+
+ '<p class="muted">Para vuelos, primero debe cerrarse la actividad en Registro de vuelo. Para teoría y simulador, registrá la clase realizada antes de elaborar la evolución.</p></section>'+
  (instructorEvaluationBooking?instructorEvaluationForm():'');
 }
 function instructorEvaluationForm(){
@@ -811,6 +811,55 @@ function chiefReviewSection(){
  '<button type="button" class="secondary" data-chief-return="'+safe(l.id)+'">Devolver con observaciones</button></div></article>').join('')||
  '<p>No hay fichas pendientes de revisión por jefatura.</p>')+
  '</section>';
+}
+function ravInstitutionScreen(){
+ const students=members.filter(p=>p.kind==='alumno');
+ const chiefEnabled=trainingInstitution.reviewMode==='chief';
+ const optionsStudents=students.map(p=>'<option value="'+safe(p.id)+'">'+safe(p.name)+'</option>').join('');
+ const a=flights.filter(f=>students.some(p=>p.id===f.pilot)&&f.operationType==='instruction'&&f.instructor);
+ const minDate=a.length?a.reduce((m,f)=>f.date<m?f.date:m,a[0].date):now().slice(0,7)+'-01';
+ const maxDate=a.length?a.reduce((m,f)=>f.date>m?f.date:m,a[0].date):now();
+ const form=ravFormOpen?'<div class="portal-box" id="ravFormPanel">'+
+  '<div class="toolbar"><h3>Preparar RAV institucional · Datos de demostración</h3>'+
+  '<button type="button" class="secondary" id="closeRavForm">Cerrar planilla</button></div>'+
+  '<form id="ravCreateForm"><div class="formgrid">'+
+  '<label>Alumno<select id="ravStudent" required>'+optionsStudents+'</select></label>'+
+  '<label>Desde<input id="ravFrom" type="date" value="'+safe(minDate)+'" required></label>'+
+  '<label>Hasta<input id="ravTo" type="date" value="'+safe(maxDate)+'" required></label></div>'+
+  '<p class="muted">Se tomarán únicamente vuelos de instrucción cerrados con instructor en el período, sin registrar otro vuelo ni agregar horas. No se permite duplicar un vuelo ya incluido en otro RAV activo.</p>'+
+  '<button class="action" type="submit">Crear borrador para revisión</button></form></div>':'';
+ const entries=ravRecords.slice().reverse().map(item=>{
+  const totals=ravFlightTotals(item,flights);
+  const student=members.find(x=>x.id===item.studentId)?.name||'Alumno no encontrado';
+  const unassessed=flights.filter(f=>item.flightIds.includes(f.id)&&!lessons.some(l=>l.flightId===f.id)).length;
+  return '<article class="rav-item"><div class="toolbar"><strong>'+safe(student)+' · '+safe(item.dateFrom)+' a '+safe(item.dateTo)+'</strong>'+
+   '<span class="rav-status-label">'+safe(RAV_STATES[item.status])+'</span></div>'+
+   '<p>'+totals.count+' vuelos de instrucción · '+totals.minutes+' minutos de bloque de referencia · Aeronaves: '+
+   safe(totals.aircraft.join(', '))+'</p>'+
+   (unassessed?'<p>'+unassessed+' vuelo(s) sin evaluación pedagógica: revisar legajos antes de utilizar como respaldo.</p>':'')+
+   '<p>Registro institucional de prueba. No contiene firmas habilitadas, certificaciones ni validación ANAC.</p>'+
+   '<div class="training-actions">'+
+    ((item.status==='draft'||item.status==='returned')?
+      '<button type="button" class="secondary" data-rav-submit="'+safe(item.id)+'">Enviar a revisión</button>':'')+
+    (item.status==='submitted'?
+      '<button type="button" class="action" data-rav-review="'+safe(item.id)+'">Marcar revisión interna (sin firmar)</button>'+
+      '<button type="button" class="secondary" data-rav-return="'+safe(item.id)+'">Devolver con observaciones</button>':'')+
+    '</div>'+
+   '<details><summary>Ver historial de decisiones de demostración</summary>'+
+   '<div class="table-scroll"><table><thead><tr><th>Evento</th><th>Responsable</th><th>Fecha</th></tr></thead><tbody>'+
+   (item.history||[]).map(h=>'<tr><td>'+safe(h.action)+'</td><td>'+safe(h.actor)+'</td><td>'+safe(h.at)+'</td></tr>').join('')+
+   '</tbody></table></div></details></article>';
+ }).join('');
+ return '<section class="panel rav-institution-panel" id="ravInstitutionSection">'+
+  '<div class="toolbar"><h2>Gestión institucional de RAV · Dirección / Administración</h2>'+
+  '<button type="button" class="action" id="openRavForm">+ Preparar RAV</button></div>'+
+  '<p class="portal-private">Este espacio está reservado para la dirección o responsable institucional facultado para revisar y gestionar el RAV. El alumno solo consulta su actividad y no puede generar ni validar un RAV institucional. En la DEMO únicamente el administrador puede simular estas funciones.</p>'+
+  '<div class="rav-process"><span>1. Registro único de vuelo</span><span>2. Borrador RAV</span>'+
+  '<span>3. Revisión de dirección'+(chiefEnabled?' / jefatura':'')+'</span><span>4. Certificación fuera de la DEMO</span></div>'+
+  '<p class="logbook-disclaimer">El RAV de demostración NO se firma, certifica, presenta ni registra ante ANAC. Las acciones de revisión son internas y deben realizarse por usuarios habilitados y verificados antes de operar con escuelas reales.</p>'+
+  '<p class="muted">Vuelos de instrucción cerrados disponibles: '+a.length+'. RAV de prueba preparados: '+ravRecords.length+'.</p>'+
+  form+(entries||'<p class="muted">Todavía no hay RAV de demostración. Cerrá primero un vuelo de instrucción desde Registro de vuelo y prepará el borrador aquí.</p>')+
+  '</section>';
 }
 function memberScreen(){
  const totals=flightTotals(flights,'pilot');
