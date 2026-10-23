@@ -311,9 +311,31 @@
     if(url&&!media){status.textContent='Enlace no compatible. Usá YouTube, Vimeo, Cloudflare Stream, MP4/WebM o una foto JPG/PNG/WEBP.';return;}
     if(!title){status.textContent='Ingresá un título.';return;}
     const btn=el('gdvStolSave');btn.disabled=true;
-    const {data,error}=await db.from('gdv_home_video').update({title,video_url:url,is_active:el('gdvStolActive').checked,updated_at:new Date().toISOString()}).eq('id',1).select('id').maybeSingle();
-    btn.disabled=false;
-    status.textContent=error?'No se pudo guardar: '+error.message:!data?'Permiso denegado.':media?.type==='image'?'Foto publicada en la portada.':'Video actualizado en la portada.';
+    try{
+      // El trigger de Supabase encola la URL antigua solo después de que
+      // el cambio de portada quedó confirmado en la base de datos.
+      const {data,error}=await db.from('gdv_home_video')
+        .update({title,video_url:url,is_active:el('gdvStolActive').checked,updated_at:new Date().toISOString()})
+        .eq('id',1).select('id,video_url').maybeSingle();
+      if(error||!data)throw new Error(error?.message||'Permiso denegado. No se publicó el contenido.');
+      const published=media?.type==='image'?'Foto publicada.':'Contenido publicado.';
+      status.textContent=published+' Comprobando archivos anteriores…';
+      try{
+        const cfg=window.GDV_CONFIG;
+        if(!window.GDV_R2_MEDIA?.cleanupQueued)throw Error('Servicio de limpieza pendiente de actualización.');
+        const cleaned=await window.GDV_R2_MEDIA.cleanupQueued(db,cfg.url,cfg.key);
+        status.textContent=published+(Number(cleaned.processed||0)>0
+         ?' Se eliminaron '+cleaned.processed+' archivo(s) anterior(es) sin uso de Cloudflare.'
+         :' No había archivos antiguos para eliminar.');
+        if(Number(cleaned.errors||0)>0||Number(cleaned.pending||0)>0)
+         status.textContent+=' Hay elementos en espera de revisión o mantenimiento semanal.';
+      }catch(err){
+        // Un fallo al borrar archivos no revierte la publicación.
+        status.textContent=published+' La limpieza del almacenamiento quedó pendiente para el proceso semanal.';
+        console.warn('Limpieza R2 pendiente:',err?.message||err);
+      }
+    }catch(err){status.textContent='No se pudo guardar: '+(err.message||'Error de conexión');}
+    finally{btn.disabled=false;}
   }
   function preview() {
     const area=el('gdvStolPreview'),status=el('gdvStolAdminStatus');
