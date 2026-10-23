@@ -33,7 +33,7 @@ export function createRavDraft(input,flights,members,existing=[]){
  const found=ravCandidates(student.id,flights,input.dateFrom,input.dateTo);
  if(!found.length)throw Error('El alumno no tiene vuelos de instrucción cerrados en este período.');
  const ids=found.map(f=>f.id);
- const already=new Set(existing.filter(r=>r.studentId===student.id&&r.status!=='returned').flatMap(r=>r.flightIds||[]));
+ const already=new Set(existing.filter(r=>r.studentId===student.id).flatMap(r=>r.flightIds||[]));
  if(ids.some(id=>already.has(id)))throw Error('Hay vuelos incluidos en otro RAV de demostración. No dupliques documentación.');
  const now=new Date().toISOString();
  return {id:crypto.randomUUID(),studentId:student.id,dateFrom:input.dateFrom,dateTo:input.dateTo,
