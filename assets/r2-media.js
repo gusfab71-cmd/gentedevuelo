@@ -53,7 +53,7 @@
   const sessionResult=await client.auth.getSession();
   const token=sessionResult.data?.session?.access_token;
   if(sessionResult.error||!token)throw new Error("La sesión venció; la limpieza queda pendiente.");
-  const endpoint=apiUrl.replace(/\\/$/,"")+"/functions/v1/r2-cleanup-queue";
+  const endpoint=(apiUrl.endsWith("/")?apiUrl.slice(0,-1):apiUrl)+"/functions/v1/r2-cleanup-queue";
   const response=await fetch(endpoint,{
    method:"POST",
    headers:{"Authorization":"Bearer "+token,"apikey":apiKey,"Content-Type":"application/json"},
