@@ -581,6 +581,31 @@ assert.ok(html.includes('id="ravFormPanel"'));
 assert.match(html,/if\(tab==='personas'\)\{wireTraining\(\);wireInstitutionalRav\(\);\}/);
 assert.doesNotMatch(html,/\['vuelos','Vuelos y RAV'\]/);
 assert.match(html,/trainingSettings\(\)\+trainingTimeline\(\)\+trainingFormMarkup\(\)\+chiefReviewSection\(\)\+ravInstitutionScreen\(\)/);
+// Ejecutar la vista RAV en aislamiento para confirmar que los formularios
+// avanzados siguen ocultos y que las revisiones se muestran correctamente.
+const ravViewSrc=script.slice(script.indexOf('function ravInstitutionScreen(){'),script.indexOf('function memberScreen(){'));
+const ravViewCtx={
+ members,flights:[instRavFlight,privateRavFlight],lessons:[],
+ ravRecords:[],ravFormOpen:false,
+ trainingInstitution:{reviewMode:'chief'},RAV_STATES,ravFlightTotals,
+ now:()=> '2026-10-23',safe:value=>String(value??'')
+};
+vm.createContext(ravViewCtx);
+vm.runInContext(ravViewSrc,ravViewCtx);
+const ravInitial=vm.runInContext('ravInstitutionScreen()',ravViewCtx);
+assert.match(ravInitial,/Gestión institucional de RAV/);
+assert.match(ravInitial,/Preparar RAV/);
+assert.doesNotMatch(ravInitial,/id="ravCreateForm"/,'Planilla RAV oculta hasta solicitarla.');
+assert.match(ravInitial,/Certificación fuera de la DEMO/);
+ravViewCtx.ravFormOpen=true;
+const ravOpen=vm.runInContext('ravInstitutionScreen()',ravViewCtx);
+assert.match(ravOpen,/id="ravCreateForm"/);
+ravViewCtx.ravFormOpen=false;ravViewCtx.ravRecords=[ravSubmitted];
+const ravWithDraft=vm.runInContext('ravInstitutionScreen()',ravViewCtx);
+assert.match(ravWithDraft,/86 minutos de bloque/);
+assert.match(ravWithDraft,/data-rav-review=/);
+assert.match(ravWithDraft,/data-rav-return=/);
+assert.match(ravWithDraft,/sin certificar|sin firmar|NO se firma/i);
 console.log('PASS: Registro de vuelo separado de RAV institucional en Pilotos y alumnos');
 
 console.log('PASS: gestión integrada, fechas, conflictos, cierre idempotente, stock, UX y acceso admin');
