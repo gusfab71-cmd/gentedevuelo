@@ -7,6 +7,7 @@ import {ASSESSMENTS,LESSON_STATUS,buildLesson,reviseLesson,submitLesson,closeLes
 import {ACTIVITY_TYPES,DEMO_RESOURCES,requestStudentBooking,takeStudentBooking,finishGroundLesson,studentPortalProjection,instructorPortalProjection,DEFAULT_TRAINING_GOALS,validateTrainingGoals,trainingHours,trainingProgress} from '../utilidades/gestion-aeronautica/src/portales.js';
 import {classifyFlightBooking,flightActivityProjection,flightActivityByRole,FLIGHT_MODE_LABELS} from '../utilidades/gestion-aeronautica/src/vuelos.js';
 import {makeLogbookDetail,logbookRows,logbookSummary,LOGBOOK_TIME_COLUMNS,LOGBOOK_SPECIAL_COLUMNS,LOGBOOK_SIMULATOR_COLUMNS} from '../utilidades/gestion-aeronautica/src/libro-vuelo.js';
+import {RAV_STATES,ravCandidates,ravFlightTotals,createRavDraft,submitRavForReview,institutionalReviewRav} from '../utilidades/gestion-aeronautica/src/rav-institucional.js';
 
 assert.equal(minutes('09:30'),570);
 assert.throws(()=>minutes('25:61'),/Hora inválida/);
@@ -103,7 +104,7 @@ assert.match(html,/Acceso exclusivo del administrador/);
 assert.match(html,/Datos ficticios/);
 assert.match(html,/No hay reservas multiusuario reales/);
 assert.match(html,/RAV oficial/);
-for(const label of ['Agenda y reservas','Vuelos y RAV','Aeronaves y mantenimiento','Pilotos y alumnos','Contabilidad y horas','Combustible y aceite','Academia y Simu PPA','Documentos y avisos'])
+for(const label of ['Agenda y reservas','Registro de vuelo','Aeronaves y mantenimiento','Pilotos y alumnos','Contabilidad y horas','Combustible y aceite','Academia y Simu PPA','Documentos y avisos'])
  assert.ok(html.includes(label),'Falta sección '+label);
 
 assert.equal(ASSESSMENTS.developing,'En práctica');
@@ -163,7 +164,7 @@ assert.throws(()=>buildLesson({...sample,flightId:'flight-class-1',date:'2026-10
 assert.equal(studentSummary([classWithFlight],'p2').flightBlockHours,1.1);
 for(const term of ['Legajo de evolución del alumno','Jefatura de Instructores','Evolución respecto de clases anteriores','Enviar al jefe de instructores','Devolver con observaciones'])
  assert.ok(html.includes(term),'Falta función visual: '+term);
-assert.match(html,/if\(tab==='personas'\)wireTraining\(\)/);
+assert.match(html,/if\(tab==='personas'\)\{wireTraining\(\);wireInstitutionalRav\(\);\}/);
 assert.match(html,/Solo administrador|Acceso exclusivo del administrador/);
 console.log('PASS: legajo alumno, evaluación de instructor, versiones, aprobación/observaciones de jefatura y vínculos de vuelo');
 
@@ -345,7 +346,7 @@ assert.equal(visibleBookings([completedTheory],['2026-10-30'],'aula-1').length,1
 assert.equal(visibleBookings([completedSim],['2026-10-30'],'sim-1').length,1);
 for(const required of ['Mi espacio de alumno','Área reservada para instructores','Seguimiento de Dirección / Jefatura',
  'Solicitar reserva','Tomar reserva','Registrar clase realizada','Registrar evolución','Mis packs de horas',
- 'Vuelos y RAV','data-instructor-take','studentBookingType'])
+ 'Registro de vuelo','data-instructor-take','studentBookingType'])
  assert.ok(html.includes(required),'Falta área o acción: '+required);
 assert.match(html,/if\(tab==='alumno'\|\|tab==='instructor'\)wirePortals\(\)/);
 assert.match(html,/const open=reservations\.filter\(r=>r\.status==='confirmada'&&\(!r\.type\|\|r\.type==='flight'\)/);
@@ -528,5 +529,83 @@ for(const label of ['Planilla completa · Libro de Vuelo','logRecordedFlightMinu
 assert.match(html,/if\(!logbookEditingFlightId\)return ''/,'La planilla debe permanecer oculta hasta solicitarla.');
 assert.match(html,/sourceFlightId|makeLogbookDetail/);
 console.log('PASS: libro completo, ocho casilleros, instrumentos, simulador separado y saldo anterior pendiente');
+
+
+// RAV es flujo institucional independiente, ubicado en Pilotos y alumnos, no en el registro de vuelo.
+const instRavFlight={...instructionFlight,id:'school-flight-unique-1',blockMinutes:86,operationType:'instruction',instructor:'i1'};
+const privateRavFlight={...soloFlight,id:'pilot-solo-unique-1',operationType:'private',instructor:''};
+const coachedRavFlight={...coachedFlight,id:'pilot-coached-unique-1',operationType:'coached',instructor:'i1'};
+const eligible=ravCandidates('p2',[instRavFlight,privateRavFlight,coachedRavFlight],'2026-10-01','2026-10-31');
+assert.equal(eligible.length,1);
+assert.equal(eligible[0].id,'school-flight-unique-1');
+assert.throws(()=>ravCandidates('p2',[], '2026-10-32','2026-11-01'),/período/);
+assert.throws(()=>ravCandidates('p2',[], '2026-11-01','2026-10-01'),/período/);
+const ravDraft=createRavDraft({studentId:'p2',dateFrom:'2026-10-01',dateTo:'2026-10-31'},
+ [instRavFlight,privateRavFlight,coachedRavFlight],members);
+assert.equal(ravDraft.status,'draft');
+assert.equal(ravDraft.flightIds.length,1);
+assert.equal(ravDraft.certification,null);
+assert.equal(ravFlightTotals(ravDraft,[instRavFlight]).minutes,86);
+assert.equal(ravFlightTotals(ravDraft,[instRavFlight]).count,1);
+assert.throws(()=>createRavDraft({studentId:'p1',dateFrom:'2026-10-01',dateTo:'2026-10-31'},
+ [instRavFlight],members),/alumno/);
+assert.throws(()=>createRavDraft({studentId:'p2',dateFrom:'2026-10-01',dateTo:'2026-10-31'},
+ [instRavFlight],members,[ravDraft]),/otro RAV/);
+assert.throws(()=>ravFlightTotals({...ravDraft,flightIds:[instRavFlight.id,instRavFlight.id]},[instRavFlight]),/no puede repetirse/);
+assert.throws(()=>ravFlightTotals(ravDraft,[]),/vuelos de origen/);
+const ravSubmitted=submitRavForReview(ravDraft);
+assert.equal(ravSubmitted.status,'submitted');
+assert.throws(()=>submitRavForReview(ravSubmitted),/Solo se envían/);
+assert.throws(()=>institutionalReviewRav(ravSubmitted,{actor:'alumno',role:'alumno',decision:'reviewed'}),/responsable institucional/);
+assert.throws(()=>institutionalReviewRav(ravSubmitted,{actor:'',role:'director',decision:'reviewed'}),/identidad/);
+assert.throws(()=>institutionalReviewRav(ravSubmitted,{actor:'director-demo',role:'director',decision:'returned'}),/observaciones/);
+const ravReturned=institutionalReviewRav(ravSubmitted,{actor:'director-demo',role:'director',decision:'returned',observations:'Revisar historial de instrucción'});
+assert.equal(ravReturned.status,'returned');
+assert.equal(ravReturned.certification,null);
+assert.throws(()=>createRavDraft({studentId:'p2',dateFrom:'2026-10-01',dateTo:'2026-10-31'},
+ [instRavFlight],members,[ravReturned]),/otro RAV/,'Devoluciones se resuelven, no se duplican.');
+const resubmitted=submitRavForReview(ravReturned);
+const ravReviewed=institutionalReviewRav(resubmitted,{actor:'jefe-demo',role:'jefe',decision:'reviewed'});
+assert.equal(ravReviewed.status,'reviewed');
+assert.equal(ravReviewed.certification,null);
+assert.match(RAV_STATES.reviewed,/NO CERTIFICADO/);
+assert.equal(ravReviewed.history.length,5);
+assert.throws(()=>institutionalReviewRav(ravReviewed,{actor:'director',role:'director',decision:'reviewed'}),/pendiente/);
+assert.ok(html.includes("['vuelos','Registro de vuelo']"));
+assert.ok(html.includes('function ravInstitutionScreen(){'));
+assert.ok(html.includes('function wireInstitutionalRav(){'));
+assert.ok(html.includes('Gestión institucional de RAV · Dirección / Administración'));
+assert.ok(html.includes('data-rav-review'));
+assert.ok(html.includes('data-rav-return'));
+assert.ok(html.includes('id="ravFormPanel"'));
+assert.match(html,/if\(tab==='personas'\)\{wireTraining\(\);wireInstitutionalRav\(\);\}/);
+assert.doesNotMatch(html,/\['vuelos','Vuelos y RAV'\]/);
+assert.match(html,/trainingSettings\(\)\+trainingTimeline\(\)\+trainingFormMarkup\(\)\+chiefReviewSection\(\)\+ravInstitutionScreen\(\)/);
+// Ejecutar la vista RAV en aislamiento para confirmar que los formularios
+// avanzados siguen ocultos y que las revisiones se muestran correctamente.
+const ravViewSrc=script.slice(script.indexOf('function ravInstitutionScreen(){'),script.indexOf('function memberScreen(){'));
+const ravViewCtx={
+ members,flights:[instRavFlight,privateRavFlight],lessons:[],
+ ravRecords:[],ravFormOpen:false,
+ trainingInstitution:{reviewMode:'chief'},RAV_STATES,ravFlightTotals,
+ now:()=> '2026-10-23',safe:value=>String(value??'')
+};
+vm.createContext(ravViewCtx);
+vm.runInContext(ravViewSrc,ravViewCtx);
+const ravInitial=vm.runInContext('ravInstitutionScreen()',ravViewCtx);
+assert.match(ravInitial,/Gestión institucional de RAV/);
+assert.match(ravInitial,/Preparar RAV/);
+assert.doesNotMatch(ravInitial,/id="ravCreateForm"/,'Planilla RAV oculta hasta solicitarla.');
+assert.match(ravInitial,/Certificación fuera de la DEMO/);
+ravViewCtx.ravFormOpen=true;
+const ravOpen=vm.runInContext('ravInstitutionScreen()',ravViewCtx);
+assert.match(ravOpen,/id="ravCreateForm"/);
+ravViewCtx.ravFormOpen=false;ravViewCtx.ravRecords=[ravSubmitted];
+const ravWithDraft=vm.runInContext('ravInstitutionScreen()',ravViewCtx);
+assert.match(ravWithDraft,/86 minutos de bloque/);
+assert.match(ravWithDraft,/data-rav-review=/);
+assert.match(ravWithDraft,/data-rav-return=/);
+assert.match(ravWithDraft,/sin certificar|sin firmar|NO se firma/i);
+console.log('PASS: Registro de vuelo separado de RAV institucional en Pilotos y alumnos');
 
 console.log('PASS: gestión integrada, fechas, conflictos, cierre idempotente, stock, UX y acceso admin');
