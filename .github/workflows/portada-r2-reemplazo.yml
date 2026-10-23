@@ -1,0 +1,30 @@
+name: Pruebas de limpieza segura de portada
+on:
+  push:
+    paths:
+      - 'assets/home-video.js'
+      - 'assets/r2-media.js'
+      - 'supabase/functions/r2-cleanup-queue/index.ts'
+      - 'moderacion.html'
+      - 'tests/portada-r2-reemplazo.test.cjs'
+      - '.github/workflows/portada-r2-reemplazo.yml'
+  pull_request:
+    paths:
+      - 'assets/home-video.js'
+      - 'assets/r2-media.js'
+      - 'supabase/functions/r2-cleanup-queue/index.ts'
+      - 'moderacion.html'
+      - 'tests/portada-r2-reemplazo.test.cjs'
+      - '.github/workflows/portada-r2-reemplazo.yml'
+  workflow_dispatch:
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --check assets/home-video.js
+      - run: node --check assets/r2-media.js
+      - run: node tests/portada-r2-reemplazo.test.cjs
