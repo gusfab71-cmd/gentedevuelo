@@ -47,5 +47,21 @@
   if(!response.ok)throw new Error(data.error||"No se pudo configurar Cloudflare.");
   return data;
  }
- window.GDV_R2_MEDIA={upload,setupCors,isR2:(v)=>typeof v==="string"&&v.startsWith(prefix),prefix};
+ // Intenta procesar únicamente archivos previamente puestos en la cola por triggers
+ // de la base de datos. La función valida JWT, rol admin, ruta y referencias vivas.
+ async function cleanupQueued(client,apiUrl,apiKey){
+  const sessionResult=await client.auth.getSession();
+  const token=sessionResult.data?.session?.access_token;
+  if(sessionResult.error||!token)throw new Error("La sesión venció; la limpieza queda pendiente.");
+  const endpoint=apiUrl.replace(/\\/$/,"")+"/functions/v1/r2-cleanup-queue";
+  const response=await fetch(endpoint,{
+   method:"POST",
+   headers:{"Authorization":"Bearer "+token,"apikey":apiKey,"Content-Type":"application/json"},
+   body:JSON.stringify({})
+  });
+  const value=await response.json().catch(()=>({}));
+  if(!response.ok)throw new Error(value.error||"No se pudo ejecutar la limpieza de archivos anteriores.");
+  return value;
+ }
+ window.GDV_R2_MEDIA={upload,setupCors,cleanupQueued,isR2:(v)=>typeof v==="string"&&v.startsWith(prefix),prefix};
 })();
