@@ -977,6 +977,55 @@ function wirePortals(){
   });
  }
 }
+function wireInstitutionalRav(){
+ $('openRavForm')?.addEventListener('click',()=>{ravFormOpen=!ravFormOpen;render()});
+ $('closeRavForm')?.addEventListener('click',()=>{ravFormOpen=false;render()});
+ $('ravCreateForm')?.addEventListener('submit',e=>{
+  e.preventDefault();
+  try{
+   const newRav=createRavDraft({
+    studentId:$('ravStudent').value,dateFrom:$('ravFrom').value,dateTo:$('ravTo').value
+   },flights,members,ravRecords);
+   ravRecords.push(newRav);ravFormOpen=false;render();
+   notice('Borrador RAV de demostración preparado desde los vuelos cerrados; sin duplicar horas ni certificar.');
+  }catch(err){notice(err.message)}
+ });
+ $('screen').querySelectorAll('[data-rav-submit]').forEach(button=>button.addEventListener('click',()=>{
+  try{
+   const current=ravRecords.find(r=>r.id===button.dataset.ravSubmit);
+   const changed=submitRavForReview(current);
+   ravRecords=ravRecords.map(r=>r.id===changed.id?changed:r);
+   render();notice('Borrador enviado para revisión interna (DEMO; sin firma ni envío ANAC).');
+  }catch(err){notice(err.message)}
+ }));
+ $('screen').querySelectorAll('[data-rav-review]').forEach(button=>button.addEventListener('click',()=>{
+  const current=ravRecords.find(r=>r.id===button.dataset.ravReview);
+  if(!current)return;
+  if(!confirm('Marcar revisión administrativa interna de DEMOSTRACIÓN. No se firma, certifica ni envía el RAV. ¿Continuar?'))return;
+  try{
+   const role=trainingInstitution.reviewMode==='chief'?'jefe':'director';
+   const changed=institutionalReviewRav(current,{
+    actor:role==='jefe'?'jefatura-demo':'director-demo',role,decision:'reviewed',
+    observations:'Revisión administrativa interna de prueba. No equivale a certificación del RAV.'
+   });
+   ravRecords=ravRecords.map(r=>r.id===changed.id?changed:r);
+   render();notice('RAV revisado internamente solo en DEMO. Sigue sin certificado ni firma.');
+  }catch(err){notice(err.message)}
+ }));
+ $('screen').querySelectorAll('[data-rav-return]').forEach(button=>button.addEventListener('click',()=>{
+  const observations=prompt('Observaciones de devolución de la dirección (DEMO):');
+  if(observations===null)return;
+  try{
+   const current=ravRecords.find(r=>r.id===button.dataset.ravReturn);
+   const role=trainingInstitution.reviewMode==='chief'?'jefe':'director';
+   const changed=institutionalReviewRav(current,{
+    actor:role==='jefe'?'jefatura-demo':'director-demo',role,decision:'returned',observations
+   });
+   ravRecords=ravRecords.map(r=>r.id===changed.id?changed:r);
+   render();notice('Borrador RAV devuelto internamente con observaciones (DEMO).');
+  }catch(err){notice(err.message)}
+ }));
+}
 function wireTraining(){
  const setType=$('trainingInstitutionType'),setMode=$('trainingReviewMode');
  const setConfig=(type,mode)=>{
@@ -1084,7 +1133,7 @@ function wireTraining(){
  }));
 }
 function wire(){
- if(tab==='personas')wireTraining();
+ if(tab==='personas'){wireTraining();wireInstitutionalRav();}
  if(tab==='alumno'||tab==='instructor')wirePortals();
  if(tab==='direccion'){
   $('openTrainingGoals')?.addEventListener('click',()=>{trainingGoalsOpen=true;render()});
