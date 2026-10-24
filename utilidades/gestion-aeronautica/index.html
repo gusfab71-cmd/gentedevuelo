@@ -187,6 +187,29 @@ ol{color:#bbccd0;font-size:13px;line-height:1.85}
 .portal-metrics:has(.metric:nth-child(4)){grid-template-columns:repeat(4,minmax(0,1fr))}
 @media(max-width:900px){.portal-metrics:has(.metric:nth-child(4)){grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:520px){.portal-metrics:has(.metric:nth-child(4)){grid-template-columns:1fr}}
+
+/* Biblioteca didáctica AeroSuite: catálogo de 30 fichas y 6 fichas CRM. */
+.library-group{border:1px solid #48636f;background:#182a35;border-radius:14px;padding:18px;margin:17px 0}
+.library-group-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:13px}
+.library-group-head h3{margin:0;font-size:17px;color:#f2f7f8}
+.library-count{font-size:11px;color:#d8e7ed;border:1px solid #597989;border-radius:999px;padding:6px 10px}
+.library-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(205px,1fr));gap:10px}
+.library-item{display:block;background:#203845;border:1px solid #516c78;border-radius:11px;padding:13px;text-decoration:none;color:#e6eef3;min-height:103px}
+.library-item strong{display:block;font-size:13px;line-height:1.4;margin:7px 0;color:#f3f7f9}
+.library-item small{display:block;color:#b6ced5;font-size:11px}
+.library-item .library-number{font-size:10px;color:#e4bb75;font-weight:800;letter-spacing:.06em}
+a.library-item:hover,a.library-item:focus-visible{border-color:#e0bd83;background:#294555}
+.library-item.is-missing{opacity:.6;cursor:not-allowed}
+.library-group-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:14px 0 0}
+.library-full-link{display:inline-block;padding:9px 12px;border-radius:9px;background:#304955;border:1px solid #688895;text-decoration:none;font-size:12px;font-weight:700}
+.library-full-link:hover{background:#3c5c6b}
+.library-upload{margin-top:18px;padding:13px 15px;border:1px solid #4e6b77;border-radius:12px;background:#1b303c}
+.library-upload summary{font-weight:700}
+.library-upload label{margin-top:13px}
+.library-upload input[type="file"]{background:#10222d;max-width:100%}
+.library-upload .muted{margin-top:9px}
+@media(max-width:690px){.library-group{padding:12px}.library-list{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.library-item{padding:9px;min-height:108px}.library-item strong{font-size:12px}}
+@media(max-width:380px){.library-list{grid-template-columns:1fr}}
 @media print{#screen>section:not(#training-ledger){display:none!important}body{background:#fff;color:#000}header,nav,.hero,.notice,.training-actions,form,#alert,button{display:none!important}.layout{display:block}.panel,.card,.training-record{break-inside:avoid;background:#fff!important;color:#111!important;border:1px solid #999!important}p,h1,h2,h3,span{color:#111!important}}
 </style>
 <script>document.documentElement.classList.add("auth-pending")</script>
@@ -211,6 +234,101 @@ import {makeLogbookDetail,logbookRows,logbookSummary,LOGBOOK_TIME_COLUMNS,LOGBOO
 import {RAV_STATES,ravCandidates,ravFlightTotals,createRavDraft,submitRavForReview,institutionalReviewRav} from './src/rav-institucional.js';
 const $=id=>document.getElementById(id);
 const safe=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[ch]));
+
+const AEROSUITE_LIBRARY_BUCKET='aerosuite-biblioteca';
+const AEROSUITE_LIBRARY_FILES={
+ teoria:{path:'teoria/fichas-teoria-30.pdf',title:'Teoría aeronáutica',count:30},
+ crm:{path:'crm/fichas-crm-06.pdf',title:'CRM y factores humanos',count:6}
+};
+const AEROSUITE_THEORY_TOPICS=[
+ 'Introducción a la aviación','Atmósfera y clima','Presión y temperatura','Viento',
+ 'Nubes y precipitaciones','Masas de aire, frentes y sistemas','Cartas meteorológicas y pronósticos',
+ 'Aerodinámica: principios básicos','Sustentación','Resistencia y empuje',
+ 'Centro de gravedad y estabilidad','Controles de vuelo','Instrumentos de vuelo',
+ 'Navegación básica','Navegación avanzada','Espacio aéreo y servicios ATC',
+ 'Reglas de vuelo (VFR / IFR)','Desempeño de la aeronave','Peso y balance',
+ 'Planificación de vuelo','Combustible y sistemas','Motores de aviación','Hélices',
+ 'Sistemas eléctricos y aviónicos','Procedimientos de emergencia','Factores humanos',
+ 'Normativa aeronáutica','Seguridad operacional','Medio ambiente y aviación','Operaciones especiales'
+];
+const AEROSUITE_CRM_TOPICS=[
+ 'CRM: pensar y actuar en equipo','Comunicación efectiva','Conciencia situacional',
+ 'Liderazgo y carga de trabajo','Decisiones y amenazas','Volar solo: CRM y SRM'
+];
+let libraryUploaded={teoria:null,crm:null};
+function libraryPdfURL(type,page){
+ const row=AEROSUITE_LIBRARY_FILES[type];
+ const result=window.GDV_AUTH.client.storage.from(AEROSUITE_LIBRARY_BUCKET).getPublicUrl(row.path);
+ return result.data.publicUrl+(page?'#page='+page:'');
+}
+function libraryCollection(type,topics){
+ const row=AEROSUITE_LIBRARY_FILES[type],ready=libraryUploaded[type]===true;
+ const pending=libraryUploaded[type]===null?'Comprobando disponibilidad…':'Pendiente de cargar PDF';
+ const cards=topics.map((title,index)=>{
+  const page=index+1, number=String(page).padStart(2,'0');
+  const inside='<span class="library-number">'+(type==='crm'?'CRM':'TEORÍA')+' · FICHA '+number+'</span>'+
+   '<strong>'+safe(title)+'</strong><small>'+(ready?'Ver ficha en PDF · página '+page:pending)+'</small>';
+  return ready?'<a class="library-item" href="'+safe(libraryPdfURL(type,page))+'" target="_blank" rel="noopener noreferrer" aria-label="Abrir ficha '+number+': '+safe(title)+'">'+inside+'</a>':
+   '<div class="library-item is-missing" aria-disabled="true">'+inside+'</div>';
+ }).join('');
+ return '<section class="library-group"><div class="library-group-head"><h3>'+safe(row.title)+'</h3>'+
+  '<span class="library-count">'+row.count+' fichas · '+(ready?'Disponibles':'Carga pendiente')+'</span></div>'+
+  '<div class="library-list">'+cards+'</div>'+
+  (ready?'<div class="library-group-actions"><a class="library-full-link" href="'+safe(libraryPdfURL(type))+'" target="_blank" rel="noopener noreferrer">Abrir las '+row.count+' fichas completas (PDF)</a></div>':'')+'</section>';
+}
+function studentLibrary(){
+ return '<section class="panel" id="aerosuiteBiblioteca"><h2>Mi biblioteca de teoría y práctica</h2>'+
+  '<p>36 fichas visuales de Gente de Vuelo organizadas por tema. Podés abrir cada ficha por separado o consultar el cuadernillo completo de su serie.</p>'+
+  libraryCollection('teoria',AEROSUITE_THEORY_TOPICS)+libraryCollection('crm',AEROSUITE_CRM_TOPICS)+
+  '<div class="grid3">'+
+  '<a class="card" href="../rodaje-viento.html"><h3>Rodaje con viento</h3><p>Práctica interactiva de controles en rodaje.</p></a>'+
+  '<a class="card" href="../calculo-sustentacion.html"><h3>Cálculo de sustentación</h3><p>Perfiles, sustentación y pérdida.</p></a>'+
+  '<a class="card" href="fichas/fuerzas-del-vuelo.html"><h3>Cuatro fuerzas del vuelo</h3><p>Ficha visual original con autoevaluación.</p></a>'+
+  '</div><p class="muted">Material complementario: no reemplaza manuales, procedimientos ni normativa vigente. Consultar estas fichas no acredita horas académicas.</p>'+
+  '<details class="library-upload"><summary>Administración · Cargar o reemplazar fichas PDF</summary>'+
+  '<p class="muted">Solo para administración de esta demostración. Subí un PDF de 30 páginas y otro de 6 páginas. Los archivos se guardan de forma permanente en la biblioteca de AeroSuite; no se almacenan como datos de prueba.</p>'+
+  '<div class="cols"><label>Teoría aeronáutica (30 páginas)<input type="file" data-library-upload="teoria" accept=".pdf,application/pdf" aria-label="Cargar las 30 fichas de teoría"></label>'+
+  '<label>CRM (6 páginas)<input type="file" data-library-upload="crm" accept=".pdf,application/pdf" aria-label="Cargar las 6 fichas CRM"></label></div>'+
+  '<p class="muted">Límite: 30 MB por PDF. Al reemplazar uno existente, se actualiza el material disponible para todos los alumnos.</p></details></section>';
+}
+async function refreshStudentLibrary(){
+ const store=window.GDV_AUTH.client.storage.from(AEROSUITE_LIBRARY_BUCKET);
+ try{
+  const [theory,crm]=await Promise.all([store.list('teoria',{limit:100}),store.list('crm',{limit:100})]);
+  if(theory.error||crm.error)throw theory.error||crm.error;
+  libraryUploaded={
+   teoria:theory.data.some(file=>file.name==='fichas-teoria-30.pdf'),
+   crm:crm.data.some(file=>file.name==='fichas-crm-06.pdf')
+  };
+ }catch(err){
+  libraryUploaded={teoria:false,crm:false};
+  notice('No se pudo consultar la biblioteca: '+(err.message||'error de acceso'));
+ }
+ if(tab==='alumno')render();
+}
+async function uploadStudentLibraryFile(input){
+ const type=input.dataset.libraryUpload;
+ const file=input.files&&input.files[0];
+ if(!AEROSUITE_LIBRARY_FILES[type]||!file)return;
+ if(file.size>30*1024*1024){notice('El PDF supera 30 MB. Usá la versión optimizada.');return;}
+ const signature=String.fromCharCode(...new Uint8Array(await file.slice(0,5).arrayBuffer()));
+ if(signature!=='%PDF-'){notice('Seleccioná un archivo PDF válido.');return;}
+ input.disabled=true;
+ notice('Subiendo '+AEROSUITE_LIBRARY_FILES[type].title+'…');
+ try{
+  const result=await window.GDV_AUTH.client.storage.from(AEROSUITE_LIBRARY_BUCKET)
+   .upload(AEROSUITE_LIBRARY_FILES[type].path,file,{upsert:true,contentType:'application/pdf',cacheControl:'60'});
+  if(result.error)throw result.error;
+  await refreshStudentLibrary();
+  notice('PDF cargado: '+AEROSUITE_LIBRARY_FILES[type].title+'. La biblioteca ya lo muestra.');
+ }catch(err){notice('No se pudo subir el PDF: '+(err.message||'error de carga'))}
+ finally{input.disabled=false;input.value='';}
+}
+document.addEventListener('change',event=>{
+ const target=event.target;
+ if(target&&target.matches('input[data-library-upload]'))uploadStudentLibraryFile(target);
+});
+
 const isoDay=d=>[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');
 const now=()=>isoDay(new Date());
 const addDays=(day,n)=>{const d=new Date(day+'T12:00:00');d.setDate(d.getDate()+n);return isoDay(d)};
@@ -365,13 +483,7 @@ function studentPortal(){
  '<section class="panel"><h2>Mis packs de horas</h2>'+
  d.packs.map(p=>'<div class="portal-box"><h3>'+safe(p.description)+'</h3><p>Compradas: '+safe(p.acquiredHours)+' h · Disponibles: '+safe(p.remainingHours)+' h</p>'+
  '<p class="muted">Ejemplo ficticio. El descuento de horas se habilitará cuando existan movimientos contables reales.</p></div>').join('')+'</section></div>'+
- '<section class="panel"><h2>Mi biblioteca de teoría y práctica</h2>'+
- '<p>Herramientas interactivas existentes en Utilidades y fichas didácticas originales. Las actividades no suman horas académicas automáticamente: debe registrarlas un instructor.</p>'+
- '<div class="grid3">'+
- '<a class="card" href="../rodaje-viento.html"><h3>Rodaje con viento</h3><p>Práctica interactiva de controles en rodaje.</p></a>'+
- '<a class="card" href="../calculo-sustentacion.html"><h3>Cálculo de sustentación</h3><p>Perfiles, sustentación y pérdida.</p></a>'+
- '<a class="card" href="fichas/fuerzas-del-vuelo.html"><h3>Ficha visual original: cuatro fuerzas</h3><p>Diagrama conceptual imprimible y breve autoevaluación.</p></a>'+
- '</div></section>';
+ studentLibrary();
 }
 function instructorPortal(){
  const d=instructorPortalProjection(portalInstructor,reservations,lessons,groundActivities);
@@ -1331,6 +1443,8 @@ function wire(){
   const {data,error:roleError}=await client.from('site_admins').select('user_id').eq('user_id',user.id).maybeSingle();
   if(roleError||!data)throw Error('Acceso exclusivo del administrador.');
   demoAdminId=user.id;restoreSchoolPolicy();restoreTrainingGoals();
+  // Estado real del almacenamiento; los datos del resto del portal son demostrativos.
+  refreshStudentLibrary().catch(()=>{});
   $('app').hidden=false;document.documentElement.classList.remove('auth-pending');render();
  }catch(err){
   document.documentElement.classList.remove('auth-pending');
