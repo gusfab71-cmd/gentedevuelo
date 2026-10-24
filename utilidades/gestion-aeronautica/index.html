@@ -255,6 +255,10 @@ const AEROSUITE_CRM_TOPICS=[
  'CRM: pensar y actuar en equipo','Comunicación efectiva','Conciencia situacional',
  'Liderazgo y carga de trabajo','Decisiones y amenazas','Volar solo: CRM y SRM'
 ];
+// Fuentes de revisión en Drive (requieren autorización de la cuenta de Google).
+const AEROSUITE_DRIVE_THEORY_URLS=["https://drive.google.com/file/d/1b-Hg-6NJgzeGMb8MdBRb_bG4BDrtIZve/view?usp=drivesdk","https://drive.google.com/file/d/17b0gxh0KMNvGT72PtGMdXXeujaEZzaoj/view?usp=drivesdk","https://drive.google.com/file/d/16125RkyosOJQJeBKZeN8jA0nUsvuy469/view?usp=drivesdk","https://drive.google.com/file/d/1Dj0hzy6KcMi5HT-4b9j4E_XQnZ1ekpLI/view?usp=drivesdk","https://drive.google.com/file/d/1sjapnuWSMjE1MfH0hv3VC7iYrG9YR7ST/view?usp=drivesdk","https://drive.google.com/file/d/1QMNWN_HO7cJCr4NdP739rMdjcVp5-ga6/view?usp=drivesdk","https://drive.google.com/file/d/1-X7KZcbFxwLYaHWKsY2sJMByJhec-xL-/view?usp=drivesdk","https://drive.google.com/file/d/1c3UVfFrwPJNwqkqF_fN0uUlu63dJ-Xku/view?usp=drivesdk","https://drive.google.com/file/d/1j9KROBJRkPLSOG7fnshSeBAK2S1Qu7Tw/view?usp=drivesdk","https://drive.google.com/file/d/1R-vIjH8WeX9zS653DuS-xHESXr0m4TkT/view?usp=drivesdk","https://drive.google.com/file/d/14IEXK4dKiZ40sbBSGB6Bdkd-0wcE_rXl/view?usp=drivesdk","https://drive.google.com/file/d/1-RfXtzbJpipR4zhgX0bbHElBbQ-0LIf8/view?usp=drivesdk","https://drive.google.com/file/d/12qTMEsKAPVChye5w10KXkQyxm1y_ZBq-/view?usp=drivesdk","https://drive.google.com/file/d/19WS_-2RfwifZDn1yf4RxFfee9va_E6Cp/view?usp=drivesdk","https://drive.google.com/file/d/1MgP2hXgNPdr2Xc0SUzkjrDWpOjvzYzuq/view?usp=drivesdk","https://drive.google.com/file/d/1gVhMj_5WupZkHHYAceyVwc-yFQUJJPqe/view?usp=drivesdk","https://drive.google.com/file/d/1YKXGNuV2UKZt7TYSDG8Jsk5-ZRsxAWdY/view?usp=drivesdk","https://drive.google.com/file/d/1-6OiUPlrb5rvgVTdJKp_AzqfhQvgBOgU/view?usp=drivesdk","https://drive.google.com/file/d/1eyK1yBIKoCymsY7Lci6klT6hNcDkivjq/view?usp=drivesdk","https://drive.google.com/file/d/1IFejNjn8SL2RjECHyMGyOlIz2OuTtzex/view?usp=drivesdk","https://drive.google.com/file/d/1Dq0F_H53uK1Wn0whoD_JUBZPGioCvJtr/view?usp=drivesdk","https://drive.google.com/file/d/1TMp4Dio_imuyXs9-E_Jps7V0voODZVL5/view?usp=drivesdk","https://drive.google.com/file/d/1-hXki52kMUyVS5kFrH5OTLGKbSoajmUi/view?usp=drivesdk","https://drive.google.com/file/d/1hCT_d7nI3WXMcmZzDV7W4j1-ohuRxXu4/view?usp=drivesdk","https://drive.google.com/file/d/1Mhj6jbkg1BHZdFjEaXIRBh4qK5ZN5dfw/view?usp=drivesdk","https://drive.google.com/file/d/15UMKANfM7WD_sczRFu23zgi2mH2N6yo2/view?usp=drivesdk","https://drive.google.com/file/d/1aOSUlQJ3Rw5oxER7439Mcw1LoF8B5Gid/view?usp=drivesdk","https://drive.google.com/file/d/1del07-xWTEUcVqk-Odux3G2FWq7MUeBA/view?usp=drivesdk","https://drive.google.com/file/d/1MLy83k7QSWwJ7H2EA5lzUaN3DyoeEIqB/view?usp=drivesdk","https://drive.google.com/file/d/1sjM2KAZM8Piu5FQWYTasuvzK9hZjfkua/view?usp=drivesdk"];
+const AEROSUITE_DRIVE_CRM_URL="https://drive.google.com/file/d/1YbMlstZuHJTL19uyEKJZJUonx58DzO8B/view?usp=drivesdk";
+const AEROSUITE_DRIVE_THEORY_BOOK_URL="https://drive.google.com/file/d/1oSwkVD59MVLkGhj6G6jqxSbT49e8_LfC/view?usp=drivesdk";
 let libraryUploaded={teoria:null,crm:null};
 function libraryPdfURL(type,page){
  const row=AEROSUITE_LIBRARY_FILES[type];
@@ -262,35 +266,37 @@ function libraryPdfURL(type,page){
  return result.data.publicUrl+(page?'#page='+page:'');
 }
 function libraryCollection(type,topics){
- const row=AEROSUITE_LIBRARY_FILES[type],ready=libraryUploaded[type]===true;
- const pending=libraryUploaded[type]===null?'Comprobando disponibilidad…':'Pendiente de cargar PDF';
+ const row=AEROSUITE_LIBRARY_FILES[type],published=libraryUploaded[type]===true;
+ const pdfDraft=(page)=>type==='crm'?AEROSUITE_DRIVE_CRM_URL+'#page='+page:AEROSUITE_DRIVE_THEORY_URLS[page-1];
  const cards=topics.map((title,index)=>{
-  const page=index+1, number=String(page).padStart(2,'0');
+  const page=index+1,number=String(page).padStart(2,'0');
+  const url=published?libraryPdfURL(type,page):pdfDraft(page);
+  const caption=published?'Ver ficha publicada · página '+page:(url?'Abrir ficha de trabajo en Drive':'Pendiente de cargar PDF');
   const inside='<span class="library-number">'+(type==='crm'?'CRM':'TEORÍA')+' · FICHA '+number+'</span>'+
-   '<strong>'+safe(title)+'</strong><small>'+(ready?'Ver ficha en PDF · página '+page:pending)+'</small>';
-  return ready?'<a class="library-item" href="'+safe(libraryPdfURL(type,page))+'" target="_blank" rel="noopener noreferrer" aria-label="Abrir ficha '+number+': '+safe(title)+'">'+inside+'</a>':
+   '<strong>'+safe(title)+'</strong><small>'+caption+'</small>';
+  return url?'<a class="library-item" href="'+safe(url)+'" target="_blank" rel="noopener noreferrer" aria-label="Abrir ficha '+number+': '+safe(title)+'">'+inside+'</a>':
    '<div class="library-item is-missing" aria-disabled="true">'+inside+'</div>';
  }).join('');
+ const book=published?libraryPdfURL(type):(type==='crm'?AEROSUITE_DRIVE_CRM_URL:AEROSUITE_DRIVE_THEORY_BOOK_URL);
  return '<section class="library-group"><div class="library-group-head"><h3>'+safe(row.title)+'</h3>'+
-  '<span class="library-count">'+row.count+' fichas · '+(ready?'Disponibles':'Carga pendiente')+'</span></div>'+
+  '<span class="library-count">'+row.count+' fichas · '+(published?'Publicadas':'Borradores en Drive')+'</span></div>'+
   '<div class="library-list">'+cards+'</div>'+
-  (ready?'<div class="library-group-actions"><a class="library-full-link" href="'+safe(libraryPdfURL(type))+'" target="_blank" rel="noopener noreferrer">Abrir las '+row.count+' fichas completas (PDF)</a></div>':'')+'</section>';
+  (book?'<div class="library-group-actions"><a class="library-full-link" href="'+safe(book)+'" target="_blank" rel="noopener noreferrer">Abrir las '+row.count+' fichas completas (PDF)</a></div>':'')+'</section>';
 }
-function studentLibrary(){
+function academyLibrary(){
  const teoriaLista=libraryUploaded.teoria===true;
  const crmLista=libraryUploaded.crm===true;
- const checking=libraryUploaded.teoria===null||libraryUploaded.crm===null;
  const complete=teoriaLista&&crmLista;
- const uploadBox='<details class="library-upload" id="aerosuiteUploader"'+(!complete?' open':'')+'>'+
+ const uploadBox='<details class="library-upload" id="aerosuiteUploader">'+
   '<summary>Administración · Cargar o reemplazar los PDF de las fichas</summary>'+
   '<p class="muted">Para activar las tarjetas, seleccioná en tu computadora el cuadernillo completo de teoría (30 páginas) y el de CRM (6 páginas). Ambos PDF se publicarán en la biblioteca permanente de AeroSuite.</p>'+
   '<div class="cols"><label>Teoría aeronáutica (30 páginas)<input type="file" data-library-upload="teoria" accept=".pdf,application/pdf" aria-label="Cargar las 30 fichas de teoría"></label>'+
   '<label>CRM (6 páginas)<input type="file" data-library-upload="crm" accept=".pdf,application/pdf" aria-label="Cargar las 6 fichas CRM"></label></div>'+
   '<p class="muted">Máximo 30 MB por PDF. Solo puede publicar o reemplazar archivos una cuenta administradora.</p>'+
   '<p id="aerosuiteUploadStatus" class="muted" role="status" aria-live="polite"></p></details>';
- return '<section class="panel" id="aerosuiteBiblioteca"><h2>Mi biblioteca de teoría y práctica</h2>'+
+ return '<section class="panel" id="aerosuiteBiblioteca"><h2>Biblioteca de formación aeronáutica · 36 fichas</h2>'+
   '<p>Catálogo de 36 fichas visuales de Gente de Vuelo organizadas por tema. Las fichas publicadas se pueden abrir individualmente por página o consultar como cuadernillo completo.</p>'+
-  (!complete&&!checking?'<div class="notice">Las fichas marcadas «Pendiente de cargar PDF» todavía no están publicadas. Usá el cargador de administración que aparece a continuación para habilitarlas.</div>':'')+
+  (!complete?'<div class="notice">Las fichas están disponibles como material de trabajo desde Google Drive, únicamente para cuentas con acceso. Todavía no están publicadas en el almacenamiento de AeroSuite ni aprobadas como material definitivo de enseñanza.</div>':'')+
   uploadBox+
   libraryCollection('teoria',AEROSUITE_THEORY_TOPICS)+libraryCollection('crm',AEROSUITE_CRM_TOPICS)+
   '<div class="grid3">'+
@@ -312,7 +318,7 @@ async function refreshStudentLibrary(){
   libraryUploaded={teoria:false,crm:false};
   notice('No se pudo consultar la biblioteca: '+(err.message||'error de acceso'));
  }
- if(tab==='alumno')render();
+ if(tab==='academia')render();
 }
 function libraryUploadMessage(message){
  const el=$('aerosuiteUploadStatus');
@@ -496,7 +502,7 @@ function studentPortal(){
  '<section class="panel"><h2>Mis packs de horas</h2>'+
  d.packs.map(p=>'<div class="portal-box"><h3>'+safe(p.description)+'</h3><p>Compradas: '+safe(p.acquiredHours)+' h · Disponibles: '+safe(p.remainingHours)+' h</p>'+
  '<p class="muted">Ejemplo ficticio. El descuento de horas se habilitará cuando existan movimientos contables reales.</p></div>').join('')+'</section></div>'+
- studentLibrary();
+ ;
 }
 function instructorPortal(){
  const d=instructorPortalProjection(portalInstructor,reservations,lessons,groundActivities);
@@ -1010,8 +1016,8 @@ function stockScreen(){
  (movements.length?'':'<tr><td colspan="3">Sin movimientos.</td></tr>')+'</tbody></table></div></section>';
 }
 function academyScreen(){
- return '<div class="cols"><section class="panel"><h2>Academia y Simu PPA</h2><p>El Simulador PPA ya existe en Gente de Vuelo y está restringido a administración mientras revisamos las respuestas ANAC. Luego podremos integrar actividades por materia, evaluaciones y progreso de cada alumno con permisos adecuados.</p><a class="secondary" href="../../simulador-ppa/">Abrir Simu PPA · Solo administrador</a></section>'+
- '<section class="panel"><h2>Fichas didácticas</h2><p>Prepararemos fichas originales de teoría de vuelo, motor, meteorología, navegación y normativa. No se copiarán textos o ilustraciones protegidos de los manuales aportados.</p><span class="pill uncertain">Diseño pendiente</span></section></div>';
+ return '<section class="panel"><h2>Academia y Simu PPA</h2><p>Accedé al Simulador PPA y a la biblioteca de fichas de teoría aeronáutica y CRM. La demostración sigue restringida a administración.</p><a class="secondary" href="../../simulador-ppa/">Abrir Simu PPA · Solo administrador</a></section>'+
+  academyLibrary();
 }
 function documentsScreen(){
  return '<section class="panel"><h2>Documentación, vencimientos, mensajes y auditoría</h2><div class="grid3">'+
