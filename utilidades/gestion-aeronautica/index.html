@@ -261,6 +261,18 @@ const AEROSUITE_DRIVE_CRM_URLS=["https://drive.google.com/file/d/1cOCMauD0-CD-kY
 const AEROSUITE_DRIVE_CRM_URL="https://drive.google.com/file/d/1YbMlstZuHJTL19uyEKJZJUonx58DzO8B/view?usp=drivesdk";
 const AEROSUITE_DRIVE_THEORY_BOOK_URL="https://drive.google.com/file/d/1oSwkVD59MVLkGhj6G6jqxSbT49e8_LfC/view?usp=drivesdk";
 let libraryUploaded={teoria:null,crm:null};
+let libraryExtra=[];
+const extraSlug=value=>String(value).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,55);
+const extraFilename=(name,count,hidden=false)=>'materias/'+(hidden?'oculta--':'')+extraSlug(name)+'--'+Number(count)+'--'+encodeURIComponent(name)+'.pdf';
+function parseExtraFile(file){
+ const m=file.name.match(/^(oculta--)?([a-z0-9-]+)--(\d+)--(.+)\.pdf$/);
+ if(!m)return null;
+ try{return {name:decodeURIComponent(m[4]),count:Number(m[3]),hidden:!!m[1],path:'materias/'+file.name}}catch{return null}
+}
+function extraCard(item){
+ const url=window.GDV_AUTH.client.storage.from(AEROSUITE_LIBRARY_BUCKET).getPublicUrl(item.path).data.publicUrl;
+ return '<section class="library-group"><div class="library-group-head"><h3>'+safe(item.name)+'</h3><span class="library-count">'+item.count+' fichas</span></div><div class="library-list"><a class="library-item library-book-card" target="_blank" rel="noopener noreferrer" href="'+safe(url)+'"><span class="library-number">CUADERNILLO COMPLETO</span><strong>'+safe(item.name)+'</strong><small>Abrir todas las páginas del PDF</small></a></div></section>';
+}
 function libraryPdfURL(type,page){
  const row=AEROSUITE_LIBRARY_FILES[type];
  const result=window.GDV_AUTH.client.storage.from(AEROSUITE_LIBRARY_BUCKET).getPublicUrl(row.path);
@@ -291,12 +303,15 @@ function academyLibrary(){
   '<div class="cols"><label>Teoría aeronáutica (30 páginas)<input type="file" data-library-upload="teoria" accept=".pdf,application/pdf" aria-label="Cargar las 30 fichas de teoría"></label>'+
   '<label>CRM (6 páginas)<input type="file" data-library-upload="crm" accept=".pdf,application/pdf" aria-label="Cargar las 6 fichas CRM"></label></div>'+
   '<p class="muted">Máximo 30 MB por PDF. Solo puede publicar o reemplazar archivos una cuenta administradora.</p>'+
+  '<hr><h3>Agregar otra materia</h3><div class="cols"><label>Nombre de la materia<input id="extraSubjectName" maxlength="80" placeholder="Ej.: Meteorología avanzada"></label><label>Cantidad de fichas<input id="extraSubjectCount" type="number" min="1" max="500" value="1"></label></div>'+
+  '<label>Cuadernillo PDF<input id="extraSubjectPdf" type="file" accept=".pdf,application/pdf"></label> <button type="button" id="extraSubjectSave">Agregar materia</button>'+
+  '<div id="extraSubjectAdmin">'+libraryExtra.map(item=>'<div class="library-group-actions">'+safe(item.name)+' ('+item.count+' fichas) · '+(item.hidden?'Oculta':'Publicada')+' <button type="button" data-extra-action="toggle" data-extra-path="'+safe(item.path)+'">'+(item.hidden?'Publicar':'Ocultar')+'</button> <button type="button" data-extra-action="delete" data-extra-path="'+safe(item.path)+'">Eliminar</button></div>').join('')+'</div>'+
   '<p id="aerosuiteUploadStatus" class="muted" role="status" aria-live="polite"></p></details>';
  return '<section class="panel" id="aerosuiteBiblioteca"><h2>Biblioteca de formación aeronáutica · 36 fichas</h2>'+
   '<p>Dos cuadernillos de formación aeronáutica de Gente de Vuelo: 30 fichas de teoría y 6 de CRM. Abrí cada tarjeta para recorrer todas las páginas en un solo PDF.</p>'+
   (!complete?'<div class="notice">Las fichas están disponibles como material de trabajo desde Google Drive, únicamente para cuentas con acceso. Todavía no están publicadas en el almacenamiento de AeroSuite ni aprobadas como material definitivo de enseñanza.</div>':'')+
   uploadBox+
-  libraryCollection('teoria',AEROSUITE_THEORY_TOPICS)+libraryCollection('crm',AEROSUITE_CRM_TOPICS)+
+  libraryCollection('teoria',AEROSUITE_THEORY_TOPICS)+libraryCollection('crm',AEROSUITE_CRM_TOPICS)+libraryExtra.filter(item=>!item.hidden).map(extraCard).join('')+
   '<div class="grid3">'+
   '<a class="card" href="../rodaje-viento.html"><h3>Rodaje con viento</h3><p>Práctica interactiva de controles en rodaje.</p></a>'+
   '<a class="card" href="../calculo-sustentacion.html"><h3>Cálculo de sustentación</h3><p>Perfiles, sustentación y pérdida.</p></a>'+
@@ -306,8 +321,9 @@ function academyLibrary(){
 async function refreshStudentLibrary(){
  const store=window.GDV_AUTH.client.storage.from(AEROSUITE_LIBRARY_BUCKET);
  try{
-  const [theory,crm]=await Promise.all([store.list('teoria',{limit:100}),store.list('crm',{limit:100})]);
+  const [theory,crm,extras]=await Promise.all([store.list('teoria',{limit:100}),store.list('crm',{limit:100}),store.list('materias',{limit:1000})]);
   if(theory.error||crm.error)throw theory.error||crm.error;
+  libraryExtra=extras.error?[]:extras.data.map(parseExtraFile).filter(Boolean).sort((a,b)=>a.name.localeCompare(b.name,'es'));
   libraryUploaded={
    teoria:theory.data.some(file=>file.name==='fichas-teoria-30.pdf'),
    crm:crm.data.some(file=>file.name==='fichas-crm-06.pdf')
@@ -341,6 +357,45 @@ async function uploadStudentLibraryFile(input){
  }catch(err){libraryUploadMessage('No se pudo subir el PDF: '+(err.message||'error de carga'))}
  finally{input.disabled=false;input.value='';}
 }
+async function extraPdfValid(file){
+ if(!file||file.size>30*1024*1024)throw Error('Seleccioná un PDF de hasta 30 MB.');
+ const signature=String.fromCharCode(...new Uint8Array(await file.slice(0,5).arrayBuffer()));
+ if(signature!=='%PDF-')throw Error('El archivo no es un PDF válido.');
+}
+document.addEventListener('click',async event=>{
+ const save=event.target.closest('#extraSubjectSave');
+ const action=event.target.closest('[data-extra-action]');
+ if(!save&&!action)return;
+ const store=window.GDV_AUTH.client.storage.from(AEROSUITE_LIBRARY_BUCKET);
+ const control=save||action;control.disabled=true;
+ try{
+  if(save){
+   const name=$('extraSubjectName').value.trim(),count=Number($('extraSubjectCount').value),file=$('extraSubjectPdf').files[0];
+   if(name.length<3||name.length>80||!Number.isInteger(count)||count<1||count>500)throw Error('Indicá nombre y cantidad válida de fichas.');
+   await extraPdfValid(file);
+   const path=extraFilename(name,count);
+   const existing=libraryExtra.find(item=>extraSlug(item.name)===extraSlug(name));
+   if(existing&&!confirm('Ya existe esta materia. ¿Reemplazar su PDF?'))return;
+   const result=await store.upload(path,file,{upsert:true,contentType:'application/pdf',cacheControl:'60'});
+   if(result.error)throw result.error;
+   if(existing&&existing.path!==path){const del=await store.remove([existing.path]);if(del.error)throw del.error}
+   libraryUploadMessage('Materia publicada: '+name);
+  }else{
+   const item=libraryExtra.find(x=>x.path===action.dataset.extraPath);
+   if(!item)throw Error('Materia no encontrada.');
+   if(action.dataset.extraAction==='delete'){
+    if(!confirm('¿Eliminar definitivamente '+item.name+' y su PDF?'))return;
+    const result=await store.remove([item.path]);if(result.error)throw result.error;
+   }else{
+    const destination=extraFilename(item.name,item.count,!item.hidden);
+    const result=await store.move(item.path,destination);
+    if(result.error)throw result.error;
+   }
+  }
+  await refreshStudentLibrary();
+ }catch(err){libraryUploadMessage('No se pudo completar: '+(err.message||'error'))}
+ finally{control.disabled=false}
+});
 document.addEventListener('change',event=>{
  const target=event.target;
  if(target&&target.matches('input[data-library-upload]'))uploadStudentLibraryFile(target);
