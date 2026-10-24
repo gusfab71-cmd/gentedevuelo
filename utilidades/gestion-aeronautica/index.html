@@ -501,8 +501,7 @@ function studentPortal(){
  '<span class="agenda-pill">Realizada (demo)</span></div>').join(''))+'</section>'+
  '<section class="panel"><h2>Mis packs de horas</h2>'+
  d.packs.map(p=>'<div class="portal-box"><h3>'+safe(p.description)+'</h3><p>Compradas: '+safe(p.acquiredHours)+' h · Disponibles: '+safe(p.remainingHours)+' h</p>'+
- '<p class="muted">Ejemplo ficticio. El descuento de horas se habilitará cuando existan movimientos contables reales.</p></div>').join('')+'</section></div>'+
- ;
+ '<p class="muted">Ejemplo ficticio. El descuento de horas se habilitará cuando existan movimientos contables reales.</p></div>').join('')+'</section></div>';
 }
 function instructorPortal(){
  const d=instructorPortalProjection(portalInstructor,reservations,lessons,groundActivities);
