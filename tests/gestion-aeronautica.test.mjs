@@ -609,20 +609,23 @@ assert.match(ravWithDraft,/sin certificar|sin firmar|NO se firma/i);
 console.log('PASS: Registro de vuelo separado de RAV institucional en Pilotos y alumnos');
 
 
-// Biblioteca de alumno: 30 temas y 6 fichas CRM, sin enlaces falsos antes de la carga.
+// Biblioteca de Academia: 30 temas y 6 fichas CRM; lectura desde Drive para administradores hasta publicarlos en Storage.
 const theoryTitles=html.match(/const AEROSUITE_THEORY_TOPICS=\[([\s\S]*?)\];/);
 const crmTitles=html.match(/const AEROSUITE_CRM_TOPICS=\[([\s\S]*?)\];/);
 assert.ok(theoryTitles&&crmTitles,'Faltan los dos catálogos de fichas.');
 assert.equal((theoryTitles[1].match(/'[^']*'/g)||[]).length,30,'Deben existir 30 temas de teoría.');
 assert.equal((crmTitles[1].match(/'[^']*'/g)||[]).length,6,'Deben existir 6 temas CRM.');
 for(const key of [
- 'aerosuite-biblioteca','function studentLibrary(){',
+ 'aerosuite-biblioteca','function academyLibrary(){',
  'libraryCollection(\'teoria\',AEROSUITE_THEORY_TOPICS)',
  'libraryCollection(\'crm\',AEROSUITE_CRM_TOPICS)',
  'data-library-upload="teoria"','data-library-upload="crm"',
  'createSignedUrl\(' /* Marker checked below for public URL alternative */
 ].slice(0,-1))assert.ok(html.includes(key),'Catálogo incompleto: '+key);
 assert.match(html,/getPublicUrl\(row\.path\)/,'Solo generar links a PDFs cargados.');
+assert.match(html,/function academyScreen\(\)\{[\s\S]*?academyLibrary\(\)/,'La biblioteca debe estar en Academia y Simu PPA.');
+assert.doesNotMatch(html,/studentLibrary\(\)/,'El Portal del alumno no debe incluir la biblioteca.');
+assert.match(html,/AEROSUITE_DRIVE_THEORY_URLS/,'Debe permitir ver las fichas de trabajo con autorización Drive.');
 assert.match(html,/libraryUploaded\[type\]===true/,'No activar enlaces hasta confirmar la carga.');
 assert.match(html,/file\.size>30\*1024\*1024/,'Control de tamaño requerido.');
 assert.match(html,/signature!=='%PDF-'/,'Control de formato PDF requerido.');
