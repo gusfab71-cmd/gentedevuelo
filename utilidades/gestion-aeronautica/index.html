@@ -268,21 +268,18 @@ function libraryPdfURL(type,page){
 }
 function libraryCollection(type,topics){
  const row=AEROSUITE_LIBRARY_FILES[type],published=libraryUploaded[type]===true;
- const pdfDraft=(page)=>type==='crm'?AEROSUITE_DRIVE_CRM_URLS[page-1]:AEROSUITE_DRIVE_THEORY_URLS[page-1];
- const cards=topics.map((title,index)=>{
-  const page=index+1,number=String(page).padStart(2,'0');
-  const url=published?libraryPdfURL(type,page):pdfDraft(page);
-  const caption=published?'Ver ficha publicada · página '+page:(url?'Abrir ficha de trabajo en Drive':'Pendiente de cargar PDF');
-  const inside='<span class="library-number">'+(type==='crm'?'CRM':'TEORÍA')+' · FICHA '+number+'</span>'+
-   '<strong>'+safe(title)+'</strong><small>'+caption+'</small>';
-  return url?'<a class="library-item" href="'+safe(url)+'" target="_blank" rel="noopener noreferrer" aria-label="Abrir ficha '+number+': '+safe(title)+'">'+inside+'</a>':
-   '<div class="library-item is-missing" aria-disabled="true">'+inside+'</div>';
- }).join('');
  const book=published?libraryPdfURL(type):(type==='crm'?AEROSUITE_DRIVE_CRM_URL:AEROSUITE_DRIVE_THEORY_BOOK_URL);
+ const detail=type==='crm'?'Comunicación, decisiones, factores humanos y trabajo en equipo.':'Teoría aeronáutica organizada en 30 fichas ilustradas.';
+ const caption=published?'Cuadernillo publicado en AeroSuite':'Cuadernillo de trabajo en Google Drive';
  return '<section class="library-group"><div class="library-group-head"><h3>'+safe(row.title)+'</h3>'+
   '<span class="library-count">'+row.count+' fichas · '+(published?'Publicadas':'Borradores en Drive')+'</span></div>'+
-  '<div class="library-list">'+cards+'</div>'+
-  (book?'<div class="library-group-actions"><a class="library-full-link" href="'+safe(book)+'" target="_blank" rel="noopener noreferrer">Abrir las '+row.count+' fichas completas (PDF)</a></div>':'')+'</section>';
+  '<div class="library-list">'+
+  (book?'<a class="library-item library-book-card" href="'+safe(book)+'" target="_blank" rel="noopener noreferrer" aria-label="Abrir el cuadernillo completo de '+safe(row.title)+'">'+
+   '<span class="library-number">CUADERNILLO COMPLETO · '+row.count+' FICHAS</span>'+
+   '<strong>'+safe(row.title)+'</strong><small>'+safe(detail)+'</small>'+
+   '<small>'+caption+' · Abrir y recorrer todas las páginas del PDF</small></a>':
+   '<div class="library-item is-missing"><strong>'+safe(row.title)+'</strong><small>Pendiente de publicar PDF</small></div>')+
+  '</div></section>';
 }
 function academyLibrary(){
  const teoriaLista=libraryUploaded.teoria===true;
@@ -296,7 +293,7 @@ function academyLibrary(){
   '<p class="muted">Máximo 30 MB por PDF. Solo puede publicar o reemplazar archivos una cuenta administradora.</p>'+
   '<p id="aerosuiteUploadStatus" class="muted" role="status" aria-live="polite"></p></details>';
  return '<section class="panel" id="aerosuiteBiblioteca"><h2>Biblioteca de formación aeronáutica · 36 fichas</h2>'+
-  '<p>Catálogo de 36 fichas visuales de Gente de Vuelo organizadas por tema. Las fichas publicadas se pueden abrir individualmente por página o consultar como cuadernillo completo.</p>'+
+  '<p>Dos cuadernillos de formación aeronáutica de Gente de Vuelo: 30 fichas de teoría y 6 de CRM. Abrí cada tarjeta para recorrer todas las páginas en un solo PDF.</p>'+
   (!complete?'<div class="notice">Las fichas están disponibles como material de trabajo desde Google Drive, únicamente para cuentas con acceso. Todavía no están publicadas en el almacenamiento de AeroSuite ni aprobadas como material definitivo de enseñanza.</div>':'')+
   uploadBox+
   libraryCollection('teoria',AEROSUITE_THEORY_TOPICS)+libraryCollection('crm',AEROSUITE_CRM_TOPICS)+
