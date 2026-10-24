@@ -277,19 +277,27 @@ function libraryCollection(type,topics){
   (ready?'<div class="library-group-actions"><a class="library-full-link" href="'+safe(libraryPdfURL(type))+'" target="_blank" rel="noopener noreferrer">Abrir las '+row.count+' fichas completas (PDF)</a></div>':'')+'</section>';
 }
 function studentLibrary(){
+ const teoriaLista=libraryUploaded.teoria===true;
+ const crmLista=libraryUploaded.crm===true;
+ const checking=libraryUploaded.teoria===null||libraryUploaded.crm===null;
+ const complete=teoriaLista&&crmLista;
+ const uploadBox='<details class="library-upload" id="aerosuiteUploader"'+(!complete?' open':'')+'>'+
+  '<summary>Administración · Cargar o reemplazar los PDF de las fichas</summary>'+
+  '<p class="muted">Para activar las tarjetas, seleccioná en tu computadora el cuadernillo completo de teoría (30 páginas) y el de CRM (6 páginas). Ambos PDF se publicarán en la biblioteca permanente de AeroSuite.</p>'+
+  '<div class="cols"><label>Teoría aeronáutica (30 páginas)<input type="file" data-library-upload="teoria" accept=".pdf,application/pdf" aria-label="Cargar las 30 fichas de teoría"></label>'+
+  '<label>CRM (6 páginas)<input type="file" data-library-upload="crm" accept=".pdf,application/pdf" aria-label="Cargar las 6 fichas CRM"></label></div>'+
+  '<p class="muted">Máximo 30 MB por PDF. Solo puede publicar o reemplazar archivos una cuenta administradora.</p>'+
+  '<p id="aerosuiteUploadStatus" class="muted" role="status" aria-live="polite"></p></details>';
  return '<section class="panel" id="aerosuiteBiblioteca"><h2>Mi biblioteca de teoría y práctica</h2>'+
-  '<p>36 fichas visuales de Gente de Vuelo organizadas por tema. Podés abrir cada ficha por separado o consultar el cuadernillo completo de su serie.</p>'+
+  '<p>Catálogo de 36 fichas visuales de Gente de Vuelo organizadas por tema. Las fichas publicadas se pueden abrir individualmente por página o consultar como cuadernillo completo.</p>'+
+  (!complete&&!checking?'<div class="notice">Las fichas marcadas «Pendiente de cargar PDF» todavía no están publicadas. Usá el cargador de administración que aparece a continuación para habilitarlas.</div>':'')+
+  uploadBox+
   libraryCollection('teoria',AEROSUITE_THEORY_TOPICS)+libraryCollection('crm',AEROSUITE_CRM_TOPICS)+
   '<div class="grid3">'+
   '<a class="card" href="../rodaje-viento.html"><h3>Rodaje con viento</h3><p>Práctica interactiva de controles en rodaje.</p></a>'+
   '<a class="card" href="../calculo-sustentacion.html"><h3>Cálculo de sustentación</h3><p>Perfiles, sustentación y pérdida.</p></a>'+
   '<a class="card" href="fichas/fuerzas-del-vuelo.html"><h3>Cuatro fuerzas del vuelo</h3><p>Ficha visual original con autoevaluación.</p></a>'+
-  '</div><p class="muted">Material complementario: no reemplaza manuales, procedimientos ni normativa vigente. Consultar estas fichas no acredita horas académicas.</p>'+
-  '<details class="library-upload"><summary>Administración · Cargar o reemplazar fichas PDF</summary>'+
-  '<p class="muted">Solo para administración de esta demostración. Subí un PDF de 30 páginas y otro de 6 páginas. Los archivos se guardan de forma permanente en la biblioteca de AeroSuite; no se almacenan como datos de prueba.</p>'+
-  '<div class="cols"><label>Teoría aeronáutica (30 páginas)<input type="file" data-library-upload="teoria" accept=".pdf,application/pdf" aria-label="Cargar las 30 fichas de teoría"></label>'+
-  '<label>CRM (6 páginas)<input type="file" data-library-upload="crm" accept=".pdf,application/pdf" aria-label="Cargar las 6 fichas CRM"></label></div>'+
-  '<p class="muted">Límite: 30 MB por PDF. Al reemplazar uno existente, se actualiza el material disponible para todos los alumnos.</p></details></section>';
+  '</div><p class="muted">Material complementario: no reemplaza manuales, procedimientos ni normativa vigente. Consultar estas fichas no acredita horas académicas.</p></section>';
 }
 async function refreshStudentLibrary(){
  const store=window.GDV_AUTH.client.storage.from(AEROSUITE_LIBRARY_BUCKET);
@@ -306,22 +314,27 @@ async function refreshStudentLibrary(){
  }
  if(tab==='alumno')render();
 }
+function libraryUploadMessage(message){
+ const el=$('aerosuiteUploadStatus');
+ if(el)el.textContent=message;
+ notice(message);
+}
 async function uploadStudentLibraryFile(input){
  const type=input.dataset.libraryUpload;
  const file=input.files&&input.files[0];
  if(!AEROSUITE_LIBRARY_FILES[type]||!file)return;
- if(file.size>30*1024*1024){notice('El PDF supera 30 MB. Usá la versión optimizada.');return;}
+ if(file.size>30*1024*1024){libraryUploadMessage('El PDF supera 30 MB. Usá la versión optimizada.');return;}
  const signature=String.fromCharCode(...new Uint8Array(await file.slice(0,5).arrayBuffer()));
- if(signature!=='%PDF-'){notice('Seleccioná un archivo PDF válido.');return;}
+ if(signature!=='%PDF-'){libraryUploadMessage('Seleccioná un archivo PDF válido.');return;}
  input.disabled=true;
- notice('Subiendo '+AEROSUITE_LIBRARY_FILES[type].title+'…');
+ libraryUploadMessage('Subiendo '+AEROSUITE_LIBRARY_FILES[type].title+'…');
  try{
   const result=await window.GDV_AUTH.client.storage.from(AEROSUITE_LIBRARY_BUCKET)
    .upload(AEROSUITE_LIBRARY_FILES[type].path,file,{upsert:true,contentType:'application/pdf',cacheControl:'60'});
   if(result.error)throw result.error;
   await refreshStudentLibrary();
-  notice('PDF cargado: '+AEROSUITE_LIBRARY_FILES[type].title+'. La biblioteca ya lo muestra.');
- }catch(err){notice('No se pudo subir el PDF: '+(err.message||'error de carga'))}
+  libraryUploadMessage('PDF cargado: '+AEROSUITE_LIBRARY_FILES[type].title+'. La biblioteca ya lo muestra.');
+ }catch(err){libraryUploadMessage('No se pudo subir el PDF: '+(err.message||'error de carga'))}
  finally{input.disabled=false;input.value='';}
 }
 document.addEventListener('change',event=>{
