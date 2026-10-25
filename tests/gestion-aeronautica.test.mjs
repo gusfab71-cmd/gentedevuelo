@@ -540,6 +540,9 @@ assert.match(airstripsOriginal,/document\.getElementById\('zone-search-form'\)\.
 assert.doesNotMatch(airstripsOriginal,/zoneInput\.addEventListener\('input',[\s\S]{0,100}fetch/,'Nominatim prohíbe autocompletado');
 assert.match(html,/allow="geolocation"/,'AeroSuite debe permitir la solicitud explícita de permiso en el iframe');
 const geocodeServerSource=fs.readFileSync(new URL('../supabase/functions/airstrip-geocode/index.ts',import.meta.url),'utf8');
+assert.match(geocodeServerSource,/SUPABASE_PUBLISHABLE_KEYS/,'La función valida la clave pública en servidor');
+assert.match(geocodeServerSource,/req\.headers\.get\("apikey"\)/,'El cliente usa apikey en lugar de Bearer');
+assert.doesNotMatch(airstripsOriginal,/Authorization:'Bearer '\+GDV_CONFIG\.key/,'La clave publicable no es un JWT');
 assert.match(geocodeServerSource,/nominatim\.openstreetmap\.org\/search/,'El servidor usa Nominatim');
 assert.match(geocodeServerSource,/cacheHours=24\*7/,'El servidor mantiene caché compartida');
 assert.match(geocodeServerSource,/gateMs=2200/,'El límite conservador protege 1 petición por segundo global');
