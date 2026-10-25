@@ -588,7 +588,7 @@ document.getElementById('zone-search-form').addEventListener('submit',async even
   // No se consulta Nominatim desde el navegador ni se hace búsqueda por cada tecla.
   const endpoint=GDV_CONFIG.url.replace(/\/$/,'')+'/functions/v1/airstrip-geocode?q='+encodeURIComponent(query);
   const response=await fetch(endpoint,{
-   headers:{Accept:'application/json',apikey:GDV_CONFIG.key,Authorization:'Bearer '+GDV_CONFIG.key},
+   headers:{Accept:'application/json',apikey:GDV_CONFIG.key},
    signal:AbortSignal.timeout(13000)
   });
   const payload=await response.json().catch(()=>({}));
