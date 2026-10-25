@@ -127,6 +127,40 @@ assert.ok(fs.existsSync(new URL('../utilidades/flightprep-nav.html',import.meta.
  'Conservar el archivo antiguo para evitar enlaces rotos hasta completar la migración');
 console.log('PASS: FlightPrep NAV retirado de accesos independientes; integración AeroSuite conservada');
 
+// Consolidación de herramientas de Gente de Vuelo en Academia del Alumno.
+for(const [file,title] of [
+ ['mantenimiento-aeronaves.html','Mantenimiento de Aeronaves'],
+ ['rodaje-viento.html','Rodaje con viento'],
+ ['calculo-sustentacion.html','Cálculo de Sustentación']
+]){
+ assert.doesNotMatch(utilitiesPage,new RegExp('href="'+file+'"'),
+  title+' no debe conservar tarjeta independiente en Utilidades');
+ assert.ok(fs.existsSync(new URL('../utilidades/'+file,import.meta.url)),
+  title+' debe conservar su código original y los enlaces antiguos');
+ assert.match(html,new RegExp("url:'\\.\\./"+file.replace('.','\\.')+"'"),
+  title+' debe estar integrado en Academia');
+}
+assert.match(html,/function academyStudentTools\(\)/,'Debe existir área de aplicaciones prácticas en Academia');
+assert.match(html,/function academyScreen\(\)\{[\s\S]*?academyStudentTools\(\)\+academyLibrary\(false\)/,
+ 'Academia del Alumno debe mostrar prácticas y las fichas originales');
+assert.match(html,/function adminAcademyScreen\(\)\{[\s\S]*?academyLibrary\(true\)/,
+ 'Administración debe mantener sus herramientas de publicación');
+assert.match(html,/if\(tab==='academia'&&currentArea==='alumno'\)/,
+ 'El visor de prácticas pertenece al área del Alumno');
+assert.match(html,/data-academy-tool="'+id+'"/,'Las tarjetas necesitan una acción de apertura');
+assert.match(html,/<iframe class="academy-tool-frame" src="'\+active\.url\+'/,
+ 'Herramientas cargadas dentro del portal, sin duplicar el código');
+assert.match(html,/target="_blank" rel="noopener noreferrer">Abrir a pantalla completa/,
+ 'Conservar alternativa para abrir aplicación completa');
+assert.match(html,/data-academy-tool-close/,'El alumno puede cerrar el visor');
+assert.match(html,/La bitácora utiliza la cuenta actual de Gente de Vuelo/,
+ 'El mantenimiento conserva el almacenamiento privado de la herramienta original');
+assert.match(html,/libraryCollection\('teoria',AEROSUITE_THEORY_TOPICS\)/);
+assert.match(html,/libraryCollection\('crm',AEROSUITE_CRM_TOPICS\)/);
+assert.match(html,/fichas\/fuerzas-del-vuelo\.html/);
+console.log('PASS: Academia del Alumno contiene mantenimiento, rodaje y sustentación, conserva biblioteca y registros');
+
+
 // Portada Gente de Vuelo: un mismo espacio de menú, AeroSuite exclusivo del administrador.
 const gdvHomepage=fs.readFileSync(new URL('../index.html',import.meta.url),'utf8');
 assert.match(gdvHomepage,/id="gdv-aerosuite-menu-link" href="utilidades\/gestion-aeronautica\/portal\.html" hidden/,'AeroSuite debe comenzar oculto en portada');
