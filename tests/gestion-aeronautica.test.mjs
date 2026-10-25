@@ -147,7 +147,7 @@ assert.match(html,/function adminAcademyScreen\(\)\{[\s\S]*?academyLibrary\(true
  'Administración debe mantener sus herramientas de publicación');
 assert.match(html,/if\(tab==='academia'&&currentArea==='alumno'\)/,
  'El visor de prácticas pertenece al área del Alumno');
-assert.match(html,/data-academy-tool="'+id+'"/,'Las tarjetas necesitan una acción de apertura');
+assert.match(html,/data-academy-tool="'\+id\+'"/,'Las tarjetas necesitan una acción de apertura');
 assert.match(html,/<iframe class="academy-tool-frame" src="'\+active\.url\+'/,
  'Herramientas cargadas dentro del portal, sin duplicar el código');
 assert.match(html,/target="_blank" rel="noopener noreferrer">Abrir a pantalla completa/,
