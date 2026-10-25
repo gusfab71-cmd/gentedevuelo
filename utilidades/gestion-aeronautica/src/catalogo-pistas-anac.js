@@ -54,7 +54,7 @@
     notes:'Referencia de carta AIP/SUP ANAC (2023); consultar publicación vigente antes de operar.'},
    sourceUrl:'https://ais.anac.gob.ar/descarga/sup-64d52a2cc61b6',
    sourceLabel:'ANAC · Carta de aeródromo SABE (SUP A 73/2023)',sourceDate:'2023-09-07',
-   sourceType:'publicacion_aip',classificationSourceUrl:'https://servicios.transporte.gob.ar/gobierno_abierto/detalle.php?d=detalle&t=aeropuertos',classificationSourceDate:'2021-09',verification:'AIP 2023 y datos de control/uso público de 2021: comprobación operativa actual pendiente.'},
+   sourceType:'publicacion_aip',classificationSourceUrl:'https://servicios.transporte.gob.ar/gobierno_abierto/detalle.php?d=detalle&t=aeropuertos',classificationSourceDate:'2021-09',verification:'AIP 2023 y datos de control/uso público de 2021: verificación operativa actual pendiente.'},
   {id:'aip-saez',category:'official',facilityClass:'controlled_public',legal_use:'public',ats_service:'twr',operation_rules:'unknown',access_policy:'public',facility_kind:'aerodrome',name:'Ezeiza / Ministro Pistarini (SAEZ)',
    ...fromDms('344920S','0583209W'),
    details:{icao:'SAEZ',runway:'11/29 y 17/35 (carta SUP 2023)',province:'Buenos Aires',
@@ -62,7 +62,7 @@
     notes:'Referencia de carta AIP/SUP ANAC (2023); consultar publicación vigente antes de operar.'},
    sourceUrl:'https://ais.anac.gob.ar/descarga/sup-652074d8547f1',
    sourceLabel:'ANAC · Carta de aeródromo SAEZ (SUP A 85/2023)',sourceDate:'2023-10-06',
-   sourceType:'publicacion_aip',classificationSourceUrl:'https://servicios.transporte.gob.ar/gobierno_abierto/detalle.php?d=detalle&t=aeropuertos',classificationSourceDate:'2021-09',verification:'AIP 2023 y datos de control/uso público de 2021: comprobación operativa actual pendiente.'}
+   sourceType:'publicacion_aip',classificationSourceUrl:'https://servicios.transporte.gob.ar/gobierno_abierto/detalle.php?d=detalle&t=aeropuertos',classificationSourceDate:'2021-09',verification:'AIP 2023 y datos de control/uso público de 2021: verificación operativa actual pendiente.'}
  ];
  root.AEROSUITE_OFFICIAL_AIRSTRIPS=Object.freeze({
   official:Object.freeze(official),lad:Object.freeze(lad),
