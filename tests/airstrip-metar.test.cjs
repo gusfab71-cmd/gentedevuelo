@@ -34,6 +34,7 @@ async function request(method,query,fetcher){
 }
 (async()=>{
  let requests=0;
+ const responseRows=reports.map(row=>({...row,obsTime:Math.floor(Date.now()/1000)-600}));
  const valid=await request('GET',{lat:'-34.56',lon:'-58.42'},async url=>{
   requests++;
   const parsed=new URL(url);
@@ -41,12 +42,12 @@ async function request(method,query,fetcher){
   assert.equal(parsed.pathname,'/api/data/metar');
   assert.equal(parsed.searchParams.get('format'),'json');
   assert.ok(parsed.searchParams.get('bbox'));
-  return {ok:true,json:async()=>reports};
+  return {ok:true,json:async()=>responseRows};
  });
  assert.equal(valid.code,200);
  assert.equal(valid.body.available,true);
  assert.equal(valid.body.station,'SABE');
- assert.equal(valid.body.freshness,'stale','Datos de prueba de octubre no deben presentarse como actuales.');
+ assert.equal(valid.body.freshness,'recent','El informe recién emitido se considera reciente.');
  assert.equal(requests,1);
  const invalid=await request('GET',{lat:'100',lon:'-57'},async()=>{throw Error('No consultar')});
  assert.equal(invalid.code,400);
