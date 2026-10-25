@@ -53,7 +53,7 @@ function pickNearest(reports,latitude,longitude,now=Date.now()){
     observationUtc:new Date(observation).toISOString(),
     ageMinutes:Math.max(0,Math.round(age)),
     freshness:age<=FRESH_MINUTES?'recent':'stale',
-    raw:raw.slice(0,1800).replace(/[\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F]/g,''),
+    raw:raw.slice(0,1800).replace(/[\x00-\x1F]/g,''),
     source:'NOAA Aviation Weather Center (AWC)'
    };
   }
