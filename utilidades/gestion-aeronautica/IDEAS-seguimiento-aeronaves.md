@@ -37,6 +37,32 @@ Airnizer muestra una modalidad en la cual el usuario puede registrar **una aeron
 
 **Estado:** Observación competitiva añadida a la caja de ideas. **No son precios aprobados de AeroSuite.**
 
+## Decisión de producto: mes gratuito para cada escuela (25/10/2026)
+
+**Decisión del proyecto:** toda escuela de vuelo que se incorpore a AeroSuite tendrá **un (1) mes de prueba gratuito** antes de decidir si contrata un plan pago. Propuesta aplicable también a aeroclubes si operan mediante una cuenta institucional; sujeto a definir la oferta definitiva.
+
+### Flujo previsto
+
+1. **Alta institucional:** una escuela crea su espacio AeroSuite y completa identificación y responsable autorizado. La membresía individual de Gente de Vuelo no exige un abono institucional.
+2. **Inicio del período de prueba:** al activar el espacio de la escuela comienza **un mes gratuito**, contado desde la fecha de activación institucional. Definir antes de codificar si se computará como un mes calendario fecha a fecha o 30 días exactos.
+3. **Acceso de evaluación:** permitir probar gestión de aeronaves, alumnos e instructores, reservas, mantenimiento, formación, Flight Operations y herramientas de AeroSuite según el alcance de prueba aprobado. Las funciones costosas (p. ej., IA) podrán tener cuotas explícitas; los módulos aún en desarrollo no se ofrecerán como operativos.
+4. **Avisos de vencimiento:** informar la fecha de finalización al activarse y recordar con anticipación (propuesta: 7 días y 2 días antes), mostrando qué planes y precios se ofrecerán.
+5. **Decisión voluntaria:** la escuela elige continuar en Essential, Pro u otra opción aprobada. **No cobrar automáticamente, no pedir tarjeta obligatoria ni crear una suscripción pagada por silencio.**
+6. **Al finalizar sin contratar:** detener las nuevas operaciones institucionales pagas, mantener datos protegidos y brindar lectura/exportación durante un período de conservación que deberá fijarse antes del lanzamiento. **No borrar bitácoras, registros académicos ni datos aeronáuticos de forma inmediata.** El acceso básico a Gente de Vuelo sigue siendo independiente.
+7. **Evitar repetición abusiva:** una prueba por institución validada, aunque haya múltiples administradores o usuarios vinculados; prever extensiones manuales excepcionales por administración.
+
+### A definir antes de activar técnicamente
+
+- Plan incluido en el ensayo y límites de aeronaves, usuarios, almacenamiento y consumo de IA.
+- Cómputo exacto de «un mes», zona horaria, fecha de inicio y reglas para organizaciones ya existentes.
+- Período de consulta/exportación posterior y política de conservación según normativa aplicable.
+- Verificación institucional y permisos efectivos para usar expedientes de terceros.
+- Precio final, facturación ARCA, términos de prueba, consentimiento para el plan pago y cancelación.
+- Estados previstos: `trial`, `active`, `expired`, `suspended`, diferenciados del perfil personal.
+- Los plazos y precios de la competencia son solo referencias; no son tarifas aprobadas de AeroSuite.
+
+**Estado:** aprobado como criterio de producto y **registrado en la caja de ideas**. Pendiente de desarrollo de suscripciones y reglas institucionales. **No se activaron cobros, bloqueos, vencimientos ni automatismos.**
+
 ## Hipótesis a evaluar
 
 - **Un piloto / propietario particular:** seguimiento y registro de mantenimiento de **una aeronave sin cargo**.
