@@ -680,7 +680,7 @@ let ravRecords=[],ravFormOpen=false;
 const trainingInstitution={institutionType:'non_ciac',reviewMode:'chief'};
 // Tres areas visual y funcionalmente aisladas dentro de la demostracion.
 const AREA_DEFS=Object.freeze({
- alumno:{title:'Área del Alumno',subtitle:'Formación, progreso, reservas y biblioteca aeronáutica.',home:'alumno',tabs:[['alumno','Mi formación y reservas'],['academia','Mi biblioteca · Teoría y CRM'],['piloto','Mi actividad personal · Demo'],['flightops','Flight Operations · Planificación'],['pistas','Mapa de Pistas y Aeródromos']]},
+ alumno:{title:'Área del Alumno',subtitle:'Formación, progreso, reservas y biblioteca aeronáutica.',home:'alumno',tabs:[['alumno','Mi formación y reservas'],['ficha_alumno','Mi ficha personal · Foto y documento'],['academia','Mi biblioteca · Teoría y CRM'],['piloto','Mi actividad personal · Demo'],['flightops','Flight Operations · Planificación'],['pistas','Mapa de Pistas y Aeródromos']]},
  instructor:{title:'Instructor y Jefe de Instructores',subtitle:'Evaluaciones, clases, seguimiento de alumnos y supervisión pedagógica.',home:'instructor',tabs:[['instructor','Panel del instructor'],['direccion','Jefatura de instructores'],['personas','Seguimiento, fichas y RAV'],['flightops','Flight Operations · Instrucción'],['pistas','Mapa de Pistas y Aeródromos']]},
  administracion:{title:'Gestión Administrativa de Escuela',subtitle:'Agenda, operaciones, flota, personal, recursos y contabilidad.',home:'inicio',tabs:[['inicio','Panel administrativo'],['reservas','Agenda y reservas'],['vuelos','Registro de vuelos'],['flota','Aeronaves y mantenimiento'],['pistas','Mapa de Pistas y Aeródromos'],['admin_personas','Personal y usuarios'],['admin_academia','Gestionar biblioteca'],['finanzas','Contabilidad y Finanzas'],['stock','Combustible y aceite'],['documentos','Documentos y avisos']]}
 });
@@ -725,7 +725,7 @@ function render(){
  $('sidebar').innerHTML=area.tabs.map(([key,label])=>'<button type="button" data-tab="'+key+'" class="'+(key===tab?'active':'')+'">'+label+'</button>').join('');
  $('sidebar').querySelectorAll('button').forEach(button=>button.addEventListener('click',()=>switchTab(button.dataset.tab)));
  $('areaBack').onclick=backToAreaPortal;
- const sections={inicio:dashboard,alumno:studentPortal,piloto:privatePilotPortal,instructor:instructorPortal,direccion:directorPortal,reservas:calendar,vuelos:flightScreen,flota:fleetScreen,personas:memberScreen,admin_personas:adminPeopleScreen,admin_academia:adminAcademyScreen,finanzas:financeScreen,stock:stockScreen,academia:academyScreen,pistas:airstripsScreen,flightops:flightOperationsScreen,documentos:documentsScreen};
+ const sections={inicio:dashboard,alumno:studentPortal,ficha_alumno:studentProfileScreen,piloto:privatePilotPortal,instructor:instructorPortal,direccion:directorPortal,reservas:calendar,vuelos:flightScreen,flota:fleetScreen,personas:memberScreen,admin_personas:adminPeopleScreen,admin_academia:adminAcademyScreen,finanzas:financeScreen,stock:stockScreen,academia:academyScreen,pistas:airstripsScreen,flightops:flightOperationsScreen,documentos:documentsScreen};
  if(!area.tabs.some(([key])=>key===tab))tab=area.home;
  $('screen').innerHTML=sections[tab]();wire();
 }
@@ -794,6 +794,10 @@ function studentPortal(){
   '<span class="agenda-pill">'+safe(stages[b.status]||b.status)+'</span></div>').join('');
  return '<section class="panel"><div class="portal-title"><h2>Mi espacio de alumno · Demostración</h2><span class="tag">Vista alumno · Datos ficticios</span></div>'+
  '<p class="portal-private">Aquí el alumno puede solicitar turnos y consultar únicamente sus reservas, horas de vuelo, prácticas registradas y packs comprados. Las notas de instructores, sus correcciones y la supervisión interna no se muestran.</p>'+
+ '<section class="aerosuite-flightops-shortcut" aria-label="Registro personal del alumno">'+
+ '<div><h3>Mi ficha personal · Foto y documentos</h3>'+
+ '<p>Cargá tus datos personales reales, fotografía privada y documento. Es independiente de la formación de prueba y del perfil público de Gente de Vuelo.</p></div>'+
+ '<button type="button" class="action" data-go="ficha_alumno">Completar mi ficha</button></section>'+
  flightOperationsShortcut('alumno')+
  '<div class="portal-metrics">'+metric(d.flightHours.toFixed(2)+' h','Horas de vuelo · demo')+
  metric(d.simulatorHours.toFixed(2)+' h','Horas de simulador · demo')+
@@ -1411,6 +1415,18 @@ function academyScreen(){
 function adminAcademyScreen(){
  return '<section class="panel"><h2>Administración de la biblioteca de formación</h2><p>Publicá los cuadernillos aquí para que el alumno los consulte sin herramientas de edición en su área.</p></section>'+
   academyLibrary(true);
+}
+function studentProfileScreen(){
+ if(currentArea!=='alumno'){
+  return '<section class="panel"><h2>Mi ficha personal</h2><p>Este formulario está reservado al titular de los datos en el área de Formación.</p></section>';
+ }
+ return '<section class="aerosuite-flightops-head" aria-label="Datos personales privados del alumno">'+
+  '<span class="aerosuite-flightops-tag">AeroSuite · Formación · Autogestión privada</span>'+
+  '<h2>Mi ficha personal de alumno</h2>'+
+  '<p>Ingresá tus nombres, apellidos, nacimiento, al menos un documento de identidad, domicilio y teléfonos. La fotografía se almacena de manera privada. La información es tuya y no aparece en el perfil comunitario.</p>'+
+  '<div class="aerosuite-flightops-note"><strong>Datos reales de la cuenta conectada:</strong> esta ficha no utiliza los alumnos ficticios de la demostración. Solo vos podés consultar o actualizar tus datos mientras no existan autorizaciones institucionales implementadas.</div>'+
+  '<div class="aerosuite-flightops-links"><a class="action" href="mi-ficha-alumno.html" target="_blank" rel="noopener noreferrer">Abrir mi ficha a pantalla completa ↗</a></div></section>'+
+  '<section class="aerosuite-flightops-framebox"><iframe class="aerosuite-flightops-frame" src="mi-ficha-alumno.html" title="Ficha personal y fotografía privada del alumno" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe></section>';
 }
 function flightOperationsShortcut(area){
  const isStudent=area==='alumno';
