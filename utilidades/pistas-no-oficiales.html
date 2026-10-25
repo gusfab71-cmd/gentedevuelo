@@ -225,6 +225,16 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
  .dispatch-map-main .basemap-selector{position:static;max-width:none;width:100%;background:#1c3346;padding:6px}
  .dispatch-map-bottom .pin-legend{gap:8px}
 }
+
+.dispatch-surface-filters{margin:10px 0;border:1px solid #567994;border-radius:11px;padding:11px;background:#1c3549;
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.dispatch-surface-filters legend{font-size:12px;font-weight:820;color:#d8edfc;padding:0 6px}
+.dispatch-surface-filters label{display:flex;flex-direction:row;gap:7px;align-items:center;font-size:12px;color:#d7e8f3;cursor:pointer}
+.dispatch-surface-filters input{width:17px;height:17px;flex-shrink:0;accent-color:#9bcaf3}
+@media(max-width:959px){
+ .dispatch-sidebar{max-height:52dvh;overflow:hidden}
+ .dispatch-sidebar-scroll{height:100%;overflow:auto;overscroll-behavior:contain}
+}
 </style></head><body><header class="dispatch-nav"><div class="dispatch-nav-logo"><span class="dispatch-nav-symbol" aria-hidden="true">✈</span>
  <div><strong>GENTE DE VUELO</strong><small>MAPA AERONÁUTICO</small></div></div>
  <nav aria-label="Herramientas Gente de Vuelo"><a href="../index.html">Portada</a><a href="../comunidad.html#foro">Foro</a><a href="index.html">Utilidades</a>
@@ -252,7 +262,14 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
 <div class="zone-attribution">Búsqueda geográfica: <a href="https://photon.komoot.io/" target="_blank" rel="noopener noreferrer">Photon</a> con datos de <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> · Resultados orientativos. No valida pistas para operación.</div>
 </section>
 
-    <div class="dispatch-quick">
+    <fieldset class="dispatch-surface-filters" id="surface-filters">
+ <legend>Superficie · Filtros rápidos</legend>
+ <label><input type="checkbox" data-pista-surface="asfalto" checked> Asfalto</label>
+ <label><input type="checkbox" data-pista-surface="tierra" checked> Tierra</label>
+ <label><input type="checkbox" data-pista-surface="cesped" checked> Césped</label>
+ <label><input type="checkbox" data-pista-surface="otros" checked> Otro / sin dato</label>
+ </fieldset>
+ <div class="dispatch-quick">
       <button id="ruler-toggle" type="button" aria-pressed="false">Regla · Distancia y rumbo</button>
       <button id="ruler-clear" type="button">Borrar medición</button>
       <button id="contribute-fast" type="button">+ Aportar pista</button>
@@ -372,6 +389,21 @@ function layerSelected(kind){
  if(kind==='reference')return layerVisibility.unverified===true&&layerVisibility.reference===true;
  return layerVisibility[kind]===true;
 }
+function surfaceCategory(record){
+ const raw=String(record?.details?.surface||record?.surface||'').normalize('NFD')
+  .replace(/[\u0300-\u036f]/g,'').toLowerCase();
+ if(/asphalt|asfalto|paviment|concreto|hormigon/.test(raw))return 'asfalto';
+ if(/tierra|earth|dirt|gravel|ripio|suelo/.test(raw))return 'tierra';
+ if(/grass|cesped|pasto|hierba/.test(raw))return 'cesped';
+ return 'otros';
+}
+function meetsSurfaceFilter(record){
+ const category=surfaceCategory(record);
+ return Boolean(document.querySelector('[data-pista-surface="'+category+'"]')?.checked);
+}
+document.querySelectorAll('[data-pista-surface]').forEach(box=>{
+ box.addEventListener('change',()=>{render();renderExternal()});
+});
 function meetsServiceFilters(record){
  const ats=String(record.ats_service||'unknown');
  const access=String(record.access_policy||'unknown');
@@ -481,7 +513,7 @@ document.getElementById('zone-search-form').addEventListener('submit',async even
   focusMapAt(coordinates.latitude,coordinates.longitude,'Coordenadas '+coordinates.latitude.toFixed(5)+', '+coordinates.longitude.toFixed(5),15);
   return;
  }
- const matched=records.filter(x=>layerSelected(airfieldClass(x))&&meetsServiceFilters(x)).filter(x=>(x.name+' '+(x.details?.province||'')).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()
+ const matched=records.filter(x=>layerSelected(airfieldClass(x))&&meetsServiceFilters(x)&&meetsSurfaceFilter(x)).filter(x=>(x.name+' '+(x.details?.province||'')).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()
   .includes(query.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase())).slice(0,5);
  if(matched.length){
   if(matched.length===1)focusMapAt(matched[0].latitude,matched[0].longitude,matched[0].name,14);
@@ -491,7 +523,7 @@ document.getElementById('zone-search-form').addEventListener('submit',async even
   }
   return;
  }
- const documentedMatches=documentedAirstrips.filter(x=>layerSelected(airfieldClass(x))&&meetsServiceFilters(x))
+ const documentedMatches=documentedAirstrips.filter(x=>layerSelected(airfieldClass(x))&&meetsServiceFilters(x)&&meetsSurfaceFilter(x))
   .filter(x=>normalizePista([x.name,x.details?.icao,x.details?.registry,x.details?.province].join(' ')).includes(normalizePista(query)))
   .slice(0,6);
  if(documentedMatches.length){
@@ -813,6 +845,7 @@ function renderExternal(){
  for(const x of externalPoints){
   const nm=reference?nauticalMiles(reference[0],reference[1],x.lat,x.lon):null;
   if(nearRadius!==null&&nm>nearRadius)continue;
+  if(!meetsSurfaceFilter(x))continue;
   const marker=L.marker([x.lat,x.lon],{icon:runwayPin('reference'),title:x.name})
     .bindPopup(referencePopup(x,nm),{maxWidth:350,minWidth:245}).addTo(external);
   attachSelection(marker,[x.lat,x.lon],x.name,()=>referencePopup(x,nm));
@@ -857,7 +890,7 @@ function renderDocumented(){
  let count=0;
  for(const point of documentedAirstrips){
   const kind=airfieldClass(point);
-  if(!layerSelected(kind)||!meetsServiceFilters(point))continue;
+  if(!layerSelected(kind)||!meetsServiceFilters(point)||!meetsSurfaceFilter(point))continue;
   const fields=[point.name,point.details?.province,point.details?.icao,point.details?.registry].join(' ');
   if(q&&!normalizePista(fields).includes(q))continue;
   if(nearRadius!==null&&(!reference||nauticalMiles(reference[0],reference[1],point.lat,point.lon)>nearRadius))continue;
@@ -901,7 +934,7 @@ function render(){
  markers.clearLayers();list.replaceChildren();
  const q=document.getElementById('search').value.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
  const all=records
-  .filter(x=>layerSelected(airfieldClass(x))&&meetsServiceFilters(x))
+  .filter(x=>layerSelected(airfieldClass(x))&&meetsServiceFilters(x)&&meetsSurfaceFilter(x))
   .filter(x=>(x.name+' '+(x.details?.province||'')).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().includes(q))
   .filter(x=>nearRadius===null||(reference&&nauticalMiles(reference[0],reference[1],x.latitude,x.longitude)<=nearRadius))
   .sort((a,b)=>reference?
