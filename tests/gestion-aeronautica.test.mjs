@@ -489,6 +489,40 @@ assert.doesNotMatch(html,/data-go="piloto"/,'No debe haber salto administrativo 
 assert.doesNotMatch(html,/data-go="academia"/,'No debe haber salto administrativo al área del alumno');
 assert.match(html,/site_admins/,'El acceso admin de la demo debe mantenerse');
 
+// Alta privada del alumno: obligatoriedad basada en captura y aislamiento de cuentas.
+const studentFormHtml=fs.readFileSync(new URL('../utilidades/gestion-aeronautica/mi-ficha-alumno.html',import.meta.url),'utf8');
+assert.match(html,/\['ficha_alumno','Mi ficha personal · Foto y documento'\]/);
+assert.match(html,/ficha_alumno:studentProfileScreen/);
+assert.match(html,/function studentProfileScreen\(\)/);
+assert.match(html,/if\(currentArea!=='alumno'\)/);
+assert.match(html,/href="mi-ficha-alumno\.html"/);
+assert.match(html,/src="mi-ficha-alumno\.html"/);
+assert.doesNotMatch(studentFormHtml,/getPublicUrl\(/,'La fotografía del alumno NO debe publicarse');
+assert.match(studentFormHtml,/aerosuite-student-portraits/,'Almacenamiento privado de fotos');
+assert.match(studentFormHtml,/aerosuite_student_profiles/);
+assert.match(studentFormHtml,/aerosuite_student_documents/);
+assert.match(studentFormHtml,/\.eq\('user_id',user\.id\)/,'Consultas restringidas a cuenta propia');
+assert.match(studentFormHtml,/client\.auth\.getUser\(\)/,'Se comprueba identidad');
+assert.match(studentFormHtml,/client\.storage\.from\(portraitBucket\)\.download\(profile\.portrait_path\)/);
+assert.match(studentFormHtml,/client\.storage\.from\(portraitBucket\)\.upload\(path,blob,\{contentType:'image\/webp',upsert:true/);
+assert.match(studentFormHtml,/canvas\.toBlob\(/,'La fotografía debe quitar EXIF/GPS');
+for(const field of ['family_names','given_names','birth_country','birth_date','residence_country','residence_province','residence_city','residence_address','postal_code','mobile_phone']){
+  const pattern=new RegExp('name="'+field+'"[^>]*required');
+  assert.match(studentFormHtml,pattern,'Campo obligatorio: '+field);
+}
+for(const field of ['landline_phone','other_phone']){
+  const pattern=new RegExp('name="'+field+'"[^>]*required');
+  assert.doesNotMatch(studentFormHtml,pattern,'Este teléfono es opcional: '+field);
+}
+assert.match(studentFormHtml,/documentIds\.length===0/,'Se exige documento cuando todavía no hay registros');
+assert.match(studentFormHtml,/documentIds\.length===1/,'El último documento no debe poder eliminarse');
+assert.match(studentFormHtml,/document_type','document_number','issuing_country/);
+assert.match(studentFormHtml,/new Date\(\)\.toISOString\(\)/,'Fecha de guardado');
+assert.match(studentFormHtml,/type="checkbox" required/,'Consentimiento informado');
+assert.match(studentFormHtml,/no aparece en el perfil comunitario|no aparecen en Mi Hangar/);
+assert.match(studentFormHtml,/gentedevuelo@gmail\.com/,'Identificación de responsable');
+console.log('PASS: ficha privada del alumno, campos obligatorios, foto segura, documento mínimo y autoedición');
+
 // Flight Operations: una sola aplicación para Formación e Instrucción, sin privilegios IA en el modo demo.
 const flightOperationsOriginal=fs.readFileSync(new URL('../utilidades/meteorologia-aeronautica.html',import.meta.url),'utf8');
 const flightAreaDefinition=html.match(/const AREA_DEFS=Object\.freeze\(\{([\s\S]*?)\}\);/);
