@@ -455,7 +455,7 @@ assert.equal(studentPortalProjection('p2',[],allFlightDemo,[],[],[]).flightHours
 assert.equal(studentPortalProjection('p1',[],allFlightDemo,[],[],[]).flightHours,2.03);
 for(const label of ['Mi Hangar de Vuelo · Piloto privado','Mis vuelos de instrucción',
  'Mi historial de vuelos como piloto privado','flightModeFilter','Piloto privado sin instructor',
- 'Sin instructor','data-area="alumno"']){
+ 'Sin instructor','area-card-grid']){
  assert.ok(html.includes(label),'Falta seguimiento de vuelo: '+label);
 }
 assert.match(html,/closeFlight\(\{from:\$\('flightFrom'\)\.value/);
@@ -463,7 +463,7 @@ assert.match(html,/booking,flights,fleet,members\)/);
 assert.match(html,/const cols=\['Fecha','Modalidad','Aeronave','Titular','Instructor'/);
 // Tres frontends de demostración con selección de área y menú limitado al espacio activo.
 for(const key of ['alumno','instructor','administracion']){
- assert.ok(html.includes('data-area="'+key+'"'),'Falta tarjeta del área '+key);
+ assert.ok(html.includes("['"+key+"','0"),'Falta tarjeta del área '+key);
 }
 assert.match(html,/currentArea=null/);
 assert.match(html,/area\.tabs\.some\(\(\[key\]\)=>key===value\)/);
