@@ -114,7 +114,7 @@ button:disabled{cursor:wait;opacity:.56}
    <section class="panel">
     <h2>4 · Confirmación y guardado</h2>
     <label class="check"><input id="privacyConsent" type="checkbox" required> Confirmo que los datos ingresados son correctos. Entiendo que se utilizarán para mi ficha de alumno en AeroSuite, separada de mi perfil comunitario, y que puedo solicitar su rectificación o eliminación.</label>
-    <p class="privacy">Versión del aviso de privacidad: 2026-10. La matrícula, evaluación del instructor, situación académica y documentos aeronáuticos se gestionarán en módulos privados de la institución, no en esta ficha autodeclarada.</p>
+    <p class="privacy">Responsable de la ficha de prueba: Gente de Vuelo (<a href="mailto:gentedevuelo@gmail.com">gentedevuelo@gmail.com</a>). Finalidad: identificación, contacto y futura vinculación voluntaria a una escuela; destinatarios: el propio alumno y, solo cuando existan permisos institucionales comprobados, personal autorizado de la escuela. Podés consultar, corregir o solicitar la eliminación de tu información. Versión del aviso: 2026-10. La matrícula, evaluaciones y documentación aeronáutica se gestionarán en módulos privados independientes.</p>
     <div class="actions"><button class="primary" type="submit" id="saveStudent">Guardar mi ficha</button>
      <button type="button" id="clearForm">Restaurar datos guardados</button></div>
     <p id="studentStatus" class="status" role="status" aria-live="polite"></p>
@@ -162,6 +162,11 @@ button:disabled{cursor:wait;opacity:.56}
    .eq('user_id',user.id).order('created_at',{ascending:true});
   if(error)throw error;
   documentIds=(data||[]).map(item=>item.id);
+  // Un documento es obligatorio al crear la ficha; los guardados se pueden corregir sin volver a cargarlo.
+  const needsFirstDocument=documentIds.length===0;
+  for(const field of ['document_type','document_number','issuing_country']){
+   get(field).required=needsFirstDocument;
+  }
   const list=$('docList');list.replaceChildren();
   if(!data?.length){const p=document.createElement('p');p.textContent='Todavía no hay documentos guardados.';list.append(p);return}
   const labels={dni:'DNI',passport:'Pasaporte',national_id_other:'Documento extranjero',other:'Otro'};
@@ -171,9 +176,14 @@ button:disabled{cursor:wait;opacity:.56}
    // Mostrar solo últimos cuatro caracteres del número para evitar exposición accidental en pantalla.
    const suffix=String(d.document_number||'').slice(-4);
    info.textContent=(labels[d.document_type]||'Documento')+' · N.º terminación '+suffix+' · '+d.issuing_country+(d.expires_on?' · Vence '+d.expires_on:'');
-   const button=document.createElement('button');button.type='button';button.textContent='Eliminar';
+   const button=document.createElement('button');button.type='button';
+   button.textContent='Eliminar';
+   if(documentIds.length===1){
+    button.disabled=true;
+    button.title='Es obligatorio conservar al menos un documento. Agregá otro antes de retirar este.';
+   }
    button.addEventListener('click',async()=>{
-    if(busy||!confirm('¿Eliminar este documento guardado?'))return;
+    if(busy||documentIds.length<=1||!confirm('¿Eliminar este documento guardado?'))return;
     busy=true;button.disabled=true;
     try{
      const {error}=await client.from('aerosuite_student_documents').delete().eq('id',d.id).eq('user_id',user.id);
