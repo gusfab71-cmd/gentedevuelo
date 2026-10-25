@@ -618,7 +618,7 @@ assert.match(airstripsOriginal,/function renderDocumented\(\)/);
 assert.match(airstripsOriginal,/function documentaryPopup\(record,nm=null\)/);
 assert.match(airstripsOriginal,/documentaryMarkers\.set\(point\.id,marker\)/);
 assert.match(airstripsOriginal,/function renderExternal\(\)\{\s*external\.clearLayers\(\);\s*if\(!layerSelected\('reference'\)/);
-assert.match(airstripsOriginal,/\.filter\(x=>layerSelected\(airfieldClass\(x\)\)&&meetsServiceFilters\(x\)\)/);
+assert.match(airstripsOriginal,/\.filter\(x=>layerSelected\(airfieldClass\(x\)\)&&meetsServiceFilters\(x\)&&meetsSurfaceFilter\(x\)\)/);
 assert.match(airstripsOriginal,/documentedMatches=documentedAirstrips/);
 assert.match(airstripsOriginal,/Fuente documental/);
 assert.match(airstripsOriginal,/no equivale a aeródromo habilitado|No son aeródromos habilitados|no son aeródromos habilitados/i);
@@ -650,6 +650,57 @@ assert.match(airstripsOriginal,/function meetsServiceFilters\(record\)/);
 assert.match(airstripsOriginal,/Solo referencia para análisis de contingencias/);
 assert.match(airstripsOriginal,/kind==='heliport'/);
 assert.match(airstripsOriginal,/kind==='unverified'/);
+
+const splitMap=airstripsOriginal;
+assert.match(splitMap,/class="dispatch-layout"/,'Falta marco de pantalla dividida');
+assert.match(splitMap,/class="dispatch-sidebar"/,'Falta panel izquierdo');
+assert.match(splitMap,/class="dispatch-map-panel"/,'Falta zona principal del mapa');
+assert.match(splitMap,/grid-template-columns:minmax\(350px,29%\) minmax\(0,1fr\)/);
+assert.match(splitMap,/id="selected-detail"/);
+assert.match(splitMap,/function showAirfieldDetail\(createCard,name\)/);
+assert.match(splitMap,/function attachSelection\(marker,point,label,createCard\)/);
+assert.match(splitMap,/attachSelection\(marker,\[point\.lat,point\.lon\]/);
+assert.match(splitMap,/attachSelection\(marker,\[p\.latitude,p\.longitude\]/);
+assert.match(splitMap,/attachSelection\(marker,\[x\.lat,x\.lon\]/);
+assert.match(splitMap,/id="ruler-toggle"/);
+assert.match(splitMap,/id="ruler-clear"/);
+assert.match(splitMap,/function rulerPoint\(point,label\)/);
+assert.match(splitMap,/function clearRuler\(\)/);
+assert.match(splitMap,/const bearing=trueBearing\(a\.lat,a\.lng,b\.lat,b\.lng\)/);
+assert.match(splitMap,/setAttribute\('aria-pressed',String\(rulerEnabled\)\)/);
+assert.match(splitMap,/\u00b0 verdadero \(sin variación magnética\)/);
+assert.match(splitMap,/id="contribute-fast"/);
+assert.match(splitMap,/if\(proposeMode\)\{proposeMode=false;proposeAt\(e\.latlng\);return\}/);
+for(const key of ['asfalto','tierra','cesped','otros']){
+ assert.match(splitMap,new RegExp('data-pista-surface="'+key+'"'),'Filtro de superficie '+key);
+}
+assert.match(splitMap,/function meetsSurfaceFilter\(record\)/);
+for(const target of ['flightprep-nav.html','meteorologia-aeronautica.html','gestion-aeronautica/']){
+ assert.ok(splitMap.includes('href="'+target+'"'),'Falta atajo de navegación a '+target);
+}
+const bearingSource=splitMap.slice(splitMap.indexOf('function trueBearing('),splitMap.indexOf('function clearRuler('));
+const bearingCalc=vm.runInNewContext(bearingSource+';trueBearing');
+assert.equal(bearingCalc(0,0,0,90),90);
+assert.equal(bearingCalc(0,0,90,0),0);
+assert.equal(bearingCalc(0,0,-90,0),180);
+assert.equal(bearingCalc(0,0,0,-90),270);
+const distanceSource=splitMap.slice(splitMap.indexOf('function nauticalMiles('),splitMap.indexOf('function setReference('));
+const miles=vm.runInNewContext(distanceSource+';nauticalMiles');
+assert.ok(Math.abs(miles(0,0,0,1)-60.04)<0.25,'Un grado longitudinal ecuatorial debe ser aproximadamente 60 NM');
+assert.ok(Math.abs(miles(0,0,0,0))<.0001,'Distancia nula');
+for(const key of ['airstrip-photo-drop','airstrip-photo-files','airstrip-photo-preview','airstrip-photo-consent']){
+ assert.match(splitMap,new RegExp('id="'+key+'"'),'Falta interfaz para fotografías: '+key);
+}
+assert.match(splitMap,/src="\.\.\/assets\/r2-media\.js"/);
+assert.match(splitMap,/GDV_R2_MEDIA\.upload\(cleaned,client,GDV_CONFIG\.url,GDV_CONFIG\.key\)/);
+assert.match(splitMap,/function stripPhotoMetadata\(file\)/);
+assert.match(splitMap,/canvas\.toBlob\(/,'Las fotografías deben sanear EXIF y GPS');
+assert.match(splitMap,/details\.photos=urls/);
+assert.match(splitMap,/airstripImageGallery\(d,p\.details\?\.photos,p\.name\)/);
+assert.match(splitMap,/airstripImageGallery\(card,details\.photos,name\)/);
+assert.match(splitMap,/status:'pending',details/,'La aprobación es posterior a la carga');
+console.log('PASS: escritorio dividido, fichas laterales, regla NM y rumbo verdadero, filtros y fotos R2');
+
 console.log('PASS: seis categorías aeronáuticas, filtros ATS/uso y alerta severa en no verificadas');
 
 console.log('PASS: categorías oficiales AIP, LAD, comunitarias y OSM con respaldo documental y capas filtrables');
