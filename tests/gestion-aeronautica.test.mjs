@@ -95,6 +95,25 @@ const landing=fs.readFileSync(new URL('../utilidades/gestion-aeronautica/index.h
 const html=fs.readFileSync(new URL('../utilidades/gestion-aeronautica/portal.html',import.meta.url),'utf8');
 // La portada institucional es pública; el portal real conserva la barrera administrativa.
 assert.match(landing,/<title>AeroSuite .* Gente de Vuelo<\/title>/);
+// Utilidades: AeroSuite operativo solo para el administrador, no para usuarios públicos.
+const utilitiesPage=fs.readFileSync(new URL('../utilidades/index.html',import.meta.url),'utf8');
+assert.match(utilitiesPage,/id="gdv-gestion-aeronautica-link"[^>]*href="gestion-aeronautica\/portal\.html"[^>]*hidden/,'AeroSuite debe iniciar oculto');
+assert.match(utilitiesPage,/<h2>AeroSuite<\/h2>/,'La tarjeta debe decir AeroSuite');
+assert.doesNotMatch(utilitiesPage,/href="gestion-aeronautica\/"><h2>AeroSuite/,'Utilidades no debe redirigir a la presentación pública');
+assert.match(utilitiesPage,/from\("site_admins"\)|from\('site_admins'\)|from\("site_admins"\)/,'Verificación institucional del usuario');
+assert.match(utilitiesPage,/gdv-gestion-aeronautica-link"\)\.hidden=false/,'El administrador habilita el acceso visible');
+assert.match(utilitiesPage,/\[hidden\]\{display:none!important\}/,'CSS impide que la tarjeta aparezca sin permiso');
+assert.match(html,/from\('site_admins'\)\.select\('user_id'\)\.eq\('user_id',user\.id\)\.maybeSingle\(\)/,'El portal también verifica permisos al abrirlo');
+assert.match(html,/if\(roleError\|\|!data\)throw Error\('Acceso exclusivo del administrador\.'\)/,'El portal debe denegar usuarios no administradores');
+console.log('PASS: acceso a AeroSuite en Utilidades exclusivo de administracion con verificación al abrir');
+// Portada: conserva el avión sobre la pista y mueve el texto principal a la zona alta.
+assert.match(landing,/<img class="hero-photo" src="\.\.\/\.\.\/portada-manana-tres-palas\.webp"/,'Conservar la foto aeronáutica de la portada');
+assert.match(landing,/\.photo-bottom\{z-index:1;position:absolute;top:84px/,'Título en la franja superior');
+assert.match(landing,/<p class="photo-caption">Diseñado para crecer/,'Pie separado del título');
+assert.match(landing,/\.hero-visual:after\{[^}]*linear-gradient\(180deg,#061827c4/,'Oscurecimiento superior para legibilidad');
+assert.doesNotMatch(landing,/\.photo-bottom\{z-index:1;position:relative;padding:30px\}/,'El título no debe tapar el avión en la zona baja');
+console.log('PASS: portada AeroSuite avión en pista y texto elevado');
+
 for(const name of ['Bienven','Quiénes somos','Tres áreas','Área del Alumno','Instructor','Gestión Administrativa','Preguntas frecuentes']){
  assert.ok(landing.includes(name),'Falta sección pública de AeroSuite: '+name);
 }
