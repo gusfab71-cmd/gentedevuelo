@@ -1,6 +1,30 @@
-# AeroSuite — Modelo de acceso a seguimiento de aeronaves (pendiente de validación)
+# AeroSuite — Caja comercial: esquema provisional de aranceles, aeronaves y prueba gratuita
 
 Fecha de incorporación a la caja de ideas: 2026-10-25.
+
+## Política comercial provisional adoptada para AeroSuite — 25/10/2026
+
+**Decisión actual del titular:** **utilizar por ahora el modelo de comercialización que compartió de Airnizer** como **tarifario provisional propio de AeroSuite**, sujeto a ajustes posteriores. Esto reemplaza, para la primera propuesta comercial, la idea anterior de no fijar precios. No equivale a un cobro habilitado ni a una suscripción técnica activa.
+
+**Plan institucional / escuela o aeroclub:**
+
+| Concepto | Tarifa provisional AeroSuite | Base de cálculo |
+|---|---:|---|
+| Módulo Empresa | **ARS 60.000 mensuales** | Importe fijo por institución |
+| Aeronave afectada | **ARS 10.500 mensuales c/u** | Por aeronave facturable vinculada a la institución |
+| Usuario afectado | **ARS 3.650 mensuales c/u** | Por alumno, instructor o piloto facturable según el futuro contrato |
+
+**Fórmula provisional:** ARS 60.000 + ARS 10.500 × aeronaves facturables + ARS 3.650 × usuarios facturables, **antes de definir impuestos e inclusiones**. **No aplicar la fórmula de modo automático** hasta acordar quién cuenta como «afectado», cuándo se activa, mínimo/inclusiones, tratamiento de cuentas duplicadas, IVA u otros impuestos y condiciones de facturación.
+
+**Seguimiento individual de aeronaves (modalidad distinta que no debe sumarse sin confirmación al módulo empresarial):**
+- **Primera aeronave gratis** para el piloto/propietario particular.
+- **Desde la segunda aeronave: ARS 10.500 mensuales por cada aeronave adicional.**
+
+**Prueba institucional:** **un mes gratuito por escuela**, sin tarjeta obligatoria, avisos antes del vencimiento y **sin cobro automático**; después, aceptación voluntaria del plan. La inscripción básica en la comunidad Gente de Vuelo sigue siendo gratuita.
+
+**Puntos pendientes expresamente no decididos:** si el beneficio de primera aeronave aplica también dentro del Módulo Empresa; si los tres cargos se acumulan sin bonificaciones; si el precio incluye impuestos; si el cobro es por usuario activo, asignado o registrado; vencimiento/periodicidad de la facturación; descuentos para pequeños aeroclubes; eventuales planes Essential/Pro; actualización por inflación; cuentas por institución y múltiples escuelas.
+
+**Estado operativo:** decisión comercial provisional **registrada**, **no** habilitada en la plataforma. Antes de cobrar: alta fiscal ARCA, facturación electrónica e Ingresos Brutos cuando corresponda, cobros, condiciones contractuales, facturación y control de permisos, conservación/exportación de datos. La referencia de Airnizer aportada por el usuario es el origen de estos importes; no se afirma que sean una cotización oficial vigente del competidor.
 
 ## Observación de mercado
 
