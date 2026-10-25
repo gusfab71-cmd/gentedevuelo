@@ -517,11 +517,11 @@ assert.match(airstripsOriginal,/site_admins/,'La moderación requiere administra
 for(const id of ['zone-search-form','zone-query','zone-search-button','zone-my-location','zone-propose-center','zone-results','zone-status']){
  assert.ok(airstripsOriginal.includes('id="'+id+'"'),'Falta control del mapa: '+id);
 }
-assert.match(airstripsOriginal,/function runwayPin\(kind='community'\)/);
+assert.match(airstripsOriginal,/function runwayPin\(kind='unverified'\)/);
 assert.match(airstripsOriginal,/const PIN_PALETTE=/);
 assert.match(airstripsOriginal,/PIN_PALETTE\[kind\]/);
 assert.match(airstripsOriginal,/<svg xmlns="http:\/\/www\.w3\.org\/2000\/svg"/);
-assert.match(airstripsOriginal,/runwayPin\('community'\)/);
+assert.match(airstripsOriginal,/runwayPin\(airfieldClass\(p\)\)/);
 assert.match(airstripsOriginal,/runwayPin\('reference'\)/);
 assert.match(airstripsOriginal,/runwayPin\('draft'\)/);
 assert.match(airstripsOriginal,/function communityPopup\(record,nm=null\)/);
@@ -531,7 +531,7 @@ for(const field of ['Coordenadas','Pista / rumbo','Dimensiones','Superficie','El
 }
 assert.match(airstripsOriginal,/document\.createElement\('dt'\)/);
 assert.match(airstripsOriginal,/document\.createElement\('dd'\)/);
-assert.match(airstripsOriginal,/No verificada para operaciones/);
+assert.match(airstripsOriginal,/warning.classList.add\('critical'\)/);
 assert.match(airstripsOriginal,/Copiar coordenadas/);
 assert.match(airstripsOriginal,/href="https:\/\/photon\.komoot\.io\//);
 assert.match(airstripsOriginal,/endpoint\.searchParams\.set\('bbox','-74,-56,-53,-21'\)/);
@@ -609,7 +609,7 @@ assert.ok(Math.abs(aeroparque.lat+34.5597222)<.00002);
 assert.equal(anacCatalog.lad[0].details.registry,'LAD 176');
 assert.ok(Math.abs(anacCatalog.lad[0].lon+60.2625)<.00002);
 assert.match(airstripsOriginal,/gestion-aeronautica\/src\/catalogo-pistas-anac\.js/);
-for(const layer of ['official','lad','community','reference']){
+for(const layer of ['controlled_public','uncontrolled_public','private_aerodrome','lad','heliport','unverified','reference']){
  assert.match(airstripsOriginal,new RegExp('data-pista-layer="'+layer+'"'),layer+' debe ser filtrable');
 }
 assert.match(airstripsOriginal,/function setLayerVisible\(kind,visible\)/);
@@ -617,14 +617,41 @@ assert.match(airstripsOriginal,/function syncLayerVisibility\(\)/);
 assert.match(airstripsOriginal,/function renderDocumented\(\)/);
 assert.match(airstripsOriginal,/function documentaryPopup\(record,nm=null\)/);
 assert.match(airstripsOriginal,/documentaryMarkers\.set\(point\.id,marker\)/);
-assert.match(airstripsOriginal,/function renderExternal\(\)\{\s*external\.clearLayers\(\);\s*if\(!layerSelected\('reference'\)\)return;/);
-assert.match(airstripsOriginal,/\.filter\(x=>layerSelected\('community'\)\)/);
+assert.match(airstripsOriginal,/function renderExternal\(\)\{\s*external\.clearLayers\(\);\s*if\(!layerSelected\('reference'\)/);
+assert.match(airstripsOriginal,/\.filter\(x=>layerSelected\(airfieldClass\(x\)\)&&meetsServiceFilters\(x\)\)/);
 assert.match(airstripsOriginal,/documentedMatches=documentedAirstrips/);
 assert.match(airstripsOriginal,/Fuente documental/);
 assert.match(airstripsOriginal,/No equivale a aeródromo habilitado|no constituye habilitación de aeródromo/);
 assert.match(airstripsOriginal,/Cobertura parcial, no inventario nacional/);
 assert.match(airstripsOriginal,/Privado no significa no oficial/);
 assert.match(html,/Mapa de Pistas y Aeródromos/);
+
+const taxonomySource=fs.readFileSync(new URL('../utilidades/gestion-aeronautica/src/clasificacion-pistas.js',import.meta.url),'utf8');
+const typeEnvironment={window:{}};
+vm.runInNewContext(taxonomySource,typeEnvironment,{timeout:1000});
+const aircraftTypes=typeEnvironment.window.GDV_AIRFIELD_TYPES;
+const six=['controlled_public','uncontrolled_public','private_aerodrome','lad','heliport','unverified'];
+assert.equal(Object.keys(aircraftTypes.CATEGORIES).length,6);
+for(const code of six){
+ assert.ok(aircraftTypes.CATEGORIES[code].label);
+ assert.match(airstripsOriginal,new RegExp('data-pista-layer="'+code+'"'));
+}
+assert.equal(aircraftTypes.ATS.afis,'Servicio AFIS (información, no control)');
+assert.equal(aircraftTypes.classification(anacCatalog.official[0]),'controlled_public');
+assert.equal(aircraftTypes.classification(anacCatalog.lad[0]),'lad');
+assert.equal(aircraftTypes.classification({facility_class:'controlled_public'}),'unverified');
+assert.equal(aircraftTypes.classification({facility_class:'private_aerodrome',verified_source_url:'https://anac.gob.ar/fuente',verified_source_date:'2026-10-20'}),'private_aerodrome');
+assert.equal(aircraftTypes.classification({category:'reference',icaoId:'SABE'}),'unverified');
+assert.match(aircraftTypes.warning('unverified'),/PELIGRO/);
+assert.match(airstripsOriginal,/id="filter-ats"/);
+assert.match(airstripsOriginal,/id="filter-access"/);
+assert.match(airstripsOriginal,/id="filter-rules"/);
+assert.match(airstripsOriginal,/function meetsServiceFilters\(record\)/);
+assert.match(airstripsOriginal,/Solo referencia para análisis de contingencias/);
+assert.match(airstripsOriginal,/kind==='heliport'/);
+assert.match(airstripsOriginal,/kind==='unverified'/);
+console.log('PASS: seis categorías aeronáuticas, filtros ATS/uso y alerta severa en no verificadas');
+
 console.log('PASS: categorías oficiales AIP, LAD, comunitarias y OSM con respaldo documental y capas filtrables');
 
 console.log('PASS: Pistas No Oficiales compartidas en las tres áreas, mapa interactivo y precauciones');
