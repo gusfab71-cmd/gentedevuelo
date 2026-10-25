@@ -1013,9 +1013,120 @@ function render(){
 }
 async function load(){const r=await client.from('community_airstrips').select('*').eq('status','approved').order('created_at',{ascending:false});if(r.error){msg.textContent='No se pudieron cargar las pistas: '+r.error.message;return}records=r.data||[];render()}
 document.getElementById('search').addEventListener('input',render);
-document.getElementById('form').addEventListener('submit',async e=>{e.preventDefault();const {data:{user}}=await client.auth.getUser();if(!user){msg.textContent='Ingresá a Gente de Vuelo para enviar propuestas.';return}const f=new FormData(e.target);const details={};for(const k of ['province','runway','dimensions','elevation','surface','permission','frequency','contact','obstacles','notes'])details[k]=String(f.get(k)||'').trim();details.location_consent=!!f.get('consent');const payload={name:String(f.get('name')).trim(),latitude:Number(f.get('latitude')),longitude:Number(f.get('longitude')),author_id:user.id,status:'pending',details};const {error}=await client.from('community_airstrips').insert(payload);msg.textContent=error?'No se pudo enviar: '+error.message:'Propuesta enviada. Quedará visible después de su aprobación.';if(!error){e.target.reset();if(draftMarker){map.removeLayer(draftMarker);draftMarker=null}}});
+
+const photoDrop=document.getElementById('airstrip-photo-drop');
+const photoInput=document.getElementById('airstrip-photo-files');
+const photoPreview=document.getElementById('airstrip-photo-preview');
+const photoConsent=document.getElementById('airstrip-photo-consent');
+let pendingAirstripPhotos=[],uploadedPhotoUrls=new Map(),previewUrls=[],airstripSending=false;
+function clearPhotoPreviews(){
+ for(const url of previewUrls)URL.revokeObjectURL(url);
+ previewUrls=[];
+ photoPreview.replaceChildren();
+}
+function photoSelection(files){
+ const selected=Array.from(files||[]).slice(0,4);
+ if(selected.length>3){
+  msg.textContent='Máximo 3 fotografías por propuesta.';
+  return;
+ }
+ for(const file of selected){
+  if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>4*1024*1024||file.size<1){
+   msg.textContent='Solo imágenes JPG, PNG o WebP de 4 MB como máximo.';
+   return;
+  }
+ }
+ pendingAirstripPhotos=selected;
+ uploadedPhotoUrls=new Map();
+ clearPhotoPreviews();
+ for(const file of selected){
+  const url=URL.createObjectURL(file);previewUrls.push(url);
+  const image=document.createElement('img');image.src=url;image.alt='Previsualización de '+file.name;
+  photoPreview.append(image);
+ }
+ msg.textContent=selected.length?'Fotografías seleccionadas: '+selected.length+'. Se subirán al enviar la propuesta.':'';
+}
+photoDrop.addEventListener('click',event=>{
+ if(event.target!==photoInput)photoInput.click();
+});
+photoDrop.addEventListener('keydown',event=>{
+ if(event.key==='Enter'||event.key===' '){event.preventDefault();photoInput.click()}
+});
+photoDrop.addEventListener('dragover',event=>{event.preventDefault();photoDrop.classList.add('is-dragover')});
+photoDrop.addEventListener('dragleave',()=>photoDrop.classList.remove('is-dragover'));
+photoDrop.addEventListener('drop',event=>{
+ event.preventDefault();photoDrop.classList.remove('is-dragover');
+ photoSelection(event.dataTransfer?.files);
+});
+photoInput.addEventListener('change',()=>photoSelection(photoInput.files));
+async function stripPhotoMetadata(file){
+ // Evitar publicar EXIF/GPS de fotografías de ubicaciones privadas.
+ if(typeof createImageBitmap!=='function')throw Error('Este navegador no puede procesar fotos de forma segura.');
+ const bitmap=await createImageBitmap(file);
+ try{
+  if(bitmap.width*bitmap.height>30000000)throw Error('La fotografía es demasiado grande.');
+  const scale=Math.min(1,1800/Math.max(bitmap.width,bitmap.height));
+  const canvas=document.createElement('canvas');
+  canvas.width=Math.max(1,Math.round(bitmap.width*scale));
+  canvas.height=Math.max(1,Math.round(bitmap.height*scale));
+  canvas.getContext('2d').drawImage(bitmap,0,0,canvas.width,canvas.height);
+  const blob=await new Promise((resolve,reject)=>{
+   canvas.toBlob(b=>b?resolve(b):reject(Error('No se pudo procesar la fotografía.')),'image/webp',.83)
+  });
+  canvas.width=canvas.height=0;
+  if(blob.size>4*1024*1024)throw Error('La fotografía resultante supera el tamaño admitido.');
+  return new File([blob],'pista-'+Date.now()+'.webp',{type:'image/webp'});
+ }finally{bitmap.close()}
+}
+document.getElementById('form').addEventListener('submit',async e=>{
+ e.preventDefault();
+ if(airstripSending)return;
+ const submit=e.target.querySelector('button[type=submit]');
+ const {data:{user}}=await client.auth.getUser();
+ if(!user){msg.textContent='Ingresá a Gente de Vuelo para enviar propuestas.';return}
+ if(pendingAirstripPhotos.length&&!photoConsent.checked){
+  msg.textContent='Para adjuntar fotografías, confirmá que tenés autorización para publicarlas.';return;
+ }
+ airstripSending=true;
+ if(submit)submit.disabled=true;
+ try{
+  const f=new FormData(e.target);
+  const details={};
+  for(const k of ['province','runway','dimensions','elevation','surface','permission','frequency','contact','obstacles','notes']){
+   details[k]=String(f.get(k)||'').trim();
+  }
+  details.location_consent=!!f.get('consent');
+  if(pendingAirstripPhotos.length){
+   if(!window.GDV_R2_MEDIA?.upload)throw Error('La carga de fotografías no está disponible.');
+   const urls=[];
+   for(let i=0;i<pendingAirstripPhotos.length;i++){
+    const file=pendingAirstripPhotos[i];
+    const cacheKey=file.name+':'+file.size+':'+file.lastModified;
+    let url=uploadedPhotoUrls.get(cacheKey);
+    if(!url){
+     msg.textContent='Preparando y cargando foto '+(i+1)+' de '+pendingAirstripPhotos.length+'…';
+     const cleaned=await stripPhotoMetadata(file);
+     const result=await window.GDV_R2_MEDIA.upload(cleaned,client,GDV_CONFIG.url,GDV_CONFIG.key);
+     url=result.url;
+     uploadedPhotoUrls.set(cacheKey,url);
+    }
+    urls.push(url);
+   }
+   details.photos=urls;
+  }
+  const payload={name:String(f.get('name')).trim(),latitude:Number(f.get('latitude')),
+   longitude:Number(f.get('longitude')),author_id:user.id,status:'pending',details};
+  const {error}=await client.from('community_airstrips').insert(payload);
+  if(error)throw Error('No se pudo enviar la propuesta: '+error.message);
+  msg.textContent='Propuesta y '+(details.photos?.length||0)+' fotografías enviadas a moderación. Solo se publicarán después de aprobación.';
+  e.target.reset();pendingAirstripPhotos=[];uploadedPhotoUrls=new Map();clearPhotoPreviews();
+  if(draftMarker){map.removeLayer(draftMarker);draftMarker=null}
+ }catch(error){
+  msg.textContent=error.message+' La propuesta no se ha publicado; podés volver a intentar.';
+ }finally{airstripSending=false;if(submit)submit.disabled=false}
+});
 const {data:{user}}=await client.auth.getUser();if(user){const {data}=await client.from('site_admins').select('user_id').eq('user_id',user.id).maybeSingle();admin=!!data}
-if(admin){document.getElementById('admin').hidden=false;async function pending(){const r=await client.from('community_airstrips').select('*').eq('status','pending').order('created_at');const root=document.getElementById('pending');root.replaceChildren();for(const p of r.data||[]){const d=el('div',p.name+' · '+p.latitude+', '+p.longitude+' · '+(p.details?.province||''));d.className='entry';for(const status of ['approved','rejected']){const b=el('button',status==='approved'?'Aprobar':'Rechazar');b.onclick=async()=>{const {error}=await client.from('community_airstrips').update({status}).eq('id',p.id);if(error)msg.textContent=error.message;else{await pending();await load()}};d.append(b)}root.append(d)}}await pending()}
+if(admin){document.getElementById('admin').hidden=false;async function pending(){const r=await client.from('community_airstrips').select('*').eq('status','pending').order('created_at');const root=document.getElementById('pending');root.replaceChildren();for(const p of r.data||[]){const d=el('div',p.name+' · '+p.latitude+', '+p.longitude+' · '+(p.details?.province||''));d.className='entry';airstripImageGallery(d,p.details?.photos,p.name);for(const status of ['approved','rejected']){const b=el('button',status==='approved'?'Aprobar':'Rechazar');b.onclick=async()=>{const {error}=await client.from('community_airstrips').update({status}).eq('id',p.id);if(error)msg.textContent=error.message;else{await pending();await load()}};d.append(b)}root.append(d)}}await pending()}
 render(); // Las referencias documentales se muestran aun si falla la conexión a la comunidad.
 await load();
 })();
