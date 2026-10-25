@@ -488,6 +488,32 @@ assert.match(html,/function adminPeopleScreen\(/);
 assert.doesNotMatch(html,/data-go="piloto"/,'No debe haber salto administrativo al área del piloto');
 assert.doesNotMatch(html,/data-go="academia"/,'No debe haber salto administrativo al área del alumno');
 assert.match(html,/site_admins/,'El acceso admin de la demo debe mantenerse');
+
+// Pistas No Oficiales: una única fuente compartida entre Gente de Vuelo y AeroSuite.
+const airstripsOriginal=fs.readFileSync(new URL('../utilidades/pistas-no-oficiales.html',import.meta.url),'utf8');
+const areaDefinition=html.match(/const AREA_DEFS=Object\.freeze\(\{([\s\S]*?)\}\);/);
+assert.ok(areaDefinition,'Falta definición de áreas de AeroSuite');
+for(const area of ['alumno','instructor','administracion']){
+ const row=areaDefinition[1].split('\n').find(line=>line.trim().startsWith(area+':'));
+ assert.ok(row&&row.includes("['pistas','Pistas No Oficiales · Mapa']"),'Falta acceso a pistas para '+area);
+}
+assert.match(html,/pistas:airstripsScreen/);
+assert.match(html,/function airstripsScreen\(\)/);
+assert.match(html,/iframe class="airstrips-frame"/);
+assert.match(html,/src="\.\.\/pistas-no-oficiales\.html"/);
+assert.match(html,/target="_blank" rel="noopener noreferrer">Abrir mapa completo/);
+assert.match(html,/no se duplican archivos ni registros/);
+assert.match(html,/no verificada para operaciones/);
+assert.match(html,/AIP, NOTAM/);
+assert.match(landing,/Pistas No Oficiales/);
+assert.match(landing,/href="\.\.\/pistas-no-oficiales\.html"/);
+assert.match(landing,/no confirma que una pista sea operativamente apta/);
+assert.match(airstripsOriginal,/\.from\('community_airstrips'\)/);
+assert.match(airstripsOriginal,/\.eq\('status','approved'\)/,'Solo pistas aprobadas deben aparecer en el mapa comunitario');
+assert.match(airstripsOriginal,/status:'pending'/,'Las pistas nuevas requieren moderación');
+assert.match(airstripsOriginal,/site_admins/,'La moderación requiere administrador');
+console.log('PASS: Pistas No Oficiales compartidas en las tres áreas, mapa interactivo y precauciones');
+
 console.log('PASS: AeroSuite con portal de tres áreas, navegación aislada y acceso restringido');
 
 console.log('PASS: alumno con instructor y piloto privado solo, horas separadas, filtros e historial individual');
