@@ -113,7 +113,129 @@ h1{letter-spacing:-.035em}
 .pista-filter-grid strong{overflow-wrap:anywhere}
 .airstrip-popup .popup-warning.critical{background:#ffe3dc;border-left-color:#b7433b;color:#81251c;font-weight:760}
 @media(max-width:680px){.pista-service-filters{grid-template-columns:1fr}}
-</style></head><body><main><p><a href="index.html">← Utilidades</a></p><h1>Mapa de Pistas y Aeródromos · Gente de Vuelo</h1><p class="notice">Información comunitaria no oficial. No sustituye AIP, NOTAM, verificación de condiciones ni autorización del propietario. No se publican ubicaciones privadas sin consentimiento.</p><p class="notice">Separá o juntá dos dedos para hacer zoom. Mantené presionado un lugar para marcar una nueva pista y agregar un comentario. Elegí Satélite o Calles arriba del mapa. Las imágenes pueden estar desactualizadas: comprobá siempre el estado real de la pista.</p><section class="zone-panel" aria-label="Buscar zona en el mapa">
+
+/* Estación de despacho Gente de Vuelo: mapa principal con barra lateral persistente. */
+:root{--dispatch-bg:#0e1c2a;--dispatch-panel:#16293b;--dispatch-fg:#ecf4fb;--dispatch-line:#41617d}
+[hidden]{display:none!important}
+body{background:#0b1826;color:var(--dispatch-fg)}
+.dispatch-nav{height:60px;padding:0 23px;display:flex;align-items:center;justify-content:space-between;gap:20px;
+ background:linear-gradient(100deg,#0a1829,#122d49);border-bottom:1px solid #416381;color:#f0f7ff}
+.dispatch-nav-logo{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.dispatch-nav-symbol{width:36px;height:36px;display:grid;place-items:center;border-radius:10px;
+ background:#204a74;border:1px solid #6491bb;color:#e2f4ff;font-size:23px}
+.dispatch-nav-logo strong{font-size:14px;letter-spacing:.055em}
+.dispatch-nav-logo small{display:block;font-size:9px;letter-spacing:.14em;color:#aad0ee}
+.dispatch-nav nav{display:flex;gap:20px;align-items:center;flex-wrap:wrap}
+.dispatch-nav nav a{font-size:12px;color:#d0e3f4;font-weight:700;text-decoration:none}
+.dispatch-nav nav a:hover{color:white;text-decoration:underline}
+main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
+.dispatch-layout{width:100%;display:grid;grid-template-columns:minmax(350px,29%) minmax(0,1fr);
+ min-height:calc(100dvh - 60px);height:calc(100dvh - 60px)}
+.dispatch-sidebar{min-width:0;min-height:0;background:#122337;border-right:1px solid #4a6983}
+.dispatch-sidebar-scroll{height:100%;overflow:auto;overscroll-behavior:contain;padding:18px 16px 36px;scrollbar-color:#54738b #142638}
+.dispatch-kicker{font-size:10px;letter-spacing:.13em;font-weight:850;color:#9ed0f5}
+.dispatch-sidebar-heading{margin:0 0 13px}
+.dispatch-sidebar-heading h1{font-size:23px;line-height:1.2;margin:7px 0 4px;color:#f2f8ff}
+.dispatch-sidebar-heading p{font-size:11px;color:#a5bfd4;margin:0}
+.dispatch-sidebar .zone-panel,.dispatch-sidebar .pista-classification{margin:12px 0;padding:14px;background:#1a3045}
+.dispatch-sidebar .zone-panel h2,.dispatch-sidebar .pista-classification h2{font-size:15px;line-height:1.28}
+.dispatch-sidebar .zone-panel p{font-size:11px}
+.dispatch-sidebar .zone-search-form{grid-template-columns:1fr 1fr}
+.dispatch-sidebar .zone-search-form label{grid-column:1/-1}
+.dispatch-sidebar .zone-search-form input{width:100%}
+.dispatch-sidebar .zone-search-form button{min-height:40px;padding:9px 7px;font-size:12px}
+.dispatch-sidebar .zone-actions button{width:100%}
+.dispatch-sidebar .zone-actions{align-items:stretch}
+.dispatch-quick{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.dispatch-quick button{font-size:12px;min-height:40px;padding:8px;background:#285170;border:1px solid #6691b0;font-weight:750}
+.dispatch-quick #contribute-fast{grid-column:1/-1;background:#c4ddf2;color:#0c2d48;border-color:#a9cde9}
+.dispatch-quick button[aria-pressed=true]{background:#a6d6f6;color:#102f48;box-shadow:inset 0 0 0 2px #eef9ff}
+.dispatch-ruler-info{border:1px solid #47708a;border-radius:10px;padding:11px;margin-top:10px;
+ color:#d0e5f2;background:#1d384f;font-size:12px;line-height:1.45}
+.dispatch-selected{margin:12px 0;border:1px solid #7497b3;border-radius:15px;background:#eef5fa;color:#152d40;overflow:hidden}
+.dispatch-selected-heading{padding:13px 15px;background:#234968;color:#fff}
+.dispatch-selected-heading .dispatch-kicker{color:#d2e9ff}
+.dispatch-selected-heading h2{font-size:16px;margin:4px 0 0;color:#fff}
+.dispatch-selected-detail{padding:13px;max-height:none}
+.dispatch-selected-detail>p{font-size:12px;line-height:1.55;margin:0;color:#38576d}
+.dispatch-selected-detail .airstrip-popup{max-height:none;overflow:visible;min-width:0}
+.dispatch-selected-detail .airstrip-popup .popup-facts{gap:2px}
+.dispatch-selected-detail .airstrip-popup .popup-fact{grid-template-columns:minmax(80px,.8fr) 1.2fr}
+.dispatch-sidebar .pista-filter-grid{grid-template-columns:1fr;gap:6px}
+.dispatch-sidebar .pista-filter-option{padding:10px;gap:8px}
+.dispatch-sidebar .pista-filter-option strong{font-size:12px}
+.dispatch-sidebar .pista-filter-option small{font-size:10px;line-height:1.35}
+.dispatch-sidebar .pista-service-filters{grid-template-columns:1fr;gap:8px}
+.dispatch-sidebar .pista-filter-head h2{margin:4px 0}
+.dispatch-sidebar .pista-layer-actions{gap:5px}
+.dispatch-sidebar .pista-layer-actions button{padding:7px 9px;font-size:11px}
+.dispatch-sidebar .official-aip-panel{padding:13px;background:#1c354c}
+.dispatch-sidebar .official-aip-panel h2{font-size:15px}
+.dispatch-sidebar .official-aip-link{font-size:12px;width:100%}
+.dispatch-sidebar .pista-official-list{padding:12px}
+.dispatch-sidebar #search{width:100%}
+.dispatch-sidebar #list .entry{padding:10px}
+.dispatch-sidebar .dispatch-list-block>h2{font-size:16px;margin:18px 0 8px}
+.dispatch-sidebar details summary{font-size:13px}
+.dispatch-sidebar .notice{font-size:12px}
+.dispatch-sidebar #form{grid-template-columns:1fr;background:#203649;padding:10px}
+.dispatch-sidebar #form label{font-size:12px}
+.dispatch-caution{font-size:11px;color:#b9cbd9;line-height:1.5;margin:19px 0 0}
+.dispatch-map-panel{display:flex;flex-direction:column;min-height:0;min-width:0;background:#0c1d2b}
+.dispatch-map-toolbar{display:flex;justify-content:space-between;align-items:center;gap:18px;padding:10px 16px;border-bottom:1px solid #345672}
+.dispatch-map-toolbar strong{display:block;font-size:13px;margin-top:5px}
+.dispatch-map-toolbar-links{display:flex;align-items:center;gap:14px}
+.dispatch-map-toolbar-links a{font-size:12px;white-space:nowrap;color:#abd8f8}
+.dispatch-map-toolbar-links button{background:#294a64;border:1px solid #6e9ab8;padding:7px 11px;font-size:11px}
+.dispatch-map-main{flex:1;display:flex;flex-direction:column;min-height:0;position:relative;padding:0}
+.dispatch-map-main #map{flex:1;width:100%;min-height:0;height:auto;margin:0;border-radius:0;touch-action:pan-x pan-y}
+.dispatch-map-main .basemap-selector{position:absolute;right:13px;top:12px;z-index:800;
+ margin:0;width:auto;max-width:min(360px,calc(100% - 25px))}
+.dispatch-map-main .basemap-selector .leaflet-control-layers{width:auto;background:#122b3fdc;box-shadow:0 5px 19px #091728ab}
+.dispatch-map-main .basemap-selector .leaflet-control-layers-base{gap:5px 12px}
+.dispatch-map-bottom{border-top:1px solid #3d5d74;background:#152b3d;max-height:180px;overflow-y:auto;padding:9px 15px}
+.dispatch-map-bottom .pin-legend{margin:0;padding:6px 0;background:transparent;border:0;gap:7px 14px}
+.dispatch-map-bottom .map-actions{margin:9px 0 0}
+.dispatch-map-bottom .map-actions button{font-size:12px;padding:8px 11px}
+.dispatch-map-panel.is-map-expanded{position:fixed;inset:60px 0 0;z-index:9000}
+.dispatch-map-panel.is-map-expanded .dispatch-map-bottom{max-height:125px}
+@media(min-width:960px){.dispatch-sidebar .pista-classification .pista-filter-grid{gap:6px}}
+@media(max-width:959px){
+ .dispatch-nav{height:auto;min-height:58px;padding:9px 12px;flex-wrap:wrap}
+ .dispatch-nav nav{width:100%;overflow-x:auto;gap:14px;flex-wrap:nowrap;padding-bottom:3px;scrollbar-width:thin}
+ .dispatch-nav nav a{white-space:nowrap}
+ .dispatch-layout{display:flex;flex-direction:column;height:auto;min-height:unset}
+ .dispatch-sidebar{order:0;overflow:visible;max-height:none}
+ .dispatch-sidebar-scroll{height:auto;overflow:visible;padding:13px}
+ .dispatch-map-panel{order:1;min-height:580px}
+ .dispatch-map-main #map{height:68dvh;min-height:440px}
+ .dispatch-map-main .basemap-selector{top:9px;right:9px}
+ .dispatch-map-toolbar-links{gap:7px}
+ .dispatch-map-toolbar-links a{font-size:11px}
+ .dispatch-map-bottom{max-height:none}
+ .dispatch-selected-detail{padding:12px}
+ .dispatch-sidebar .pista-filter-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .dispatch-sidebar .pista-service-filters{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .dispatch-map-panel.is-map-expanded{inset:0}
+}
+@media(max-width:620px){
+ .dispatch-sidebar .pista-filter-grid,.dispatch-sidebar .pista-service-filters{grid-template-columns:1fr}
+ .dispatch-map-toolbar{gap:8px;flex-wrap:wrap}
+ .dispatch-map-main #map{min-height:500px}
+ .dispatch-map-main .basemap-selector{position:static;max-width:none;width:100%;background:#1c3346;padding:6px}
+ .dispatch-map-bottom .pin-legend{gap:8px}
+}
+</style></head><body><header class="dispatch-nav"><div class="dispatch-nav-logo"><span class="dispatch-nav-symbol" aria-hidden="true">✈</span>
+ <div><strong>GENTE DE VUELO</strong><small>MAPA AERONÁUTICO</small></div></div>
+ <nav aria-label="Herramientas Gente de Vuelo"><a href="../index.html">Portada</a><a href="../comunidad.html#foro">Foro</a><a href="index.html">Utilidades</a>
+ <a href="flightprep-nav.html">FlightPrep NAV</a><a href="meteorologia-aeronautica.html">Flight Operations</a>
+ <a href="gestion-aeronautica/">AeroSuite</a></nav></header><main class="dispatch-main">
+ <div class="dispatch-layout">
+  <aside class="dispatch-sidebar" id="dispatch-sidebar" aria-label="Panel de control del mapa">
+   <div class="dispatch-sidebar-scroll">
+    <div class="dispatch-sidebar-heading"><span class="dispatch-kicker">CENTRO DE CONTROL</span>
+     <h1>Mapa de Pistas y Aeródromos</h1><p>Gente de Vuelo · AeroSuite</p></div>
+    <section class="zone-panel" aria-label="Buscar zona en el mapa">
 <h2>Ubicá una zona o una pista</h2>
 <p>Buscá por localidad, provincia o nombre de pista. También podés ingresar coordenadas decimales, por ejemplo: -34.90, -57.94. El mapa se centrará en el lugar elegido.</p>
 <form id="zone-search-form" class="zone-search-form" role="search">
@@ -129,17 +251,20 @@ h1{letter-spacing:-.035em}
 <div id="zone-results" aria-label="Resultados de búsqueda"></div>
 <div class="zone-attribution">Búsqueda geográfica: <a href="https://photon.komoot.io/" target="_blank" rel="noopener noreferrer">Photon</a> con datos de <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> · Resultados orientativos. No valida pistas para operación.</div>
 </section>
-<section class="official-aip-panel" aria-labelledby="official-aip-heading">
-  <div>
-    <span class="official-aip-eyebrow">DOCUMENTACIÓN AERONÁUTICA OFICIAL</span>
-    <h2 id="official-aip-heading">Consultar AIP Argentina · ANAC</h2>
-    <p>Accedé a la publicación oficial para consultar información GEN, ENR y AD. La existencia de una pista en este mapa comunitario <strong>no acredita que esté publicada, habilitada ni autorizada</strong>.</p>
-  </div>
-  <a class="official-aip-link" href="https://ais.anac.gob.ar/aip" target="_blank" rel="noopener noreferrer" aria-label="Abrir AIP Argentina oficial de ANAC en otra pestaña">Abrir AIP oficial ↗</a>
-</section>
-<div id="basemap-selector" class="basemap-selector" aria-label="Elegir tipo de mapa"></div>
-<div id="map" aria-label="Mapa satelital de pistas"></div>
-<section class="pista-classification" aria-labelledby="pista-filter-title">
+
+    <div class="dispatch-quick">
+      <button id="ruler-toggle" type="button" aria-pressed="false">Regla · Distancia y rumbo</button>
+      <button id="ruler-clear" type="button">Borrar medición</button>
+      <button id="contribute-fast" type="button">+ Aportar pista</button>
+    </div>
+    <div id="ruler-info" role="status" class="dispatch-ruler-info">Seleccioná «Regla» y marcá dos puntos o pines para medir NM y rumbo verdadero.</div>
+    <section class="dispatch-selected" id="selected-panel" aria-labelledby="selected-title">
+      <div class="dispatch-selected-heading"><span class="dispatch-kicker">FICHA DE PISTA</span><h2 id="selected-title">Seleccioná un pin del mapa</h2></div>
+      <div id="selected-detail" class="dispatch-selected-detail" aria-live="polite">
+       <p>La información aeronáutica se mostrará aquí sin cubrir el mapa. Incluye datos de pista, fuentes, METAR cercano y referencias AIP cuando existan.</p>
+      </div>
+    </section>
+    <section class="pista-classification" aria-labelledby="pista-filter-title">
  <div class="pista-filter-head">
   <div><span class="official-aip-eyebrow">CLASIFICACIÓN DE LAS FUENTES</span>
   <h2 id="pista-filter-title">Elegí qué pistas querés visualizar</h2></div>
@@ -165,7 +290,33 @@ h1{letter-spacing:-.035em}
  <a href="https://ais.anac.gob.ar/aip" target="_blank" rel="noopener noreferrer">AIP · ANAC</a>
  <a href="https://www.argentina.gob.ar/sites/default/files/listado_lad_2026-09.pdf" target="_blank" rel="noopener noreferrer">Listado LAD · septiembre 2026</a></div>
 </section>
-<div class="pin-legend" aria-label="Leyenda de marcadores">
+
+    <div class="dispatch-list-block"><label>Filtrar registros visibles <input id="search" placeholder="Nombre, provincia, código OACI o número LAD"></label>
+<section class="pista-official-list" aria-labelledby="pista-official-title">
+ <h2 id="pista-official-title">Registros con respaldo documental ANAC · Muestra inicial</h2>
+ <p>Esta es una muestra parcial identificada en publicaciones oficiales, no un inventario completo ni una constancia de habilitación vigente.</p>
+ <div id="pista-documented-list"></div>
+</section><details id="alternatives" class="notice"><summary style="cursor:pointer;font-weight:bold;padding:8px">Buscar alternativas cercanas · distancia en NM</summary><h2>Buscar posibles alternativas cercanas</h2><p>Ingresá un punto de referencia o seleccioná un lugar en el mapa. Las distancias son en línea recta y solo orientativas.</p><label>Latitud de referencia <input id="ref-lat" type="number" step="any" min="-90" max="90" placeholder="-34.8"></label> <label>Longitud de referencia <input id="ref-lon" type="number" step="any" min="-180" max="180" placeholder="-58.4"></label> <label>Radio de búsqueda <select id="radius"><option value="25">25 NM</option><option value="50" selected>50 NM</option><option value="100">100 NM</option><option value="200">200 NM</option></select></label> <button type="button" id="pick-ref">Elegir punto en mapa</button> <button type="button" id="find-near">Buscar cercanas</button> <button type="button" id="reset-near">Quitar filtro</button><p id="near-status"></p></details><h2>Pistas identificadas por la comunidad</h2><div id="list"></div><details id="contribute"><summary style="cursor:pointer;padding:14px;background:#28648c;border-radius:10px;font-weight:bold">+ Agregar una pista conocida</summary><h2>Proponer una pista</h2><p>Solo integrantes registrados. Cada propuesta requiere aprobación de administración.</p><form id="form"><label>Nombre de la pista<input name="name" required maxlength="120" minlength="3"></label><label>Provincia<input name="province" required maxlength="80"></label><label>Latitud decimal<input name="latitude" type="number" step="any" min="-56" max="-21" required></label><label>Longitud decimal<input name="longitude" type="number" step="any" min="-74" max="-53" required></label><label>Orientación de pista<input name="runway" maxlength="50"></label><label>Dimensiones<input name="dimensions" maxlength="80"></label><label>Elevación<input name="elevation" maxlength="50"></label><label>Superficie<select name="surface"><option>Desconocida</option><option>Césped</option><option>Tierra</option><option>Asfalto</option><option>Ripio</option><option>Otra</option></select></label><label>Acceso<select name="permission"><option>Requiere autorización previa</option><option>Consultar al responsable</option><option>Acceso no confirmado</option></select></label><label>Frecuencia (si corresponde)<input name="frequency" maxlength="60"></label><label>Contacto autorizado para publicar<input name="contact" maxlength="150"></label><label class="wide">Obstáculos<textarea name="obstacles" maxlength="1500"></textarea></label><label class="wide">Observaciones<textarea name="notes" maxlength="2500"></textarea></label><label class="wide"><span><input type="checkbox" name="consent" required> Confirmo que tengo autorización para divulgar esta ubicación y los datos de contacto incluidos.</span></label><button type="submit">Enviar a moderación</button></form></details><p id="message" role="status"></p><section id="admin" hidden><h2>Moderación de propuestas</h2><div id="pending"></div></section></div>
+    <section class="official-aip-panel" aria-labelledby="official-aip-heading">
+  <div>
+    <span class="official-aip-eyebrow">DOCUMENTACIÓN AERONÁUTICA OFICIAL</span>
+    <h2 id="official-aip-heading">Consultar AIP Argentina · ANAC</h2>
+    <p>Accedé a la publicación oficial para consultar información GEN, ENR y AD. La existencia de una pista en este mapa comunitario <strong>no acredita que esté publicada, habilitada ni autorizada</strong>.</p>
+  </div>
+  <a class="official-aip-link" href="https://ais.anac.gob.ar/aip" target="_blank" rel="noopener noreferrer" aria-label="Abrir AIP Argentina oficial de ANAC en otra pestaña">Abrir AIP oficial ↗</a>
+</section>
+
+    <p class="dispatch-caution">Advertencia: mapa de apoyo educativo y consulta geográfica. No reemplaza AIP, NOTAM, ni autorización de propietario u operador.</p>
+   </div>
+  </aside>
+  <section class="dispatch-map-panel" id="dispatch-map-panel" aria-label="Mapa geográfico interactivo">
+   <div class="dispatch-map-toolbar"><div><span class="dispatch-kicker">ÁREA DE NAVEGACIÓN</span>
+    <strong>Mapa interactivo · Pistas y aeródromos</strong></div><div class="dispatch-map-toolbar-links">
+    <button id="map-fullscreen" type="button">Ampliar mapa</button><a href="https://ais.anac.gob.ar/aip" target="_blank" rel="noopener noreferrer">AIP oficial ↗</a></div></div>
+   <div class="dispatch-map-main"><div id="basemap-selector" class="basemap-selector" aria-label="Elegir tipo de mapa"></div>
+<div id="map" aria-label="Mapa satelital de pistas"></div>
+</div>
+   <div class="dispatch-map-bottom"><div class="pin-legend" aria-label="Leyenda de marcadores">
   <span class="legend-item"><span class="legend-dot controlled" aria-hidden="true"></span>TWR público</span>
   <span class="legend-item"><span class="legend-dot uncontrolled" aria-hidden="true"></span>Público sin TWR</span>
   <span class="legend-item"><span class="legend-dot private" aria-hidden="true"></span>Privado</span>
@@ -174,12 +325,10 @@ h1{letter-spacing:-.035em}
   <span class="legend-item"><span class="legend-dot unverified" aria-hidden="true"></span>⚠ Sin verificar</span>
   <span class="legend-item"><span class="legend-dot reference" aria-hidden="true"></span>OSM sin verificar</span>
   <span class="legend-item"><span class="legend-dot draft" aria-hidden="true"></span>Propuesta pendiente</span>
-</div><p class="map-actions"><button id="explore" type="button">Explorar pistas en esta zona</button> <small id="osm-status">Acercá el mapa a una zona y presioná el botón. Fuente: OpenStreetMap / Overpass.</small></p><label>Filtrar registros visibles <input id="search" placeholder="Nombre, provincia, código OACI o número LAD"></label>
-<section class="pista-official-list" aria-labelledby="pista-official-title">
- <h2 id="pista-official-title">Registros con respaldo documental ANAC · Muestra inicial</h2>
- <p>Esta es una muestra parcial identificada en publicaciones oficiales, no un inventario completo ni una constancia de habilitación vigente.</p>
- <div id="pista-documented-list"></div>
-</section><details id="alternatives" class="notice"><summary style="cursor:pointer;font-weight:bold;padding:8px">Buscar alternativas cercanas · distancia en NM</summary><h2>Buscar posibles alternativas cercanas</h2><p>Ingresá un punto de referencia o seleccioná un lugar en el mapa. Las distancias son en línea recta y solo orientativas.</p><label>Latitud de referencia <input id="ref-lat" type="number" step="any" min="-90" max="90" placeholder="-34.8"></label> <label>Longitud de referencia <input id="ref-lon" type="number" step="any" min="-180" max="180" placeholder="-58.4"></label> <label>Radio de búsqueda <select id="radius"><option value="25">25 NM</option><option value="50" selected>50 NM</option><option value="100">100 NM</option><option value="200">200 NM</option></select></label> <button type="button" id="pick-ref">Elegir punto en mapa</button> <button type="button" id="find-near">Buscar cercanas</button> <button type="button" id="reset-near">Quitar filtro</button><p id="near-status"></p></details><h2>Pistas identificadas por la comunidad</h2><div id="list"></div><details id="contribute"><summary style="cursor:pointer;padding:14px;background:#28648c;border-radius:10px;font-weight:bold">+ Agregar una pista conocida</summary><h2>Proponer una pista</h2><p>Solo integrantes registrados. Cada propuesta requiere aprobación de administración.</p><form id="form"><label>Nombre de la pista<input name="name" required maxlength="120" minlength="3"></label><label>Provincia<input name="province" required maxlength="80"></label><label>Latitud decimal<input name="latitude" type="number" step="any" min="-56" max="-21" required></label><label>Longitud decimal<input name="longitude" type="number" step="any" min="-74" max="-53" required></label><label>Orientación de pista<input name="runway" maxlength="50"></label><label>Dimensiones<input name="dimensions" maxlength="80"></label><label>Elevación<input name="elevation" maxlength="50"></label><label>Superficie<select name="surface"><option>Desconocida</option><option>Césped</option><option>Tierra</option><option>Asfalto</option><option>Ripio</option><option>Otra</option></select></label><label>Acceso<select name="permission"><option>Requiere autorización previa</option><option>Consultar al responsable</option><option>Acceso no confirmado</option></select></label><label>Frecuencia (si corresponde)<input name="frequency" maxlength="60"></label><label>Contacto autorizado para publicar<input name="contact" maxlength="150"></label><label class="wide">Obstáculos<textarea name="obstacles" maxlength="1500"></textarea></label><label class="wide">Observaciones<textarea name="notes" maxlength="2500"></textarea></label><label class="wide"><span><input type="checkbox" name="consent" required> Confirmo que tengo autorización para divulgar esta ubicación y los datos de contacto incluidos.</span></label><button type="submit">Enviar a moderación</button></form></details><p id="message" role="status"></p><section id="admin" hidden><h2>Moderación de propuestas</h2><div id="pending"></div></section></main><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="../assets/supabase-2.117.2.min.js"></script><script src="../assets/community-config.js"></script><script src="gestion-aeronautica/src/catalogo-pistas-anac.js"></script><script src="gestion-aeronautica/src/clasificacion-pistas.js"></script><script>
+</div><p class="map-actions"><button id="explore" type="button">Explorar pistas en esta zona</button> <small id="osm-status">Acercá el mapa a una zona y presioná el botón. Fuente: OpenStreetMap / Overpass.</small></p></div>
+  </section>
+ </div>
+</main><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="../assets/supabase-2.117.2.min.js"></script><script src="../assets/community-config.js"></script><script src="gestion-aeronautica/src/catalogo-pistas-anac.js"></script><script src="gestion-aeronautica/src/clasificacion-pistas.js"></script><script>
 (async()=>{
 const client=supabase.createClient(GDV_CONFIG.url,GDV_CONFIG.key);
 const map=L.map('map',{touchZoom:true,scrollWheelZoom:true,doubleClickZoom:true,tapHold:true}).setView([-35.0,-58.2],10);const satellite=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Imagery © Esri and contributors'}).addTo(map);const streets=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'});const basemapControl=L.control.layers({'Satélite · ver pistas':satellite,'Calles y caminos':streets},null,{collapsed:false});basemapControl.addTo(map);const basemapSelector=document.getElementById('basemap-selector');basemapSelector.appendChild(basemapControl.getContainer());
