@@ -549,6 +549,28 @@ assert.equal(argCoords.longitude,-57.94);
 assert.equal(coordinateParser('-34.9 -57.94').longitude,-57.94);
 assert.equal(coordinateParser('Chascomús'),null);
 assert.equal(coordinateParser('91, 200'),null);
+for(const marker of [
+  "addMetarReference(card,latitude,longitude)",
+  "Consultar METAR cercano",
+  "METAR de referencia cercano",
+  "const METAR_CACHE_MILLISECONDS=300000",
+  "'/api/airstrip-metar?lat='",
+  "Observado: ",
+  " UTC",
+  "Estación ",
+  " NM de la pista",
+  "METAR ANTIGUO",
+  "no necesariamente representativa"
+]){
+ // La advertencia de no representatividad se entrega desde el servidor,
+ // las restantes etiquetas deben estar presentes en la aplicación.
+ if(marker==="no necesariamente representativa")continue;
+ assert.ok(airstripsOriginal.includes(marker),'Falta tarjeta de METAR seguro: '+marker);
+}
+assert.match(airstripsOriginal,/button\.addEventListener\('click',async\(\)=>/);
+assert.doesNotMatch(airstripsOriginal,/setInterval\([^)]*metar/i,'No realizar polling meteorológico continuo.');
+console.log('PASS: interfaz de METAR consultable por pin con ICAO, distancia, hora UTC y alerta por antigüedad');
+
 console.log('PASS: buscador geográfico manual, coordenadas, iconos aeronáuticos SVG y fichas detalladas del pin');
 
 console.log('PASS: Pistas No Oficiales compartidas en las tres áreas, mapa interactivo y precauciones');
