@@ -106,6 +106,27 @@ assert.match(utilitiesPage,/\[hidden\]\{display:none!important\}/,'CSS impide qu
 assert.match(html,/from\('site_admins'\)\.select\('user_id'\)\.eq\('user_id',user\.id\)\.maybeSingle\(\)/,'El portal también verifica permisos al abrirlo');
 assert.match(html,/if\(roleError\|\|!data\)throw Error\('Acceso exclusivo del administrador\.'\)/,'El portal debe denegar usuarios no administradores');
 console.log('PASS: acceso a AeroSuite en Utilidades exclusivo de administracion con verificación al abrir');
+
+// FlightPrep NAV deja de ser una herramienta independiente: el motor antiguo se conserva
+// temporalmente para compatibilidad de enlaces pero no se ofrece desde navegación pública.
+assert.doesNotMatch(utilitiesPage,/href="flightprep-nav\.html"|<h2>FlightPrep NAV<\/h2>/i,
+ 'FlightPrep NAV no debe aparecer como tarjeta independiente en Utilidades');
+const aeroLocatorNav=fs.readFileSync(new URL('../utilidades/pistas-no-oficiales.html',import.meta.url),'utf8');
+assert.doesNotMatch(aeroLocatorNav,/href="flightprep-nav\.html">FlightPrep NAV<\/a>/,
+ 'La navegación de AeroLocator no debe ofrecer el antiguo FlightPrep NAV');
+const homepageWithoutFlightPrep=fs.readFileSync(new URL('../index.html',import.meta.url),'utf8');
+assert.doesNotMatch(homepageWithoutFlightPrep,/FlightPrep Nav/i,
+ 'La portada no debe anunciar el módulo retirado');
+assert.match(homepageWithoutFlightPrep,/Flight Operations para planificación, meteorología y navegación en AeroSuite/,
+ 'La descripción pública debe orientar la planificación a AeroSuite');
+assert.match(html,/flightops:flightOperationsScreen/,
+ 'Flight Operations debe continuar integrado en AeroSuite');
+assert.match(html,/src="'\+url\+'" loading="lazy"/,
+ 'El iframe de Flight Operations debe permanecer accesible');
+assert.ok(fs.existsSync(new URL('../utilidades/flightprep-nav.html',import.meta.url)),
+ 'Conservar el archivo antiguo para evitar enlaces rotos hasta completar la migración');
+console.log('PASS: FlightPrep NAV retirado de accesos independientes; integración AeroSuite conservada');
+
 // Portada Gente de Vuelo: un mismo espacio de menú, AeroSuite exclusivo del administrador.
 const gdvHomepage=fs.readFileSync(new URL('../index.html',import.meta.url),'utf8');
 assert.match(gdvHomepage,/id="gdv-aerosuite-menu-link" href="utilidades\/gestion-aeronautica\/portal\.html" hidden/,'AeroSuite debe comenzar oculto en portada');
