@@ -455,12 +455,25 @@ assert.equal(studentPortalProjection('p2',[],allFlightDemo,[],[],[]).flightHours
 assert.equal(studentPortalProjection('p1',[],allFlightDemo,[],[],[]).flightHours,2.03);
 for(const label of ['Mi Hangar de Vuelo · Piloto privado','Mis vuelos de instrucción',
  'Mi historial de vuelos como piloto privado','flightModeFilter','Piloto privado sin instructor',
- 'Sin instructor','data-go="piloto"']){
+ 'Sin instructor','data-area="alumno"']){
  assert.ok(html.includes(label),'Falta seguimiento de vuelo: '+label);
 }
 assert.match(html,/closeFlight\(\{from:\$\('flightFrom'\)\.value/);
 assert.match(html,/booking,flights,fleet,members\)/);
 assert.match(html,/const cols=\['Fecha','Modalidad','Aeronave','Titular','Instructor'/);
+// Tres frontends de demostración con selección de área y menú limitado al espacio activo.
+for(const key of ['alumno','instructor','administracion']){
+ assert.ok(html.includes('data-area="'+key+'"'),'Falta tarjeta del área '+key);
+}
+assert.match(html,/currentArea=null/);
+assert.match(html,/area\.tabs\.some\(\(\[key\]\)=>key===value\)/);
+assert.match(html,/area\.tabs\.map\(\(\[key,label\]\)/);
+assert.match(html,/function adminPeopleScreen\(/);
+assert.doesNotMatch(html,/data-go="piloto"/,'No debe haber salto administrativo al área del piloto');
+assert.doesNotMatch(html,/data-go="academia"/,'No debe haber salto administrativo al área del alumno');
+assert.match(html,/site_admins/,'El acceso admin de la demo debe mantenerse');
+console.log('PASS: AeroSuite con portal de tres áreas, navegación aislada y acceso restringido');
+
 console.log('PASS: alumno con instructor y piloto privado solo, horas separadas, filtros e historial individual');
 
 
