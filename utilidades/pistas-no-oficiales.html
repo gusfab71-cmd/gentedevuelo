@@ -662,6 +662,7 @@ function selectAirfield(marker,point,label,createCard){
  showAirfieldDetail(createCard,label);
  if(desktopMode()){
   marker.closePopup();
+  selectedPanel.scrollIntoView({behavior:'smooth',block:'nearest'});
  }else{
   marker.openPopup();
  }
@@ -812,8 +813,9 @@ function renderExternal(){
  for(const x of externalPoints){
   const nm=reference?nauticalMiles(reference[0],reference[1],x.lat,x.lon):null;
   if(nearRadius!==null&&nm>nearRadius)continue;
-  L.marker([x.lat,x.lon],{icon:runwayPin('reference'),title:x.name})
+  const marker=L.marker([x.lat,x.lon],{icon:runwayPin('reference'),title:x.name})
     .bindPopup(referencePopup(x,nm),{maxWidth:350,minWidth:245}).addTo(external);
+  attachSelection(marker,[x.lat,x.lon],x.name,()=>referencePopup(x,nm));
   count++;
  }
  document.getElementById('near-status').textContent=nearRadius!==null?
@@ -863,6 +865,7 @@ function renderDocumented(){
   const marker=L.marker([point.lat,point.lon],{icon:runwayPin(kind),title:point.name})
     .bindPopup(documentaryPopup(point,distance),{maxWidth:360,minWidth:250})
     .addTo(documentedLayers[point.category]);
+  attachSelection(marker,[point.lat,point.lon],point.name,()=>documentaryPopup(point,distance));
   documentaryMarkers.set(point.id,marker);
   count++;
   const article=document.createElement('article');article.className='pista-record';
@@ -878,8 +881,8 @@ function renderDocumented(){
   const btn=document.createElement('button');btn.type='button';btn.textContent='Ver ficha en el mapa';
   btn.addEventListener('click',()=>{
    map.setView([point.lat,point.lon],14);
-   marker.openPopup();
-   document.getElementById('map').scrollIntoView({behavior:'smooth',block:'center'});
+   selectAirfield(marker,[point.lat,point.lon],point.name,()=>documentaryPopup(point,distance));
+   (desktopMode()?selectedPanel:document.getElementById('map')).scrollIntoView({behavior:'smooth',block:'center'});
   });
   article.append(tag,title,description,source,btn);root.append(article);
  }
@@ -907,6 +910,7 @@ function render(){
   const nm=reference?nauticalMiles(reference[0],reference[1],p.latitude,p.longitude):null;
   const marker=L.marker([p.latitude,p.longitude],{icon:runwayPin(airfieldClass(p)),title:p.name})
    .bindPopup(communityPopup(p,nm),{maxWidth:350,minWidth:245}).addTo(markers);
+  attachSelection(marker,[p.latitude,p.longitude],p.name,()=>communityPopup(p,nm));
   const entry=el('article','');entry.className='entry';
   const title=el('strong',p.name),surface=el('p',(p.details?.province||'Provincia sin informar')+' · '+(p.details?.surface||'Superficie sin verificar'));
   const coords=el('small','Coordenadas: '+Number(p.latitude).toFixed(6)+', '+Number(p.longitude).toFixed(6));
@@ -920,8 +924,8 @@ function render(){
   const button=el('button','Ver ficha y ubicación');
   button.type='button';button.addEventListener('click',()=>{
    map.setView([p.latitude,p.longitude],14);
-   marker.openPopup();
-   document.getElementById('map').scrollIntoView({behavior:'smooth',block:'center'});
+   selectAirfield(marker,[p.latitude,p.longitude],p.name,()=>communityPopup(p,nm));
+   (desktopMode()?selectedPanel:document.getElementById('map')).scrollIntoView({behavior:'smooth',block:'center'});
   });
   entry.append(button);list.append(entry);
  }
