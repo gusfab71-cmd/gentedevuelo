@@ -106,6 +106,17 @@ assert.match(utilitiesPage,/\[hidden\]\{display:none!important\}/,'CSS impide qu
 assert.match(html,/from\('site_admins'\)\.select\('user_id'\)\.eq\('user_id',user\.id\)\.maybeSingle\(\)/,'El portal también verifica permisos al abrirlo');
 assert.match(html,/if\(roleError\|\|!data\)throw Error\('Acceso exclusivo del administrador\.'\)/,'El portal debe denegar usuarios no administradores');
 console.log('PASS: acceso a AeroSuite en Utilidades exclusivo de administracion con verificación al abrir');
+// Portada Gente de Vuelo: un mismo espacio de menú, AeroSuite exclusivo del administrador.
+const gdvHomepage=fs.readFileSync(new URL('../index.html',import.meta.url),'utf8');
+assert.match(gdvHomepage,/id="gdv-aerosuite-menu-link" href="utilidades\/gestion-aeronautica\/portal\.html" hidden/,'AeroSuite debe comenzar oculto en portada');
+assert.match(gdvHomepage,/id="gdv-tools-menu-link" href="utilidades\/">Herramientas<\/a>/,'Las herramientas públicas deben conservar acceso');
+assert.match(gdvHomepage,/aeroSuiteNav\.hidden = !window\.gdvLegacyAdmin/,'Solo el administrador ve AeroSuite');
+assert.match(gdvHomepage,/toolsNav\.hidden = !!window\.gdvLegacyAdmin/,'Ocultar el enlace anterior al administrador');
+assert.match(gdvHomepage,/#menuDesplegable \[hidden\]\{display:none!important\}/,'Respetar visibilidad del acceso');
+assert.match(gdvHomepage,/\.from\("site_admins"\)\.select\("user_id"\)\.eq\("user_id", user\.id\)\.maybeSingle\(\)/,'El menú comprueba administrador en Supabase');
+assert.doesNotMatch(gdvHomepage,/<a href="utilidades\/">Utilidades<\/a>/,'No mantener etiqueta anterior en la barra principal');
+console.log('PASS: portada Gente de Vuelo muestra AeroSuite solamente al administrador, preserva herramientas públicas');
+
 // La portada y el portal de AeroSuite deben permitir volver a Gente de Vuelo.
 assert.match(landing,/<a class="btn btn-small nav-home" href="\.\.\/\.\.\/index\.html" aria-label="Volver al inicio de Gente de Vuelo">/,'Falta botón de inicio en portada');
 assert.match(landing,/\.nav-cta\{flex-shrink:0;display:flex;align-items:center;gap:9px\}/,'Diseño de navegación de AeroSuite');
