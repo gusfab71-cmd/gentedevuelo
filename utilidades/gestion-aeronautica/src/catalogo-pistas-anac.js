@@ -39,7 +39,7 @@
   [938,'EA. TREBOLARES','18/36','1250 x 35 m','Tierra','353800,00S','0633000,00W','La Pampa']
  ];
  const lad=LAD_ROWS.map(([registry,name,runway,dimensions,surface,lat,lon,province])=>({
-  id:'anac-lad-'+registry,category:'lad',name:'LAD '+registry+' · '+name,...fromDms(lat,lon),
+  id:'anac-lad-'+registry,category:'lad',facilityClass:'lad',legal_use:'lad',ats_service:'unknown',operation_rules:'vfr',access_policy:'prior_permission',facility_kind:'airstrip',name:'LAD '+registry+' · '+name,...fromDms(lat,lon),
   details:{runway,dimensions,surface,province,registry:'LAD '+registry,
    permission:'No confirmada: contactar al responsable',
    notes:'LAD incluido en listado ANAC. No equivale a aeródromo habilitado.'},
@@ -47,22 +47,22 @@
   sourceType:'registro_lad',verification:'Referencia documental. Vigencia y aptitud operacional no verificadas.'
  }));
  const official=[
-  {id:'aip-sabe',category:'official',name:'Aeroparque Jorge Newbery (SABE)',
+  {id:'aip-sabe',category:'official',facilityClass:'controlled_public',legal_use:'public',ats_service:'twr',operation_rules:'unknown',access_policy:'public',facility_kind:'aerodrome',name:'Aeroparque Jorge Newbery (SABE)',
    ...fromDms('343335S','0582454W'),
    details:{icao:'SABE',runway:'13/31',dimensions:'2350 x 45 m (carta SUP 2023)',province:'Ciudad Autónoma de Buenos Aires',
     permission:'Verificar en AIP, MADHEL y NOTAM; acceso sujeto a condiciones publicadas.',
     notes:'Referencia de carta AIP/SUP ANAC (2023); consultar publicación vigente antes de operar.'},
    sourceUrl:'https://ais.anac.gob.ar/descarga/sup-64d52a2cc61b6',
    sourceLabel:'ANAC · Carta de aeródromo SABE (SUP A 73/2023)',sourceDate:'2023-09-07',
-   sourceType:'publicacion_aip',verification:'Referencia AIP; habilitación y condiciones actuales requieren revisión oficial.'},
-  {id:'aip-saez',category:'official',name:'Ezeiza / Ministro Pistarini (SAEZ)',
+   sourceType:'publicacion_aip',classificationSourceUrl:'https://servicios.transporte.gob.ar/gobierno_abierto/detalle.php?d=detalle&t=aeropuertos',classificationSourceDate:'2021-09',verification:'AIP 2023 y datos de control/uso público de 2021: comprobación operativa actual pendiente.'},
+  {id:'aip-saez',category:'official',facilityClass:'controlled_public',legal_use:'public',ats_service:'twr',operation_rules:'unknown',access_policy:'public',facility_kind:'aerodrome',name:'Ezeiza / Ministro Pistarini (SAEZ)',
    ...fromDms('344920S','0583209W'),
    details:{icao:'SAEZ',runway:'11/29 y 17/35 (carta SUP 2023)',province:'Buenos Aires',
     permission:'Verificar en AIP, MADHEL y NOTAM; acceso sujeto a condiciones publicadas.',
     notes:'Referencia de carta AIP/SUP ANAC (2023); consultar publicación vigente antes de operar.'},
    sourceUrl:'https://ais.anac.gob.ar/descarga/sup-652074d8547f1',
    sourceLabel:'ANAC · Carta de aeródromo SAEZ (SUP A 85/2023)',sourceDate:'2023-10-06',
-   sourceType:'publicacion_aip',verification:'Referencia AIP; habilitación y condiciones actuales requieren revisión oficial.'}
+   sourceType:'publicacion_aip',classificationSourceUrl:'https://servicios.transporte.gob.ar/gobierno_abierto/detalle.php?d=detalle&t=aeropuertos',classificationSourceDate:'2021-09',verification:'AIP 2023 y datos de control/uso público de 2021: comprobación operativa actual pendiente.'}
  ];
  root.AEROSUITE_OFFICIAL_AIRSTRIPS=Object.freeze({
   official:Object.freeze(official),lad:Object.freeze(lad),
