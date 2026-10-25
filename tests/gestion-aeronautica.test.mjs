@@ -599,11 +599,21 @@ console.log('PASS: Flight Operations unificado en Alumno e Instructor sin IA y c
 
 // Pistas No Oficiales: una única fuente compartida entre Gente de Vuelo y AeroSuite.
 const airstripsOriginal=fs.readFileSync(new URL('../utilidades/pistas-no-oficiales.html',import.meta.url),'utf8');
+assert.match(airstripsOriginal,/<title>AeroLocator · Mapa de pistas y aeródromos/,'El nombre visible de la aplicación debe ser AeroLocator');
+assert.match(airstripsOriginal,/<h1>AeroLocator<\/h1>/,'AeroLocator en el centro de control');
+assert.match(airstripsOriginal,/<strong>AeroLocator · Mapa interactivo<\/strong>/,'AeroLocator en el mapa');
+assert.match(airstripsOriginal,/<small>AEROLOCATOR · MAPA AERONÁUTICO<\/small>/,'AeroLocator en la barra superior');
+assert.match(html,/AeroLocator en AeroSuite/,'Nombre en el portal de AeroSuite');
+assert.match(landing,/<h3>AeroLocator<\/h3>/,'Nombre en presentación pública de AeroSuite');
+assert.match(fs.readFileSync(new URL('../utilidades/index.html',import.meta.url),'utf8'),/<h2>AeroLocator<\/h2>/,'Nombre en Utilidades Gente de Vuelo');
+assert.match(html,/src="\.\.\/pistas-no-oficiales\.html"/,'No cambiar URL funcional del mapa');
+console.log('PASS: AeroLocator como identidad visible, sin alterar rutas ni funcionalidad del mapa');
+
 const areaDefinition=html.match(/const AREA_DEFS=Object\.freeze\(\{([\s\S]*?)\}\);/);
 assert.ok(areaDefinition,'Falta definición de áreas de AeroSuite');
 for(const area of ['alumno','instructor','administracion']){
  const row=areaDefinition[1].split('\n').find(line=>line.trim().startsWith(area+':'));
- assert.ok(row&&row.includes("['pistas','Mapa de Pistas y Aeródromos']"),'Falta acceso a pistas para '+area);
+ assert.ok(row&&row.includes("['pistas','AeroLocator']"),'Falta acceso a pistas para '+area);
 }
 assert.match(html,/pistas:airstripsScreen/);
 assert.match(html,/function airstripsScreen\(\)/);
@@ -613,7 +623,7 @@ assert.match(html,/target="_blank" rel="noopener noreferrer">Abrir mapa completo
 assert.match(html,/no se duplican archivos ni registros/);
 assert.match(html,/no confirma aptitud operacional/);
 assert.match(html,/AIP, NOTAM/);
-assert.match(landing,/Mapa de Pistas y Aeródromos/);
+assert.match(landing,/AeroLocator/);
 assert.match(landing,/href="\.\.\/pistas-no-oficiales\.html"/);
 assert.match(landing,/ninguna referencia garantiza aptitud/);
 assert.match(airstripsOriginal,/\.from\('community_airstrips'\)/);
@@ -770,7 +780,7 @@ assert.match(airstripsOriginal,/Fuente documental/);
 assert.match(airstripsOriginal,/no equivale a aeródromo habilitado|No son aeródromos habilitados|no son aeródromos habilitados/i);
 assert.match(airstripsOriginal,/Cobertura parcial, no inventario nacional/);
 assert.match(airstripsOriginal,/Privado no significa no oficial/);
-assert.match(html,/Mapa de Pistas y Aeródromos/);
+assert.match(html,/AeroLocator/);
 
 const taxonomySource=fs.readFileSync(new URL('../utilidades/gestion-aeronautica/src/clasificacion-pistas.js',import.meta.url),'utf8');
 const typeEnvironment={window:{}};
