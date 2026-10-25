@@ -8,6 +8,7 @@ import {ACTIVITY_TYPES,DEMO_RESOURCES,requestStudentBooking,takeStudentBooking,f
 import {classifyFlightBooking,flightActivityProjection,flightActivityByRole,FLIGHT_MODE_LABELS} from '../utilidades/gestion-aeronautica/src/vuelos.js';
 import {makeLogbookDetail,logbookRows,logbookSummary,LOGBOOK_TIME_COLUMNS,LOGBOOK_SPECIAL_COLUMNS,LOGBOOK_SIMULATOR_COLUMNS} from '../utilidades/gestion-aeronautica/src/libro-vuelo.js';
 import {RAV_STATES,ravCandidates,ravFlightTotals,createRavDraft,submitRavForReview,institutionalReviewRav} from '../utilidades/gestion-aeronautica/src/rav-institucional.js';
+import {cents,makeFinanceEntry,financeReport,financeBalances} from '../utilidades/gestion-aeronautica/src/finanzas.js';
 
 assert.equal(minutes('09:30'),570);
 assert.throws(()=>minutes('25:61'),/Hora inválida/);
@@ -104,7 +105,7 @@ assert.match(html,/Acceso exclusivo del administrador/);
 assert.match(html,/Datos ficticios/);
 assert.match(html,/No hay reservas multiusuario reales/);
 assert.match(html,/RAV oficial/);
-for(const label of ['Agenda y reservas','Registro de vuelo','Aeronaves y mantenimiento','Pilotos y alumnos','Contabilidad y horas','Combustible y aceite','Academia y Simu PPA','Documentos y avisos'])
+for(const label of ['Agenda y reservas','Registro de vuelo','Aeronaves y mantenimiento','Pilotos y alumnos','Contabilidad y Finanzas','Combustible y aceite','Academia y Simu PPA','Documentos y avisos'])
  assert.ok(html.includes(label),'Falta sección '+label);
 
 assert.equal(ASSESSMENTS.developing,'En práctica');
@@ -658,5 +659,40 @@ assert.ok(html.includes('data-library-replace="teoria"'),'Debe haber botón expl
 assert.ok(html.includes('data-library-replace="crm"'),'Debe haber botón explícito de reemplazo de CRM.');
 assert.match(html,/signature!=='%PDF-'/,'Control de formato PDF requerido.');
 console.log('PASS: biblioteca AeroSuite, 30 fichas de teoría y 8 de CRM con carga R2 resistente a CORS');
+
+
+/* AeroSuite: balances separados de escuela/aeródromo, cuentas y caja chica. */
+assert.equal(cents('101.23'),10123);
+assert.equal(cents('10,50'),1050);
+assert.throws(()=>cents('0'),/mayor a cero/);
+assert.throws(()=>cents('10.123'),/importe válido/);
+const finOpening=makeFinanceEntry({kind:'apertura',date:'2026-10-25',account:'caja_general',amount:'200000',concept:'Fondo inicial'},[]);
+const finTransfer=makeFinanceEntry({kind:'transferencia',date:'2026-10-25',account:'caja_general',destination:'caja_chica',amount:'30000',concept:'Reposición de caja chica'},[finOpening]);
+const finGrass=makeFinanceEntry({kind:'egreso',date:'2026-10-25',area:'aerodromo',category:'Corte de pasto y espacios verdes',account:'caja_chica',amount:'8000',concept:'Mantenimiento de pista'},[finOpening,finTransfer]);
+const finIncome=makeFinanceEntry({kind:'ingreso',date:'2026-10-25',area:'escuela',category:'Horas de vuelo e instrucción',account:'banco',amount:'12000',concept:'Clases de vuelo'},[finOpening,finTransfer,finGrass]);
+const finWater=makeFinanceEntry({kind:'egreso',date:'2026-10-25',area:'aerodromo',category:'Agua',account:'banco',amount:'10000',concept:'Agua aeródromo'},[finOpening,finTransfer,finGrass,finIncome]);
+const finLedger=[finOpening,finTransfer,finGrass,finIncome,finWater];
+const finReport=financeReport(finLedger);
+assert.equal(finReport.income,1200000);
+assert.equal(finReport.expenses,1800000);
+assert.equal(finReport.net,-600000);
+assert.equal(finReport.opening,20000000);
+assert.equal(finReport.balances.caja_general,17000000);
+assert.equal(finReport.balances.caja_chica,2200000);
+assert.equal(finReport.balances.banco,200000);
+assert.equal(finReport.byArea.escuela.income,1200000);
+assert.equal(finReport.byArea.aerodromo.expenses,1800000);
+assert.equal(finReport.expenseCategories['Corte de pasto y espacios verdes'],800000);
+assert.equal(financeReport(finLedger,{area:'aerodromo',period:'2026-10'}).net,-1800000);
+assert.equal(financeReport(finLedger,{area:'escuela',period:'2026-10'}).net,1200000);
+assert.equal(financeReport(finLedger,{area:'escuela',period:'2026-09'}).rows.length,0);
+assert.throws(()=>makeFinanceEntry({kind:'egreso',date:'2026-10-25',area:'aerodromo',category:'Imprevistos y caja chica',account:'caja_chica',amount:'23000',concept:'Imprevisto'},finLedger),/Fondos insuficientes/);
+assert.throws(()=>makeFinanceEntry({kind:'transferencia',date:'2026-10-25',account:'caja_general',destination:'caja_general',amount:'100',concept:'Misma cuenta'},finLedger),/diferente/);
+assert.throws(()=>makeFinanceEntry({kind:'egreso',date:'2026-10-25',area:'aerodromo',category:'Pago no permitido',account:'banco',amount:'100',concept:'Inválido'},finLedger),/categoría/);
+assert.equal(Object.values(financeBalances(finLedger)).reduce((sum,n)=>sum+n,0),19400000);
+for(const text of ['function financeScreen(){','function wireFinance(){','fin-funds','finCategory','finTarget','finExport','Corte de pasto','Caja chica','financeReport(financeEntries']){
+ assert.ok(html.toLowerCase().includes(text.toLowerCase()),'Falta interfaz de finanzas: '+text);
+}
+console.log('PASS: finanzas AeroSuite con gastos por area, balance, caja chica, fondos iniciales y transferencias');
 
 console.log('PASS: gestión integrada, fechas, conflictos, cierre idempotente, stock, UX y acceso admin');
