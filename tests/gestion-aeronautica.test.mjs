@@ -533,12 +533,47 @@ assert.match(airstripsOriginal,/document\.createElement\('dt'\)/);
 assert.match(airstripsOriginal,/document\.createElement\('dd'\)/);
 assert.match(airstripsOriginal,/warning.classList.add\('critical'\)/);
 assert.match(airstripsOriginal,/Copiar coordenadas/);
-assert.match(airstripsOriginal,/href="https:\/\/photon\.komoot\.io\//);
-assert.match(airstripsOriginal,/endpoint\.searchParams\.set\('bbox','-74,-56,-53,-21'\)/);
+assert.match(airstripsOriginal,/href="https:\/\/nominatim\.org\//);
+assert.match(airstripsOriginal,/\/functions\/v1\/airstrip-geocode\?q=/);
 assert.match(airstripsOriginal,/zoneCache\.set\(key,options\)/);
 assert.match(airstripsOriginal,/document\.getElementById\('zone-search-form'\)\.addEventListener\('submit'/);
-assert.doesNotMatch(airstripsOriginal,/zoneInput\.addEventListener\('input',[\s\S]{0,100}fetch/,'La búsqueda a Photon no debe ejecutarse por cada letra');
+assert.doesNotMatch(airstripsOriginal,/zoneInput\.addEventListener\('input',[\s\S]{0,100}fetch/,'Nominatim prohíbe autocompletado');
 assert.match(html,/allow="geolocation"/,'AeroSuite debe permitir la solicitud explícita de permiso en el iframe');
+const geocodeServerSource=fs.readFileSync(new URL('../supabase/functions/airstrip-geocode/index.ts',import.meta.url),'utf8');
+assert.match(geocodeServerSource,/nominatim\.openstreetmap\.org\/search/,'El servidor usa Nominatim');
+assert.match(geocodeServerSource,/cacheHours=24\*7/,'El servidor mantiene caché compartida');
+assert.match(geocodeServerSource,/gateMs=2200/,'El límite conservador protege 1 petición por segundo global');
+assert.match(geocodeServerSource,/airstrip_geocode_gate/,'El límite debe ser de toda la web y no por navegador');
+assert.match(geocodeServerSource,/\.lte\("last_call_at",cutoff\)/,'El gate debe ser atómico en Postgres');
+assert.match(geocodeServerSource,/airstrip_geocode_cache/,'La caché evita repetir solicitudes');
+assert.match(geocodeServerSource,/upstreamURL\.searchParams\.set\("countrycodes","ar"\)/);
+assert.match(geocodeServerSource,/upstreamURL\.searchParams\.set\("format","jsonv2"\)/);
+assert.match(geocodeServerSource,/GenteDeVuelo-AirstripMap\/1\.0/,'El proveedor exige identificador de aplicación');
+assert.match(geocodeServerSource,/new Response\(null,\{status:204,headers:headers\(origin\)\}\)/,'CORS preflight');
+assert.match(airstripsOriginal,/map\.flyTo\(\[latitude,longitude\],zoom/,'Leaflet debe animar los desplazamientos');
+assert.match(airstripsOriginal,/prefers-reduced-motion/,'Debe respetarse accesibilidad');
+assert.match(airstripsOriginal,/Condiciones de uso<\/a>/,'Citar la política de Nominatim');
+assert.doesNotMatch(airstripsOriginal,/photon\.komoot\.io/i,'No mantener proveedor antiguo');
+assert.match(airstripsOriginal,/GDV_CONFIG\.url\.replace\(/,'La consulta pasa por el servidor seguro');
+// Simular flyTo y reducción de movimiento, evitando llamadas de red.
+const flyFrom=airstripsOriginal.indexOf('function focusMapAt(latitude,longitude,label,zoom=13){');
+const flyUntil=airstripsOriginal.indexOf('function presentZoneOptions(options){',flyFrom);
+assert.ok(flyFrom>=0&&flyUntil>flyFrom);
+const calls=[];
+const fakeStatus={textContent:''};
+const stubMap={flyTo:(...args)=>calls.push(['flyTo',args]),setView:(...args)=>calls.push(['setView',args])};
+const flying=vm.runInNewContext(airstripsOriginal.slice(flyFrom,flyUntil)+';focusMapAt',{
+ map:stubMap,window:{matchMedia:()=>({matches:false})},zoneStatus:fakeStatus,
+ document:{getElementById:()=>({replaceChildren(){},scrollIntoView(){}})}
+});
+flying(-31.744,-60.518,'Paraná, Entre Ríos',13);
+assert.equal(calls.length,1);
+assert.equal(calls[0][0],'flyTo');
+assert.equal(calls[0][1][0][0],-31.744);
+assert.equal(calls[0][1][0][1],-60.518);
+assert.match(fakeStatus.textContent,/Paraná/);
+console.log('PASS: Nominatim a demanda con gate global, caché SQL, búsqueda Argentina y flyTo accesible');
+
 const functionStart=airstripsOriginal.indexOf('function parseZoneCoordinates(value){');
 const functionEnd=airstripsOriginal.indexOf('function focusMapAt(',functionStart);
 assert.ok(functionStart>0&&functionEnd>functionStart,'Falta el analizador de coordenadas');
