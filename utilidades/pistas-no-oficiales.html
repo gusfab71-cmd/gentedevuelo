@@ -235,6 +235,24 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
  .dispatch-sidebar{max-height:52dvh;overflow:hidden}
  .dispatch-sidebar-scroll{height:100%;overflow:auto;overscroll-behavior:contain}
 }
+
+.airstrip-photos{display:grid;gap:7px;border:1px solid #6183a0;background:#1f3d52;border-radius:11px;padding:10px}
+.airstrip-photos>label{font-size:12px;font-weight:800;color:#eff7fc}
+.airstrip-photo-drop{border:2px dashed #87aed0;border-radius:10px;padding:14px;min-height:92px;
+ cursor:pointer;background:#142c40;display:flex;flex-direction:column;gap:7px;text-align:center}
+.airstrip-photo-drop:focus-visible,.airstrip-photo-drop.is-dragover{outline:2px solid #c4e3f7;background:#285676}
+.airstrip-photo-drop>strong{font-size:12px}
+.airstrip-photo-drop>span{font-size:11px;color:#b7d1e5}
+.airstrip-photo-preview{display:flex;gap:7px;flex-wrap:wrap;justify-content:center}
+.airstrip-photo-preview img{width:90px;height:65px;object-fit:cover;border:1px solid #8bb1cd;border-radius:7px}
+.airstrip-photos .photo-consent{font-weight:400;color:#d5e7f3;font-size:11px}
+.airstrip-photos .photo-consent span{display:flex;align-items:flex-start;gap:7px}
+.airstrip-photos .photo-consent input{width:16px;height:16px;flex-shrink:0}
+.airstrip-photos small{font-size:10px;line-height:1.5}
+.airstrip-gallery{display:grid;gap:8px;padding:10px 0}
+.airstrip-gallery strong{font-size:11px;color:#32546d}
+.airstrip-gallery img{display:block;max-width:100%;height:auto;aspect-ratio:16/9;object-fit:cover;border-radius:8px;border:1px solid #b6ccdb}
+.dispatch-sidebar .airstrip-gallery img{width:100%}
 </style></head><body><header class="dispatch-nav"><div class="dispatch-nav-logo"><span class="dispatch-nav-symbol" aria-hidden="true">✈</span>
  <div><strong>GENTE DE VUELO</strong><small>MAPA AERONÁUTICO</small></div></div>
  <nav aria-label="Herramientas Gente de Vuelo"><a href="../index.html">Portada</a><a href="../comunidad.html#foro">Foro</a><a href="index.html">Utilidades</a>
@@ -313,7 +331,19 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
  <h2 id="pista-official-title">Registros con respaldo documental ANAC · Muestra inicial</h2>
  <p>Esta es una muestra parcial identificada en publicaciones oficiales, no un inventario completo ni una constancia de habilitación vigente.</p>
  <div id="pista-documented-list"></div>
-</section><details id="alternatives" class="notice"><summary style="cursor:pointer;font-weight:bold;padding:8px">Buscar alternativas cercanas · distancia en NM</summary><h2>Buscar posibles alternativas cercanas</h2><p>Ingresá un punto de referencia o seleccioná un lugar en el mapa. Las distancias son en línea recta y solo orientativas.</p><label>Latitud de referencia <input id="ref-lat" type="number" step="any" min="-90" max="90" placeholder="-34.8"></label> <label>Longitud de referencia <input id="ref-lon" type="number" step="any" min="-180" max="180" placeholder="-58.4"></label> <label>Radio de búsqueda <select id="radius"><option value="25">25 NM</option><option value="50" selected>50 NM</option><option value="100">100 NM</option><option value="200">200 NM</option></select></label> <button type="button" id="pick-ref">Elegir punto en mapa</button> <button type="button" id="find-near">Buscar cercanas</button> <button type="button" id="reset-near">Quitar filtro</button><p id="near-status"></p></details><h2>Pistas identificadas por la comunidad</h2><div id="list"></div><details id="contribute"><summary style="cursor:pointer;padding:14px;background:#28648c;border-radius:10px;font-weight:bold">+ Agregar una pista conocida</summary><h2>Proponer una pista</h2><p>Solo integrantes registrados. Cada propuesta requiere aprobación de administración.</p><form id="form"><label>Nombre de la pista<input name="name" required maxlength="120" minlength="3"></label><label>Provincia<input name="province" required maxlength="80"></label><label>Latitud decimal<input name="latitude" type="number" step="any" min="-56" max="-21" required></label><label>Longitud decimal<input name="longitude" type="number" step="any" min="-74" max="-53" required></label><label>Orientación de pista<input name="runway" maxlength="50"></label><label>Dimensiones<input name="dimensions" maxlength="80"></label><label>Elevación<input name="elevation" maxlength="50"></label><label>Superficie<select name="surface"><option>Desconocida</option><option>Césped</option><option>Tierra</option><option>Asfalto</option><option>Ripio</option><option>Otra</option></select></label><label>Acceso<select name="permission"><option>Requiere autorización previa</option><option>Consultar al responsable</option><option>Acceso no confirmado</option></select></label><label>Frecuencia (si corresponde)<input name="frequency" maxlength="60"></label><label>Contacto autorizado para publicar<input name="contact" maxlength="150"></label><label class="wide">Obstáculos<textarea name="obstacles" maxlength="1500"></textarea></label><label class="wide">Observaciones<textarea name="notes" maxlength="2500"></textarea></label><label class="wide"><span><input type="checkbox" name="consent" required> Confirmo que tengo autorización para divulgar esta ubicación y los datos de contacto incluidos.</span></label><button type="submit">Enviar a moderación</button></form></details><p id="message" role="status"></p><section id="admin" hidden><h2>Moderación de propuestas</h2><div id="pending"></div></section></div>
+</section><details id="alternatives" class="notice"><summary style="cursor:pointer;font-weight:bold;padding:8px">Buscar alternativas cercanas · distancia en NM</summary><h2>Buscar posibles alternativas cercanas</h2><p>Ingresá un punto de referencia o seleccioná un lugar en el mapa. Las distancias son en línea recta y solo orientativas.</p><label>Latitud de referencia <input id="ref-lat" type="number" step="any" min="-90" max="90" placeholder="-34.8"></label> <label>Longitud de referencia <input id="ref-lon" type="number" step="any" min="-180" max="180" placeholder="-58.4"></label> <label>Radio de búsqueda <select id="radius"><option value="25">25 NM</option><option value="50" selected>50 NM</option><option value="100">100 NM</option><option value="200">200 NM</option></select></label> <button type="button" id="pick-ref">Elegir punto en mapa</button> <button type="button" id="find-near">Buscar cercanas</button> <button type="button" id="reset-near">Quitar filtro</button><p id="near-status"></p></details><h2>Pistas identificadas por la comunidad</h2><div id="list"></div><details id="contribute"><summary style="cursor:pointer;padding:14px;background:#28648c;border-radius:10px;font-weight:bold">+ Agregar una pista conocida</summary><h2>Proponer una pista</h2><p>Solo integrantes registrados. Cada propuesta requiere aprobación de administración.</p><form id="form"><label>Nombre de la pista<input name="name" required maxlength="120" minlength="3"></label><label>Provincia<input name="province" required maxlength="80"></label><label>Latitud decimal<input name="latitude" type="number" step="any" min="-56" max="-21" required></label><label>Longitud decimal<input name="longitude" type="number" step="any" min="-74" max="-53" required></label><label>Orientación de pista<input name="runway" maxlength="50"></label><label>Dimensiones<input name="dimensions" maxlength="80"></label><label>Elevación<input name="elevation" maxlength="50"></label><label>Superficie<select name="surface"><option>Desconocida</option><option>Césped</option><option>Tierra</option><option>Asfalto</option><option>Ripio</option><option>Otra</option></select></label><label>Acceso<select name="permission"><option>Requiere autorización previa</option><option>Consultar al responsable</option><option>Acceso no confirmado</option></select></label><label>Frecuencia (si corresponde)<input name="frequency" maxlength="60"></label><label>Contacto autorizado para publicar<input name="contact" maxlength="150"></label><label class="wide">Obstáculos<textarea name="obstacles" maxlength="1500"></textarea></label><label class="wide">Observaciones<textarea name="notes" maxlength="2500"></textarea></label><div class="airstrip-photos wide">
+ <label for="airstrip-photo-files">Fotografías de la pista (hasta 3)</label>
+ <div id="airstrip-photo-drop" class="airstrip-photo-drop" role="button" tabindex="0"
+  aria-label="Arrastrar fotos o seleccionar imágenes JPG, PNG y WebP">
+   <strong>Arrastrá fotografías aquí o hacé clic para elegir</strong>
+   <span>JPG, PNG o WebP · Hasta 4 MB cada una · Se enviarán a moderación</span>
+   <input id="airstrip-photo-files" type="file" accept="image/jpeg,image/png,image/webp" multiple hidden>
+   <div id="airstrip-photo-preview" class="airstrip-photo-preview" aria-live="polite"></div>
+ </div>
+ <label class="photo-consent"><span><input id="airstrip-photo-consent" type="checkbox"> Confirmo que puedo publicar estas imágenes y que no incluyen información sensible de terceros.</span></label>
+ <small>Las fotografías solo se muestran en el mapa cuando se aprueba la propuesta. Se almacenan en Cloudflare R2.</small>
+ </div>
+ <label class="wide"><span><input type="checkbox" name="consent" required> Confirmo que tengo autorización para divulgar esta ubicación y los datos de contacto incluidos.</span></label><button type="submit">Enviar a moderación</button></form></details><p id="message" role="status"></p><section id="admin" hidden><h2>Moderación de propuestas</h2><div id="pending"></div></section></div>
     <section class="official-aip-panel" aria-labelledby="official-aip-heading">
   <div>
     <span class="official-aip-eyebrow">DOCUMENTACIÓN AERONÁUTICA OFICIAL</span>
@@ -345,7 +375,7 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
 </div><p class="map-actions"><button id="explore" type="button">Explorar pistas en esta zona</button> <small id="osm-status">Acercá el mapa a una zona y presioná el botón. Fuente: OpenStreetMap / Overpass.</small></p></div>
   </section>
  </div>
-</main><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="../assets/supabase-2.117.2.min.js"></script><script src="../assets/community-config.js"></script><script src="gestion-aeronautica/src/catalogo-pistas-anac.js"></script><script src="gestion-aeronautica/src/clasificacion-pistas.js"></script><script>
+</main><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="../assets/supabase-2.117.2.min.js"></script><script src="../assets/community-config.js"></script><script src="../assets/r2-media.js"></script><script src="gestion-aeronautica/src/catalogo-pistas-anac.js"></script><script src="gestion-aeronautica/src/clasificacion-pistas.js"></script><script>
 (async()=>{
 const client=supabase.createClient(GDV_CONFIG.url,GDV_CONFIG.key);
 const map=L.map('map',{touchZoom:true,scrollWheelZoom:true,doubleClickZoom:true,tapHold:true}).setView([-35.0,-58.2],10);const satellite=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Imagery © Esri and contributors'}).addTo(map);const streets=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'});const basemapControl=L.control.layers({'Satélite · ver pistas':satellite,'Calles y caminos':streets},null,{collapsed:false});basemapControl.addTo(map);const basemapSelector=document.getElementById('basemap-selector');basemapSelector.appendChild(basemapControl.getContainer());
@@ -737,6 +767,21 @@ document.getElementById('contribute-fast').addEventListener('click',()=>{
  document.getElementById('map').scrollIntoView({behavior:'smooth',block:'center'});
 });
 
+function airstripImageGallery(parent,urls,name){
+ if(!Array.isArray(urls))return;
+ const safe=urls.filter(url=>typeof url==='string'&&
+  /^https:\/\/media\.gentedevuelo\.com\/imagenes\/[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|png|webp)$/i.test(url)).slice(0,3);
+ if(!safe.length)return;
+ const gallery=document.createElement('div');gallery.className='airstrip-gallery';
+ const caption=document.createElement('strong');caption.textContent='Fotografías aportadas por la comunidad';gallery.append(caption);
+ for(let i=0;i<safe.length;i++){
+  const photo=document.createElement('img');photo.src=safe[i];
+  photo.loading='lazy';photo.alt='Fotografía comunitaria '+(i+1)+' · '+name;
+  photo.width=420;photo.height=235;
+  gallery.append(photo);
+ }
+ parent.append(gallery);
+}
 function airstripPopup(name,kind,latitude,longitude,details={},nm=null,updated=''){
  const card=document.createElement('section');card.className='airstrip-popup';
  const tag=document.createElement('span');tag.className='popup-tag';
@@ -782,6 +827,7 @@ function airstripPopup(name,kind,latitude,longitude,details={},nm=null,updated='
  item('Fecha del documento',details.sourceDate);
  item('Verificación',details.verification);
  card.append(facts);
+ airstripImageGallery(card,details.photos,name);
  const actions=document.createElement('div');actions.className='popup-actions';
  const open=document.createElement('a');
  open.textContent='Ver ubicación en mapa ↗';
