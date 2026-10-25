@@ -609,7 +609,7 @@ assert.match(ravWithDraft,/sin certificar|sin firmar|NO se firma/i);
 console.log('PASS: Registro de vuelo separado de RAV institucional en Pilotos y alumnos');
 
 
-// Biblioteca de Academia: 30 temas y 6 fichas CRM; lectura desde Drive para administradores hasta publicarlos en Storage.
+// Biblioteca de Academia: 30 temas y 6 fichas CRM; material previo en Supabase y nuevas versiones de hasta 100 MB en Cloudflare R2.
 const theoryTitles=html.match(/const AEROSUITE_THEORY_TOPICS=\[([\s\S]*?)\];/);
 const crmTitles=html.match(/const AEROSUITE_CRM_TOPICS=\[([\s\S]*?)\];/);
 assert.ok(theoryTitles&&crmTitles,'Faltan los dos catálogos de fichas.');
@@ -627,7 +627,14 @@ assert.match(html,/function academyScreen\(\)\{[\s\S]*?academyLibrary\(\)/,'La b
 assert.doesNotMatch(html,/studentLibrary\(\)/,'El Portal del alumno no debe incluir la biblioteca.');
 assert.match(html,/AEROSUITE_DRIVE_THEORY_URLS/,'Debe permitir ver las fichas de trabajo con autorización Drive.');
 assert.match(html,/libraryUploaded\[type\]===true/,'No activar enlaces hasta confirmar la carga.');
-assert.match(html,/file\.size>30\*1024\*1024/,'Control de tamaño requerido.');
+assert.match(html,/const AEROSUITE_LIBRARY_MAX_MB=100/,'El límite para los cuadernillos principales debe ser 100 MB.');
+assert.ok(html.includes("file.size>AEROSUITE_LIBRARY_MAX_MB*1024*1024"),'Debe validar el tamaño de 100 MB.');
+assert.ok(html.includes("file.size<=AEROSUITE_LIBRARY_MAX_MB*1024*1024"),'El selector debe habilitar archivos de 100 MB.');
+assert.ok(html.includes("callLibraryR2('prepare'"),'La carga debe usar una URL firmada de Cloudflare R2.');
+assert.ok(html.includes("callLibraryR2('finish'"),'La publicación debe confirmar el reemplazo.');
+assert.ok(html.includes("callLibraryR2('status'"),'La biblioteca debe detectar la versión publicada en R2.');
+assert.ok(html.includes('data-library-replace="teoria"'),'Debe haber botón explícito de reemplazo de teoría.');
+assert.ok(html.includes('data-library-replace="crm"'),'Debe haber botón explícito de reemplazo de CRM.');
 assert.match(html,/signature!=='%PDF-'/,'Control de formato PDF requerido.');
 console.log('PASS: biblioteca AeroSuite, 30 fichas de teoría y 6 de CRM con control de carga admin');
 
