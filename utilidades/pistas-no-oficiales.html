@@ -196,16 +196,21 @@ const PIN_PALETTE={
  reference:{fill:'#667282',edge:'#e1ebf4'},
  draft:{fill:'#bc7e41',edge:'#ffe0ac'}
 };
-function runwayPin(kind='community'){
- const tone=PIN_PALETTE[kind]||PIN_PALETTE.community;
- // SVG vectorial propio; la figura es una pista, no una flecha genérica.
- const svg='<svg xmlns="http://www.w3.org/2000/svg" width="42" height="54" viewBox="0 0 42 54" aria-hidden="true">'+
-  '<path d="M21 2C10.2 2 2 10.3 2 21.2c0 13.9 19 30.8 19 30.8s19-16.9 19-30.8C40 10.3 31.8 2 21 2Z" fill="'+tone.fill+'" stroke="'+tone.edge+'" stroke-width="2.6"/>'+
-  '<path d="M14 11.4h14v21.9H14z" fill="#102639" rx="2"/>'+
+function runwayPin(kind='unverified'){
+ const tone=PIN_PALETTE[kind]||PIN_PALETTE.unverified;
+ const heli=kind==='heliport';
+ const critical=kind==='unverified'||kind==='community';
+ const symbol=heli?
+  '<circle cx="21" cy="22" r="14" fill="#10314b" stroke="#d7f4fc" stroke-width="1.5"/><text x="21" y="30" text-anchor="middle" fill="#fff" font-family="Arial,sans-serif" font-weight="900" font-size="24">H</text>':
+  critical?
+  '<path d="M21 10 34 34H8Z" fill="#fff1dc" stroke="#601c18" stroke-width="1.8"/><path d="M21 17v9" stroke="#8b211c" stroke-width="3" stroke-linecap="round"/><circle cx="21" cy="30" r="1.8" fill="#8b211c"/>':
+  '<path d="M14 11.4h14v21.9H14z" fill="#102639"/>'+
   '<path d="M17 12.8v18.8M25 12.8v18.8" stroke="#d3e9f9" stroke-opacity=".85" stroke-width="1.2"/>'+
   '<path d="M21 14v16.2" stroke="#ffffff" stroke-width="2.2" stroke-dasharray="4 3" stroke-linecap="round"/>'+
-  '<path d="M14 10.3h14M14 33.6h14" stroke="'+tone.edge+'" stroke-width="2"/>'+
-  '</svg>';
+  '<path d="M14 10.3h14M14 33.6h14" stroke="'+tone.edge+'" stroke-width="2"/>';
+ const svg='<svg xmlns="http://www.w3.org/2000/svg" width="42" height="54" viewBox="0 0 42 54" aria-hidden="true">'+
+  '<path d="M21 2C10.2 2 2 10.3 2 21.2c0 13.9 19 30.8 19 30.8s19-16.9 19-30.8C40 10.3 31.8 2 21 2Z" fill="'+tone.fill+'" stroke="'+tone.edge+'" stroke-width="2.6"/>'+
+  symbol+'</svg>';
  return L.divIcon({className:'airstrip-marker',html:svg,iconSize:[42,54],iconAnchor:[21,51],popupAnchor:[0,-48]});
 }
 const ANAC_CATALOG=window.AEROSUITE_OFFICIAL_AIRSTRIPS||{official:[],lad:[],sources:{},catalogStatus:'no_disponible'};
