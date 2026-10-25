@@ -491,39 +491,39 @@ assert.match(html,/site_admins/,'El acceso admin de la demo debe mantenerse');
 
 // Flight Operations: una sola aplicación para Formación e Instrucción, sin privilegios IA en el modo demo.
 const flightOperationsOriginal=fs.readFileSync(new URL('../utilidades/meteorologia-aeronautica.html',import.meta.url),'utf8');
-const flightAreaDefinition=html.match(/const AREA_DEFS=Object\\.freeze\\(\\{([\\s\\S]*?)\\}\\);/);
+const flightAreaDefinition=html.match(/const AREA_DEFS=Object\.freeze\(\{([\s\S]*?)\}\);/);
 assert.ok(flightAreaDefinition,'No existe definición de áreas de AeroSuite');
 for(const [area,caption] of [['alumno','Planificación'],['instructor','Instrucción']]){
- const row=flightAreaDefinition[1].split('\\n').find(line=>line.trim().startsWith(area+':'));
+ const row=flightAreaDefinition[1].split('\n').find(line=>line.trim().startsWith(area+':'));
  assert.ok(row&&row.includes("['flightops','Flight Operations · "+caption+"']"),'Falta Flight Operations en '+area);
 }
-const schoolRow=flightAreaDefinition[1].split('\\n').find(line=>line.trim().startsWith('administracion:'));
+const schoolRow=flightAreaDefinition[1].split('\n').find(line=>line.trim().startsWith('administracion:'));
 assert.ok(schoolRow&&!schoolRow.includes("['flightops'"),'Flight Operations no fue solicitado en el área administrativa');
 assert.match(html,/flightops:flightOperationsScreen/);
-assert.match(html,/function flightOperationsScreen\\(\\)/);
-assert.match(html,/function flightOperationsShortcut\\(area\\)/);
-assert.match(html,/flightOperationsShortcut\\('alumno'\\)/);
-assert.match(html,/flightOperationsShortcut\\('instructor'\\)/);
+assert.match(html,/function flightOperationsScreen\(\)/);
+assert.match(html,/function flightOperationsShortcut\(area\)/);
+assert.match(html,/flightOperationsShortcut\('alumno'\)/);
+assert.match(html,/flightOperationsShortcut\('instructor'\)/);
 assert.match(html,/data-go="flightops"/);
-assert.match(html,/const context=isStudent\\?'formacion':'instruccion'/);
-assert.match(html,/const url='\\.\\.\\/meteorologia-aeronautica\\.html\\?aerosuite='\\+context/);
+assert.match(html,/const context=isStudent\?'formacion':'instruccion'/);
+assert.match(html,/const url='\.\.\/meteorologia-aeronautica\.html\?aerosuite='\+context/);
 assert.match(html,/<iframe class="aerosuite-flightops-frame"/);
 assert.match(html,/title="Flight Operations · /);
-assert.match(html,/src="'\\+url\\+'"/);
-assert.match(html,/if\\(currentArea!=='alumno'&&currentArea!=='instructor'\\)/);
+assert.match(html,/src="'\+url\+'"/);
+assert.match(html,/if\(currentArea!=='alumno'&&currentArea!=='instructor'\)/);
 assert.match(html,/no guarda automáticamente trabajos en el legajo del alumno/);
 assert.match(html,/Modo formativo sin IA/);
-assert.match(flightOperationsOriginal,/const aeroContext=new URLSearchParams\\(window\\.location\\.search\\)\\.get\\('aerosuite'\\)/);
-assert.match(flightOperationsOriginal,/aeroContext==='formacion'\\|\\|aeroContext==='instruccion'/);
-assert.match(flightOperationsOriginal,/dataset\\.flightRole=isAdmin&&!trainingView\\?'admin':'member'/);
-assert.match(flightOperationsOriginal,/if\\(!isAdmin\\|\\|trainingView\\)\\{/);
-assert.match(flightOperationsOriginal,/const \\{data:admin,error:roleError\\}=await client\\.from\\('site_admins'\\)/,'La IA sigue verificando acceso administrativo');
-assert.match(flightOperationsOriginal,/const control=byId\\(id\\);if\\(control\\)control\\.disabled=true/);
+assert.match(flightOperationsOriginal,/const aeroContext=new URLSearchParams\(window\.location\.search\)\.get\('aerosuite'\)/);
+assert.match(flightOperationsOriginal,/aeroContext==='formacion'\|\|aeroContext==='instruccion'/);
+assert.match(flightOperationsOriginal,/dataset\.flightRole=isAdmin&&!trainingView\?'admin':'member'/);
+assert.match(flightOperationsOriginal,/if\(!isAdmin\|\|trainingView\)\{/);
+assert.match(flightOperationsOriginal,/const \{data:admin,error:roleError\}=await client\.from\('site_admins'\)/,'La IA sigue verificando acceso administrativo');
+assert.match(flightOperationsOriginal,/const control=byId\(id\);if\(control\)control\.disabled=true/);
 for(const feature of ['flight-origin','flight-dest','flight-alternate','flight-fetch-reports']){
  assert.ok(flightOperationsOriginal.includes('id="'+feature+'"'),'No debe perderse '+feature);
 }
 assert.match(landing,/Flight Operations · Planificador de vuelo/);
-assert.match(landing,/href="\\.\\.\\/meteorologia-aeronautica\\.html\\?aerosuite=formacion"/);
+assert.match(landing,/href="\.\.\/meteorologia-aeronautica\.html\?aerosuite=formacion"/);
 console.log('PASS: Flight Operations unificado en Alumno e Instructor sin IA y con permisos originales intactos');
 
 // Pistas No Oficiales: una única fuente compartida entre Gente de Vuelo y AeroSuite.
