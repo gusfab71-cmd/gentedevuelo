@@ -278,6 +278,19 @@ document.getElementById('zone-search-form').addEventListener('submit',async even
   }
   return;
  }
+ const documentedMatches=documentedAirstrips.filter(x=>layerSelected(x.category))
+  .filter(x=>normalizePista([x.name,x.details?.icao,x.details?.registry,x.details?.province].join(' ')).includes(normalizePista(query)))
+  .slice(0,6);
+ if(documentedMatches.length){
+  if(documentedMatches.length===1){
+   const found=documentedMatches[0];focusMapAt(found.lat,found.lon,found.name,14);
+   const marker=documentaryMarkers.get(found.id);if(marker)marker.openPopup();
+  }else{
+   presentZoneOptions(documentedMatches.map(x=>({lat:x.lat,lon:x.lon,label:x.name+' · '+(x.category==='lad'?'LAD registrado':'AIP documentado'),zoom:14})));
+   zoneStatus.textContent=documentedMatches.length+' referencias ANAC de esta muestra. Elegí una para ir a la zona.';
+  }
+  return;
+ }
  const key=query.toLowerCase();
  if(zoneCache.has(key)){
   const saved=zoneCache.get(key);
@@ -586,6 +599,7 @@ document.getElementById('search').addEventListener('input',render);
 document.getElementById('form').addEventListener('submit',async e=>{e.preventDefault();const {data:{user}}=await client.auth.getUser();if(!user){msg.textContent='Ingresá a Gente de Vuelo para enviar propuestas.';return}const f=new FormData(e.target);const details={};for(const k of ['province','runway','dimensions','elevation','surface','permission','frequency','contact','obstacles','notes'])details[k]=String(f.get(k)||'').trim();details.location_consent=!!f.get('consent');const payload={name:String(f.get('name')).trim(),latitude:Number(f.get('latitude')),longitude:Number(f.get('longitude')),author_id:user.id,status:'pending',details};const {error}=await client.from('community_airstrips').insert(payload);msg.textContent=error?'No se pudo enviar: '+error.message:'Propuesta enviada. Quedará visible después de su aprobación.';if(!error){e.target.reset();if(draftMarker){map.removeLayer(draftMarker);draftMarker=null}}});
 const {data:{user}}=await client.auth.getUser();if(user){const {data}=await client.from('site_admins').select('user_id').eq('user_id',user.id).maybeSingle();admin=!!data}
 if(admin){document.getElementById('admin').hidden=false;async function pending(){const r=await client.from('community_airstrips').select('*').eq('status','pending').order('created_at');const root=document.getElementById('pending');root.replaceChildren();for(const p of r.data||[]){const d=el('div',p.name+' · '+p.latitude+', '+p.longitude+' · '+(p.details?.province||''));d.className='entry';for(const status of ['approved','rejected']){const b=el('button',status==='approved'?'Aprobar':'Rechazar');b.onclick=async()=>{const {error}=await client.from('community_airstrips').update({status}).eq('id',p.id);if(error)msg.textContent=error.message;else{await pending();await load()}};d.append(b)}root.append(d)}}await pending()}
+render(); // Las referencias documentales se muestran aun si falla la conexión a la comunidad.
 await load();
 })();
 </script></body></html>
