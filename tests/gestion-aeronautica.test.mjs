@@ -584,7 +584,7 @@ assert.equal(ravReviewed.certification,null);
 assert.match(RAV_STATES.reviewed,/NO CERTIFICADO/);
 assert.equal(ravReviewed.history.length,5);
 assert.throws(()=>institutionalReviewRav(ravReviewed,{actor:'director',role:'director',decision:'reviewed'}),/pendiente/);
-assert.ok(html.includes("['vuelos','Registro de vuelo']"));
+assert.ok(html.includes("['vuelos','Registro de vuelos']"));
 assert.ok(html.includes('function ravInstitutionScreen(){'));
 assert.ok(html.includes('function wireInstitutionalRav(){'));
 assert.ok(html.includes('Gestión institucional de RAV · Dirección / Administración'));
@@ -629,14 +629,16 @@ assert.ok(theoryTitles&&crmTitles,'Faltan los dos catálogos de fichas.');
 assert.equal((theoryTitles[1].match(/'[^']*'/g)||[]).length,30,'Deben existir 30 temas de teoría.');
 assert.equal((crmTitles[1].match(/'[^']*'/g)||[]).length,8,'Deben existir 8 temas CRM.');
 for(const key of [
- 'aerosuite-biblioteca','function academyLibrary(){',
+ 'aerosuite-biblioteca','function academyLibrary(canManage=false){',
  'libraryCollection(\'teoria\',AEROSUITE_THEORY_TOPICS)',
  'libraryCollection(\'crm\',AEROSUITE_CRM_TOPICS)',
  'data-library-upload="teoria"','data-library-upload="crm"',
  'createSignedUrl\(' /* Marker checked below for public URL alternative */
 ].slice(0,-1))assert.ok(html.includes(key),'Catálogo incompleto: '+key);
 assert.match(html,/getPublicUrl\(row\.path\)/,'Solo generar links a PDFs cargados.');
-assert.match(html,/function academyScreen\(\)\{[\s\S]*?academyLibrary\(\)/,'La biblioteca debe estar en Academia y Simu PPA.');
+assert.match(html,/function academyScreen\(\)\{[\s\S]*?academyLibrary\(false\)/,'La biblioteca de Alumno debe ser solo de lectura.');
+assert.match(html,/function adminAcademyScreen\(\)\{[\s\S]*?academyLibrary\(true\)/,'Los PDF deben editarse desde Gestión Administrativa.');
+assert.ok(html.includes("(canManage?uploadBox:'')"),'No mostrar botones de edición al alumno.');
 assert.doesNotMatch(html,/studentLibrary\(\)/,'El Portal del alumno no debe incluir la biblioteca.');
 assert.doesNotMatch(html,/AEROSUITE_DRIVE_THEORY_URLS/,'Academia no debe depender de Google Drive.');
 assert.match(html,/libraryUploaded\[type\]===true/,'No activar enlaces hasta confirmar la carga.');
