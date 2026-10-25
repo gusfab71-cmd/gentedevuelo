@@ -157,7 +157,7 @@ const client=supabase.createClient(GDV_CONFIG.url,GDV_CONFIG.key);
 const map=L.map('map',{touchZoom:true,scrollWheelZoom:true,doubleClickZoom:true,tapHold:true}).setView([-35.0,-58.2],10);const satellite=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Imagery © Esri and contributors'}).addTo(map);const streets=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'});const basemapControl=L.control.layers({'Satélite · ver pistas':satellite,'Calles y caminos':streets},null,{collapsed:false});basemapControl.addTo(map);const basemapSelector=document.getElementById('basemap-selector');basemapSelector.appendChild(basemapControl.getContainer());
 let markers=L.layerGroup().addTo(map),records=[],admin=false;
 const PIN_PALETTE={
- community:{fill:'#246190',edge:'#a7d5f8'},reference:{fill:'#667282',edge:'#e1ebf4'},draft:{fill:'#bc7e41',edge:'#ffe0ac'}
+ official:{fill:'#286ba8',edge:'#e2f2ff'},lad:{fill:'#ba8a34',edge:'#ffecc4'},community:{fill:'#8b65a9',edge:'#ebdbfd'},reference:{fill:'#667282',edge:'#e1ebf4'},draft:{fill:'#bc7e41',edge:'#ffe0ac'}
 };
 function runwayPin(kind='community'){
  const tone=PIN_PALETTE[kind]||PIN_PALETTE.community;
@@ -171,6 +171,36 @@ function runwayPin(kind='community'){
   '</svg>';
  return L.divIcon({className:'airstrip-marker',html:svg,iconSize:[42,54],iconAnchor:[21,51],popupAnchor:[0,-48]});
 }
+const ANAC_CATALOG=window.AEROSUITE_OFFICIAL_AIRSTRIPS||{official:[],lad:[],sources:{},catalogStatus:'no_disponible'};
+const documentedLayers={official:L.layerGroup().addTo(map),lad:L.layerGroup().addTo(map)};
+const layerVisibility={official:true,lad:true,community:true,reference:true};
+const documentaryMarkers=new Map();
+function layerSelected(kind){return layerVisibility[kind]===true}
+function syncLayerVisibility(){
+ for(const kind of ['official','lad']){
+  const group=documentedLayers[kind];
+  if(layerSelected(kind)&&!map.hasLayer(group))group.addTo(map);
+  else if(!layerSelected(kind)&&map.hasLayer(group))map.removeLayer(group);
+ }
+ for(const [kind,group] of [['community',markers],['reference',external]]){
+  if(layerSelected(kind)&&!map.hasLayer(group))group.addTo(map);
+  else if(!layerSelected(kind)&&map.hasLayer(group))map.removeLayer(group);
+ }
+}
+function setLayerVisible(kind,visible){
+ if(!Object.prototype.hasOwnProperty.call(layerVisibility,kind))return;
+ layerVisibility[kind]=visible;
+ const checkbox=document.querySelector('[data-pista-layer="'+kind+'"]');
+ if(checkbox)checkbox.checked=visible;
+ syncLayerVisibility();
+ render();renderExternal();
+}
+document.querySelectorAll('[data-pista-layer]').forEach(input=>{
+ input.addEventListener('change',()=>setLayerVisible(input.dataset.pistaLayer,input.checked));
+});
+document.getElementById('layers-all').addEventListener('click',()=>Object.keys(layerVisibility).forEach(kind=>setLayerVisible(kind,true)));
+document.getElementById('layers-none').addEventListener('click',()=>Object.keys(layerVisibility).forEach(kind=>setLayerVisible(kind,false)));
+
 const draftPin=runwayPin('draft');let draftMarker=null;
 function proposeAt(latlng){
  if(pickReference)return;
