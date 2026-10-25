@@ -97,6 +97,22 @@ h1{letter-spacing:-.035em}
 .pista-record .pista-record-tag{font-size:10px;letter-spacing:.07em;font-weight:850;color:#f4e0be}
 .airstrip-popup .popup-fact dd a{color:#175e91!important}
 @media(max-width:680px){.pista-classification{padding:13px}.pista-filter-grid{grid-template-columns:1fr}.pista-layer-actions{width:100%}.pista-layer-actions button{flex:1}.pista-doc-links{gap:10px}}
+
+.pista-filter-option.critical{background:#442c2b;border-color:#b85b52}
+.pista-filter-option.critical strong{color:#ffe1db}
+.osm-toggle{display:flex;flex-direction:row;align-items:center;gap:8px;font-size:12px;color:#d4e1ec;margin:12px 0}
+.osm-toggle input{width:17px;height:17px;flex-shrink:0;accent-color:#96bad7}
+.pista-service-filters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px;margin:14px 0 10px}
+.pista-service-filters label{font-size:12px;color:#daeafa}
+.pista-service-filters select{width:100%;margin-top:4px;font-size:13px}
+.swatch-controlled,.pin-legend .legend-dot.controlled{background:#286ba8}
+.swatch-uncontrolled,.pin-legend .legend-dot.uncontrolled{background:#258a91}
+.swatch-private,.pin-legend .legend-dot.private{background:#8367b5}
+.swatch-heliport,.pin-legend .legend-dot.heliport{background:#427f8d}
+.swatch-unverified,.pin-legend .legend-dot.unverified{background:#b7433b;border-color:#ffd4c9}
+.pista-filter-grid strong{overflow-wrap:anywhere}
+.airstrip-popup .popup-warning.critical{background:#ffe3dc;border-left-color:#b7433b;color:#81251c;font-weight:760}
+@media(max-width:680px){.pista-service-filters{grid-template-columns:1fr}}
 </style></head><body><main><p><a href="index.html">← Utilidades</a></p><h1>Mapa de Pistas y Aeródromos · Gente de Vuelo</h1><p class="notice">Información comunitaria no oficial. No sustituye AIP, NOTAM, verificación de condiciones ni autorización del propietario. No se publican ubicaciones privadas sin consentimiento.</p><p class="notice">Separá o juntá dos dedos para hacer zoom. Mantené presionado un lugar para marcar una nueva pista y agregar un comentario. Elegí Satélite o Calles arriba del mapa. Las imágenes pueden estar desactualizadas: comprobá siempre el estado real de la pista.</p><section class="zone-panel" aria-label="Buscar zona en el mapa">
 <h2>Ubicá una zona o una pista</h2>
 <p>Buscá por localidad, provincia o nombre de pista. También podés ingresar coordenadas decimales, por ejemplo: -34.90, -57.94. El mapa se centrará en el lugar elegido.</p>
@@ -130,10 +146,18 @@ h1{letter-spacing:-.035em}
   <div class="pista-layer-actions"><button type="button" id="layers-all">Mostrar todas</button><button type="button" id="layers-none">Ocultar todas</button></div>
  </div>
  <div class="pista-filter-grid">
-  <label class="pista-filter-option"><input type="checkbox" data-pista-layer="official" checked><span class="pista-filter-swatch swatch-official" aria-hidden="true"></span><span><strong>Aeródromos documentados (AIP)</strong><small>Publicación ANAC; no verifica habilitación vigente</small></span></label>
-  <label class="pista-filter-option"><input type="checkbox" data-pista-layer="lad" checked><span class="pista-filter-swatch swatch-lad" aria-hidden="true"></span><span><strong>Lugares Aptos Denunciados (LAD)</strong><small>Registro oficial; no equivale a aeródromo habilitado</small></span></label>
-  <label class="pista-filter-option"><input type="checkbox" data-pista-layer="community" checked><span class="pista-filter-swatch swatch-community" aria-hidden="true"></span><span><strong>Pistas comunitarias</strong><small>Reportadas; situación oficial no comprobada</small></span></label>
-  <label class="pista-filter-option"><input type="checkbox" data-pista-layer="reference" checked><span class="pista-filter-swatch swatch-reference" aria-hidden="true"></span><span><strong>Referencias cartográficas</strong><small>OpenStreetMap; datos no validados</small></span></label>
+  <label class="pista-filter-option"><input type="checkbox" data-pista-layer="controlled_public" checked><span class="pista-filter-swatch swatch-controlled" aria-hidden="true"></span><span><strong>Aeropuertos / aeródromos públicos controlados</strong><small>Control de tránsito aéreo (TWR) documentado. IFR, balizamiento y servicios se verifican por separado.</small></span></label>
+  <label class="pista-filter-option"><input type="checkbox" data-pista-layer="uncontrolled_public" checked><span class="pista-filter-swatch swatch-uncontrolled" aria-hidden="true"></span><span><strong>Aeródromos públicos no controlados</strong><small>Sin servicio TWR. Consultar horarios, AFIS/radio y condiciones; uso público no garantiza servicios.</small></span></label>
+  <label class="pista-filter-option"><input type="checkbox" data-pista-layer="private_aerodrome" checked><span class="pista-filter-swatch swatch-private" aria-hidden="true"></span><span><strong>Aeródromos privados</strong><small>Acceso sujeto a autorización. Pueden contar o no con ATS; verificar habilitación.</small></span></label>
+  <label class="pista-filter-option"><input type="checkbox" data-pista-layer="lad" checked><span class="pista-filter-swatch swatch-lad" aria-hidden="true"></span><span><strong>Lugares Aptos Denunciados (LAD)</strong><small>No son aeródromos habilitados. Consultar restricciones VFR, condiciones y autorización.</small></span></label>
+  <label class="pista-filter-option"><input type="checkbox" data-pista-layer="heliport" checked><span class="pista-filter-swatch swatch-heliport" aria-hidden="true"></span><span><strong>Helipuertos / helipuntos</strong><small>Instalaciones para alas rotativas. Público/privado y superficie/elevado se muestran en cada ficha.</small></span></label>
+  <label class="pista-filter-option critical"><input type="checkbox" data-pista-layer="unverified" checked><span class="pista-filter-swatch swatch-unverified" aria-hidden="true"></span><span><strong>⚠ No oficiales / estatus sin verificar</strong><small>Solo referencias geográficas para análisis de contingencias. NO utilizar como destino o alternativo confirmado.</small></span></label>
+ </div>
+ <label class="osm-toggle"><input type="checkbox" data-pista-layer="reference" checked> Dentro de «Sin verificar», mostrar también referencias de OpenStreetMap (gris)</label>
+ <div class="pista-service-filters" aria-label="Filtros de características aeronáuticas">
+  <label>Servicio ATS<select id="filter-ats"><option value="all">Todos los niveles ATS</option><option value="twr">TWR · Control</option><option value="afis">AFIS · Información</option><option value="air_radio">Radio / información</option><option value="none">Sin ATS documentado</option><option value="unknown">ATS no verificado</option></select></label>
+  <label>Acceso<select id="filter-access"><option value="all">Cualquier acceso</option><option value="public">Uso público</option><option value="prior_permission">Autorización previa</option><option value="restricted">Restringido</option><option value="unknown">Sin confirmar</option></select></label>
+  <label>Reglas de operación<select id="filter-rules"><option value="all">VFR / IFR: todos</option><option value="vfr">VFR documentado</option><option value="ifr">IFR documentado</option><option value="both">VFR e IFR documentados</option><option value="unknown">Sin verificar</option></select></label>
  </div>
  <div id="pista-catalog-status" role="status">Catálogo oficial parcial: muestra inicial con fuentes ANAC y fecha documental. Consultá siempre información vigente.</div>
  <p class="pista-filter-note"><strong>Privado no significa no oficial.</strong> Un aeródromo documentado puede ser privado. El acceso, la disponibilidad y la aptitud operacional deben verificarse aparte.</p>
@@ -141,12 +165,15 @@ h1{letter-spacing:-.035em}
  <a href="https://ais.anac.gob.ar/aip" target="_blank" rel="noopener noreferrer">AIP · ANAC</a>
  <a href="https://www.argentina.gob.ar/sites/default/files/listado_lad_2026-09.pdf" target="_blank" rel="noopener noreferrer">Listado LAD · septiembre 2026</a></div>
 </section>
-<div class="pin-legend" aria-label="Significado de los marcadores">
-  <span class="legend-item"><span class="legend-dot official" aria-hidden="true"></span>Documentado AIP</span>
-  <span class="legend-item"><span class="legend-dot lad" aria-hidden="true"></span>LAD ANAC</span>
-  <span class="legend-item"><span class="legend-dot community" aria-hidden="true"></span>Comunitaria publicada</span>
-  <span class="legend-item"><span class="legend-dot reference" aria-hidden="true"></span>Referencia cartográfica</span>
-  <span class="legend-item"><span class="legend-dot draft" aria-hidden="true"></span>Nueva propuesta (sin publicar)</span>
+<div class="pin-legend" aria-label="Leyenda de marcadores">
+  <span class="legend-item"><span class="legend-dot controlled" aria-hidden="true"></span>TWR público</span>
+  <span class="legend-item"><span class="legend-dot uncontrolled" aria-hidden="true"></span>Público sin TWR</span>
+  <span class="legend-item"><span class="legend-dot private" aria-hidden="true"></span>Privado</span>
+  <span class="legend-item"><span class="legend-dot lad" aria-hidden="true"></span>LAD</span>
+  <span class="legend-item"><span class="legend-dot heliport" aria-hidden="true"></span>Helipuerto</span>
+  <span class="legend-item"><span class="legend-dot unverified" aria-hidden="true"></span>⚠ Sin verificar</span>
+  <span class="legend-item"><span class="legend-dot reference" aria-hidden="true"></span>OSM sin verificar</span>
+  <span class="legend-item"><span class="legend-dot draft" aria-hidden="true"></span>Propuesta pendiente</span>
 </div><p class="map-actions"><button id="explore" type="button">Explorar pistas en esta zona</button> <small id="osm-status">Acercá el mapa a una zona y presioná el botón. Fuente: OpenStreetMap / Overpass.</small></p><label>Filtrar registros visibles <input id="search" placeholder="Nombre, provincia, código OACI o número LAD"></label>
 <section class="pista-official-list" aria-labelledby="pista-official-title">
  <h2 id="pista-official-title">Registros con respaldo documental ANAC · Muestra inicial</h2>
