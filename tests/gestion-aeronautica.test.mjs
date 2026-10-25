@@ -91,11 +91,26 @@ assert.equal(stockMove({qty:20},4,'salida'),16);
 assert.equal(stockMove({qty:20},4,'entrada'),24);
 assert.throws(()=>stockMove({qty:20},25,'salida'),/stock/);
 
-const html=fs.readFileSync(new URL('../utilidades/gestion-aeronautica/index.html',import.meta.url),'utf8');
+const landing=fs.readFileSync(new URL('../utilidades/gestion-aeronautica/index.html',import.meta.url),'utf8');
+const html=fs.readFileSync(new URL('../utilidades/gestion-aeronautica/portal.html',import.meta.url),'utf8');
+// La portada institucional es pública; el portal real conserva la barrera administrativa.
+assert.match(landing,/<title>AeroSuite .* Gente de Vuelo<\/title>/);
+for(const name of ['Bienven','Quiénes somos','Tres áreas','Área del Alumno','Instructor','Gestión Administrativa','Preguntas frecuentes']){
+ assert.ok(landing.includes(name),'Falta sección pública de AeroSuite: '+name);
+}
+for(const section of ['solucion','areas','modulos','nosotros','preguntas']){
+ assert.ok(landing.includes('id="'+section+'"'),'Falta sección de presentación: '+section);
+}
+assert.match(landing,/href="portal\.html"/);
+assert.doesNotMatch(landing,/GDV_AUTH|site_admins|supabase-2\.117/,'La portada no debe pedir credenciales ni exponer el portal de prueba');
+assert.match(html,/site_admins/,'El portal operativo debe conservar control de acceso admin');
+assert.match(html,/Acceso exclusivo del administrador/);
+assert.match(html,/href="index\.html">Volver a la presentación<\/a>/);
+
 const matches=[...html.matchAll(/<script type="module">([\s\S]*?)<\/script>/g)];
 assert.equal(matches.length,1);
 const script=matches[0][1].replace(/^(?:\s*import[^\n]*\n)+/,'');
-new vm.Script(script,{filename:'gestion-aeronautica/index.html'});
+new vm.Script(script,{filename:'gestion-aeronautica/portal.html'});
 assert.match(html,/id="bookingDurationHint"/);
 assert.match(html,/const updateStudentDuration=\(\)=>/);
 assert.match(html,/\$\('bookPilot'\)\?\.addEventListener\('change',updateStudentDuration\)/);
