@@ -625,7 +625,7 @@ for(const key of [
 assert.match(html,/getPublicUrl\(row\.path\)/,'Solo generar links a PDFs cargados.');
 assert.match(html,/function academyScreen\(\)\{[\s\S]*?academyLibrary\(\)/,'La biblioteca debe estar en Academia y Simu PPA.');
 assert.doesNotMatch(html,/studentLibrary\(\)/,'El Portal del alumno no debe incluir la biblioteca.');
-assert.match(html,/AEROSUITE_DRIVE_THEORY_URLS/,'Debe permitir ver las fichas de trabajo con autorización Drive.');
+assert.doesNotMatch(html,/AEROSUITE_DRIVE_THEORY_URLS/,'Academia no debe depender de Google Drive.');
 assert.match(html,/libraryUploaded\[type\]===true/,'No activar enlaces hasta confirmar la carga.');
 assert.match(html,/const AEROSUITE_LIBRARY_MAX_MB=100/,'El límite para los cuadernillos principales debe ser 100 MB.');
 assert.ok(html.includes("file.size>AEROSUITE_LIBRARY_MAX_MB*1024*1024"),'Debe validar el tamaño de 100 MB.');
@@ -633,9 +633,15 @@ assert.ok(html.includes("file.size<=AEROSUITE_LIBRARY_MAX_MB*1024*1024"),'El sel
 assert.ok(html.includes("callLibraryR2('prepare'"),'La carga debe usar una URL firmada de Cloudflare R2.');
 assert.ok(html.includes("callLibraryR2('finish'"),'La publicación debe confirmar el reemplazo.');
 assert.ok(html.includes("callLibraryR2('status'"),'La biblioteca debe detectar la versión publicada en R2.');
+assert.match(html,/async function uploadLibraryMultipart\(type,file\)/,'Debe existir la carga por fragmentos como respaldo cuando falle CORS.');
+assert.ok(html.includes("callLibraryR2('multipart-start'"),'Debe iniciar multipart en R2.');
+assert.ok(html.includes("callLibraryR2('multipart-complete'"),'Debe confirmar multipart antes de publicar.');
+assert.ok(html.includes("'x-academia-action':'multipart-part'"),'La transferencia por fragmentos debe autenticarse.');
+assert.ok(html.includes("const previousR2=libraryR2"),'No perder el PDF vigente cuando status falla.');
+assert.ok(html.includes("libraryR2[type]?.published"),'Distinguir PDF R2 actual de versión Supabase anterior.');
 assert.ok(html.includes('data-library-replace="teoria"'),'Debe haber botón explícito de reemplazo de teoría.');
 assert.ok(html.includes('data-library-replace="crm"'),'Debe haber botón explícito de reemplazo de CRM.');
 assert.match(html,/signature!=='%PDF-'/,'Control de formato PDF requerido.');
-console.log('PASS: biblioteca AeroSuite, 30 fichas de teoría y 6 de CRM con control de carga admin');
+console.log('PASS: biblioteca AeroSuite, 30 fichas de teoría y 8 de CRM con carga R2 resistente a CORS');
 
 console.log('PASS: gestión integrada, fechas, conflictos, cierre idempotente, stock, UX y acceso admin');
