@@ -402,8 +402,21 @@ async function uploadStudentLibraryFile(input){
   libraryUploadMessage('Transferencia finalizada. Verificando y reemplazando el PDF publicado…');
   const published=await callLibraryR2('finish',{type,path:prepared.path});
   if(!published?.ok||!published?.published||published.size!==file.size)throw Error('No se pudo confirmar el reemplazo del archivo.');
+  // La confirmación de finish es la fuente de verdad: no perder el estado publicado
+  // si una consulta posterior de status falla temporalmente.
+  libraryR2[type]={...published,published:true};
+  libraryUploaded[type]=true;
+  libraryFileVersions[type]=published.version||Date.now().toString();
+  libraryFileUpdatedAt[type]=published.updatedAt||new Date().toISOString();
+  libraryUploadMessage('PDF publicado en Cloudflare R2 ('+(file.size/1024/1024).toFixed(1)+' MB). Actualizando biblioteca…');
   await refreshStudentLibrary();
-  if(!libraryR2[type]?.published)throw Error('El PDF se cargó pero la biblioteca no pudo consultar su versión nueva. Volvé a actualizar la página.');
+  if(!libraryUploaded[type]){
+   libraryR2[type]={...published,published:true};
+   libraryUploaded[type]=true;
+   libraryFileVersions[type]=published.version||Date.now().toString();
+   libraryFileUpdatedAt[type]=published.updatedAt||new Date().toISOString();
+   if(tab==='academia')render();
+  }
   libraryUploadMessage('PDF reemplazado correctamente ('+(file.size/1024/1024).toFixed(1)+' MB): '+AEROSUITE_LIBRARY_FILES[type].title+'. Abrí la tarjeta para ver la nueva versión.');
  }catch(err){libraryUploadMessage('No se pudo reemplazar el PDF: '+(err.message||'error de carga'))}
  finally{input.disabled=false;input.value='';}
