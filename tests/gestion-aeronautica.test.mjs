@@ -489,39 +489,49 @@ assert.doesNotMatch(html,/data-go="piloto"/,'No debe haber salto administrativo 
 assert.doesNotMatch(html,/data-go="academia"/,'No debe haber salto administrativo al área del alumno');
 assert.match(html,/site_admins/,'El acceso admin de la demo debe mantenerse');
 
-// Alta privada del alumno: obligatoriedad basada en captura y aislamiento de cuentas.
+// Registro unificado de la comunidad: Alumno, Instructor, Piloto y foto voluntaria.
 const studentFormHtml=fs.readFileSync(new URL('../utilidades/gestion-aeronautica/mi-ficha-alumno.html',import.meta.url),'utf8');
-assert.match(html,/\['ficha_alumno','Mi ficha personal · Foto y documento'\]/);
+assert.match(html,/\['ficha_alumno','Mi perfil AeroSuite · Registro ampliado'\]/);
 assert.match(html,/ficha_alumno:studentProfileScreen/);
 assert.match(html,/function studentProfileScreen\(\)/);
-assert.match(html,/if\(currentArea!=='alumno'\)/);
+assert.match(html,/\['instructor','Panel del instructor'\],\['ficha_alumno','Mi perfil AeroSuite'\]/);
+assert.match(html,/\['inicio','Panel administrativo'\],\['ficha_alumno','Mi perfil AeroSuite'\]/);
 assert.match(html,/href="mi-ficha-alumno\.html"/);
 assert.match(html,/src="mi-ficha-alumno\.html"/);
-assert.doesNotMatch(studentFormHtml,/getPublicUrl\(/,'La fotografía del alumno NO debe publicarse');
-assert.match(studentFormHtml,/aerosuite-student-portraits/,'Almacenamiento privado de fotos');
-assert.match(studentFormHtml,/aerosuite_student_profiles/);
-assert.match(studentFormHtml,/aerosuite_student_documents/);
-assert.match(studentFormHtml,/\.eq\('user_id',user\.id\)/,'Consultas restringidas a cuenta propia');
-assert.match(studentFormHtml,/client\.auth\.getUser\(\)/,'Se comprueba identidad');
+assert.doesNotMatch(studentFormHtml,/getPublicUrl\(/,'La foto personal NO debe tener URL pública');
+assert.match(studentFormHtml,/aerosuite-student-portraits/,'Bucket privado existente');
+assert.match(studentFormHtml,/aerosuite_member_profiles/);
+assert.match(studentFormHtml,/aerosuite_member_documents/);
+assert.match(studentFormHtml,/aerosuite_role_declarations/);
+assert.match(studentFormHtml,/\.eq\('user_id',user\.id\)/,'Solo lee datos propios');
+assert.match(studentFormHtml,/client\.auth\.getUser\(\)/,'Misma autenticación de Gente de Vuelo');
 assert.match(studentFormHtml,/client\.storage\.from\(portraitBucket\)\.download\(profile\.portrait_path\)/);
 assert.match(studentFormHtml,/client\.storage\.from\(portraitBucket\)\.upload\(path,blob,\{contentType:'image\/webp',upsert:true/);
-assert.match(studentFormHtml,/canvas\.toBlob\(/,'La fotografía debe quitar EXIF/GPS');
+assert.match(studentFormHtml,/canvas\.toBlob\(/,'Fotografía optimizada y sin EXIF');
+assert.match(studentFormHtml,/Fotografía personal \(opcional\)/);
+assert.match(studentFormHtml,/La <b>fotografía es opcional<\/b>/);
+assert.doesNotMatch(studentFormHtml,/id="portraitFile"[^>]*required/,'Foto no requerida');
+for(const name of ['role_student','role_instructor','role_pilot']){
+ assert.match(studentFormHtml,new RegExp('name="'+name+'"'),'Perfil debe ser elegible '+name);
+}
+assert.match(studentFormHtml,/get\(def\.flag\)\.checked/);
+assert.match(studentFormHtml,/if\(!active\.length\)throw Error/,'Exigir al menos un perfil');
+assert.match(studentFormHtml,/verification_state:'unverified'/,'Roles declarados no deben conceder privilegios');
 for(const field of ['family_names','given_names','birth_country','birth_date','residence_country','residence_province','residence_city','residence_address','postal_code','mobile_phone']){
-  const pattern=new RegExp('name="'+field+'"[^>]*required');
-  assert.match(studentFormHtml,pattern,'Campo obligatorio: '+field);
+ assert.match(studentFormHtml,new RegExp('name="'+field+'"[^>]*required'),'Campo de identidad obligatorio '+field);
 }
 for(const field of ['landline_phone','other_phone']){
-  const pattern=new RegExp('name="'+field+'"[^>]*required');
-  assert.doesNotMatch(studentFormHtml,pattern,'Este teléfono es opcional: '+field);
+ assert.doesNotMatch(studentFormHtml,new RegExp('name="'+field+'"[^>]*required'),'Teléfono opcional: '+field);
 }
-assert.match(studentFormHtml,/documentIds\.length===0/,'Se exige documento cuando todavía no hay registros');
-assert.match(studentFormHtml,/documentIds\.length===1/,'El último documento no debe poder eliminarse');
+assert.match(studentFormHtml,/documentIds\.length===0/,'Exigir al menos un documento');
+assert.match(studentFormHtml,/documentIds\.length===1/,'Proteger último documento');
 assert.match(studentFormHtml,/document_type','document_number','issuing_country/);
-assert.match(studentFormHtml,/new Date\(\)\.toISOString\(\)/,'Fecha de guardado');
-assert.match(studentFormHtml,/type="checkbox" required/,'Consentimiento informado');
-assert.match(studentFormHtml,/no aparece en el perfil comunitario|no aparecen en Mi Hangar/);
-assert.match(studentFormHtml,/gentedevuelo@gmail\.com/,'Identificación de responsable');
-console.log('PASS: ficha privada del alumno, campos obligatorios, foto segura, documento mínimo y autoedición');
+assert.match(studentFormHtml,/new Date\(\)\.toISOString\(\)/);
+assert.match(studentFormHtml,/type="checkbox" required/,'Aviso de privacidad');
+assert.match(studentFormHtml,/no aparecen en Mi Hangar/);
+assert.match(studentFormHtml,/gentedevuelo@gmail\.com/,'Responsable de tratamiento');
+assert.match(landing,/Completar mi perfil de AeroSuite/,'Registro accesible al integrante');
+console.log('PASS: un solo usuario GdV, roles declarativos Alumno Instructor Piloto, foto opcional, documentos privados');
 
 // Flight Operations: una sola aplicación para Formación e Instrucción, sin privilegios IA en el modo demo.
 const flightOperationsOriginal=fs.readFileSync(new URL('../utilidades/meteorologia-aeronautica.html',import.meta.url),'utf8');
