@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Gestión Aeronáutica · Gente de Vuelo</title>
+<title>AeroSuite | Portal de gestión aeronáutica · Gente de Vuelo</title>
 <style>
 :root{font-family:Inter,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;color:#e8f0f4;background:#111b22;color-scheme:dark}
 *{box-sizing:border-box}body{margin:0;background:linear-gradient(130deg,#141f29 0%,#101922 70%);min-height:100vh}
@@ -211,6 +211,37 @@ a.library-item:hover,a.library-item:focus-visible{border-color:#e0bd83;backgroun
 @media(max-width:690px){.library-group{padding:12px}.library-list{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.library-item{padding:9px;min-height:108px}.library-item strong{font-size:12px}}
 @media(max-width:380px){.library-list{grid-template-columns:1fr}}
 @media print{#screen>section:not(#training-ledger){display:none!important}body{background:#fff;color:#000}header,nav,.hero,.notice,.training-actions,form,#alert,button{display:none!important}.layout{display:block}.panel,.card,.training-record{break-inside:avoid;background:#fff!important;color:#111!important;border:1px solid #999!important}p,h1,h2,h3,span{color:#111!important}}
+
+/* AeroSuite: portales visuales independientes sobre datos de demostración compartidos. */
+header .brand{display:flex;flex-direction:column;gap:2px;font-size:18px;color:#eaf4ff;letter-spacing:.5px}
+header .brand small{font-size:9px;letter-spacing:1.7px;color:#9dbedc}
+.area-intro{padding:23px;background:linear-gradient(125deg,#203956,#182833);border:1px solid #466680;border-radius:18px;margin-bottom:17px}
+.area-intro h2{font-size:23px;margin:6px 0 7px}.area-intro p{margin:0;font-size:13px}
+.area-card-grid{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:15px}
+.area-card{min-height:270px;padding:23px;border:1px solid #57738a;border-radius:18px;display:flex;flex-direction:column;gap:14px;background:linear-gradient(145deg,#203649,#192c3a);color:#edf5fb;text-align:left;font:inherit;cursor:pointer;box-shadow:0 14px 30px #070e173b;transition:background .15s,transform .15s,border-color .15s}
+.area-card:hover{transform:translateY(-3px);background:#2d475d;border-color:#b2d7ec}
+.area-card h3{font-size:clamp(18px,1.8vw,24px);color:#fff;margin:0}
+.area-card p{font-size:13px;line-height:1.55;margin:0;color:#c9dce9}
+.area-card strong{display:inline-block;font-size:11px;letter-spacing:.1em;color:#d4e8f5;padding:9px 11px;border-radius:9px;border:1px solid #6f8fa8}
+.area-card-student{background:linear-gradient(140deg,#2b5580,#19344c);border-color:#85b7df}
+.area-card-student:hover{background:#2c5d8d}
+.area-card-instructor{border-color:#5c9293}.area-card-administracion{border-color:#7a92ab}
+.area-card-bottom{display:flex;justify-content:space-between;align-items:center;border-top:1px solid #5c768c;padding-top:13px;margin-top:auto;color:#edf5fc;font-weight:750;font-size:12px}
+.area-card-bottom span:last-child{font-size:20px}
+.area-portal-note{font-size:12px;margin:14px 0 0;color:#b5c8d5}
+.workspace-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px;flex-wrap:wrap}
+.area-return{background:#2a4255;border:1px solid #7092a6;color:#eef6fb;padding:10px 14px;border-radius:10px;font:inherit;font-size:12px;font-weight:800;cursor:pointer}
+.area-return:hover{background:#355a74}
+.area-crumb{font-size:12px;font-weight:750;letter-spacing:.04em;color:#c0d7e7}
+body[data-aerosuite-area="alumno"] nav button.active{background:#27567b;border-color:#87bce2}
+body[data-aerosuite-area="instructor"] nav button.active{background:#275353;border-color:#82b9b0}
+body[data-aerosuite-area="administracion"] nav button.active{background:#344b63;border-color:#9bafc4}
+.quick-areas{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px;margin-top:15px}
+.quick-area{padding:17px;background:#223a4a;color:#eaf4fc;border:1px solid #47677c;border-radius:12px;cursor:pointer;text-align:left;font:inherit}
+.quick-area:hover{background:#305568;border-color:#8db6d0}.quick-area b{display:block;font-size:14px;margin-bottom:6px}.quick-area span{font-size:12px;color:#b9cedb}
+@media(max-width:940px){.area-card-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.area-card-student{grid-column:1/-1;min-height:220px}.quick-areas{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:690px){.area-intro{padding:17px}.area-card-grid{grid-template-columns:1fr}.area-card-student{grid-column:auto}.area-card{min-height:180px;padding:19px;gap:10px}.area-card h3{font-size:20px}.quick-areas{grid-template-columns:1fr}.workspace-head{align-items:stretch}.area-return{width:100%}}
+@media print{.area-portal,.workspace-head{display:none!important}}
 </style>
 <script>document.documentElement.classList.add("auth-pending")</script>
 <style>html.auth-pending body{visibility:hidden}</style>
@@ -218,11 +249,11 @@ a.library-item:hover,a.library-item:focus-visible{border-color:#e0bd83;backgroun
 <script src="../../assets/community-config.js"></script>
 <script src="../../assets/auth-guard.js"></script>
 </head><body>
-<header><a class="brand" href="../../index.html">GENTE DE VUELO</a><span>UTILIDADES / GESTIÓN AERONÁUTICA</span><a href="../index.html">Volver a Utilidades</a></header>
+<header><a class="brand" href="../../index.html">AEROSUITE<small>BY GENTE DE VUELO</small></a><span>PORTAL DE GESTIÓN AERONÁUTICA</span><a href="../index.html">Volver a Utilidades</a></header>
 <main id="app" hidden>
-<div class="hero"><div><div class="eyebrow">Gente de Vuelo · AeroSuite</div><h1>Gestión Aeronáutica</h1><p class="sub">Reservas, actividad, flota, formación y administración · Una sola plataforma</p></div><span class="tag">Prototipo privado · Administrador</span></div>
+<div class="hero"><div><div class="eyebrow">AeroSuite · By Gente de Vuelo</div><h1 id="areaTitle">Portal de AeroSuite</h1><p class="sub" id="areaSubtitle">Tres áreas independientes · Una sola información compartida.</p></div><span class="tag">Prototipo privado · Administrador</span></div>
 <div class="notice"><strong>Entorno de demostración.</strong> Los datos que cargues aquí son ficticios y se pierden al recargar. No hay reservas multiusuario reales, validación directa con ANAC, facturación ni RAV oficial. La confirmación de una reserva NO autoriza un vuelo. Utilizá solamente datos de prueba.</div>
-<div class="layout"><nav id="sidebar" aria-label="Módulos de Gestión Aeronáutica"></nav><div class="content"><p id="alert" role="status" aria-live="polite"></p><section id="screen" aria-live="polite"></section></div></div>
+<section id="areaPortal" class="area-portal" aria-label="Seleccionar área de AeroSuite"></section><div id="workspace" hidden><div class="workspace-head"><button type="button" id="areaBack" class="area-return">← Volver al panel principal</button><span id="areaCrumb" class="area-crumb"></span></div><div class="layout"><nav id="sidebar" aria-label="Menú exclusivo del área activa"></nav><div class="content"><p id="alert" role="status" aria-live="polite"></p><section id="screen" aria-live="polite"></section></div></div></div>
 </main>
 <script type="module">
 import {createReservation,closeFlight,flightTotals,stockMove,validDate,minutes,reservationMinimumMinutes,reservationSuggestedMinutes,STUDENT_RESERVATION_MINUTES,DEFAULT_RESERVATION_POLICY,validateReservationPolicy} from './src/operacion.js';
@@ -603,15 +634,55 @@ const chiefDemoId='jefe-instructores-demo';
 let ravRecords=[],ravFormOpen=false;
 // Demostración: configuración por institución. Sin persistencia ni validación ANAC.
 const trainingInstitution={institutionType:'non_ciac',reviewMode:'chief'};
-const navs=[['inicio','Panel general'],['alumno','Portal del alumno · Demo'],['piloto','Mi actividad · Piloto privado'],['instructor','Área de instructores · Demo'],['direccion','Seguimiento dirección · Demo'],['reservas','Agenda y reservas'],['vuelos','Registro de vuelo'],['flota','Aeronaves y mantenimiento'],['personas','Pilotos y alumnos'],['finanzas','Contabilidad y horas'],['stock','Combustible y aceite'],['academia','Academia y Simu PPA'],['documentos','Documentos y avisos']];
+// Tres areas visual y funcionalmente aisladas dentro de la demostracion.
+const AREA_DEFS=Object.freeze({
+ alumno:{title:'Área del Alumno',subtitle:'Formación, progreso, reservas y biblioteca aeronáutica.',home:'alumno',tabs:[['alumno','Mi formación y reservas'],['academia','Mi biblioteca · Teoría y CRM'],['piloto','Mi actividad personal · Demo']]},
+ instructor:{title:'Instructor y Jefe de Instructores',subtitle:'Evaluaciones, clases, seguimiento de alumnos y supervisión pedagógica.',home:'instructor',tabs:[['instructor','Panel del instructor'],['direccion','Jefatura de instructores'],['personas','Seguimiento, fichas y RAV']]},
+ administracion:{title:'Gestión Administrativa de Escuela',subtitle:'Agenda, operaciones, flota, personal, recursos y contabilidad.',home:'inicio',tabs:[['inicio','Panel administrativo'],['reservas','Agenda y reservas'],['vuelos','Registro de vuelos'],['flota','Aeronaves y mantenimiento'],['admin_personas','Personal y usuarios'],['finanzas','Contabilidad y horas'],['stock','Combustible y aceite'],['documentos','Documentos y avisos']]}
+});
+let currentArea=null;
+function areaPortalMarkup(){
+ const cards=[
+  ['alumno','01 · FORMACIÓN','Área del Alumno','Mi formación, clases, turnos, horas y Mi biblioteca de teoría y práctica. El espacio protagonista de AeroSuite.','Entrar a mi formación'],
+  ['instructor','02 · INSTRUCCIÓN','Instructor y Jefatura','Alumnos asignados, evaluaciones, legajos y supervisión del jefe de instructores.','Entrar a instrucción'],
+  ['administracion','03 · ESCUELA','Gestión Administrativa','Agenda, vuelos, flota, mantenimiento, personal, recursos y administración institucional.','Entrar a gestión']
+ ];
+ return '<div class="area-intro"><span class="eyebrow">Tres áreas · Una plataforma</span><h2>Elegí tu espacio de trabajo</h2><p>Las pantallas y los menús no se mezclan. Cada área muestra solamente sus funciones y utiliza los mismos registros de demostración cuando corresponde.</p></div>'+
+ '<div class="area-card-grid">'+cards.map(([key,number,title,description,label])=>
+ '<button type="button" class="area-card area-card-'+key+'" data-area="'+key+'"><strong>'+number+'</strong><h3>'+title+'</h3><p>'+description+'</p>'+
+ '<span class="area-card-bottom"><span>'+label+'</span><span aria-hidden="true">→</span></span></button>').join('')+'</div>'+
+ '<p class="area-portal-note">Vista de demostración restringida al administrador. Los permisos reales por rol e institución se implementarán antes de habilitar el ingreso de alumnos e instructores.</p>';
+}
 function notice(message){$('alert').textContent=message}
 const metric=(value,label)=>'<div class="metric"><strong>'+safe(value)+'</strong><span>'+safe(label)+'</span></div>';
 const options=(rows,value='id',label='name')=>rows.map(row=>'<option value="'+safe(row[value])+'">'+safe(row[label])+'</option>').join('');
-function switchTab(value){tab=value;notice('');render()}
+function switchArea(key){
+ if(!Object.prototype.hasOwnProperty.call(AREA_DEFS,key))return;
+ currentArea=key;tab=AREA_DEFS[key].home;notice('');render();
+}
+function backToAreaPortal(){currentArea=null;tab='inicio';notice('');render()}
+function switchTab(value){
+ const area=AREA_DEFS[currentArea];
+ if(!area||!area.tabs.some(([key])=>key===value)){notice('Este módulo pertenece a otra área. Volvé al portal principal para cambiar de espacio.');return}
+ tab=value;notice('');render();
+}
 function render(){
- $('sidebar').innerHTML=navs.map(([key,label])=>'<button type="button" data-tab="'+key+'" class="'+(key===tab?'active':'')+'">'+label+'</button>').join('');
- $('sidebar').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>switchTab(b.dataset.tab)));
- const sections={inicio:dashboard,alumno:studentPortal,piloto:privatePilotPortal,instructor:instructorPortal,direccion:directorPortal,reservas:calendar,vuelos:flightScreen,flota:fleetScreen,personas:memberScreen,finanzas:financeScreen,stock:stockScreen,academia:academyScreen,documentos:documentsScreen};
+ const area=AREA_DEFS[currentArea];
+ document.body.dataset.aerosuiteArea=currentArea||'portal';
+ $('areaPortal').hidden=!!area;$('workspace').hidden=!area;
+ $('areaTitle').textContent=area?area.title:'Portal de AeroSuite';
+ $('areaSubtitle').textContent=area?area.subtitle:'Tres áreas independientes · Una sola información compartida.';
+ if(!area){
+  $('areaPortal').innerHTML=areaPortalMarkup();
+  $('areaPortal').querySelectorAll('[data-area]').forEach(button=>button.addEventListener('click',()=>switchArea(button.dataset.area)));
+  $('sidebar').replaceChildren();$('screen').replaceChildren();return;
+ }
+ $('areaCrumb').textContent='AEROSUITE / '+area.title.toUpperCase()+' · DEMO';
+ $('sidebar').innerHTML=area.tabs.map(([key,label])=>'<button type="button" data-tab="'+key+'" class="'+(key===tab?'active':'')+'">'+label+'</button>').join('');
+ $('sidebar').querySelectorAll('button').forEach(button=>button.addEventListener('click',()=>switchTab(button.dataset.tab)));
+ $('areaBack').onclick=backToAreaPortal;
+ const sections={inicio:dashboard,alumno:studentPortal,piloto:privatePilotPortal,instructor:instructorPortal,direccion:directorPortal,reservas:calendar,vuelos:flightScreen,flota:fleetScreen,personas:memberScreen,admin_personas:adminPeopleScreen,finanzas:financeScreen,stock:stockScreen,academia:academyScreen,documentos:documentsScreen};
+ if(!area.tabs.some(([key])=>key===tab))tab=area.home;
  $('screen').innerHTML=sections[tab]();wire();
 }
 // Portales independientes dentro de la demostración ADMIN: no hay suplantación de roles ni accesos reales.
@@ -662,8 +733,7 @@ function privatePilotPortal(){
  '<div class="portal-metrics">'+metric(p.blockHours.toFixed(2)+' h','Bloque registrado · vuelos sin instructor')+
  metric(p.flights,'Vuelos privados registrados')+
  metric(p.landings,'Aterrizajes')+'</div>'+
- '<div class="training-actions"><button class="action" data-go="reservas">Solicitar reserva de aeronave · Demo</button>'+
- '<button class="secondary" data-go="vuelos">Ver Registro de vuelo</button></div></section>'+
+ '<p class="muted">La reserva institucional y los registros administrativos se gestionan en el área de escuela; este panel personal conserva su navegación independiente.</p></section>'+
  '<section class="panel"><h2>Mi historial de vuelos como piloto privado</h2>'+flightCards(p)+
  '<p class="muted">Otros vuelos del perfil con instructor (si los hubiera): '+all.byMode.coached.flights+
  '. Se contabilizan aparte de los vuelos sin instructor.</p></section>';
@@ -786,13 +856,14 @@ function directorPortal(){
 let studentBookingOpen=false,instructorEvaluationBooking='';
 function dashboard(){
  const hours=flights.reduce((sum,x)=>sum+x.blockHours,0),turns=reservations.filter(r=>r.status==='confirmada').length;
+ const links=[['reservas','Agenda y reservas','Turnos y disponibilidad'],['vuelos','Registro de vuelos','Actividad y horas'],['flota','Aeronaves y mantenimiento','Flota y vencimientos'],['admin_personas','Personal y usuarios','Perfiles de prueba'],['finanzas','Contabilidad y horas','Montos orientativos'],['stock','Combustible y aceite','Stock institucional'],['documentos','Documentos y avisos','Documentación y alertas']];
  return '<div class="metrics">'+metric(fleet.length,'Aeronaves demo')+metric(turns,'Reservas de prueba')+metric(flights.length,'Vuelos cerrados demo')+metric(hours.toFixed(1)+' h','Horas registradas demo')+'</div>'+
- '<div class="cols"><section class="panel"><h2>Operación diaria</h2><p>Una agenda central para coordinar aeronaves, pilotos e instructores. Al registrar un vuelo se refleja en el historial y en un resumen económico provisional.</p><button class="action" data-go="reservas">Abrir agenda</button></section>'+
- '<section class="panel"><h2>Formación y legajos</h2><p>El seguimiento de alumnos, las evaluaciones PPA y las fichas originales se incorporarán por etapas, sin exponer datos personales hasta implementar permisos de institución.</p><button class="secondary" data-go="academia">Ver Academia</button></section></div>'+
- '<section class="panel"><h2>Estado de implementación</h2><div class="grid3">'+
- '<div class="card"><h3>En este prototipo</h3><p>Agenda semanal interactiva, detección de conflictos, cierre de vuelos, acumulados, movimientos de stock simulados y resumen de importes.</p><span class="pill">Demo funcional</span></div>'+
- '<div class="card"><h3>Reutilizable de Gente de Vuelo</h3><p>Motor de reservas de prueba, mantenimiento de aeronaves y Simu PPA. Todavía funcionan sobre datos independientes.</p><span class="pill uncertain">Integración pendiente</span></div>'+
- '<div class="card"><h3>Para operar con instituciones</h3><p>Usuarios, permisos, base multiinstitución, disponibilidad en tiempo real, conciliación, documentos y RAV conforme a ANAC.</p><span class="pill uncertain">Desarrollo posterior</span></div></div></section>';
+ '<section class="panel"><h2>Panel administrativo de la escuela</h2><p>Accesos de gestión institucional independientes de los espacios del alumno y del instructor.</p><div class="quick-areas">'+
+ links.map(([key,title,description])=>'<button type="button" class="quick-area" data-go="'+key+'"><b>'+title+'</b><span>'+description+'</span></button>').join('')+
+ '</div></section><section class="panel"><h2>Estado de implementación</h2><div class="grid3">'+
+ '<div class="card"><h3>Demostración funcional</h3><p>Agenda, reservas, vuelos y stock con datos ficticios compartidos en esta sesión.</p><span class="pill">Demo</span></div>'+
+ '<div class="card"><h3>Áreas independientes</h3><p>Alumno, instructor/jefatura y administración con menú y navegación propios.</p><span class="pill">Interfaz separada</span></div>'+
+ '<div class="card"><h3>Antes de usar con escuelas</h3><p>Faltan cuentas, permisos y persistencia multiinstitución reales.</p><span class="pill uncertain">Desarrollo pendiente</span></div></div></section>';
 }
 function schoolTurneraSettings(){
  if(!schoolSettingsOpen)return '';
@@ -1027,8 +1098,7 @@ function flightScreen(){
  '</td><td>'+safe(f.from)+' → '+safe(f.to)+'</td><td>'+safe(f.blockHours.toFixed(2))+' h</td><td>'+
  safe(f.tachDifference.toFixed(2))+' h</td><td>'+safe(f.landings)+'</td><td>'+ (f.logbook?(f.logbook.incomplete?'Borrador incompleto':'Borrador sin certificar'):'Pendiente de completar')+ '<button type="button" class="secondary" data-edit-logbook="'+safe(f.id)+'">'+(f.logbook?'Revisar planilla':'Cargar planilla')+'</button></td></tr>').join('')+
  (shown.length?'':'<tr><td colspan="9">Sin vuelos para este filtro.</td></tr>')+'</tbody></table></div>'+
- '<div class="training-actions"><button class="secondary" data-go="alumno">Ver historial del alumno</button>'+
- '<button class="secondary" data-go="piloto">Ver historial del piloto privado</button></div>'+
+ '<p class="muted">Los usuarios consultan sus propios historiales desde sus áreas personales, no desde el panel administrativo.</p>'+
  '<p class="muted">CSV auxiliar de registros de vuelo. El RAV institucional se prepara y revisa en Pilotos y alumnos → Gestión de RAV. No certifica horas ante ANAC.</p></section>'+logbookFormScreen()+logbookSummaryScreen();
 }
 function fleetScreen(){
@@ -1200,6 +1270,13 @@ function ravInstitutionScreen(){
   form+(entries||'<p class="muted">Todavía no hay RAV de demostración. Cerrá primero un vuelo de instrucción desde Registro de vuelo y prepará el borrador aquí.</p>')+
   '</section>';
 }
+function adminPeopleScreen(){
+ const totals=flightTotals(flights,'pilot');
+ return '<section class="panel"><h2>Personal y usuarios de la escuela</h2><p>Consulta administrativa de perfiles ficticios. No habilita ver ni editar las evaluaciones pedagógicas del área de instrucción.</p>'+
+ '<div class="table-scroll"><table><thead><tr><th>Persona</th><th>Rol</th><th>Licencia declarada</th><th>Horas demo</th></tr></thead><tbody>'+
+ members.map(p=>'<tr><td>'+safe(p.name)+'</td><td>'+safe(p.kind)+'</td><td>'+safe(p.licenseUntil)+'</td><td>'+safe((totals[p.id]||0).toFixed(2))+' h</td></tr>').join('')+
+ '</tbody></table></div><p class="muted">La gestión efectiva de permisos multiinstitución se implementará más adelante.</p></section>';
+}
 function memberScreen(){
  const totals=flightTotals(flights,'pilot');
  return '<section class="panel"><h2>Pilotos, alumnos e instructores</h2>'+
@@ -1224,7 +1301,7 @@ function stockScreen(){
  (movements.length?'':'<tr><td colspan="3">Sin movimientos.</td></tr>')+'</tbody></table></div></section>';
 }
 function academyScreen(){
- return '<section class="panel"><h2>Academia y Simu PPA</h2><p>Accedé al Simulador PPA y a la biblioteca de fichas de teoría aeronáutica y CRM. La demostración sigue restringida a administración.</p><a class="secondary" href="../../simulador-ppa/">Abrir Simu PPA · Solo administrador</a></section>'+
+ return '<section class="panel"><h2>Mi biblioteca de teoría y práctica · Academia y Simu PPA</h2><p>Accedé al Simulador PPA y a la biblioteca de fichas de teoría aeronáutica y CRM. La demostración sigue restringida a administración.</p><a class="secondary" href="../../simulador-ppa/">Abrir Simu PPA · Solo administrador</a></section>'+
   academyLibrary();
 }
 function documentsScreen(){
