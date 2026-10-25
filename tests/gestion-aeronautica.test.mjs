@@ -621,7 +621,7 @@ assert.match(airstripsOriginal,/function renderExternal\(\)\{\s*external\.clearL
 assert.match(airstripsOriginal,/\.filter\(x=>layerSelected\(airfieldClass\(x\)\)&&meetsServiceFilters\(x\)\)/);
 assert.match(airstripsOriginal,/documentedMatches=documentedAirstrips/);
 assert.match(airstripsOriginal,/Fuente documental/);
-assert.match(airstripsOriginal,/No equivale a aeródromo habilitado|no constituye habilitación de aeródromo/);
+assert.match(airstripsOriginal,/no equivale a aeródromo habilitado|No son aeródromos habilitados|no son aeródromos habilitados/i);
 assert.match(airstripsOriginal,/Cobertura parcial, no inventario nacional/);
 assert.match(airstripsOriginal,/Privado no significa no oficial/);
 assert.match(html,/Mapa de Pistas y Aeródromos/);
