@@ -335,7 +335,7 @@ function libraryCollection(type,topics){
    '<div class="library-item is-missing"><strong>'+safe(row.title)+'</strong><small>Pendiente de publicar PDF</small></div>')+
   '</div></section>';
 }
-function academyLibrary(){
+function academyLibrary(canManage=false){
  const teoriaLista=libraryUploaded.teoria===true;
  const crmLista=libraryUploaded.crm===true;
  const complete=teoriaLista&&crmLista;
@@ -355,7 +355,7 @@ function academyLibrary(){
   '<p>Dos cuadernillos de formación aeronáutica de Gente de Vuelo: 30 fichas de teoría y 8 de CRM. Abrí cada tarjeta para recorrer todas las páginas en un solo PDF.</p>'+
   (libraryStatusWarning?'<div class="notice" role="status">'+safe(libraryStatusWarning)+'</div>':'')+
   (!complete?'<div class="notice">Estado de publicación: '+(teoriaLista?'Teoría (30 fichas) publicada en AeroSuite. ':'Teoría (30 fichas) pendiente de publicar en Cloudflare R2. ')+(crmLista?'CRM (8 fichas) publicado en AeroSuite.':'CRM (8 fichas) pendiente de publicar en Cloudflare R2.')+'</div>':'')+
-  uploadBox+
+  (canManage?uploadBox:'')+
   libraryCollection('teoria',AEROSUITE_THEORY_TOPICS)+libraryCollection('crm',AEROSUITE_CRM_TOPICS)+libraryExtra.filter(item=>!item.hidden).map(extraCard).join('')+
   '<div class="grid3">'+
   '<a class="card" href="../rodaje-viento.html"><h3>Rodaje con viento</h3><p>Práctica interactiva de controles en rodaje.</p></a>'+
@@ -423,7 +423,7 @@ async function refreshStudentLibrary(){
   libraryStatusWarning='No se pudo actualizar el listado de biblioteca: '+(err.message||'error de acceso');
   notice(libraryStatusWarning);
  }
- if(tab==='academia'){
+ if(tab==='academia'||tab==='admin_academia'){
   render();
   const uploader=$('aerosuiteUploader');
   if(uploader)uploader.open=uploaderWasOpen;
@@ -519,7 +519,7 @@ async function uploadStudentLibraryFile(input){
    libraryUploaded[type]=true;
    libraryFileVersions[type]=published.version||Date.now().toString();
    libraryFileUpdatedAt[type]=published.updatedAt||new Date().toISOString();
-   if(tab==='academia')render();
+   if(tab==='admin_academia')render();
   }
   libraryUploadMessage('PDF reemplazado correctamente ('+(file.size/1024/1024).toFixed(1)+' MB): '+AEROSUITE_LIBRARY_FILES[type].title+'. Abrí la tarjeta para ver la nueva versión.');
  }catch(err){
@@ -638,7 +638,7 @@ const trainingInstitution={institutionType:'non_ciac',reviewMode:'chief'};
 const AREA_DEFS=Object.freeze({
  alumno:{title:'Área del Alumno',subtitle:'Formación, progreso, reservas y biblioteca aeronáutica.',home:'alumno',tabs:[['alumno','Mi formación y reservas'],['academia','Mi biblioteca · Teoría y CRM'],['piloto','Mi actividad personal · Demo']]},
  instructor:{title:'Instructor y Jefe de Instructores',subtitle:'Evaluaciones, clases, seguimiento de alumnos y supervisión pedagógica.',home:'instructor',tabs:[['instructor','Panel del instructor'],['direccion','Jefatura de instructores'],['personas','Seguimiento, fichas y RAV']]},
- administracion:{title:'Gestión Administrativa de Escuela',subtitle:'Agenda, operaciones, flota, personal, recursos y contabilidad.',home:'inicio',tabs:[['inicio','Panel administrativo'],['reservas','Agenda y reservas'],['vuelos','Registro de vuelos'],['flota','Aeronaves y mantenimiento'],['admin_personas','Personal y usuarios'],['finanzas','Contabilidad y horas'],['stock','Combustible y aceite'],['documentos','Documentos y avisos']]}
+ administracion:{title:'Gestión Administrativa de Escuela',subtitle:'Agenda, operaciones, flota, personal, recursos y contabilidad.',home:'inicio',tabs:[['inicio','Panel administrativo'],['reservas','Agenda y reservas'],['vuelos','Registro de vuelos'],['flota','Aeronaves y mantenimiento'],['admin_personas','Personal y usuarios'],['admin_academia','Gestionar biblioteca'],['finanzas','Contabilidad y horas'],['stock','Combustible y aceite'],['documentos','Documentos y avisos']]}
 });
 let currentArea=null;
 function areaPortalMarkup(){
@@ -681,7 +681,7 @@ function render(){
  $('sidebar').innerHTML=area.tabs.map(([key,label])=>'<button type="button" data-tab="'+key+'" class="'+(key===tab?'active':'')+'">'+label+'</button>').join('');
  $('sidebar').querySelectorAll('button').forEach(button=>button.addEventListener('click',()=>switchTab(button.dataset.tab)));
  $('areaBack').onclick=backToAreaPortal;
- const sections={inicio:dashboard,alumno:studentPortal,piloto:privatePilotPortal,instructor:instructorPortal,direccion:directorPortal,reservas:calendar,vuelos:flightScreen,flota:fleetScreen,personas:memberScreen,admin_personas:adminPeopleScreen,finanzas:financeScreen,stock:stockScreen,academia:academyScreen,documentos:documentsScreen};
+ const sections={inicio:dashboard,alumno:studentPortal,piloto:privatePilotPortal,instructor:instructorPortal,direccion:directorPortal,reservas:calendar,vuelos:flightScreen,flota:fleetScreen,personas:memberScreen,admin_personas:adminPeopleScreen,admin_academia:adminAcademyScreen,finanzas:financeScreen,stock:stockScreen,academia:academyScreen,documentos:documentsScreen};
  if(!area.tabs.some(([key])=>key===tab))tab=area.home;
  $('screen').innerHTML=sections[tab]();wire();
 }
@@ -856,7 +856,7 @@ function directorPortal(){
 let studentBookingOpen=false,instructorEvaluationBooking='';
 function dashboard(){
  const hours=flights.reduce((sum,x)=>sum+x.blockHours,0),turns=reservations.filter(r=>r.status==='confirmada').length;
- const links=[['reservas','Agenda y reservas','Turnos y disponibilidad'],['vuelos','Registro de vuelos','Actividad y horas'],['flota','Aeronaves y mantenimiento','Flota y vencimientos'],['admin_personas','Personal y usuarios','Perfiles de prueba'],['finanzas','Contabilidad y horas','Montos orientativos'],['stock','Combustible y aceite','Stock institucional'],['documentos','Documentos y avisos','Documentación y alertas']];
+ const links=[['reservas','Agenda y reservas','Turnos y disponibilidad'],['vuelos','Registro de vuelos','Actividad y horas'],['flota','Aeronaves y mantenimiento','Flota y vencimientos'],['admin_personas','Personal y usuarios','Perfiles de prueba'],['admin_academia','Biblioteca de formación','Publicar fichas de teoría y CRM'],['finanzas','Contabilidad y horas','Montos orientativos'],['stock','Combustible y aceite','Stock institucional'],['documentos','Documentos y avisos','Documentación y alertas']];
  return '<div class="metrics">'+metric(fleet.length,'Aeronaves demo')+metric(turns,'Reservas de prueba')+metric(flights.length,'Vuelos cerrados demo')+metric(hours.toFixed(1)+' h','Horas registradas demo')+'</div>'+
  '<section class="panel"><h2>Panel administrativo de la escuela</h2><p>Accesos de gestión institucional independientes de los espacios del alumno y del instructor.</p><div class="quick-areas">'+
  links.map(([key,title,description])=>'<button type="button" class="quick-area" data-go="'+key+'"><b>'+title+'</b><span>'+description+'</span></button>').join('')+
@@ -1302,7 +1302,11 @@ function stockScreen(){
 }
 function academyScreen(){
  return '<section class="panel"><h2>Mi biblioteca de teoría y práctica · Academia y Simu PPA</h2><p>Accedé al Simulador PPA y a la biblioteca de fichas de teoría aeronáutica y CRM. La demostración sigue restringida a administración.</p><a class="secondary" href="../../simulador-ppa/">Abrir Simu PPA · Solo administrador</a></section>'+
-  academyLibrary();
+  academyLibrary(false);
+}
+function adminAcademyScreen(){
+ return '<section class="panel"><h2>Administración de la biblioteca de formación</h2><p>Publicá los cuadernillos aquí para que el alumno los consulte sin herramientas de edición en su área.</p></section>'+
+  academyLibrary(true);
 }
 function documentsScreen(){
  return '<section class="panel"><h2>Documentación, vencimientos, mensajes y auditoría</h2><div class="grid3">'+
