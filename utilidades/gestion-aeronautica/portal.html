@@ -259,6 +259,31 @@ body[data-aerosuite-area="administracion"] nav button.active{background:#344b63;
 .airstrips-frame{width:100%;height:clamp(600px,83vh,980px);display:block;border:0;border-radius:12px;background:#18232d}
 .airstrips-warning{padding:13px 16px;margin:15px 0;border-left:4px solid #dfb47b;border-radius:9px;background:#34332e;color:#f1e2c9;font-size:13px;line-height:1.6}
 @media(max-width:690px){.airstrips-shell{padding:15px}.airstrips-embed{padding:5px}.airstrips-frame{height:76vh;min-height:545px}.airstrips-tools .action{width:100%}}
+
+/* Planificador unificado de Gente de Vuelo dentro de Formación e Instrucción. */
+.aerosuite-flightops-head{border:1px solid #567995;background:linear-gradient(125deg,#18384d,#132a3b);border-radius:16px;padding:20px;margin-bottom:13px}
+.aerosuite-flightops-head h2{margin:5px 0 8px;font-size:24px;letter-spacing:-.02em}
+.aerosuite-flightops-head p{font-size:14px;line-height:1.55;color:#d5e4ee;max-width:950px}
+.aerosuite-flightops-tag{font-size:11px;letter-spacing:.09em;font-weight:800;color:#b0ddf6;text-transform:uppercase}
+.aerosuite-flightops-links{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin-top:13px}
+.aerosuite-flightops-links a{text-decoration:none;display:inline-flex;align-items:center;min-height:42px}
+.aerosuite-flightops-links a:hover{text-decoration:underline}
+.aerosuite-flightops-note{border-left:3px solid #c3a577;background:#293038;border-radius:9px;padding:12px 14px;color:#f1e5cf;margin-top:13px;font-size:12px;line-height:1.55}
+.aerosuite-flightops-framebox{border:1px solid #54768b;border-radius:15px;background:#14252f;padding:9px;overflow:hidden}
+.aerosuite-flightops-frame{display:block;width:100%;height:clamp(800px,88vh,1190px);border:0;background:#101719;border-radius:10px}
+.aerosuite-flightops-shortcut{margin:14px 0;border:1px solid #547992;border-radius:13px;background:#1a3041;padding:14px 16px;display:flex;gap:14px;justify-content:space-between;align-items:center;flex-wrap:wrap}
+.aerosuite-flightops-shortcut h3{margin:0 0 5px;font-size:16px}
+.aerosuite-flightops-shortcut p{margin:0;color:#c7d8e4;font-size:12px;line-height:1.5}
+.aerosuite-flightops-shortcut button{white-space:nowrap;min-height:40px}
+@media(max-width:700px){
+ .aerosuite-flightops-head{padding:14px}
+ .aerosuite-flightops-head h2{font-size:20px}
+ .aerosuite-flightops-framebox{padding:3px}
+ .aerosuite-flightops-frame{height:79vh;min-height:650px}
+ .aerosuite-flightops-links{align-items:stretch}
+ .aerosuite-flightops-links a{width:100%;justify-content:center}
+ .aerosuite-flightops-shortcut button{width:100%}
+}
 </style>
 <script>document.documentElement.classList.add("auth-pending")</script>
 <style>html.auth-pending body{visibility:hidden}</style>
@@ -655,8 +680,8 @@ let ravRecords=[],ravFormOpen=false;
 const trainingInstitution={institutionType:'non_ciac',reviewMode:'chief'};
 // Tres areas visual y funcionalmente aisladas dentro de la demostracion.
 const AREA_DEFS=Object.freeze({
- alumno:{title:'Área del Alumno',subtitle:'Formación, progreso, reservas y biblioteca aeronáutica.',home:'alumno',tabs:[['alumno','Mi formación y reservas'],['academia','Mi biblioteca · Teoría y CRM'],['piloto','Mi actividad personal · Demo'],['pistas','Mapa de Pistas y Aeródromos']]},
- instructor:{title:'Instructor y Jefe de Instructores',subtitle:'Evaluaciones, clases, seguimiento de alumnos y supervisión pedagógica.',home:'instructor',tabs:[['instructor','Panel del instructor'],['direccion','Jefatura de instructores'],['personas','Seguimiento, fichas y RAV'],['pistas','Mapa de Pistas y Aeródromos']]},
+ alumno:{title:'Área del Alumno',subtitle:'Formación, progreso, reservas y biblioteca aeronáutica.',home:'alumno',tabs:[['alumno','Mi formación y reservas'],['academia','Mi biblioteca · Teoría y CRM'],['piloto','Mi actividad personal · Demo'],['flightops','Flight Operations · Planificación'],['pistas','Mapa de Pistas y Aeródromos']]},
+ instructor:{title:'Instructor y Jefe de Instructores',subtitle:'Evaluaciones, clases, seguimiento de alumnos y supervisión pedagógica.',home:'instructor',tabs:[['instructor','Panel del instructor'],['direccion','Jefatura de instructores'],['personas','Seguimiento, fichas y RAV'],['flightops','Flight Operations · Instrucción'],['pistas','Mapa de Pistas y Aeródromos']]},
  administracion:{title:'Gestión Administrativa de Escuela',subtitle:'Agenda, operaciones, flota, personal, recursos y contabilidad.',home:'inicio',tabs:[['inicio','Panel administrativo'],['reservas','Agenda y reservas'],['vuelos','Registro de vuelos'],['flota','Aeronaves y mantenimiento'],['pistas','Mapa de Pistas y Aeródromos'],['admin_personas','Personal y usuarios'],['admin_academia','Gestionar biblioteca'],['finanzas','Contabilidad y Finanzas'],['stock','Combustible y aceite'],['documentos','Documentos y avisos']]}
 });
 let currentArea=null;
@@ -700,7 +725,7 @@ function render(){
  $('sidebar').innerHTML=area.tabs.map(([key,label])=>'<button type="button" data-tab="'+key+'" class="'+(key===tab?'active':'')+'">'+label+'</button>').join('');
  $('sidebar').querySelectorAll('button').forEach(button=>button.addEventListener('click',()=>switchTab(button.dataset.tab)));
  $('areaBack').onclick=backToAreaPortal;
- const sections={inicio:dashboard,alumno:studentPortal,piloto:privatePilotPortal,instructor:instructorPortal,direccion:directorPortal,reservas:calendar,vuelos:flightScreen,flota:fleetScreen,personas:memberScreen,admin_personas:adminPeopleScreen,admin_academia:adminAcademyScreen,finanzas:financeScreen,stock:stockScreen,academia:academyScreen,pistas:airstripsScreen,documentos:documentsScreen};
+ const sections={inicio:dashboard,alumno:studentPortal,piloto:privatePilotPortal,instructor:instructorPortal,direccion:directorPortal,reservas:calendar,vuelos:flightScreen,flota:fleetScreen,personas:memberScreen,admin_personas:adminPeopleScreen,admin_academia:adminAcademyScreen,finanzas:financeScreen,stock:stockScreen,academia:academyScreen,pistas:airstripsScreen,flightops:flightOperationsScreen,documentos:documentsScreen};
  if(!area.tabs.some(([key])=>key===tab))tab=area.home;
  $('screen').innerHTML=sections[tab]();wire();
 }
@@ -769,6 +794,7 @@ function studentPortal(){
   '<span class="agenda-pill">'+safe(stages[b.status]||b.status)+'</span></div>').join('');
  return '<section class="panel"><div class="portal-title"><h2>Mi espacio de alumno · Demostración</h2><span class="tag">Vista alumno · Datos ficticios</span></div>'+
  '<p class="portal-private">Aquí el alumno puede solicitar turnos y consultar únicamente sus reservas, horas de vuelo, prácticas registradas y packs comprados. Las notas de instructores, sus correcciones y la supervisión interna no se muestran.</p>'+
+ flightOperationsShortcut('alumno')+
  '<div class="portal-metrics">'+metric(d.flightHours.toFixed(2)+' h','Horas de vuelo · demo')+
  metric(d.simulatorHours.toFixed(2)+' h','Horas de simulador · demo')+
  metric(d.theoryHours.toFixed(2)+' h','Horas de teoría · demo')+
@@ -823,6 +849,7 @@ function instructorPortal(){
  return '<section class="panel"><div class="portal-title"><h2>Área reservada para instructores · Demo</h2>'+
  '<span class="tag">Solo perfil instructor en producción</span></div>'+
  '<p class="portal-private">La vista de instructor está separada de la del alumno. Permite tomar reservas, registrar clases y evaluar la evolución de alumnos asignados. Las cuentas reales tendrán permisos de servidor y no dependerán de cambiar una pantalla.</p>'+
+ flightOperationsShortcut('instructor')+
  '<div class="portal-metrics">'+metric(d.pending.length,'Solicitudes sin asignar')+
  metric(d.assigned.length,'Turnos tomados por mí')+
  metric(d.lessons.length,'Evaluaciones realizadas')+'</div></section>'+
@@ -1384,6 +1411,37 @@ function academyScreen(){
 function adminAcademyScreen(){
  return '<section class="panel"><h2>Administración de la biblioteca de formación</h2><p>Publicá los cuadernillos aquí para que el alumno los consulte sin herramientas de edición en su área.</p></section>'+
   academyLibrary(true);
+}
+function flightOperationsShortcut(area){
+ const isStudent=area==='alumno';
+ const description=isStudent?
+  'Practicá planificación de vuelo, navegación por piernas, boletines meteorológicos y cálculo de tiempos y combustible.':
+  'Prepará clases de navegación, analizá rutas con tus alumnos y revisá cálculos, METAR, TAF, SIGMET y PRONAREA.';
+ return '<section class="aerosuite-flightops-shortcut" aria-label="Acceso a Flight Operations">'+
+  '<div><h3>Flight Operations · '+(isStudent?'Formación':'Instrucción')+'</h3><p>'+description+'</p></div>'+
+  '<button type="button" class="action" data-go="flightops">Abrir planificador de vuelo</button></section>';
+}
+function flightOperationsScreen(){
+ if(currentArea!=='alumno'&&currentArea!=='instructor'){
+  return '<section class="panel"><h2>Flight Operations</h2><p>Esta herramienta pertenece a las áreas de Formación e Instrucción.</p></section>';
+ }
+ const isStudent=currentArea==='alumno';
+ const context=isStudent?'formacion':'instruccion';
+ const url='../meteorologia-aeronautica.html?aerosuite='+context;
+ const label=isStudent?'Formación del Alumno':'Instrucción y Jefatura';
+ const description=isStudent?
+  'Utilizá el planificador original de Gente de Vuelo para ejercitar datos del vuelo, rutas por piernas, METAR, TAF, SIGMET, PRONAREA, NOTAM y cálculos de navegación, tiempos y combustible.':
+  'Trabajá con la misma herramienta utilizada por el alumno para preparar clases, comparar rutas, revisar boletines aeronáuticos y enseñar los cálculos del prevuelo.';
+ return '<section class="aerosuite-flightops-head" aria-label="Flight Operations para '+safe(label)+'">'+
+  '<span class="aerosuite-flightops-tag">AeroSuite · '+safe(label)+' · Herramienta compartida</span>'+
+  '<h2>Flight Operations · Planificación y meteorología</h2>'+
+  '<p>'+description+'</p>'+
+  '<div class="aerosuite-flightops-links"><a class="action" href="'+url+'" target="_blank" rel="noopener noreferrer">Abrir Flight Operations a pantalla completa ↗</a>'+
+  '<a class="secondary" href="https://ais.anac.gob.ar/aip" target="_blank" rel="noopener noreferrer">Consultar AIP Argentina ↗</a></div>'+
+  '<div class="aerosuite-flightops-note" role="note"><strong>Modo formativo sin IA.</strong> Los informes y decisiones de vuelo requieren verificación en fuentes oficiales. Esta integración no guarda automáticamente trabajos en el legajo del alumno ni registra evaluaciones del instructor. El acceso operativo real por rol está pendiente de implementación.</div>'+
+  '</section>'+
+  '<section class="aerosuite-flightops-framebox" aria-label="Flight Operations integrado">'+
+  '<iframe class="aerosuite-flightops-frame" title="Flight Operations · '+safe(label)+' · Sin inteligencia artificial" src="'+url+'" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe></section>';
 }
 function airstripsScreen(){
  const roleLabel=currentArea==='alumno'?'Área del Alumno':currentArea==='instructor'?'Área del Instructor y Jefatura':'Gestión Administrativa';
