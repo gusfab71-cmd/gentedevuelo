@@ -573,6 +573,13 @@ console.log('PASS: interfaz de METAR consultable por pin con ICAO, distancia, ho
 
 console.log('PASS: buscador geográfico manual, coordenadas, iconos aeronáuticos SVG y fichas detalladas del pin');
 
+
+assert.match(airstripsOriginal, /href="https:\/\/ais\.anac\.gob\.ar\/aip" target="_blank" rel="noopener noreferrer"/, 'El mapa debe enlazar al AIP oficial de ANAC');
+assert.match(airstripsOriginal, /aip\.href='https:\/\/ais\.anac\.gob\.ar\/aip'/, 'Cada ficha debe incluir acceso al AIP oficial');
+assert.match(airstripsOriginal, /no acredita que esté publicada, habilitada ni autorizada/, 'Evitar presentar pistas comunitarias como aeródromos habilitados');
+assert.match(html, /Consultar AIP oficial · ANAC/, 'El módulo de AeroSuite debe enlazar al AIP oficial');
+assert.doesNotMatch(airstripsOriginal, /aip.*status:'approved'/i, 'La AIP no debe confundirse con moderación comunitaria');
+
 console.log('PASS: Pistas No Oficiales compartidas en las tres áreas, mapa interactivo y precauciones');
 
 console.log('PASS: AeroSuite con portal de tres áreas, navegación aislada y acceso restringido');
