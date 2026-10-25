@@ -249,6 +249,16 @@ body[data-aerosuite-area="administracion"] nav button.active{background:#344b63;
 .fin-controls{display:flex;flex-wrap:wrap;gap:12px}.fin-controls label{min-width:190px}
 .fin-explainer{background:#213845;border-left:3px solid #d4b57d;padding:12px;font-size:12px;color:#cfdee6;margin:14px 0}
 @media(max-width:690px){.fin-metrics,.fin-funds{grid-template-columns:1fr}.fin-controls label{width:100%}}
+
+/* Pistas comunitarias: una única aplicación de Gente de Vuelo reutilizada en AeroSuite. */
+.airstrips-shell{border:1px solid #456579;background:linear-gradient(130deg,#193143,#142733);border-radius:17px;padding:20px;margin-bottom:16px}
+.airstrips-tools{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-top:15px}
+.airstrips-tools .action{display:inline-flex;text-decoration:none;justify-content:center;align-items:center;gap:9px}
+.airstrips-source{font-size:12px;color:#bed0db}
+.airstrips-embed{background:#172d3c;border:1px solid #496b80;border-radius:17px;padding:12px;overflow:hidden}
+.airstrips-frame{width:100%;height:clamp(600px,83vh,980px);display:block;border:0;border-radius:12px;background:#18232d}
+.airstrips-warning{padding:13px 16px;margin:15px 0;border-left:4px solid #dfb47b;border-radius:9px;background:#34332e;color:#f1e2c9;font-size:13px;line-height:1.6}
+@media(max-width:690px){.airstrips-shell{padding:15px}.airstrips-embed{padding:5px}.airstrips-frame{height:76vh;min-height:545px}.airstrips-tools .action{width:100%}}
 </style>
 <script>document.documentElement.classList.add("auth-pending")</script>
 <style>html.auth-pending body{visibility:hidden}</style>
@@ -645,9 +655,9 @@ let ravRecords=[],ravFormOpen=false;
 const trainingInstitution={institutionType:'non_ciac',reviewMode:'chief'};
 // Tres areas visual y funcionalmente aisladas dentro de la demostracion.
 const AREA_DEFS=Object.freeze({
- alumno:{title:'Área del Alumno',subtitle:'Formación, progreso, reservas y biblioteca aeronáutica.',home:'alumno',tabs:[['alumno','Mi formación y reservas'],['academia','Mi biblioteca · Teoría y CRM'],['piloto','Mi actividad personal · Demo']]},
- instructor:{title:'Instructor y Jefe de Instructores',subtitle:'Evaluaciones, clases, seguimiento de alumnos y supervisión pedagógica.',home:'instructor',tabs:[['instructor','Panel del instructor'],['direccion','Jefatura de instructores'],['personas','Seguimiento, fichas y RAV']]},
- administracion:{title:'Gestión Administrativa de Escuela',subtitle:'Agenda, operaciones, flota, personal, recursos y contabilidad.',home:'inicio',tabs:[['inicio','Panel administrativo'],['reservas','Agenda y reservas'],['vuelos','Registro de vuelos'],['flota','Aeronaves y mantenimiento'],['admin_personas','Personal y usuarios'],['admin_academia','Gestionar biblioteca'],['finanzas','Contabilidad y Finanzas'],['stock','Combustible y aceite'],['documentos','Documentos y avisos']]}
+ alumno:{title:'Área del Alumno',subtitle:'Formación, progreso, reservas y biblioteca aeronáutica.',home:'alumno',tabs:[['alumno','Mi formación y reservas'],['academia','Mi biblioteca · Teoría y CRM'],['piloto','Mi actividad personal · Demo'],['pistas','Pistas No Oficiales · Mapa']]},
+ instructor:{title:'Instructor y Jefe de Instructores',subtitle:'Evaluaciones, clases, seguimiento de alumnos y supervisión pedagógica.',home:'instructor',tabs:[['instructor','Panel del instructor'],['direccion','Jefatura de instructores'],['personas','Seguimiento, fichas y RAV'],['pistas','Pistas No Oficiales · Mapa']]},
+ administracion:{title:'Gestión Administrativa de Escuela',subtitle:'Agenda, operaciones, flota, personal, recursos y contabilidad.',home:'inicio',tabs:[['inicio','Panel administrativo'],['reservas','Agenda y reservas'],['vuelos','Registro de vuelos'],['flota','Aeronaves y mantenimiento'],['pistas','Pistas No Oficiales · Mapa'],['admin_personas','Personal y usuarios'],['admin_academia','Gestionar biblioteca'],['finanzas','Contabilidad y Finanzas'],['stock','Combustible y aceite'],['documentos','Documentos y avisos']]}
 });
 let currentArea=null;
 function areaPortalMarkup(){
@@ -690,7 +700,7 @@ function render(){
  $('sidebar').innerHTML=area.tabs.map(([key,label])=>'<button type="button" data-tab="'+key+'" class="'+(key===tab?'active':'')+'">'+label+'</button>').join('');
  $('sidebar').querySelectorAll('button').forEach(button=>button.addEventListener('click',()=>switchTab(button.dataset.tab)));
  $('areaBack').onclick=backToAreaPortal;
- const sections={inicio:dashboard,alumno:studentPortal,piloto:privatePilotPortal,instructor:instructorPortal,direccion:directorPortal,reservas:calendar,vuelos:flightScreen,flota:fleetScreen,personas:memberScreen,admin_personas:adminPeopleScreen,admin_academia:adminAcademyScreen,finanzas:financeScreen,stock:stockScreen,academia:academyScreen,documentos:documentsScreen};
+ const sections={inicio:dashboard,alumno:studentPortal,piloto:privatePilotPortal,instructor:instructorPortal,direccion:directorPortal,reservas:calendar,vuelos:flightScreen,flota:fleetScreen,personas:memberScreen,admin_personas:adminPeopleScreen,admin_academia:adminAcademyScreen,finanzas:financeScreen,stock:stockScreen,academia:academyScreen,pistas:airstripsScreen,documentos:documentsScreen};
  if(!area.tabs.some(([key])=>key===tab))tab=area.home;
  $('screen').innerHTML=sections[tab]();wire();
 }
@@ -865,7 +875,7 @@ function directorPortal(){
 let studentBookingOpen=false,instructorEvaluationBooking='';
 function dashboard(){
  const hours=flights.reduce((sum,x)=>sum+x.blockHours,0),turns=reservations.filter(r=>r.status==='confirmada').length;
- const links=[['reservas','Agenda y reservas','Turnos y disponibilidad'],['vuelos','Registro de vuelos','Actividad y horas'],['flota','Aeronaves y mantenimiento','Flota y vencimientos'],['admin_personas','Personal y usuarios','Perfiles de prueba'],['admin_academia','Biblioteca de formación','Publicar fichas de teoría y CRM'],['finanzas','Contabilidad y Finanzas','Gastos generales y caja chica'],['stock','Combustible y aceite','Stock institucional'],['documentos','Documentos y avisos','Documentación y alertas']];
+ const links=[['reservas','Agenda y reservas','Turnos y disponibilidad'],['vuelos','Registro de vuelos','Actividad y horas'],['flota','Aeronaves y mantenimiento','Flota y vencimientos'],['pistas','Pistas No Oficiales','Mapa satelital y referencias comunitarias'],['admin_personas','Personal y usuarios','Perfiles de prueba'],['admin_academia','Biblioteca de formación','Publicar fichas de teoría y CRM'],['finanzas','Contabilidad y Finanzas','Gastos generales y caja chica'],['stock','Combustible y aceite','Stock institucional'],['documentos','Documentos y avisos','Documentación y alertas']];
  return '<div class="metrics">'+metric(fleet.length,'Aeronaves demo')+metric(turns,'Reservas de prueba')+metric(flights.length,'Vuelos cerrados demo')+metric(hours.toFixed(1)+' h','Horas registradas demo')+'</div>'+
  '<section class="panel"><h2>Panel administrativo de la escuela</h2><p>Accesos de gestión institucional independientes de los espacios del alumno y del instructor.</p><div class="quick-areas">'+
  links.map(([key,title,description])=>'<button type="button" class="quick-area" data-go="'+key+'"><b>'+title+'</b><span>'+description+'</span></button>').join('')+
@@ -1374,6 +1384,17 @@ function academyScreen(){
 function adminAcademyScreen(){
  return '<section class="panel"><h2>Administración de la biblioteca de formación</h2><p>Publicá los cuadernillos aquí para que el alumno los consulte sin herramientas de edición en su área.</p></section>'+
   academyLibrary(true);
+}
+function airstripsScreen(){
+ const roleLabel=currentArea==='alumno'?'Área del Alumno':currentArea==='instructor'?'Área del Instructor y Jefatura':'Gestión Administrativa';
+ return '<section class="airstrips-shell" aria-label="Pistas No Oficiales en AeroSuite">'+
+  '<span class="eyebrow">AeroSuite · '+safe(roleLabel)+'</span><h2>Pistas No Oficiales · Mapa comunitario</h2>'+
+  '<p>Consultá ubicaciones aportadas por la comunidad de Gente de Vuelo, pistas cartografiadas en OpenStreetMap y posibles referencias cercanas en millas náuticas. El mapa es el mismo que utiliza Gente de Vuelo: no se duplican archivos ni registros.</p>'+
+  '<div class="airstrips-warning" role="note"><strong>Información no oficial y no verificada para operaciones.</strong> Una referencia cartográfica no acredita que una pista esté habilitada, sea utilizable o constituya una alternativa segura. Antes de cualquier vuelo verificá AIP, NOTAM, datos oficiales, estado real, obstáculos y autorización del propietario o responsable. Las distancias en NM son aproximadas y en línea recta.</div>'+
+  '<div class="airstrips-tools"><a class="action" href="../pistas-no-oficiales.html" target="_blank" rel="noopener noreferrer">Abrir mapa completo en otra pestaña ↗</a>'+
+  '<span class="airstrips-source">Fuente: Gente de Vuelo · Propuestas sujetas a moderación · Referencias OSM sin validación operacional</span></div></section>'+
+  '<section class="airstrips-embed" aria-label="Explorador de pistas comunitarias"><iframe class="airstrips-frame" title="Mapa interactivo de Pistas No Oficiales de Gente de Vuelo" src="../pistas-no-oficiales.html" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe></section>'+
+  '<p class="muted">Las propuestas comunitarias se envían a moderación en el sistema de Gente de Vuelo. En esta integración no se cargan pistas automáticamente en los planes de vuelo ni se presentan como aeródromos autorizados.</p>';
 }
 function documentsScreen(){
  return '<section class="panel"><h2>Documentación, vencimientos, mensajes y auditoría</h2><div class="grid3">'+
