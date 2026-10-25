@@ -298,7 +298,7 @@ function libraryCollection(type,topics){
  const detail=type==='crm'?'Comunicación, decisiones, factores humanos y trabajo en equipo.':'Teoría aeronáutica organizada en 30 fichas ilustradas.';
  const caption=published?'Cuadernillo publicado en AeroSuite'+libraryUpdatedLabel(type) :'Cuadernillo pendiente de publicación en Cloudflare R2';
  return '<section class="library-group"><div class="library-group-head"><h3>'+safe(row.title)+'</h3>'+
-  '<span class="library-count">'+row.count+' fichas · '+(published?'Publicadas':'Borradores en Drive')+'</span></div>'+
+  '<span class="library-count">'+row.count+' fichas · '+(published?'Publicadas':'Pendientes de publicación')+'</span></div>'+
   '<div class="library-list">'+
   (book?'<a class="library-item library-book-card" href="'+safe(book)+'" target="_blank" rel="noopener noreferrer" aria-label="Abrir el cuadernillo completo de '+safe(row.title)+'">'+
    '<span class="library-number">CUADERNILLO COMPLETO · '+row.count+' FICHAS</span>'+
