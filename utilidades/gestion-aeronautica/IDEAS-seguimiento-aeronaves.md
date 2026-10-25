@@ -2,6 +2,8 @@
 
 Fecha de incorporación a la caja de ideas: 2026-10-25.
 
+**Índice general del proyecto:** [Caja de Ideas maestra de AeroSuite](CAJA-DE-IDEAS.md). Este archivo es el anexo de comercialización y precios.
+
 ## Política comercial provisional adoptada para AeroSuite — 25/10/2026
 
 **Decisión actual del titular:** **utilizar por ahora el modelo de comercialización que compartió de Airnizer** como **tarifario provisional propio de AeroSuite**, sujeto a ajustes posteriores. Esto reemplaza, para la primera propuesta comercial, la idea anterior de no fijar precios. No equivale a un cobro habilitado ni a una suscripción técnica activa.
