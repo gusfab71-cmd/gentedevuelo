@@ -175,6 +175,87 @@ button:disabled{cursor:wait;opacity:.56}
  function fill(row){
   for(const name of fields){if(row[name]!==undefined&&row[name]!==null)get(name).value=String(row[name]);}
  }
+ 
+ const roleDefs=[
+  {key:'student',flag:'role_student',panel:'studentExtra',fields:['student_training_goal']},
+  {key:'instructor',flag:'role_instructor',panel:'instructorExtra',fields:['instructor_license_type','instructor_license_number','instructor_organization','instructor_airfield']},
+  {key:'pilot',flag:'role_pilot',panel:'pilotExtra',fields:['pilot_license_type','pilot_license_number','pilot_airfield','pilot_hours']}
+ ];
+ const roleInputs=new Set(roleDefs.flatMap(def=>def.fields));
+ function syncRoleFields(){
+  for(const def of roleDefs){
+   const enabled=get(def.flag).checked;
+   $(def.panel).hidden=!enabled;
+   for(const name of def.fields){
+    const input=get(name);
+    input.disabled=!enabled;
+    input.required=enabled&&['student_training_goal','instructor_license_type','instructor_license_number','pilot_license_type','pilot_license_number'].includes(name);
+   }
+  }
+ }
+ for(const def of roleDefs)get(def.flag).addEventListener('change',syncRoleFields);
+ syncRoleFields();
+ async function loadRoles(){
+  const {data,error}=await client.from('aerosuite_role_declarations')
+   .select('role,training_goal,license_type,license_number,organization,home_airfield,flight_hours')
+   .eq('user_id',user.id);
+  if(error)throw error;
+  for(const def of roleDefs){
+   get(def.flag).checked=Boolean(data?.some(x=>x.role===def.key));
+  }
+  syncRoleFields();
+  for(const row of data||[]){
+   if(row.role==='student')get('student_training_goal').value=row.training_goal||'';
+   if(row.role==='instructor'){
+    for(const [field,col] of [['instructor_license_type','license_type'],['instructor_license_number','license_number'],
+      ['instructor_organization','organization'],['instructor_airfield','home_airfield']]){
+     get(field).value=row[col]??'';
+    }
+   }
+   if(row.role==='pilot'){
+    for(const [field,col] of [['pilot_license_type','license_type'],['pilot_license_number','license_number'],
+      ['pilot_airfield','home_airfield'],['pilot_hours','flight_hours']]){
+     get(field).value=row[col]??'';
+    }
+   }
+  }
+ }
+ function rolePayload(def){
+  const payload={user_id:user.id,role:def.key,verification_state:'unverified',updated_at:new Date().toISOString()};
+  if(def.key==='student')payload.training_goal=get('student_training_goal').value.trim();
+  if(def.key==='instructor'){
+   payload.license_type=get('instructor_license_type').value.trim();
+   payload.license_number=get('instructor_license_number').value.trim();
+   payload.organization=get('instructor_organization').value.trim()||null;
+   payload.home_airfield=get('instructor_airfield').value.trim()||null;
+  }
+  if(def.key==='pilot'){
+   payload.license_type=get('pilot_license_type').value.trim();
+   payload.license_number=get('pilot_license_number').value.trim();
+   payload.home_airfield=get('pilot_airfield').value.trim()||null;
+   const hours=get('pilot_hours').value.trim();
+   payload.flight_hours=hours?Number(hours):null;
+  }
+  return payload;
+ }
+ async function saveRoles(){
+  const {data:before,error:readError}=await client.from('aerosuite_role_declarations')
+   .select('role').eq('user_id',user.id);
+  if(readError)throw readError;
+  const active=roleDefs.filter(d=>get(d.flag).checked);
+  if(!active.length)throw Error('Seleccioná al menos un perfil: Alumno, Instructor o Piloto.');
+  for(const def of active){
+   const {error}=await client.from('aerosuite_role_declarations').upsert(rolePayload(def),{onConflict:'user_id,role'});
+   if(error)throw Error('No se pudo guardar el perfil '+def.key+': '+error.message);
+  }
+  for(const former of before||[]){
+   if(active.some(d=>d.key===former.role))continue;
+   const {error}=await client.from('aerosuite_role_declarations').delete()
+    .eq('user_id',user.id).eq('role',former.role);
+   if(error)throw Error('No se pudo dar de baja el perfil '+former.role+': '+error.message);
+  }
+ }
+
  const portraitBucket='aerosuite-student-portraits';
  function previewImage(url){
   if(portraitBlobUrl){URL.revokeObjectURL(portraitBlobUrl);portraitBlobUrl='';}
@@ -187,7 +268,7 @@ button:disabled{cursor:wait;opacity:.56}
   if(!error&&data)previewImage(URL.createObjectURL(data));
  }
  async function loadDocuments(){
-  const {data,error}=await client.from('aerosuite_student_documents')
+  const {data,error}=await client.from('aerosuite_member_documents')
    .select('id,document_type,document_number,issuing_country,expires_on')
    .eq('user_id',user.id).order('created_at',{ascending:true});
   if(error)throw error;
@@ -216,7 +297,7 @@ button:disabled{cursor:wait;opacity:.56}
     if(busy||documentIds.length<=1||!confirm('¿Eliminar este documento guardado?'))return;
     busy=true;button.disabled=true;
     try{
-     const {error}=await client.from('aerosuite_student_documents').delete().eq('id',d.id).eq('user_id',user.id);
+     const {error}=await client.from('aerosuite_member_documents').delete().eq('id',d.id).eq('user_id',user.id);
      if(error)throw error;
      await loadDocuments();
      status('Documento eliminado. Recordá registrar al menos un documento para completar la ficha.');
@@ -227,10 +308,11 @@ button:disabled{cursor:wait;opacity:.56}
   }
  }
  async function refresh(){
-  const {data,error}=await client.from('aerosuite_student_profiles').select('*').eq('user_id',user.id).maybeSingle();
+  const {data,error}=await client.from('aerosuite_member_profiles').select('*').eq('user_id',user.id).maybeSingle();
   if(error)throw error;
   profile=data;
   if(data)fill(data);
+  await loadRoles();
   await loadDocuments();
   await loadPortrait();
   status(data?'Se cargaron los datos guardados de tu ficha privada.':'Podés completar tu ficha personal y guardar el primer documento.');
@@ -260,6 +342,9 @@ button:disabled{cursor:wait;opacity:.56}
  $('studentForm').addEventListener('submit',async event=>{
   event.preventDefault();if(busy)return;
   const form=$('studentForm');
+  if(!roleDefs.some(def=>get(def.flag).checked)){
+   status('Seleccioná al menos un perfil aeronáutico: Alumno, Instructor o Piloto.',true);return;
+  }
   if(!form.reportValidity())return;
   if(!$('privacyConsent').checked){status('Confirmá el aviso de privacidad antes de guardar.',true);return}
   const values=Object.fromEntries(fields.map(name=>[name,get(name).value.trim()]));
@@ -278,30 +363,32 @@ button:disabled{cursor:wait;opacity:.56}
    status('Guardando datos personales…');
    const payload={...values,user_id:user.id,consented_at:new Date().toISOString(),privacy_notice_version:'2026-10'};
    for(const key of ['landline_phone','other_phone']){if(!payload[key])payload[key]=null}
-   const {error}=await client.from('aerosuite_student_profiles').upsert(payload,{onConflict:'user_id'});
+   const {error}=await client.from('aerosuite_member_profiles').upsert(payload,{onConflict:'user_id'});
    if(error)throw error;
    if(document_type&&document_number){
-    const {error:docError}=await client.from('aerosuite_student_documents').insert({
+    const {error:docError}=await client.from('aerosuite_member_documents').insert({
      user_id:user.id,document_type,document_number,issuing_country,expires_on
     });
     if(docError&&docError.code!=='23505')throw Error('Los datos personales se guardaron, pero el documento no: '+docError.message);
    }
+   status('Guardando perfiles declarados…');
+   await saveRoles();
    if(newPortrait){
     status('Guardando fotografía privada…');
     const blob=await processPortrait(newPortrait);
     const path=user.id+'/portrait.webp';
     const {error:uploadError}=await client.storage.from(portraitBucket).upload(path,blob,{contentType:'image/webp',upsert:true,cacheControl:'60'});
     if(uploadError)throw Error('Los datos se guardaron, pero no la fotografía: '+uploadError.message);
-    const {error:photoError}=await client.from('aerosuite_student_profiles').update({portrait_path:path}).eq('user_id',user.id);
+    const {error:photoError}=await client.from('aerosuite_member_profiles').update({portrait_path:path}).eq('user_id',user.id);
     if(photoError)throw Error('La fotografía se cargó, pero no se pudo vincular al perfil: '+photoError.message);
     newPortrait=null;$('portraitFile').value='';
    }
-   const {data:updated,error:readError}=await client.from('aerosuite_student_profiles').select('*').eq('user_id',user.id).single();
+   const {data:updated,error:readError}=await client.from('aerosuite_member_profiles').select('*').eq('user_id',user.id).single();
    if(readError)throw readError;
    profile=updated;
    await loadDocuments();
    for(const name of ['document_type','document_number','expires_on'])get(name).value='';
-   status('Ficha personal guardada de forma privada. La inscripción a cursos y la validación documental corresponden a la escuela.');
+   status('Tu perfil privado de AeroSuite se guardó. Los roles declarados no conceden acceso institucional hasta ser verificados. La fotografía es opcional.');
   }catch(error){status('No se pudo completar el guardado: '+error.message,true)}
   finally{busy=false;$('saveStudent').disabled=false}
  });
