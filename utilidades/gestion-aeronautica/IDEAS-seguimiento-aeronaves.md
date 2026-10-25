@@ -4,6 +4,8 @@ Fecha de incorporación a la caja de ideas: 2026-10-25.
 
 **Índice general del proyecto:** [Caja de Ideas maestra de AeroSuite](CAJA-DE-IDEAS.md). Este archivo es el anexo de comercialización y precios.
 
+**Actualización de competencia 25/10/2026:** [Análisis de GestiónAero y Aeros Gestión](ANALISIS-COMPETENCIA-GESTIONAERO-AEROS.md). GestiónAero publica **ARS 60.000/mes + IVA con aeronaves y usuarios ilimitados** y **ARS 80.000/mes + IVA con WhatsApp**, además de 30 días de prueba. Esta nueva evidencia requiere revisar la competitividad del esquema variable adoptado por AeroSuite **sin modificar sus tarifas provisionales hasta nueva decisión**.
+
 ## Política comercial provisional adoptada para AeroSuite — 25/10/2026
 
 **Decisión actual del titular:** **utilizar por ahora el modelo de comercialización que compartió de Airnizer** como **tarifario provisional propio de AeroSuite**, sujeto a ajustes posteriores. Esto reemplaza, para la primera propuesta comercial, la idea anterior de no fijar precios. No equivale a un cobro habilitado ni a una suscripción técnica activa.
