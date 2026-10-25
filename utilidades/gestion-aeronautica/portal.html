@@ -8,7 +8,7 @@
 a{color:#cde8ed}a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #a6d1da;outline-offset:2px}
 header{padding:19px max(20px,calc((100vw - 1380px)/2));display:flex;justify-content:space-between;align-items:center;gap:14px;border-bottom:1px solid #36515b;background:#18242e}
 header a{text-decoration:none}header .brand{font-weight:850;letter-spacing:1.5px;color:#f2d6a3;font-size:14px}
-header span{color:#b6c7cd;font-size:13px}
+header span{color:#b6c7cd;font-size:13px}.portal-head-links{display:flex;align-items:center;gap:11px;flex-wrap:wrap}.portal-head-links a{font-size:12px;color:#dcebf6;border:1px solid #5c8096;border-radius:9px;padding:9px 12px;background:#213947}.portal-head-links a:hover{background:#315670;color:#fff}.portal-head-links .portal-home{background:#244d6b;border-color:#8ab2d0;font-weight:800}
 main{max-width:1380px;margin:0 auto;padding:24px 22px 64px}
 .eyebrow{font-size:11px;letter-spacing:2px;color:#8fb5c2;font-weight:800;text-transform:uppercase}
 h1{font-size:clamp(27px,3.2vw,42px);letter-spacing:-.035em;margin:8px 0 5px}
@@ -291,7 +291,7 @@ body[data-aerosuite-area="administracion"] nav button.active{background:#344b63;
 <script src="../../assets/community-config.js"></script>
 <script src="../../assets/auth-guard.js"></script>
 </head><body>
-<header><a class="brand" href="index.html">AEROSUITE<small>BY GENTE DE VUELO</small></a><span>PORTAL DE GESTIÓN AERONÁUTICA · DEMO</span><a href="index.html">Volver a la presentación</a></header>
+<header><a class="brand" href="index.html">AEROSUITE<small>BY GENTE DE VUELO</small></a><span>PORTAL DE GESTIÓN AERONÁUTICA · DEMO</span><div class="portal-head-links"><a class="portal-home" href="../../index.html" aria-label="Volver al inicio de Gente de Vuelo">⌂ Inicio Gente de Vuelo</a><a href="index.html">Volver a la presentación</a></div></header>
 <main id="app" hidden>
 <div class="hero"><div><div class="eyebrow">AeroSuite · By Gente de Vuelo</div><h1 id="areaTitle">Portal de AeroSuite</h1><p class="sub" id="areaSubtitle">Tres áreas independientes · Una sola información compartida.</p></div><span class="tag">Prototipo privado · Administrador</span></div>
 <div class="notice"><strong>Entorno de demostración.</strong> Los datos que cargues aquí son ficticios y se pierden al recargar. No hay reservas multiusuario reales, validación directa con ANAC, facturación ni RAV oficial. La confirmación de una reserva NO autoriza un vuelo. Utilizá solamente datos de prueba.</div>
