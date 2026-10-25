@@ -512,6 +512,45 @@ assert.match(airstripsOriginal,/\.from\('community_airstrips'\)/);
 assert.match(airstripsOriginal,/\.eq\('status','approved'\)/,'Solo pistas aprobadas deben aparecer en el mapa comunitario');
 assert.match(airstripsOriginal,/status:'pending'/,'Las pistas nuevas requieren moderación');
 assert.match(airstripsOriginal,/site_admins/,'La moderación requiere administrador');
+
+// Mejoras de búsqueda y de representación de pistas, en el mapa original.
+for(const id of ['zone-search-form','zone-query','zone-search-button','zone-my-location','zone-propose-center','zone-results','zone-status']){
+ assert.ok(airstripsOriginal.includes('id="'+id+'"'),'Falta control del mapa: '+id);
+}
+assert.match(airstripsOriginal,/function runwayPin\(kind='community'\)/);
+assert.match(airstripsOriginal,/const PIN_PALETTE=/);
+assert.match(airstripsOriginal,/PIN_PALETTE\[kind\]/);
+assert.match(airstripsOriginal,/<svg xmlns="http:\/\/www\.w3\.org\/2000\/svg"/);
+assert.match(airstripsOriginal,/runwayPin\('community'\)/);
+assert.match(airstripsOriginal,/runwayPin\('reference'\)/);
+assert.match(airstripsOriginal,/runwayPin\('draft'\)/);
+assert.match(airstripsOriginal,/function communityPopup\(record,nm=null\)/);
+assert.match(airstripsOriginal,/function referencePopup\(record,nm=null\)/);
+for(const field of ['Coordenadas','Pista / rumbo','Dimensiones','Superficie','Elevación','Acceso','Obstáculos','Frecuencia','Observaciones']){
+ assert.ok(airstripsOriginal.includes("'"+field+"'"),'El pin debe mostrar '+field);
+}
+assert.match(airstripsOriginal,/document\.createElement\('dt'\)/);
+assert.match(airstripsOriginal,/document\.createElement\('dd'\)/);
+assert.match(airstripsOriginal,/No verificada para operaciones/);
+assert.match(airstripsOriginal,/Copiar coordenadas/);
+assert.match(airstripsOriginal,/href="https:\/\/photon\.komoot\.io\//);
+assert.match(airstripsOriginal,/endpoint\.searchParams\.set\('bbox','-74,-56,-53,-21'\)/);
+assert.match(airstripsOriginal,/zoneCache\.set\(key,options\)/);
+assert.match(airstripsOriginal,/document\.getElementById\('zone-search-form'\)\.addEventListener\('submit'/);
+assert.doesNotMatch(airstripsOriginal,/zoneInput\.addEventListener\('input',[\s\S]{0,100}fetch/,'La búsqueda a Photon no debe ejecutarse por cada letra');
+assert.match(html,/allow="geolocation"/,'AeroSuite debe permitir la solicitud explícita de permiso en el iframe');
+const functionStart=airstripsOriginal.indexOf('function parseZoneCoordinates(value){');
+const functionEnd=airstripsOriginal.indexOf('function focusMapAt(',functionStart);
+assert.ok(functionStart>0&&functionEnd>functionStart,'Falta el analizador de coordenadas');
+const coordinateParser=vm.runInNewContext(airstripsOriginal.slice(functionStart,functionEnd)+';parseZoneCoordinates');
+const argCoords=coordinateParser('-34.9, -57.94');
+assert.equal(argCoords.latitude,-34.9);
+assert.equal(argCoords.longitude,-57.94);
+assert.equal(coordinateParser('-34.9 -57.94').longitude,-57.94);
+assert.equal(coordinateParser('Chascomús'),null);
+assert.equal(coordinateParser('91, 200'),null);
+console.log('PASS: buscador geográfico manual, coordenadas, iconos aeronáuticos SVG y fichas detalladas del pin');
+
 console.log('PASS: Pistas No Oficiales compartidas en las tres áreas, mapa interactivo y precauciones');
 
 console.log('PASS: AeroSuite con portal de tres áreas, navegación aislada y acceso restringido');
