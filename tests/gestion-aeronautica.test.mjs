@@ -609,12 +609,12 @@ assert.match(ravWithDraft,/sin certificar|sin firmar|NO se firma/i);
 console.log('PASS: Registro de vuelo separado de RAV institucional en Pilotos y alumnos');
 
 
-// Biblioteca de Academia: 30 temas y 6 fichas CRM; material previo en Supabase y nuevas versiones de hasta 100 MB en Cloudflare R2.
+// Biblioteca de Academia: 30 temas y 8 fichas CRM; material previo en Supabase y nuevas versiones de hasta 100 MB en Cloudflare R2.
 const theoryTitles=html.match(/const AEROSUITE_THEORY_TOPICS=\[([\s\S]*?)\];/);
 const crmTitles=html.match(/const AEROSUITE_CRM_TOPICS=\[([\s\S]*?)\];/);
 assert.ok(theoryTitles&&crmTitles,'Faltan los dos catálogos de fichas.');
 assert.equal((theoryTitles[1].match(/'[^']*'/g)||[]).length,30,'Deben existir 30 temas de teoría.');
-assert.equal((crmTitles[1].match(/'[^']*'/g)||[]).length,6,'Deben existir 6 temas CRM.');
+assert.equal((crmTitles[1].match(/'[^']*'/g)||[]).length,8,'Deben existir 8 temas CRM.');
 for(const key of [
  'aerosuite-biblioteca','function academyLibrary(){',
  'libraryCollection(\'teoria\',AEROSUITE_THEORY_TOPICS)',
