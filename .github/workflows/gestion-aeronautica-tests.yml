@@ -3,12 +3,18 @@ on:
   pull_request:
     paths:
       - 'utilidades/gestion-aeronautica/**'
+      - 'utilidades/pistas-no-oficiales.html'
+      - 'api/airstrip-metar.js'
+      - 'tests/airstrip-metar.test.cjs'
       - 'tests/gestion-aeronautica.test.mjs'
       - '.github/workflows/gestion-aeronautica-tests.yml'
   push:
     branches: [main]
     paths:
       - 'utilidades/gestion-aeronautica/**'
+      - 'utilidades/pistas-no-oficiales.html'
+      - 'api/airstrip-metar.js'
+      - 'tests/airstrip-metar.test.cjs'
       - 'tests/gestion-aeronautica.test.mjs'
       - '.github/workflows/gestion-aeronautica-tests.yml'
 permissions:
@@ -22,3 +28,4 @@ jobs:
         with:
           node-version: '22'
       - run: node --experimental-default-type=module tests/gestion-aeronautica.test.mjs
+      - run: node tests/airstrip-metar.test.cjs
