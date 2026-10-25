@@ -465,6 +465,7 @@ function referencePopup(record,nm=null){
 }
 function renderExternal(){
  external.clearLayers();
+ if(!layerSelected('reference'))return;
  let count=0;
  for(const x of externalPoints){
   const nm=reference?nauticalMiles(reference[0],reference[1],x.lat,x.lon):null;
@@ -495,16 +496,65 @@ document.getElementById('explore').addEventListener('click',async()=>{
    const name=tags.name||tags.icao||tags.ref||(tags.aeroway==='runway'?'Pista sin nombre':'Aeródromo sin nombre');
    externalPoints.push({lat,lon,name,details:{surface:tags.surface||'',runway:tags.ref||tags.icao||'',dimensions:tags.length||'',permission:tags.access||'',notes:'Elemento cartográfico: '+(tags.aeroway||'referencia aeronáutica')}});count++;
   }
-  renderExternal();status.textContent=count+' referencias cartográficas encontradas. Marcadores ámbar = OpenStreetMap; marcadores estándar = comunidad aprobada. Los datos pueden estar incompletos.';
+  renderExternal();status.textContent=count+' referencias cartográficas encontradas. Referencias grises = OpenStreetMap; morados = comunidad; azul = documentación AIP; dorado = LAD. Los datos pueden estar incompletos.';
  }catch(e){status.textContent='No se pudo consultar el catálogo cartográfico ahora. Probá más tarde.'}finally{button.disabled=false}
 });
 const msg=document.getElementById('message'),list=document.getElementById('list');
 function el(tag,text){const e=document.createElement(tag);e.textContent=text;return e}
 
+const documentedAirstrips=[...(ANAC_CATALOG.official||[]),...(ANAC_CATALOG.lad||[])];
+function normalizePista(value){return String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()}
+function renderDocumented(){
+ const root=document.getElementById('pista-documented-list');
+ root.replaceChildren();
+ documentaryMarkers.clear();
+ documentedLayers.official.clearLayers();documentedLayers.lad.clearLayers();
+ const q=normalizePista(document.getElementById('search').value.trim());
+ let count=0;
+ for(const point of documentedAirstrips){
+  if(!layerSelected(point.category))continue;
+  const fields=[point.name,point.details?.province,point.details?.icao,point.details?.registry].join(' ');
+  if(q&&!normalizePista(fields).includes(q))continue;
+  if(nearRadius!==null&&(!reference||nauticalMiles(reference[0],reference[1],point.lat,point.lon)>nearRadius))continue;
+  const distance=reference?nauticalMiles(reference[0],reference[1],point.lat,point.lon):null;
+  const marker=L.marker([point.lat,point.lon],{icon:runwayPin(point.category),title:point.name})
+    .bindPopup(documentaryPopup(point,distance),{maxWidth:360,minWidth:250})
+    .addTo(documentedLayers[point.category]);
+  documentaryMarkers.set(point.id,marker);
+  count++;
+  const article=document.createElement('article');article.className='pista-record';
+  const tag=document.createElement('span');tag.className='pista-record-tag';
+  tag.textContent=point.category==='lad'?'LAD ANAC · '+point.details.registry:'AIP · '+point.details.icao;
+  const title=document.createElement('strong');title.textContent=point.name;
+  const description=document.createElement('p');
+  description.textContent=(point.details.province||'Argentina')+' · '+(point.details.runway||'Sin rumbo publicado')+
+   (distance!==null?' · '+distance.toFixed(1)+' NM desde referencia':'');
+  const source=document.createElement('p');
+  source.textContent='Fuente: '+point.sourceLabel+' · '+point.sourceDate;
+  const btn=document.createElement('button');btn.type='button';btn.textContent='Ver ficha en el mapa';
+  btn.addEventListener('click',()=>{
+   map.setView([point.lat,point.lon],14);
+   marker.openPopup();
+   document.getElementById('map').scrollIntoView({behavior:'smooth',block:'center'});
+  });
+  article.append(tag,title,description,source,btn);root.append(article);
+ }
+ if(!count){
+  const empty=document.createElement('p');
+  empty.textContent='Sin registros documentales de la muestra que coincidan con la selección. El catálogo es parcial.';
+  root.append(empty);
+ }
+ document.getElementById('pista-catalog-status').textContent=
+  'Muestra documental: '+(ANAC_CATALOG.official||[]).length+' aeródromos con carta AIP y '+
+  (ANAC_CATALOG.lad||[]).length+' registros LAD del listado ANAC del 28/09/2026. '+
+  count+' registros visibles con los filtros actuales. Cobertura parcial, no inventario nacional.';
+}
+
 function render(){
  markers.clearLayers();list.replaceChildren();
  const q=document.getElementById('search').value.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
  const all=records
+  .filter(x=>layerSelected('community'))
   .filter(x=>(x.name+' '+(x.details?.province||'')).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().includes(q))
   .filter(x=>nearRadius===null||(reference&&nauticalMiles(reference[0],reference[1],x.latitude,x.longitude)<=nearRadius))
   .sort((a,b)=>reference?
@@ -528,7 +578,8 @@ function render(){
   });
   entry.append(button);list.append(entry);
  }
- if(!list.children.length)list.append(el('p','No hay pistas comunitarias aprobadas que coincidan con los filtros.'));
+ if(!list.children.length)list.append(el('p',layerSelected('community')?'No hay pistas comunitarias aprobadas que coincidan con los filtros.':'La capa comunitaria está oculta.'));
+ renderDocumented();
 }
 async function load(){const r=await client.from('community_airstrips').select('*').eq('status','approved').order('created_at',{ascending:false});if(r.error){msg.textContent='No se pudieron cargar las pistas: '+r.error.message;return}records=r.data||[];render()}
 document.getElementById('search').addEventListener('input',render);
