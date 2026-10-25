@@ -242,6 +242,13 @@ body[data-aerosuite-area="administracion"] nav button.active{background:#344b63;
 @media(max-width:940px){.area-card-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.area-card-student{grid-column:1/-1;min-height:220px}.quick-areas{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:690px){.area-intro{padding:17px}.area-card-grid{grid-template-columns:1fr}.area-card-student{grid-column:auto}.area-card{min-height:180px;padding:19px;gap:10px}.area-card h3{font-size:20px}.quick-areas{grid-template-columns:1fr}.workspace-head{align-items:stretch}.area-return{width:100%}}
 @media print{.area-portal,.workspace-head{display:none!important}}
+.fin-metrics,.fin-funds{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:14px 0}
+.fin-metrics>div,.fin-funds>div{border:1px solid #507080;background:#193240;border-radius:12px;padding:16px}
+.fin-metrics strong,.fin-funds strong{display:block;font-size:21px;color:#f0dfb9;overflow-wrap:anywhere}
+.fin-metrics span,.fin-funds span{font-size:12px;color:#b9d0da}
+.fin-controls{display:flex;flex-wrap:wrap;gap:12px}.fin-controls label{min-width:190px}
+.fin-explainer{background:#213845;border-left:3px solid #d4b57d;padding:12px;font-size:12px;color:#cfdee6;margin:14px 0}
+@media(max-width:690px){.fin-metrics,.fin-funds{grid-template-columns:1fr}.fin-controls label{width:100%}}
 </style>
 <script>document.documentElement.classList.add("auth-pending")</script>
 <style>html.auth-pending body{visibility:hidden}</style>
@@ -263,6 +270,7 @@ import {ASSESSMENTS,LESSON_STATUS,buildLesson,reviseLesson,submitLesson,closeLes
 import {FLIGHT_MODE_LABELS,flightActivityByRole,flightActivityProjection} from './src/vuelos.js';
 import {makeLogbookDetail,logbookRows,logbookSummary,LOGBOOK_TIME_COLUMNS,LOGBOOK_SPECIAL_COLUMNS,LOGBOOK_SIMULATOR_COLUMNS,LOGBOOK_PURPOSES} from './src/libro-vuelo.js';
 import {RAV_STATES,ravCandidates,ravFlightTotals,createRavDraft,submitRavForReview,institutionalReviewRav} from './src/rav-institucional.js';
+import {FINANCE_AREAS,FINANCE_ACCOUNTS,FINANCE_KINDS,FINANCE_CATEGORIES,makeFinanceEntry,financeReport} from './src/finanzas.js';
 const $=id=>document.getElementById(id);
 const safe=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[ch]));
 
@@ -601,6 +609,7 @@ const fleet=[{id:'LV-ABC',model:'Cessna 172',blocked:false,insuranceUntil:'2027-
 const products=[{id:'avgas',name:'AVGAS 100LL',qty:180,unit:'L',min:60,cost:1800,sale:2300},
 {id:'oil',name:'Aceite aeronáutico',qty:16,unit:'L',min:5,cost:12500,sale:15700}];
 let reservations=[],flights=[],movements=[],lessons=[],groundActivities=[],tab='inicio',week=now();
+let financeEntries=[],financePeriod='todos',financeArea='todos';
 let flightModeFilter='all';
 let logbookEditingFlightId='',logbookPersonFilter='p2';
 const demoPacks=[{id:'pack-demo-10h',studentId:'p2',description:'Pack de 10 horas (ejemplo)',acquiredHours:10,remainingHours:10}];
@@ -638,7 +647,7 @@ const trainingInstitution={institutionType:'non_ciac',reviewMode:'chief'};
 const AREA_DEFS=Object.freeze({
  alumno:{title:'Área del Alumno',subtitle:'Formación, progreso, reservas y biblioteca aeronáutica.',home:'alumno',tabs:[['alumno','Mi formación y reservas'],['academia','Mi biblioteca · Teoría y CRM'],['piloto','Mi actividad personal · Demo']]},
  instructor:{title:'Instructor y Jefe de Instructores',subtitle:'Evaluaciones, clases, seguimiento de alumnos y supervisión pedagógica.',home:'instructor',tabs:[['instructor','Panel del instructor'],['direccion','Jefatura de instructores'],['personas','Seguimiento, fichas y RAV']]},
- administracion:{title:'Gestión Administrativa de Escuela',subtitle:'Agenda, operaciones, flota, personal, recursos y contabilidad.',home:'inicio',tabs:[['inicio','Panel administrativo'],['reservas','Agenda y reservas'],['vuelos','Registro de vuelos'],['flota','Aeronaves y mantenimiento'],['admin_personas','Personal y usuarios'],['admin_academia','Gestionar biblioteca'],['finanzas','Contabilidad y horas'],['stock','Combustible y aceite'],['documentos','Documentos y avisos']]}
+ administracion:{title:'Gestión Administrativa de Escuela',subtitle:'Agenda, operaciones, flota, personal, recursos y contabilidad.',home:'inicio',tabs:[['inicio','Panel administrativo'],['reservas','Agenda y reservas'],['vuelos','Registro de vuelos'],['flota','Aeronaves y mantenimiento'],['admin_personas','Personal y usuarios'],['admin_academia','Gestionar biblioteca'],['finanzas','Contabilidad y Finanzas'],['stock','Combustible y aceite'],['documentos','Documentos y avisos']]}
 });
 let currentArea=null;
 function areaPortalMarkup(){
@@ -856,7 +865,7 @@ function directorPortal(){
 let studentBookingOpen=false,instructorEvaluationBooking='';
 function dashboard(){
  const hours=flights.reduce((sum,x)=>sum+x.blockHours,0),turns=reservations.filter(r=>r.status==='confirmada').length;
- const links=[['reservas','Agenda y reservas','Turnos y disponibilidad'],['vuelos','Registro de vuelos','Actividad y horas'],['flota','Aeronaves y mantenimiento','Flota y vencimientos'],['admin_personas','Personal y usuarios','Perfiles de prueba'],['admin_academia','Biblioteca de formación','Publicar fichas de teoría y CRM'],['finanzas','Contabilidad y horas','Montos orientativos'],['stock','Combustible y aceite','Stock institucional'],['documentos','Documentos y avisos','Documentación y alertas']];
+ const links=[['reservas','Agenda y reservas','Turnos y disponibilidad'],['vuelos','Registro de vuelos','Actividad y horas'],['flota','Aeronaves y mantenimiento','Flota y vencimientos'],['admin_personas','Personal y usuarios','Perfiles de prueba'],['admin_academia','Biblioteca de formación','Publicar fichas de teoría y CRM'],['finanzas','Contabilidad y Finanzas','Gastos generales y caja chica'],['stock','Combustible y aceite','Stock institucional'],['documentos','Documentos y avisos','Documentación y alertas']];
  return '<div class="metrics">'+metric(fleet.length,'Aeronaves demo')+metric(turns,'Reservas de prueba')+metric(flights.length,'Vuelos cerrados demo')+metric(hours.toFixed(1)+' h','Horas registradas demo')+'</div>'+
  '<section class="panel"><h2>Panel administrativo de la escuela</h2><p>Accesos de gestión institucional independientes de los espacios del alumno y del instructor.</p><div class="quick-areas">'+
  links.map(([key,title,description])=>'<button type="button" class="quick-area" data-go="'+key+'"><b>'+title+'</b><span>'+description+'</span></button>').join('')+
@@ -1286,12 +1295,70 @@ function memberScreen(){
  '</tbody></table></div></section>'+
  trainingSettings()+trainingTimeline()+trainingFormMarkup()+chiefReviewSection()+ravInstitutionScreen();
 }
+
+const fm=n=>(n/100).toLocaleString('es-AR',{style:'currency',currency:'ARS',minimumFractionDigits:2,maximumFractionDigits:2});
+const finOptions=(obj,current)=>Object.entries(obj).map(([k,v])=>'<option value="'+safe(k)+'" '+(k===current?'selected':'')+'>'+safe(v)+'</option>').join('');
 function financeScreen(){
- const gross=flights.reduce((a,b)=>a+b.cost,0);
- return '<div class="metrics">'+metric(money(gross),'Vuelos valorizados · Demo')+metric('0','Cobros efectuados')+metric('0','Egresos registrados')+metric('—','Saldo real no disponible')+'</div>'+
- '<section class="panel"><h2>Contabilidad, packs de horas y cuentas corrientes</h2><p>Etapa de diseño: ingresos/egresos categorizados, cajas, cheques, proveedores, horas prepagas y saldos en pesos. Los importes mostrados son solo cálculos de tarifa sobre horas de bloque de demostración, <strong>no facturación ni cobranzas</strong>.</p><div class="table-scroll"><table><thead><tr><th>Reserva / vuelo</th><th>Horas bloque</th><th>Tarifa vigente de prueba</th><th>Importe calculado</th></tr></thead><tbody>'+
- flights.map(f=>'<tr><td>'+safe(f.date)+' · '+safe(f.aircraft)+'</td><td>'+f.blockHours+'</td><td>'+money(f.cost/f.blockHours)+'/h</td><td>'+money(f.cost)+'</td></tr>').join('')+
- (flights.length?'':'<tr><td colspan="4">Cerrá un vuelo de prueba para ver el cálculo.</td></tr>')+'</tbody></table></div></section>';
+ const r=financeReport(financeEntries,{period:financePeriod,area:financeArea});
+ const months=[...new Set([now().slice(0,7),...financeEntries.map(x=>x.date.slice(0,7))])].sort().reverse();
+ const periodOptions='<option value="todos">Todos los meses</option>'+months.map(x=>'<option '+(financePeriod===x?'selected':'')+' value="'+x+'">'+x+'</option>').join('');
+ const balances=Object.entries(FINANCE_ACCOUNTS).map(([k,v])=>'<div><span>'+safe(v)+' · saldo acumulado</span><strong>'+fm(r.balances[k])+'</strong></div>').join('');
+ const sectorRows=['escuela','aerodromo','compartido'].map(k=>'<tr><td>'+safe(FINANCE_AREAS[k])+'</td><td>'+fm(r.byArea[k].income)+'</td><td>'+fm(r.byArea[k].expenses)+'</td><td>'+fm(r.byArea[k].income-r.byArea[k].expenses)+'</td></tr>').join('');
+ const expenseRows=Object.entries(r.expenseCategories).sort((x,y)=>y[1]-x[1]).map(([k,v])=>'<tr><td>'+safe(k)+'</td><td>'+fm(v)+'</td></tr>').join('');
+ const movements=r.rows.slice().reverse().map(x=>'<tr><td>'+safe(x.date)+'</td><td>'+safe(FINANCE_AREAS[x.area])+'</td><td>'+safe(FINANCE_KINDS[x.kind])+'</td><td>'+safe(x.category)+'</td><td>'+safe(x.concept)+(x.reference?' · '+safe(x.reference):'')+'</td><td>'+safe(FINANCE_ACCOUNTS[x.account])+(x.destination?' → '+safe(FINANCE_ACCOUNTS[x.destination]):'')+'</td><td>'+(x.kind==='egreso'?'−':x.kind==='transferencia'?'↔ ':'+')+fm(x.cents)+'</td></tr>').join('');
+ return '<section class="panel"><h2>Balance general · Escuela de vuelo y Aeródromo</h2><p>Control de ingresos, servicios (agua, luz, gas), corte de pasto, impuestos, mantenimiento, reparaciones e imprevistos.</p>'+
+ '<div class="fin-explainer"><strong>DEMO:</strong> movimientos ficticios solo durante esta sesión, se pierden al recargar. Los vuelos valorizados y el stock no son cobros ni pagos. Una reposición de caja chica es una transferencia, no un ingreso.</div>'+
+ '<div class="fin-controls"><label>Período<select id="financePeriod">'+periodOptions+'</select></label><label>Sector<select id="financeFilterArea">'+finOptions({todos:'Todos',escuela:'Escuela de vuelo',aerodromo:'Aeródromo',compartido:'Compartido'},financeArea)+'</select></label></div></section>'+
+ '<div class="fin-metrics"><div><span>Ingresos operativos</span><strong>'+fm(r.income)+'</strong></div><div><span>Egresos operativos</span><strong>'+fm(r.expenses)+'</strong></div><div><span>Resultado del filtro</span><strong>'+fm(r.net)+'</strong></div></div>'+
+ '<section class="panel"><h2>Saldos de fondos y caja chica</h2><div class="fin-funds">'+balances+'</div><p class="muted">Los saldos son acumulados. Registrá una apertura inicial para disponer fondos; transferí dinero desde banco o caja general a caja chica para reponerla sin duplicar ingresos.</p></section>'+
+ '<section class="panel"><h2>Registrar movimiento de prueba</h2><form id="financeForm"><div class="formgrid">'+
+ '<label>Operación<select id="finKind">'+finOptions(FINANCE_KINDS,'egreso')+'</select></label>'+
+ '<label>Fecha<input id="finDate" type="date" value="'+now()+'" required></label>'+
+ '<label id="finAreaBox">Sector<select id="finArea">'+finOptions({escuela:'Escuela',aerodromo:'Aeródromo',compartido:'Compartido'},'aerodromo')+'</select></label>'+
+ '<label id="finCategoryBox">Categoría<select id="finCategory">'+FINANCE_CATEGORIES.egreso.map(x=>'<option>'+safe(x)+'</option>').join('')+'</select></label>'+
+ '<label>Cuenta de origen o movimiento<select id="finAccount">'+finOptions(FINANCE_ACCOUNTS,'caja_general')+'</select></label>'+
+ '<label id="finTargetBox" hidden>Destino de transferencia<select id="finTarget">'+finOptions(FINANCE_ACCOUNTS,'caja_chica')+'</select></label>'+
+ '<label>Importe en pesos<input id="finAmount" type="number" step="0.01" min="0.01" max="9999999999.99" required></label>'+
+ '<label>Concepto / proveedor<input id="finConcept" maxlength="150" required placeholder="Ej. Reparación de instalaciones"></label>'+
+ '<label>Número de comprobante<input id="finReference" maxlength="100" placeholder="Opcional"></label>'+
+ '<label class="wide">Observaciones<textarea id="finNotes" rows="2" maxlength="500"></textarea></label>'+
+ '</div><button type="submit" class="action">Guardar movimiento demo</button></form></section>'+
+ '<section class="panel"><h2>Balance por área</h2><div class="table-scroll"><table><thead><tr><th>Área</th><th>Ingresos</th><th>Gastos</th><th>Resultado</th></tr></thead><tbody>'+sectorRows+'</tbody></table></div>'+
+ '<h2>Gastos por categoría</h2>'+(expenseRows?'<div class="table-scroll"><table><thead><tr><th>Categoría</th><th>Total</th></tr></thead><tbody>'+expenseRows+'</tbody></table></div>':'<p class="muted">Sin egresos en el filtro.</p>')+'</section>'+
+ '<section class="panel"><div class="toolbar"><h2>Historial de ingresos, egresos y transferencias</h2><button id="finExport" class="secondary" '+(r.rows.length?'':'disabled')+'>Exportar CSV</button></div>'+
+ '<div class="table-scroll"><table><thead><tr><th>Fecha</th><th>Área</th><th>Tipo</th><th>Categoría</th><th>Detalle</th><th>Cuenta</th><th>Importe</th></tr></thead><tbody>'+
+ (movements||'<tr><td colspan="7">No hay movimientos para este filtro.</td></tr>')+'</tbody></table></div></section>';
+}
+function wireFinance(){
+ const kind=$('finKind'),category=$('finCategory');
+ function fields(){
+  const operative=kind.value==='ingreso'||kind.value==='egreso';
+  $('finAreaBox').hidden=!operative;$('finCategoryBox').hidden=!operative;$('finTargetBox').hidden=kind.value!=='transferencia';
+  if(operative)category.innerHTML=FINANCE_CATEGORIES[kind.value].map(x=>'<option>'+safe(x)+'</option>').join('');
+  const c=$('finConcept');
+  if(!operative&&(!c.value||c.value==='Saldo inicial'||c.value==='Transferencia interna'))c.value=kind.value==='apertura'?'Saldo inicial':'Transferencia interna';
+  if(operative&&(c.value==='Saldo inicial'||c.value==='Transferencia interna'))c.value='';
+ }
+ kind.addEventListener('change',fields);fields();
+ $('financePeriod').addEventListener('change',e=>{financePeriod=e.target.value;render()});
+ $('financeFilterArea').addEventListener('change',e=>{financeArea=e.target.value;render()});
+ $('financeForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  try{
+   const row=makeFinanceEntry({kind:kind.value,date:$('finDate').value,area:$('finArea').value,category:category.value,account:$('finAccount').value,
+    destination:$('finTarget').value,amount:$('finAmount').value,concept:$('finConcept').value,reference:$('finReference').value,notes:$('finNotes').value},financeEntries);
+   financeEntries.push({...row,id:'fin-demo-'+Date.now()});financeArea='todos';financePeriod='todos';
+   render();notice('Movimiento de prueba registrado. Los saldos son de DEMOSTRACIÓN y no se guardan permanentemente.');
+  }catch(error){notice(error.message)}
+ });
+ $('finExport').addEventListener('click',()=>{
+  const records=financeReport(financeEntries,{period:financePeriod,area:financeArea}).rows;
+  const lines=[['Fecha','Área','Tipo','Categoría','Concepto','Cuenta','Destino','Importe ARS','Comprobante'],
+   ...records.map(x=>[x.date,FINANCE_AREAS[x.area],FINANCE_KINDS[x.kind],x.category,x.concept,FINANCE_ACCOUNTS[x.account],FINANCE_ACCOUNTS[x.destination]||'',(x.cents/100).toFixed(2),x.reference])];
+  const quote=value=>'"'+String(value??'').replace(/[\r\n]/g,' ').replace(/"/g,'""').replace(/^[=+@-]/,"'$&")+'"';
+  const blob=new Blob(['\ufeff'+lines.map(row=>row.map(quote).join(';')).join('\r\n')],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='aerosuite-finanzas-demo.csv';a.click();URL.revokeObjectURL(url);
+ });
 }
 function stockScreen(){
  return '<section class="panel"><h2>Combustible, aceite y stock institucional · Demo</h2><p>Registrar entradas y salidas de prueba con mínimos configurables. Las cargas a aeronaves, compras de proveedor, costo y venta por litro y su vínculo con contabilidad se conectarán en una etapa posterior.</p>'+
@@ -1553,6 +1620,7 @@ function wireTraining(){
  }));
 }
 function wire(){
+ if(tab==='finanzas')wireFinance();
  if(tab==='personas'){wireTraining();wireInstitutionalRav();}
  if(tab==='alumno'||tab==='instructor')wirePortals();
  if(tab==='direccion'){
