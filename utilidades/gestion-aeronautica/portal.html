@@ -284,6 +284,23 @@ body[data-aerosuite-area="administracion"] nav button.active{background:#344b63;
  .aerosuite-flightops-links a{width:100%;justify-content:center}
  .aerosuite-flightops-shortcut button{width:100%}
 }
+
+/* Aplicaciones prácticas en la Academia del Alumno. Se reutilizan originales. */
+.academy-tool-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px;margin-top:17px}
+.academy-tool-card{border:1px solid #53758a;border-radius:14px;background:linear-gradient(155deg,#213d52,#162b3a);padding:17px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.academy-tool-card h3{font-size:17px;line-height:1.3;margin:2px 0 0;color:#f0f8ff}
+.academy-tool-card p{font-size:12px;line-height:1.55;color:#cbdce7;flex:1;margin:0}
+.academy-tool-card button{width:100%;margin-top:3px;min-height:42px}
+.academy-tool-type{font-size:10px;letter-spacing:.09em;font-weight:850;color:#c3dff3}
+.academy-tool-viewer{background:#162633;border:1px solid #58819b;border-radius:17px;padding:15px;margin-bottom:17px;overflow:hidden}
+.academy-tool-viewer-head{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:13px}
+.academy-tool-viewer-head h3{font-size:20px;margin:5px 0 0}
+.academy-tool-actions{display:flex;gap:10px;flex-wrap:wrap}
+.academy-tool-actions a{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;min-height:40px}
+.academy-tool-frame{display:block;border:0;border-radius:11px;width:100%;background:#090f1c;min-height:690px}
+.academy-tool-viewer>.muted{margin:11px 4px 1px;line-height:1.55}
+@media(max-width:950px){.academy-tool-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:650px){.academy-tool-grid{grid-template-columns:1fr}.academy-tool-viewer{padding:7px}.academy-tool-frame{height:75dvh!important;min-height:610px}.academy-tool-actions{width:100%}.academy-tool-actions>*{flex:1}}
 </style>
 <script>document.documentElement.classList.add("auth-pending")</script>
 <style>html.auth-pending body{visibility:hidden}</style>
@@ -401,8 +418,6 @@ function academyLibrary(canManage=false){
   (canManage?uploadBox:'')+
   libraryCollection('teoria',AEROSUITE_THEORY_TOPICS)+libraryCollection('crm',AEROSUITE_CRM_TOPICS)+libraryExtra.filter(item=>!item.hidden).map(extraCard).join('')+
   '<div class="grid3">'+
-  '<a class="card" href="../rodaje-viento.html"><h3>Rodaje con viento</h3><p>Práctica interactiva de controles en rodaje.</p></a>'+
-  '<a class="card" href="../calculo-sustentacion.html"><h3>Cálculo de sustentación</h3><p>Perfiles, sustentación y pérdida.</p></a>'+
   '<a class="card" href="fichas/fuerzas-del-vuelo.html"><h3>Cuatro fuerzas del vuelo</h3><p>Ficha visual original con autoevaluación.</p></a>'+
   '</div><p class="muted">Material complementario: no reemplaza manuales, procedimientos ni normativa vigente. Consultar estas fichas no acredita horas académicas.</p></section>';
 }
@@ -1408,9 +1423,37 @@ function stockScreen(){
  '<section class="panel"><h2>Historial de movimientos de prueba</h2><div class="table-scroll"><table><thead><tr><th>Producto</th><th>Movimiento</th><th>Cantidad</th></tr></thead><tbody>'+movements.map(m=>'<tr><td>'+safe(m.item)+'</td><td>'+safe(m.kind)+'</td><td>'+safe(m.qty)+'</td></tr>').join('')+
  (movements.length?'':'<tr><td colspan="3">Sin movimientos.</td></tr>')+'</tbody></table></div></section>';
 }
+// Herramientas originales Gente de Vuelo compartidas, sin copias de datos ni cambios de almacenamiento.
+const ACADEMY_STUDENT_TOOLS=Object.freeze({
+ sustentacion:{title:'Cálculo de sustentación',description:'Simulador didáctico de perfiles NACA, ángulo de ataque, flaps y pérdida.',url:'../calculo-sustentacion.html',height:'980px',type:'formativo'},
+ rodaje:{title:'Rodaje con viento',description:'Posición de alerones y elevador durante el rodaje con viento.',url:'../rodaje-viento.html',height:'960px',type:'formativo'},
+ mantenimiento:{title:'Mantenimiento de aeronaves',description:'Bitácora personal de mantenimiento, componentes y vencimientos de aeronaves.',url:'../mantenimiento-aeronaves.html',height:'1160px',type:'privado'}
+});
+let academyActiveTool=null;
+function academyStudentTools(){
+ const cards=Object.entries(ACADEMY_STUDENT_TOOLS).map(([id,tool])=>
+  '<article class="academy-tool-card"><span class="academy-tool-type">'+(tool.type==='privado'?'REGISTRO PRIVADO':'PRÁCTICA INTERACTIVA')+'</span>'+
+  '<h3>'+safe(tool.title)+'</h3><p>'+safe(tool.description)+'</p>'+
+  '<button type="button" class="'+(academyActiveTool===id?'primary':'secondary')+'" data-academy-tool="'+id+'">'+
+  (academyActiveTool===id?'Herramienta abierta':'Utilizar herramienta')+'</button></article>'
+ ).join('');
+ const active=academyActiveTool&&ACADEMY_STUDENT_TOOLS[academyActiveTool];
+ const viewer=active?
+  '<section class="academy-tool-viewer" id="academyToolViewer" aria-label="Herramienta '+safe(active.title)+'">'+
+   '<div class="academy-tool-viewer-head"><div><span class="academy-tool-type">ACADEMIA · AEROSUITE</span>'+
+   '<h3>'+safe(active.title)+'</h3></div>'+
+   '<div class="academy-tool-actions"><a class="secondary" href="'+active.url+'" target="_blank" rel="noopener noreferrer">Abrir a pantalla completa ↗</a>'+
+   '<button type="button" class="secondary" data-academy-tool-close>Ocultar herramienta</button></div></div>'+
+   '<iframe class="academy-tool-frame" src="'+active.url+'" title="'+safe(active.title)+' · Aula AeroSuite" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" style="height:'+active.height+'"></iframe>'+
+   (active.type==='privado'?'<p class="muted">La bitácora utiliza la cuenta actual de Gente de Vuelo; sus registros privados permanecen en el almacenamiento de la herramienta original, sin duplicarlos en la demostración de AeroSuite.</p>':'')+
+   '</section>':'';
+ return '<section class="panel" id="academyStudentApplications"><h2>Aplicaciones prácticas · Academia del Alumno</h2>'+
+  '<p>Ejercitá conocimientos aeronáuticos y consultá tu mantenimiento desde AeroSuite. Elegí una aplicación: se abrirá aquí sin perder la biblioteca de fichas ni crear una segunda versión.</p>'+
+  '<div class="academy-tool-grid">'+cards+'</div></section>'+viewer;
+}
 function academyScreen(){
- return '<section class="panel"><h2>Mi biblioteca de teoría y práctica · Academia y Simu PPA</h2><p>Accedé al Simulador PPA y a la biblioteca de fichas de teoría aeronáutica y CRM. La demostración sigue restringida a administración.</p><a class="secondary" href="../../simulador-ppa/">Abrir Simu PPA · Solo administrador</a></section>'+
-  academyLibrary(false);
+ return '<section class="panel"><h2>Mi biblioteca de teoría y práctica · Academia y Simu PPA</h2><p>Accedé al Simulador PPA, a la biblioteca de fichas de teoría aeronáutica y CRM, y a las aplicaciones prácticas integradas en esta sección. La demostración sigue restringida a administración.</p><a class="secondary" href="../../simulador-ppa/">Abrir Simu PPA · Solo administrador</a></section>'+
+  academyStudentTools()+academyLibrary(false);
 }
 function adminAcademyScreen(){
  return '<section class="panel"><h2>Administración de la biblioteca de formación</h2><p>Publicá los cuadernillos aquí para que el alumno los consulte sin herramientas de edición en su área.</p></section>'+
@@ -1713,6 +1756,20 @@ function wireTraining(){
  }));
 }
 function wire(){
+ if(tab==='academia'&&currentArea==='alumno'){
+  $('screen').querySelectorAll('[data-academy-tool]').forEach(button=>{
+   button.addEventListener('click',()=>{
+    const id=button.dataset.academyTool;
+    if(!Object.prototype.hasOwnProperty.call(ACADEMY_STUDENT_TOOLS,id))return;
+    academyActiveTool=id;
+    render();
+    $('academyToolViewer')?.scrollIntoView({behavior:'smooth',block:'start'});
+   });
+  });
+  $('screen').querySelector('[data-academy-tool-close]')?.addEventListener('click',()=>{
+   academyActiveTool=null;render();$('academyStudentApplications')?.scrollIntoView({behavior:'smooth',block:'start'});
+  });
+ }
  if(tab==='finanzas')wireFinance();
  if(tab==='personas'){wireTraining();wireInstitutionalRav();}
  if(tab==='alumno'||tab==='instructor')wirePortals();
