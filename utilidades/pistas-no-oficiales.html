@@ -179,13 +179,22 @@ h1{letter-spacing:-.035em}
  <h2 id="pista-official-title">Registros con respaldo documental ANAC · Muestra inicial</h2>
  <p>Esta es una muestra parcial identificada en publicaciones oficiales, no un inventario completo ni una constancia de habilitación vigente.</p>
  <div id="pista-documented-list"></div>
-</section><details id="alternatives" class="notice"><summary style="cursor:pointer;font-weight:bold;padding:8px">Buscar alternativas cercanas · distancia en NM</summary><h2>Buscar posibles alternativas cercanas</h2><p>Ingresá un punto de referencia o seleccioná un lugar en el mapa. Las distancias son en línea recta y solo orientativas.</p><label>Latitud de referencia <input id="ref-lat" type="number" step="any" min="-90" max="90" placeholder="-34.8"></label> <label>Longitud de referencia <input id="ref-lon" type="number" step="any" min="-180" max="180" placeholder="-58.4"></label> <label>Radio de búsqueda <select id="radius"><option value="25">25 NM</option><option value="50" selected>50 NM</option><option value="100">100 NM</option><option value="200">200 NM</option></select></label> <button type="button" id="pick-ref">Elegir punto en mapa</button> <button type="button" id="find-near">Buscar cercanas</button> <button type="button" id="reset-near">Quitar filtro</button><p id="near-status"></p></details><h2>Pistas identificadas por la comunidad</h2><div id="list"></div><details id="contribute"><summary style="cursor:pointer;padding:14px;background:#28648c;border-radius:10px;font-weight:bold">+ Agregar una pista conocida</summary><h2>Proponer una pista</h2><p>Solo integrantes registrados. Cada propuesta requiere aprobación de administración.</p><form id="form"><label>Nombre de la pista<input name="name" required maxlength="120" minlength="3"></label><label>Provincia<input name="province" required maxlength="80"></label><label>Latitud decimal<input name="latitude" type="number" step="any" min="-56" max="-21" required></label><label>Longitud decimal<input name="longitude" type="number" step="any" min="-74" max="-53" required></label><label>Orientación de pista<input name="runway" maxlength="50"></label><label>Dimensiones<input name="dimensions" maxlength="80"></label><label>Elevación<input name="elevation" maxlength="50"></label><label>Superficie<select name="surface"><option>Desconocida</option><option>Césped</option><option>Tierra</option><option>Asfalto</option><option>Ripio</option><option>Otra</option></select></label><label>Acceso<select name="permission"><option>Requiere autorización previa</option><option>Consultar al responsable</option><option>Acceso no confirmado</option></select></label><label>Frecuencia (si corresponde)<input name="frequency" maxlength="60"></label><label>Contacto autorizado para publicar<input name="contact" maxlength="150"></label><label class="wide">Obstáculos<textarea name="obstacles" maxlength="1500"></textarea></label><label class="wide">Observaciones<textarea name="notes" maxlength="2500"></textarea></label><label class="wide"><span><input type="checkbox" name="consent" required> Confirmo que tengo autorización para divulgar esta ubicación y los datos de contacto incluidos.</span></label><button type="submit">Enviar a moderación</button></form></details><p id="message" role="status"></p><section id="admin" hidden><h2>Moderación de propuestas</h2><div id="pending"></div></section></main><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="../assets/supabase-2.117.2.min.js"></script><script src="../assets/community-config.js"></script><script src="gestion-aeronautica/src/catalogo-pistas-anac.js"></script><script>
+</section><details id="alternatives" class="notice"><summary style="cursor:pointer;font-weight:bold;padding:8px">Buscar alternativas cercanas · distancia en NM</summary><h2>Buscar posibles alternativas cercanas</h2><p>Ingresá un punto de referencia o seleccioná un lugar en el mapa. Las distancias son en línea recta y solo orientativas.</p><label>Latitud de referencia <input id="ref-lat" type="number" step="any" min="-90" max="90" placeholder="-34.8"></label> <label>Longitud de referencia <input id="ref-lon" type="number" step="any" min="-180" max="180" placeholder="-58.4"></label> <label>Radio de búsqueda <select id="radius"><option value="25">25 NM</option><option value="50" selected>50 NM</option><option value="100">100 NM</option><option value="200">200 NM</option></select></label> <button type="button" id="pick-ref">Elegir punto en mapa</button> <button type="button" id="find-near">Buscar cercanas</button> <button type="button" id="reset-near">Quitar filtro</button><p id="near-status"></p></details><h2>Pistas identificadas por la comunidad</h2><div id="list"></div><details id="contribute"><summary style="cursor:pointer;padding:14px;background:#28648c;border-radius:10px;font-weight:bold">+ Agregar una pista conocida</summary><h2>Proponer una pista</h2><p>Solo integrantes registrados. Cada propuesta requiere aprobación de administración.</p><form id="form"><label>Nombre de la pista<input name="name" required maxlength="120" minlength="3"></label><label>Provincia<input name="province" required maxlength="80"></label><label>Latitud decimal<input name="latitude" type="number" step="any" min="-56" max="-21" required></label><label>Longitud decimal<input name="longitude" type="number" step="any" min="-74" max="-53" required></label><label>Orientación de pista<input name="runway" maxlength="50"></label><label>Dimensiones<input name="dimensions" maxlength="80"></label><label>Elevación<input name="elevation" maxlength="50"></label><label>Superficie<select name="surface"><option>Desconocida</option><option>Césped</option><option>Tierra</option><option>Asfalto</option><option>Ripio</option><option>Otra</option></select></label><label>Acceso<select name="permission"><option>Requiere autorización previa</option><option>Consultar al responsable</option><option>Acceso no confirmado</option></select></label><label>Frecuencia (si corresponde)<input name="frequency" maxlength="60"></label><label>Contacto autorizado para publicar<input name="contact" maxlength="150"></label><label class="wide">Obstáculos<textarea name="obstacles" maxlength="1500"></textarea></label><label class="wide">Observaciones<textarea name="notes" maxlength="2500"></textarea></label><label class="wide"><span><input type="checkbox" name="consent" required> Confirmo que tengo autorización para divulgar esta ubicación y los datos de contacto incluidos.</span></label><button type="submit">Enviar a moderación</button></form></details><p id="message" role="status"></p><section id="admin" hidden><h2>Moderación de propuestas</h2><div id="pending"></div></section></main><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="../assets/supabase-2.117.2.min.js"></script><script src="../assets/community-config.js"></script><script src="gestion-aeronautica/src/catalogo-pistas-anac.js"></script><script src="gestion-aeronautica/src/clasificacion-pistas.js"></script><script>
 (async()=>{
 const client=supabase.createClient(GDV_CONFIG.url,GDV_CONFIG.key);
 const map=L.map('map',{touchZoom:true,scrollWheelZoom:true,doubleClickZoom:true,tapHold:true}).setView([-35.0,-58.2],10);const satellite=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Imagery © Esri and contributors'}).addTo(map);const streets=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'});const basemapControl=L.control.layers({'Satélite · ver pistas':satellite,'Calles y caminos':streets},null,{collapsed:false});basemapControl.addTo(map);const basemapSelector=document.getElementById('basemap-selector');basemapSelector.appendChild(basemapControl.getContainer());
 let markers=L.layerGroup().addTo(map),records=[],admin=false;
 const PIN_PALETTE={
- official:{fill:'#286ba8',edge:'#e2f2ff'},lad:{fill:'#ba8a34',edge:'#ffecc4'},community:{fill:'#8b65a9',edge:'#ebdbfd'},reference:{fill:'#667282',edge:'#e1ebf4'},draft:{fill:'#bc7e41',edge:'#ffe0ac'}
+ official:{fill:'#286ba8',edge:'#e2f2ff'},
+ controlled_public:{fill:'#286ba8',edge:'#e2f2ff'},
+ uncontrolled_public:{fill:'#258a91',edge:'#c6f5ed'},
+ private_aerodrome:{fill:'#8367b5',edge:'#e7d9ff'},
+ lad:{fill:'#b58b37',edge:'#fff0ca'},
+ heliport:{fill:'#427f8d',edge:'#d0f0f6'},
+ unverified:{fill:'#b7433b',edge:'#ffe1d9'},
+ community:{fill:'#b7433b',edge:'#ffe1d9'},
+ reference:{fill:'#667282',edge:'#e1ebf4'},
+ draft:{fill:'#bc7e41',edge:'#ffe0ac'}
 };
 function runwayPin(kind='community'){
  const tone=PIN_PALETTE[kind]||PIN_PALETTE.community;
@@ -201,9 +210,24 @@ function runwayPin(kind='community'){
 }
 const ANAC_CATALOG=window.AEROSUITE_OFFICIAL_AIRSTRIPS||{official:[],lad:[],sources:{},catalogStatus:'no_disponible'};
 const documentedLayers={official:L.layerGroup().addTo(map),lad:L.layerGroup().addTo(map)};
-const layerVisibility={official:true,lad:true,community:true,reference:true};
+const layerVisibility={controlled_public:true,uncontrolled_public:true,private_aerodrome:true,lad:true,heliport:true,unverified:true,reference:true};
 const documentaryMarkers=new Map();
-function layerSelected(kind){return layerVisibility[kind]===true}
+function layerSelected(kind){
+ if(kind==='official')return ['controlled_public','uncontrolled_public','private_aerodrome','heliport'].some(k=>layerVisibility[k]===true);
+ if(kind==='community')return layerVisibility.unverified===true;
+ if(kind==='reference')return layerVisibility.unverified===true&&layerVisibility.reference===true;
+ return layerVisibility[kind]===true;
+}
+function meetsServiceFilters(record){
+ const ats=String(record.ats_service||'unknown');
+ const access=String(record.access_policy||'unknown');
+ const rules=String(record.operation_rules||'unknown');
+ const selected=(id,value)=>document.getElementById(id)?.value==='all'||document.getElementById(id)?.value===value;
+ return selected('filter-ats',ats)&&selected('filter-access',access)&&selected('filter-rules',rules);
+}
+for(const id of ['filter-ats','filter-access','filter-rules']){
+ document.getElementById(id).addEventListener('change',()=>{render();renderExternal()});
+}
 function syncLayerVisibility(){
  for(const kind of ['official','lad']){
   const group=documentedLayers[kind];
@@ -229,6 +253,9 @@ document.querySelectorAll('[data-pista-layer]').forEach(input=>{
 document.getElementById('layers-all').addEventListener('click',()=>Object.keys(layerVisibility).forEach(kind=>setLayerVisible(kind,true)));
 document.getElementById('layers-none').addEventListener('click',()=>Object.keys(layerVisibility).forEach(kind=>setLayerVisible(kind,false)));
 
+const AIRFIELD_TYPES=window.GDV_AIRFIELD_TYPES;
+if(!AIRFIELD_TYPES)throw Error('No está disponible el catálogo de clasificación aeronáutica');
+function airfieldClass(record){return AIRFIELD_TYPES.classification(record)}
 const draftPin=runwayPin('draft');let draftMarker=null;
 function proposeAt(latlng){
  if(pickReference)return;
