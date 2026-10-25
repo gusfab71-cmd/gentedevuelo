@@ -4,6 +4,7 @@ on:
     paths:
       - 'utilidades/gestion-aeronautica/**'
       - 'utilidades/pistas-no-oficiales.html'
+      - 'utilidades/index.html'
       - 'utilidades/meteorologia-aeronautica.html'
       - 'api/airstrip-metar.js'
       - 'tests/airstrip-metar.test.cjs'
@@ -14,6 +15,7 @@ on:
     paths:
       - 'utilidades/gestion-aeronautica/**'
       - 'utilidades/pistas-no-oficiales.html'
+      - 'utilidades/index.html'
       - 'utilidades/meteorologia-aeronautica.html'
       - 'api/airstrip-metar.js'
       - 'tests/airstrip-metar.test.cjs'
