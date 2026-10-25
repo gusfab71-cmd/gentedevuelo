@@ -655,9 +655,9 @@ let ravRecords=[],ravFormOpen=false;
 const trainingInstitution={institutionType:'non_ciac',reviewMode:'chief'};
 // Tres areas visual y funcionalmente aisladas dentro de la demostracion.
 const AREA_DEFS=Object.freeze({
- alumno:{title:'Área del Alumno',subtitle:'Formación, progreso, reservas y biblioteca aeronáutica.',home:'alumno',tabs:[['alumno','Mi formación y reservas'],['academia','Mi biblioteca · Teoría y CRM'],['piloto','Mi actividad personal · Demo'],['pistas','Pistas No Oficiales · Mapa']]},
- instructor:{title:'Instructor y Jefe de Instructores',subtitle:'Evaluaciones, clases, seguimiento de alumnos y supervisión pedagógica.',home:'instructor',tabs:[['instructor','Panel del instructor'],['direccion','Jefatura de instructores'],['personas','Seguimiento, fichas y RAV'],['pistas','Pistas No Oficiales · Mapa']]},
- administracion:{title:'Gestión Administrativa de Escuela',subtitle:'Agenda, operaciones, flota, personal, recursos y contabilidad.',home:'inicio',tabs:[['inicio','Panel administrativo'],['reservas','Agenda y reservas'],['vuelos','Registro de vuelos'],['flota','Aeronaves y mantenimiento'],['pistas','Pistas No Oficiales · Mapa'],['admin_personas','Personal y usuarios'],['admin_academia','Gestionar biblioteca'],['finanzas','Contabilidad y Finanzas'],['stock','Combustible y aceite'],['documentos','Documentos y avisos']]}
+ alumno:{title:'Área del Alumno',subtitle:'Formación, progreso, reservas y biblioteca aeronáutica.',home:'alumno',tabs:[['alumno','Mi formación y reservas'],['academia','Mi biblioteca · Teoría y CRM'],['piloto','Mi actividad personal · Demo'],['pistas','Mapa de Pistas y Aeródromos']]},
+ instructor:{title:'Instructor y Jefe de Instructores',subtitle:'Evaluaciones, clases, seguimiento de alumnos y supervisión pedagógica.',home:'instructor',tabs:[['instructor','Panel del instructor'],['direccion','Jefatura de instructores'],['personas','Seguimiento, fichas y RAV'],['pistas','Mapa de Pistas y Aeródromos']]},
+ administracion:{title:'Gestión Administrativa de Escuela',subtitle:'Agenda, operaciones, flota, personal, recursos y contabilidad.',home:'inicio',tabs:[['inicio','Panel administrativo'],['reservas','Agenda y reservas'],['vuelos','Registro de vuelos'],['flota','Aeronaves y mantenimiento'],['pistas','Mapa de Pistas y Aeródromos'],['admin_personas','Personal y usuarios'],['admin_academia','Gestionar biblioteca'],['finanzas','Contabilidad y Finanzas'],['stock','Combustible y aceite'],['documentos','Documentos y avisos']]}
 });
 let currentArea=null;
 function areaPortalMarkup(){
@@ -875,7 +875,7 @@ function directorPortal(){
 let studentBookingOpen=false,instructorEvaluationBooking='';
 function dashboard(){
  const hours=flights.reduce((sum,x)=>sum+x.blockHours,0),turns=reservations.filter(r=>r.status==='confirmada').length;
- const links=[['reservas','Agenda y reservas','Turnos y disponibilidad'],['vuelos','Registro de vuelos','Actividad y horas'],['flota','Aeronaves y mantenimiento','Flota y vencimientos'],['pistas','Pistas No Oficiales','Mapa satelital y referencias comunitarias'],['admin_personas','Personal y usuarios','Perfiles de prueba'],['admin_academia','Biblioteca de formación','Publicar fichas de teoría y CRM'],['finanzas','Contabilidad y Finanzas','Gastos generales y caja chica'],['stock','Combustible y aceite','Stock institucional'],['documentos','Documentos y avisos','Documentación y alertas']];
+ const links=[['reservas','Agenda y reservas','Turnos y disponibilidad'],['vuelos','Registro de vuelos','Actividad y horas'],['flota','Aeronaves y mantenimiento','Flota y vencimientos'],['pistas','Mapa de Pistas y Aeródromos','Fuentes ANAC, LAD y pistas comunitarias'],['admin_personas','Personal y usuarios','Perfiles de prueba'],['admin_academia','Biblioteca de formación','Publicar fichas de teoría y CRM'],['finanzas','Contabilidad y Finanzas','Gastos generales y caja chica'],['stock','Combustible y aceite','Stock institucional'],['documentos','Documentos y avisos','Documentación y alertas']];
  return '<div class="metrics">'+metric(fleet.length,'Aeronaves demo')+metric(turns,'Reservas de prueba')+metric(flights.length,'Vuelos cerrados demo')+metric(hours.toFixed(1)+' h','Horas registradas demo')+'</div>'+
  '<section class="panel"><h2>Panel administrativo de la escuela</h2><p>Accesos de gestión institucional independientes de los espacios del alumno y del instructor.</p><div class="quick-areas">'+
  links.map(([key,title,description])=>'<button type="button" class="quick-area" data-go="'+key+'"><b>'+title+'</b><span>'+description+'</span></button>').join('')+
@@ -1388,13 +1388,13 @@ function adminAcademyScreen(){
 function airstripsScreen(){
  const roleLabel=currentArea==='alumno'?'Área del Alumno':currentArea==='instructor'?'Área del Instructor y Jefatura':'Gestión Administrativa';
  return '<section class="airstrips-shell" aria-label="Pistas No Oficiales en AeroSuite">'+
-  '<span class="eyebrow">AeroSuite · '+safe(roleLabel)+'</span><h2>Pistas No Oficiales · Mapa comunitario</h2>'+
-  '<p>Consultá ubicaciones aportadas por la comunidad de Gente de Vuelo, pistas cartografiadas en OpenStreetMap y posibles referencias cercanas en millas náuticas. El mapa es el mismo que utiliza Gente de Vuelo: no se duplican archivos ni registros.</p>'+
-  '<div class="airstrips-warning" role="note"><strong>Información no oficial y no verificada para operaciones.</strong> Una referencia cartográfica no acredita que una pista esté habilitada, sea utilizable o constituya una alternativa segura. Antes de cualquier vuelo verificá AIP, NOTAM, datos oficiales, estado real, obstáculos y autorización del propietario o responsable. Las distancias en NM son aproximadas y en línea recta.</div>'+
+  '<span class="eyebrow">AeroSuite · '+safe(roleLabel)+'</span><h2>Mapa de Pistas y Aeródromos</h2>'+
+  '<p>Consultá una muestra documental de aeródromos publicados en AIP, LAD del listado ANAC, pistas comunitarias y referencias de OpenStreetMap. Filtrá cada categoría y consultá su fuente. El mapa es el mismo de Gente de Vuelo: no se duplican archivos ni registros.</p>'+
+  '<div class="airstrips-warning" role="note"><strong>Información cartográfica y documental: no confirma aptitud operacional.</strong> Una referencia cartográfica no acredita que una pista esté habilitada, sea utilizable o constituya una alternativa segura. Antes de cualquier vuelo verificá AIP, NOTAM, datos oficiales, estado real, obstáculos y autorización del propietario o responsable. Las distancias en NM son aproximadas y en línea recta.</div>'+
   '<div class="airstrips-tools"><a class="action" href="../pistas-no-oficiales.html" target="_blank" rel="noopener noreferrer">Abrir mapa completo en otra pestaña ↗</a>'+ 
   '<a class="action" href="https://ais.anac.gob.ar/aip" target="_blank" rel="noopener noreferrer">Consultar AIP oficial · ANAC ↗</a>'+
-  '<span class="airstrips-source">Fuente: Gente de Vuelo · Propuestas sujetas a moderación · Referencias OSM sin validación operacional</span></div></section>'+
-  '<section class="airstrips-embed" aria-label="Explorador de pistas comunitarias"><iframe class="airstrips-frame" title="Mapa interactivo de Pistas No Oficiales de Gente de Vuelo" src="../pistas-no-oficiales.html" loading="lazy" allow="geolocation" referrerpolicy="strict-origin-when-cross-origin"></iframe></section>'+
+  '<span class="airstrips-source">Fuentes: AIP/MADHEL/ANAC y Gente de Vuelo · Catálogo ANAC parcial · Comunidad moderada · OSM no verificado</span></div></section>'+
+  '<section class="airstrips-embed" aria-label="Explorador de pistas comunitarias"><iframe class="airstrips-frame" title="Mapa de Pistas y Aeródromos con categorías AIP, LAD, comunitarias y cartográficas" src="../pistas-no-oficiales.html" loading="lazy" allow="geolocation" referrerpolicy="strict-origin-when-cross-origin"></iframe></section>'+
   '<p class="muted">Las propuestas comunitarias se envían a moderación en el sistema de Gente de Vuelo. En esta integración no se cargan pistas automáticamente en los planes de vuelo ni se presentan como aeródromos autorizados.</p>';
 }
 function documentsScreen(){
