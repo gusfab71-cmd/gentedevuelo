@@ -37,7 +37,17 @@ Deno.serve(async req=>{
  const url=new URL(req.url);
  const q=sanitize(url.searchParams.get("q")||"");
  if(!q)return reply(origin,400,{ok:false,error:"Ingresá una localidad válida (2 a 100 caracteres)."});
- // El anon JWT del sitio se verifica por Supabase (verify_jwt=true).
+ // Función pública de solo geocodificación: se autentica la publishable API key
+ // contra las claves activas del proyecto. Las claves sb_publishable_ NO son JWT.
+ let allowedKeys: Record<string,string>={};
+ try{allowedKeys=JSON.parse(Deno.env.get("SUPABASE_PUBLISHABLE_KEYS")||"{}")}
+ catch(_){return reply(origin,503,{ok:false,error:"Configuración de acceso al buscador inválida."})}
+ const fallbackKey=Deno.env.get("SUPABASE_PUBLISHABLE_KEY");
+ const apiKey=req.headers.get("apikey")||"";
+ if(!apiKey||(!Object.values(allowedKeys).includes(apiKey)&&apiKey!==fallbackKey)){
+  return reply(origin,401,{ok:false,error:"Falta la clave pública válida de Gente de Vuelo."});
+ }
+
  const serviceKey=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")||"";
  const databaseUrl=Deno.env.get("SUPABASE_URL")||"";
  if(!serviceKey||!databaseUrl)return reply(origin,503,{ok:false,error:"Buscador no configurado."});
