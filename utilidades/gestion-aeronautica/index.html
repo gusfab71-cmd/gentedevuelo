@@ -336,7 +336,7 @@ async function callLibraryR2(action,body={}){
  const client=window.GDV_AUTH.client;
  // Algunas consultas recibieron HTTP 503 del gateway de Supabase.
  // Reintentar solo operaciones sin efectos de publicación.
- const attempts=action==='status'||action==='prepare'?3:1;
+ const attempts=['status','prepare','multipart-start','multipart-complete'].includes(action)?3:1;
  for(let attempt=0;attempt<attempts;attempt++){
   try{
    const {data,error}=await client.functions.invoke('aerosuite-biblioteca-r2',{body:{action,...body}});
@@ -403,6 +403,50 @@ function libraryUploadMessage(message){
  if(el)el.textContent=message;
  notice(message);
 }
+// Respaldo sin CORS de Cloudflare: fragmentos de 6 MB, enviados a la
+// función autenticada de Supabase y ensamblados dentro de Cloudflare R2.
+async function uploadLibraryMultipart(type,file){
+ const client=window.GDV_AUTH.client;
+ const session=await callLibraryR2('multipart-start',{type,size:file.size});
+ if(!session?.ok||!session?.uploadId||!session?.path)throw Error('No se pudo abrir la carga fragmentada en R2.');
+ const blockSize=session.partBytes||6*1024*1024;
+ const parts=[];
+ try{
+  const total=Math.ceil(file.size/blockSize);
+  for(let index=0;index<total;index++){
+   const first=index*blockSize,last=Math.min(file.size,first+blockSize);
+   libraryUploadMessage('Transferencia segura a R2: fragmento '+(index+1)+' de '+total+'…');
+   let completed=false,lastError=null;
+   for(let attempt=0;attempt<3&&!completed;attempt++){
+    try{
+     const {data,error}=await client.functions.invoke('aerosuite-biblioteca-r2',{
+      headers:{
+       'Content-Type':'application/octet-stream',
+       'x-academia-action':'multipart-part',
+       'x-academia-upload-id':session.uploadId,
+       'x-academia-path':session.path,
+       'x-academia-part':String(index+1)
+      },
+      body:file.slice(first,last,'application/octet-stream')
+     });
+     if(error)throw error;
+     if(!data?.ok||!data?.etag)throw Error(data?.error||'Cloudflare no confirmó el fragmento.');
+     parts.push(data.etag);completed=true;
+    }catch(error){
+     lastError=error;
+     if(attempt<2)await new Promise(resolve=>setTimeout(resolve,500*(attempt+1)));
+    }
+   }
+   if(!completed)throw Error('Falló el fragmento '+(index+1)+' de '+total+': '+(lastError?.message||'sin respuesta'));
+  }
+  const completed=await callLibraryR2('multipart-complete',{type,path:session.path,uploadId:session.uploadId,parts});
+  if(!completed?.ok)throw Error('No se pudo finalizar la transferencia fragmentada.');
+  return session.path;
+ }catch(error){
+  await callLibraryR2('multipart-abort',{type,path:session.path,uploadId:session.uploadId}).catch(()=>{});
+  throw error;
+ }
+}
 async function uploadStudentLibraryFile(input){
  const type=input.dataset.libraryUpload;
  const file=input.files&&input.files[0];
@@ -415,27 +459,30 @@ async function uploadStudentLibraryFile(input){
  input.disabled=true;
  libraryUploadMessage('Preparando publicación en Cloudflare R2: '+AEROSUITE_LIBRARY_FILES[type].title+'…');
  try{
-  const prepared=await callLibraryR2('prepare',{type,contentType:'application/pdf',size:file.size});
-  if(!prepared?.uploadUrl||!prepared?.path)throw Error('No se recibió un enlace seguro de carga.');
-  libraryUploadMessage('Subiendo '+file.name+' ('+(file.size/1024/1024).toFixed(1)+' MB) a Cloudflare R2…');
-  let uploaded;
+  let path;
   try{
-   uploaded=await fetch(prepared.uploadUrl,{method:'PUT',headers:{'Content-Type':'application/pdf'},body:file});
-  }catch(error){
-   throw Error('No se pudo transferir el archivo al depósito R2. Revisá CORS (permitir PUT y Content-Type para gentedevuelo.com) y la conexión de Internet.'+(prepared.corsWarning?' '+prepared.corsWarning:''));
+   const prepared=await callLibraryR2('prepare',{type,contentType:'application/pdf',size:file.size});
+   if(!prepared?.uploadUrl||!prepared?.path)throw Error('No se recibió un enlace seguro de carga.');
+   libraryUploadMessage('Subiendo '+file.name+' ('+(file.size/1024/1024).toFixed(1)+' MB) a Cloudflare R2…');
+   const uploaded=await fetch(prepared.uploadUrl,{method:'PUT',headers:{'Content-Type':'application/pdf'},body:file});
+   if(!uploaded.ok)throw Error('La transferencia directa respondió '+uploaded.status);
+   path=prepared.path;
+  }catch(directError){
+   // Esta vía funciona si el navegador no tiene permiso CORS para R2.
+   console.warn('Carga directa R2 falló; se usa transferencia fragmentada:',directError.message);
+   libraryUploadMessage('La transferencia directa no se completó. Usando el método seguro por fragmentos…');
+   path=await uploadLibraryMultipart(type,file);
   }
-  if(!uploaded.ok)throw Error('Cloudflare rechazó la transferencia ('+uploaded.status+'). No se reemplazó el PDF anterior.');
   libraryUploadMessage('Transferencia finalizada. Verificando y reemplazando el PDF publicado…');
-  const published=await callLibraryR2('finish',{type,path:prepared.path});
+  const published=await callLibraryR2('finish',{type,path});
   if(!published?.ok||!published?.published||published.size!==file.size)throw Error('No se pudo confirmar el reemplazo del archivo.');
-  // La confirmación de finish es la fuente de verdad: no perder el estado publicado
-  // si una consulta posterior de status falla temporalmente.
   libraryR2[type]={...published,published:true};
   libraryUploaded[type]=true;
   libraryFileVersions[type]=published.version||Date.now().toString();
   libraryFileUpdatedAt[type]=published.updatedAt||new Date().toISOString();
   libraryUploadMessage('PDF publicado en Cloudflare R2 ('+(file.size/1024/1024).toFixed(1)+' MB). Actualizando biblioteca…');
   await refreshStudentLibrary();
+  // Una consulta status fallida no debe hacer retroceder la publicación.
   if(!libraryUploaded[type]){
    libraryR2[type]={...published,published:true};
    libraryUploaded[type]=true;
@@ -444,8 +491,9 @@ async function uploadStudentLibraryFile(input){
    if(tab==='academia')render();
   }
   libraryUploadMessage('PDF reemplazado correctamente ('+(file.size/1024/1024).toFixed(1)+' MB): '+AEROSUITE_LIBRARY_FILES[type].title+'. Abrí la tarjeta para ver la nueva versión.');
- }catch(err){libraryUploadMessage('No se pudo reemplazar el PDF: '+(err.message||'error de carga'))}
- finally{input.disabled=false;input.value='';}
+ }catch(err){
+  libraryUploadMessage('No se pudo reemplazar el PDF: '+(err.message||'error de carga')+'. El cuadernillo anterior sigue disponible.');
+ }finally{input.disabled=false;input.value='';}
 }
 async function extraPdfValid(file){
  if(!file||file.size>30*1024*1024)throw Error('Seleccioná un PDF de hasta 30 MB.');
