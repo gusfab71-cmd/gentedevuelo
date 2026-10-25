@@ -110,6 +110,117 @@ map.on('click',e=>{if(pickReference){pickReference=false;setReference(e.latlng.l
 document.getElementById('pick-ref').onclick=()=>{pickReference=true;document.getElementById('near-status').textContent='Tocá un punto del mapa para establecer la referencia.'};
 document.getElementById('find-near').onclick=()=>{const lat=Number(document.getElementById('ref-lat').value),lon=Number(document.getElementById('ref-lon').value);if(!document.getElementById('ref-lat').value||!document.getElementById('ref-lon').value||!Number.isFinite(lat)||!Number.isFinite(lon)||Math.abs(lat)>90||Math.abs(lon)>180){document.getElementById('near-status').textContent='Ingresá coordenadas válidas.';return}setReference(lat,lon);nearRadius=Number(document.getElementById('radius').value);render();renderExternal();};
 document.getElementById('reset-near').onclick=()=>{nearRadius=null;reference=null;if(referenceMarker)map.removeLayer(referenceMarker);referenceMarker=null;document.getElementById('near-status').textContent='Filtro quitado.';render();renderExternal()};
+
+/* Búsqueda a demanda; sin autocompletado ni consultas automáticas a servicios externos.
+ * Photon ofrece un servidor demo de disponibilidad no garantizada. */
+const zoneInput=document.getElementById('zone-query');
+const zoneStatus=document.getElementById('zone-status');
+const zoneResults=document.getElementById('zone-results');
+const zoneSearchButton=document.getElementById('zone-search-button');
+const zoneCache=new Map();
+let zoneLookupBusy=false,lastZoneLookup=0,zoneLocationMarker=null;
+function parseZoneCoordinates(value){
+ const match=String(value).trim().match(/^([-+]?\d{1,2}(?:[.,]\d+)?)\s*[,;\s]\s*([-+]?\d{1,3}(?:[.,]\d+)?)$/);
+ if(!match)return null;
+ const latitude=Number(match[1].replace(',','.')),longitude=Number(match[2].replace(',','.'));
+ if(!Number.isFinite(latitude)||!Number.isFinite(longitude)||Math.abs(latitude)>90||Math.abs(longitude)>180)return null;
+ return {latitude,longitude};
+}
+function focusMapAt(latitude,longitude,label,zoom=13){
+ map.setView([latitude,longitude],zoom,{animate:true});
+ zoneStatus.textContent='Zona seleccionada: '+label+'. Tocá un pin para ver sus datos o mantené presionado el mapa para proponer una pista.';
+ document.getElementById('zone-results').replaceChildren();
+ const center=document.getElementById('map');
+ center.scrollIntoView({behavior:'smooth',block:'center'});
+}
+function presentZoneOptions(options){
+ zoneResults.replaceChildren();
+ for(const item of options){
+  const button=document.createElement('button');
+  button.type='button';button.className='zone-choice';
+  const marker=document.createElement('strong');marker.textContent='Ir a';
+  const name=document.createElement('span');name.textContent=item.label;
+  button.append(marker,name);
+  button.addEventListener('click',()=>focusMapAt(item.lat,item.lon,item.label,item.zoom||13));
+  zoneResults.append(button);
+ }
+}
+document.getElementById('zone-search-form').addEventListener('submit',async event=>{
+ event.preventDefault();
+ if(zoneLookupBusy)return;
+ const query=zoneInput.value.trim().replace(/\s+/g,' ');
+ if(query.length<2){zoneStatus.textContent='Escribí una localidad, una pista o un par de coordenadas.';return}
+ const coordinates=parseZoneCoordinates(query);
+ if(coordinates){
+  focusMapAt(coordinates.latitude,coordinates.longitude,'Coordenadas '+coordinates.latitude.toFixed(5)+', '+coordinates.longitude.toFixed(5),15);
+  return;
+ }
+ const matched=records.filter(x=>(x.name+' '+(x.details?.province||'')).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()
+  .includes(query.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase())).slice(0,5);
+ if(matched.length){
+  if(matched.length===1)focusMapAt(matched[0].latitude,matched[0].longitude,matched[0].name,14);
+  else{
+   presentZoneOptions(matched.map(x=>({lat:x.latitude,lon:x.longitude,label:x.name+' · '+(x.details?.province||'Argentina'),zoom:14})));
+   zoneStatus.textContent=matched.length+' pistas comunitarias coincidentes. Elegí una.';
+  }
+  return;
+ }
+ const key=query.toLowerCase();
+ if(zoneCache.has(key)){
+  const saved=zoneCache.get(key);
+  if(saved.length){presentZoneOptions(saved);zoneStatus.textContent='Seleccioná la localidad encontrada para centrar el mapa.'}
+  else zoneStatus.textContent='No se encontraron lugares. Probá con otra localidad o con coordenadas.';
+  return;
+ }
+ if(Date.now()-lastZoneLookup<1300){zoneStatus.textContent='Esperá un momento antes de realizar otra búsqueda.';return}
+ lastZoneLookup=Date.now();zoneLookupBusy=true;zoneSearchButton.disabled=true;
+ zoneResults.replaceChildren();zoneStatus.textContent='Buscando localidad o zona…';
+ try{
+  // El demo Photon se consulta únicamente al pulsar Buscar. Para mayor escala se requerirá proveedor propio.
+  const endpoint=new URL('https://photon.komoot.io/api/');
+  endpoint.searchParams.set('q',query);
+  endpoint.searchParams.set('limit','5');
+  endpoint.searchParams.set('lang','es');
+  endpoint.searchParams.set('bbox','-74,-56,-53,-21');
+  const response=await fetch(endpoint.toString(),{headers:{Accept:'application/json'},signal:AbortSignal.timeout(12000)});
+  if(!response.ok)throw Error('Proveedor geográfico no disponible');
+  const payload=await response.json();
+  const options=[],keys=new Set();
+  for(const feature of payload.features||[]){
+   const [lon,lat]=feature.geometry?.coordinates||[];
+   if(!Number.isFinite(lat)||!Number.isFinite(lon)||lat < -56||lat > -21||lon < -74||lon > -53)continue;
+   const p=feature.properties||{};
+   const label=[p.name,p.city,p.county,p.state].filter(Boolean).filter((text,i,arr)=>arr.indexOf(text)===i).join(' · ');
+   if(!label||keys.has(label))continue;
+   keys.add(label);options.push({lat,lon,label,zoom:['house','building','street'].includes(p.type)?15:12});
+  }
+  zoneCache.set(key,options);
+  if(options.length){presentZoneOptions(options);zoneStatus.textContent='Encontré '+options.length+' lugares. Elegí uno para ir a la zona.'}
+  else zoneStatus.textContent='No encontré esa localidad en Argentina. Probá con otra búsqueda o ingresá coordenadas.';
+ }catch(err){
+  zoneStatus.textContent='No se pudo consultar el buscador geográfico. Podés buscar pistas publicadas o ingresar coordenadas directamente.';
+ }finally{zoneLookupBusy=false;zoneSearchButton.disabled=false}
+});
+document.getElementById('zone-my-location').addEventListener('click',()=>{
+ if(!navigator.geolocation){zoneStatus.textContent='Tu navegador no permite obtener la ubicación.';return}
+ zoneStatus.textContent='Solicitando permiso para ubicarte…';
+ navigator.geolocation.getCurrentPosition(position=>{
+  const {latitude,longitude,accuracy}=position.coords;
+  if(zoneLocationMarker)map.removeLayer(zoneLocationMarker);
+  zoneLocationMarker=L.circleMarker([latitude,longitude],{radius:8,color:'#073c5c',fillColor:'#25c6f1',fillOpacity:.9,weight:3})
+   .addTo(map).bindPopup('Tu ubicación aproximada · Precisión informada: '+Math.round(accuracy)+' metros.');
+  focusMapAt(latitude,longitude,'Tu ubicación aproximada',13);
+  zoneLocationMarker.openPopup();
+ },()=>{
+  zoneStatus.textContent='No se pudo acceder a tu ubicación. Revisá los permisos del navegador o usá el buscador.';
+ },{enableHighAccuracy:false,timeout:9000,maximumAge:60000});
+});
+document.getElementById('zone-propose-center').addEventListener('click',()=>{
+ const point=map.getCenter();
+ proposeAt(point);
+ zoneStatus.textContent='Marcaste el centro del mapa. Tocá el marcador y completá la propuesta para enviarla a moderación.';
+});
+
 function renderExternal(){external.clearLayers();let count=0;for(const x of externalPoints){const nm=reference?nauticalMiles(reference[0],reference[1],x.lat,x.lon):null;if(nearRadius!==null&&nm>nearRadius)continue;const popup=document.createElement('div');popup.append(document.createTextNode(x.name),document.createElement('br'),document.createTextNode('Referencia OpenStreetMap · no verificada para operaciones'+(nm!==null?' · '+nm.toFixed(1)+' NM':'')));L.circleMarker([x.lat,x.lon],{radius:7,color:'#f2ad37',weight:2,fillOpacity:.8}).bindPopup(popup).addTo(external);count++}document.getElementById('near-status').textContent=nearRadius!==null?'Referencias dentro de '+nearRadius+' NM: '+count+' cartográficas, más pistas comunitarias listadas abajo. Acercá el mapa y consultá otras zonas para ampliar los resultados.':''}
 document.getElementById('explore').addEventListener('click',async()=>{
  const status=document.getElementById('osm-status'),button=document.getElementById('explore');
