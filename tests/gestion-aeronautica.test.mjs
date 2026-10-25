@@ -495,7 +495,7 @@ const areaDefinition=html.match(/const AREA_DEFS=Object\.freeze\(\{([\s\S]*?)\}\
 assert.ok(areaDefinition,'Falta definición de áreas de AeroSuite');
 for(const area of ['alumno','instructor','administracion']){
  const row=areaDefinition[1].split('\n').find(line=>line.trim().startsWith(area+':'));
- assert.ok(row&&row.includes("['pistas','Pistas No Oficiales · Mapa']"),'Falta acceso a pistas para '+area);
+ assert.ok(row&&row.includes("['pistas','Mapa de Pistas y Aeródromos']"),'Falta acceso a pistas para '+area);
 }
 assert.match(html,/pistas:airstripsScreen/);
 assert.match(html,/function airstripsScreen\(\)/);
@@ -503,11 +503,11 @@ assert.match(html,/iframe class="airstrips-frame"/);
 assert.match(html,/src="\.\.\/pistas-no-oficiales\.html"/);
 assert.match(html,/target="_blank" rel="noopener noreferrer">Abrir mapa completo/);
 assert.match(html,/no se duplican archivos ni registros/);
-assert.match(html,/no verificada para operaciones/);
+assert.match(html,/no confirma aptitud operacional/);
 assert.match(html,/AIP, NOTAM/);
-assert.match(landing,/Pistas No Oficiales/);
+assert.match(landing,/Mapa de Pistas y Aeródromos/);
 assert.match(landing,/href="\.\.\/pistas-no-oficiales\.html"/);
-assert.match(landing,/no confirma que una pista sea operativamente apta/);
+assert.match(landing,/ninguna referencia garantiza aptitud/);
 assert.match(airstripsOriginal,/\.from\('community_airstrips'\)/);
 assert.match(airstripsOriginal,/\.eq\('status','approved'\)/,'Solo pistas aprobadas deben aparecer en el mapa comunitario');
 assert.match(airstripsOriginal,/status:'pending'/,'Las pistas nuevas requieren moderación');
@@ -579,6 +579,53 @@ assert.match(airstripsOriginal, /aip\.href='https:\/\/ais\.anac\.gob\.ar\/aip'/,
 assert.match(airstripsOriginal, /no acredita que esté publicada, habilitada ni autorizada/, 'Evitar presentar pistas comunitarias como aeródromos habilitados');
 assert.match(html, /Consultar AIP oficial · ANAC/, 'El módulo de AeroSuite debe enlazar al AIP oficial');
 assert.doesNotMatch(airstripsOriginal, /aip.*status:'approved'/i, 'La AIP no debe confundirse con moderación comunitaria');
+
+
+const anacCatalogSource=fs.readFileSync(new URL('../utilidades/gestion-aeronautica/src/catalogo-pistas-anac.js',import.meta.url),'utf8');
+const anacEnvironment={window:{}};
+vm.runInNewContext(anacCatalogSource,anacEnvironment,{timeout:1000});
+const anacCatalog=anacEnvironment.window.AEROSUITE_OFFICIAL_AIRSTRIPS;
+assert.ok(anacCatalog,'Debe estar disponible el catálogo inicial con fuentes oficiales');
+assert.equal(anacCatalog.catalogStatus,'parcial','No se puede presentar una muestra como inventario completo');
+assert.equal(anacCatalog.ladEdition,'2026-09-28');
+assert.equal(anacCatalog.official.length,2);
+assert.equal(anacCatalog.lad.length,16);
+const allDocumented=[...anacCatalog.official,...anacCatalog.lad];
+assert.equal(new Set(allDocumented.map(x=>x.id)).size,allDocumented.length,'No duplicar identificadores documentales');
+for(const item of allDocumented){
+ assert.ok(['official','lad'].includes(item.category),'Categoría documental desconocida');
+ assert.ok(Number.isFinite(item.lat)&&item.lat>=-56&&item.lat<=-21);
+ assert.ok(Number.isFinite(item.lon)&&item.lon>=-74&&item.lon<=-53);
+ assert.match(item.sourceUrl,/^https:\/\/(?:ais\.anac\.gob\.ar|www\.argentina\.gob\.ar)\//);
+ assert.match(item.verification,/verific|revisi/i,'Nunca inferir aptitud o habilitación vigente');
+ assert.ok(item.sourceDate,'La ficha debe indicar fecha del documento');
+}
+const ezeiza=anacCatalog.official.find(x=>x.details.icao==='SAEZ');
+const aeroparque=anacCatalog.official.find(x=>x.details.icao==='SABE');
+assert.ok(ezeiza&&aeroparque);
+assert.ok(Math.abs(ezeiza.lat+34.8222222)<.00002);
+assert.ok(Math.abs(ezeiza.lon+58.5358333)<.00002);
+assert.ok(Math.abs(aeroparque.lat+34.5597222)<.00002);
+assert.equal(anacCatalog.lad[0].details.registry,'LAD 176');
+assert.ok(Math.abs(anacCatalog.lad[0].lon+60.2625)<.00002);
+assert.match(airstripsOriginal,/gestion-aeronautica\/src\/catalogo-pistas-anac\.js/);
+for(const layer of ['official','lad','community','reference']){
+ assert.match(airstripsOriginal,new RegExp('data-pista-layer="'+layer+'"'),layer+' debe ser filtrable');
+}
+assert.match(airstripsOriginal,/function setLayerVisible\(kind,visible\)/);
+assert.match(airstripsOriginal,/function syncLayerVisibility\(\)/);
+assert.match(airstripsOriginal,/function renderDocumented\(\)/);
+assert.match(airstripsOriginal,/function documentaryPopup\(record,nm=null\)/);
+assert.match(airstripsOriginal,/documentaryMarkers\.set\(point\.id,marker\)/);
+assert.match(airstripsOriginal,/function renderExternal\(\)\{\s*external\.clearLayers\(\);\s*if\(!layerSelected\('reference'\)\)return;/);
+assert.match(airstripsOriginal,/\.filter\(x=>layerSelected\('community'\)\)/);
+assert.match(airstripsOriginal,/documentedMatches=documentedAirstrips/);
+assert.match(airstripsOriginal,/Fuente documental/);
+assert.match(airstripsOriginal,/No equivale a aeródromo habilitado|no constituye habilitación de aeródromo/);
+assert.match(airstripsOriginal,/Cobertura parcial, no inventario nacional/);
+assert.match(airstripsOriginal,/Privado no significa no oficial/);
+assert.match(html,/Mapa de Pistas y Aeródromos/);
+console.log('PASS: categorías oficiales AIP, LAD, comunitarias y OSM con respaldo documental y capas filtrables');
 
 console.log('PASS: Pistas No Oficiales compartidas en las tres áreas, mapa interactivo y precauciones');
 
