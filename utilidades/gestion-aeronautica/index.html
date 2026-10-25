@@ -294,9 +294,9 @@ function libraryUpdatedLabel(type){
 }
 function libraryCollection(type,topics){
  const row=AEROSUITE_LIBRARY_FILES[type],published=libraryUploaded[type]===true;
- const book=published?libraryPdfURL(type):(type==='crm'?AEROSUITE_DRIVE_CRM_URL:AEROSUITE_DRIVE_THEORY_BOOK_URL);
+ const book=published?libraryPdfURL(type):null;
  const detail=type==='crm'?'Comunicación, decisiones, factores humanos y trabajo en equipo.':'Teoría aeronáutica organizada en 30 fichas ilustradas.';
- const caption=published?'Cuadernillo publicado en AeroSuite'+libraryUpdatedLabel(type):'Cuadernillo de trabajo en Google Drive';
+ const caption=published?'Cuadernillo publicado en AeroSuite'+libraryUpdatedLabel(type) :'Cuadernillo pendiente de publicación en Cloudflare R2';
  return '<section class="library-group"><div class="library-group-head"><h3>'+safe(row.title)+'</h3>'+
   '<span class="library-count">'+row.count+' fichas · '+(published?'Publicadas':'Borradores en Drive')+'</span></div>'+
   '<div class="library-list">'+
@@ -313,10 +313,10 @@ function academyLibrary(){
  const complete=teoriaLista&&crmLista;
  const uploadBox='<details class="library-upload" id="aerosuiteUploader">'+
   '<summary>Administración · Cargar o reemplazar los PDF de las fichas</summary>'+
-  '<p class="muted">Seleccioná un PDF completo de teoría (30 páginas) o CRM (6 páginas). Los nuevos cuadernillos se guardarán en Cloudflare R2 y sustituirán las versiones anteriores.</p>'+
+  '<p class="muted">Seleccioná un PDF completo de teoría (30 páginas) o CRM (8 páginas). Los nuevos cuadernillos se guardarán en Cloudflare R2 y sustituirán las versiones anteriores.</p>'+
   '<div class="cols"><div><label>Teoría aeronáutica (30 páginas)<input type="file" data-library-upload="teoria" accept=".pdf,application/pdf" aria-label="Seleccionar PDF de las 30 fichas"></label>'+
   '<button type="button" data-library-replace="teoria" disabled>Reemplazar las 30 fichas de teoría</button></div>'+
-  '<div><label>CRM (6 páginas)<input type="file" data-library-upload="crm" accept=".pdf,application/pdf" aria-label="Seleccionar PDF de las 6 fichas CRM"></label>'+
+  '<div><label>CRM (6 páginas)<input type="file" data-library-upload="crm" accept=".pdf,application/pdf" aria-label="Seleccionar PDF de las 8 fichas CRM"></label>'+
   '<button type="button" data-library-replace="crm" disabled>Reemplazar las 6 fichas CRM</button></div></div>'+
   '<p class="muted">Límite para Teoría y CRM: 100 MB por PDF. Seleccioná el archivo, pulsá Reemplazar y esperá la confirmación. Solo administradores.</p>'+
   '<hr><h3>Agregar otra materia</h3><div class="cols"><label>Nombre de la materia<input id="extraSubjectName" maxlength="80" placeholder="Ej.: Meteorología avanzada"></label><label>Cantidad de fichas<input id="extraSubjectCount" type="number" min="1" max="500" value="1"></label></div>'+
@@ -325,7 +325,7 @@ function academyLibrary(){
   '<p id="aerosuiteUploadStatus" class="muted" role="status" aria-live="polite"></p></details>';
  return '<section class="panel" id="aerosuiteBiblioteca"><h2>Biblioteca de formación aeronáutica · 38 fichas</h2>'+
   '<p>Dos cuadernillos de formación aeronáutica de Gente de Vuelo: 30 fichas de teoría y 8 de CRM. Abrí cada tarjeta para recorrer todas las páginas en un solo PDF.</p>'+
-  (!complete?'<div class="notice">Estado de publicación: '+(teoriaLista?'Teoría (30 fichas) publicada en AeroSuite. ':'Teoría (30 fichas) pendiente de publicar; disponible desde Drive con autorización. ')+(crmLista?'CRM (8 fichas) publicado en AeroSuite.':'CRM (8 fichas) pendiente de publicar; disponible desde Drive con autorización.')+'</div>':'')+
+  (!complete?'<div class="notice">Estado de publicación: '+(teoriaLista?'Teoría (30 fichas) publicada en AeroSuite. ':'Teoría (30 fichas) pendiente de publicar en Cloudflare R2. ')+(crmLista?'CRM (8 fichas) publicado en AeroSuite.':'CRM (8 fichas) pendiente de publicar en Cloudflare R2.')+'</div>':'')+
   uploadBox+
   libraryCollection('teoria',AEROSUITE_THEORY_TOPICS)+libraryCollection('crm',AEROSUITE_CRM_TOPICS)+libraryExtra.filter(item=>!item.hidden).map(extraCard).join('')+
   '<div class="grid3">'+
