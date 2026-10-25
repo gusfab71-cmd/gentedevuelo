@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <meta name="theme-color" content="#122437">
-<title>Mi ficha de alumno · AeroSuite | Gente de Vuelo</title>
+<title>Mi perfil AeroSuite · Alumno, Instructor o Piloto</title>
 <style>
 :root{font-family:Inter,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;color:#eff6fc;background:#111c28;color-scheme:dark}
 *{box-sizing:border-box}body{margin:0;background:linear-gradient(150deg,#101c29 0%,#1d3042 95%);min-height:100vh}
@@ -53,7 +53,12 @@ button:disabled{cursor:wait;opacity:.56}
 .photo-panel .side-note{border-top:1px solid #45677f;padding-top:12px}
 .loading{padding:35px;text-align:center;color:#c4dbef}
 @media(max-width:800px){.form-layout{grid-template-columns:1fr}.photo-panel{position:static;order:-1}.photo-frame{max-width:240px}.field-grid{grid-template-columns:1fr}.panel{padding:15px}main{padding-top:16px}}
-</style>
+.aerosuite-role-options{border:1px solid #6486a0;border-radius:13px;background:#203c51;padding:14px;margin:10px 0 15px;display:grid;gap:8px}
+.aerosuite-role-options legend{padding:0 6px;color:#d9eefa;font-size:12px;font-weight:800}
+.aerosuite-role-options label{display:flex;align-items:center;gap:12px;padding:10px;background:#163348;border:1px solid #4c718a;border-radius:9px;cursor:pointer}
+.aerosuite-role-options input{width:18px;height:18px;accent-color:#9bccec;flex-shrink:0}
+.aerosuite-role-options small{display:block;color:#b5cede;font-size:11px;margin-top:3px}
+.aerosuite-role-details{margin:11px 0;padding:15px;background:#223e51;border:1px solid #50758e;border-radius:12px}</style>
 <script>document.documentElement.classList.add('auth-pending')</script>
 <style>html.auth-pending body{visibility:hidden}</style>
 <script src="../../assets/supabase-2.117.2.min.js"></script>
@@ -62,21 +67,46 @@ button:disabled{cursor:wait;opacity:.56}
 </head>
 <body>
 <header>
-<a class="brand" href="index.html">AEROSUITE<small>BY GENTE DE VUELO · FORMACIÓN</small></a>
+<a class="brand" href="index.html">AEROSUITE<small>BY GENTE DE VUELO · PERFIL AERONÁUTICO</small></a>
 <nav aria-label="Navegación"><a href="portal.html">Portal AeroSuite</a><a href="../index.html">Utilidades</a><a href="../../index.html">Gente de Vuelo</a></nav>
 </header>
 <main>
-<div class="hero"><span class="kicker">FORMACIÓN AERONÁUTICA · REGISTRO PRIVADO</span>
-<h1>Mi ficha personal de alumno</h1>
-<p>Completá tu identidad, documento y datos de contacto. Solo vos podés consultar y modificar estos datos en esta primera etapa. Una escuela deberá verificar la documentación y registrar por separado tu inscripción y progreso académico.</p>
-<div class="notice"><b>Privacidad:</b> tus datos no aparecen en Mi Hangar, el foro ni el perfil público de Gente de Vuelo. La foto se guarda en un espacio privado. <b>Los campos con * son obligatorios.</b> El teléfono fijo es opcional para no excluir a estudiantes que solo usan celular.</div>
+<div class="hero"><span class="kicker">COMUNIDAD AERONÁUTICA · REGISTRO INTEGRADO</span>
+<h1>Mi perfil AeroSuite</h1>
+<p>Con la misma cuenta y contraseña de Gente de Vuelo, elegí si querés participar como Alumno, Instructor o Piloto (podés seleccionar varios). Completá solamente los datos adicionales; no necesitás registrarte de nuevo en la comunidad.</p>
+<div class="notice"><b>Privacidad:</b> tus datos no aparecen en Mi Hangar, el foro ni el perfil público de Gente de Vuelo. La <b>fotografía es opcional</b> y, si decidís cargarla, se guarda de forma privada. <b>Los campos con * son obligatorios.</b> El teléfono fijo es opcional para no excluir a estudiantes que solo usan celular.</div>
 </div>
 <div id="loading" class="loading">Verificando la sesión de Gente de Vuelo…</div>
 <div id="workspace" class="form-layout" hidden>
  <div class="form-main">
   <form id="studentForm" novalidate>
    <section class="panel">
-    <h2>1 · Datos personales</h2>
+    <h2>1 · Perfiles aeronáuticos</h2>
+    <p class="panel-subtitle">Seleccioná uno o varios perfiles. Declarar «Instructor» o «Piloto» no acredita licencias ni permite ver datos de terceros.</p>
+    <fieldset class="aerosuite-role-options">
+      <legend>¿Cómo participarás en AeroSuite? <span class="required">*</span></legend>
+      <label><input type="checkbox" name="role_student"><span><b>Alumno</b><small>Formación, cursos y prácticas</small></span></label>
+      <label><input type="checkbox" name="role_instructor"><span><b>Instructor</b><small>Enseñanza y seguimiento, sujeto a verificación</small></span></label>
+      <label><input type="checkbox" name="role_pilot"><span><b>Piloto</b><small>Actividad y planificación personal</small></span></label>
+    </fieldset>
+    <div id="studentExtra" class="aerosuite-role-details" hidden>
+      <label class="field">Curso de interés <span class="required">*</span><input name="student_training_goal" maxlength="120" placeholder="PPA, PCA, otra formación"></label>
+    </div>
+    <div id="instructorExtra" class="aerosuite-role-details" hidden><div class="field-grid">
+      <label class="field">Licencia/habilitación de instructor (declarada) <span class="required">*</span><input name="instructor_license_type" maxlength="100"></label>
+      <label class="field">Número de licencia <span class="required">*</span><input name="instructor_license_number" maxlength="65"></label>
+      <label class="field">Institución de referencia (opcional)<input name="instructor_organization" maxlength="130"></label>
+      <label class="field">Aeródromo base (opcional)<input name="instructor_airfield" maxlength="120"></label>
+    </div></div>
+    <div id="pilotExtra" class="aerosuite-role-details" hidden><div class="field-grid">
+      <label class="field">Licencia de piloto (declarada) <span class="required">*</span><input name="pilot_license_type" maxlength="100"></label>
+      <label class="field">Número de licencia <span class="required">*</span><input name="pilot_license_number" maxlength="65"></label>
+      <label class="field">Aeródromo base (opcional)<input name="pilot_airfield" maxlength="120"></label>
+      <label class="field">Horas de vuelo (opcional)<input name="pilot_hours" type="number" min="0" max="200000" step="0.1"></label>
+    </div></div>
+   </section>
+   <section class="panel">
+    <h2>2 · Datos personales</h2>
     <div class="field-grid">
      <label class="field">Apellido <span class="required" aria-hidden="true">*</span><input name="family_names" autocomplete="family-name" maxlength="120" required></label>
      <label class="field">Nombre <span class="required" aria-hidden="true">*</span><input name="given_names" autocomplete="given-name" maxlength="120" required></label>
@@ -86,8 +116,8 @@ button:disabled{cursor:wait;opacity:.56}
     </div>
    </section>
    <section class="panel">
-    <h2>2 · Documentación de identidad</h2>
-    <p class="panel-subtitle">Airnizer exige al menos un documento. AeroSuite también solicita uno para completar la ficha. No adjuntamos fotografías de DNI en esta etapa.</p>
+    <h2>3 · Documentación de identidad</h2>
+    <p class="panel-subtitle">Ingresá al menos un documento de identidad. Por ahora no se solicita fotografía de DNI. Los datos declarados no son una verificación oficial.</p>
     <div class="field-grid">
      <label class="field">Tipo de documento <span class="required" aria-hidden="true">*</span>
       <select name="document_type" required><option value="">Seleccionar</option><option value="dni">DNI</option><option value="passport">Pasaporte</option><option value="national_id_other">Documento nacional extranjero</option><option value="other">Otro documento</option></select></label>
@@ -99,7 +129,7 @@ button:disabled{cursor:wait;opacity:.56}
     <div id="docList" class="docs-list" aria-live="polite"></div>
    </section>
    <section class="panel">
-    <h2>3 · Residencia actual y contacto</h2>
+    <h2>4 · Residencia actual y contacto</h2>
     <div class="field-grid">
      <label class="field">País de residencia <span class="required" aria-hidden="true">*</span><input name="residence_country" value="Argentina" maxlength="100" required></label>
      <label class="field">Provincia <span class="required" aria-hidden="true">*</span><input name="residence_province" maxlength="120" required></label>
@@ -112,9 +142,9 @@ button:disabled{cursor:wait;opacity:.56}
     </div>
    </section>
    <section class="panel">
-    <h2>4 · Confirmación y guardado</h2>
-    <label class="check"><input id="privacyConsent" type="checkbox" required> Confirmo que los datos ingresados son correctos. Entiendo que se utilizarán para mi ficha de alumno en AeroSuite, separada de mi perfil comunitario, y que puedo solicitar su rectificación o eliminación.</label>
-    <p class="privacy">Responsable de la ficha de prueba: Gente de Vuelo (<a href="mailto:gentedevuelo@gmail.com">gentedevuelo@gmail.com</a>). Finalidad: identificación, contacto y futura vinculación voluntaria a una escuela; destinatarios: el propio alumno y, solo cuando existan permisos institucionales comprobados, personal autorizado de la escuela. Podés consultar, corregir o solicitar la eliminación de tu información. Versión del aviso: 2026-10. La matrícula, evaluaciones y documentación aeronáutica se gestionarán en módulos privados independientes.</p>
+    <h2>5 · Confirmación y guardado</h2>
+    <label class="check"><input id="privacyConsent" type="checkbox" required> Confirmo que los datos ingresados son correctos. Entiendo que se utilizarán para mi perfil personal de AeroSuite, separada de mi perfil comunitario, y que puedo solicitar su rectificación o eliminación.</label>
+    <p class="privacy">Responsable de la ficha de prueba: Gente de Vuelo (<a href="mailto:gentedevuelo@gmail.com">gentedevuelo@gmail.com</a>). Finalidad: identificación, contacto y futura vinculación voluntaria a una escuela; destinatarios: el propio alumno y, solo cuando existan permisos institucionales comprobados, personal autorizado de la escuela. Podés consultar, corregir o solicitar la eliminación de tu información. Versión del aviso: 2026-10. La vinculación a escuelas, las licencias verificadas y los permisos de Instructor se gestionarán independientemente y solo con autorización.</p>
     <div class="actions"><button class="primary" type="submit" id="saveStudent">Guardar mi ficha</button>
      <button type="button" id="clearForm">Restaurar datos guardados</button></div>
     <p id="studentStatus" class="status" role="status" aria-live="polite"></p>
@@ -122,10 +152,10 @@ button:disabled{cursor:wait;opacity:.56}
   </form>
  </div>
  <aside class="panel photo-panel" aria-label="Fotografía del alumno">
-  <h2>Fotografía personal</h2>
+  <h2>Fotografía personal (opcional)</h2>
   <div class="photo-frame">
-   <img id="portraitPreview" alt="Mi fotografía de alumno" hidden>
-   <div id="photoPlaceholder" class="photo-placeholder"><b aria-hidden="true">◌</b>Agregar fotografía<br>tipo carnet</div>
+   <img id="portraitPreview" alt="Mi fotografía opcional" hidden>
+   <div id="photoPlaceholder" class="photo-placeholder"><b aria-hidden="true">◌</b>Agregar fotografía<br>solo si querés</div>
   </div>
   <label>Elegir fotografía<input id="portraitFile" type="file" accept="image/jpeg,image/png,image/webp"></label>
   <p>JPG, PNG o WebP. Hasta 5 MB antes de procesar. La imagen se convierte a WebP sin metadatos EXIF o GPS y se almacena en un bucket privado.</p>
