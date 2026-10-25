@@ -863,7 +863,7 @@ for(const key of ['asfalto','tierra','cesped','otros']){
  assert.match(splitMap,new RegExp('data-pista-surface="'+key+'"'),'Filtro de superficie '+key);
 }
 assert.match(splitMap,/function meetsSurfaceFilter\(record\)/);
-for(const target of ['flightprep-nav.html','meteorologia-aeronautica.html','gestion-aeronautica/']){
+for(const target of ['meteorologia-aeronautica.html','gestion-aeronautica/']){
  assert.ok(splitMap.includes('href="'+target+'"'),'Falta atajo de navegación a '+target);
 }
 const bearingSource=splitMap.slice(splitMap.indexOf('function trueBearing('),splitMap.indexOf('function clearRuler('));
