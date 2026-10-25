@@ -54,6 +54,14 @@ Este es el registro central de las decisiones, ideas y pendientes tratados para 
 
 - **A EVALUAR:** modelos de costo para escuelas pequeñas, medianas y grandes; comparar cargas por aeronave y por usuario, evitando desincentivar el registro de alumnos.
 
+## 3B. Estudio competitivo: GestiónAero y Aeros Gestión — 25/10/2026
+
+- **ESTUDIADO EN FUENTES PÚBLICAS:** **GestiónAero** ([gestionaero.com.ar](https://gestionaero.com.ar/)) comunica reservas y validación de habilitaciones, vuelo→horas→RAV PDF, gestión de flota/mantenimiento, socios, contabilidad, combustible, avisos y reservas de instalaciones; administra varias instituciones. Las prestaciones fueron observadas en su sitio comercial, **no verificadas dentro de una cuenta operativa**.
+- **HALLAZGO PRIORITARIO DE PRECIOS:** GestiónAero publica prueba de **30 días gratis sin tarjeta**, **Full ARS 60.000/mes + IVA con usuarios y aeronaves ilimitados** y **WhatsApp ARS 80.000/mes + IVA**. El esquema provisional adoptado para AeroSuite es **ARS 60.000 base + ARS 10.500 por aeronave + ARS 3.650 por usuario**, que puede resultar sustancialmente más caro. **No modificar la decisión vigente de precios sin nueva aprobación**, pero priorizar una simulación comercial para escuelas pequeñas/medianas.
+- **OTRO PROVEEDOR DISTINTO:** **Aeros Gestión** ([aeros.com.ar/web/](https://aeros.com.ar/web/)) anuncia reservas, contabilidad, factura electrónica, mecánica, vencimientos, biblioteca aeronáutica, servicios METAR/NOTAM/LAD, IA, formación Aeros SED y beneficio **Aeros Base gratis únicamente para socios FADA habilitados**. Precios generales no confirmados.
+- **PENDIENTE DE EVALUACIÓN:** solicitar demo autorizada, recorrer alta → reserva → vuelo → RAV → cuenta corriente y comprobar controles de vencimientos, accesos, auditoría, exportación y soporte. Valorar tarifa plana frente a variable, y ventaja diferenciadora de AeroSuite con comunidad+Academia+Flight Operations+AeroLocator.
+- **FUENTE Y ANÁLISIS DETALLADO:** [Estudio GestiónAero y Aeros Gestión](ANALISIS-COMPETENCIA-GESTIONAERO-AEROS.md). Los precios son los publicados el **25/10/2026**, sujetos a cambios del proveedor.
+
 ## 4. Registro integrado, documentación y roles
 
 - **APROBADO:** quien se registra en Gente de Vuelo puede ampliar datos para participar en AeroSuite como **Alumno, Instructor y/o Piloto**, uno o varios; **foto NO obligatoria**.
