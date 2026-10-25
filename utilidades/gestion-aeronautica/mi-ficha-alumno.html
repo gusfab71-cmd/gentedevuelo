@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#122437">
+<title>Mi ficha de alumno · AeroSuite | Gente de Vuelo</title>
+<style>
+:root{font-family:Inter,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;color:#eff6fc;background:#111c28;color-scheme:dark}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(150deg,#101c29 0%,#1d3042 95%);min-height:100vh}
+[hidden]{display:none!important}a{color:#badbfa}a:hover{color:white}button,input,select{font:inherit}
+button,a,input,select{outline-offset:2px}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #a9dbfc}
+header{background:#11283c;border-bottom:1px solid #45677f;display:flex;justify-content:space-between;align-items:center;gap:15px;padding:13px clamp(14px,3vw,38px);flex-wrap:wrap}
+.brand{font-size:16px;letter-spacing:.065em;font-weight:900;color:#f2faff;text-decoration:none}
+.brand small{display:block;font-size:10px;letter-spacing:.1em;color:#a9c9e3}
+header nav{display:flex;align-items:center;gap:17px;flex-wrap:wrap;font-size:12px;font-weight:700}
+main{max-width:1100px;margin:0 auto;padding:28px 15px 70px}
+.kicker{font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:#acd9f5;font-weight:850}
+h1{font-size:clamp(27px,4vw,38px);letter-spacing:-.035em;margin:7px 0}h2{font-size:17px;margin:0 0 15px}p{line-height:1.55}
+.hero{border:1px solid #50758e;border-radius:19px;background:#1c3449;padding:24px;margin-bottom:17px}
+.hero p{max-width:790px;font-size:14px;color:#c9dae7;margin:7px 0}
+.notice{border-left:4px solid #c9aa73;background:#2d3235;border-radius:9px;padding:11px 14px;color:#f5e5ca;font-size:12px;margin-top:16px}
+.form-layout{display:grid;grid-template-columns:minmax(0,1fr) 255px;gap:18px;align-items:start}
+.form-main{display:grid;gap:15px}.panel{border:1px solid #537790;border-radius:17px;background:#1a3042;padding:21px}
+.panel-subtitle{color:#aac7de;margin:-7px 0 14px;font-size:12px}
+.field-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 14px}
+.field{display:grid;gap:5px;font-size:12px;font-weight:700;color:#d6e8f5}.field.full{grid-column:1/-1}
+.field input,.field select{min-width:0;width:100%;min-height:43px;padding:10px 12px;border:1px solid #7696ac;border-radius:9px;background:#112537;color:#fff;font-size:14px}
+.field input::placeholder{color:#94aaba}
+.field input:read-only{background:#20394a;color:#bfd4e1}
+.required{color:#ffad97;font-weight:900;margin-left:2px}
+.photo-panel{position:sticky;top:18px}
+.photo-frame{width:100%;aspect-ratio:4/4.4;border:2px dashed #82a5bf;border-radius:13px;display:grid;place-items:center;overflow:hidden;background:#233e51;margin-bottom:12px}
+.photo-placeholder{text-align:center;font-size:13px;color:#b7d4e7;line-height:1.65;padding:12px}
+.photo-placeholder b{font-size:46px;font-weight:300;display:block}
+.photo-frame img{width:100%;height:100%;object-fit:cover}
+.photo-panel label{font-size:13px;color:#d9e7f2;display:grid;gap:8px}
+.photo-panel input{width:100%;font-size:11px}
+.photo-panel p{font-size:11px;color:#b6d0e0}
+.docs-list{display:grid;gap:8px;margin:12px 0}
+.doc-row{background:#223e53;border:1px solid #54768d;padding:11px 12px;border-radius:10px;font-size:12px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px}
+.doc-row button{font-size:11px;padding:7px 10px}
+.actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+button{cursor:pointer;border:1px solid #6c99b7;background:#2b5875;color:#edf6ff;border-radius:9px;padding:11px 16px;font-size:13px;font-weight:800}
+button.primary{background:#c7e4f9;border-color:#e3f5ff;color:#102c45}
+button:disabled{cursor:wait;opacity:.56}
+.status{min-height:24px;font-size:13px;line-height:1.5;color:#d7e8f4}
+.status.error{color:#ffbdac}.status.ok{color:#a5edcd}
+.check{display:flex;gap:9px;align-items:flex-start;font-size:12px;line-height:1.55;color:#dce9f4}
+.check input{margin-top:3px;accent-color:#90c7e8}
+.privacy{font-size:11px;color:#b8cfe0}
+.photo-panel .side-note{border-top:1px solid #45677f;padding-top:12px}
+.loading{padding:35px;text-align:center;color:#c4dbef}
+@media(max-width:800px){.form-layout{grid-template-columns:1fr}.photo-panel{position:static;order:-1}.photo-frame{max-width:240px}.field-grid{grid-template-columns:1fr}.panel{padding:15px}main{padding-top:16px}}
+</style>
+<script>document.documentElement.classList.add('auth-pending')</script>
+<style>html.auth-pending body{visibility:hidden}</style>
+<script src="../../assets/supabase-2.117.2.min.js"></script>
+<script src="../../assets/community-config.js"></script>
+<script src="../../assets/auth-guard.js"></script>
+</head>
+<body>
+<header>
+<a class="brand" href="index.html">AEROSUITE<small>BY GENTE DE VUELO · FORMACIÓN</small></a>
+<nav aria-label="Navegación"><a href="portal.html">Portal AeroSuite</a><a href="../index.html">Utilidades</a><a href="../../index.html">Gente de Vuelo</a></nav>
+</header>
+<main>
+<div class="hero"><span class="kicker">FORMACIÓN AERONÁUTICA · REGISTRO PRIVADO</span>
+<h1>Mi ficha personal de alumno</h1>
+<p>Completá tu identidad, documento y datos de contacto. Solo vos podés consultar y modificar estos datos en esta primera etapa. Una escuela deberá verificar la documentación y registrar por separado tu inscripción y progreso académico.</p>
+<div class="notice"><b>Privacidad:</b> tus datos no aparecen en Mi Hangar, el foro ni el perfil público de Gente de Vuelo. La foto se guarda en un espacio privado. <b>Los campos con * son obligatorios.</b> El teléfono fijo es opcional para no excluir a estudiantes que solo usan celular.</div>
+</div>
+<div id="loading" class="loading">Verificando la sesión de Gente de Vuelo…</div>
+<div id="workspace" class="form-layout" hidden>
+ <div class="form-main">
+  <form id="studentForm" novalidate>
+   <section class="panel">
+    <h2>1 · Datos personales</h2>
+    <div class="field-grid">
+     <label class="field">Apellido <span class="required" aria-hidden="true">*</span><input name="family_names" autocomplete="family-name" maxlength="120" required></label>
+     <label class="field">Nombre <span class="required" aria-hidden="true">*</span><input name="given_names" autocomplete="given-name" maxlength="120" required></label>
+     <label class="field">País de nacimiento <span class="required" aria-hidden="true">*</span><input name="birth_country" value="Argentina" maxlength="100" required></label>
+     <label class="field">Fecha de nacimiento <span class="required" aria-hidden="true">*</span><input type="date" name="birth_date" id="birthDate" min="1900-01-01" required></label>
+     <label class="field full">Correo de la cuenta (solo lectura)<input id="accountEmail" readonly type="email"></label>
+    </div>
+   </section>
+   <section class="panel">
+    <h2>2 · Documentación de identidad</h2>
+    <p class="panel-subtitle">Airnizer exige al menos un documento. AeroSuite también solicita uno para completar la ficha. No adjuntamos fotografías de DNI en esta etapa.</p>
+    <div class="field-grid">
+     <label class="field">Tipo de documento <span class="required" aria-hidden="true">*</span>
+      <select name="document_type" required><option value="">Seleccionar</option><option value="dni">DNI</option><option value="passport">Pasaporte</option><option value="national_id_other">Documento nacional extranjero</option><option value="other">Otro documento</option></select></label>
+     <label class="field">Número <span class="required" aria-hidden="true">*</span><input name="document_number" maxlength="50" autocomplete="off" required></label>
+     <label class="field">País emisor <span class="required" aria-hidden="true">*</span><input name="issuing_country" value="Argentina" maxlength="100" required></label>
+     <label class="field">Vencimiento (si corresponde)<input name="expires_on" type="date"></label>
+    </div>
+    <p class="privacy">El DNI o pasaporte es información privada. No se mostrará en perfiles públicos. El número no acredita por sí solo la verificación por parte de una escuela.</p>
+    <div id="docList" class="docs-list" aria-live="polite"></div>
+   </section>
+   <section class="panel">
+    <h2>3 · Residencia actual y contacto</h2>
+    <div class="field-grid">
+     <label class="field">País de residencia <span class="required" aria-hidden="true">*</span><input name="residence_country" value="Argentina" maxlength="100" required></label>
+     <label class="field">Provincia <span class="required" aria-hidden="true">*</span><input name="residence_province" maxlength="120" required></label>
+     <label class="field">Ciudad <span class="required" aria-hidden="true">*</span><input name="residence_city" maxlength="120" required></label>
+     <label class="field">Dirección <span class="required" aria-hidden="true">*</span><input name="residence_address" autocomplete="street-address" maxlength="250" required></label>
+     <label class="field">Código postal <span class="required" aria-hidden="true">*</span><input name="postal_code" autocomplete="postal-code" maxlength="20" required></label>
+     <label class="field">Teléfono móvil <span class="required" aria-hidden="true">*</span><input name="mobile_phone" type="tel" autocomplete="tel" maxlength="35" required></label>
+     <label class="field">Teléfono fijo (opcional)<input name="landline_phone" type="tel" maxlength="35"></label>
+     <label class="field">Otro teléfono (opcional)<input name="other_phone" type="tel" maxlength="35"></label>
+    </div>
+   </section>
+   <section class="panel">
+    <h2>4 · Confirmación y guardado</h2>
+    <label class="check"><input id="privacyConsent" type="checkbox" required> Confirmo que los datos ingresados son correctos. Entiendo que se utilizarán para mi ficha de alumno en AeroSuite, separada de mi perfil comunitario, y que puedo solicitar su rectificación o eliminación.</label>
+    <p class="privacy">Versión del aviso de privacidad: 2026-10. La matrícula, evaluación del instructor, situación académica y documentos aeronáuticos se gestionarán en módulos privados de la institución, no en esta ficha autodeclarada.</p>
+    <div class="actions"><button class="primary" type="submit" id="saveStudent">Guardar mi ficha</button>
+     <button type="button" id="clearForm">Restaurar datos guardados</button></div>
+    <p id="studentStatus" class="status" role="status" aria-live="polite"></p>
+   </section>
+  </form>
+ </div>
+ <aside class="panel photo-panel" aria-label="Fotografía del alumno">
+  <h2>Fotografía personal</h2>
+  <div class="photo-frame">
+   <img id="portraitPreview" alt="Mi fotografía de alumno" hidden>
+   <div id="photoPlaceholder" class="photo-placeholder"><b aria-hidden="true">◌</b>Agregar fotografía<br>tipo carnet</div>
+  </div>
+  <label>Elegir fotografía<input id="portraitFile" type="file" accept="image/jpeg,image/png,image/webp"></label>
+  <p>JPG, PNG o WebP. Hasta 5 MB antes de procesar. La imagen se convierte a WebP sin metadatos EXIF o GPS y se almacena en un bucket privado.</p>
+  <p class="side-note"><b>Acceso restringido:</b> la foto no utiliza las publicaciones ni la galería pública de Gente de Vuelo. Solo puede descargarla su propietario mediante su sesión.</p>
+ </aside>
+</div>
+</main>
+<script>
+(async()=>{
+ 'use strict';
+ const $=id=>document.getElementById(id);
+ const {client,ready}=window.GDV_AUTH||{};
+ let user=null,profile=null,documentIds=[],portraitBlobUrl='',newPortrait=null,busy=false;
+ const fields=['given_names','family_names','birth_country','birth_date','residence_country','residence_province','residence_city','residence_address','postal_code','mobile_phone','landline_phone','other_phone'];
+ const status=(text,error=false)=>{$('studentStatus').textContent=text;$('studentStatus').className='status '+(error?'error':'ok')};
+ const get=(name)=>document.querySelector('#studentForm [name="'+name+'"]');
+ function fill(row){
+  for(const name of fields){if(row[name]!==undefined&&row[name]!==null)get(name).value=String(row[name]);}
+ }
+ const portraitBucket='aerosuite-student-portraits';
+ function previewImage(url){
+  if(portraitBlobUrl){URL.revokeObjectURL(portraitBlobUrl);portraitBlobUrl='';}
+  portraitBlobUrl=url;
+  $('portraitPreview').src=url;$('portraitPreview').hidden=false;$('photoPlaceholder').hidden=true;
+ }
+ async function loadPortrait(){
+  if(!profile?.portrait_path)return;
+  const {data,error}=await client.storage.from(portraitBucket).download(profile.portrait_path);
+  if(!error&&data)previewImage(URL.createObjectURL(data));
+ }
+ async function loadDocuments(){
+  const {data,error}=await client.from('aerosuite_student_documents')
+   .select('id,document_type,document_number,issuing_country,expires_on')
+   .eq('user_id',user.id).order('created_at',{ascending:true});
+  if(error)throw error;
+  documentIds=(data||[]).map(item=>item.id);
+  const list=$('docList');list.replaceChildren();
+  if(!data?.length){const p=document.createElement('p');p.textContent='Todavía no hay documentos guardados.';list.append(p);return}
+  const labels={dni:'DNI',passport:'Pasaporte',national_id_other:'Documento extranjero',other:'Otro'};
+  for(const d of data){
+   const article=document.createElement('div');article.className='doc-row';
+   const info=document.createElement('span');
+   // Mostrar solo últimos cuatro caracteres del número para evitar exposición accidental en pantalla.
+   const suffix=String(d.document_number||'').slice(-4);
+   info.textContent=(labels[d.document_type]||'Documento')+' · N.º terminación '+suffix+' · '+d.issuing_country+(d.expires_on?' · Vence '+d.expires_on:'');
+   const button=document.createElement('button');button.type='button';button.textContent='Eliminar';
+   button.addEventListener('click',async()=>{
+    if(busy||!confirm('¿Eliminar este documento guardado?'))return;
+    busy=true;button.disabled=true;
+    try{
+     const {error}=await client.from('aerosuite_student_documents').delete().eq('id',d.id).eq('user_id',user.id);
+     if(error)throw error;
+     await loadDocuments();
+     status('Documento eliminado. Recordá registrar al menos un documento para completar la ficha.');
+    }catch(err){status('Error al eliminar el documento: '+err.message,true)}
+    finally{busy=false;button.disabled=false}
+   });
+   article.append(info,button);list.append(article);
+  }
+ }
+ async function refresh(){
+  const {data,error}=await client.from('aerosuite_student_profiles').select('*').eq('user_id',user.id).maybeSingle();
+  if(error)throw error;
+  profile=data;
+  if(data)fill(data);
+  await loadDocuments();
+  await loadPortrait();
+  status(data?'Se cargaron los datos guardados de tu ficha privada.':'Podés completar tu ficha personal y guardar el primer documento.');
+ }
+ async function processPortrait(file){
+  if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>5*1024*1024||file.size===0)throw Error('La fotografía debe ser JPG, PNG o WebP y no superar 5 MB.');
+  if(typeof createImageBitmap!=='function')throw Error('Este navegador no permite procesar fotografías de forma segura.');
+  const bitmap=await createImageBitmap(file);
+  try{
+   if(bitmap.width*bitmap.height>28000000)throw Error('Imagen demasiado grande.');
+   const ratio=Math.min(1,800/Math.max(bitmap.width,bitmap.height));
+   const canvas=document.createElement('canvas');
+   canvas.width=Math.round(bitmap.width*ratio);canvas.height=Math.round(bitmap.height*ratio);
+   canvas.getContext('2d').drawImage(bitmap,0,0,canvas.width,canvas.height);
+   const blob=await new Promise((resolve,reject)=>canvas.toBlob(blob=>blob?resolve(blob):reject(Error('No se pudo convertir la foto.')),'image/webp',.85));
+   canvas.width=canvas.height=0;
+   if(blob.size>2*1024*1024)throw Error('La fotografía optimizada excede 2 MB.');
+   return blob;
+  }finally{bitmap.close()}
+ }
+ $('portraitFile').addEventListener('change',()=>{
+  newPortrait=$('portraitFile').files?.[0]||null;
+  if(newPortrait)previewImage(URL.createObjectURL(newPortrait));
+ });
+ $('clearForm').addEventListener('click',async()=>{if(busy)return;try{await refresh();newPortrait=null;$('portraitFile').value=''}catch(e){status(e.message,true)}});
+ $('birthDate').max=new Date().toISOString().slice(0,10);
+ $('studentForm').addEventListener('submit',async event=>{
+  event.preventDefault();if(busy)return;
+  const form=$('studentForm');
+  if(!form.reportValidity())return;
+  if(!$('privacyConsent').checked){status('Confirmá el aviso de privacidad antes de guardar.',true);return}
+  const values=Object.fromEntries(fields.map(name=>[name,get(name).value.trim()]));
+  const document_type=get('document_type').value;
+  const document_number=get('document_number').value.trim();
+  const issuing_country=get('issuing_country').value.trim();
+  const expires_on=get('expires_on').value||null;
+  if(!documentIds.length&&(!document_type||!document_number||!issuing_country)){
+   status('Para completar la ficha tenés que registrar al menos un documento.',true);
+   return;
+  }
+  if(document_number&&(!document_type||!issuing_country)){status('Completá tipo, número y país del documento.',true);return}
+  if(document_type&&!document_number){status('Ingresá el número del documento.',true);return}
+  busy=true;$('saveStudent').disabled=true;
+  try{
+   status('Guardando datos personales…');
+   const payload={...values,user_id:user.id,consented_at:new Date().toISOString(),privacy_notice_version:'2026-10'};
+   for(const key of ['landline_phone','other_phone']){if(!payload[key])payload[key]=null}
+   const {error}=await client.from('aerosuite_student_profiles').upsert(payload,{onConflict:'user_id'});
+   if(error)throw error;
+   if(document_type&&document_number){
+    const {error:docError}=await client.from('aerosuite_student_documents').insert({
+     user_id:user.id,document_type,document_number,issuing_country,expires_on
+    });
+    if(docError&&docError.code!=='23505')throw Error('Los datos personales se guardaron, pero el documento no: '+docError.message);
+   }
+   if(newPortrait){
+    status('Guardando fotografía privada…');
+    const blob=await processPortrait(newPortrait);
+    const path=user.id+'/portrait.webp';
+    const {error:uploadError}=await client.storage.from(portraitBucket).upload(path,blob,{contentType:'image/webp',upsert:true,cacheControl:'60'});
+    if(uploadError)throw Error('Los datos se guardaron, pero no la fotografía: '+uploadError.message);
+    const {error:photoError}=await client.from('aerosuite_student_profiles').update({portrait_path:path}).eq('user_id',user.id);
+    if(photoError)throw Error('La fotografía se cargó, pero no se pudo vincular al perfil: '+photoError.message);
+    newPortrait=null;$('portraitFile').value='';
+   }
+   const {data:updated,error:readError}=await client.from('aerosuite_student_profiles').select('*').eq('user_id',user.id).single();
+   if(readError)throw readError;
+   profile=updated;
+   await loadDocuments();
+   for(const name of ['document_type','document_number','expires_on'])get(name).value='';
+   status('Ficha personal guardada de forma privada. La inscripción a cursos y la validación documental corresponden a la escuela.');
+  }catch(error){status('No se pudo completar el guardado: '+error.message,true)}
+  finally{busy=false;$('saveStudent').disabled=false}
+ });
+ try{
+  if(!client||!ready)throw Error('No se pudo iniciar la verificación de sesión.');
+  await ready;
+  const {data,error}=await client.auth.getUser();
+  if(error||!data?.user)throw Error('Iniciá sesión en Gente de Vuelo para usar la ficha.');
+  user=data.user;$('accountEmail').value=user.email||'';
+  $('loading').hidden=true;$('workspace').hidden=false;
+  await refresh();
+ }catch(error){$('loading').textContent='No se pudo abrir la ficha: '+error.message}
+})();
+</script>
+</body></html>
