@@ -1,0 +1,1830 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AeroSuite | Acceso privado a gestión · Gente de Vuelo</title>
+<style>
+:root{font-family:Inter,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;color:#e8f0f4;background:#111b22;color-scheme:dark}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(130deg,#141f29 0%,#101922 70%);min-height:100vh}
+[hidden],.hidden{display:none!important}
+a{color:#cde8ed}a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #a6d1da;outline-offset:2px}
+header{padding:19px max(20px,calc((100vw - 1380px)/2));display:flex;justify-content:space-between;align-items:center;gap:14px;border-bottom:1px solid #36515b;background:#18242e}
+header a{text-decoration:none}header .brand{font-weight:850;letter-spacing:1.5px;color:#f2d6a3;font-size:14px}
+header span{color:#b6c7cd;font-size:13px}
+main{max-width:1380px;margin:0 auto;padding:24px 22px 64px}
+.eyebrow{font-size:11px;letter-spacing:2px;color:#8fb5c2;font-weight:800;text-transform:uppercase}
+h1{font-size:clamp(27px,3.2vw,42px);letter-spacing:-.035em;margin:8px 0 5px}
+h2{font-size:19px;margin:0 0 12px;color:#f0f7f9}
+p{color:#c7d5d9;line-height:1.55}
+.sub{color:#a8bcc4;font-size:14px;margin:4px 0}
+.tag{display:inline-flex;border:1px solid #6a8992;color:#cfe6ec;border-radius:999px;padding:6px 11px;font-size:11px;font-weight:750;white-space:nowrap}
+.status{display:flex;align-items:center;gap:9px;color:#b7dbe4;font-size:12px}
+.status:before{content:"";width:8px;height:8px;border-radius:50%;background:#f1bd78}
+.breadcrumb{margin-bottom:20px}.hero{display:flex;justify-content:space-between;gap:20px;align-items:center;margin-bottom:22px}
+.notice{border-left:3px solid #d7b47a;padding:13px 16px;border-radius:8px;background:#293033;color:#e8e0cf;font-size:13px;line-height:1.55;margin-bottom:20px}
+.layout{display:grid;grid-template-columns:225px minmax(0,1fr);gap:22px}
+nav{align-self:start;position:sticky;top:20px;border:1px solid #344c56;background:#18252e;border-radius:16px;padding:10px;display:grid;gap:3px}
+nav button{background:transparent;color:#c8d5db;border:1px solid transparent;text-align:left;padding:12px 13px;border-radius:10px;font:inherit;font-size:13px;cursor:pointer}
+nav button.active{background:#304955;border-color:#547582;color:white;font-weight:800}
+nav button:hover{background:#263b46}
+main button.action,main button.secondary{font:inherit;cursor:pointer;border:1px solid #6d9ba7;padding:10px 15px;border-radius:9px;font-size:13px}
+.action{color:#101820;background:#e1bd82;font-weight:800}
+.secondary{color:#dfebef;background:#30444e}
+button:disabled{opacity:.5;cursor:not-allowed}
+.content{min-width:0}.panel{background:#1c2b34;border:1px solid #36515e;border-radius:16px;padding:22px;margin-bottom:15px}
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}
+.metric{padding:17px;background:#1f323d;border:1px solid #3e5c68;border-radius:13px}
+.metric strong{font-size:24px;display:block;color:#ffdfad}.metric span{font-size:12px;color:#b8cad2}
+.cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
+.card{background:#182630;border:1px solid #3e5861;border-radius:13px;padding:17px}
+.card h3{font-size:15px;margin:0 0 7px}
+.card p{font-size:13px;margin:0 0 10px}
+label{display:grid;gap:6px;font-size:12px;color:#c6d7dc}
+input,select{width:100%;border:1px solid #5b7481;border-radius:8px;padding:10px 11px;background:#101c24;color:white;font:inherit;font-size:13px}
+form{display:grid;gap:15px}.formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.formgrid .wide{grid-column:1/-1}
+.toolbar{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-bottom:15px;flex-wrap:wrap}
+.muted{font-size:12px;color:#9fb5bd}
+table{border-collapse:collapse;width:100%;min-width:570px;font-size:13px}
+td,th{padding:12px 10px;border-bottom:1px solid #354b55;text-align:left;vertical-align:top}
+th{color:#a9c3cc;font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+.table-scroll{overflow-x:auto}
+.daygrid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:7px;margin:15px 0 18px}
+.day{min-height:145px;border:1px solid #47616b;border-radius:11px;padding:8px;background:#152630;min-width:0}
+.day.current{border-color:#c9ae7e}.day h3{font-size:12px;color:#dfedf1;margin:0 0 8px}
+.slot{font-size:10px;line-height:1.35;background:#345766;border-left:3px solid #d4b57d;border-radius:6px;padding:7px;margin-bottom:5px;overflow-wrap:anywhere}
+.empty{font-size:11px;color:#7d9aa5}
+.pill{display:inline-block;padding:4px 8px;border-radius:8px;background:#274b46;border:1px solid #4a8679;color:#d2f3e8;font-size:11px}
+.pill.uncertain{background:#4b3e30;border-color:#8d714d;color:#ffe0b1}
+form details{padding:10px 14px;background:#16232c;border:1px solid #425d66;border-radius:10px}
+summary{cursor:pointer;color:#e2c499;font-weight:700;font-size:13px}
+ol{color:#bbccd0;font-size:13px;line-height:1.85}
+#alert{min-height:22px;margin-top:9px;font-size:13px;color:#f5d8a8}
+@media(max-width:1020px){.metrics{grid-template-columns:repeat(2,1fr)}.layout{grid-template-columns:180px minmax(0,1fr)}.daygrid{grid-template-columns:repeat(4,1fr)}}
+@media(max-width:690px){header{padding:14px}main{padding:15px}.hero{align-items:start;flex-direction:column}.layout{display:block}nav{position:static;display:flex;overflow:auto;margin-bottom:16px}nav button{flex-shrink:0}.cols,.grid3,.formgrid{grid-template-columns:1fr}.formgrid .wide{grid-column:auto}.daygrid{grid-template-columns:repeat(2,1fr)}.panel{padding:15px}}
+.training-status{padding:5px 9px;border-radius:999px;font-size:11px;border:1px solid #65828a;background:#263d45;display:inline-block}
+.training-status.submitted{border-color:#c6ae79;color:#ffe3a6}.training-status.returned{border-color:#b87966;color:#ffd2be}
+.training-status.approved{border-color:#73a991;color:#b0f0d6}
+.training-history{border-left:2px solid #547080;margin:10px 0;padding-left:14px}
+.training-history-item{margin-bottom:13px;font-size:12px;line-height:1.5}
+.training-history-item p{font-size:12px;margin:4px 0}
+.training-form{display:grid;gap:12px;margin-top:15px}
+.training-form textarea,.training-review textarea{min-height:88px;padding:10px;border-radius:9px;border:1px solid #5b7481;background:#101c24;color:white;font:inherit;resize:vertical;width:100%}
+.training-actions{display:flex;gap:9px;flex-wrap:wrap;margin:14px 0}
+.training-note{background:#182c37;border-left:3px solid #cfb179;padding:11px 13px;font-size:12px;margin:10px 0;color:#d7e1e7}
+.training-record{border:1px solid #45616f;border-radius:12px;padding:14px;background:#182630;margin:12px 0}
+.training-record h3{font-size:15px;margin:5px 0}
+.training-record p{font-size:12px;margin:4px 0}
+
+/* Agenda visual original inspirada en la simplicidad de agendas aeronáuticas. */
+.visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.agenda-shell{padding:17px 19px}
+.agenda-toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:13px}
+.agenda-heading h2{margin:0;font-size:21px;color:#f0f8f8}
+.agenda-heading p{margin:6px 0 0;font-size:12px;color:#a4bac5}
+.agenda-controls{display:flex;align-items:center;flex-wrap:wrap;gap:7px}
+.agenda-controls button,.agenda-controls select,.agenda-controls input{height:36px;font-size:12px}
+.agenda-controls button{padding:7px 11px;border:1px solid #476775;border-radius:8px;background:#243843;color:#dce8eb;cursor:pointer}
+.agenda-controls button:hover{background:#38535f}
+.agenda-controls .agenda-create{background:#edcf97;color:#152029;border-color:#edcf97;font-weight:800;padding:8px 15px}
+.agenda-controls .agenda-active{background:#3f5966;border-color:#a5c8d4;color:white}
+.agenda-controls input[type="date"]{width:145px;padding:5px 8px}
+.agenda-filters{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:15px}
+.agenda-filters label{min-width:155px;flex:0 1 205px}
+.agenda-filters select{height:38px}
+.agenda-filters .agenda-legend{display:flex;gap:14px;margin-left:auto;align-items:center;flex-wrap:wrap;padding:6px 0}
+.agenda-dot{width:8px;height:8px;border-radius:100%;display:inline-block;margin-right:6px;background:#79bcb2}
+.agenda-dot.gold{background:#deb980}
+.agenda-legend span{font-size:11px;color:#aebfc6;white-space:nowrap}
+.agenda-scroll{overflow-x:auto;overscroll-behavior-x:contain;border:1px solid #354f58;border-radius:13px;background:#13222c}
+.agenda-columns{display:grid;grid-template-columns:56px repeat(7,minmax(125px,1fr));min-width:970px}
+.agenda-columns.day-mode{grid-template-columns:56px minmax(320px,1fr);min-width:380px}
+.agenda-clock-heading{padding:14px 6px;background:#1e333d;font-size:10px;color:#98b1bc;text-align:center;border-bottom:1px solid #435c66}
+.agenda-day-heading{background:#1e333d;border-left:1px solid #3a545e;border-bottom:1px solid #435c66;text-align:center;padding:8px 4px;min-width:0}
+.agenda-day-heading strong{display:block;font-size:12px;color:#edf4f6}
+.agenda-day-heading small{font-size:10px;color:#9db8c3}
+.agenda-day-heading.today{background:#324a55}
+.agenda-clock{position:relative;background:#152630;border-right:1px solid #3a545e}
+.agenda-clock-label{position:absolute;right:8px;font-size:10px;color:#8aa5b2;transform:translateY(-7px)}
+.agenda-day-surface{position:relative;min-width:0;border-left:1px solid #405963;background:repeating-linear-gradient(to bottom,#1a2a34 0,#1a2a34 calc(var(--agenda-hour-height,52px) - 1px),#354b55 var(--agenda-hour-height,52px))}
+.agenda-hour-slot{display:block;width:100%;height:52px;border:0;border-bottom:0;background:transparent;position:relative;text-align:center;color:transparent;cursor:pointer}
+.agenda-hour-slot:hover,.agenda-hour-slot:focus-visible{background:#5e849238;color:#aac6cf;z-index:1;outline:1px dashed #80b5c8;outline-offset:-2px}
+.agenda-hour-slot span{font-size:11px}
+.agenda-event{position:absolute;border:1px solid #b59362;border-left:3px solid #eed197;border-radius:7px;background:#5c4b36;color:#f3f6ff;text-align:left;padding:5px 6px;overflow:hidden;cursor:pointer;z-index:2;box-shadow:0 2px 6px #08151d33;line-height:1.3;min-width:0}
+.agenda-event:hover,.agenda-event:focus-visible{outline:2px solid #f9e3b1;outline-offset:1px}
+.agenda-event.demo-flight{background:#245465;border-color:#5aabbf;border-left-color:#91d9d1}
+.agenda-event.is-selected{outline:2px solid #f1cd91}
+.agenda-event b,.agenda-event small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.agenda-event b{font-size:11px}.agenda-event small{font-size:10px;color:#e1eaf2}
+.agenda-viewnote{font-size:11px;color:#91adba;margin-top:10px}
+.school-settings{background:#1e303b;border:1px solid #526c79}
+.school-settings .formgrid{grid-template-columns:repeat(3,minmax(0,1fr))}
+.school-days{display:flex;flex-wrap:wrap;gap:9px;margin:8px 0}
+.school-days label{display:flex;align-items:center;gap:7px;padding:8px 10px;background:#172832;border:1px solid #496472;border-radius:9px;white-space:nowrap}
+.school-days input{width:15px;height:15px}
+.school-setting-info{font-size:12px;color:#e2c28c;margin-top:8px}
+.agenda-day-heading.day-closed{opacity:.6}
+.agenda-day-surface.day-closed{background-color:#25303a}
+.agenda-hour-slot:disabled{opacity:.25;cursor:not-allowed;background:#1b2630}
+.agenda-form-panel{border-color:#b6a079;background:#223139}
+.agenda-form-panel .formgrid{grid-template-columns:repeat(3,minmax(0,1fr))}
+.agenda-form-panel .formgrid>label{min-width:0}
+.agenda-selected{border:1px solid #63808e;background:#203540;border-radius:12px;padding:13px 16px;display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;align-items:center}
+.agenda-selected strong{font-size:14px;color:#fce1ab}
+.agenda-selected p{font-size:12px;margin:4px 0 0}
+.agenda-empty-note{color:#9fb5bd;font-size:12px}
+.agenda-pill{border:1px solid #67808b;color:#bbd4db;border-radius:8px;padding:4px 7px;font-size:11px}
+.agenda-small-actions{display:flex;flex-wrap:wrap;gap:7px}
+.agenda-booking-note{font-size:11px;color:#b6cbd1;margin-top:9px}
+@media(max-width:750px){
+ .agenda-shell{padding:12px}
+ .agenda-toolbar{align-items:flex-start}
+ .agenda-controls{width:100%}
+ .agenda-controls .agenda-create{margin-left:auto}
+ .agenda-controls input[type="date"]{width:135px}
+ .agenda-filters .agenda-legend{margin-left:0}
+ .agenda-form-panel .formgrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .school-settings .formgrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .agenda-columns.day-mode{min-width:0}
+ .agenda-columns:not(.day-mode){min-width:970px}
+}
+@media(max-width:420px){.agenda-form-panel .formgrid,.school-settings .formgrid{grid-template-columns:1fr}}
+/* Vistas funcionales aisladas: acceso real pendiente de RLS por institución. */
+.portal-title{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.portal-title h2{margin:0}
+.portal-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:14px 0}
+.portal-box{background:#172933;border:1px solid #3d5a67;border-radius:12px;padding:15px;margin-bottom:12px}
+.portal-box h3{margin:0 0 8px;font-size:15px}
+.portal-small{font-size:12px;color:#a9c6ce}
+.portal-task{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:1px solid #41545d;padding:12px 0}
+.portal-task:last-child{border-bottom:none}
+.portal-task strong{font-size:13px}
+.portal-actions{display:flex;flex-wrap:wrap;gap:8px}
+.portal-private{border-left:3px solid #8ab5c2;background:#1b333e;padding:12px 15px;border-radius:8px;font-size:12px;color:#c7d9df}
+@media(max-width:690px){.portal-metrics{grid-template-columns:1fr}}
+.rav-institution-panel{border:1px solid #587888;background:#1b303d}
+.rav-process{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.rav-process span{padding:7px 10px;border:1px solid #506f7d;border-radius:9px;color:#cae0e7;font-size:12px}
+.rav-status-label{color:#ecd099;font-size:12px;font-weight:650}
+.rav-item{padding:15px;margin:11px 0;background:#162b37;border:1px solid #3c5c6b;border-radius:12px}
+.rav-item .training-actions{margin-top:8px}
+.rav-item p{font-size:12px;color:#b9ced8;margin:5px 0}
+.flight-activity-list{display:grid;gap:10px}.flight-activity-item{padding:12px 14px;border-radius:11px;border:1px solid #486471;background:#192c37;display:flex;justify-content:space-between;align-items:start;gap:12px;flex-wrap:wrap}
+.flight-activity-item p{margin:4px 0;font-size:12px;color:#bed0d8}.flight-activity-item strong{font-size:13px;color:#f0f6f9}
+.flight-type-pill{display:inline-flex;padding:4px 9px;border:1px solid #7b949e;border-radius:999px;font-size:11px;color:#d9e9ef}
+.flight-type-pill.private{border-color:#6fa58d;color:#cdf3da}
+.flight-type-pill.instruction{border-color:#b69767;color:#f1ddbb}
+.logbook-form{background:#1d323d;border:1px solid #688995;border-radius:12px;padding:18px}
+.logbook-form .formgrid{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.logbook-summary{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin:12px 0;color:#d0e6ed}
+.logbook-summary span{padding:8px 12px;border:1px solid #526b79;background:#172b36;border-radius:8px;font-size:12px}
+.logbook-summary b{color:#f3d49e}
+.logbook-disclaimer{border-left:3px solid #d2ad72;padding:10px 14px;margin:10px 0;background:#282f36;color:#e8d3b2;font-size:12px}
+@media(max-width:800px){.logbook-form .formgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:490px){.logbook-form .formgrid{grid-template-columns:1fr}}
+.flight-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media(max-width:720px){.flight-summary{grid-template-columns:1fr}}
+.training-progress-list{display:grid;gap:13px;margin:13px 0}.training-progress-entry .toolbar{margin-bottom:6px;font-size:12px}.training-progress-entry .toolbar span{color:#cadde4}.training-progress-track{height:11px;border:1px solid #527383;border-radius:999px;overflow:hidden;background:#0e1e27}.training-progress-track span{display:block;height:100%;background:linear-gradient(90deg,#64a4b7,#eccb8e);border-radius:999px}.training-progress-entry .muted{margin-top:5px}
+.portal-metrics:has(.metric:nth-child(4)){grid-template-columns:repeat(4,minmax(0,1fr))}
+@media(max-width:900px){.portal-metrics:has(.metric:nth-child(4)){grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){.portal-metrics:has(.metric:nth-child(4)){grid-template-columns:1fr}}
+
+/* Biblioteca didáctica AeroSuite: catálogo de 30 fichas y 6 fichas CRM. */
+.library-group{border:1px solid #48636f;background:#182a35;border-radius:14px;padding:18px;margin:17px 0}
+.library-group-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:13px}
+.library-group-head h3{margin:0;font-size:17px;color:#f2f7f8}
+.library-count{font-size:11px;color:#d8e7ed;border:1px solid #597989;border-radius:999px;padding:6px 10px}
+.library-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(205px,1fr));gap:10px}
+.library-item{display:block;background:#203845;border:1px solid #516c78;border-radius:11px;padding:13px;text-decoration:none;color:#e6eef3;min-height:103px}
+.library-item strong{display:block;font-size:13px;line-height:1.4;margin:7px 0;color:#f3f7f9}
+.library-item small{display:block;color:#b6ced5;font-size:11px}
+.library-item .library-number{font-size:10px;color:#e4bb75;font-weight:800;letter-spacing:.06em}
+a.library-item:hover,a.library-item:focus-visible{border-color:#e0bd83;background:#294555}
+.library-item.is-missing{opacity:.6;cursor:not-allowed}
+.library-group-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:14px 0 0}
+.library-full-link{display:inline-block;padding:9px 12px;border-radius:9px;background:#304955;border:1px solid #688895;text-decoration:none;font-size:12px;font-weight:700}
+.library-full-link:hover{background:#3c5c6b}
+.library-upload{margin-top:18px;padding:13px 15px;border:1px solid #4e6b77;border-radius:12px;background:#1b303c}
+.library-upload summary{font-weight:700}
+.library-upload label{margin-top:13px}
+.library-upload input[type="file"]{background:#10222d;max-width:100%}
+.library-upload .muted{margin-top:9px}
+@media(max-width:690px){.library-group{padding:12px}.library-list{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.library-item{padding:9px;min-height:108px}.library-item strong{font-size:12px}}
+@media(max-width:380px){.library-list{grid-template-columns:1fr}}
+@media print{#screen>section:not(#training-ledger){display:none!important}body{background:#fff;color:#000}header,nav,.hero,.notice,.training-actions,form,#alert,button{display:none!important}.layout{display:block}.panel,.card,.training-record{break-inside:avoid;background:#fff!important;color:#111!important;border:1px solid #999!important}p,h1,h2,h3,span{color:#111!important}}
+
+/* AeroSuite: portales visuales independientes sobre datos de demostración compartidos. */
+header .brand{display:flex;flex-direction:column;gap:2px;font-size:18px;color:#eaf4ff;letter-spacing:.5px}
+header .brand small{font-size:9px;letter-spacing:1.7px;color:#9dbedc}
+.area-intro{padding:23px;background:linear-gradient(125deg,#203956,#182833);border:1px solid #466680;border-radius:18px;margin-bottom:17px}
+.area-intro h2{font-size:23px;margin:6px 0 7px}.area-intro p{margin:0;font-size:13px}
+.area-card-grid{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:15px}
+.area-card{min-height:270px;padding:23px;border:1px solid #57738a;border-radius:18px;display:flex;flex-direction:column;gap:14px;background:linear-gradient(145deg,#203649,#192c3a);color:#edf5fb;text-align:left;font:inherit;cursor:pointer;box-shadow:0 14px 30px #070e173b;transition:background .15s,transform .15s,border-color .15s}
+.area-card:hover{transform:translateY(-3px);background:#2d475d;border-color:#b2d7ec}
+.area-card h3{font-size:clamp(18px,1.8vw,24px);color:#fff;margin:0}
+.area-card p{font-size:13px;line-height:1.55;margin:0;color:#c9dce9}
+.area-card strong{display:inline-block;font-size:11px;letter-spacing:.1em;color:#d4e8f5;padding:9px 11px;border-radius:9px;border:1px solid #6f8fa8}
+.area-card-student{background:linear-gradient(140deg,#2b5580,#19344c);border-color:#85b7df}
+.area-card-student:hover{background:#2c5d8d}
+.area-card-instructor{border-color:#5c9293}.area-card-administracion{border-color:#7a92ab}
+.area-card-bottom{display:flex;justify-content:space-between;align-items:center;border-top:1px solid #5c768c;padding-top:13px;margin-top:auto;color:#edf5fc;font-weight:750;font-size:12px}
+.area-card-bottom span:last-child{font-size:20px}
+.area-portal-note{font-size:12px;margin:14px 0 0;color:#b5c8d5}
+.workspace-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px;flex-wrap:wrap}
+.area-return{background:#2a4255;border:1px solid #7092a6;color:#eef6fb;padding:10px 14px;border-radius:10px;font:inherit;font-size:12px;font-weight:800;cursor:pointer}
+.area-return:hover{background:#355a74}
+.area-crumb{font-size:12px;font-weight:750;letter-spacing:.04em;color:#c0d7e7}
+body[data-aerosuite-area="alumno"] nav button.active{background:#27567b;border-color:#87bce2}
+body[data-aerosuite-area="instructor"] nav button.active{background:#275353;border-color:#82b9b0}
+body[data-aerosuite-area="administracion"] nav button.active{background:#344b63;border-color:#9bafc4}
+.quick-areas{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px;margin-top:15px}
+.quick-area{padding:17px;background:#223a4a;color:#eaf4fc;border:1px solid #47677c;border-radius:12px;cursor:pointer;text-align:left;font:inherit}
+.quick-area:hover{background:#305568;border-color:#8db6d0}.quick-area b{display:block;font-size:14px;margin-bottom:6px}.quick-area span{font-size:12px;color:#b9cedb}
+@media(max-width:940px){.area-card-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.area-card-student{grid-column:1/-1;min-height:220px}.quick-areas{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:690px){.area-intro{padding:17px}.area-card-grid{grid-template-columns:1fr}.area-card-student{grid-column:auto}.area-card{min-height:180px;padding:19px;gap:10px}.area-card h3{font-size:20px}.quick-areas{grid-template-columns:1fr}.workspace-head{align-items:stretch}.area-return{width:100%}}
+@media print{.area-portal,.workspace-head{display:none!important}}
+.fin-metrics,.fin-funds{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:14px 0}
+.fin-metrics>div,.fin-funds>div{border:1px solid #507080;background:#193240;border-radius:12px;padding:16px}
+.fin-metrics strong,.fin-funds strong{display:block;font-size:21px;color:#f0dfb9;overflow-wrap:anywhere}
+.fin-metrics span,.fin-funds span{font-size:12px;color:#b9d0da}
+.fin-controls{display:flex;flex-wrap:wrap;gap:12px}.fin-controls label{min-width:190px}
+.fin-explainer{background:#213845;border-left:3px solid #d4b57d;padding:12px;font-size:12px;color:#cfdee6;margin:14px 0}
+@media(max-width:690px){.fin-metrics,.fin-funds{grid-template-columns:1fr}.fin-controls label{width:100%}}
+</style>
+<script>document.documentElement.classList.add("auth-pending")</script>
+<style>html.auth-pending body{visibility:hidden}</style>
+<script src="../../assets/supabase-2.117.2.min.js"></script>
+<script src="../../assets/community-config.js"></script>
+<script src="../../assets/auth-guard.js"></script>
+</head><body>
+<header><a class="brand" href="index.html">AEROSUITE<small>BY GENTE DE VUELO</small></a><span>PORTAL DE GESTIÓN AERONÁUTICA · DEMO</span><a href="index.html">Volver a la presentación</a></header>
+<main id="app" hidden>
+<div class="hero"><div><div class="eyebrow">AeroSuite · By Gente de Vuelo</div><h1 id="areaTitle">Portal de AeroSuite</h1><p class="sub" id="areaSubtitle">Tres áreas independientes · Una sola información compartida.</p></div><span class="tag">Prototipo privado · Administrador</span></div>
+<div class="notice"><strong>Entorno de demostración.</strong> Los datos que cargues aquí son ficticios y se pierden al recargar. No hay reservas multiusuario reales, validación directa con ANAC, facturación ni RAV oficial. La confirmación de una reserva NO autoriza un vuelo. Utilizá solamente datos de prueba.</div>
+<section id="areaPortal" class="area-portal" aria-label="Seleccionar área de AeroSuite"></section><div id="workspace" hidden><div class="workspace-head"><button type="button" id="areaBack" class="area-return">← Volver al panel principal</button><span id="areaCrumb" class="area-crumb"></span></div><div class="layout"><nav id="sidebar" aria-label="Menú exclusivo del área activa"></nav><div class="content"><p id="alert" role="status" aria-live="polite"></p><section id="screen" aria-live="polite"></section></div></div></div>
+</main>
+<script type="module">
+import {createReservation,closeFlight,flightTotals,stockMove,validDate,minutes,reservationMinimumMinutes,reservationSuggestedMinutes,STUDENT_RESERVATION_MINUTES,DEFAULT_RESERVATION_POLICY,validateReservationPolicy} from './src/operacion.js';
+import {mondayOf,shiftDate,listWeek,visibleBookings,timeWindow,layoutDay,hhmm} from './src/agenda.js';
+import {ACTIVITY_TYPES,DEMO_RESOURCES,requestStudentBooking,takeStudentBooking,finishGroundLesson,studentPortalProjection,instructorPortalProjection,DEFAULT_TRAINING_GOALS,validateTrainingGoals,trainingHours,trainingProgress} from './src/portales.js';
+import {ASSESSMENTS,LESSON_STATUS,buildLesson,reviseLesson,submitLesson,closeLessonByInstructor,reviewLesson,studentTimeline,studentSummary} from './src/formacion.js';
+import {FLIGHT_MODE_LABELS,flightActivityByRole,flightActivityProjection} from './src/vuelos.js';
+import {makeLogbookDetail,logbookRows,logbookSummary,LOGBOOK_TIME_COLUMNS,LOGBOOK_SPECIAL_COLUMNS,LOGBOOK_SIMULATOR_COLUMNS,LOGBOOK_PURPOSES} from './src/libro-vuelo.js';
+import {RAV_STATES,ravCandidates,ravFlightTotals,createRavDraft,submitRavForReview,institutionalReviewRav} from './src/rav-institucional.js';
+import {FINANCE_AREAS,FINANCE_ACCOUNTS,FINANCE_KINDS,FINANCE_CATEGORIES,makeFinanceEntry,financeReport} from './src/finanzas.js';
+const $=id=>document.getElementById(id);
+const safe=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[ch]));
+
+const AEROSUITE_LIBRARY_BUCKET='aerosuite-biblioteca';
+const AEROSUITE_LIBRARY_MAX_MB=100;
+const AEROSUITE_LIBRARY_FILES={
+ teoria:{path:'teoria/fichas-teoria-30.pdf',title:'Teoría aeronáutica',count:30},
+ crm:{path:'crm/fichas-crm-06.pdf',title:'CRM y factores humanos',count:8}
+};
+const AEROSUITE_THEORY_TOPICS=[
+ 'Introducción a la aviación','Atmósfera y clima','Presión y temperatura','Viento',
+ 'Nubes y precipitaciones','Masas de aire, frentes y sistemas','Cartas meteorológicas y pronósticos',
+ 'Aerodinámica: principios básicos','Sustentación','Resistencia y empuje',
+ 'Centro de gravedad y estabilidad','Controles de vuelo','Instrumentos de vuelo',
+ 'Navegación básica','Navegación avanzada','Espacio aéreo y servicios ATC',
+ 'Reglas de vuelo (VFR / IFR)','Desempeño de la aeronave','Peso y balance',
+ 'Planificación de vuelo','Combustible y sistemas','Motores de aviación','Hélices',
+ 'Sistemas eléctricos y aviónicos','Procedimientos de emergencia','Factores humanos',
+ 'Normativa aeronáutica','Seguridad operacional','Medio ambiente y aviación','Operaciones especiales'
+];
+const AEROSUITE_CRM_TOPICS=[
+ 'Comunicación efectiva','Gestión del estrés','Gestión de la carga de trabajo',
+ 'Toma de decisiones','Resolución de conflictos','Liderazgo',
+ 'Gestión del equipo','Conclusión: las siete esferas del CRM'
+];
+// La biblioteca usa Cloudflare R2 como destino de las nuevas versiones.\n// Los PDF antiguos de Supabase permanecen como respaldo de lectura hasta migrarlos.
+let libraryUploaded={teoria:null,crm:null};
+let libraryR2={teoria:null,crm:null};
+let libraryFileVersions={teoria:null,crm:null};
+let libraryFileUpdatedAt={teoria:null,crm:null};
+let libraryExtra=[];
+let libraryStatusWarning='';
+const extraSlug=value=>String(value).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,55);
+const extraFilename=(name,count,hidden=false)=>'materias/'+(hidden?'oculta--':'')+extraSlug(name)+'--'+Number(count)+'--'+encodeURIComponent(name)+'.pdf';
+function parseExtraFile(file){
+ const m=file.name.match(/^(oculta--)?([a-z0-9-]+)--(\d+)--(.+)\.pdf$/);
+ if(!m)return null;
+ try{return {name:decodeURIComponent(m[4]),count:Number(m[3]),hidden:!!m[1],path:'materias/'+file.name,updatedAt:file.updated_at||file.created_at||null}}catch{return null}
+}
+function extraCard(item){
+ const base=window.GDV_AUTH.client.storage.from(AEROSUITE_LIBRARY_BUCKET).getPublicUrl(item.path).data.publicUrl;
+ const url=base+(item.updatedAt?'?v='+encodeURIComponent(item.updatedAt):'');
+ return '<section class="library-group"><div class="library-group-head"><h3>'+safe(item.name)+'</h3><span class="library-count">'+item.count+' fichas</span></div><div class="library-list"><a class="library-item library-book-card" target="_blank" rel="noopener noreferrer" href="'+safe(url)+'"><span class="library-number">CUADERNILLO COMPLETO</span><strong>'+safe(item.name)+'</strong><small>Abrir todas las páginas del PDF</small></a></div></section>';
+}
+function libraryPdfURL(type,page){
+ const row=AEROSUITE_LIBRARY_FILES[type];
+ const r2=libraryR2[type];
+ const url=r2?.published&&r2.url?r2.url:window.GDV_AUTH.client.storage.from(AEROSUITE_LIBRARY_BUCKET).getPublicUrl(row.path).data.publicUrl;
+ const version=libraryFileVersions[type];
+ return url+(version?'?v='+encodeURIComponent(version):'')+(page?'#page='+page:'');
+}
+function libraryUpdatedLabel(type){
+ const value=libraryFileUpdatedAt[type];
+ if(!value)return '';
+ const date=new Date(value);
+ return Number.isNaN(date.getTime())?'':' · Actualizado: '+date.toLocaleString('es-AR',{dateStyle:'short',timeStyle:'short'});
+}
+function libraryCollection(type,topics){
+ const row=AEROSUITE_LIBRARY_FILES[type],published=libraryUploaded[type]===true;
+ const book=published?libraryPdfURL(type):null;
+ const detail=type==='crm'?'Comunicación, decisiones, factores humanos y trabajo en equipo.':'Teoría aeronáutica organizada en 30 fichas ilustradas.';
+ const caption=published?(libraryR2[type]?.published?'Cuadernillo publicado en Cloudflare R2':'PDF heredado en Supabase (todavía no actualizado en R2)')+libraryUpdatedLabel(type):'Cuadernillo pendiente de publicación en Cloudflare R2';
+ return '<section class="library-group"><div class="library-group-head"><h3>'+safe(row.title)+'</h3>'+
+  '<span class="library-count">'+row.count+' fichas · '+(published?'Publicadas':'Pendientes de publicación')+'</span></div>'+
+  '<div class="library-list">'+
+  (book?'<a class="library-item library-book-card" href="'+safe(book)+'" target="_blank" rel="noopener noreferrer" aria-label="Abrir el cuadernillo completo de '+safe(row.title)+'">'+
+   '<span class="library-number">CUADERNILLO COMPLETO · '+row.count+' FICHAS</span>'+
+   '<strong>'+safe(row.title)+'</strong><small>'+safe(detail)+'</small>'+
+   '<small>'+caption+' · Abrir y recorrer todas las páginas del PDF</small></a>':
+   '<div class="library-item is-missing"><strong>'+safe(row.title)+'</strong><small>Pendiente de publicar PDF</small></div>')+
+  '</div></section>';
+}
+function academyLibrary(canManage=false){
+ const teoriaLista=libraryUploaded.teoria===true;
+ const crmLista=libraryUploaded.crm===true;
+ const complete=teoriaLista&&crmLista;
+ const uploadBox='<details class="library-upload" id="aerosuiteUploader">'+
+  '<summary>Administración · Cargar o reemplazar los PDF de las fichas</summary>'+
+  '<p class="muted">Seleccioná un PDF completo de teoría (30 páginas) o CRM (8 páginas). Los nuevos cuadernillos se guardarán en Cloudflare R2 y sustituirán las versiones anteriores.</p>'+
+  '<div class="cols"><div><label>Teoría aeronáutica (30 páginas)<input type="file" data-library-upload="teoria" accept=".pdf,application/pdf" aria-label="Seleccionar PDF de las 30 fichas"></label>'+
+  '<button type="button" data-library-replace="teoria" disabled>Reemplazar las 30 fichas de teoría</button></div>'+
+  '<div><label>CRM (8 páginas)<input type="file" data-library-upload="crm" accept=".pdf,application/pdf" aria-label="Seleccionar PDF de las 8 fichas CRM"></label>'+
+  '<button type="button" data-library-replace="crm" disabled>Reemplazar las 8 fichas CRM</button></div></div>'+
+  '<p class="muted">Límite para Teoría y CRM: 100 MB por PDF. Seleccioná el archivo, pulsá Reemplazar y esperá la confirmación. Solo administradores.</p>'+
+  '<hr><h3>Agregar otra materia</h3><div class="cols"><label>Nombre de la materia<input id="extraSubjectName" maxlength="80" placeholder="Ej.: Meteorología avanzada"></label><label>Cantidad de fichas<input id="extraSubjectCount" type="number" min="1" max="500" value="1"></label></div>'+
+  '<label>Cuadernillo PDF<input id="extraSubjectPdf" type="file" accept=".pdf,application/pdf"></label> <button type="button" id="extraSubjectSave">Agregar materia</button>'+
+  '<div id="extraSubjectAdmin">'+libraryExtra.map(item=>'<div class="library-group-actions">'+safe(item.name)+' ('+item.count+' fichas) · '+(item.hidden?'Oculta':'Publicada')+' <button type="button" data-extra-action="toggle" data-extra-path="'+safe(item.path)+'">'+(item.hidden?'Publicar':'Ocultar')+'</button> <button type="button" data-extra-action="delete" data-extra-path="'+safe(item.path)+'">Eliminar</button></div>').join('')+'</div>'+
+  '<p id="aerosuiteUploadStatus" class="muted" role="status" aria-live="polite"></p></details>';
+ return '<section class="panel" id="aerosuiteBiblioteca"><h2>Biblioteca de formación aeronáutica · 38 fichas</h2>'+
+  '<p>Dos cuadernillos de formación aeronáutica de Gente de Vuelo: 30 fichas de teoría y 8 de CRM. Abrí cada tarjeta para recorrer todas las páginas en un solo PDF.</p>'+
+  (libraryStatusWarning?'<div class="notice" role="status">'+safe(libraryStatusWarning)+'</div>':'')+
+  (!complete?'<div class="notice">Estado de publicación: '+(teoriaLista?'Teoría (30 fichas) publicada en AeroSuite. ':'Teoría (30 fichas) pendiente de publicar en Cloudflare R2. ')+(crmLista?'CRM (8 fichas) publicado en AeroSuite.':'CRM (8 fichas) pendiente de publicar en Cloudflare R2.')+'</div>':'')+
+  (canManage?uploadBox:'')+
+  libraryCollection('teoria',AEROSUITE_THEORY_TOPICS)+libraryCollection('crm',AEROSUITE_CRM_TOPICS)+libraryExtra.filter(item=>!item.hidden).map(extraCard).join('')+
+  '<div class="grid3">'+
+  '<a class="card" href="../rodaje-viento.html"><h3>Rodaje con viento</h3><p>Práctica interactiva de controles en rodaje.</p></a>'+
+  '<a class="card" href="../calculo-sustentacion.html"><h3>Cálculo de sustentación</h3><p>Perfiles, sustentación y pérdida.</p></a>'+
+  '<a class="card" href="fichas/fuerzas-del-vuelo.html"><h3>Cuatro fuerzas del vuelo</h3><p>Ficha visual original con autoevaluación.</p></a>'+
+  '</div><p class="muted">Material complementario: no reemplaza manuales, procedimientos ni normativa vigente. Consultar estas fichas no acredita horas académicas.</p></section>';
+}
+async function callLibraryR2(action,body={}){
+ const client=window.GDV_AUTH.client;
+ // Algunas consultas recibieron HTTP 503 del gateway de Supabase.
+ // Reintentar solo operaciones sin efectos de publicación.
+ const attempts=['status','prepare','multipart-start','multipart-complete'].includes(action)?3:1;
+ for(let attempt=0;attempt<attempts;attempt++){
+  try{
+   const {data,error}=await client.functions.invoke('aerosuite-biblioteca-r2',{body:{action,...body}});
+   if(error){
+    let detail='',status=error.context?.status||0;
+    try{const result=await error.context?.json?.();detail=result?.error||''}catch(_){}
+    const issue=new Error(detail||(status===503?'El servicio de publicación respondió 503; intentá nuevamente.':error.message||'No se pudo contactar Cloudflare R2'));
+    issue.status=status;
+    throw issue;
+   }
+   if(data?.error)throw Error(data.error);
+   return data;
+  }catch(error){
+   if(attempt<attempts-1&&(error.status===503||/fetch|network|503/i.test(error.message||''))){
+    await new Promise(resolve=>setTimeout(resolve,350*(attempt+1)));
+    continue;
+   }
+   throw error;
+  }
+ }
+}
+async function refreshStudentLibrary(){
+ const uploaderWasOpen=!!$('aerosuiteUploader')?.open;
+ const store=window.GDV_AUTH.client.storage.from(AEROSUITE_LIBRARY_BUCKET);
+ try{
+  const [theory,crm,extras,r2Query]=await Promise.all([
+   store.list('teoria',{limit:100}),
+   store.list('crm',{limit:100}),
+   store.list('materias',{limit:1000}),
+   callLibraryR2('status').then(data=>({data,error:null}),error=>({data:null,error}))
+  ]);
+  const r2State=r2Query.data;
+  libraryStatusWarning=r2Query.error?'No se pudo verificar Cloudflare R2: '+r2Query.error.message+'. Se conserva la última versión R2 confirmada en esta sesión; los PDF de Supabase son versiones antiguas.':'';
+  const theoryFile=theory.error?null:(theory.data||[]).find(file=>file.name==='fichas-teoria-30.pdf');
+  const crmFile=crm.error?null:(crm.data||[]).find(file=>file.name==='fichas-crm-06.pdf');
+  libraryExtra=extras.error?[]:(extras.data||[]).map(parseExtraFile).filter(Boolean).sort((a,b)=>a.name.localeCompare(b.name,'es'));
+  // Si falla status, no descartar el archivo ya verificado por finish.
+  const previousR2=libraryR2;
+  libraryR2={
+   teoria:r2State?(r2State.teoria?.published?r2State.teoria:null):previousR2.teoria,
+   crm:r2State?(r2State.crm?.published?r2State.crm:null):previousR2.crm
+  };
+  libraryUploaded={teoria:!!libraryR2.teoria||!!theoryFile,crm:!!libraryR2.crm||!!crmFile};
+  libraryFileUpdatedAt={
+   teoria:libraryR2.teoria?.updatedAt||theoryFile?.updated_at||theoryFile?.created_at||null,
+   crm:libraryR2.crm?.updatedAt||crmFile?.updated_at||crmFile?.created_at||null
+  };
+  libraryFileVersions={
+   teoria:libraryR2.teoria?.version||libraryFileUpdatedAt.teoria||theoryFile?.id||null,
+   crm:libraryR2.crm?.version||libraryFileUpdatedAt.crm||crmFile?.id||null
+  };
+ }catch(err){
+  libraryStatusWarning='No se pudo actualizar el listado de biblioteca: '+(err.message||'error de acceso');
+  notice(libraryStatusWarning);
+ }
+ if(tab==='academia'||tab==='admin_academia'){
+  render();
+  const uploader=$('aerosuiteUploader');
+  if(uploader)uploader.open=uploaderWasOpen;
+ }
+}
+function libraryUploadMessage(message){
+ const el=$('aerosuiteUploadStatus');
+ if(el)el.textContent=message;
+ notice(message);
+}
+// Respaldo sin CORS de Cloudflare: fragmentos de 6 MB, enviados a la
+// función autenticada de Supabase y ensamblados dentro de Cloudflare R2.
+async function uploadLibraryMultipart(type,file){
+ const client=window.GDV_AUTH.client;
+ const session=await callLibraryR2('multipart-start',{type,size:file.size});
+ if(!session?.ok||!session?.uploadId||!session?.path)throw Error('No se pudo abrir la carga fragmentada en R2.');
+ const blockSize=session.partBytes||6*1024*1024;
+ const parts=[];
+ try{
+  const total=Math.ceil(file.size/blockSize);
+  for(let index=0;index<total;index++){
+   const first=index*blockSize,last=Math.min(file.size,first+blockSize);
+   libraryUploadMessage('Transferencia segura a R2: fragmento '+(index+1)+' de '+total+'…');
+   let completed=false,lastError=null;
+   for(let attempt=0;attempt<3&&!completed;attempt++){
+    try{
+     const {data,error}=await client.functions.invoke('aerosuite-biblioteca-r2',{
+      headers:{
+       'Content-Type':'application/octet-stream',
+       'x-academia-action':'multipart-part',
+       'x-academia-upload-id':session.uploadId,
+       'x-academia-path':session.path,
+       'x-academia-part':String(index+1)
+      },
+      body:file.slice(first,last,'application/octet-stream')
+     });
+     if(error)throw error;
+     if(!data?.ok||!data?.etag)throw Error(data?.error||'Cloudflare no confirmó el fragmento.');
+     parts.push(data.etag);completed=true;
+    }catch(error){
+     lastError=error;
+     if(attempt<2)await new Promise(resolve=>setTimeout(resolve,500*(attempt+1)));
+    }
+   }
+   if(!completed)throw Error('Falló el fragmento '+(index+1)+' de '+total+': '+(lastError?.message||'sin respuesta'));
+  }
+  const completed=await callLibraryR2('multipart-complete',{type,path:session.path,uploadId:session.uploadId,parts});
+  if(!completed?.ok)throw Error('No se pudo finalizar la transferencia fragmentada.');
+  return session.path;
+ }catch(error){
+  await callLibraryR2('multipart-abort',{type,path:session.path,uploadId:session.uploadId}).catch(()=>{});
+  throw error;
+ }
+}
+async function uploadStudentLibraryFile(input){
+ const type=input.dataset.libraryUpload;
+ const file=input.files&&input.files[0];
+ if(!AEROSUITE_LIBRARY_FILES[type]||!file){libraryUploadMessage('Primero seleccioná un archivo PDF.');return;}
+ if(file.size>AEROSUITE_LIBRARY_MAX_MB*1024*1024){
+  libraryUploadMessage('El PDF pesa '+(file.size/1024/1024).toFixed(1)+' MB y supera el máximo de 100 MB.');return;
+ }
+ const signature=String.fromCharCode(...new Uint8Array(await file.slice(0,5).arrayBuffer()));
+ if(signature!=='%PDF-'){libraryUploadMessage('Seleccioná un archivo PDF válido.');return;}
+ input.disabled=true;
+ libraryUploadMessage('Preparando publicación en Cloudflare R2: '+AEROSUITE_LIBRARY_FILES[type].title+'…');
+ try{
+  let path;
+  try{
+   const prepared=await callLibraryR2('prepare',{type,contentType:'application/pdf',size:file.size});
+   if(!prepared?.uploadUrl||!prepared?.path)throw Error('No se recibió un enlace seguro de carga.');
+   libraryUploadMessage('Subiendo '+file.name+' ('+(file.size/1024/1024).toFixed(1)+' MB) a Cloudflare R2…');
+   const uploaded=await fetch(prepared.uploadUrl,{method:'PUT',headers:{'Content-Type':'application/pdf'},body:file});
+   if(!uploaded.ok)throw Error('La transferencia directa respondió '+uploaded.status);
+   path=prepared.path;
+  }catch(directError){
+   // Esta vía funciona si el navegador no tiene permiso CORS para R2.
+   console.warn('Carga directa R2 falló; se usa transferencia fragmentada:',directError.message);
+   libraryUploadMessage('La transferencia directa no se completó. Usando el método seguro por fragmentos…');
+   path=await uploadLibraryMultipart(type,file);
+  }
+  libraryUploadMessage('Transferencia finalizada. Verificando y reemplazando el PDF publicado…');
+  const published=await callLibraryR2('finish',{type,path});
+  if(!published?.ok||!published?.published||published.size!==file.size)throw Error('No se pudo confirmar el reemplazo del archivo.');
+  libraryR2[type]={...published,published:true};
+  libraryUploaded[type]=true;
+  libraryFileVersions[type]=published.version||Date.now().toString();
+  libraryFileUpdatedAt[type]=published.updatedAt||new Date().toISOString();
+  libraryUploadMessage('PDF publicado en Cloudflare R2 ('+(file.size/1024/1024).toFixed(1)+' MB). Actualizando biblioteca…');
+  await refreshStudentLibrary();
+  // Una consulta status fallida no debe hacer retroceder la publicación.
+  if(!libraryUploaded[type]){
+   libraryR2[type]={...published,published:true};
+   libraryUploaded[type]=true;
+   libraryFileVersions[type]=published.version||Date.now().toString();
+   libraryFileUpdatedAt[type]=published.updatedAt||new Date().toISOString();
+   if(tab==='admin_academia')render();
+  }
+  libraryUploadMessage('PDF reemplazado correctamente ('+(file.size/1024/1024).toFixed(1)+' MB): '+AEROSUITE_LIBRARY_FILES[type].title+'. Abrí la tarjeta para ver la nueva versión.');
+ }catch(err){
+  libraryUploadMessage('No se pudo reemplazar el PDF: '+(err.message||'error de carga')+'. El cuadernillo anterior sigue disponible.');
+ }finally{input.disabled=false;input.value='';}
+}
+async function extraPdfValid(file){
+ if(!file||file.size>30*1024*1024)throw Error('Seleccioná un PDF de hasta 30 MB.');
+ const signature=String.fromCharCode(...new Uint8Array(await file.slice(0,5).arrayBuffer()));
+ if(signature!=='%PDF-')throw Error('El archivo no es un PDF válido.');
+}
+document.addEventListener('click',async event=>{
+ const save=event.target.closest('#extraSubjectSave');
+ const action=event.target.closest('[data-extra-action]');
+ if(!save&&!action)return;
+ const store=window.GDV_AUTH.client.storage.from(AEROSUITE_LIBRARY_BUCKET);
+ const control=save||action;control.disabled=true;
+ try{
+  if(save){
+   const name=$('extraSubjectName').value.trim(),count=Number($('extraSubjectCount').value),file=$('extraSubjectPdf').files[0];
+   if(name.length<3||name.length>80||!Number.isInteger(count)||count<1||count>500)throw Error('Indicá nombre y cantidad válida de fichas.');
+   await extraPdfValid(file);
+   const path=extraFilename(name,count);
+   const existing=libraryExtra.find(item=>extraSlug(item.name)===extraSlug(name));
+   if(existing&&!confirm('Ya existe esta materia. ¿Reemplazar su PDF?'))return;
+   const result=await store.upload(path,file,{upsert:true,contentType:'application/pdf',cacheControl:'60'});
+   if(result.error)throw result.error;
+   if(existing&&existing.path!==path){const del=await store.remove([existing.path]);if(del.error)throw del.error}
+   libraryUploadMessage('Materia publicada: '+name);
+  }else{
+   const item=libraryExtra.find(x=>x.path===action.dataset.extraPath);
+   if(!item)throw Error('Materia no encontrada.');
+   if(action.dataset.extraAction==='delete'){
+    if(!confirm('¿Eliminar definitivamente '+item.name+' y su PDF?'))return;
+    const result=await store.remove([item.path]);if(result.error)throw result.error;
+   }else{
+    const destination=extraFilename(item.name,item.count,!item.hidden);
+    const result=await store.move(item.path,destination);
+    if(result.error)throw result.error;
+   }
+  }
+  await refreshStudentLibrary();
+ }catch(err){libraryUploadMessage('No se pudo completar: '+(err.message||'error'))}
+ finally{control.disabled=false}
+});
+document.addEventListener('click',async event=>{
+ const replace=event.target.closest('[data-library-replace]');
+ if(!replace)return;
+ const type=replace.dataset.libraryReplace;
+ const input=document.querySelector('input[data-library-upload="'+type+'"]');
+ if(!input||!input.files?.length){libraryUploadMessage('Primero seleccioná el PDF que querés subir.');return;}
+ replace.disabled=true;
+ try{await uploadStudentLibraryFile(input)}
+ finally{if(replace.isConnected)replace.disabled=!input.files?.length;}
+});
+document.addEventListener('change',event=>{
+ const target=event.target;
+ if(!target||!target.matches('input[data-library-upload]'))return;
+ const file=target.files&&target.files[0];
+ const type=target.dataset.libraryUpload;
+ const replace=document.querySelector('[data-library-replace="'+type+'"]');
+ const valid=!!file&&file.size<=AEROSUITE_LIBRARY_MAX_MB*1024*1024;
+ if(replace)replace.disabled=!valid;
+ if(!file){libraryUploadMessage('No seleccionaste un archivo.');return;}
+ if(!valid){libraryUploadMessage('El PDF seleccionado pesa '+(file.size/1024/1024).toFixed(1)+' MB y supera el límite de 100 MB.');return;}
+ libraryUploadMessage('Archivo seleccionado: '+file.name+' ('+(file.size/1024/1024).toFixed(1)+' MB). Ahora pulsá «Reemplazar las '+AEROSUITE_LIBRARY_FILES[type].count+' fichas» para publicarlo.');
+});
+
+const isoDay=d=>[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');
+const now=()=>isoDay(new Date());
+const addDays=(day,n)=>{const d=new Date(day+'T12:00:00');d.setDate(d.getDate()+n);return isoDay(d)};
+const shortDay=s=>new Date(s+'T12:00:00').toLocaleDateString('es-AR',{weekday:'short',day:'numeric',month:'short'});
+const money=n=>Number(n).toLocaleString('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0});
+const members=[{id:'p1',name:'Piloto Demo',kind:'piloto',licenseUntil:'2027-06-01',cmaUntil:'2027-05-01'},
+{id:'p2',name:'Alumno Demo',kind:'alumno',licenseUntil:'2027-06-01',cmaUntil:'2027-05-01'},
+{id:'i1',name:'Instructor Demo',kind:'instructor',licenseUntil:'2027-06-01',cmaUntil:'2027-05-01'}];
+const fleet=[{id:'LV-ABC',model:'Cessna 172',blocked:false,insuranceUntil:'2027-06-01',rate:95000},
+{id:'LV-XYZ',model:'Piper PA-11',blocked:false,insuranceUntil:'2027-05-01',rate:70000}];
+const products=[{id:'avgas',name:'AVGAS 100LL',qty:180,unit:'L',min:60,cost:1800,sale:2300},
+{id:'oil',name:'Aceite aeronáutico',qty:16,unit:'L',min:5,cost:12500,sale:15700}];
+let reservations=[],flights=[],movements=[],lessons=[],groundActivities=[],tab='inicio',week=now();
+let financeEntries=[],financePeriod='todos',financeArea='todos';
+let flightModeFilter='all';
+let logbookEditingFlightId='',logbookPersonFilter='p2';
+const demoPacks=[{id:'pack-demo-10h',studentId:'p2',description:'Pack de 10 horas (ejemplo)',acquiredHours:10,remainingHours:10}];
+let trainingGoals=validateTrainingGoals(DEFAULT_TRAINING_GOALS),trainingGoalsOpen=false;
+const trainingGoalsStorageKey=()=>demoAdminId?'gdv-gestion-metas-v1-'+demoAdminId:'';
+function restoreTrainingGoals(){
+ try{
+  const source=trainingGoalsStorageKey()?localStorage.getItem(trainingGoalsStorageKey()):null;
+  if(source)trainingGoals=validateTrainingGoals(JSON.parse(source));
+ }catch(_){trainingGoals=validateTrainingGoals(DEFAULT_TRAINING_GOALS)}
+}
+function rememberTrainingGoals(){
+ try{if(trainingGoalsStorageKey())localStorage.setItem(trainingGoalsStorageKey(),JSON.stringify(trainingGoals))}catch(_){}
+}
+let schoolPolicy=validateReservationPolicy(DEFAULT_RESERVATION_POLICY),schoolSettingsOpen=false,demoAdminId='';
+const schoolPolicyStorageKey=()=>demoAdminId?'gdv-gestion-turnera-v1-'+demoAdminId:'';
+function rememberSchoolPolicy(){
+ try{if(schoolPolicyStorageKey())localStorage.setItem(schoolPolicyStorageKey(),JSON.stringify(schoolPolicy))}catch(_){}
+}
+function restoreSchoolPolicy(){
+ try{
+  const raw=schoolPolicyStorageKey()?localStorage.getItem(schoolPolicyStorageKey()):null;
+  if(raw)schoolPolicy=validateReservationPolicy(JSON.parse(raw));
+ }catch(_){schoolPolicy=validateReservationPolicy(DEFAULT_RESERVATION_POLICY)}
+}
+let agendaView=window.matchMedia('(max-width:720px)').matches?'day':'week';
+let agendaAircraft='all',agendaInstructor='all',agendaFormOpen=false,agendaBookingId='';
+let agendaSelectedBooking='',agendaDraftDate=week,agendaDraftStart='10:00';
+let trainingForm='',trainingStudent='p2',trainingPreselectFlight='';
+const chiefDemoId='jefe-instructores-demo';
+let ravRecords=[],ravFormOpen=false;
+// Demostración: configuración por institución. Sin persistencia ni validación ANAC.
+const trainingInstitution={institutionType:'non_ciac',reviewMode:'chief'};
+// Tres areas visual y funcionalmente aisladas dentro de la demostracion.
+const AREA_DEFS=Object.freeze({
+ alumno:{title:'Área del Alumno',subtitle:'Formación, progreso, reservas y biblioteca aeronáutica.',home:'alumno',tabs:[['alumno','Mi formación y reservas'],['academia','Mi biblioteca · Teoría y CRM'],['piloto','Mi actividad personal · Demo']]},
+ instructor:{title:'Instructor y Jefe de Instructores',subtitle:'Evaluaciones, clases, seguimiento de alumnos y supervisión pedagógica.',home:'instructor',tabs:[['instructor','Panel del instructor'],['direccion','Jefatura de instructores'],['personas','Seguimiento, fichas y RAV']]},
+ administracion:{title:'Gestión Administrativa de Escuela',subtitle:'Agenda, operaciones, flota, personal, recursos y contabilidad.',home:'inicio',tabs:[['inicio','Panel administrativo'],['reservas','Agenda y reservas'],['vuelos','Registro de vuelos'],['flota','Aeronaves y mantenimiento'],['admin_personas','Personal y usuarios'],['admin_academia','Gestionar biblioteca'],['finanzas','Contabilidad y Finanzas'],['stock','Combustible y aceite'],['documentos','Documentos y avisos']]}
+});
+let currentArea=null;
+function areaPortalMarkup(){
+ const cards=[
+  ['alumno','01 · FORMACIÓN','Área del Alumno','Mi formación, clases, turnos, horas y Mi biblioteca de teoría y práctica. El espacio protagonista de AeroSuite.','Entrar a mi formación'],
+  ['instructor','02 · INSTRUCCIÓN','Instructor y Jefatura','Alumnos asignados, evaluaciones, legajos y supervisión del jefe de instructores.','Entrar a instrucción'],
+  ['administracion','03 · ESCUELA','Gestión Administrativa','Agenda, vuelos, flota, mantenimiento, personal, recursos y administración institucional.','Entrar a gestión']
+ ];
+ return '<div class="area-intro"><span class="eyebrow">Tres áreas · Una plataforma</span><h2>Elegí tu espacio de trabajo</h2><p>Las pantallas y los menús no se mezclan. Cada área muestra solamente sus funciones y utiliza los mismos registros de demostración cuando corresponde.</p></div>'+
+ '<div class="area-card-grid">'+cards.map(([key,number,title,description,label])=>
+ '<button type="button" class="area-card area-card-'+key+'" data-area="'+key+'"><strong>'+number+'</strong><h3>'+title+'</h3><p>'+description+'</p>'+
+ '<span class="area-card-bottom"><span>'+label+'</span><span aria-hidden="true">→</span></span></button>').join('')+'</div>'+
+ '<p class="area-portal-note">Vista de demostración restringida al administrador. Los permisos reales por rol e institución se implementarán antes de habilitar el ingreso de alumnos e instructores.</p>';
+}
+function notice(message){$('alert').textContent=message}
+const metric=(value,label)=>'<div class="metric"><strong>'+safe(value)+'</strong><span>'+safe(label)+'</span></div>';
+const options=(rows,value='id',label='name')=>rows.map(row=>'<option value="'+safe(row[value])+'">'+safe(row[label])+'</option>').join('');
+function switchArea(key){
+ if(!Object.prototype.hasOwnProperty.call(AREA_DEFS,key))return;
+ currentArea=key;tab=AREA_DEFS[key].home;notice('');render();
+}
+function backToAreaPortal(){currentArea=null;tab='inicio';notice('');render()}
+function switchTab(value){
+ const area=AREA_DEFS[currentArea];
+ if(!area||!area.tabs.some(([key])=>key===value)){notice('Este módulo pertenece a otra área. Volvé al portal principal para cambiar de espacio.');return}
+ tab=value;notice('');render();
+}
+function render(){
+ const area=AREA_DEFS[currentArea];
+ document.body.dataset.aerosuiteArea=currentArea||'portal';
+ $('areaPortal').hidden=!!area;$('workspace').hidden=!area;
+ $('areaTitle').textContent=area?area.title:'Portal de AeroSuite';
+ $('areaSubtitle').textContent=area?area.subtitle:'Tres áreas independientes · Una sola información compartida.';
+ if(!area){
+  $('areaPortal').innerHTML=areaPortalMarkup();
+  $('areaPortal').querySelectorAll('[data-area]').forEach(button=>button.addEventListener('click',()=>switchArea(button.dataset.area)));
+  $('sidebar').replaceChildren();$('screen').replaceChildren();return;
+ }
+ $('areaCrumb').textContent='AEROSUITE / '+area.title.toUpperCase()+' · DEMO';
+ $('sidebar').innerHTML=area.tabs.map(([key,label])=>'<button type="button" data-tab="'+key+'" class="'+(key===tab?'active':'')+'">'+label+'</button>').join('');
+ $('sidebar').querySelectorAll('button').forEach(button=>button.addEventListener('click',()=>switchTab(button.dataset.tab)));
+ $('areaBack').onclick=backToAreaPortal;
+ const sections={inicio:dashboard,alumno:studentPortal,piloto:privatePilotPortal,instructor:instructorPortal,direccion:directorPortal,reservas:calendar,vuelos:flightScreen,flota:fleetScreen,personas:memberScreen,admin_personas:adminPeopleScreen,admin_academia:adminAcademyScreen,finanzas:financeScreen,stock:stockScreen,academia:academyScreen,documentos:documentsScreen};
+ if(!area.tabs.some(([key])=>key===tab))tab=area.home;
+ $('screen').innerHTML=sections[tab]();wire();
+}
+// Portales independientes dentro de la demostración ADMIN: no hay suplantación de roles ni accesos reales.
+const portalStudent='p2',portalPrivatePilot='p1',portalInstructor='i1';
+const portalLabel=(id)=>members.find(m=>m.id===id)?.name||id;
+const portalType=(kind)=>ACTIVITY_TYPES[kind]||ACTIVITY_TYPES.flight;
+const portalResource=(booking)=>booking.aircraft||DEMO_RESOURCES.find(x=>x.id===booking.resourceId)?.name||'Recurso por asignar';
+const portalDate=(d)=>safe(d.date+' · '+d.start+'–'+d.end);
+function trainingProgressWidget(progress){
+ const items=[['flightHours','Horas de vuelo','plane'],['simulatorHours','Horas de simulador','monitor'],['theoryHours','Horas de teoría','book']];
+ return '<div class="training-progress-list">'+items.map(([key,label])=>{
+  const p=progress[key],n=p.required?String(p.required)+' h':'Sin objetivo exigido';
+  return '<div class="training-progress-entry"><div class="toolbar"><strong>'+label+'</strong><span>'+
+   p.completed.toFixed(2)+' h / '+n+'</span></div>'+
+   '<div class="training-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+(p.percentage??0)+'" aria-label="'+label+'">'+
+   '<span style="width:'+(p.percentage??0)+'%"></span></div>'+
+   '<div class="muted">Restantes según el plan de prueba: '+p.remaining.toFixed(2)+' h'+
+   (!p.required?' · Sin meta numérica':'')+'</div></div>';
+ }).join('')+'</div>';
+}
+function trainingGoalSettings(){
+ if(!trainingGoalsOpen)return '';
+ const names=[['flightHours','Objetivo de horas de vuelo'],['simulatorHours','Objetivo de horas de simulador'],['theoryHours','Objetivo de horas de teoría']];
+ return '<section class="panel"><div class="toolbar"><h2>Plan de formación · Objetivos de la escuela</h2>'+
+ '<button type="button" class="secondary" id="closeTrainingGoals">Cerrar</button></div>'+
+ '<p>Configuración demostrativa; el programa real debe ser aprobado por la institución según la normativa y su régimen aplicable. Las horas de simulador no se convierten automáticamente en horas de vuelo.</p>'+
+ '<form id="trainingGoalsForm"><div class="formgrid">'+names.map(([key,label])=>
+  '<label>'+label+'<input type="number" id="goal-'+key+'" min="0" max="500" step="0.25" value="'+trainingGoals[key]+'" required></label>').join('')+
+ '</div><button class="action" type="submit">Guardar objetivos (demo)</button></form></section>';
+}
+function flightCards(projection){
+ if(!projection.rows.length)return '<p class="muted">Todavía no hay vuelos cerrados para este perfil de demostración.</p>';
+ return '<div class="flight-activity-list">'+projection.rows.map(f=>{
+  const instructor=f.instructor?portalLabel(f.instructor):'Sin instructor';
+  return '<article class="flight-activity-item"><div><strong>'+safe(f.date)+' · '+safe(f.aircraft)+'</strong>'+
+   '<p>'+safe(f.origin)+' → '+safe(f.destination)+' · '+safe(f.start)+'–'+safe(f.end)+'</p>'+
+   '<p>'+safe(instructor)+' · '+safe(FLIGHT_MODE_LABELS[f.operationType]||'Modalidad anterior sin clasificar')+'</p></div>'+
+   '<div><span class="flight-type-pill '+safe(f.operationType)+'">'+safe(f.blockHours.toFixed(2))+' h de bloque</span>'+
+   '<p>'+safe(f.landings)+' aterrizajes · Tacómetro Δ '+safe(f.tachDifference.toFixed(2))+' h</p></div></article>';
+ }).join('')+'</div>';
+}
+function privatePilotPortal(){
+ const p=flightActivityByRole(portalPrivatePilot,'piloto',flights);
+ const all=flightActivityProjection(portalPrivatePilot,flights);
+ return '<section class="panel"><div class="portal-title"><h2>Mi Hangar de Vuelo · Piloto privado</h2>'+
+ '<span class="tag">Vista individual · DEMO</span></div>'+
+ '<p class="portal-private">Historial personal de vuelos sin instructor del piloto privado. La aplicación separa estas horas de las clases del alumno, las del instructor y el tacómetro de la aeronave. No es Libro de Vuelo oficial ni prueba de atribuciones.</p>'+
+ '<div class="portal-metrics">'+metric(p.blockHours.toFixed(2)+' h','Bloque registrado · vuelos sin instructor')+
+ metric(p.flights,'Vuelos privados registrados')+
+ metric(p.landings,'Aterrizajes')+'</div>'+
+ '<p class="muted">La reserva institucional y los registros administrativos se gestionan en el área de escuela; este panel personal conserva su navegación independiente.</p></section>'+
+ '<section class="panel"><h2>Mi historial de vuelos como piloto privado</h2>'+flightCards(p)+
+ '<p class="muted">Otros vuelos del perfil con instructor (si los hubiera): '+all.byMode.coached.flights+
+ '. Se contabilizan aparte de los vuelos sin instructor.</p></section>';
+}
+function studentPortal(){
+ const d=studentPortalProjection(portalStudent,reservations,flights,lessons,demoPacks,groundActivities,trainingGoals);
+ const instruction=flightActivityByRole(portalStudent,'alumno',flights);
+ const stages={solicitada:'Pendiente de instructor',confirmada:'Confirmada',cancelada:'Cancelada'};
+ const options=Object.entries(ACTIVITY_TYPES).map(([id,label])=>'<option value="'+id+'">'+safe(label)+'</option>').join('');
+ const resources=[...fleet.map(a=>({id:a.id,label:a.id+' · '+a.model,kind:'flight'})),
+ ...DEMO_RESOURCES.map(x=>({id:x.id,label:x.name,kind:x.type}))];
+ const bookings=d.reservations.slice().reverse().map(b=>'<div class="portal-task"><div><strong>'+safe(portalType(b.type))+'</strong>'+
+  '<div class="portal-small">'+portalDate(b)+' · '+safe(portalResource(b))+'</div></div>'+
+  '<span class="agenda-pill">'+safe(stages[b.status]||b.status)+'</span></div>').join('');
+ return '<section class="panel"><div class="portal-title"><h2>Mi espacio de alumno · Demostración</h2><span class="tag">Vista alumno · Datos ficticios</span></div>'+
+ '<p class="portal-private">Aquí el alumno puede solicitar turnos y consultar únicamente sus reservas, horas de vuelo, prácticas registradas y packs comprados. Las notas de instructores, sus correcciones y la supervisión interna no se muestran.</p>'+
+ '<div class="portal-metrics">'+metric(d.flightHours.toFixed(2)+' h','Horas de vuelo · demo')+
+ metric(d.simulatorHours.toFixed(2)+' h','Horas de simulador · demo')+
+ metric(d.theoryHours.toFixed(2)+' h','Horas de teoría · demo')+
+ metric(d.packs.reduce((n,p)=>n+p.remainingHours,0)+' h','Packs disponibles · demo')+'</div>'+
+ '<div class="portal-box"><div class="toolbar"><h3>Mi avance según el programa de la escuela</h3>'+
+ '<span class="tag">Objetivos de demostración</span></div>'+trainingProgressWidget(d.progress)+
+ '<p class="muted">El ejemplo parte de 40 h de vuelo y 5 h de simulador; cada escuela puede ajustar ambos requisitos. No certifica habilitaciones ni permite sustituir horas de avión por simulador.</p></div></section>'+
+ '<section class="panel"><h2>Mis vuelos de instrucción</h2>'+flightCards(instruction)+
+ '<p class="muted">Este historial muestra únicamente mis vuelos cerrados con instructor; no incluye las horas de teoría ni las sesiones de simulador.</p></section>'+
+ '<section class="panel"><div class="toolbar"><h2>Mis reservas</h2>'+
+ '<button id="openStudentBooking" class="action">+ Solicitar turno</button></div>'+
+ (bookings||'<p class="muted">No tenés solicitudes registradas en esta demostración.</p>')+'</section>'+
+ '<section id="studentBookingPanel" class="panel" '+(!studentBookingOpen?'hidden':'')+'><div class="toolbar"><h2>Solicitar una actividad</h2>'+
+ '<button class="secondary" type="button" id="closeStudentBooking">Cerrar</button></div>'+
+ '<form id="studentBookingForm"><div class="formgrid">'+
+ '<label>Tipo de reserva<select id="studentBookingType">'+options+'</select></label>'+
+ '<label>Recurso<select id="studentBookingResource">'+resources.map(x=>'<option value="'+safe(x.id)+'" data-kind="'+safe(x.kind)+'">'+safe(x.label)+'</option>').join('')+'</select></label>'+
+ '<label>Fecha<input type="date" id="studentBookingDate" value="'+safe(now())+'" required></label>'+
+ '<label>Inicio<input type="time" id="studentBookingStart" value="'+safe(schoolPolicy.openTime)+'" required></label>'+
+ '<label>Final<input type="time" id="studentBookingEnd" value="'+safe(hhmm(minutes(schoolPolicy.openTime)+schoolPolicy.studentDefaultMinutes))+'" required></label></div>'+
+ '<p class="muted">Duración mínima: '+schoolPolicy.studentMinMinutes+' minutos según la turnera de la escuela. La solicitud queda pendiente hasta que un instructor la acepte.</p>'+
+ '<button class="action" type="submit">Solicitar reserva (demo)</button></form></section>'+
+ '<div class="cols"><section class="panel"><h2>Mi actividad realizada</h2>'+
+ (d.practices.map(x=>'<div class="portal-task"><div><strong>'+safe(x.topics)+'</strong><div class="portal-small">'+
+ safe(x.date)+' · '+safe(portalType(x.type))+' · '+safe(x.minutes)+' min</div></div>'+
+ '<span class="agenda-pill">Registrada</span></div>').join('')||'<p class="muted">Sin prácticas evaluadas todavía.</p>')+
+ (d.groundActivities.map(x=>'<div class="portal-task"><span>'+safe(portalType(x.type))+' · '+safe(x.date)+'</span>'+
+ '<span class="agenda-pill">Realizada (demo)</span></div>').join(''))+'</section>'+
+ '<section class="panel"><h2>Mis packs de horas</h2>'+
+ d.packs.map(p=>'<div class="portal-box"><h3>'+safe(p.description)+'</h3><p>Compradas: '+safe(p.acquiredHours)+' h · Disponibles: '+safe(p.remainingHours)+' h</p>'+
+ '<p class="muted">Ejemplo ficticio. El descuento de horas se habilitará cuando existan movimientos contables reales.</p></div>').join('')+'</section></div>';
+}
+function instructorPortal(){
+ const d=instructorPortalProjection(portalInstructor,reservations,lessons,groundActivities);
+ const assigned= d.assigned.map(b=>{
+  const flight=flights.find(f=>f.reservationId===b.id);
+  const classRecorded=groundActivities.some(a=>a.bookingId===b.id);
+  const assessed=lessons.some(l=>l.bookingId===b.id||flight&&l.flightId===flight.id);
+  const completed=b.type==='flight'||!b.type?Boolean(flight):classRecorded;
+  return '<div class="portal-task"><div><strong>'+safe(portalType(b.type))+' · '+safe(portalLabel(b.pilot))+'</strong>'+
+   '<div class="portal-small">'+portalDate(b)+' · '+safe(portalResource(b))+'</div>'+
+   '<div class="portal-small">'+(completed?'Actividad realizada (demo)':'Actividad pendiente de registro')+
+   (assessed?' · Evaluación registrada':' · Evolución pendiente')+'</div></div><div class="portal-actions">'+
+   (b.type!=='flight'&&b.type&&!classRecorded?
+    '<button class="secondary" type="button" data-instructor-complete="'+safe(b.id)+'">Registrar clase realizada</button>':'')+
+   (completed&&!assessed?'<button class="action" type="button" data-instructor-evaluate="'+safe(b.id)+'">Registrar evolución</button>':'')+
+   '</div></div>';
+ }).join('');
+ const pending=d.pending.map(b=>'<div class="portal-task"><div><strong>'+safe(portalType(b.type))+' · '+safe(portalLabel(b.pilot))+'</strong>'+
+ '<div class="portal-small">'+portalDate(b)+' · '+safe(portalResource(b))+'</div></div>'+
+ '<button class="action" type="button" data-instructor-take="'+safe(b.id)+'">Tomar reserva</button></div>').join('');
+ return '<section class="panel"><div class="portal-title"><h2>Área reservada para instructores · Demo</h2>'+
+ '<span class="tag">Solo perfil instructor en producción</span></div>'+
+ '<p class="portal-private">La vista de instructor está separada de la del alumno. Permite tomar reservas, registrar clases y evaluar la evolución de alumnos asignados. Las cuentas reales tendrán permisos de servidor y no dependerán de cambiar una pantalla.</p>'+
+ '<div class="portal-metrics">'+metric(d.pending.length,'Solicitudes sin asignar')+
+ metric(d.assigned.length,'Turnos tomados por mí')+
+ metric(d.lessons.length,'Evaluaciones realizadas')+'</div></section>'+
+ '<section class="panel"><h2>Solicitudes pendientes de instructor</h2>'+
+ (pending||'<p class="muted">No hay solicitudes pendientes de asignación.</p>')+'</section>'+
+ '<section class="panel"><h2>Mis turnos y seguimiento</h2>'+
+ (assigned||'<p class="muted">Todavía no tomaste reservas de demostración.</p>')+
+ '<p class="muted">Para vuelos, primero debe cerrarse la actividad en Registro de vuelo. Para teoría y simulador, registrá la clase realizada antes de elaborar la evolución.</p></section>'+
+ (instructorEvaluationBooking?instructorEvaluationForm():'');
+}
+function instructorEvaluationForm(){
+ const b=reservations.find(x=>x.id===instructorEvaluationBooking);
+ if(!b||b.instructor!==portalInstructor)return '';
+ return '<section class="panel agenda-form-panel"><div class="toolbar"><h2>Seguimiento pedagógico · '+safe(portalLabel(b.pilot))+'</h2>'+
+ '<button class="secondary" type="button" id="closeInstructorEvaluation">Cerrar</button></div>'+
+ '<form id="instructorEvaluationForm"><div class="formgrid"><label>Actividad<input value="'+safe(portalType(b.type))+'" disabled></label>'+
+ '<label>Alumno<input value="'+safe(portalLabel(b.pilot))+'" disabled></label>'+
+ '<label>Fecha<input value="'+safe(b.date)+'" disabled></label>'+
+ '<label>Duración (minutos)<input id="evaluationMinutes" type="number" min="1" max="600" value="'+safe(minutes(b.end)-minutes(b.start))+'" required></label></div>'+
+ '<label>Temas y ejercicios<textarea id="evaluationTopics" maxlength="1000" required></textarea></label>'+
+ '<label>Evolución observada<textarea id="evaluationProgress" maxlength="1000" required></textarea></label>'+
+ '<label>Dificultades (opcional)<textarea id="evaluationDifficulties" maxlength="1000"></textarea></label>'+
+ '<label>Próximo objetivo<textarea id="evaluationNextGoal" maxlength="1000" required></textarea></label>'+
+ '<label>Valoración<select id="evaluationAssessment">'+Object.entries(ASSESSMENTS).map(([v,label])=>'<option value="'+v+'">'+safe(label)+'</option>').join('')+'</select></label>'+
+ '<button class="action" type="submit">Guardar evaluación del instructor (demo)</button></form>'+
+ '<p class="muted">La evaluación se integra al legajo, conservando la revisión posterior del jefe si corresponde. No acredita horas oficiales por sí sola.</p></section>';
+}
+function directorPortal(){
+ const pending=lessons.filter(x=>x.status==='submitted');
+ const missing=reservations.filter(b=>b.status==='confirmada'&&b.pilot===portalStudent&&
+  ((b.type==='flight'||!b.type)?flights.some(f=>f.reservationId===b.id):
+   groundActivities.some(a=>a.bookingId===b.id))&&
+  !lessons.some(l=>l.bookingId===b.id||flights.some(f=>f.reservationId===b.id&&l.flightId===f.id)));
+ const counts=studentSummary(lessons,portalStudent);
+ const progress=trainingProgress(trainingHours(portalStudent,flights,groundActivities),trainingGoals);
+ return '<section class="panel"><div class="portal-title"><h2>Seguimiento de Dirección / Jefatura</h2><span class="tag">Supervisión · Demo admin</span></div>'+
+ '<p class="portal-private">Vista para director o jefe de instructores autorizado: progreso por alumno, fichas pendientes, devoluciones y clases sin evaluación. La jefatura puede ser opcional según el régimen de la escuela.</p>'+
+ '<div class="portal-metrics">'+metric(counts.lessons,'Evaluaciones cargadas')+
+ metric(pending.length,'Pendientes de revisión')+metric(missing.length,'Clases sin evaluación')+'</div></section>'+
+ trainingGoalSettings()+
+ '<section class="panel"><div class="toolbar"><h2>Avance del alumno de prueba</h2>'+
+ '<button class="secondary" type="button" id="openTrainingGoals">Configurar programa</button></div>'+
+ trainingProgressWidget(progress)+
+ '<p><strong>'+safe(portalLabel(portalStudent))+'</strong> · Clases registradas: '+counts.lessons+
+ ' · Fichas revisadas: '+counts.approved+' · Cerradas por instructor: '+counts.instructorClosed+
+ ' · Devueltas: '+counts.returned+'</p>'+
+ '<p class="muted">Para revisar evaluaciones o gestionar el RAV institucional, usá Pilotos y alumnos. El alumno no puede aprobar documentación institucional.</p>'+
+ '<button class="secondary" type="button" data-go="personas">Abrir seguimiento y gestión de RAV</button></section>';
+}
+let studentBookingOpen=false,instructorEvaluationBooking='';
+function dashboard(){
+ const hours=flights.reduce((sum,x)=>sum+x.blockHours,0),turns=reservations.filter(r=>r.status==='confirmada').length;
+ const links=[['reservas','Agenda y reservas','Turnos y disponibilidad'],['vuelos','Registro de vuelos','Actividad y horas'],['flota','Aeronaves y mantenimiento','Flota y vencimientos'],['admin_personas','Personal y usuarios','Perfiles de prueba'],['admin_academia','Biblioteca de formación','Publicar fichas de teoría y CRM'],['finanzas','Contabilidad y Finanzas','Gastos generales y caja chica'],['stock','Combustible y aceite','Stock institucional'],['documentos','Documentos y avisos','Documentación y alertas']];
+ return '<div class="metrics">'+metric(fleet.length,'Aeronaves demo')+metric(turns,'Reservas de prueba')+metric(flights.length,'Vuelos cerrados demo')+metric(hours.toFixed(1)+' h','Horas registradas demo')+'</div>'+
+ '<section class="panel"><h2>Panel administrativo de la escuela</h2><p>Accesos de gestión institucional independientes de los espacios del alumno y del instructor.</p><div class="quick-areas">'+
+ links.map(([key,title,description])=>'<button type="button" class="quick-area" data-go="'+key+'"><b>'+title+'</b><span>'+description+'</span></button>').join('')+
+ '</div></section><section class="panel"><h2>Estado de implementación</h2><div class="grid3">'+
+ '<div class="card"><h3>Demostración funcional</h3><p>Agenda, reservas, vuelos y stock con datos ficticios compartidos en esta sesión.</p><span class="pill">Demo</span></div>'+
+ '<div class="card"><h3>Áreas independientes</h3><p>Alumno, instructor/jefatura y administración con menú y navegación propios.</p><span class="pill">Interfaz separada</span></div>'+
+ '<div class="card"><h3>Antes de usar con escuelas</h3><p>Faltan cuentas, permisos y persistencia multiinstitución reales.</p><span class="pill uncertain">Desarrollo pendiente</span></div></div></section>';
+}
+function schoolTurneraSettings(){
+ if(!schoolSettingsOpen)return '';
+ const p=schoolPolicy,dayNames=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+ const minutesField=(id,label,value)=>
+  '<label>'+label+'<input type="number" id="'+id+'" min="15" max="480" step="15" value="'+safe(value)+'" required></label>';
+ const weekdays=dayNames.map((day,i)=>'<label><input type="checkbox" name="schoolDay" value="'+i+'" '+
+  (p.availableWeekdays.includes(i)?'checked':'')+'><span>'+day+'</span></label>').join('');
+ return '<section class="panel school-settings" id="schoolTurneraPanel"><div class="toolbar"><h2>Configurar turnera · Escuela de prueba</h2>'+
+ '<button type="button" class="secondary" id="closeSchoolSettings">Cerrar configuración</button></div>'+
+ '<p>Adaptá los horarios y las duraciones según la organización de tu escuela. Los 90 minutos para alumnos son el valor inicial, pero podés cambiarlos. La configuración se conserva solo en este navegador para el administrador. No se comparte aún entre usuarios ni instituciones.</p>'+
+ '<form id="schoolSettingsForm"><div class="formgrid">'+
+ '<label>Nombre de la escuela<input id="schoolName" maxlength="80" value="'+safe(p.schoolName)+'" required></label>'+
+ '<label>Inicio de jornada<input type="time" id="schoolOpen" value="'+safe(p.openTime)+'" required></label>'+
+ '<label>Fin de jornada<input type="time" id="schoolClose" value="'+safe(p.closeTime)+'" required></label>'+
+ '<label>Intervalo para iniciar turnos<select id="schoolSlot">'+[15,30,60].map(x=>'<option value="'+x+'" '+(p.slotMinutes===x?'selected':'')+'>'+x+' minutos</option>').join('')+'</select></label>'+
+ minutesField('schoolStudentMin','Duración mínima alumno (min)',p.studentMinMinutes)+
+ minutesField('schoolStudentSuggested','Duración sugerida alumno (min)',p.studentDefaultMinutes)+
+ minutesField('schoolPilotSuggested','Duración sugerida piloto (min)',p.pilotDefaultMinutes)+
+ '</div><p class="muted" style="margin-top:12px">Días habilitados para recibir reservas</p>'+
+ '<div class="school-days">'+weekdays+'</div>'+
+ '<div class="school-days">'+
+ '<label><input type="checkbox" id="schoolShowActivity" '+(p.showActivity?'checked':'')+'>Campo actividad</label>'+
+ '<label><input type="checkbox" id="schoolShowNotes" '+(p.showNotes?'checked':'')+'>Campo observaciones</label></div>'+
+ '<div class="training-actions"><button class="action" type="submit">Guardar turnera (solo demo)</button>'+
+ '<button type="button" class="secondary" id="schoolReset">Restaurar valores iniciales</button></div></form>'+
+ '<p class="muted">Estas reglas se aplican a nuevas reservas y a modificaciones; las ya confirmadas mantienen sus horarios hasta que se editen. No sustituye validaciones documentales ni de aeronavegabilidad.</p></section>';
+}
+function calendar(){
+ const dates=agendaView==='week'?listWeek(week):[week];
+ const shown=visibleBookings(reservations,dates,agendaAircraft,agendaInstructor);
+ const range=timeWindow(shown,schoolPolicy.openTime,schoolPolicy.closeTime),px=schoolPolicy.slotMinutes===15?80:schoolPolicy.slotMinutes===30?64:52,boardHeight=(range.end-range.start)/60*px;
+ const startHour=Math.floor(range.start/60),endHour=Math.ceil(range.end/60);
+ const hours=Array.from({length:endHour-startHour},(_,i)=>startHour+i);
+ const short=s=>shortDay(s).replace(/\./g,'');
+ const eventHtml=date=>layoutDay(shown,date,range.start,px).map(b=>{
+  const pilot=members.find(p=>p.id===b.pilot)?.name||b.pilot;
+  const width=100/b.lanes,left=b.lane*width;
+  const styling='top:'+b.top+'px;height:'+b.height+'px;left:calc('+left+'% + 3px);width:calc('+width+'% - 6px)';
+  const title=b.start+'–'+b.end+' · '+portalType(b.type)+' · '+portalResource(b)+' · '+pilot+
+   (b.instructor?' · '+(members.find(p=>p.id===b.instructor)?.name||b.instructor):'');
+  return '<button type="button" class="agenda-event '+(b.instructor?'demo-flight ':'')+
+   (agendaSelectedBooking===b.id?'is-selected':'')+'" data-agenda-event="'+safe(b.id)+'" style="'+styling+
+   '" title="'+safe(title)+'" aria-label="Ver reserva de prueba: '+safe(title)+'">'+
+   '<small>'+safe(b.start)+'–'+safe(b.end)+'</small><b>'+safe(portalResource(b))+'</b>'+ 
+   '<small>'+safe(pilot)+'</small></button>';
+ }).join('');
+ const headings=dates.map(d=>'<div class="agenda-day-heading '+(d===now()?'today':'')+' '+(schoolPolicy.availableWeekdays.includes(new Date(d+'T12:00:00Z').getUTCDay())?'':'day-closed')+'"><strong>'+safe(short(d))+'</strong>'+
+  '<small>'+safe(d)+(schoolPolicy.availableWeekdays.includes(new Date(d+'T12:00:00Z').getUTCDay())?'':' · cerrado')+'</small></div>').join('');
+ const clock='<div class="agenda-clock" style="height:'+boardHeight+'px">'+
+  hours.map(h=>'<span class="agenda-clock-label" style="top:'+((h-startHour)*px)+'px">'+hhmm(h*60)+'</span>').join('')+
+  '<span class="agenda-clock-label" style="top:'+boardHeight+'px">'+hhmm(range.end)+'</span></div>';
+ const columns=dates.map(date=>{
+  const closed=!schoolPolicy.availableWeekdays.includes(new Date(date+'T12:00:00Z').getUTCDay());
+  const step=schoolPolicy.slotMinutes;
+  const cells=hours.flatMap(h=>Array.from({length:60/step},(_,i)=>h*60+i*step)).map(t=>{
+   const time=hhmm(t),disabled=closed||t<minutes(schoolPolicy.openTime)||t>=minutes(schoolPolicy.closeTime);
+   return '<button type="button" class="agenda-hour-slot" style="height:'+(px*step/60)+'px"'+
+    (disabled?' disabled':'')+' data-agenda-date="'+date+'" data-agenda-time="'+time+
+    '" aria-label="Nueva reserva el '+date+' a las '+time+'"><span>+ Reservar '+time+'</span></button>';
+  }).join('');
+  return '<div class="agenda-day-surface '+(closed?'day-closed':'')+'" style="height:'+boardHeight+'px;--agenda-hour-height:'+px+'px" data-agenda-day="'+date+'">'+
+   cells+eventHtml(date)+'</div>';
+ }).join('');
+ const controls='<div class="agenda-controls">'+
+  '<button type="button" data-agenda-shift="-1" title="Anterior" aria-label="Período anterior">‹</button>'+
+  '<button type="button" data-agenda-today>Hoy</button>'+
+  '<button type="button" data-agenda-shift="1" title="Siguiente" aria-label="Período siguiente">›</button>'+
+  '<label><span class="visually-hidden">Fecha de referencia</span><input id="week" aria-label="Fecha de referencia" type="date" value="'+safe(week)+'"></label>'+
+  '<button type="button" data-agenda-view="week" class="'+(agendaView==='week'?'agenda-active':'')+'" aria-pressed="'+(agendaView==='week')+'">Semana</button>'+
+  '<button type="button" data-agenda-view="day" class="'+(agendaView==='day'?'agenda-active':'')+'" aria-pressed="'+(agendaView==='day')+'">Día</button>'+
+  '<button type="button" class="agenda-create" id="newBooking">+ Nueva reserva</button>'+ 
+  '<button type="button" id="openSchoolSettings" title="Adaptar horarios y duraciones de la escuela">Configurar turnera</button></div>';
+ const filters='<div class="agenda-filters">'+
+  '<label>Recurso<select id="agendaFilterAircraft"><option value="all">Todos los recursos</option>'+ 
+   (fleet.map(a=>'<option value="'+safe(a.id)+'" '+(agendaAircraft===a.id?'selected':'')+'>'+safe(a.id)+' · '+safe(a.model)+'</option>').join('')+DEMO_RESOURCES.map(a=>'<option value="'+safe(a.id)+'" '+(agendaAircraft===a.id?'selected':'')+'>'+safe(a.name)+'</option>').join(''))+'</select></label>'+ 
+  '<label>Instructor<select id="agendaFilterInstructor"><option value="all">Todos los instructores</option>'+
+   members.filter(p=>p.kind==='instructor').map(p=>'<option value="'+safe(p.id)+'" '+(agendaInstructor===p.id?'selected':'')+'>'+safe(p.name)+'</option>').join('')+'</select></label>'+
+  '<div class="agenda-legend"><span><i class="agenda-dot"></i>Con instructor</span>'+
+   '<span><i class="agenda-dot gold"></i>Turnos particulares</span><span class="agenda-pill">'+shown.length+' turno(s) visibles</span></div></div>';
+ const active=reservations.find(b=>b.id===agendaSelectedBooking&&b.status==='confirmada');
+ const booked=active&&flights.some(f=>f.reservationId===active.id);
+ const selected=active?'<section class="agenda-selected"><div><strong>'+safe(portalResource(active))+' · '+safe(active.start)+'–'+safe(active.end)+'</strong>'+
+  '<p>'+safe(active.date)+' · '+safe(members.find(p=>p.id===active.pilot)?.name||'')+
+  (active.instructor?' · Instructor: '+safe(members.find(p=>p.id===active.instructor)?.name||''):'')+
+  ' · Confirmada (solo demo)</p></div><div class="agenda-small-actions">'+
+  (booked?'<span class="agenda-pill">Vuelo ya cerrado</span>':
+  (active.type&&active.type!=='flight'?'':'<button type="button" class="secondary" data-agenda-edit="'+safe(active.id)+'">Editar</button>')+
+  '<button type="button" class="secondary" data-cancel="'+safe(active.id)+'">Cancelar</button>')+
+  '<button type="button" class="secondary" data-agenda-close>Ocultar</button></div></section>':'';
+ const edit=agendaBookingId?reservations.find(x=>x.id===agendaBookingId&&x.status==='confirmada'):null;
+ const option=(item,value,title,selectedId)=>'<option value="'+safe(item[value])+'" '+(selectedId===item[value]?'selected':'')+'>'+safe(item[title])+'</option>';
+ const date=edit?.date||agendaDraftDate,start=edit?.start||agendaDraftStart;
+ const selectedPerson=members.find(m=>m.id===(edit?.pilot||'p1'));
+ const proposedEnd=minutes(start)+reservationSuggestedMinutes(selectedPerson,schoolPolicy);
+ const end=edit?.end||(proposedEnd<1440?hhmm(proposedEnd):'23:59');
+ const formHtml=agendaFormOpen?'<section class="panel agenda-form-panel" id="bookingPanel"><div class="toolbar"><h2>'+(edit?'Modificar reserva · Demo':'Nueva reserva · Demo')+'</h2>'+
+  '<button type="button" class="secondary" id="closeBooking">Cerrar formulario</button></div>'+
+  '<form id="booking"><div class="formgrid">'+
+  '<label>Aeronave<select id="bookAircraft">'+fleet.map(a=>'<option value="'+safe(a.id)+'" '+((edit?.aircraft||agendaAircraft)===a.id?'selected':'')+'>'+safe(a.id)+' · '+safe(a.model)+'</option>').join('')+'</select></label>'+
+  '<label>Piloto / alumno<select id="bookPilot">'+members.filter(p=>p.kind!=='instructor').map(p=>option(p,'id','name',edit?.pilot||'p1')).join('')+'</select></label>'+
+  '<label>Instructor<select id="bookInstructor"><option value="">Sin instructor</option>'+members.filter(p=>p.kind==='instructor').map(p=>option(p,'id','name',edit?.instructor||'')).join('')+'</select></label>'+
+  '<label>Fecha<input type="date" id="bookDate" value="'+safe(date)+'" required></label>'+
+  '<label>Desde<input type="time" id="bookStart" value="'+safe(start)+'" required></label>'+
+  '<label>Hasta<input type="time" id="bookEnd" value="'+safe(end)+'" required></label></div>'+ 
+  (schoolPolicy.showActivity?'<label>Actividad<select id="bookActivity"><option value="Instrucción">Instrucción</option><option value="Práctica">Práctica</option><option value="Vuelo particular">Vuelo particular</option><option value="Otra">Otra</option></select></label>':'')+
+  (schoolPolicy.showNotes?'<label>Observaciones (opcionales)<input id="bookNotes" maxlength="250" value="'+safe(edit?.notes||'')+'"></label>':'')+
+  '<div class="training-actions"><button type="submit" class="action">'+(edit?'Guardar cambios (demo)':'Confirmar reserva de prueba')+'</button>'+
+  '<button type="button" class="secondary" id="cancelBooking">Cancelar</button></div></form>'+
+  '<p id="bookingDurationHint" class="agenda-booking-note" role="status" aria-live="polite">'+(selectedPerson?.kind==='alumno'?'Alumno: mínimo '+schoolPolicy.studentMinMinutes+' minutos (turnera configurable).':'La duración mínima para alumnos es '+schoolPolicy.studentMinMinutes+' minutos, configurable por la escuela.')+'</p>'+ 
+  '<p class="agenda-booking-note">Validaciones locales de aeronave, instructor, piloto, fechas y conflictos. No comprueba licencias ante ANAC ni garantiza disponibilidad para otros usuarios.</p></section>':'';
+ const table='<details class="panel" id="agendaBookingList"><summary>Ver historial de reservas de demostración ('+reservations.length+')</summary>'+
+  '<div class="table-scroll" style="margin-top:12px"><table><thead><tr><th>Fecha</th><th>Recurso</th><th>Alumno o piloto</th><th>Hora</th><th>Estado</th><th>Acción</th></tr></thead><tbody>'+
+  reservations.slice().sort((a,b)=>b.date.localeCompare(a.date)||b.start.localeCompare(a.start)).map(b=>
+   '<tr><td>'+safe(b.date)+'</td><td>'+safe(portalResource(b))+'</td><td>'+safe(members.find(x=>x.id===b.pilot)?.name||'')+'</td>'+
+   '<td>'+safe(b.start)+'–'+safe(b.end)+'</td><td>'+safe(b.status)+'</td><td>'+
+   (b.status==='confirmada'&&!flights.some(f=>f.reservationId===b.id)?'<button type="button" class="secondary" data-agenda-event="'+safe(b.id)+'">Ver</button>':'—')+
+   '</td></tr>').join('')+
+  (reservations.length?'':'<tr><td colspan="6">Todavía no hay reservas de prueba.</td></tr>')+
+  '</tbody></table></div></details>';
+ return '<section class="panel agenda-shell"><div class="agenda-toolbar"><div class="agenda-heading"><h2>Agenda inteligente de turnos</h2>'+
+  '<p>'+safe(schoolPolicy.schoolName)+' · '+safe(schoolPolicy.openTime)+'–'+safe(schoolPolicy.closeTime)+' · Alumno: mínimo '+schoolPolicy.studentMinMinutes+' min · Demo</p></div>'+controls+'</div>'+
+  filters+'<div class="agenda-scroll"><div class="agenda-columns '+(agendaView==='day'?'day-mode':'')+'">'+
+  '<div class="agenda-clock-heading">HORA</div>'+headings+clock+columns+'</div></div>'+
+  '<p class="agenda-viewnote">Seleccioná una hora libre para preparar un turno; seleccioná un turno para ver sus detalles. Los datos se pierden al recargar y no representan disponibilidad en tiempo real.</p></section>'+
+  schoolTurneraSettings()+formHtml+selected+table;
+}
+function logbookFormScreen(){
+ if(!logbookEditingFlightId)return '';
+ const flight=flights.find(f=>f.id===logbookEditingFlightId);
+ if(!flight)return '';
+ const booking=reservations.find(b=>b.id===flight.reservationId);
+ if(!booking)return '';
+ const stored=flight.logbook||{};
+ const person=members.find(m=>m.id===flight.pilot);
+ const plane=fleet.find(a=>a.id===flight.aircraft);
+ const duration=flight.blockMinutes??Math.round(flight.blockHours*60);
+ const options=(data,selected)=>Object.entries(data).map(([key,label])=>
+  '<option value="'+safe(key)+'" '+(selected===key?'selected':'')+'>'+safe(label)+'</option>').join('');
+ const field=(label,id,val,extras='')=>'<label>'+label+'<input id="'+id+'" '+extras+' value="'+safe(val??'')+'"></label>';
+ const timeFields=(columns,group,values)=>Object.entries(columns).map(([key,label])=>
+  '<label>'+safe(label)+' · minutos<input type="number" data-log-group="'+group+'" data-log-key="'+safe(key)+
+  '" min="0" max="'+duration+'" step="1" value="'+safe(values?.[key]??'')+'" placeholder="0"></label>').join('');
+ return '<section class="panel logbook-form" id="flightLogbookPanel">'+
+  '<div class="toolbar"><h2>Planilla completa · Libro de Vuelo (borrador)</h2>'+
+  '<button class="secondary" id="closeFlightLogbook" type="button">Ocultar planilla</button></div>'+
+  '<p class="muted">'+safe(flight.date)+' · '+safe(person?.name||flight.pilot)+' · '+safe(flight.aircraft)+
+  ' · '+safe(flight.from)+' → '+safe(flight.to)+' · Horarios '+safe(flight.start)+'–'+safe(flight.end)+
+  ' (verificar UTC) · Bloque '+duration+' min</p>'+
+  '<p class="logbook-disclaimer">La hoja distingue tiempo de bloque, actividad asentada y casilleros especializados. No se atribuyen automáticamente las horas a piloto/copiloto ni a vuelo nocturno, instrumental o travesía. Los datos deben cotejarse con el libro en papel y los procedimientos aplicables.</p>'+
+  '<form id="flightLogbookForm"><div class="formgrid">'+
+   '<label>Finalidad del vuelo<select id="logPurpose" required><option value="" '+(!stored.purpose?'selected':'')+
+    ' disabled>Elegí finalidad</option>'+options(LOGBOOK_PURPOSES,stored.purpose)+'</select></label>'+
+   field('Licencia / certificado','logLicense',stored.license,'maxlength="80"')+
+   field('Legajo Nº (referencia)','logLegajo',stored.legajoNumber,'maxlength="40"')+
+   field('Página Nº','logPage',stored.pageNumber,'maxlength="12"')+
+   field('Marca','logMake',stored.aircraftMake,'maxlength="90"')+
+   field('Modelo','logModel',stored.aircraftModel||plane?.model,'maxlength="90"')+
+   field('Potencia','logPower',stored.powerHp,'maxlength="30"')+
+   field('Clase de aeronave','logClass',stored.aircraftClass,'maxlength="50"')+
+   '<label>Minutos declarados en libro<input id="logRecordedFlightMinutes" type="number" min="1" max="'+duration+
+    '" step="1" placeholder="Sin completar" value="'+safe(stored.recordedFlightMinutes??'')+'" required></label>'+
+   '</div>'+
+   '<h3>Tiempos de vuelo · Ocho casilleros de la hoja</h3>'+
+   '<p class="muted">Distribuí los minutos declarados entre sobre aeródromo/travesía, día/noche y piloto/copiloto. La suma debe coincidir con los minutos declarados para el libro.</p>'+
+   '<div class="formgrid">'+timeFields(LOGBOOK_TIME_COLUMNS,'categoryMinutes',stored.categoryMinutes)+'</div>'+
+   '<details class="portal-box"><summary>Discriminación adicional · Instrumentos, instructor y clase de aeronave</summary>'+
+    '<p class="muted">Casilleros adicionales de la página derecha: pueden coincidir con horas ya distribuidas arriba, por lo que NO se suman dos veces al total. Dejá en blanco lo que no corresponda.</p>'+
+    '<div class="formgrid">'+timeFields(LOGBOOK_SPECIAL_COLUMNS,'specialMinutes',stored.specialMinutes)+'</div>'+
+   '</details>'+
+   '<details class="portal-box"><summary>Simulador y certificaciones</summary>'+
+    '<p class="muted">La página derecha incluye Adiestrador terrestre / Simulador (Instructor y Piloto en instrucción). Las horas se registran en la clase de simulador efectivamente realizada y se muestran aparte; no se cargan como horas de vuelo de avión.</p>'+
+    '<label>Referencia u observación para cotejo (NO es una firma certificante)<textarea id="logCertificationNote" maxlength="300">'+
+      safe(stored.certificationNote||'')+'</textarea></label>'+
+   '</details>'+
+   '<div class="training-actions"><button class="action" type="submit">Guardar borrador auxiliar</button>'+
+   '<button class="secondary" id="cancelFlightLogbook" type="button">Cancelar</button></div></form>'+
+   '<p class="logbook-disclaimer">El sistema no acredita piloto al mando, vuelo instrumental ni otras atribuciones aeronáuticas. La sección Certificaciones del papel no se reproduce como firma oficial.</p></section>';
+}
+function logbookSummaryScreen(){
+ const people=members.filter(x=>x.kind==='alumno'||x.kind==='piloto');
+ const id=people.some(x=>x.id===logbookPersonFilter)?logbookPersonFilter:people[0]?.id;
+ if(!id)return '';
+ const sum=logbookSummary(id,flights,groundActivities);
+ const counts=(columns,values)=>Object.entries(columns).filter(([,label])=>label).map(([key,label])=>
+   '<span>'+safe(label)+': <b>'+safe(values?.[key]||0)+' min</b></span>').join('');
+ return '<section class="panel"><div class="toolbar"><h2>Resumen del libro personal · Borrador</h2>'+
+ '<label>Titular<select id="logbookPerson">'+people.map(p=>'<option value="'+safe(p.id)+'" '+(p.id===id?'selected':'')+'>'+safe(p.name)+'</option>').join('')+'</select></label></div>'+
+ '<div class="logbook-summary"><span>Vuelos con ficha: <b>'+sum.flights+'</b></span>'+
+ '<span>Tiempo declarado: <b>'+sum.minutes+' min</b></span>'+
+ '<span>Saldo página anterior: <b>Sin documentar</b></span></div>'+
+ '<details><summary>Distribución sobre aeródromo / travesía (día, noche, piloto, copiloto)</summary>'+
+ '<div class="logbook-summary">'+counts(LOGBOOK_TIME_COLUMNS,sum.categories)+'</div></details>'+
+ '<details><summary>Discriminación especial (instructor, multimotor, instrumentos y otros)</summary>'+
+ '<div class="logbook-summary">'+counts(LOGBOOK_SPECIAL_COLUMNS,sum.special)+'</div></details>'+
+ '<details><summary>Adiestrador terrestre / Simulador (actividad separada)</summary>'+
+ '<div class="logbook-summary">'+counts(LOGBOOK_SIMULATOR_COLUMNS,sum.simulator)+'</div></details>'+
+ '<p class="logbook-disclaimer">Total a página siguiente: pendiente de cotejo con saldo anterior y documentación firmada. Los registros son borradores de demostración, no certificados ni RAV ANAC.</p></section>';
+}
+function flightScreen(){
+ const open=reservations.filter(r=>r.status==='confirmada'&&(!r.type||r.type==='flight')&&!flights.some(f=>f.reservationId===r.id));
+ const types=[
+  ['all','Todos los vuelos'],['instruction','Instrucción con instructor'],
+  ['private','Piloto privado sin instructor'],['coached','Piloto con instructor']];
+ const shown=flights.filter(x=>flightModeFilter==='all'||x.operationType===flightModeFilter)
+  .slice().sort((a,b)=>b.date.localeCompare(a.date)||String(b.createdAt).localeCompare(String(a.createdAt)));
+ const total=(type)=>flights.filter(f=>f.operationType===type).reduce((n,f)=>n+(Number(f.blockMinutes)||Math.round(f.blockHours*60)),0)/60;
+ return '<div class="flight-summary">'+metric(total('instruction').toFixed(2)+' h','Vuelo de instrucción · bloque')+
+  metric(total('private').toFixed(2)+' h','Piloto privado solo · bloque')+
+  metric(flights.length,'Vuelos totales · Demo')+'</div>'+
+ '<section class="panel"><h2>Registrar y cerrar vuelo · Demo</h2>'+
+ '<p>Dos actividades principales: <b>alumno con instructor</b> y <b>piloto privado sin instructor</b>. La modalidad se determina por el titular y la reserva. El tiempo de bloque se calcula por separado del tacómetro; no se acredita automáticamente como experiencia reglamentaria.</p>'+
+ (open.length?'<form id="flightform"><div class="formgrid">'+
+ '<label>Reserva de vuelo confirmada<select id="flightBooking">'+open.map(r=>'<option value="'+safe(r.id)+'">'+safe(r.date)+' · '+safe(r.aircraft)+' · '+safe(members.find(x=>x.id===r.pilot)?.name||r.pilot)+(r.instructor?' · Con instructor':' · Sin instructor')+'</option>').join('')+'</select></label>'+
+ '<label>Origen<input id="flightFrom" maxlength="8" value="SADF" required></label>'+
+ '<label>Destino<input id="flightTo" maxlength="8" value="SADF" required></label>'+
+ '<label>Inicio de bloque<input id="flightStart" type="time" value="10:00" required></label>'+
+ '<label>Fin de bloque<input id="flightEnd" type="time" value="11:00" required></label>'+
+ '<label>Tacómetro inicial<input id="tachStart" type="number" step=".01" min="0" value="1350.0" required></label>'+
+ '<label>Tacómetro final<input id="tachEnd" type="number" step=".01" min="0" value="1351.0" required></label>'+
+ '<label>Aterrizajes<input id="landings" type="number" min="0" max="30" value="1" required></label></div>'+
+ '<button type="submit" class="action">Cerrar vuelo de demostración</button></form>':
+ '<div class="card"><p>Primero necesitás una reserva de vuelo confirmada. Un vuelo ya cerrado no se puede duplicar.</p><button class="secondary" data-go="reservas">Ir a reservas</button></div>')+'</section>'+
+ '<section class="panel"><div class="toolbar"><h2>Historial de registros de vuelo · DEMO</h2>'+
+ '<div class="agenda-controls"><label>Modalidad<select id="flightModeFilter">'+types.map(([key,label])=>
+  '<option value="'+key+'" '+(key===flightModeFilter?'selected':'')+'>'+label+'</option>').join('')+'</select></label>'+
+ '<button id="flightExport" class="secondary" '+(!shown.length?'disabled':'')+'>Exportar CSV (no RAV oficial)</button></div></div>'+
+ '<div class="table-scroll"><table><thead><tr><th>Fecha</th><th>Modalidad</th><th>Matrícula</th><th>Titular e instructor</th><th>Ruta</th><th>Bloque</th><th>Tacómetro Δ</th><th>Aterrizajes</th><th>Libro personal</th></tr></thead><tbody>'+
+ shown.map(f=>'<tr><td>'+safe(f.date)+'</td><td>'+safe(FLIGHT_MODE_LABELS[f.operationType]||'Anterior sin clasificar')+'</td>'+
+ '<td>'+safe(f.aircraft)+'</td><td>'+safe(members.find(x=>x.id===f.pilot)?.name||f.pilot)+
+ (f.instructor?'<div class="muted">Instructor: '+safe(members.find(x=>x.id===f.instructor)?.name||f.instructor)+'</div>':'<div class="muted">Sin instructor</div>')+
+ '</td><td>'+safe(f.from)+' → '+safe(f.to)+'</td><td>'+safe(f.blockHours.toFixed(2))+' h</td><td>'+
+ safe(f.tachDifference.toFixed(2))+' h</td><td>'+safe(f.landings)+'</td><td>'+ (f.logbook?(f.logbook.incomplete?'Borrador incompleto':'Borrador sin certificar'):'Pendiente de completar')+ '<button type="button" class="secondary" data-edit-logbook="'+safe(f.id)+'">'+(f.logbook?'Revisar planilla':'Cargar planilla')+'</button></td></tr>').join('')+
+ (shown.length?'':'<tr><td colspan="9">Sin vuelos para este filtro.</td></tr>')+'</tbody></table></div>'+
+ '<p class="muted">Los usuarios consultan sus propios historiales desde sus áreas personales, no desde el panel administrativo.</p>'+
+ '<p class="muted">CSV auxiliar de registros de vuelo. El RAV institucional se prepara y revisa en Pilotos y alumnos → Gestión de RAV. No certifica horas ante ANAC.</p></section>'+logbookFormScreen()+logbookSummaryScreen();
+}
+function fleetScreen(){
+ const totals=flightTotals(flights,'aircraft');
+ return '<section class="panel"><h2>Flota, mantenimiento y seguros</h2><div class="grid3">'+fleet.map(a=>'<div class="card"><h3>'+safe(a.id)+' · '+safe(a.model)+'</h3><p>Estado de muestra: '+(a.blocked?'Bloqueado':'Disponible administrativamente')+'</p><p>Seguro declarado hasta: '+safe(a.insuranceUntil)+'</p><p>Horas de bloque demo: '+(totals[a.id]||0).toFixed(2)+'</p><p>Tarifa de muestra: '+money(a.rate)+'/h</p><span class="pill uncertain">Datos ficticios</span></div>').join('')+'</div>'+
+ '<p class="muted">Ya existe Mantenimiento de Aeronaves en Utilidades, pero sus datos personales todavía NO están sincronizados con esta demostración.</p>'+
+ '<a class="secondary" href="../mantenimiento-aeronaves.html">Abrir herramienta actual de mantenimiento</a></section>';
+}
+const personName=id=>id===chiefDemoId?'Jefe de Instructores (simulado)':members.find(p=>p.id===id)?.name||id;
+function trainingSettings(){
+ const type=trainingInstitution.institutionType,mode=trainingInstitution.reviewMode;
+ return '<section class="panel"><div class="toolbar"><h2>Organización de la instrucción · Demo</h2>'+
+ '<span class="tag">Configuración por institución</span></div>'+
+ '<p>Elegí cómo se supervisan los legajos. No modifica los registros existentes. En el modo no CIAC sin jefe, el instructor responsable puede cerrar su ficha pedagógica.</p>'+
+ '<div class="formgrid">'+
+ '<label>Régimen institucional declarado<select id="trainingInstitutionType">'+
+ '<option value="non_ciac" '+(type==='non_ciac'?'selected':'')+'>Escuela / aeroclub fuera del régimen CIAC 141</option>'+
+ '<option value="ciac" '+(type==='ciac'?'selected':'')+'>Centro certificado CIAC (RAAC 141)</option>'+
+ '</select></label>'+
+ '<label>Supervisión de fichas<select id="trainingReviewMode">'+
+ '<option value="chief" '+(mode==='chief'?'selected':'')+'>Con jefe de instructores (revisión y aprobación)</option>'+
+ '<option value="instructor" '+(mode==='instructor'?'selected':'')+(type==='ciac'?' disabled':'')+'>Sin jefe: cierre por instructor responsable</option>'+
+ '</select></label></div>'+
+ '<div class="training-note"><b>Advertencia reglamentaria:</b> un CIAC debe cumplir los cargos, designaciones y procedimientos de su MIP según RAAC 141 (edición mayo 2026). El modo sin jefe no habilita a omitir estos requisitos. Esta selección es solo una simulación y no valida la habilitación institucional.</div>'+
+ '</section>';
+}
+function trainingFormMarkup(){
+ const editing=trainingForm.startsWith('edit:')?lessons.find(l=>l.id===trainingForm.slice(5)):null;
+ if(trainingForm!=='new'&&!editing)return '';
+ const student=editing?.studentId||trainingStudent;
+ const instructors=members.filter(p=>p.kind==='instructor');
+ const classes=flights.filter(f=>f.pilot===student&&f.instructor&&(!editing||f.instructor===editing.instructorId));
+ const selectedFlight=classes.find(f=>f.id===(editing?.flightId||trainingPreselectFlight));
+ const option=(p,selected)=>'<option value="'+safe(p.id)+'" '+(p.id===selected?'selected':'')+'>'+safe(p.name)+'</option>';
+ const assessmentOpts=Object.entries(ASSESSMENTS).map(([key,label])=>'<option value="'+key+'" '+(editing?.assessment===key?'selected':'')+'>'+safe(label)+'</option>').join('');
+ const input=(label,id,type,value='',more='')=>'<label>'+label+'<input id="'+id+'" type="'+type+'" value="'+safe(value)+'" '+more+' '+(id==='lessonAircraft'?'':'required')+'></label>';
+ const area=(label,id,value='')=>'<label>'+label+'<textarea id="'+id+'" maxlength="1000" required>'+safe(value)+'</textarea></label>';
+ return '<section class="panel"><h2>'+(editing?'Corregir ficha del instructor':'Registrar nueva clase de instrucción')+'</h2>'+
+ '<p class="training-note">Prototipo: el rol de instructor está simulado desde la cuenta administradora. No utilices datos reales; para operar en una escuela se habilitarán cuentas individuales y autorización en servidor.</p>'+
+ '<form id="training-form" class="training-form"><div class="formgrid">'+
+ '<label>Alumno<select id="lessonStudent" '+(editing?'disabled':'')+'>'+members.filter(m=>m.kind==='alumno').map(p=>option(p,student)).join('')+'</select></label>'+
+ '<label>Instructor responsable<select id="lessonInstructor" '+(editing?'disabled':'')+'>'+instructors.map(p=>option(p,editing?.instructorId||selectedFlight?.instructor||instructors[0]?.id)).join('')+'</select></label>'+
+ input('Fecha de la clase','lessonDate','date',editing?.date||selectedFlight?.date||now())+
+ input('Duración pedagógica (minutos)','lessonMinutes','number',editing?.minutes||60,'min="1" max="600"')+
+ input('Matrícula de práctica (si aplica)','lessonAircraft','text',editing?.aircraft||selectedFlight?.aircraft||'','maxlength="50"')+
+ '<label>Vuelo asociado (opcional)<select id="lessonFlight" '+(editing?'disabled':'')+'><option value="">Clase teórica o sin vuelo asociado</option>'+
+ classes.map(f=>'<option value="'+safe(f.id)+'" '+((editing?.flightId||trainingPreselectFlight)===f.id?'selected':'')+'>'+safe(f.date)+' · '+safe(f.aircraft)+' · '+safe(f.blockHours)+' h bloque · '+safe(personName(f.instructor))+'</option>').join('')+'</select></label>'+
+ '</div><div class="formgrid"><div class="wide">'+area('Temas, ejercicios y maniobras trabajados','lessonTopics',editing?.topics||'')+'</div>'+
+ '<div class="wide">'+area('Evolución respecto de clases anteriores','lessonEvolution',editing?.evolution||'')+'</div>'+
+ '<div class="wide"><label>Dificultades observadas (opcional)<textarea id="lessonDifficulties" maxlength="1000">'+safe(editing?.difficulties||'')+'</textarea></label></div>'+
+ '<div class="wide">'+area('Objetivos y recomendaciones para la próxima clase','lessonGoal',editing?.nextGoal||'')+'</div>'+
+ '<label>Valoración del instructor<select id="lessonAssessment">'+assessmentOpts+'</select></label></div>'+
+ '<div class="training-actions"><button class="action" type="submit">'+(editing?'Guardar nueva revisión':'Guardar borrador de clase')+'</button><button class="secondary" type="button" id="closeTrainingForm">Cerrar planilla</button></div></form></section>';
+}
+function trainingTimeline(){
+ const student=trainingStudent,entries=studentTimeline(lessons,student),summary=studentSummary(lessons,student);
+ const unreported=flights.filter(f=>f.pilot===student&&f.instructor&&!lessons.some(l=>l.flightId===f.id));
+ const missingBlock=unreported.length?'<div class="training-note"><strong>'+unreported.length+' vuelo(s) de instrucción sin ficha de evolución</strong><p>El instructor debe documentar el progreso y finalizar la ficha según la modalidad de la institución.</p>'+
+ unreported.map(f=>'<div class="training-actions"><span>'+safe(f.date)+' · '+safe(f.aircraft)+' · '+safe(personName(f.instructor))+'</span><button class="secondary" type="button" data-prepare-lesson="'+safe(f.id)+'">Preparar ficha pendiente</button></div>').join('')+'</div>':'';
+ const cards=entries.map(l=>{
+  const status=LESSON_STATUS[l.status]||'Estado pendiente';
+  const audit=l.history.map(h=>{
+   const names={created:'Ficha creada',edited:'Ficha corregida',submitted:'Enviada al jefe de instructores',approved:'Revisada y aprobada por el jefe',returned:'Devuelta al instructor',instructor_closed:'Cerrada por instructor responsable'};
+   const description=h.action==='submitted'?'Instantánea de la ficha preservada para auditoría':String(h.detail||'').slice(0,500);
+   return '<div class="training-history-item"><b>'+safe(new Date(h.date).toLocaleString('es-AR'))+' · '+safe(names[h.action]||h.action)+'</b>'+
+    '<p>Responsable: '+safe(personName(h.actor))+' · Revisión '+safe(h.revision)+'</p>'+
+    '<p>'+safe(description)+'</p></div>';
+  }).join('');
+  const editable=['draft','returned'].includes(l.status);
+  const buttons=editable?'<button type="button" class="secondary" data-lesson-edit="'+safe(l.id)+'">Corregir ficha</button>'+
+   (l.status==='draft'?'<button class="action" type="button" data-lesson-send="'+safe(l.id)+'">'+(trainingInstitution.reviewMode==='chief'?'Enviar al jefe de instructores':'Cerrar ficha como instructor (sin jefe)')+'</button>':''):'';
+  return '<article class="training-record"><div class="toolbar"><h3>'+safe(l.date)+' · '+safe(personName(l.instructorId))+'</h3>'+
+   '<span class="training-status '+safe(l.status)+'">'+safe(status)+'</span></div>'+
+   '<p><strong>Clase:</strong> '+safe(l.minutes)+' min · '+(l.flightId?'Vuelo vinculado · '+safe(l.hours)+' h bloque':'Sin vuelo vinculado')+
+   (l.aircraft?' · '+safe(l.aircraft):'')+'</p>'+
+   '<p><strong>Temas:</strong> '+safe(l.topics)+'</p><p><strong>Evolución:</strong> '+safe(l.evolution)+'</p>'+
+   '<p><strong>Dificultades:</strong> '+safe(l.difficulties||'No informadas')+'</p>'+
+   '<p><strong>Próxima clase:</strong> '+safe(l.nextGoal)+'</p><p><strong>Valoración:</strong> '+safe(ASSESSMENTS[l.assessment])+'</p>'+
+   (l.chiefReview?'<p class="training-note"><strong>Última revisión del jefe:</strong> '+safe(LESSON_STATUS[l.chiefReview.decision])+
+    ' · '+safe(l.chiefReview.reason||'Sin observaciones adicionales')+
+    ' · '+safe(l.chiefReview.date.slice(0,10))+'</p>':'')+
+   '<div class="training-actions">'+buttons+'</div>'+
+   '<details><summary>Ver trazabilidad y revisiones ('+l.history.length+')</summary><div class="training-history">'+audit+'</div></details></article>';
+ }).join('');
+ return '<section class="panel" id="training-ledger"><div class="toolbar"><h2>Legajo de evolución del alumno</h2>'+
+ '<button class="secondary" type="button" id="printTraining">Imprimir resumen</button></div>'+
+ '<label>Alumno a consultar<select id="trainingStudent">'+
+ members.filter(m=>m.kind==='alumno').map(m=>'<option value="'+safe(m.id)+'" '+(student===m.id?'selected':'')+'>'+safe(m.name)+'</option>').join('')+
+ '</select></label><div class="metrics" style="margin-top:16px">'+
+ metric(summary.lessons,'Clases registradas')+metric(summary.approved+summary.instructorClosed,'Fichas cerradas')+
+ metric(summary.pending,'Pendientes del jefe')+metric(Math.round(summary.trainingMinutes/60*10)/10+' h','Instrucción pedagógica')+'</div>'+
+ '<p class="muted">Revisadas por jefe: '+summary.approved+' · Cerradas por instructor: '+summary.instructorClosed+' · Devueltas: '+summary.returned+'</p>'+
+ '<div class="training-actions"><button type="button" class="action" id="newTraining">Registrar clase</button></div>'+
+ '<p class="muted">Cada clase guarda instructor, fecha, duración, evolución, dificultades, objetivos y estado de aprobación. Las horas de instrucción pedagógica no se suman automáticamente a la bitácora oficial.</p>'+
+ missingBlock+(cards||'<div class="card"><p>Aún no hay clases registradas para este alumno de demostración.</p></div>')+'</section>';
+}
+function chiefReviewSection(){
+ if(trainingInstitution.reviewMode!=='chief'){
+  const completed=lessons.filter(l=>l.status==='instructor_closed').length;
+  return '<section class="panel"><h2>Consulta administrativa de formación</h2>'+
+   '<p>'+completed+' fichas cerradas por instructores, con historial visible desde cada legajo. No requieren aprobación de jefatura en esta modalidad pedagógica de demostración.</p>'+
+   '<p class="training-note">La administración puede supervisar los legajos, pero el cierre corresponde al instructor asignado. Esto no acredita cumplimiento de requisitos de certificación ANAC.</p></section>';
+ }
+
+ const pending=lessons.filter(l=>l.status==='submitted');
+ const missing=flights.filter(f=>members.some(p=>p.id===f.pilot&&p.kind==='alumno')&&f.instructor&&!lessons.some(l=>l.flightId===f.id));
+ return '<section class="panel"><div class="toolbar"><h2>Jefatura de Instructores · Control de calidad</h2>'+
+ '<span class="training-status submitted">'+pending.length+' por revisar</span></div>'+
+ '<p class="training-note"><b>'+missing.length+' vuelo(s) de alumno sin ficha</b>. La jefatura puede detectar y solicitar la evaluación pendiente.</p>'+
+ missing.map(f=>'<div class="training-record"><b>'+safe(f.date)+' · '+safe(personName(f.pilot))+' · '+safe(f.aircraft)+'</b>'+
+ '<p>Instructor: '+safe(personName(f.instructor))+' · Sin registro pedagógico vinculado</p>'+
+ '<button class="secondary" data-prepare-lesson="'+safe(f.id)+'">Preparar ficha para el instructor</button></div>').join('')+
+ '<p class="training-note"><strong>Rol simulado:</strong> las acciones de jefatura son pruebas realizadas por el administrador. En producción solo el jefe de instructores de la institución podrá aprobar o devolver fichas con su propia identidad y permisos de servidor.</p>'+
+ (pending.map(l=>'<article class="training-record"><h3>'+safe(personName(l.studentId))+' · Clase '+safe(l.date)+'</h3>'+
+ '<p>Instructor: '+safe(personName(l.instructorId))+' · Revisión '+safe(l.revision)+'</p>'+
+ '<p><strong>Temas:</strong> '+safe(l.topics)+'</p><p><strong>Evolución:</strong> '+safe(l.evolution)+'</p>'+
+ '<p><strong>Próxima clase:</strong> '+safe(l.nextGoal)+'</p>'+
+ '<div class="training-actions"><button type="button" class="action" data-chief-approve="'+safe(l.id)+'">Aprobar (simulado)</button>'+
+ '<button type="button" class="secondary" data-chief-return="'+safe(l.id)+'">Devolver con observaciones</button></div></article>').join('')||
+ '<p>No hay fichas pendientes de revisión por jefatura.</p>')+
+ '</section>';
+}
+function ravInstitutionScreen(){
+ const students=members.filter(p=>p.kind==='alumno');
+ const chiefEnabled=trainingInstitution.reviewMode==='chief';
+ const optionsStudents=students.map(p=>'<option value="'+safe(p.id)+'">'+safe(p.name)+'</option>').join('');
+ const a=flights.filter(f=>students.some(p=>p.id===f.pilot)&&f.operationType==='instruction'&&f.instructor);
+ const minDate=a.length?a.reduce((m,f)=>f.date<m?f.date:m,a[0].date):now().slice(0,7)+'-01';
+ const maxDate=a.length?a.reduce((m,f)=>f.date>m?f.date:m,a[0].date):now();
+ const form=ravFormOpen?'<div class="portal-box" id="ravFormPanel">'+
+  '<div class="toolbar"><h3>Preparar RAV institucional · Datos de demostración</h3>'+
+  '<button type="button" class="secondary" id="closeRavForm">Cerrar planilla</button></div>'+
+  '<form id="ravCreateForm"><div class="formgrid">'+
+  '<label>Alumno<select id="ravStudent" required>'+optionsStudents+'</select></label>'+
+  '<label>Desde<input id="ravFrom" type="date" value="'+safe(minDate)+'" required></label>'+
+  '<label>Hasta<input id="ravTo" type="date" value="'+safe(maxDate)+'" required></label></div>'+
+  '<p class="muted">Se tomarán únicamente vuelos de instrucción cerrados con instructor en el período, sin registrar otro vuelo ni agregar horas. No se permite duplicar un vuelo ya incluido en otro RAV activo.</p>'+
+  '<button class="action" type="submit">Crear borrador para revisión</button></form></div>':'';
+ const entries=ravRecords.slice().reverse().map(item=>{
+  const totals=ravFlightTotals(item,flights);
+  const student=members.find(x=>x.id===item.studentId)?.name||'Alumno no encontrado';
+  const unassessed=flights.filter(f=>item.flightIds.includes(f.id)&&!lessons.some(l=>l.flightId===f.id)).length;
+  return '<article class="rav-item"><div class="toolbar"><strong>'+safe(student)+' · '+safe(item.dateFrom)+' a '+safe(item.dateTo)+'</strong>'+
+   '<span class="rav-status-label">'+safe(RAV_STATES[item.status])+'</span></div>'+
+   '<p>'+totals.count+' vuelos de instrucción · '+totals.minutes+' minutos de bloque de referencia · Aeronaves: '+
+   safe(totals.aircraft.join(', '))+'</p>'+
+   (unassessed?'<p>'+unassessed+' vuelo(s) sin evaluación pedagógica: revisar legajos antes de utilizar como respaldo.</p>':'')+
+   '<p>Registro institucional de prueba. No contiene firmas habilitadas, certificaciones ni validación ANAC.</p>'+
+   '<div class="training-actions">'+
+    ((item.status==='draft'||item.status==='returned')?
+      '<button type="button" class="secondary" data-rav-submit="'+safe(item.id)+'">Enviar a revisión</button>':'')+
+    (item.status==='submitted'?
+      '<button type="button" class="action" data-rav-review="'+safe(item.id)+'">Marcar revisión interna (sin firmar)</button>'+
+      '<button type="button" class="secondary" data-rav-return="'+safe(item.id)+'">Devolver con observaciones</button>':'')+
+    '</div>'+
+   '<details><summary>Ver historial de decisiones de demostración</summary>'+
+   '<div class="table-scroll"><table><thead><tr><th>Evento</th><th>Responsable</th><th>Fecha</th></tr></thead><tbody>'+
+   (item.history||[]).map(h=>'<tr><td>'+safe(h.action)+'</td><td>'+safe(h.actor)+'</td><td>'+safe(h.at)+'</td></tr>').join('')+
+   '</tbody></table></div></details></article>';
+ }).join('');
+ return '<section class="panel rav-institution-panel" id="ravInstitutionSection">'+
+  '<div class="toolbar"><h2>Gestión institucional de RAV · Dirección / Administración</h2>'+
+  '<button type="button" class="action" id="openRavForm">+ Preparar RAV</button></div>'+
+  '<p class="portal-private">Este espacio está reservado para la dirección o responsable institucional facultado para revisar y gestionar el RAV. El alumno solo consulta su actividad y no puede generar ni validar un RAV institucional. En la DEMO únicamente el administrador puede simular estas funciones.</p>'+
+  '<div class="rav-process"><span>1. Registro único de vuelo</span><span>2. Borrador RAV</span>'+
+  '<span>3. Revisión de dirección'+(chiefEnabled?' / jefatura':'')+'</span><span>4. Certificación fuera de la DEMO</span></div>'+
+  '<p class="logbook-disclaimer">El RAV de demostración NO se firma, certifica, presenta ni registra ante ANAC. Las acciones de revisión son internas y deben realizarse por usuarios habilitados y verificados antes de operar con escuelas reales.</p>'+
+  '<p class="muted">Vuelos de instrucción cerrados disponibles: '+a.length+'. RAV de prueba preparados: '+ravRecords.length+'.</p>'+
+  form+(entries||'<p class="muted">Todavía no hay RAV de demostración. Cerrá primero un vuelo de instrucción desde Registro de vuelo y prepará el borrador aquí.</p>')+
+  '</section>';
+}
+function adminPeopleScreen(){
+ const totals=flightTotals(flights,'pilot');
+ return '<section class="panel"><h2>Personal y usuarios de la escuela</h2><p>Consulta administrativa de perfiles ficticios. No habilita ver ni editar las evaluaciones pedagógicas del área de instrucción.</p>'+
+ '<div class="table-scroll"><table><thead><tr><th>Persona</th><th>Rol</th><th>Licencia declarada</th><th>Horas demo</th></tr></thead><tbody>'+
+ members.map(p=>'<tr><td>'+safe(p.name)+'</td><td>'+safe(p.kind)+'</td><td>'+safe(p.licenseUntil)+'</td><td>'+safe((totals[p.id]||0).toFixed(2))+' h</td></tr>').join('')+
+ '</tbody></table></div><p class="muted">La gestión efectiva de permisos multiinstitución se implementará más adelante.</p></section>';
+}
+function memberScreen(){
+ const totals=flightTotals(flights,'pilot');
+ return '<section class="panel"><h2>Pilotos, alumnos e instructores</h2>'+
+ '<p>Perfiles ficticios. La primera versión operativa requerirá cuentas individuales y permisos de instructor, alumno y jefe.</p>'+
+ '<div class="table-scroll"><table><thead><tr><th>Perfil de prueba</th><th>Rol</th><th>Licencia declarada</th><th>CMA declarada</th><th>Horas bloque</th></tr></thead><tbody>'+
+ members.map(p=>'<tr><td>'+safe(p.name)+'</td><td>'+safe(p.kind)+'</td><td>'+safe(p.licenseUntil)+'</td><td>'+safe(p.cmaUntil)+'</td><td>'+(totals[p.id]||0).toFixed(2)+'</td></tr>').join('')+
+ '</tbody></table></div></section>'+
+ trainingSettings()+trainingTimeline()+trainingFormMarkup()+chiefReviewSection()+ravInstitutionScreen();
+}
+
+const fm=n=>(n/100).toLocaleString('es-AR',{style:'currency',currency:'ARS',minimumFractionDigits:2,maximumFractionDigits:2});
+const finOptions=(obj,current)=>Object.entries(obj).map(([k,v])=>'<option value="'+safe(k)+'" '+(k===current?'selected':'')+'>'+safe(v)+'</option>').join('');
+function financeScreen(){
+ const r=financeReport(financeEntries,{period:financePeriod,area:financeArea});
+ const months=[...new Set([now().slice(0,7),...financeEntries.map(x=>x.date.slice(0,7))])].sort().reverse();
+ const periodOptions='<option value="todos">Todos los meses</option>'+months.map(x=>'<option '+(financePeriod===x?'selected':'')+' value="'+x+'">'+x+'</option>').join('');
+ const balances=Object.entries(FINANCE_ACCOUNTS).map(([k,v])=>'<div><span>'+safe(v)+' · saldo acumulado</span><strong>'+fm(r.balances[k])+'</strong></div>').join('');
+ const sectorRows=['escuela','aerodromo','compartido'].map(k=>'<tr><td>'+safe(FINANCE_AREAS[k])+'</td><td>'+fm(r.byArea[k].income)+'</td><td>'+fm(r.byArea[k].expenses)+'</td><td>'+fm(r.byArea[k].income-r.byArea[k].expenses)+'</td></tr>').join('');
+ const expenseRows=Object.entries(r.expenseCategories).sort((x,y)=>y[1]-x[1]).map(([k,v])=>'<tr><td>'+safe(k)+'</td><td>'+fm(v)+'</td></tr>').join('');
+ const movements=r.rows.slice().reverse().map(x=>'<tr><td>'+safe(x.date)+'</td><td>'+safe(FINANCE_AREAS[x.area])+'</td><td>'+safe(FINANCE_KINDS[x.kind])+'</td><td>'+safe(x.category)+'</td><td>'+safe(x.concept)+(x.reference?' · '+safe(x.reference):'')+'</td><td>'+safe(FINANCE_ACCOUNTS[x.account])+(x.destination?' → '+safe(FINANCE_ACCOUNTS[x.destination]):'')+'</td><td>'+(x.kind==='egreso'?'−':x.kind==='transferencia'?'↔ ':'+')+fm(x.cents)+'</td></tr>').join('');
+ return '<section class="panel"><h2>Balance general · Escuela de vuelo y Aeródromo</h2><p>Control de ingresos, servicios (agua, luz, gas), corte de pasto, impuestos, mantenimiento, reparaciones e imprevistos.</p>'+
+ '<div class="fin-explainer"><strong>DEMO:</strong> movimientos ficticios solo durante esta sesión, se pierden al recargar. Los vuelos valorizados y el stock no son cobros ni pagos. Una reposición de caja chica es una transferencia, no un ingreso.</div>'+
+ '<div class="fin-controls"><label>Período<select id="financePeriod">'+periodOptions+'</select></label><label>Sector<select id="financeFilterArea">'+finOptions({todos:'Todos',escuela:'Escuela de vuelo',aerodromo:'Aeródromo',compartido:'Compartido'},financeArea)+'</select></label></div></section>'+
+ '<div class="fin-metrics"><div><span>Ingresos operativos</span><strong>'+fm(r.income)+'</strong></div><div><span>Egresos operativos</span><strong>'+fm(r.expenses)+'</strong></div><div><span>Resultado del filtro</span><strong>'+fm(r.net)+'</strong></div></div>'+
+ '<section class="panel"><h2>Saldos de fondos y caja chica</h2><div class="fin-funds">'+balances+'</div><p class="muted">Los saldos son acumulados. Registrá una apertura inicial para disponer fondos; transferí dinero desde banco o caja general a caja chica para reponerla sin duplicar ingresos.</p></section>'+
+ '<section class="panel"><h2>Registrar movimiento de prueba</h2><form id="financeForm"><div class="formgrid">'+
+ '<label>Operación<select id="finKind">'+finOptions(FINANCE_KINDS,'egreso')+'</select></label>'+
+ '<label>Fecha<input id="finDate" type="date" value="'+now()+'" required></label>'+
+ '<label id="finAreaBox">Sector<select id="finArea">'+finOptions({escuela:'Escuela',aerodromo:'Aeródromo',compartido:'Compartido'},'aerodromo')+'</select></label>'+
+ '<label id="finCategoryBox">Categoría<select id="finCategory">'+FINANCE_CATEGORIES.egreso.map(x=>'<option>'+safe(x)+'</option>').join('')+'</select></label>'+
+ '<label>Cuenta de origen o movimiento<select id="finAccount">'+finOptions(FINANCE_ACCOUNTS,'caja_general')+'</select></label>'+
+ '<label id="finTargetBox" hidden>Destino de transferencia<select id="finTarget">'+finOptions(FINANCE_ACCOUNTS,'caja_chica')+'</select></label>'+
+ '<label>Importe en pesos<input id="finAmount" type="number" step="0.01" min="0.01" max="9999999999.99" required></label>'+
+ '<label>Concepto / proveedor<input id="finConcept" maxlength="150" required placeholder="Ej. Reparación de instalaciones"></label>'+
+ '<label>Número de comprobante<input id="finReference" maxlength="100" placeholder="Opcional"></label>'+
+ '<label class="wide">Observaciones<textarea id="finNotes" rows="2" maxlength="500"></textarea></label>'+
+ '</div><button type="submit" class="action">Guardar movimiento demo</button></form></section>'+
+ '<section class="panel"><h2>Balance por área</h2><div class="table-scroll"><table><thead><tr><th>Área</th><th>Ingresos</th><th>Gastos</th><th>Resultado</th></tr></thead><tbody>'+sectorRows+'</tbody></table></div>'+
+ '<h2>Gastos por categoría</h2>'+(expenseRows?'<div class="table-scroll"><table><thead><tr><th>Categoría</th><th>Total</th></tr></thead><tbody>'+expenseRows+'</tbody></table></div>':'<p class="muted">Sin egresos en el filtro.</p>')+'</section>'+
+ '<section class="panel"><div class="toolbar"><h2>Historial de ingresos, egresos y transferencias</h2><button id="finExport" class="secondary" '+(r.rows.length?'':'disabled')+'>Exportar CSV</button></div>'+
+ '<div class="table-scroll"><table><thead><tr><th>Fecha</th><th>Área</th><th>Tipo</th><th>Categoría</th><th>Detalle</th><th>Cuenta</th><th>Importe</th></tr></thead><tbody>'+
+ (movements||'<tr><td colspan="7">No hay movimientos para este filtro.</td></tr>')+'</tbody></table></div></section>';
+}
+function wireFinance(){
+ const kind=$('finKind'),category=$('finCategory');
+ function fields(){
+  const operative=kind.value==='ingreso'||kind.value==='egreso';
+  $('finAreaBox').hidden=!operative;$('finCategoryBox').hidden=!operative;$('finTargetBox').hidden=kind.value!=='transferencia';
+  if(operative)category.innerHTML=FINANCE_CATEGORIES[kind.value].map(x=>'<option>'+safe(x)+'</option>').join('');
+  const c=$('finConcept');
+  if(!operative&&(!c.value||c.value==='Saldo inicial'||c.value==='Transferencia interna'))c.value=kind.value==='apertura'?'Saldo inicial':'Transferencia interna';
+  if(operative&&(c.value==='Saldo inicial'||c.value==='Transferencia interna'))c.value='';
+ }
+ kind.addEventListener('change',fields);fields();
+ $('financePeriod').addEventListener('change',e=>{financePeriod=e.target.value;render()});
+ $('financeFilterArea').addEventListener('change',e=>{financeArea=e.target.value;render()});
+ $('financeForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  try{
+   const row=makeFinanceEntry({kind:kind.value,date:$('finDate').value,area:$('finArea').value,category:category.value,account:$('finAccount').value,
+    destination:$('finTarget').value,amount:$('finAmount').value,concept:$('finConcept').value,reference:$('finReference').value,notes:$('finNotes').value},financeEntries);
+   financeEntries.push({...row,id:'fin-demo-'+Date.now()});financeArea='todos';financePeriod='todos';
+   render();notice('Movimiento de prueba registrado. Los saldos son de DEMOSTRACIÓN y no se guardan permanentemente.');
+  }catch(error){notice(error.message)}
+ });
+ $('finExport').addEventListener('click',()=>{
+  const records=financeReport(financeEntries,{period:financePeriod,area:financeArea}).rows;
+  const lines=[['Fecha','Área','Tipo','Categoría','Concepto','Cuenta','Destino','Importe ARS','Comprobante'],
+   ...records.map(x=>[x.date,FINANCE_AREAS[x.area],FINANCE_KINDS[x.kind],x.category,x.concept,FINANCE_ACCOUNTS[x.account],FINANCE_ACCOUNTS[x.destination]||'',(x.cents/100).toFixed(2),x.reference])];
+  const quote=value=>'"'+String(value??'').replace(/[\r\n]/g,' ').replace(/"/g,'""').replace(/^[=+@-]/,"'$&")+'"';
+  const blob=new Blob(['\ufeff'+lines.map(row=>row.map(quote).join(';')).join('\r\n')],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='aerosuite-finanzas-demo.csv';a.click();URL.revokeObjectURL(url);
+ });
+}
+function stockScreen(){
+ return '<section class="panel"><h2>Combustible, aceite y stock institucional · Demo</h2><p>Registrar entradas y salidas de prueba con mínimos configurables. Las cargas a aeronaves, compras de proveedor, costo y venta por litro y su vínculo con contabilidad se conectarán en una etapa posterior.</p>'+
+ '<div class="grid3">'+products.map(p=>'<div class="card"><h3>'+safe(p.name)+'</h3><p>Disponible: <b>'+safe(p.qty)+' '+safe(p.unit)+'</b></p><p>Mínimo configurado: '+p.min+' '+safe(p.unit)+'</p><p>Precio de compra demo: '+money(p.cost)+' / '+safe(p.unit)+'</p><p>Venta demo: '+money(p.sale)+' / '+safe(p.unit)+'</p><span class="pill '+(p.qty<p.min?'uncertain':'')+'">'+(p.qty<p.min?'Reponer':'Stock registrado')+'</span></div>').join('')+'</div></section>'+
+ '<section class="panel"><h2>Movimiento de stock · Sin guardado real</h2><form id="stockform"><div class="formgrid"><label>Producto<select id="stockItem">'+options(products)+'</select></label><label>Movimiento<select id="stockKind"><option value="entrada">Ingreso / compra</option><option value="salida">Salida / utilización</option></select></label><label>Cantidad<input type="number" id="stockQty" min=".01" step=".01" required></label></div><button type="submit" class="action">Registrar movimiento de prueba</button></form></section>'+
+ '<section class="panel"><h2>Historial de movimientos de prueba</h2><div class="table-scroll"><table><thead><tr><th>Producto</th><th>Movimiento</th><th>Cantidad</th></tr></thead><tbody>'+movements.map(m=>'<tr><td>'+safe(m.item)+'</td><td>'+safe(m.kind)+'</td><td>'+safe(m.qty)+'</td></tr>').join('')+
+ (movements.length?'':'<tr><td colspan="3">Sin movimientos.</td></tr>')+'</tbody></table></div></section>';
+}
+function academyScreen(){
+ return '<section class="panel"><h2>Mi biblioteca de teoría y práctica · Academia y Simu PPA</h2><p>Accedé al Simulador PPA y a la biblioteca de fichas de teoría aeronáutica y CRM. La demostración sigue restringida a administración.</p><a class="secondary" href="../../simulador-ppa/">Abrir Simu PPA · Solo administrador</a></section>'+
+  academyLibrary(false);
+}
+function adminAcademyScreen(){
+ return '<section class="panel"><h2>Administración de la biblioteca de formación</h2><p>Publicá los cuadernillos aquí para que el alumno los consulte sin herramientas de edición en su área.</p></section>'+
+  academyLibrary(true);
+}
+function documentsScreen(){
+ return '<section class="panel"><h2>Documentación, vencimientos, mensajes y auditoría</h2><div class="grid3">'+
+ '<div class="card"><h3>Licencias y CMA</h3><p>Identificación, vigencia, evidencia documental y verificación humana por rol.</p><span class="pill uncertain">Integración pendiente</span></div>'+
+ '<div class="card"><h3>Seguro y mantenimiento</h3><p>Vencimientos por calendario, horas y ciclos, según registros reales de aeronave.</p><span class="pill uncertain">Integración pendiente</span></div>'+
+ '<div class="card"><h3>Comunicaciones</h3><p>Avisos de reservas, cancelaciones y eventos, sin mensajes automáticos hasta contar con consentimiento y permisos.</p><span class="pill uncertain">Diseño pendiente</span></div></div></section>';
+}
+function wirePortals(){
+ if(tab==='alumno'){
+  $('openStudentBooking')?.addEventListener('click',()=>{studentBookingOpen=true;render()});
+  $('closeStudentBooking')?.addEventListener('click',()=>{studentBookingOpen=false;render()});
+  const changeResources=()=>{
+   const type=$('studentBookingType')?.value,list=$('studentBookingResource');
+   if(!list)return;
+   [...list.options].forEach(o=>{o.hidden=o.dataset.kind!==type});
+   const first=[...list.options].find(o=>!o.hidden);
+   if(first)list.value=first.value;
+  };
+  $('studentBookingType')?.addEventListener('change',changeResources);
+  changeResources();
+  $('studentBookingForm')?.addEventListener('submit',e=>{
+   e.preventDefault();
+   try{
+    const type=$('studentBookingType').value,resource=$('studentBookingResource').value;
+    const draft={pilot:portalStudent,type,date:$('studentBookingDate').value,
+     start:$('studentBookingStart').value,end:$('studentBookingEnd').value,
+     aircraft:type==='flight'?resource:'',resourceId:type==='flight'?'':resource};
+    const student=members.find(m=>m.id===portalStudent);
+    const requested=requestStudentBooking(draft,student,reservations,fleet,DEMO_RESOURCES,schoolPolicy);
+    reservations.push(requested);studentBookingOpen=false;render();
+    notice('Solicitud de '+portalType(type)+' guardada solo en la demostración. Un instructor deberá tomarla.');
+   }catch(err){notice(err.message)}
+  });
+ }
+ if(tab==='instructor'){
+  $('screen').querySelectorAll('[data-instructor-take]').forEach(button=>button.addEventListener('click',()=>{
+   try{
+    const booking=reservations.find(x=>x.id===button.dataset.instructorTake);
+    const instructor=members.find(x=>x.id===portalInstructor);
+    const taken=takeStudentBooking(booking,instructor,reservations,members,schoolPolicy,fleet);
+    reservations=reservations.map(x=>x.id===taken.id?taken:x);
+    render();notice('Solicitud tomada por instructor de prueba. El alumno ya puede ver el turno confirmado.');
+   }catch(err){notice(err.message)}
+  }));
+  $('screen').querySelectorAll('[data-instructor-complete]').forEach(button=>button.addEventListener('click',()=>{
+   try{
+    const booking=reservations.find(x=>x.id===button.dataset.instructorComplete);
+    if(booking.date>now())throw Error('No se puede marcar realizada una clase programada para una fecha futura.');
+    const reserved=minutes(booking.end)-minutes(booking.start);
+    const answer=prompt('Minutos efectivamente realizados de '+portalType(booking.type)+' (máximo '+reserved+'):',String(reserved));
+    if(answer===null)return;
+    const actual=Number(answer);
+    const activity=finishGroundLesson(booking,portalInstructor,groundActivities,actual);
+    groundActivities.push(activity);render();
+    notice('Clase de '+portalType(booking.type)+' registrada. Ahora podés completar la evolución del alumno.');
+   }catch(err){notice(err.message)}
+  }));
+  $('screen').querySelectorAll('[data-instructor-evaluate]').forEach(button=>button.addEventListener('click',()=>{
+   const booking=reservations.find(x=>x.id===button.dataset.instructorEvaluate&&x.instructor===portalInstructor);
+   if(!booking)return;
+   instructorEvaluationBooking=booking.id;render();$('evaluationTopics')?.focus();
+  }));
+  $('closeInstructorEvaluation')?.addEventListener('click',()=>{instructorEvaluationBooking='';render()});
+  $('instructorEvaluationForm')?.addEventListener('submit',e=>{
+   e.preventDefault();
+   try{
+    const booking=reservations.find(x=>x.id===instructorEvaluationBooking&&x.instructor===portalInstructor);
+    if(!booking)throw Error('Reserva de instructor inválida.');
+    const flight=flights.find(f=>f.reservationId===booking.id);
+    if((booking.type==='flight'||!booking.type)&&!flight)throw Error('Primero se debe cerrar el vuelo.');
+    if(booking.type!=='flight'&&booking.type&&!groundActivities.some(a=>a.bookingId===booking.id))
+     throw Error('Primero registrá la clase realizada.');
+    const draft=buildLesson({
+     bookingId:booking.id,studentId:booking.pilot,instructorId:portalInstructor,
+     date:booking.date,minutes:Number($('evaluationMinutes').value),
+     aircraft:booking.aircraft||'',flightId:flight?.id||'',
+     topics:$('evaluationTopics').value,evolution:$('evaluationProgress').value,
+     difficulties:$('evaluationDifficulties').value,
+     nextGoal:$('evaluationNextGoal').value,assessment:$('evaluationAssessment').value
+    },members,members,flights,lessons,reservations);
+    const saved=trainingInstitution.reviewMode==='chief'?submitLesson(draft,portalInstructor):
+     closeLessonByInstructor(draft,portalInstructor,trainingInstitution);
+    lessons.push(saved);instructorEvaluationBooking='';render();
+    notice(trainingInstitution.reviewMode==='chief'?
+     'Evolución del instructor registrada y enviada a dirección/jefatura para revisión (DEMO).':
+     'Evaluación pedagógica cerrada por instructor responsable (DEMO).');
+   }catch(err){notice(err.message)}
+  });
+ }
+}
+function wireInstitutionalRav(){
+ $('openRavForm')?.addEventListener('click',()=>{ravFormOpen=!ravFormOpen;render()});
+ $('closeRavForm')?.addEventListener('click',()=>{ravFormOpen=false;render()});
+ $('ravCreateForm')?.addEventListener('submit',e=>{
+  e.preventDefault();
+  try{
+   const newRav=createRavDraft({
+    studentId:$('ravStudent').value,dateFrom:$('ravFrom').value,dateTo:$('ravTo').value
+   },flights,members,ravRecords);
+   ravRecords.push(newRav);ravFormOpen=false;render();
+   notice('Borrador RAV de demostración preparado desde los vuelos cerrados; sin duplicar horas ni certificar.');
+  }catch(err){notice(err.message)}
+ });
+ $('screen').querySelectorAll('[data-rav-submit]').forEach(button=>button.addEventListener('click',()=>{
+  try{
+   const current=ravRecords.find(r=>r.id===button.dataset.ravSubmit);
+   const changed=submitRavForReview(current);
+   ravRecords=ravRecords.map(r=>r.id===changed.id?changed:r);
+   render();notice('Borrador enviado para revisión interna (DEMO; sin firma ni envío ANAC).');
+  }catch(err){notice(err.message)}
+ }));
+ $('screen').querySelectorAll('[data-rav-review]').forEach(button=>button.addEventListener('click',()=>{
+  const current=ravRecords.find(r=>r.id===button.dataset.ravReview);
+  if(!current)return;
+  if(!confirm('Marcar revisión administrativa interna de DEMOSTRACIÓN. No se firma, certifica ni envía el RAV. ¿Continuar?'))return;
+  try{
+   const role=trainingInstitution.reviewMode==='chief'?'jefe':'director';
+   const changed=institutionalReviewRav(current,{
+    actor:role==='jefe'?'jefatura-demo':'director-demo',role,decision:'reviewed',
+    observations:'Revisión administrativa interna de prueba. No equivale a certificación del RAV.'
+   });
+   ravRecords=ravRecords.map(r=>r.id===changed.id?changed:r);
+   render();notice('RAV revisado internamente solo en DEMO. Sigue sin certificado ni firma.');
+  }catch(err){notice(err.message)}
+ }));
+ $('screen').querySelectorAll('[data-rav-return]').forEach(button=>button.addEventListener('click',()=>{
+  const observations=prompt('Observaciones de devolución de la dirección (DEMO):');
+  if(observations===null)return;
+  try{
+   const current=ravRecords.find(r=>r.id===button.dataset.ravReturn);
+   const role=trainingInstitution.reviewMode==='chief'?'jefe':'director';
+   const changed=institutionalReviewRav(current,{
+    actor:role==='jefe'?'jefatura-demo':'director-demo',role,decision:'returned',observations
+   });
+   ravRecords=ravRecords.map(r=>r.id===changed.id?changed:r);
+   render();notice('Borrador RAV devuelto internamente con observaciones (DEMO).');
+  }catch(err){notice(err.message)}
+ }));
+}
+function wireTraining(){
+ const setType=$('trainingInstitutionType'),setMode=$('trainingReviewMode');
+ const setConfig=(type,mode)=>{
+  if(type!=='ciac'&&type!=='non_ciac')throw Error('Tipo de institución inválido.');
+  if(mode!=='chief'&&mode!=='instructor')throw Error('Modalidad de supervisión inválida.');
+  if(type==='ciac'&&mode!=='chief')throw Error('No se puede omitir jefatura en un CIAC bajo RAAC 141.');
+  if(mode==='instructor'&&lessons.some(l=>l.status==='submitted'))
+   throw Error('Hay fichas ya enviadas a jefatura; deben resolverse antes de pasar al modo sin jefe.');
+  trainingInstitution.institutionType=type;trainingInstitution.reviewMode=mode;
+  trainingForm='';render();
+  notice('Configuración de DEMOSTRACIÓN cambiada. No verifica condición CIAC ni se guarda permanentemente.');
+ };
+ setType?.addEventListener('change',e=>{
+  try{
+   const mode=e.target.value==='ciac'?'chief':trainingInstitution.reviewMode;
+   setConfig(e.target.value,mode);
+  }catch(err){render();notice(err.message)}
+ });
+ setMode?.addEventListener('change',e=>{
+  try{setConfig(trainingInstitution.institutionType,e.target.value)}
+  catch(err){render();notice(err.message)}
+ });
+ const studentSelect=$('trainingStudent');
+ if(studentSelect)studentSelect.addEventListener('change',e=>{trainingStudent=e.target.value;trainingForm='';render()});
+ $('newTraining')?.addEventListener('click',()=>{trainingPreselectFlight='';trainingForm='new';render();$('lessonTopics')?.focus()});
+ $('closeTrainingForm')?.addEventListener('click',()=>{trainingForm='';trainingPreselectFlight='';render()});
+ $('screen').querySelectorAll('[data-prepare-lesson]').forEach(button=>button.addEventListener('click',()=>{
+  const f=flights.find(x=>x.id===button.dataset.prepareLesson);
+  if(!f)return;
+  trainingStudent=f.pilot;trainingPreselectFlight=f.id;trainingForm='new';render();
+  $('lessonTopics')?.focus();
+ }));
+ $('printTraining')?.addEventListener('click',()=>window.print());
+ $('lessonFlight')?.addEventListener('change',e=>{
+  const f=flights.find(x=>x.id===e.target.value);
+  if(!f)return;
+  if($('lessonDate'))$('lessonDate').value=f.date;
+  if($('lessonAircraft'))$('lessonAircraft').value=f.aircraft;
+  if($('lessonInstructor'))$('lessonInstructor').value=f.instructor;
+ });
+ const form=$('training-form');
+ form?.addEventListener('submit',e=>{
+  e.preventDefault();
+  try{
+   const editing=trainingForm.startsWith('edit:')?lessons.find(l=>l.id===trainingForm.slice(5)):null;
+   const draft={
+    studentId:editing?.studentId||$('lessonStudent').value,
+    instructorId:editing?.instructorId||$('lessonInstructor').value,
+    date:$('lessonDate').value,minutes:$('lessonMinutes').value,aircraft:$('lessonAircraft').value,
+    flightId:editing?.flightId||$('lessonFlight').value,
+    topics:$('lessonTopics').value,evolution:$('lessonEvolution').value,
+    difficulties:$('lessonDifficulties').value,nextGoal:$('lessonGoal').value,
+    assessment:$('lessonAssessment').value
+   };
+   if(editing){
+    const revised=reviseLesson(editing,draft,editing.instructorId);
+    lessons=lessons.map(l=>l.id===editing.id?revised:l);
+    notice('Corrección registrada (DEMO). '+(trainingInstitution.reviewMode==='chief'?'Enviá nuevamente la ficha para revisión.':'El instructor puede cerrar la ficha sin revisión de jefatura.'));
+   }else{
+    const lesson=buildLesson(draft,members,members,flights,lessons);
+    lessons.push(lesson);trainingStudent=lesson.studentId;
+    notice('Borrador creado (DEMO). '+(trainingInstitution.reviewMode==='chief'?'El instructor debe enviarlo al jefe de instructores.':'El instructor puede cerrar su evaluación pedagógica.'));
+   }
+   trainingForm='';trainingPreselectFlight='';render();
+  }catch(err){notice(err.message)}
+ });
+ $('screen').querySelectorAll('[data-lesson-edit]').forEach(button=>button.addEventListener('click',()=>{
+  const selected=lessons.find(l=>l.id===button.dataset.lessonEdit);
+  if(!selected||!['draft','returned'].includes(selected.status))return;
+  trainingStudent=selected.studentId;trainingForm='edit:'+selected.id;
+  render();$('lessonTopics')?.focus();
+ }));
+ $('screen').querySelectorAll('[data-lesson-send]').forEach(button=>button.addEventListener('click',()=>{
+  try{
+   const selected=lessons.find(l=>l.id===button.dataset.lessonSend);
+   if(!selected)throw Error('Ficha no encontrada.');
+   const chiefRequired=trainingInstitution.reviewMode==='chief';
+   const changed=chiefRequired?submitLesson(selected,selected.instructorId):
+    closeLessonByInstructor(selected,selected.instructorId,trainingInstitution);
+   lessons=lessons.map(l=>l.id===selected.id?changed:l);
+   render();notice(chiefRequired?'Ficha enviada al jefe para revisión (DEMO).':
+    'Evaluación pedagógica cerrada por el instructor responsable (DEMO; sin certificación ANAC).');
+  }catch(err){notice(err.message)}
+ }));
+ $('screen').querySelectorAll('[data-chief-approve]').forEach(button=>button.addEventListener('click',()=>{
+  if(trainingInstitution.reviewMode!=='chief')return;
+  if(!confirm('Simular aprobación por el jefe de instructores de esta ficha. No genera certificación real. ¿Continuar?'))return;
+  try{
+   const selected=lessons.find(l=>l.id===button.dataset.chiefApprove);
+   const checked=reviewLesson(selected,chiefDemoId,'approved','Revisión sin observaciones en la demostración');
+   lessons=lessons.map(l=>l.id===checked.id?checked:l);
+   render();notice('Ficha marcada como revisada por Jefatura (DEMOSTRACIÓN; sin firma real).');
+  }catch(err){notice(err.message)}
+ }));
+ $('screen').querySelectorAll('[data-chief-return]').forEach(button=>button.addEventListener('click',()=>{
+  if(trainingInstitution.reviewMode!=='chief')return;
+  const reason=prompt('Observación del jefe de instructores que deberá atender el instructor (DEMO):');
+  if(reason===null)return;
+  try{
+   const selected=lessons.find(l=>l.id===button.dataset.chiefReturn);
+   const checked=reviewLesson(selected,chiefDemoId,'returned',reason);
+   lessons=lessons.map(l=>l.id===checked.id?checked:l);
+   render();notice('Ficha devuelta al instructor con observaciones (DEMOSTRACIÓN).');
+  }catch(err){notice(err.message)}
+ }));
+}
+function wire(){
+ if(tab==='finanzas')wireFinance();
+ if(tab==='personas'){wireTraining();wireInstitutionalRav();}
+ if(tab==='alumno'||tab==='instructor')wirePortals();
+ if(tab==='direccion'){
+  $('openTrainingGoals')?.addEventListener('click',()=>{trainingGoalsOpen=true;render()});
+  $('closeTrainingGoals')?.addEventListener('click',()=>{trainingGoalsOpen=false;render()});
+  $('trainingGoalsForm')?.addEventListener('submit',e=>{
+   e.preventDefault();
+   try{
+    trainingGoals=validateTrainingGoals({
+     flightHours:Number($('goal-flightHours').value),
+     simulatorHours:Number($('goal-simulatorHours').value),
+     theoryHours:Number($('goal-theoryHours').value)
+    });
+    rememberTrainingGoals();trainingGoalsOpen=false;render();
+    notice('Objetivos de la escuela actualizados (DEMO). Las horas registradas no se modificaron.');
+   }catch(err){notice(err.message)}
+  });
+ }
+ $('screen').querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>switchTab(b.dataset.go)));
+ if(tab==='reservas'){
+  $('openSchoolSettings')?.addEventListener('click',()=>{schoolSettingsOpen=!schoolSettingsOpen;render()});
+  $('closeSchoolSettings')?.addEventListener('click',()=>{schoolSettingsOpen=false;render()});
+  $('schoolReset')?.addEventListener('click',()=>{
+   if(!confirm('¿Restaurar los horarios y duraciones iniciales de la escuela de prueba?'))return;
+   schoolPolicy=validateReservationPolicy(DEFAULT_RESERVATION_POLICY);
+   rememberSchoolPolicy();schoolSettingsOpen=false;render();
+   notice('Turnera de demostración restaurada. Las reservas ya confirmadas no se modificaron.');
+  });
+  $('schoolSettingsForm')?.addEventListener('submit',e=>{
+   e.preventDefault();
+   try{
+    const days=[...$('schoolSettingsForm').querySelectorAll('input[name="schoolDay"]:checked')].map(x=>Number(x.value));
+    const next=validateReservationPolicy({
+     schoolName:$('schoolName').value,
+     openTime:$('schoolOpen').value,closeTime:$('schoolClose').value,
+     studentMinMinutes:Number($('schoolStudentMin').value),
+     studentDefaultMinutes:Number($('schoolStudentSuggested').value),
+     pilotDefaultMinutes:Number($('schoolPilotSuggested').value),
+     slotMinutes:Number($('schoolSlot').value),
+     availableWeekdays:days,showActivity:$('schoolShowActivity').checked,
+     showNotes:$('schoolShowNotes').checked
+    });
+    schoolPolicy=next;rememberSchoolPolicy();schoolSettingsOpen=false;agendaFormOpen=false;agendaBookingId='';
+    render();notice('Turnera de '+next.schoolName+' actualizada (solo demo; se conserva en este navegador).');
+   }catch(err){notice(err.message)}
+  });
+  $('week').addEventListener('change',e=>{
+   if(validDate(e.target.value)){week=e.target.value;agendaSelectedBooking='';render()}
+  });
+  $('screen').querySelectorAll('[data-agenda-shift]').forEach(b=>b.addEventListener('click',()=>{
+   const step=Number(b.dataset.agendaShift);
+   week=shiftDate(week,step*(agendaView==='week'?7:1));agendaSelectedBooking='';render();
+  }));
+  $('screen').querySelector('[data-agenda-today]')?.addEventListener('click',()=>{
+   week=now();agendaSelectedBooking='';render();
+  });
+  $('screen').querySelectorAll('[data-agenda-view]').forEach(b=>b.addEventListener('click',()=>{
+   agendaView=b.dataset.agendaView;agendaSelectedBooking='';render();
+  }));
+  $('agendaFilterAircraft').addEventListener('change',e=>{agendaAircraft=e.target.value;agendaSelectedBooking='';render()});
+  $('agendaFilterInstructor').addEventListener('change',e=>{agendaInstructor=e.target.value;agendaSelectedBooking='';render()});
+  const openForm=(date,start,id='')=>{
+   if(!validDate(date))return;
+   agendaDraftDate=date;agendaDraftStart=start;agendaFormOpen=true;agendaBookingId=id;
+   agendaSelectedBooking='';week=date;render();$('bookPilot')?.focus();
+  };
+  $('newBooking').addEventListener('click',()=>openForm(week,schoolPolicy.openTime));
+  $('screen').querySelectorAll('[data-agenda-time]').forEach(b=>b.addEventListener('click',()=>{
+   openForm(b.dataset.agendaDate,b.dataset.agendaTime);
+  }));
+  $('screen').querySelectorAll('[data-agenda-event]').forEach(b=>b.addEventListener('click',()=>{
+   const reservation=reservations.find(x=>x.id===b.dataset.agendaEvent&&x.status==='confirmada');
+   if(reservation){agendaSelectedBooking=reservation.id;agendaFormOpen=false;agendaBookingId='';week=reservation.date;render()}
+  }));
+  $('screen').querySelectorAll('[data-agenda-edit]').forEach(b=>b.addEventListener('click',()=>{
+   const reservation=reservations.find(x=>x.id===b.dataset.agendaEdit&&x.status==='confirmada');
+   if(reservation&&!flights.some(f=>f.reservationId===reservation.id))
+    openForm(reservation.date,reservation.start,reservation.id);
+  }));
+  $('screen').querySelector('[data-agenda-close]')?.addEventListener('click',()=>{agendaSelectedBooking='';render()});
+  const closeForm=()=>{agendaFormOpen=false;agendaBookingId='';render()};
+  $('closeBooking')?.addEventListener('click',closeForm);
+  $('cancelBooking')?.addEventListener('click',closeForm);
+  // Ajustar el horario sugerido cuando se elige un alumno, sin impedir que la validación rechace reservas más cortas.
+  const updateStudentDuration=()=>{
+   const selected=members.find(p=>p.id===$('bookPilot')?.value);
+   const min=reservationMinimumMinutes(selected,schoolPolicy),start=$('bookStart')?.value,end=$('bookEnd')?.value;
+   const hint=$('bookingDurationHint');
+   if(!hint||!start||!end)return;
+   if(min===0){hint.textContent='Duración sugerida por la escuela: '+schoolPolicy.pilotDefaultMinutes+' minutos. Alumnos: mínimo '+schoolPolicy.studentMinMinutes+' minutos.';return}
+   try{
+    const t=minutes(start),finish=minutes(end),suggestedEnd=t+reservationSuggestedMinutes(selected,schoolPolicy);
+    if(suggestedEnd>=24*60||suggestedEnd>minutes(schoolPolicy.closeTime)){
+     hint.textContent='Esta hora de inicio no permite completar el turno sugerido dentro de la jornada escolar. Elegí un horario anterior.';
+    }else{
+     if(finish-t<min)$('bookEnd').value=hhmm(suggestedEnd);
+     hint.textContent='Alumno: mínimo '+min+' minutos; sugerido '+schoolPolicy.studentDefaultMinutes+' minutos. Fin propuesto: '+$('bookEnd').value+'.';
+    }
+   }catch(_){hint.textContent='Alumno: duración mínima de '+schoolPolicy.studentMinMinutes+' minutos según la escuela.'}
+  };
+  $('bookPilot')?.addEventListener('change',updateStudentDuration);
+  $('bookStart')?.addEventListener('change',updateStudentDuration);
+  updateStudentDuration();
+  $('booking')?.addEventListener('submit',e=>{
+   e.preventDefault();
+   try{
+    const data={
+     aircraft:$('bookAircraft').value,pilot:$('bookPilot').value,instructor:$('bookInstructor').value,
+     date:$('bookDate').value,start:$('bookStart').value,end:$('bookEnd').value,
+     activity:schoolPolicy.showActivity?$('bookActivity').value:(reservations.find(x=>x.id===agendaBookingId)?.activity||''),notes:schoolPolicy.showNotes?$('bookNotes').value:(reservations.find(x=>x.id===agendaBookingId)?.notes||'')
+    };
+    const existing=agendaBookingId?reservations.find(x=>x.id===agendaBookingId&&x.status==='confirmada'):null;
+    if(agendaBookingId&&!existing)throw Error('La reserva original ya no está disponible.');
+    if(existing&&flights.some(f=>f.reservationId===existing.id))
+     throw Error('No se puede modificar una reserva cuyo vuelo ya fue cerrado.');
+    const checked=createReservation(data,reservations.filter(x=>x.id!==existing?.id),fleet,members,schoolPolicy);
+    if(existing)Object.assign(existing,data,{updatedAt:new Date().toISOString()});
+    else reservations.push(checked);
+    agendaSelectedBooking=existing?.id||checked.id;
+    agendaFormOpen=false;agendaBookingId='';week=data.date;render();
+    notice(existing?'Reserva de demostración modificada correctamente. No se enviaron notificaciones.':
+     'Reserva de DEMOSTRACIÓN confirmada solo en esta sesión; no constituye autorización de vuelo.');
+   }catch(err){notice(err.message)}
+  });
+  $('screen').querySelectorAll('[data-cancel]').forEach(b=>b.addEventListener('click',()=>{
+   const x=reservations.find(r=>r.id===b.dataset.cancel&&r.status==='confirmada');
+   if(!x||flights.some(f=>f.reservationId===x.id))return;
+   if(!confirm('¿Cancelar la reserva de demostración? La cancelación no envía notificaciones.'))return;
+   x.status='cancelada';x.cancelledAt=new Date().toISOString();
+   agendaSelectedBooking='';agendaFormOpen=false;agendaBookingId='';render();
+   notice('Reserva de demostración cancelada. No se enviaron notificaciones.');
+  }));
+ }
+ if(tab==='vuelos'){
+  $('flightModeFilter')?.addEventListener('change',e=>{flightModeFilter=e.target.value;render()});
+  $('logbookPerson')?.addEventListener('change',e=>{logbookPersonFilter=e.target.value;render()});
+  $('screen').querySelectorAll('[data-edit-logbook]').forEach(button=>button.addEventListener('click',()=>{
+   const id=button.dataset.editLogbook;
+   if(!flights.some(f=>f.id===id))return;
+   logbookEditingFlightId=id;render();$('flightLogbookPanel')?.scrollIntoView({behavior:'smooth',block:'center'});
+  }));
+  const closeBook=()=>{logbookEditingFlightId='';render()};
+  $('closeFlightLogbook')?.addEventListener('click',closeBook);
+  $('cancelFlightLogbook')?.addEventListener('click',closeBook);
+  $('flightLogbookForm')?.addEventListener('submit',e=>{
+   e.preventDefault();
+   try{
+    const f=flights.find(x=>x.id===logbookEditingFlightId);
+    const booking=reservations.find(x=>x.id===f?.reservationId);
+    if(!f||!booking)throw Error('No se encontró el vuelo de la planilla.');
+    const person=members.find(m=>m.id===f.pilot);
+    const detail=makeLogbookDetail({
+     purpose:$('logPurpose').value,recordedFlightMinutes:$('logRecordedFlightMinutes').value,
+     categoryMinutes:Object.fromEntries([...document.querySelectorAll('[data-log-group="categoryMinutes"]')].map(el=>[el.dataset.logKey,el.value])),
+     specialMinutes:Object.fromEntries([...document.querySelectorAll('[data-log-group="specialMinutes"]')].map(el=>[el.dataset.logKey,el.value])),
+     certificationNote:$('logCertificationNote').value,
+     license:$('logLicense').value,legajoNumber:$('logLegajo').value,pageNumber:$('logPage').value,aircraftMake:$('logMake').value,
+     aircraftModel:$('logModel').value,aircraftClass:$('logClass').value,
+     powerHp:$('logPower').value
+    },booking,f,person,fleet);
+    f.logbook=detail;logbookEditingFlightId='';logbookPersonFilter=f.pilot;render();
+    notice(detail.incomplete?'Planilla auxiliar guardada, aún faltan datos documentales. No está certificada.':
+     'Planilla auxiliar completa guardada (DEMO). No es Libro de Vuelo ni RAV oficial.');
+   }catch(err){notice(err.message)}
+  });
+  if($('flightform'))$('flightform').addEventListener('submit',e=>{e.preventDefault();try{
+   const booking=reservations.find(r=>r.id===$('flightBooking').value);
+   const f=closeFlight({from:$('flightFrom').value,to:$('flightTo').value,start:$('flightStart').value,end:$('flightEnd').value,
+    tachStart:$('tachStart').value,tachEnd:$('tachEnd').value,landings:$('landings').value},booking,flights,fleet,members);
+   flights.push(f);render();notice('Vuelo de DEMOSTRACIÓN cerrado. '+(members.some(p=>p.id===f.pilot&&p.kind==='alumno')?
+ 'El instructor debe completar una ficha de evolución en Pilotos y alumnos.':
+ 'No se modificaron registros oficiales ni de Mantenimiento.'));
+  }catch(err){notice(err.message)}});
+  $('flightExport')?.addEventListener('click',()=>{
+   const cols=['Fecha','Modalidad','Aeronave','Titular','Instructor','Origen','Destino','Inicio bloque','Fin bloque','Horas bloque','Delta Tacometro','Aterrizajes','Costo orientativo'];
+   const quote=v=>'"'+String(v??'').replace(/[\r\n]/g,' ').replace(/"/g,'""').replace(/^[=+@-]/,"'$&")+'"';
+   const data=[cols,...flights.filter(f=>flightModeFilter==='all'||f.operationType===flightModeFilter).map(f=>[f.date,FLIGHT_MODE_LABELS[f.operationType]||'Anterior sin clasificar',f.aircraft,f.pilot,f.instructor||'',f.from,f.to,f.start,f.end,f.blockHours,f.tachDifference,f.landings,f.cost])];
+   const blob=new Blob(['\ufeff'+data.map(r=>r.map(quote).join(';')).join('\r\n')],{type:'text/csv;charset=utf-8'});
+   const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='vuelos-demo-no-rav.csv';a.click();URL.revokeObjectURL(url);
+  });
+ }
+ if(tab==='stock')$('stockform').addEventListener('submit',e=>{e.preventDefault();try{
+  const item=products.find(p=>p.id===$('stockItem').value);
+  if(!item)throw Error('Producto inexistente.');
+  const qty=Number($('stockQty').value),kind=$('stockKind').value;
+  item.qty=stockMove(item,qty,kind);movements.push({item:item.name,kind,qty});render();notice('Movimiento de stock ficticio registrado para esta sesión.');
+ }catch(err){notice(err.message)}});
+}
+(async()=>{
+ try{
+  await window.GDV_AUTH.ready;
+  const client=window.GDV_AUTH.client;
+  if(!client)throw Error('Autenticación no disponible.');
+  const {data:{user},error}=await client.auth.getUser();
+  if(error||!user)throw Error('Se requiere iniciar sesión.');
+  const {data,error:roleError}=await client.from('site_admins').select('user_id').eq('user_id',user.id).maybeSingle();
+  if(roleError||!data)throw Error('Acceso exclusivo del administrador.');
+  demoAdminId=user.id;restoreSchoolPolicy();restoreTrainingGoals();
+  // Estado real del almacenamiento; los datos del resto del portal son demostrativos.
+  refreshStudentLibrary().catch(()=>{});
+  $('app').hidden=false;document.documentElement.classList.remove('auth-pending');render();
+ }catch(err){
+  document.documentElement.classList.remove('auth-pending');
+  document.body.innerHTML='<main><h1>Gestión Aeronáutica</h1><p>Esta primera versión es privada para administración. Iniciá sesión con una cuenta autorizada desde Gente de Vuelo.</p><a href="../index.html">Volver a Utilidades</a></main>';
+ }
+})();
+</script></body></html>
