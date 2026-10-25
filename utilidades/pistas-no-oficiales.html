@@ -81,6 +81,7 @@ h1{letter-spacing:-.035em}
 .swatch-official,.pin-legend .legend-dot.official{background:#286ba8}
 .swatch-lad,.pin-legend .legend-dot.lad{background:#ba8a34}
 .swatch-community{background:#8b65a9}
+.pin-legend .legend-dot.community{background:#8b65a9;border-color:#ebdbfd}
 .swatch-reference{background:#74808d}
 #pista-catalog-status{font-size:12px;margin:14px 0 8px;color:#e4d2a7;line-height:1.5}
 .pista-filter-note{font-size:12px;line-height:1.6;margin:8px 0;color:#cedde7}
@@ -143,7 +144,7 @@ h1{letter-spacing:-.035em}
 <div class="pin-legend" aria-label="Significado de los marcadores">
   <span class="legend-item"><span class="legend-dot official" aria-hidden="true"></span>Documentado AIP</span>
   <span class="legend-item"><span class="legend-dot lad" aria-hidden="true"></span>LAD ANAC</span>
-  <span class="legend-item"><span class="legend-dot" aria-hidden="true"></span>Comunitaria publicada</span>
+  <span class="legend-item"><span class="legend-dot community" aria-hidden="true"></span>Comunitaria publicada</span>
   <span class="legend-item"><span class="legend-dot reference" aria-hidden="true"></span>Referencia cartográfica</span>
   <span class="legend-item"><span class="legend-dot draft" aria-hidden="true"></span>Nueva propuesta (sin publicar)</span>
 </div><p class="map-actions"><button id="explore" type="button">Explorar pistas en esta zona</button> <small id="osm-status">Acercá el mapa a una zona y presioná el botón. Fuente: OpenStreetMap / Overpass.</small></p><label>Filtrar registros visibles <input id="search" placeholder="Nombre, provincia, código OACI o número LAD"></label>
@@ -268,7 +269,7 @@ document.getElementById('zone-search-form').addEventListener('submit',async even
   focusMapAt(coordinates.latitude,coordinates.longitude,'Coordenadas '+coordinates.latitude.toFixed(5)+', '+coordinates.longitude.toFixed(5),15);
   return;
  }
- const matched=records.filter(x=>(x.name+' '+(x.details?.province||'')).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()
+ const matched=records.filter(x=>layerSelected('community')).filter(x=>(x.name+' '+(x.details?.province||'')).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()
   .includes(query.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase())).slice(0,5);
  if(matched.length){
   if(matched.length===1)focusMapAt(matched[0].latitude,matched[0].longitude,matched[0].name,14);
