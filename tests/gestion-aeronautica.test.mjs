@@ -106,6 +106,14 @@ assert.match(utilitiesPage,/\[hidden\]\{display:none!important\}/,'CSS impide qu
 assert.match(html,/from\('site_admins'\)\.select\('user_id'\)\.eq\('user_id',user\.id\)\.maybeSingle\(\)/,'El portal también verifica permisos al abrirlo');
 assert.match(html,/if\(roleError\|\|!data\)throw Error\('Acceso exclusivo del administrador\.'\)/,'El portal debe denegar usuarios no administradores');
 console.log('PASS: acceso a AeroSuite en Utilidades exclusivo de administracion con verificación al abrir');
+// La portada y el portal de AeroSuite deben permitir volver a Gente de Vuelo.
+assert.match(landing,/<a class="btn btn-small nav-home" href="\.\.\/\.\.\/index\.html" aria-label="Volver al inicio de Gente de Vuelo">/,'Falta botón de inicio en portada');
+assert.match(landing,/\.nav-cta\{flex-shrink:0;display:flex;align-items:center;gap:9px\}/,'Diseño de navegación de AeroSuite');
+assert.match(landing,/@media\(max-width:470px\)\{\.nav-cta\{order:2;width:100%/,'Acceso de regreso en pantallas pequeñas');
+assert.match(html,/<a class="portal-home" href="\.\.\/\.\.\/index\.html" aria-label="Volver al inicio de Gente de Vuelo">/,'Falta botón en el portal privado');
+assert.match(html,/href="index\.html">Volver a la presentación/,'Se conserva navegación interna de AeroSuite');
+console.log('PASS: botón Inicio Gente de Vuelo desde portada y portal AeroSuite');
+
 // Portada: conserva el avión sobre la pista y mueve el texto principal a la zona alta.
 assert.match(landing,/<img class="hero-photo" src="\.\.\/\.\.\/portada-manana-tres-palas\.webp"/,'Conservar la foto aeronáutica de la portada');
 assert.match(landing,/\.photo-bottom\{z-index:1;position:absolute;top:84px/,'Título en la franja superior');
