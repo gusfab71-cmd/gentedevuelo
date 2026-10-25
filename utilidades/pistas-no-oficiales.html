@@ -57,6 +57,14 @@ h1{letter-spacing:-.035em}
 .metar-result .metar-observation{font-size:11px;color:#425e74;line-height:1.5}
 .metar-result .metar-stale{font-size:11px;font-weight:800;color:#8d430d;background:#fff0d1;border-radius:7px;padding:7px 9px;margin-top:7px}
 .metar-result pre{font:11px/1.55 ui-monospace,SFMono-Regular,Consolas,monospace;background:#132a3e;color:#edf7ff;padding:9px 10px;white-space:pre-wrap;overflow-wrap:anywhere;border-radius:7px;margin:9px 0}
+
+.official-aip-panel{display:flex;align-items:center;justify-content:space-between;gap:17px;flex-wrap:wrap;padding:17px 20px;background:linear-gradient(110deg,#203e54,#1a303f);border:1px solid #7093af;border-radius:14px;margin:13px 0}
+.official-aip-panel h2{font-size:18px;margin:6px 0 7px;color:#f4f9ff}
+.official-aip-panel p{margin:0;color:#d1e0ec;font-size:12px;line-height:1.55;max-width:770px}
+.official-aip-eyebrow{letter-spacing:.14em;font-size:10px;font-weight:850;color:#a7d3f5}
+.official-aip-link{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:10px 17px;border:1px solid #bfdaf5;border-radius:10px;background:#c3e1fc;color:#12334c;font-size:13px;font-weight:850;text-decoration:none;white-space:nowrap}
+.official-aip-link:hover,.official-aip-link:focus-visible{background:#edf7ff;color:#0a2c45}
+@media(max-width:650px){.official-aip-panel{padding:14px}.official-aip-link{width:100%}}
 </style></head><body><main><p><a href="index.html">← Utilidades</a></p><h1>Pistas no oficiales · Gente de Vuelo</h1><p class="notice">Información comunitaria no oficial. No sustituye AIP, NOTAM, verificación de condiciones ni autorización del propietario. No se publican ubicaciones privadas sin consentimiento.</p><p class="notice">Separá o juntá dos dedos para hacer zoom. Mantené presionado un lugar para marcar una nueva pista y agregar un comentario. Elegí Satélite o Calles arriba del mapa. Las imágenes pueden estar desactualizadas: comprobá siempre el estado real de la pista.</p><section class="zone-panel" aria-label="Buscar zona en el mapa">
 <h2>Ubicá una zona o una pista</h2>
 <p>Buscá por localidad, provincia o nombre de pista. También podés ingresar coordenadas decimales, por ejemplo: -34.90, -57.94. El mapa se centrará en el lugar elegido.</p>
@@ -72,6 +80,14 @@ h1{letter-spacing:-.035em}
 </div>
 <div id="zone-results" aria-label="Resultados de búsqueda"></div>
 <div class="zone-attribution">Búsqueda geográfica: <a href="https://photon.komoot.io/" target="_blank" rel="noopener noreferrer">Photon</a> con datos de <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> · Resultados orientativos. No valida pistas para operación.</div>
+</section>
+<section class="official-aip-panel" aria-labelledby="official-aip-heading">
+  <div>
+    <span class="official-aip-eyebrow">DOCUMENTACIÓN AERONÁUTICA OFICIAL</span>
+    <h2 id="official-aip-heading">Consultar AIP Argentina · ANAC</h2>
+    <p>Accedé a la publicación oficial para consultar información GEN, ENR y AD. La existencia de una pista en este mapa comunitario <strong>no acredita que esté publicada, habilitada ni autorizada</strong>.</p>
+  </div>
+  <a class="official-aip-link" href="https://ais.anac.gob.ar/aip" target="_blank" rel="noopener noreferrer" aria-label="Abrir AIP Argentina oficial de ANAC en otra pestaña">Abrir AIP oficial ↗</a>
 </section>
 <div id="basemap-selector" class="basemap-selector" aria-label="Elegir tipo de mapa"></div>
 <div id="map" aria-label="Mapa satelital de pistas"></div>
@@ -314,6 +330,12 @@ function airstripPopup(name,kind,latitude,longitude,details={},nm=null,updated='
  open.textContent='Ver ubicación en mapa ↗';
  open.href='https://www.openstreetmap.org/?mlat='+encodeURIComponent(latitude)+'&mlon='+encodeURIComponent(longitude)+'#map=15/'+encodeURIComponent(latitude)+'/'+encodeURIComponent(longitude);
  open.target='_blank';open.rel='noopener noreferrer';actions.append(open);
+ const aip=document.createElement('a');
+ aip.textContent='Consultar AIP oficial ↗';
+ aip.href='https://ais.anac.gob.ar/aip';
+ aip.target='_blank';aip.rel='noopener noreferrer';
+ aip.setAttribute('aria-label','Consultar AIP Argentina de ANAC para verificar información oficial de aeródromos y rutas; esta pista no está verificada.');
+ actions.append(aip);
  const copy=document.createElement('button');copy.type='button';copy.textContent='Copiar coordenadas';
  copy.addEventListener('click',async()=>{
   try{await navigator.clipboard.writeText(Number(latitude).toFixed(6)+', '+Number(longitude).toFixed(6));copy.textContent='Coordenadas copiadas'}
