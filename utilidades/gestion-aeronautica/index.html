@@ -36,7 +36,7 @@ button:focus-visible{outline:3px solid #9ad7ff;outline-offset:4px}
 .btn-ghost{background:rgba(24,48,72,.62);color:#f0f6fc;border-color:#54738f}
 .btn-ghost:hover{border-color:#9dbfe0;background:#264562}
 .btn-small{min-height:41px;padding:10px 16px;font-size:12px}
-.nav-cta{flex-shrink:0}
+.nav-cta{flex-shrink:0;display:flex;align-items:center;gap:9px}.nav-home{border-color:#81a7c6;background:#102d48;color:#e3f2ff}.nav-home:hover{background:#275778;border-color:#c4e3ff}
 .nav-toggle{display:none}
 .eyebrow{display:inline-flex;align-items:center;gap:9px;letter-spacing:.16em;font-weight:850;font-size:10px;text-transform:uppercase;color:#a9cff4}
 .eyebrow:before{content:"";width:26px;height:2px;border-radius:3px;background:#e8c38e}
@@ -123,8 +123,9 @@ footer{margin-top:90px;border-top:1px solid var(--border);background:#071523;pad
 .footer-links{display:flex;gap:18px;flex-wrap:wrap}
 @media(max-width:1080px){.nav-links{gap:14px}.nav-links a:nth-child(4){display:none}.hero-grid{gap:20px}.hero-visual{min-height:470px}.area-card{padding:24px 20px}.area-card h3{font-size:21px}}
 @media(max-width:890px){.container{width:min(1190px,calc(100% - 36px))}.nav-inner{flex-wrap:wrap;padding:13px 0;min-height:70px}.nav-links{order:3;width:100%;overflow-x:auto;padding:4px 0 3px}.nav-links a:nth-child(4){display:inline}.nav-cta{margin-left:auto}.hero-grid{grid-template-columns:1fr}.hero{padding:54px 0}.hero-copy>p{max-width:670px}.hero-visual{min-height:430px;max-height:530px}.areas-grid{grid-template-columns:repeat(2,1fr)}.area-card.primary{grid-column:1/-1;min-height:250px}.area-card .area-no{margin-bottom:35px}.module-grid{grid-template-columns:repeat(2,1fr)}.about-grid{gap:25px}}
-@media(max-width:640px){.nav-inner{gap:12px}.brand-name{font-size:20px}.brand-mark{width:41px;height:41px}.nav-links{gap:17px;font-size:11px;scrollbar-width:none}.nav-cta .btn{padding:9px 12px;min-height:39px}.hero{padding:43px 0 43px}.hero-visual{min-height:390px}.hero-visual .photo-bottom{top:80px;padding:0 20px}.photo-bottom h2{font-size:clamp(21px,5vw,24px)}.photo-caption{padding:32px 20px 15px;font-size:11px}.photo-top{top:17px;left:18px;right:18px}.intro-grid{grid-template-columns:1fr;gap:18px}.section{padding:64px 0}.why-grid,.areas-grid,.module-grid,.workflow,.about-grid,.faq-grid{grid-template-columns:1fr}.area-card.primary{grid-column:auto}.area-card{min-height:230px}.area-card .area-no{margin-bottom:29px}.why-card{min-height:unset;padding:23px}.module-card{min-height:170px}.about-visual{min-height:295px}.faq-grid{gap:15px}.final-cta{padding:30px 23px;display:block}.final-buttons{margin-top:22px}.footer-inner{align-items:start;flex-direction:column}.hero-copy>p{font-size:15px}}
+@media(max-width:640px){.nav-inner{gap:12px}.brand-name{font-size:20px}.brand-mark{width:41px;height:41px}.nav-links{gap:17px;font-size:11px;scrollbar-width:none}.nav-cta{gap:6px}.nav-cta .btn{padding:9px 11px;min-height:39px;font-size:11px}.hero{padding:43px 0 43px}.hero-visual{min-height:390px}.hero-visual .photo-bottom{top:80px;padding:0 20px}.photo-bottom h2{font-size:clamp(21px,5vw,24px)}.photo-caption{padding:32px 20px 15px;font-size:11px}.photo-top{top:17px;left:18px;right:18px}.intro-grid{grid-template-columns:1fr;gap:18px}.section{padding:64px 0}.why-grid,.areas-grid,.module-grid,.workflow,.about-grid,.faq-grid{grid-template-columns:1fr}.area-card.primary{grid-column:auto}.area-card{min-height:230px}.area-card .area-no{margin-bottom:29px}.why-card{min-height:unset;padding:23px}.module-card{min-height:170px}.about-visual{min-height:295px}.faq-grid{gap:15px}.final-cta{padding:30px 23px;display:block}.final-buttons{margin-top:22px}.footer-inner{align-items:start;flex-direction:column}.hero-copy>p{font-size:15px}}
 @media(prefers-reduced-motion:reduce){:root{scroll-behavior:auto}.btn,.area-card{transition:none}.btn:hover{transform:none}}
+@media(max-width:470px){.nav-cta{order:2;width:100%;margin-left:0;display:grid;grid-template-columns:1fr 1fr}.nav-cta .btn{white-space:normal;text-align:center;padding:8px 6px;font-size:10px}.nav-links{order:3}}
 </style>
 </head>
 <body>
@@ -140,7 +141,7 @@ footer{margin-top:90px;border-top:1px solid var(--border);background:#071523;pad
     <nav class="nav-links" aria-label="Navegación de la presentación">
       <a href="#solucion">La solución</a><a href="#areas">Tres áreas</a><a href="#modulos">Funcionalidades</a><a href="#nosotros">Quiénes somos</a><a href="#preguntas">Preguntas</a>
     </nav>
-    <div class="nav-cta"><a class="btn btn-ghost btn-small" href="portal.html">Ingresar a la demo <span aria-hidden="true">↗</span></a></div>
+    <div class="nav-cta"><a class="btn btn-small nav-home" href="../../index.html" aria-label="Volver al inicio de Gente de Vuelo">⌂ Inicio Gente de Vuelo</a><a class="btn btn-ghost btn-small" href="portal.html">Ingresar a la demo <span aria-hidden="true">↗</span></a></div>
   </div>
 </header>
 <main id="contenido">
