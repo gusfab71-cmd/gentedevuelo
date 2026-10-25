@@ -412,7 +412,7 @@ if(!AIRFIELD_TYPES)throw Error('No está disponible el catálogo de clasificaci�
 function airfieldClass(record){return AIRFIELD_TYPES.classification(record)}
 const draftPin=runwayPin('draft');let draftMarker=null;
 function proposeAt(latlng){
- if(pickReference)return;
+ if(pickReference||rulerEnabled)return;
  const lat=latlng.lat,lon=latlng.lng;
  if(lat < -56||lat > -21||lon < -74||lon > -53){alert('Por ahora solo se pueden proponer pistas dentro de Argentina.');return}
  if(draftMarker)map.removeLayer(draftMarker);
@@ -428,7 +428,11 @@ map.on('contextmenu',e=>{if(!holdTriggered)proposeAt(e.latlng);holdTriggered=fal
 const external=L.layerGroup().addTo(map);let lastRequest=0;let reference=null,nearRadius=null,referenceMarker=null,pickReference=false,externalPoints=[];
 function nauticalMiles(a,b,c,d){const r=Math.PI/180,p1=a*r,p2=c*r,dp=(c-a)*r,dl=(d-b)*r,h=Math.sin(dp/2)**2+Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)**2;return 3440.065*2*Math.atan2(Math.sqrt(h),Math.sqrt(1-h))}
 function setReference(lat,lon){reference=[lat,lon];document.getElementById('ref-lat').value=lat.toFixed(6);document.getElementById('ref-lon').value=lon.toFixed(6);if(referenceMarker)map.removeLayer(referenceMarker);referenceMarker=L.circleMarker(reference,{radius:9,color:'#00d7ff',fillOpacity:.8}).addTo(map).bindPopup('Punto de referencia').openPopup()}
-map.on('click',e=>{if(pickReference){pickReference=false;setReference(e.latlng.lat,e.latlng.lng);document.getElementById('near-status').textContent='Punto seleccionado. Presioná Buscar cercanas.'}});
+map.on('click',e=>{
+ if(pickReference){pickReference=false;setReference(e.latlng.lat,e.latlng.lng);document.getElementById('near-status').textContent='Punto seleccionado. Presioná Buscar cercanas.';return}
+ if(proposeMode){proposeMode=false;proposeAt(e.latlng);return}
+ if(rulerEnabled){rulerPoint(e.latlng);}
+});
 document.getElementById('pick-ref').onclick=()=>{pickReference=true;document.getElementById('near-status').textContent='Tocá un punto del mapa para establecer la referencia.'};
 document.getElementById('find-near').onclick=()=>{const lat=Number(document.getElementById('ref-lat').value),lon=Number(document.getElementById('ref-lon').value);if(!document.getElementById('ref-lat').value||!document.getElementById('ref-lon').value||!Number.isFinite(lat)||!Number.isFinite(lon)||Math.abs(lat)>90||Math.abs(lon)>180){document.getElementById('near-status').textContent='Ingresá coordenadas válidas.';return}setReference(lat,lon);nearRadius=Number(document.getElementById('radius').value);render();renderExternal();};
 document.getElementById('reset-near').onclick=()=>{nearRadius=null;reference=null;if(referenceMarker)map.removeLayer(referenceMarker);referenceMarker=null;document.getElementById('near-status').textContent='Filtro quitado.';render();renderExternal()};
@@ -603,6 +607,102 @@ function addMetarReference(parent,latitude,longitude){
   }finally{button.disabled=false}
  });
 }
+
+
+/* Interacción de escritorio: fichas laterales y regla de navegación.
+ * Rumbo verdadero inicial (ortodrómico) y distancia de círculo máximo, sin corrección magnética. */
+const selectedPanel=document.getElementById('selected-panel');
+const selectedDetail=document.getElementById('selected-detail');
+const selectedTitle=document.getElementById('selected-title');
+const rulerToggle=document.getElementById('ruler-toggle');
+const rulerInfo=document.getElementById('ruler-info');
+let rulerEnabled=false,rulerPoints=[],rulerLine=null,rulerMarkers=[];
+const desktopMode=()=>window.matchMedia('(min-width:960px)').matches;
+function trueBearing(lat1,lon1,lat2,lon2){
+ const rad=Math.PI/180,p1=lat1*rad,p2=lat2*rad,dLon=(lon2-lon1)*rad;
+ const y=Math.sin(dLon)*Math.cos(p2);
+ const x=Math.cos(p1)*Math.sin(p2)-Math.sin(p1)*Math.cos(p2)*Math.cos(dLon);
+ const angle=(Math.atan2(y,x)*180/Math.PI+360)%360;
+ return Number(angle.toFixed(1));
+}
+function clearRuler(){
+ rulerPoints=[];
+ if(rulerLine){map.removeLayer(rulerLine);rulerLine=null}
+ for(const x of rulerMarkers)map.removeLayer(x);
+ rulerMarkers=[];
+ rulerInfo.textContent=rulerEnabled?'Elegí el punto de salida en el mapa o tocá su pin.':
+  'Regla lista: dos puntos calculan NM y rumbo verdadero inicial.';
+}
+function rulerPoint(point,label){
+ if(!rulerEnabled)return;
+ if(rulerPoints.length>=2)clearRuler();
+ rulerPoints.push({lat:point.lat,lng:point.lng,label:label||'Punto '+rulerPoints.length});
+ const marker=L.circleMarker(point,{radius:7,color:'#19384d',weight:2,fillColor:'#9addff',fillOpacity:1,interactive:false}).addTo(map);
+ rulerMarkers.push(marker);
+ if(rulerPoints.length===1){
+  rulerInfo.textContent='Origen: '+rulerPoints[0].label+' · Seleccioná destino para medir.';
+  return;
+ }
+ const a=rulerPoints[0],b=rulerPoints[1];
+ const nm=nauticalMiles(a.lat,a.lng,b.lat,b.lng);
+ const bearing=trueBearing(a.lat,a.lng,b.lat,b.lng);
+ rulerLine=L.polyline([[a.lat,a.lng],[b.lat,b.lng]],{color:'#b9e7ff',weight:3,dashArray:'9 8',interactive:false}).addTo(map);
+ rulerInfo.textContent='Desde '+a.label+' hasta '+b.label+': '+nm.toFixed(2)+' NM · RV inicial '+bearing.toFixed(1)+'° verdadero (sin variación magnética). Línea geodésica orientativa.';
+}
+function showAirfieldDetail(createCard,name){
+ selectedTitle.textContent=name;
+ selectedDetail.replaceChildren(createCard());
+}
+function selectAirfield(marker,point,label,createCard){
+ if(rulerEnabled){
+  if(marker.isPopupOpen())marker.closePopup();
+  rulerPoint(L.latLng(point[0],point[1]),label);
+  return;
+ }
+ showAirfieldDetail(createCard,label);
+ if(desktopMode()){
+  marker.closePopup();
+ }else{
+  marker.openPopup();
+ }
+}
+function attachSelection(marker,point,label,createCard){
+ marker.on('click',()=>selectAirfield(marker,point,label,createCard));
+ return marker;
+}
+rulerToggle.addEventListener('click',()=>{
+ rulerEnabled=!rulerEnabled;
+ rulerToggle.setAttribute('aria-pressed',String(rulerEnabled));
+ document.getElementById('map').style.cursor=rulerEnabled?'crosshair':'';
+ clearRuler();
+ if(rulerEnabled){
+  document.getElementById('map').scrollIntoView({behavior:'smooth',block:'center'});
+ }
+});
+document.getElementById('ruler-clear').addEventListener('click',clearRuler);
+const expandMap=document.getElementById('map-fullscreen');
+expandMap.addEventListener('click',()=>{
+ const panel=document.getElementById('dispatch-map-panel');
+ const expanded=panel.classList.toggle('is-map-expanded');
+ expandMap.textContent=expanded?'Cerrar vista ampliada':'Ampliar mapa';
+ expandMap.setAttribute('aria-pressed',String(expanded));
+ setTimeout(()=>map.invalidateSize({animate:false}),100);
+});
+window.addEventListener('keydown',e=>{
+ if(e.key==='Escape'&&document.getElementById('dispatch-map-panel').classList.contains('is-map-expanded')){
+  document.getElementById('map-fullscreen').click();
+ }
+});
+window.addEventListener('resize',()=>map.invalidateSize({animate:false}));
+map.whenReady(()=>setTimeout(()=>map.invalidateSize({animate:false}),150));
+let proposeMode=false;
+document.getElementById('contribute-fast').addEventListener('click',()=>{
+ proposeMode=true;
+ rulerEnabled=false;rulerToggle.setAttribute('aria-pressed','false');clearRuler();
+ document.getElementById('contribute').open=true;
+ rulerInfo.textContent='Modo aporte: hacé clic en la zona exacta del mapa. Se marcará la ubicación y podrás completar el formulario.';
+ document.getElementById('map').scrollIntoView({behavior:'smooth',block:'center'});
+});
 
 function airstripPopup(name,kind,latitude,longitude,details={},nm=null,updated=''){
  const card=document.createElement('section');card.className='airstrip-popup';
