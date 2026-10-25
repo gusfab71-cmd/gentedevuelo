@@ -57,17 +57,17 @@ p{color:#c2d3df;line-height:1.73;font-size:15px}
 .hero-actions{display:flex;flex-wrap:wrap;gap:11px;margin-bottom:26px}
 .hero-note{display:flex;align-items:center;gap:9px;color:#9fb7cd;font-size:12px}
 .hero-note:before{content:"";width:7px;height:7px;background:#e8c38e;border-radius:50%;box-shadow:0 0 0 4px #c99f6030}
-.hero-visual{position:relative;min-height:515px;display:flex;flex-direction:column;justify-content:flex-end;border:1px solid #4b6a8a;border-radius:27px;overflow:hidden;background:#173450;box-shadow:0 35px 70px #020e1e7a}
-.hero-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:55% 50%;filter:saturate(.86) contrast(1.02)}
-.hero-visual:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,#06182723 0%,#06172835 34%,#061626ed 100%);pointer-events:none}
+.hero-visual{position:relative;min-height:515px;display:flex;flex-direction:column;justify-content:flex-end;border:1px solid #4b6a8a;border-radius:27px;overflow:hidden;background:#173450;box-shadow:0 35px 70px #020e1e7a;isolation:isolate}
+.hero-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:55% 54%;filter:saturate(.9) contrast(1.03)}
+.hero-visual:after{content:"";position:absolute;inset:0;z-index:0;background:linear-gradient(180deg,#061827c4 0%,#0618278c 23%,#0618270b 49%,#06162600 68%,#061626a8 100%);pointer-events:none}
 .photo-top{position:absolute;top:22px;left:21px;right:21px;z-index:1;display:flex;justify-content:space-between;gap:10px;align-items:center}
 .photo-top span{background:#0c1f33c9;color:#f4f8ff;border:1px solid #c3dcf06a;border-radius:999px;font-size:10px;letter-spacing:.1em;font-weight:800;padding:10px 12px;backdrop-filter:blur(7px)}
-.photo-bottom{z-index:1;position:relative;padding:30px}
+.photo-bottom{z-index:1;position:absolute;top:84px;left:0;right:0;padding:0 28px;max-width:100%;text-shadow:0 2px 9px #071422aa}
 .photo-bottom .overline{font-size:10px;color:#a9d6fc;letter-spacing:.18em;font-weight:900}
-.photo-bottom h2{font-size:27px;color:white;line-height:1.2;margin:12px 0 14px}
-.photo-bottom p{font-size:13px;color:#d8e8f5;line-height:1.55;margin:0}
-.photo-pills{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
-.photo-pills span{font-size:11px;border:1px solid #9cc3db6f;background:#29445dcb;padding:8px 11px;border-radius:9px;color:#f5faff}
+.photo-bottom h2{font-size:clamp(21px,2.15vw,27px);color:white;line-height:1.18;margin:9px 0 11px;max-width:440px}
+.photo-caption{z-index:1;position:absolute;bottom:0;left:0;right:0;padding:38px 27px 18px;background:linear-gradient(0deg,#061726e9 0%,#06172683 50%,transparent 100%);font-size:12px;color:#eff7fd;line-height:1.5;margin:0}
+.photo-pills{display:flex;gap:7px;flex-wrap:wrap;margin:0;max-width:100%}
+.photo-pills span{font-size:10px;border:1px solid #9cc3db6f;background:#183951d9;padding:7px 10px;border-radius:9px;color:#f5faff;text-shadow:none}
 .intro-strip{padding:24px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);background:#12283cc0}
 .intro-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
 .intro-item{display:flex;gap:15px;align-items:center}
@@ -123,7 +123,7 @@ footer{margin-top:90px;border-top:1px solid var(--border);background:#071523;pad
 .footer-links{display:flex;gap:18px;flex-wrap:wrap}
 @media(max-width:1080px){.nav-links{gap:14px}.nav-links a:nth-child(4){display:none}.hero-grid{gap:20px}.hero-visual{min-height:470px}.area-card{padding:24px 20px}.area-card h3{font-size:21px}}
 @media(max-width:890px){.container{width:min(1190px,calc(100% - 36px))}.nav-inner{flex-wrap:wrap;padding:13px 0;min-height:70px}.nav-links{order:3;width:100%;overflow-x:auto;padding:4px 0 3px}.nav-links a:nth-child(4){display:inline}.nav-cta{margin-left:auto}.hero-grid{grid-template-columns:1fr}.hero{padding:54px 0}.hero-copy>p{max-width:670px}.hero-visual{min-height:430px;max-height:530px}.areas-grid{grid-template-columns:repeat(2,1fr)}.area-card.primary{grid-column:1/-1;min-height:250px}.area-card .area-no{margin-bottom:35px}.module-grid{grid-template-columns:repeat(2,1fr)}.about-grid{gap:25px}}
-@media(max-width:640px){.nav-inner{gap:12px}.brand-name{font-size:20px}.brand-mark{width:41px;height:41px}.nav-links{gap:17px;font-size:11px;scrollbar-width:none}.nav-cta .btn{padding:9px 12px;min-height:39px}.hero{padding:43px 0 43px}.hero-visual{min-height:390px}.hero-visual .photo-bottom{padding:24px}.photo-bottom h2{font-size:24px}.intro-grid{grid-template-columns:1fr;gap:18px}.section{padding:64px 0}.why-grid,.areas-grid,.module-grid,.workflow,.about-grid,.faq-grid{grid-template-columns:1fr}.area-card.primary{grid-column:auto}.area-card{min-height:230px}.area-card .area-no{margin-bottom:29px}.why-card{min-height:unset;padding:23px}.module-card{min-height:170px}.about-visual{min-height:295px}.faq-grid{gap:15px}.final-cta{padding:30px 23px;display:block}.final-buttons{margin-top:22px}.footer-inner{align-items:start;flex-direction:column}.hero-copy>p{font-size:15px}}
+@media(max-width:640px){.nav-inner{gap:12px}.brand-name{font-size:20px}.brand-mark{width:41px;height:41px}.nav-links{gap:17px;font-size:11px;scrollbar-width:none}.nav-cta .btn{padding:9px 12px;min-height:39px}.hero{padding:43px 0 43px}.hero-visual{min-height:390px}.hero-visual .photo-bottom{top:80px;padding:0 20px}.photo-bottom h2{font-size:clamp(21px,5vw,24px)}.photo-caption{padding:32px 20px 15px;font-size:11px}.photo-top{top:17px;left:18px;right:18px}.intro-grid{grid-template-columns:1fr;gap:18px}.section{padding:64px 0}.why-grid,.areas-grid,.module-grid,.workflow,.about-grid,.faq-grid{grid-template-columns:1fr}.area-card.primary{grid-column:auto}.area-card{min-height:230px}.area-card .area-no{margin-bottom:29px}.why-card{min-height:unset;padding:23px}.module-card{min-height:170px}.about-visual{min-height:295px}.faq-grid{gap:15px}.final-cta{padding:30px 23px;display:block}.final-buttons{margin-top:22px}.footer-inner{align-items:start;flex-direction:column}.hero-copy>p{font-size:15px}}
 @media(prefers-reduced-motion:reduce){:root{scroll-behavior:auto}.btn,.area-card{transition:none}.btn:hover{transform:none}}
 </style>
 </head>
@@ -164,8 +164,8 @@ footer{margin-top:90px;border-top:1px solid var(--border);background:#071523;pad
           <div class="overline">UN ECOSISTEMA CONECTADO</div>
           <h2>Tres experiencias independientes.<br>Una sola visión aeronáutica.</h2>
           <div class="photo-pills"><span>Alumnos</span><span>Instructores y Jefatura</span><span>Administración</span></div>
-          <p>Diseñado para crecer con las necesidades de cada institución, sin perder sencillez de uso.</p>
         </div>
+        <p class="photo-caption">Diseñado para crecer con las necesidades de cada institución, sin perder sencillez de uso.</p>
       </div>
     </div>
   </section>
