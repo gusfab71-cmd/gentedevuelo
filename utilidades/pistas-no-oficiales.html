@@ -453,15 +453,14 @@ function addMetarReference(parent,latitude,longitude){
 function airstripPopup(name,kind,latitude,longitude,details={},nm=null,updated=''){
  const card=document.createElement('section');card.className='airstrip-popup';
  const tag=document.createElement('span');tag.className='popup-tag';
- tag.textContent=kind==='official'?'AERÓDROMO CON DOCUMENTACIÓN AIP':
-  kind==='lad'?'LUGAR APTO DENUNCIADO · ANAC':
-  kind==='reference'?'REFERENCIA CARTOGRÁFICA · OSM':'PISTA COMUNITARIA · PUBLICADA';
+ const type=AIRFIELD_TYPES.CATEGORIES[kind];
+ tag.textContent=kind==='reference'?'REFERENCIA CARTOGRÁFICA · OPENSTREETMAP':
+  kind==='unverified'||kind==='community'?'⚠ ESTATUS NO VERIFICADO · SOLO REFERENCIA':
+  (type?type.label.toUpperCase():'ESTATUS PENDIENTE DE VERIFICACIÓN');
  const title=document.createElement('h3');title.textContent=String(name||'Pista sin nombre');card.append(tag,title);
  const warning=document.createElement('p');warning.className='popup-warning';
- warning.textContent=kind==='official'?
-  'Consta en una publicación AIP; no confirma habilitación vigente, apertura ni condiciones actuales. Verificá AIP/MADHEL, NOTAM y autorización antes de volar.':
-  kind==='lad'?'Registro LAD ANAC: no constituye habilitación de aeródromo. Verificá vigencia, acceso y condiciones reales.':
-  'No verificada para operaciones. Confirmá AIP, NOTAM, obstáculos, condiciones reales y autorización de acceso antes de volar.';
+ warning.textContent=AIRFIELD_TYPES.warning(kind);
+ if(kind==='unverified'||kind==='community'||kind==='reference')warning.classList.add('critical');
  card.append(warning);
  const facts=document.createElement('dl');facts.className='popup-facts';
  const item=(label,value,showEmpty=false)=>{
@@ -473,7 +472,13 @@ function airstripPopup(name,kind,latitude,longitude,details={},nm=null,updated='
  };
  item('Provincia',details.province);
  item('Coordenadas',Number(latitude).toFixed(6)+', '+Number(longitude).toFixed(6),true);
- item('Categoría documental',details.documentCategory);
+ item('Categoría documental',details.documentCategory||AIRFIELD_TYPES.CATEGORIES[kind]?.short);
+ item('Condición legal',AIRFIELD_TYPES.LEGAL[details.legal_use||'unknown']);
+ item('Servicio ATS',AIRFIELD_TYPES.ATS[details.ats_service||'unknown']);
+ item('Reglas de operación',AIRFIELD_TYPES.OPS[details.operation_rules||'unknown']);
+ item('Condición de acceso',AIRFIELD_TYPES.ACCESS[details.access_policy||'unknown']);
+ item('Tipo de infraestructura',details.facility_kind);
+ item('Helipuerto (emplazamiento)',details.heliport_structure);
  item('Código OACI',details.icao);
  item('Registro',details.registry);
  item('Pista / rumbo',details.runway,kind==='community'||kind==='official'||kind==='lad');
@@ -520,13 +525,28 @@ function communityPopup(record,nm=null){
  let date='';
  const timestamp=record.updated_at||record.created_at;
  if(timestamp){const parsed=new Date(timestamp);if(Number.isFinite(parsed.getTime()))date=parsed.toLocaleDateString('es-AR')}
- return airstripPopup(record.name,'community',record.latitude,record.longitude,record.details||{},nm,date);
+ const kind=airfieldClass(record);
+ const docs=kind==='unverified'?{}:{
+  sourceLabel:'Información documental revisada por administración',
+  sourceDate:record.verified_source_date||'',
+  sourceUrl:record.verified_source_url||'',
+  verification:'La evidencia no acredita disponibilidad ni aptitud operacional actual.'
+ };
+ return airstripPopup(record.name,kind,record.latitude,record.longitude,
+  {...(record.details||{}),...docs,
+   legal_use:record.legal_use,ats_service:record.ats_service,operation_rules:record.operation_rules,
+   access_policy:record.access_policy,facility_kind:record.facility_kind,
+   heliport_structure:record.heliport_structure},nm,date);
 }
 function documentaryPopup(record,nm=null){
+ const kind=airfieldClass(record);
  const details={...(record.details||{}),sourceLabel:record.sourceLabel||'',sourceDate:record.sourceDate||'',
   sourceUrl:record.sourceUrl||'',verification:record.verification||'',
-  documentCategory:record.category==='lad'?'LAD (no habilitación)':'Publicado AIP (revisar vigencia)'};
- return airstripPopup(record.name,record.category,record.lat,record.lon,details,nm,record.sourceDate);
+  legal_use:record.legal_use,ats_service:record.ats_service,operation_rules:record.operation_rules,
+  access_policy:record.access_policy,facility_kind:record.facility_kind,heliport_structure:record.heliport_structure,
+  documentCategory:record.category==='lad'?'LAD (no habilitación)':'Publicado AIP; datos de ATS históricos',
+  notes:[record.details?.notes,record.classificationSourceDate?'Clasificación de control y uso: datos oficiales '+record.classificationSourceDate:''].filter(Boolean).join(' · ')};
+ return airstripPopup(record.name,kind,record.lat,record.lon,details,nm,record.sourceDate);
 }
 function referencePopup(record,nm=null){
  return airstripPopup(record.name,'reference',record.lat,record.lon,record.details||{},nm,'Fuente: OpenStreetMap · sin verificación operacional');
