@@ -46,6 +46,17 @@ h1{letter-spacing:-.035em}
 #map{height:74dvh;min-height:480px}
 .leaflet-popup-content{min-width:240px}
 @media(max-width:650px){.zone-panel{padding:13px}.zone-search-form{grid-template-columns:1fr 1fr}.zone-search-form label{grid-column:1/-1}.zone-search-form button{min-width:0;padding:10px 7px;font-size:12px}.zone-actions button{width:100%}.pin-legend{gap:9px 14px}#map{height:72dvh;min-height:500px}}
+
+.metar-box{margin:13px 0 4px;padding:12px;border:1px solid #bad2e4;border-radius:10px;background:#edf5fb;color:#18334a}
+.metar-box button{background:#225c83;color:white;border:1px solid #306d95;padding:9px 12px;font-size:12px;font-weight:750}
+.metar-box button:disabled{opacity:.6}
+.metar-box h4{font-size:13px;margin:0 0 5px;color:#17374e}
+.metar-caption{font-size:11px!important;color:#405c70!important;line-height:1.5!important;margin:5px 0!important}
+.metar-result{margin-top:8px}
+.metar-result .metar-station{font-size:12px;font-weight:820;color:#133753;margin:4px 0}
+.metar-result .metar-observation{font-size:11px;color:#425e74;line-height:1.5}
+.metar-result .metar-stale{font-size:11px;font-weight:800;color:#8d430d;background:#fff0d1;border-radius:7px;padding:7px 9px;margin-top:7px}
+.metar-result pre{font:11px/1.55 ui-monospace,SFMono-Regular,Consolas,monospace;background:#132a3e;color:#edf7ff;padding:9px 10px;white-space:pre-wrap;overflow-wrap:anywhere;border-radius:7px;margin:9px 0}
 </style></head><body><main><p><a href="index.html">← Utilidades</a></p><h1>Pistas no oficiales · Gente de Vuelo</h1><p class="notice">Información comunitaria no oficial. No sustituye AIP, NOTAM, verificación de condiciones ni autorización del propietario. No se publican ubicaciones privadas sin consentimiento.</p><p class="notice">Separá o juntá dos dedos para hacer zoom. Mantené presionado un lugar para marcar una nueva pista y agregar un comentario. Elegí Satélite o Calles arriba del mapa. Las imágenes pueden estar desactualizadas: comprobá siempre el estado real de la pista.</p><section class="zone-panel" aria-label="Buscar zona en el mapa">
 <h2>Ubicá una zona o una pista</h2>
 <p>Buscá por localidad, provincia o nombre de pista. También podés ingresar coordenadas decimales, por ejemplo: -34.90, -57.94. El mapa se centrará en el lugar elegido.</p>
@@ -222,6 +233,53 @@ document.getElementById('zone-propose-center').addEventListener('click',()=>{
 });
 
 
+
+const nearestMetarCache=new Map();
+const METAR_CACHE_MILLISECONDS=300000;
+function addMetarReference(parent,latitude,longitude){
+ const wrapper=document.createElement('div');wrapper.className='metar-box';
+ const title=document.createElement('h4');title.textContent='METAR de referencia cercano';
+ const caption=document.createElement('p');caption.className='metar-caption';
+ caption.textContent='Observación de una estación distinta a esta pista. Consultá solo cuando lo necesites.';
+ const button=document.createElement('button');button.type='button';
+ button.textContent='Consultar METAR cercano';
+ const result=document.createElement('div');result.className='metar-result';result.setAttribute('aria-live','polite');
+ wrapper.append(title,caption,button,result);parent.append(wrapper);
+ const key=Number(latitude).toFixed(2)+','+Number(longitude).toFixed(2);
+ function renderWeather(payload){
+  result.replaceChildren();
+  const line=(value,style='metar-observation')=>{const el=document.createElement('p');el.className=style;el.textContent=value;result.append(el)};
+  if(!payload.available){line(payload.reason||'No se encontró ninguna estación con METAR utilizable en las proximidades.');return}
+  line('Estación '+payload.station+' · '+Number(payload.distanceNm).toFixed(1)+' NM de la pista','metar-station');
+  const stamp=new Date(payload.observationUtc);
+  const time=Number.isFinite(stamp.getTime())?stamp.toISOString().slice(0,16).replace('T',' ')+' UTC':'Hora UTC no disponible';
+  line('Observado: '+time+' · Antigüedad aproximada: '+payload.ageMinutes+' min');
+  if(payload.freshness!=='recent'){
+   line('METAR ANTIGUO: no debe considerarse un informe actual. Revisá la fuente oficial.','metar-stale');
+  }
+  const raw=document.createElement('pre');raw.textContent=payload.raw;result.append(raw);
+  line('La estación puede estar lejos o presentar condiciones distintas. No certifica el tiempo de la pista.');
+  const source=document.createElement('a');source.textContent='Fuente: Aviation Weather Center (NOAA) ↗';
+  source.href='https://aviationweather.gov/';source.target='_blank';source.rel='noopener noreferrer';
+  result.append(source);
+ }
+ button.addEventListener('click',async()=>{
+  const found=nearestMetarCache.get(key);
+  if(found&&Date.now()-found.at<METAR_CACHE_MILLISECONDS){renderWeather(found.payload);return}
+  button.disabled=true;result.textContent='Consultando METAR cercano…';
+  try{
+   const path='/api/airstrip-metar?lat='+encodeURIComponent(latitude)+'&lon='+encodeURIComponent(longitude);
+   const response=await fetch(path,{headers:{Accept:'application/json'},signal:AbortSignal.timeout(13000)});
+   const data=await response.json();
+   if(!response.ok||!data.ok)throw Error(data.error||'No se pudo recuperar el METAR cercano.');
+   nearestMetarCache.set(key,{at:Date.now(),payload:data});renderWeather(data);
+  }catch(e){
+   result.textContent='METAR no disponible: '+(e.name==='TimeoutError'?'la consulta excedió el tiempo de espera.':e.message)+
+    ' Consultá la fuente meteorológica oficial.';
+  }finally{button.disabled=false}
+ });
+}
+
 function airstripPopup(name,kind,latitude,longitude,details={},nm=null,updated=''){
  const card=document.createElement('section');card.className='airstrip-popup';
  const tag=document.createElement('span');tag.className='popup-tag';
@@ -261,6 +319,7 @@ function airstripPopup(name,kind,latitude,longitude,details={},nm=null,updated='
   try{await navigator.clipboard.writeText(Number(latitude).toFixed(6)+', '+Number(longitude).toFixed(6));copy.textContent='Coordenadas copiadas'}
   catch(_){copy.textContent='No se pudieron copiar';}
  });actions.append(copy);card.append(actions);
+ addMetarReference(card,latitude,longitude);
  return card;
 }
 function communityPopup(record,nm=null){
