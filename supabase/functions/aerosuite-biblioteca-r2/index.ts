@@ -57,7 +57,7 @@ async function signedCopyObject(input:any){
  const response=await client.fetch(target,{method:"PUT",headers:{
   "x-amz-copy-source":source,
   "x-amz-metadata-directive":"REPLACE",
-  "Content-Type":"application/pdf",
+  "Content-Type":input.ContentType||"application/pdf",
   "Cache-Control":"public, max-age=60"
  },signal:AbortSignal.timeout(45000)});
  const xml=await response.text();
@@ -157,24 +157,52 @@ async function state(client:S3Client,type:string){
 const legacyBucket="aerosuite-biblioteca";
 const legacyMain:{[key:string]:string}={teoria:"teoria/fichas-teoria-30.pdf",crm:"crm/fichas-crm-06.pdf"};
 const extraPrefix="biblioteca/materias/";
+const academyTypes:Record<string,string>={
+ pdf:"application/pdf",jpg:"image/jpeg",jpeg:"image/jpeg",png:"image/png",webp:"image/webp",
+ mp4:"video/mp4",webm:"video/webm",mp3:"audio/mpeg",wav:"audio/wav",
+ docx:"application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+ pptx:"application/vnd.openxmlformats-officedocument.presentationml.presentation",
+ xlsx:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+ txt:"text/plain"
+};
+function typeForName(filename:unknown){
+ if(typeof filename!=="string"||filename.length<5||filename.length>180||
+    /[\\/\x00-\x1f]/.test(filename))return null;
+ const extension=filename.split(".").pop()?.toLowerCase()||"";
+ return academyTypes[extension]?{extension,mime:academyTypes[extension]}:null;
+}
+function matchesFileSignature(data:Uint8Array,extension:string){
+ const text=new TextDecoder("latin1").decode(data);
+ if(extension==="pdf")return text.startsWith("%PDF-");
+ if(extension==="jpg"||extension==="jpeg")return data[0]===255&&data[1]===216&&data[2]===255;
+ if(extension==="png")return [137,80,78,71,13,10,26,10].every((b,i)=>data[i]===b);
+ if(extension==="webp")return text.startsWith("RIFF")&&text.slice(8,12)==="WEBP";
+ if(extension==="mp4")return text.slice(4,8)==="ftyp";
+ if(extension==="webm")return [26,69,223,163].every((b,i)=>data[i]===b);
+ if(extension==="mp3")return text.startsWith("ID3")||(data[0]===255&&(data[1]&224)===224);
+ if(extension==="wav")return text.startsWith("RIFF")&&text.slice(8,12)==="WAVE";
+ if(["docx","pptx","xlsx"].includes(extension))return [80,75,3,4].every((b,i)=>data[i]===b);
+ if(extension==="txt")return !data.includes(0);
+ return false;
+}
 const publicURL=(key:string)=>publicBase+key.split("/").map(encodeURIComponent).join("/");
 const copySource=(key:string)=>encodeURIComponent(bucket+"/"+key).replace(/%2F/gi,"/");
 function extraSlug(value:string){
  return value.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase()
   .replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,55);
 }
-function extraKey(name:string,count:number,hidden=false){
- return extraPrefix+(hidden?"oculta--":"")+extraSlug(name)+"--"+count+"--"+encodeURIComponent(name)+".pdf";
+function extraKey(name:string,count:number,hidden=false,extension="pdf"){
+ return extraPrefix+(hidden?"oculta--":"")+extraSlug(name)+"--"+count+"--"+encodeURIComponent(name)+"."+extension;
 }
 function parseExtra(key:unknown){
  if(typeof key!=="string"||!key.startsWith(extraPrefix))return null;
  const suffix=key.slice(extraPrefix.length);
- const m=suffix.match(/^(oculta--)?([a-z0-9-]+)--([1-9][0-9]{0,2})--(.+)\.pdf$/);
+ const m=suffix.match(/^(oculta--)?([a-z0-9-]+)--([1-9][0-9]{0,2})--(.+)\.(pdf|jpg|jpeg|png|webp|mp4|webm|mp3|wav|docx|pptx|xlsx|txt)$/);
  if(!m)return null;
  try{
   const name=decodeURIComponent(m[4]),count=Number(m[3]);
-  if(name.length<3||name.length>80||count<1||count>500||extraKey(name,count,!!m[1])!==key)return null;
-  return {name,count,hidden:!!m[1],slug:m[2],path:key};
+  if(name.length<3||name.length>80||count<1||count>500||extraKey(name,count,!!m[1],m[5])!==key)return null;
+  return {name,count,hidden:!!m[1],slug:m[2],path:key,extension:m[5],mime:academyTypes[m[5]]};
  }catch{return null}
 }
 
@@ -185,7 +213,9 @@ async function listExtras(adminDb:any){
  return (data||[]).map((x:any)=>({
   slug:x.slug,name:x.name,count:x.fichas,hidden:x.hidden,path:x.r2_key,
   size:x.file_size,version:x.file_version,updatedAt:x.updated_at,
-  url:publicURL(x.r2_key),source:"r2"
+  url:publicURL(x.r2_key),source:"r2",
+  mime:parseExtra(x.r2_key)?.mime||"application/pdf",
+  extension:parseExtra(x.r2_key)?.extension||"pdf"
  }));
 }
 async function eraseLegacyExtras(adminDb:any,slug:string){
@@ -258,7 +288,8 @@ Deno.serve(async req=>{
    const objectKey=type==="extra"?row!.path:keys[type];
    const head=await signedSend(client,new HeadObjectCommand({Bucket:bucket,Key:objectKey}));
    if(!head.ContentLength)return reply(origin,404,{error:"El PDF no existe"});
-   const filename=type==="extra"?extraSlug(row!.name)+".pdf":type==="teoria"?"teoria-aeronautica.pdf":"crm-factores-humanos.pdf";
+   const safeName=(row?.name||"archivo").replace(/[^a-zA-Z0-9_.-]/g,"_").slice(0,110);
+   const filename=type==="extra"?(safeName.endsWith("."+row!.extension)?safeName:safeName+"."+row!.extension):type==="teoria"?"teoria-aeronautica.pdf":"crm-factores-humanos.pdf";
    const downloadUrl=await getSignedUrl(client,new GetObjectCommand({
     Bucket:bucket,Key:objectKey,ResponseContentDisposition:'attachment; filename="'+filename+'"'
    }),{expiresIn:120});
@@ -302,7 +333,7 @@ Deno.serve(async req=>{
    if(!row)return reply(origin,400,{error:"Materia inválida"});
    const target=extraKey(row.name,row.count,!row.hidden);
    await signedSend(client,new CopyObjectCommand({Bucket:bucket,Key:target,
-    CopySource:copySource(row.path),ContentType:"application/pdf",CacheControl:"public, max-age=60",MetadataDirective:"REPLACE"}));
+    CopySource:copySource(row.path),ContentType:row.mime,CacheControl:"public, max-age=60",MetadataDirective:"REPLACE"}));
    const verified=await signedSend(client,new HeadObjectCommand({Bucket:bucket,Key:target}));
    if(!verified.ContentLength)throw Error("No se confirmó el cambio");
    const {error:catalogError}=await adminDb.from("aerosuite_library_catalog").update({
@@ -324,8 +355,10 @@ Deno.serve(async req=>{
    if(!Number.isInteger(body.size)||body.size<5||body.size>maxBytes)
     return reply(origin,413,{error:"Solo PDF de hasta 100 MB"});
    const path="biblioteca/pendientes/"+user.id+"/"+crypto.randomUUID()+".pdf";
+   const fileType=type==="extra"?typeForName(body.filename):{extension:"pdf",mime:"application/pdf"};
+   if(!fileType)return reply(origin,415,{error:"Formato de archivo no admitido para Academia Aeronáutica"});
    const created=await signedSend(client,new CreateMultipartUploadCommand({
-    Bucket:bucket,Key:path,ContentType:"application/pdf"
+    Bucket:bucket,Key:path,ContentType:fileType.mime
    }));
    if(!created.UploadId)return reply(origin,502,{error:"R2 no abrió la transferencia fragmentada"});
    return reply(origin,200,{ok:true,path,uploadId:created.UploadId,partBytes:5*1024*1024});
@@ -370,24 +403,26 @@ Deno.serve(async req=>{
    if(!validStaging(path,user.id))return reply(origin,400,{error:"Ruta de carga inválida"});
    const head=await signedSend(client,new HeadObjectCommand({Bucket:bucket,Key:path}));
    const size=Number(head.ContentLength||0);
+   const format=type==="extra"?typeForName(body.filename):{extension:"pdf",mime:"application/pdf"};
+   if(!format)return reply(origin,415,{error:"Formato de archivo no admitido"});
    if(size<5||size>maxBytes){await signedSend(client,new DeleteObjectCommand({Bucket:bucket,Key:path}));return reply(origin,413,{error:"El archivo supera los 100 MB"})}
-   if((head.ContentType||"").split(";")[0]!=="application/pdf")return reply(origin,415,{error:"El archivo no es PDF"});
-   const sample=await signedSend(client,new GetObjectCommand({Bucket:bucket,Key:path,Range:"bytes=0-7"}));
+   if((head.ContentType||"").split(";")[0]!==format.mime)return reply(origin,415,{error:"El tipo del archivo no coincide con su extensión"});
+   const sample=await signedSend(client,new GetObjectCommand({Bucket:bucket,Key:path,Range:"bytes=0-15"}));
    const magic=await sample.Body?.transformToByteArray();
-   if(!magic||new TextDecoder().decode(magic.slice(0,5))!=="%PDF-")return reply(origin,415,{error:"PDF inválido"});
+   if(!magic||!matchesFileSignature(magic,format.extension))return reply(origin,415,{error:"Archivo inválido o formato no admitido"});
 
    // Publicar primero y verificar; recién después retirar versiones anteriores.
    if(type==="extra"){
     const name=typeof body.name==="string"?body.name.trim():"",count=Number(body.count);
     if(name.length<3||name.length>80||!Number.isInteger(count)||count<1||count>500)
      return reply(origin,400,{error:"Nombre o cantidad de fichas inválida"});
-    const key=extraKey(name,count);
-    if(!extraSlug(name))return reply(origin,400,{error:"Nombre de materia inválido"});
+    const key=extraKey(name,count,false,format.extension);
+    if(!extraSlug(name)||body.filename!==name)return reply(origin,400,{error:"Nombre o archivo inválido"});
     const previous=await adminDb.from("aerosuite_library_catalog").select("r2_key")
       .eq("slug",extraSlug(name)).maybeSingle();
     if(previous.error)throw Error("No se pudo comprobar la versión anterior del catálogo: "+previous.error.message);
     await signedSend(client,new CopyObjectCommand({Bucket:bucket,Key:key,CopySource:copySource(path),
-     ContentType:"application/pdf",CacheControl:"public, max-age=60",MetadataDirective:"REPLACE"}));
+     ContentType:format.mime,CacheControl:"public, max-age=60",MetadataDirective:"REPLACE"}));
     const published=await signedSend(client,new HeadObjectCommand({Bucket:bucket,Key:key}));
     if(Number(published.ContentLength)!==size)return reply(origin,502,{error:"No se confirmó la materia en R2"});
     const version=(published.LastModified?.toISOString()||"")+"-"+String(published.ETag||"").replace(/"/g,"");
