@@ -497,7 +497,8 @@ async function refreshStudentLibrary(){
   const theoryFile=theory.error?null:(theory.data||[]).find(file=>file.name==='fichas-teoria-30.pdf');
   const crmFile=crm.error?null:(crm.data||[]).find(file=>file.name==='fichas-crm-06.pdf');
   const previousExtras=libraryExtra.filter(item=>item.source==='r2');
-  const r2Extras=r2State?(r2State.extras||[]):previousExtras;
+  const catalogWarning=(r2State?.warnings||[]).some(w=>String(w).startsWith('Materias:'));
+  const r2Extras=r2State&&!catalogWarning?(r2State.extras||[]):previousExtras;
   const legacyExtras=extras.error?[]:(extras.data||[]).map(parseExtraFile).filter(Boolean);
   const r2Slugs=new Set(r2Extras.map(item=>extraSlug(item.name)));
   libraryExtra=[...r2Extras,...legacyExtras.filter(item=>!r2Slugs.has(extraSlug(item.name)))]
@@ -651,9 +652,23 @@ document.addEventListener('click',async event=>{
    try{
     stagedPath=await transferLibraryFileToR2('extra',file);
     const result=await callLibraryR2('finish',{type:'extra',path:stagedPath,name,count});
-    if(!result?.ok||!result?.published||result.size!==file.size)throw Error('No se pudo verificar la publicación.');
+    if(!result?.ok||!result?.published||result.size!==file.size||!result.path||!result.url)
+     throw Error('No se pudo verificar la publicación.');
     stagedPath=null;
-    libraryUploadMessage('Materia publicada en Cloudflare R2: '+name+(result.cleanupWarning?' Advertencia: '+result.cleanupWarning:''));
+    const publishedItem={
+     name,count,slug:extraSlug(name),path:result.path,url:result.url,
+     size:result.size,hidden:false,source:'r2',
+     updatedAt:new Date().toISOString(),version:Date.now().toString()
+    };
+    libraryExtra=[...libraryExtra.filter(item=>extraSlug(item.name)!==publishedItem.slug),publishedItem]
+     .sort((a,b)=>a.name.localeCompare(b.name,'es'));
+    libraryUploadMessage('Publicación confirmada por Cloudflare R2: '+name+'. Actualizando las tarjetas…');
+    if(tab==='admin_academia'){
+     render();
+     const uploader=$('aerosuiteUploader');
+     if(uploader)uploader.open=true;
+    }
+    if(result.cleanupWarning)libraryStatusWarning=result.cleanupWarning;
    }catch(error){
     if(stagedPath)await callLibraryR2('discard',{path:stagedPath}).catch(()=>{});
     throw error;
@@ -677,6 +692,9 @@ document.addEventListener('click',async event=>{
    }else throw Error('Acción inválida');
   }
   await refreshStudentLibrary();
+  if(save){
+   libraryUploadMessage('Materia publicada y disponible para los alumnos. Verificá la nueva tarjeta en la biblioteca.');
+  }
  }catch(err){libraryUploadMessage('No se pudo completar: '+(err.message||'error'));await refreshStudentLibrary();}
  finally{if(control.isConnected)control.disabled=false}
 });
