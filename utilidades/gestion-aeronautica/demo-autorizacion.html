@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>AeroSuite · Camino demo de autorización institucional</title>
+<style>
+:root{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;color:#edf5fa;background:#0f1d2a;color-scheme:dark}
+*{box-sizing:border-box}[hidden]{display:none!important}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 70% 8%,#3152705a,transparent 45%),linear-gradient(145deg,#101f2d,#0b1522)}
+a{color:#c9e5fa;text-decoration:none}a:hover{text-decoration:underline}
+button,input,select{font:inherit}button{cursor:pointer}button:disabled{opacity:.46;cursor:not-allowed}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #afdbfb;outline-offset:3px}
+header{padding:17px max(20px,calc((100vw - 1280px)/2));background:#172b3c;border-bottom:1px solid #42637e;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.brand{font-weight:900;font-size:21px;letter-spacing:-.03em;color:#d8ebfa}.brand b{color:#83bdec}.brand small{display:block;font-size:10px;color:#a8c6d7;letter-spacing:.13em;font-weight:700}
+nav{display:flex;align-items:center;gap:14px;font-size:12px;flex-wrap:wrap}.flag{padding:8px 11px;font-size:10px;font-weight:900;letter-spacing:.09em;border:1px solid #9f7f55;background:#463826;color:#ffe0ae;border-radius:999px}
+main{max-width:1280px;padding:31px 20px 75px;margin:auto}
+.overline{text-transform:uppercase;letter-spacing:.15em;font-size:11px;font-weight:850;color:#b0d2ef}
+h1{font-size:clamp(27px,3.7vw,43px);line-height:1.15;letter-spacing:-.035em;margin:8px 0 12px}
+p{color:#bcd1df;line-height:1.6}.intro{max-width:850px;font-size:14px}
+.notice{border:1px solid #6e89a0;background:#263e50;border-radius:12px;padding:15px 18px;margin:20px 0;color:#e4f1f7;font-size:13px;line-height:1.5}
+.layout{display:grid;grid-template-columns:260px minmax(0,1fr);gap:19px;margin-top:23px;align-items:start}
+.side,.panel{background:#192d3d;border:1px solid #43627a;border-radius:17px}
+.side{padding:15px;position:sticky;top:20px}
+.side h2{font-size:13px;margin:5px 6px 13px;color:#b4cddc;letter-spacing:.06em;text-transform:uppercase}
+.steps{display:grid;gap:6px}.step{display:flex;align-items:center;gap:11px;text-align:left;background:transparent;border:1px solid transparent;color:#c1d3e1;padding:12px 10px;width:100%;border-radius:10px;font-size:12px}
+.step .num{display:grid;place-items:center;border:1px solid #7196ad;width:29px;height:29px;border-radius:50%;flex-shrink:0;font-size:12px;font-weight:850}
+.step.current{background:#294c67;border-color:#83aac8;color:#fff}.step.done .num{border-color:#79b6a2;background:#24443f;color:#c8f6e8}
+.side-note{color:#a5bbcb;font-size:11px;line-height:1.6;border-top:1px solid #3c5a70;margin:15px 5px 0;padding-top:13px}
+.panel{padding:25px;min-height:490px}
+.panel h2{font-size:24px;letter-spacing:-.025em;margin:2px 0 8px}
+.panel h3{font-size:16px;color:#f1e1c6;margin:16px 0 11px}
+.lead{font-size:13px;margin:4px 0 20px}
+.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+label{display:grid;gap:7px;font-size:12px;color:#d4e7f1}.wide{grid-column:1/-1}
+input,select{min-height:44px;padding:10px 12px;border:1px solid #6b8ca4;border-radius:9px;background:#102331;color:#eff8ff;width:100%;font-size:14px}
+.card{background:#122636;border:1px solid #45627a;border-radius:13px;padding:16px;margin:11px 0}
+.card strong{font-size:14px}.card p{font-size:12px;margin:6px 0 0}
+.detail{display:grid;grid-template-columns:minmax(115px,200px) minmax(0,1fr);gap:10px 15px;padding:13px 0;border-bottom:1px solid #38556b;font-size:13px}
+.detail .key{color:#a9c7d8}.detail .val{font-weight:700;overflow-wrap:anywhere}
+.preview-email{background:#eaf2f8;color:#182b3a;border-radius:13px;padding:21px;max-width:780px;margin:17px 0}
+.preview-email p{color:#344957;font-size:13px}.preview-email .preview-title{font-weight:850;font-size:18px}.preview-email .preview-button{display:inline-block;background:#265d8b;color:#fff;border-radius:9px;padding:11px 15px;font-weight:800;font-size:13px}
+.preview-email .preview-small{font-size:11px;color:#6c7984}
+.pill{display:inline-flex;align-items:center;padding:6px 10px;font-size:11px;color:#b8ead8;border:1px solid #498b74;background:#21463d;border-radius:999px}
+.badge{display:inline-block;padding:4px 8px;color:#ffe1b2;border:1px solid #a48a68;background:#453829;border-radius:8px;font-weight:800;font-size:10px;letter-spacing:.07em}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:24px}
+.action{border:1px solid #89abc3;background:#29465d;color:#e9f4fb;border-radius:10px;padding:12px 16px;font-size:13px;font-weight:750}
+.action.primary{background:#e9c994;border-color:#e9c994;color:#172839;font-weight:850}
+.action:hover:not(:disabled){filter:brightness(1.13)}
+.mock-shell{border:1px solid #52718b;border-radius:15px;overflow:hidden;margin:18px 0;background:#132536}
+.mock-head{padding:16px;background:#23445f;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.mock-head strong{font-size:16px}.mock-head span{font-size:11px;color:#c3dded}
+.mock-body{padding:18px}
+.tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+.tile{padding:17px;border-radius:12px;background:#234057;border:1px solid #4e7897}
+.tile strong{display:block;font-size:14px}.tile span{display:block;margin-top:6px;font-size:11px;color:#bdcede}
+.fine{color:#9cb6c7;font-size:11px}
+@media(max-width:830px){.layout{grid-template-columns:1fr}.side{position:static}.steps{grid-template-columns:repeat(2,minmax(0,1fr))}.panel{min-height:0}}
+@media(max-width:520px){main{padding:21px 12px 48px}header{padding:15px}.panel{padding:16px}.form-grid,.tiles,.steps{grid-template-columns:1fr}.detail{grid-template-columns:1fr;gap:2px}.actions .action{width:100%}}
+</style>
+<script src="../../assets/supabase-2.117.2.min.js"></script>
+<script src="../../assets/community-config.js"></script>
+<script src="../../assets/auth-guard.js?v=20261013registro2"></script>
+</head>
+<body>
+<header>
+ <a class="brand" href="index.html">Aero<b>Suite</b><small>BY GENTE DE VUELO · SIMULADOR DE ALTA</small></a>
+ <nav><span class="flag">DEMO · NO ENVÍA CORREOS</span><a href="superadministrador.html">Superadministrador</a><a href="portal.html">Portal demo</a></nav>
+</header>
+<main>
+ <span class="overline">Recorrido de una nueva institución</span>
+ <h1>Del alta de la escuela al primer ingreso</h1>
+ <p class="intro">Probá los cinco momentos de la contratación y activación institucional. Es una simulación visual independiente de los registros reales: <strong>no crea escuelas, no invita usuarios, no cambia licencias y no guarda datos.</strong></p>
+ <div id="authNotice" class="notice" role="status" aria-live="polite">Comprobando tu acceso de Superadministrador…</div>
+ <div id="demo" class="layout" hidden>
+  <aside class="side" aria-label="Etapas del recorrido">
+   <h2>Camino demo</h2>
+   <div class="steps">
+    <button class="step current" type="button" data-nav="0"><span class="num">1</span><span>Registrar escuela</span></button>
+    <button class="step" type="button" data-nav="1" disabled><span class="num">2</span><span>Autorizar 30 días</span></button>
+    <button class="step" type="button" data-nav="2" disabled><span class="num">3</span><span>Invitar responsable</span></button>
+    <button class="step" type="button" data-nav="3" disabled><span class="num">4</span><span>Activar acceso</span></button>
+    <button class="step" type="button" data-nav="4" disabled><span class="num">5</span><span>Ingresar al portal</span></button>
+   </div>
+   <div class="side-note">Esta demostración no utiliza cuentas ni tokens reales. El portal del cliente todavía no está habilitado para instituciones.</div>
+  </aside>
+  <div class="panel">
+   <section data-screen="0">
+    <span class="overline">Etapa 1 · Administración de AeroSuite</span>
+    <h2>Alta de una escuela ficticia</h2>
+    <p class="lead">Completá un registro de ejemplo. Los campos no se envían a ninguna base de datos.</p>
+    <form id="schoolForm">
+     <div class="form-grid">
+      <label class="wide">Institución <input id="schoolName" value="Escuela de Vuelo Horizonte (DEMO)" required minlength="3" maxlength="160"></label>
+      <label>Tipo <select id="schoolKind"><option value="escuela">Escuela de vuelo</option><option value="aeroclub">Aeroclub</option><option value="aerodromo">Aeródromo</option></select></label>
+      <label>Plan inicial <select id="schoolPlan"><option value="institucional">Institucional (prueba)</option><option value="essential">Essential (propuesto)</option><option value="pro">Pro (propuesto)</option><option value="aeroclub_pro">AeroClub Pro (propuesto)</option></select></label>
+      <label>Responsable institucional <input id="schoolContact" value="María Torres (ficticia)" required minlength="3" maxlength="130"></label>
+      <label>Correo de ejemplo <input type="email" id="schoolEmail" value="direccion@escuela-ejemplo.invalid" required maxlength="254"></label>
+     </div>
+     <div class="actions"><button class="action primary" type="submit">Continuar con autorización</button></div>
+    </form>
+    <p class="fine">El dominio .invalid identifica correos de ejemplo que no se pueden utilizar para enviar invitaciones.</p>
+   </section>
+   <section data-screen="1" hidden>
+    <span class="overline">Etapa 2 · Decisión del Superadministrador</span>
+    <h2>Autorizar la prueba gratuita</h2>
+    <p class="lead">Esta sería la ficha que aprobás desde el panel comercial antes de que alguien pueda entrar.</p>
+    <div class="card">
+     <span class="badge">REGISTRO SIMULADO</span>
+     <div class="detail"><span class="key">Institución</span><span class="val" id="confirmSchool">—</span></div>
+     <div class="detail"><span class="key">Responsable</span><span class="val" id="confirmContact">—</span></div>
+     <div class="detail"><span class="key">Plan</span><span class="val" id="confirmPlan">—</span></div>
+     <div class="detail"><span class="key">Duración de prueba</span><span class="val">30 días · sin tarjeta ni cobro automático</span></div>
+    </div>
+    <div class="notice">Solo vos, como Superadministrador, autorizás la institución. Una declaración de alumno o instructor no concede permisos institucionales.</div>
+    <div class="actions"><button class="action" type="button" data-back="0">Volver</button><button class="action primary" type="button" id="authorizeDemo">Simular autorización de 30 días</button></div>
+   </section>
+   <section data-screen="2" hidden>
+    <span class="overline">Etapa 3 · Invitación institucional</span>
+    <h2>Así recibiría el correo la escuela</h2>
+    <p class="lead">Vista previa del mensaje. El botón de abajo solo avanza la demostración: no se conecta con Gmail ni con Supabase Auth.</p>
+    <div class="preview-email" aria-label="Ejemplo de correo">
+     <div class="preview-small">AeroSuite · By Gente de Vuelo</div>
+     <div class="preview-title">Invitación para administrar tu institución</div>
+     <p>Hola, <strong id="emailContact">—</strong>:</p>
+     <p>Tu institución <strong id="emailSchool">—</strong> fue autorizada para explorar AeroSuite con una prueba gratuita de 30 días.</p>
+     <p>Para activar la cuenta deberás verificar tu correo y establecer una contraseña personal. No compartiremos claves ni utilizaremos una contraseña general.</p>
+     <span class="preview-button">Aceptar invitación</span>
+     <p class="preview-small">Ejemplo de botón sin enlace operativo. En producción se emitiría un vínculo personal de un solo uso y vigencia limitada.</p>
+    </div>
+    <div class="detail"><span class="key">Destinatario de muestra</span><span class="val" id="emailTo">—</span></div>
+    <div class="actions"><button class="action" type="button" data-back="1">Volver</button><button class="action primary" type="button" id="simulateSend">Simular correo enviado</button></div>
+   </section>
+   <section data-screen="3" hidden>
+    <span class="overline">Etapa 4 · Visión del responsable</span>
+    <h2>Activación de la cuenta institucional</h2>
+    <p class="lead">Ahora estás viendo lo que haría la persona invitada, no el ingreso real a su cuenta.</p>
+    <div class="card">
+     <span class="pill">Invitación simulada recibida</span>
+     <div class="detail"><span class="key">Institución</span><span class="val" id="activateSchool">—</span></div>
+     <div class="detail"><span class="key">Correo por verificar</span><span class="val" id="activateEmail">—</span></div>
+     <div class="detail"><span class="key">Identidad y contraseña</span><span class="val">Se validarían en Supabase Auth; no se solicitan en esta demo.</span></div>
+     <div class="detail"><span class="key">Rol habilitado</span><span class="val">Administrador institucional (asignación exclusiva de la escuela)</span></div>
+    </div>
+    <p class="fine">En el sistema definitivo: verificar correo → crear clave personal → aceptar términos → asociar la cuenta a la institución autorizada.</p>
+    <div class="actions"><button class="action" type="button" data-back="2">Volver</button><button class="action primary" type="button" id="simulateActivate">Simular activación del responsable</button></div>
+   </section>
+   <section data-screen="4" hidden>
+    <span class="overline">Etapa 5 · Visión del cliente</span>
+    <h2>Primer ingreso al portal de la escuela</h2>
+    <p class="lead">Esta maqueta muestra el acceso institucional que construiremos. No permite operar sobre alumnos, reservas o aeronaves reales.</p>
+    <div class="mock-shell">
+     <div class="mock-head"><strong id="portalSchool">—</strong><span>DEMO · Administrador institucional</span></div>
+     <div class="mock-body">
+      <span class="pill">Período de prueba activo · simulación</span>
+      <p style="font-size:12px" id="portalTerm">—</p>
+      <div class="tiles">
+       <div class="tile"><strong>Reservas de vuelo</strong><span>Turnera de la institución</span></div>
+       <div class="tile"><strong>Alumnos e instructores</strong><span>Miembros autorizados por esta escuela</span></div>
+       <div class="tile"><strong>Flota y mantenimiento</strong><span>Información exclusiva de la institución</span></div>
+       <div class="tile"><strong>Academia aeronáutica</strong><span>Materiales y seguimiento formativo</span></div>
+      </div>
+     </div>
+    </div>
+    <div class="notice">Resultado esperado: cada escuela administra únicamente sus datos, y el Superadministrador conserva el control de licencias. Esta separación todavía debe aplicarse a los módulos operativos antes del lanzamiento.</div>
+    <div class="actions"><button class="action" type="button" data-back="3">Volver</button><button class="action primary" type="button" id="restartDemo">Reiniciar recorrido</button><a class="action" href="superadministrador.html">Volver al Superadministrador</a></div>
+   </section>
+  </div>
+ </div>
+</main>
+<script>
+'use strict';
+(async()=>{
+ const authNotice=document.getElementById('authNotice');
+ const demoBox=document.getElementById('demo');
+ try{
+  await window.GDV_AUTH.ready;
+  const client=window.GDV_AUTH.client;
+  if(!client)throw new Error('El servicio de autenticación no está disponible.');
+  const {data:{user},error}=await client.auth.getUser();
+  if(error||!user){authNotice.textContent='Acceso restringido. Iniciá sesión en Gente de Vuelo como administrador.';return}
+  const permission=await client.from('aerosuite_superadmins').select('user_id').eq('user_id',user.id).maybeSingle();
+  if(permission.error)throw permission.error;
+  if(!permission.data||permission.data.user_id!==user.id){authNotice.textContent='Acceso denegado. Solo el Superadministrador AeroSuite puede ejecutar la demostración.';return}
+  authNotice.textContent='Superadministrador autenticado. Recorrido de ejemplo: ningún paso guarda datos ni envía correos.';
+  demoBox.hidden=false;
+ }catch(error){authNotice.textContent='No se pudo validar el permiso: '+(error?.message||'Error de autenticación');return}
+ const byId=id=>document.getElementById(id);
+ const stepButtons=[...document.querySelectorAll('[data-nav]')];
+ const screens=[...document.querySelectorAll('[data-screen]')];
+ const state={step:0,unlocked:0,school:null,startedAt:null,expiresAt:null};
+ const text=(id,value)=>{byId(id).textContent=value};
+ const planNames={institucional:'Institucional',essential:'Essential',pro:'Pro',aeroclub_pro:'AeroClub Pro'};
+ const format=d=>d.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'});
+ const showStep=i=>{
+  if(i<0||i>state.unlocked||i>4)return;
+  state.step=i;
+  for(const s of screens)s.hidden=Number(s.dataset.screen)!==i;
+  for(const b of stepButtons){
+   const n=Number(b.dataset.nav);
+   b.disabled=n>state.unlocked;
+   b.classList.toggle('current',n===i);
+   b.classList.toggle('done',n<i);
+   if(n===i)b.setAttribute('aria-current','step');else b.removeAttribute('aria-current');
+  }
+  const title=screens[i].querySelector('h2');if(title){title.setAttribute('tabindex','-1');title.focus({preventScroll:true})}
+  demoBox.scrollIntoView({behavior:'smooth',block:'start'});
+ };
+ const nextStep=()=>{state.unlocked=Math.max(state.unlocked,state.step+1);showStep(state.step+1)};
+ for(const b of stepButtons)b.addEventListener('click',()=>showStep(Number(b.dataset.nav)));
+ for(const b of document.querySelectorAll('[data-back]'))b.addEventListener('click',()=>showStep(Number(b.dataset.back)));
+ byId('schoolForm').addEventListener('submit',e=>{
+  e.preventDefault();if(!e.currentTarget.reportValidity())return;
+  state.school={name:byId('schoolName').value.trim(),kind:byId('schoolKind').value,plan:byId('schoolPlan').value,contact:byId('schoolContact').value.trim(),email:byId('schoolEmail').value.trim()};
+  if(!state.school.name||!state.school.contact||!state.school.email)return;
+  text('confirmSchool',state.school.name);text('confirmContact',state.school.contact);text('confirmPlan',planNames[state.school.plan]||'Institucional');
+  nextStep();
+ });
+ byId('authorizeDemo').addEventListener('click',()=>{
+  state.startedAt=new Date();
+  state.expiresAt=new Date(state.startedAt.getTime()+30*24*60*60*1000);
+  text('emailContact',state.school.contact);text('emailSchool',state.school.name);text('emailTo',state.school.email);
+  nextStep();
+ });
+ byId('simulateSend').addEventListener('click',()=>{
+  text('activateSchool',state.school.name);text('activateEmail',state.school.email);
+  nextStep();
+ });
+ byId('simulateActivate').addEventListener('click',()=>{
+  text('portalSchool',state.school.name);
+  text('portalTerm','Inicio: '+format(state.startedAt)+' · Fin: '+format(state.expiresAt)+' · Sin cobro automático');
+  nextStep();
+ });
+ byId('restartDemo').addEventListener('click',()=>{
+  state.step=0;state.unlocked=0;state.school=null;state.startedAt=null;state.expiresAt=null;
+  byId('schoolForm').reset();showStep(0);
+ });
+ showStep(0);
+})();
+</script>
+</body>
+</html>
