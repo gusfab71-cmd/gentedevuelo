@@ -29,6 +29,13 @@ h1{font-size:clamp(27px,4vw,38px);letter-spacing:-.035em;margin:7px 0}h2{font-si
 .field input,.field select{min-width:0;width:100%;min-height:43px;padding:10px 12px;border:1px solid #7696ac;border-radius:9px;background:#112537;color:#fff;font-size:14px}
 .field input::placeholder{color:#94aaba}
 .field input:read-only{background:#20394a;color:#bfd4e1}
+.email-change{margin-top:3px;justify-items:start}
+.email-change-panel{width:100%;padding:15px;border:1px solid #577d98;border-radius:11px;background:#213b50;display:grid;gap:12px}
+.email-change-panel[hidden]{display:none!important}
+.email-change-panel p{font-size:12px;line-height:1.5;color:#d0e4f2;margin:0;font-weight:400}
+.email-change-panel .actions{margin-top:1px}
+.email-change-panel .status{margin:0}
+
 .required{color:#ffad97;font-weight:900;margin-left:2px}
 .photo-panel{position:sticky;top:18px}
 .photo-frame{width:100%;aspect-ratio:4/4.4;border:2px dashed #82a5bf;border-radius:13px;display:grid;place-items:center;overflow:hidden;background:#233e51;margin-bottom:12px}
@@ -112,7 +119,21 @@ button:disabled{cursor:wait;opacity:.56}
      <label class="field">Nombre <span class="required" aria-hidden="true">*</span><input name="given_names" autocomplete="given-name" maxlength="120" required></label>
      <label class="field">País de nacimiento <span class="required" aria-hidden="true">*</span><input name="birth_country" value="Argentina" maxlength="100" required></label>
      <label class="field">Fecha de nacimiento <span class="required" aria-hidden="true">*</span><input type="date" name="birth_date" id="birthDate" min="1900-01-01" required></label>
-     <label class="field full">Correo de la cuenta (solo lectura)<input id="accountEmail" readonly type="email"></label>
+     <label class="field full">Correo de acceso a Gente de Vuelo<input id="accountEmail" readonly type="email" autocomplete="email"></label>
+     <div class="field full email-change">
+      <button type="button" id="toggleEmailChange" aria-controls="emailChangePanel" aria-expanded="false">Cambiar correo de acceso</button>
+      <div id="emailChangePanel" class="email-change-panel" hidden>
+       <p>Este correo pertenece a tu cuenta compartida de Gente de Vuelo y AeroSuite. Para cambiarlo debés confirmar la solicitud mediante los mensajes enviados por el sistema. El correo actual seguirá vigente hasta completar la verificación.</p>
+       <label class="field" for="newAccountEmail">Nuevo correo electrónico
+        <input id="newAccountEmail" type="email" autocomplete="off" inputmode="email" maxlength="254" placeholder="nuevo@ejemplo.com">
+       </label>
+       <div class="actions">
+        <button type="button" class="primary" id="requestEmailChange">Enviar confirmación</button>
+        <button type="button" id="cancelEmailChange">Cancelar</button>
+       </div>
+       <p id="emailChangeStatus" class="status" role="status" aria-live="polite"></p>
+      </div>
+     </div>
     </div>
    </section>
    <section class="panel">
@@ -336,6 +357,59 @@ button:disabled{cursor:wait;opacity:.56}
    return blob;
   }finally{bitmap.close()}
  }
+ // El correo es un dato de Supabase Auth, no parte de los perfiles aeronáuticos.
+ // Pedir la actualización con verificación; no escribir directamente auth.users ni profiles.
+ const emailButton=$('toggleEmailChange'),emailPanel=$('emailChangePanel');
+ const emailField=$('newAccountEmail'),requestEmailButton=$('requestEmailChange');
+ let emailChangeBusy=false;
+ const emailMessage=(message,error=false)=>{
+  $('emailChangeStatus').textContent=message;
+  $('emailChangeStatus').className='status '+(error?'error':'ok');
+ };
+ function toggleEmailChange(open){
+  emailPanel.hidden=!open;
+  emailButton.setAttribute('aria-expanded',String(open));
+  emailField.disabled=!open;
+  if(open)emailField.focus();
+  else{emailField.value='';emailMessage('');}
+ }
+ emailField.disabled=true;
+ emailButton.addEventListener('click',()=>{if(!emailChangeBusy)toggleEmailChange(emailPanel.hidden)});
+ $('cancelEmailChange').addEventListener('click',()=>{if(!emailChangeBusy)toggleEmailChange(false)});
+ requestEmailButton.addEventListener('click',async()=>{
+  if(emailChangeBusy||busy)return;
+  const proposed=emailField.value.trim();
+  if(!proposed||!emailField.checkValidity()){
+   emailMessage('Ingresá una dirección de correo válida.',true);
+   emailField.focus();return;
+  }
+  if(proposed.toLowerCase()===(user?.email||'').toLowerCase()){
+   emailMessage('El correo ingresado ya es el de tu cuenta.',true);return;
+  }
+  if(!confirm('¿Solicitar el cambio del correo de acceso a '+proposed+'? Tendrás que confirmar el cambio desde los mensajes de verificación.'))return;
+  emailChangeBusy=true;
+  requestEmailButton.disabled=true;
+  emailMessage('Solicitando el cambio de correo…');
+  try{
+   const {data:current,error:sessionError}=await client.auth.getUser();
+   if(sessionError||!current?.user||current.user.id!==user?.id)
+    throw Error('La sesión cambió o venció. Iniciá sesión de nuevo para continuar.');
+   if(proposed.toLowerCase()===(current.user.email||'').toLowerCase())
+    throw Error('Esa dirección ya es la que utiliza tu cuenta.');
+   const {error}=await client.auth.updateUser(
+    {email:proposed},
+    {emailRedirectTo:window.location.origin+'/utilidades/gestion-aeronautica/mi-ficha-alumno.html'}
+   );
+   if(error)throw error;
+   emailField.value='';
+   emailMessage('Solicitud enviada. Revisá el correo nuevo y el actual: según la configuración de seguridad, puede ser necesario confirmar ambos. El correo de acceso no cambiará hasta completar la verificación.');
+  }catch(error){
+   emailMessage('No se pudo solicitar el cambio: '+(error?.message||'Error de autenticación')+'.',true);
+  }finally{
+   emailChangeBusy=false;
+   requestEmailButton.disabled=false;
+  }
+ });
  $('portraitFile').addEventListener('change',()=>{
   newPortrait=$('portraitFile').files?.[0]||null;
   if(newPortrait)previewImage(URL.createObjectURL(newPortrait));
