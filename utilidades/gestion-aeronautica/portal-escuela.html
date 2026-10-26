@@ -24,6 +24,16 @@ p{color:#c2d3dd;line-height:1.6}
 .pill{font-size:10px;font-weight:850;color:#eecda1;border:1px solid #987b54;background:#433b31;padding:5px 9px;border-radius:999px}
 button{cursor:pointer;border:1px solid #7193a9;border-radius:9px;padding:11px 14px;font:inherit;font-size:13px;color:#edf7ff;background:#304e64}
 button:disabled{opacity:.6;cursor:not-allowed}
+label{display:grid;gap:7px;font-size:12px;color:#e2eff8}
+input[type=email]{width:100%;background:#122737;border:1px solid #7394aa;border-radius:9px;color:#fff;padding:12px;font:inherit;font-size:14px}
+.role-options{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0}
+.role-options label{display:flex;align-items:center;gap:12px;border:1px solid #567990;background:#183448;border-radius:12px;padding:15px;cursor:pointer}
+.role-options input{accent-color:#c4d9f1;width:18px;height:18px}
+.role-options strong{font-size:14px}.role-options small{color:#bbd0dd;font-size:11px}
+.primary{background:#e7c899;color:#122739;font-weight:800;border-color:#e7c899}
+#inviteFeedback{font-size:13px;color:#edcf9b;min-height:20px;margin-top:10px}
+@media(max-width:520px){.role-options{grid-template-columns:1fr}}
+
 @media(max-width:830px){.metrics{grid-template-columns:repeat(2,1fr)}}@media(max-width:480px){.metrics{grid-template-columns:1fr}.panel{padding:15px}}
 </style>
 <script src="../../assets/supabase-2.117.2.min.js"></script>
@@ -57,6 +67,23 @@ button:disabled{opacity:.6;cursor:not-allowed}
    <section class="tile"><h3>Flota y mantenimiento</h3><p>Aeronaves, disponibilidad y seguimiento técnico.</p><span class="pill">Pendiente de integración segura</span></section>
    <section class="tile"><h3>Academia Aeronáutica</h3><p>Biblioteca institucional y recursos didácticos.</p><span class="pill">Pendiente de integración segura</span></section>
   </div>
+  <section class="panel" id="directorInvitePanel" hidden>
+   <span class="label">Gestión exclusiva del director</span>
+   <h2>Invitar instructores y alumnos</h2>
+   <p>Seleccioná el permiso correspondiente a cada persona. Recibirá un correo oficial con un enlace para ingresar directamente a AeroSuite y activar su cuenta. La contraseña la elige el destinatario; no se utiliza el DNI.</p>
+   <form id="instituteInviteForm">
+    <label>Correo del destinatario
+      <input name="recipient" type="email" autocomplete="email" placeholder="usuario@correo.com" maxlength="254" required>
+    </label>
+    <div class="role-options">
+     <label><input name="role" type="radio" value="instructor" checked><span><strong>Instructor</strong><small>Personal autorizado a instruir</small></span></label>
+     <label><input name="role" type="radio" value="alumno"><span><strong>Alumno</strong><small>Cuenta personal de formación</small></span></label>
+    </div>
+    <button class="primary" type="submit" id="sendInviteButton">Enviar invitación por correo</button>
+    <div id="inviteFeedback" role="status" aria-live="polite"></div>
+   </form>
+   <p style="font-size:12px">La invitación vence en siete días. La escuela solo puede invitar personas vinculadas a su institución y nunca puede crear otro Superadministrador.</p>
+  </section>
   <div class="status">Este es un portal de verificación de acceso. Ninguna tarjeta está habilitada para operar: todavía falta aplicar permisos institucionales específicos a cada módulo, sin compartir datos entre escuelas.</div>
  </div>
 </main>
@@ -92,6 +119,29 @@ try{
  const until=school.expires_at?new Date(school.expires_at).toLocaleDateString('es-AR'):'sin fecha';
  el('schoolExpiry').textContent='Vencimiento: '+until;
  el('schoolAccessLine').textContent=school.can_access?'Acceso institucional vigente':'Institución sin licencia vigente';
+ if(school.my_role==='administrador'&&school.can_access){
+   el('directorInvitePanel').hidden=false;
+   el('instituteInviteForm').addEventListener('submit',async ev=>{
+     ev.preventDefault();
+     const f=ev.currentTarget,button=el('sendInviteButton'),feedback=el('inviteFeedback');
+     const email=String(new FormData(f).get('recipient')||'').trim().toLowerCase();
+     const role=String(new FormData(f).get('role')||'');
+     if(!['instructor','alumno'].includes(role)||!email){feedback.textContent='Completá el correo y elegí un rol válido.';return}
+     if(!confirm('¿Enviar una invitación real a '+email+' como '+role+' de '+school.institution_name+'?'))return;
+     button.disabled=true;feedback.textContent='Enviando invitación…';
+     try{
+       const {data,error}=await client.functions.invoke('aerosuite-invitations',{
+         body:{mode:'send',institution_id:school.institution_id,email,role}
+       });
+       if(error)throw Error(data?.error||error.message);
+       if(!data?.ok)throw Error(data?.error||'El correo no fue confirmado.');
+       feedback.textContent='Invitación enviada a '+email+'. El proveedor aceptó el correo; revisá la casilla.';
+       f.reset();
+     }catch(error){feedback.textContent='No se pudo enviar: '+(error?.message||'Error de servicio')}
+     finally{button.disabled=false}
+   });
+ }
+
  message.textContent=school.can_access?'Identidad, institución y permiso verificados correctamente.':'El permiso figura asociado, pero la licencia está suspendida o vencida.';
 }catch(err){message.textContent='No se pudo verificar el permiso de la escuela: '+(err?.message||'Error de servidor');}
 el('signOutButton').addEventListener('click',async()=>{
