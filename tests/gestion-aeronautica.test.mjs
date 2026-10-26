@@ -409,6 +409,28 @@ assert.throws(()=>requestStudentBooking({...threeBase,type:'airline',aircraft:'L
 assert.throws(()=>requestStudentBooking({...threeBase,type:'theory',resourceId:'aula-1',end:'10:00'},alice,[],fleet),/90 minutos/);
 assert.throws(()=>requestStudentBooking({...threeBase,type:'simulator',resourceId:'sim-1'},alice,[schoolPlane],fleet),/otra actividad/);
 assert.throws(()=>requestStudentBooking({...threeBase,type:'flight',aircraft:'LV-ABC',pilot:'p1'},alice,[],fleet),/alumno/);
+
+const otherBookingStudent={...alice,id:'p3'};
+const ninetyMinSlot=requestStudentBooking({...threeBase,type:'flight',aircraft:'LV-ABC',start:'09:30',end:'11:00'},alice,[],fleet);
+assert.equal(ninetyMinSlot.status,'solicitada');
+assert.equal(ninetyMinSlot.start,'09:30');
+assert.equal(ninetyMinSlot.end,'11:00');
+// Pendiente y confirmada reservan la franja completa del mismo recurso.
+const competitor={...threeBase,pilot:'p3',type:'flight',aircraft:'LV-ABC'};
+assert.throws(()=>requestStudentBooking({...competitor,start:'10:00',end:'11:30'},otherBookingStudent,[ninetyMinSlot],fleet),
+ /recurso ya tiene un turno/,'Una segunda solicitud no puede superponerse con una pendiente del mismo avión');
+assert.throws(()=>requestStudentBooking({...competitor,start:'10:00',end:'11:30'},otherBookingStudent,[{...ninetyMinSlot,status:'confirmada'}],fleet),
+ /recurso ya tiene un turno/,'La reserva confirmada mantiene el bloqueo');
+assert.equal(requestStudentBooking({...competitor,start:'11:00',end:'12:30'},otherBookingStudent,[ninetyMinSlot],fleet).status,'solicitada',
+ 'Un turno que empieza exactamente a las 11:00 no se superpone con el anterior');
+assert.equal(requestStudentBooking({...competitor,aircraft:'LV-XYZ',start:'10:00',end:'11:30'},otherBookingStudent,[ninetyMinSlot],fleet).status,'solicitada',
+ 'Otra aeronave permite simultaneidad para alumnos diferentes');
+assert.equal(requestStudentBooking({...competitor,start:'10:00',end:'11:30'},otherBookingStudent,[{...ninetyMinSlot,status:'cancelada'}],fleet).status,'solicitada',
+ 'Al cancelar se libera el recurso');
+assert.match(html,/student-week-pending/);
+assert.match(html,/student-week-confirmed/);
+assert.match(html,/members\.find\(m=>m\.id===b\.pilot\)\?\.name/);
+
 const flightTaken=takeStudentBooking(schoolPlane,teacher,[schoolPlane],members);
 assert.equal(flightTaken.status,'confirmada');
 assert.equal(flightTaken.instructor,'i1');
