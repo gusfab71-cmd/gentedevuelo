@@ -1130,7 +1130,7 @@ assert.match(html,/libraryUploaded\[type\]===true/,'No activar enlaces hasta con
 assert.match(html,/const AEROSUITE_LIBRARY_MAX_MB=100/,'El límite para los cuadernillos principales debe ser 100 MB.');
 assert.ok(html.includes("file.size>AEROSUITE_LIBRARY_MAX_MB*1024*1024"),'Debe validar el tamaño de 100 MB.');
 assert.ok(html.includes("file.size<=AEROSUITE_LIBRARY_MAX_MB*1024*1024"),'El selector debe habilitar archivos de 100 MB.');
-assert.ok(html.includes("callLibraryR2('prepare'"),'La carga debe usar una URL firmada de Cloudflare R2.');
+assert.ok(html.includes('return uploadLibraryMultipart(type,file);'),'La transferencia debe usar por defecto carga fragmentada segura, sin CORS en el navegador.');
 assert.ok(html.includes("callLibraryR2('finish'"),'La publicación debe confirmar el reemplazo.');
 assert.ok(html.includes("callLibraryR2('status'"),'La biblioteca debe detectar la versión publicada en R2.');
 assert.match(html,/async function uploadLibraryMultipart\(type,file\)/,'Debe existir la carga por fragmentos como respaldo cuando falle CORS.');
