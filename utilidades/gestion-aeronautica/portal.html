@@ -697,7 +697,7 @@ let ravRecords=[],ravFormOpen=false;
 const trainingInstitution={institutionType:'non_ciac',reviewMode:'chief'};
 // Tres areas visual y funcionalmente aisladas dentro de la demostracion.
 const AREA_DEFS=Object.freeze({
- alumno:{title:'Área del Alumno',subtitle:'Formación, progreso, reservas y biblioteca aeronáutica.',home:'ficha_alumno',tabs:[['alumno','Mi formación y reservas'],['academia','Mi biblioteca · Teoría y CRM'],['piloto','Mi actividad personal · Demo'],['flightops','Flight Operations · Planificación'],['pistas','AeroLocator'],['ficha_alumno','Mi perfil y datos personales']]},
+ alumno:{title:'Área del Alumno',subtitle:'Formación, progreso, reservas y biblioteca aeronáutica.',home:'ficha_alumno',tabs:[['alumno','Mi reserva y formación'],['academia','Mi biblioteca · Teoría y CRM'],['piloto','Mi actividad personal · Demo'],['flightops','Flight Operations · Planificación'],['pistas','AeroLocator'],['ficha_alumno','Mi perfil y datos personales']]},
  instructor:{title:'Instructor y Jefe de Instructores',subtitle:'Evaluaciones, clases, seguimiento de alumnos y supervisión pedagógica.',home:'instructor',tabs:[['instructor','Panel del instructor'],['ficha_alumno','Mi perfil AeroSuite'],['direccion','Jefatura de instructores'],['personas','Seguimiento, fichas y RAV'],['flightops','Flight Operations · Instrucción'],['pistas','AeroLocator']]},
  administracion:{title:'Gestión Administrativa de Escuela',subtitle:'Agenda, operaciones, flota, personal, recursos y contabilidad.',home:'inicio',tabs:[['inicio','Panel administrativo'],['ficha_alumno','Mi perfil AeroSuite'],['reservas','Agenda y reservas'],['vuelos','Registro de vuelos'],['flota','Aeronaves y mantenimiento'],['pistas','AeroLocator'],['admin_personas','Personal y usuarios'],['admin_academia','Gestionar biblioteca'],['finanzas','Contabilidad y Finanzas'],['stock','Combustible y aceite'],['documentos','Documentos y avisos']]}
 });
@@ -842,7 +842,19 @@ function studentPortal(){
  const bookings=d.reservations.slice().reverse().map(b=>'<div class="portal-task"><div><strong>'+safe(portalType(b.type))+'</strong>'+
   '<div class="portal-small">'+portalDate(b)+' · '+safe(portalResource(b))+'</div></div>'+
   '<span class="agenda-pill">'+safe(stages[b.status]||b.status)+'</span></div>').join('');
- return '<section class="panel"><div class="portal-title"><h2>Mi espacio de alumno · Demostración</h2><span class="tag">Vista alumno · Datos ficticios</span></div>'+
+ return '<section id="studentBookingPanel" class="panel"><div class="portal-title"><h2>Turnera · Sacá tu próximo turno</h2><span class="tag">Reserva de demostración</span></div>'+
+ '<p class="portal-private">Elegí la actividad, aeronave o recurso, fecha y horario para solicitar tu turno. Podés consultar tus solicitudes debajo. Un instructor deberá confirmar la reserva.</p>'+
+ '<form id="studentBookingForm"><div class="formgrid">'+
+ '<label>Tipo de reserva<select id="studentBookingType">'+options+'</select></label>'+
+ '<label>Recurso<select id="studentBookingResource">'+resources.map(x=>'<option value="'+safe(x.id)+'" data-kind="'+safe(x.kind)+'">'+safe(x.label)+'</option>').join('')+'</select></label>'+
+ '<label>Fecha<input type="date" id="studentBookingDate" value="'+safe(now())+'" required></label>'+
+ '<label>Inicio<input type="time" id="studentBookingStart" value="'+safe(schoolPolicy.openTime)+'" required></label>'+
+ '<label>Final<input type="time" id="studentBookingEnd" value="'+safe(hhmm(minutes(schoolPolicy.openTime)+schoolPolicy.studentDefaultMinutes))+'" required></label></div>'+
+ '<p class="muted">Duración mínima: '+schoolPolicy.studentMinMinutes+' minutos según la turnera de la escuela. La solicitud queda pendiente hasta que un instructor la acepte.</p>'+
+ '<button class="action" type="submit">Solicitar reserva (demo)</button></form></section>'+
+ '<section class="panel"><h2>Mis reservas y solicitudes</h2>'+
+ (bookings||'<p class="muted">No tenés solicitudes registradas en esta demostración.</p>')+'</section>'+
+ '<section class="panel"><div class="portal-title"><h2>Mi espacio de alumno · Demostración</h2><span class="tag">Vista alumno · Datos ficticios</span></div>'+
  '<p class="portal-private">Aquí el alumno puede solicitar turnos y consultar únicamente sus reservas, horas de vuelo, prácticas registradas y packs comprados. Las notas de instructores, sus correcciones y la supervisión interna no se muestran.</p>'+
  '<div class="portal-metrics">'+metric(d.flightHours.toFixed(2)+' h','Horas de vuelo · demo')+
  metric(d.simulatorHours.toFixed(2)+' h','Horas de simulador · demo')+
@@ -853,19 +865,6 @@ function studentPortal(){
  '<p class="muted">El ejemplo parte de 40 h de vuelo y 5 h de simulador; cada escuela puede ajustar ambos requisitos. No certifica habilitaciones ni permite sustituir horas de avión por simulador.</p></div></section>'+
  '<section class="panel"><h2>Mis vuelos de instrucción</h2>'+flightCards(instruction)+
  '<p class="muted">Este historial muestra únicamente mis vuelos cerrados con instructor; no incluye las horas de teoría ni las sesiones de simulador.</p></section>'+
- '<section class="panel"><div class="toolbar"><h2>Mis reservas</h2>'+
- '<button id="openStudentBooking" class="action">+ Solicitar turno</button></div>'+
- (bookings||'<p class="muted">No tenés solicitudes registradas en esta demostración.</p>')+'</section>'+
- '<section id="studentBookingPanel" class="panel" '+(!studentBookingOpen?'hidden':'')+'><div class="toolbar"><h2>Solicitar una actividad</h2>'+
- '<button class="secondary" type="button" id="closeStudentBooking">Cerrar</button></div>'+
- '<form id="studentBookingForm"><div class="formgrid">'+
- '<label>Tipo de reserva<select id="studentBookingType">'+options+'</select></label>'+
- '<label>Recurso<select id="studentBookingResource">'+resources.map(x=>'<option value="'+safe(x.id)+'" data-kind="'+safe(x.kind)+'">'+safe(x.label)+'</option>').join('')+'</select></label>'+
- '<label>Fecha<input type="date" id="studentBookingDate" value="'+safe(now())+'" required></label>'+
- '<label>Inicio<input type="time" id="studentBookingStart" value="'+safe(schoolPolicy.openTime)+'" required></label>'+
- '<label>Final<input type="time" id="studentBookingEnd" value="'+safe(hhmm(minutes(schoolPolicy.openTime)+schoolPolicy.studentDefaultMinutes))+'" required></label></div>'+
- '<p class="muted">Duración mínima: '+schoolPolicy.studentMinMinutes+' minutos según la turnera de la escuela. La solicitud queda pendiente hasta que un instructor la acepte.</p>'+
- '<button class="action" type="submit">Solicitar reserva (demo)</button></form></section>'+
  '<div class="cols"><section class="panel"><h2>Mi actividad realizada</h2>'+
  (d.practices.map(x=>'<div class="portal-task"><div><strong>'+safe(x.topics)+'</strong><div class="portal-small">'+
  safe(x.date)+' · '+safe(portalType(x.type))+' · '+safe(x.minutes)+' min</div></div>'+
@@ -948,7 +947,7 @@ function directorPortal(){
  '<p class="muted">Para revisar evaluaciones o gestionar el RAV institucional, usá Pilotos y alumnos. El alumno no puede aprobar documentación institucional.</p>'+
  '<button class="secondary" type="button" data-go="personas">Abrir seguimiento y gestión de RAV</button></section>';
 }
-let studentBookingOpen=false,instructorEvaluationBooking='';
+let instructorEvaluationBooking='';
 function dashboard(){
  const hours=flights.reduce((sum,x)=>sum+x.blockHours,0),turns=reservations.filter(r=>r.status==='confirmada').length;
  const links=[['reservas','Agenda y reservas','Turnos y disponibilidad'],['vuelos','Registro de vuelos','Actividad y horas'],['flota','Aeronaves y mantenimiento','Flota y vencimientos'],['pistas','AeroLocator','Fuentes ANAC, LAD y pistas comunitarias'],['admin_personas','Personal y usuarios','Perfiles de prueba'],['admin_academia','Biblioteca de formación','Publicar fichas de teoría y CRM'],['finanzas','Contabilidad y Finanzas','Gastos generales y caja chica'],['stock','Combustible y aceite','Stock institucional'],['documentos','Documentos y avisos','Documentación y alertas']];
@@ -1543,8 +1542,6 @@ function documentsScreen(){
 }
 function wirePortals(){
  if(tab==='alumno'){
-  $('openStudentBooking')?.addEventListener('click',()=>{studentBookingOpen=true;render()});
-  $('closeStudentBooking')?.addEventListener('click',()=>{studentBookingOpen=false;render()});
   const changeResources=()=>{
    const type=$('studentBookingType')?.value,list=$('studentBookingResource');
    if(!list)return;
@@ -1563,7 +1560,7 @@ function wirePortals(){
      aircraft:type==='flight'?resource:'',resourceId:type==='flight'?'':resource};
     const student=members.find(m=>m.id===portalStudent);
     const requested=requestStudentBooking(draft,student,reservations,fleet,DEMO_RESOURCES,schoolPolicy);
-    reservations.push(requested);studentBookingOpen=false;render();
+    reservations.push(requested);render();
     notice('Solicitud de '+portalType(type)+' guardada solo en la demostración. Un instructor deberá tomarla.');
    }catch(err){notice(err.message)}
   });
