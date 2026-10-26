@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="es"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>AeroSuite · Portal institucional de prueba</title>
+<style>
+:root{font-family:Inter,system-ui,Arial,sans-serif;color:#eef6fb;background:#101c2a;color-scheme:dark}
+*{box-sizing:border-box}[hidden]{display:none!important}body{margin:0;min-height:100vh;background:linear-gradient(140deg,#101e2c,#142c3f)}
+a{color:#b5ddfb}a:focus-visible,button:focus-visible{outline:3px solid #b5ddfb;outline-offset:3px}
+header{padding:18px max(20px,calc((100vw - 1200px)/2));background:#172b40;border-bottom:1px solid #4a6d84;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.brand{color:#edf8ff;text-decoration:none;font-size:22px;font-weight:850}.brand span{color:#9ac9ef}.brand small{font-size:10px;color:#b4cde0;display:block;letter-spacing:.14em}
+nav{display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:12px}
+main{max-width:1200px;margin:auto;padding:37px 20px 70px}
+h1{font-size:clamp(27px,4vw,41px);margin:8px 0}h2{font-size:20px;margin:3px 0 11px}
+p{color:#c2d3dd;line-height:1.6}
+.label{font-size:11px;text-transform:uppercase;letter-spacing:.15em;color:#efcf94;font-weight:800}
+.status{border:1px solid #7092a8;background:#233b4c;border-radius:11px;padding:15px;font-size:13px;color:#e3f2f7;margin:18px 0;line-height:1.6}
+.panel{background:#1b3041;border:1px solid #52758d;border-radius:15px;padding:20px;margin:18px 0}
+.meta{display:flex;gap:14px;flex-wrap:wrap;margin:19px 0}
+.meta span{background:#263d50;border:1px solid #62849a;border-radius:999px;padding:8px 11px;font-size:12px}
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.tile{background:#1c394d;border:1px solid #537993;padding:21px;border-radius:13px;min-height:150px}
+.tile h3{font-size:15px;margin:0 0 10px}.tile p{font-size:12px;margin:0 0 14px}
+.pill{font-size:10px;font-weight:850;color:#eecda1;border:1px solid #987b54;background:#433b31;padding:5px 9px;border-radius:999px}
+button{cursor:pointer;border:1px solid #7193a9;border-radius:9px;padding:11px 14px;font:inherit;font-size:13px;color:#edf7ff;background:#304e64}
+button:disabled{opacity:.6;cursor:not-allowed}
+@media(max-width:830px){.metrics{grid-template-columns:repeat(2,1fr)}}@media(max-width:480px){.metrics{grid-template-columns:1fr}.panel{padding:15px}}
+</style>
+<script src="../../assets/supabase-2.117.2.min.js"></script>
+<script src="../../assets/community-config.js"></script>
+</head><body>
+<header><a class="brand" href="index.html">Aero<span>Suite</span><small>BY GENTE DE VUELO · PORTAL DE INSTITUCIONES</small></a>
+<nav><a href="index.html">Presentación</a><a href="../../index.html">Gente de Vuelo</a><button id="signOutButton" type="button" hidden>Salir de esta cuenta</button></nav>
+</header>
+<main>
+ <span class="label">Acceso institucional verificado</span>
+ <h1>Portal de la escuela</h1>
+ <p>Vista real del vínculo entre una cuenta y su institución. La autorización se consulta en Supabase y no da acceso a los módulos del prototipo general.</p>
+ <div class="status" id="message" role="status" aria-live="polite">Verificando tu cuenta y la licencia…</div>
+ <div id="schoolArea" hidden>
+  <section class="panel">
+   <span class="label">Entidad autorizada</span>
+   <h2 id="schoolName">—</h2>
+   <p id="actorLine"></p>
+   <div class="meta">
+    <span id="schoolKind">—</span>
+    <span id="schoolRole">—</span>
+    <span id="schoolPlan">—</span>
+    <span id="schoolExpiry">—</span>
+   </div>
+   <p id="schoolAccessLine" style="font-weight:750"></p>
+  </section>
+  <h2>Áreas de la escuela</h2>
+  <div class="metrics">
+   <section class="tile"><h3>Reservas y vuelos</h3><p>Agenda institucional y actividad operativa.</p><span class="pill">Pendiente de integración segura</span></section>
+   <section class="tile"><h3>Alumnos e instructores</h3><p>Usuarios y documentación exclusiva de la escuela.</p><span class="pill">Pendiente de integración segura</span></section>
+   <section class="tile"><h3>Flota y mantenimiento</h3><p>Aeronaves, disponibilidad y seguimiento técnico.</p><span class="pill">Pendiente de integración segura</span></section>
+   <section class="tile"><h3>Academia Aeronáutica</h3><p>Biblioteca institucional y recursos didácticos.</p><span class="pill">Pendiente de integración segura</span></section>
+  </div>
+  <div class="status">Este es un portal de verificación de acceso. Ninguna tarjeta está habilitada para operar: todavía falta aplicar permisos institucionales específicos a cada módulo, sin compartir datos entre escuelas.</div>
+ </div>
+</main>
+<script>
+'use strict';
+(async()=>{
+const el=id=>document.getElementById(id),message=el('message');
+const client=supabase.createClient(GDV_CONFIG.url,GDV_CONFIG.key);
+let data;
+try{
+ const result=await client.auth.getUser();
+ const user=result.data?.user;
+ if(result.error||!user){
+  message.textContent='No hay sesión institucional. Ingresá desde el enlace de invitación de tu escuela.';
+  return;
+ }
+ el('signOutButton').hidden=false;
+ const access=await client.rpc('aerosuite_my_institution_access');
+ if(access.error)throw access.error;
+ data=access.data||[];
+ const queryId=new URLSearchParams(location.search).get('institucion');
+ const school=queryId?data.find(x=>x.institution_id===queryId):data.find(x=>x.can_access&&x.my_role==='administrador');
+ if(!school){
+  message.textContent='Tu cuenta todavía no está asociada a una institución autorizada. Ingresá desde el enlace de invitación con el correo correspondiente.';
+  return;
+ }
+ el('schoolArea').hidden=false;
+ el('schoolName').textContent=school.institution_name;
+ el('actorLine').textContent='Cuenta: '+(user.email||'verificada en Supabase');
+ el('schoolKind').textContent='Tipo: '+({escuela:'Escuela de vuelo',aeroclub:'Aeroclub',aerodromo:'Aeródromo'}[school.institution_kind]||school.institution_kind);
+ el('schoolRole').textContent='Rol: '+school.my_role;
+ el('schoolPlan').textContent='Plan: '+school.plan;
+ const until=school.expires_at?new Date(school.expires_at).toLocaleDateString('es-AR'):'sin fecha';
+ el('schoolExpiry').textContent='Vencimiento: '+until;
+ el('schoolAccessLine').textContent=school.can_access?'Acceso institucional vigente':'Institución sin licencia vigente';
+ message.textContent=school.can_access?'Identidad, institución y permiso verificados correctamente.':'El permiso figura asociado, pero la licencia está suspendida o vencida.';
+}catch(err){message.textContent='No se pudo verificar el permiso de la escuela: '+(err?.message||'Error de servidor');}
+el('signOutButton').addEventListener('click',async()=>{
+ const r=await client.auth.signOut();
+ if(r.error){message.textContent='No se pudo salir: '+r.error.message;return}
+ location.replace('index.html');
+});
+})();
+</script>
+</body></html>
