@@ -78,9 +78,9 @@ Este es el registro central de las decisiones, ideas y pendientes tratados para 
 
 ## 5. Formación del Alumno / Academia
 
-- **APROBADO:** biblioteca de formación aeronáutica original, con **30 fichas teóricas** y **8 de CRM (Crew Resource Management)**; gráficos aeronaúticos realistas, infografías verticales, alta resolución, información precisa y legible, encabezado y logo AeroSuite/Gente de Vuelo.
+- **DECISIÓN VIGENTE (26/10/2026):** Academia Aeronáutica se administra como una biblioteca **genérica y dinámica**, sin temarios ni cantidades prefijadas de Teoría o CRM. El administrador sube uno o varios archivos (PDF, imágenes, videos, audio y documentos), cada uno con tarjeta independiente y opciones de descarga, ocultación, publicación y eliminación. Cualquier contenido teórico o de factores humanos se carga como archivo normal; no hay categorías obligatorias.
 
-- **APROBADO:** biblioteca en storage propio **Cloudflare R2 / Supabase**, no depender de Google Drive; administración reemplaza PDFs completos y agrega materias; límite solicitado para fichas **100 MB por PDF** y conservación del anterior si falla la sustitución.
+- **APROBADO:** los archivos didácticos se almacenan en **Cloudflare R2**, y Supabase conserva solo el catálogo y los permisos; sin Google Drive. Límite: **100 MB por archivo**. El reemplazo conserva la versión publicada hasta confirmar la nueva, y el borrado debe limpiar archivo y catálogo.
 
 - **APROBADO:** Simu de Examen PPA basado en materiales ANAC aportados, preguntas aleatorias, opciones múltiples, 1 punto por acierto, explicación fundamentada y revisión técnica obligatoria. Durante prototipo solo admin.
 
