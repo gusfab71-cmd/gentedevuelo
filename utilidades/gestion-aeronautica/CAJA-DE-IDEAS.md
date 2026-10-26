@@ -1,6 +1,6 @@
 # Caja de Ideas de AeroSuite — Documento Maestro
 
-**Actualizado:** 25/10/2026  ·  **Proyecto:** AeroSuite, By Gente de Vuelo
+**Actualizado:** 26/10/2026  ·  **Proyecto:** AeroSuite, By Gente de Vuelo
 
 Este es el registro central de las decisiones, ideas y pendientes tratados para AeroSuite. No implica que todos los módulos estén publicados o habilitados.
 
@@ -11,6 +11,15 @@ Este es el registro central de las decisiones, ideas y pendientes tratados para 
 - Una funcionalidad codificada no debe considerarse publicada sin despliegue exitoso y prueba de usuario. Algunos despliegues de octubre fueron bloqueados por límites de Vercel. No confundir demo de administrador con cuentas institucionales reales.
 
 - El anexo [Comercialización, tarifas y período de prueba](IDEAS-seguimiento-aeronaves.md) es la fuente detallada del esquema de precios provisional.
+
+## 0B. Acceso de clientes y Superadministración — 26/10/2026
+
+- **APROBADO:** usar inicialmente el subdominio `aerosuite.gentedevuelo.com` para el acceso directo de clientes, sin comprar otro dominio. Gente de Vuelo mantiene el acceso de presentación comercial. **PENDIENTE:** configurar DNS, Vercel, URLs autorizadas de Supabase Auth y probar el acceso real al subdominio.
+- **IMPLEMENTADO EN SUPABASE:** rol separado `aerosuite_superadmins`, inicialmente asignado a la cuenta administradora actual de Gente de Vuelo; catálogo `aerosuite_institutions`; usuarios asociados `aerosuite_institution_members` y auditoría `aerosuite_institution_audit`, todos con RLS. Las mutaciones comerciales quedan restringidas al Superadministrador.
+- **IMPLEMENTADO EN CÓDIGO:** `superadministrador.html` gestiona altas y edición de instituciones, tipo, datos de contacto, plan, prueba de 30 días, vencimiento y suspensión. Desde Utilidades se muestra una tarjeta exclusiva para el rol. **El despliegue y la prueba visual en producción todavía deben verificarse**; la existencia del archivo no garantiza que Vercel haya desplegado.
+- **DECISIÓN DE SEGURIDAD:** no entregar contraseñas generales a escuelas ni confundir la autodeclaración de instructor/piloto con autorización institucional. No eliminar registros al suspender. Los estados pendientes, vencidos y suspendidos no concederán acceso comercial.
+- **PENDIENTE:** invitaciones institucionales verificadas, administrador designado, inicio de sesión directo por subdominio, control de acceso efectivo en módulos de alumno/instructor/gestión y aislamiento de sus datos por institución. No hay ninguna escuela habilitada; el portal actual sigue como demo privada.
+- **PROVISIONAL:** los planes visibles en el panel son etiquetas internas; no crean cargos automáticos, facturación ni pasarela de pago. El esquema provisional Airnizer de la sección 2 no se modifica.
 
 ## 1. Visión, marca e integración con Gente de Vuelo
 
