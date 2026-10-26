@@ -70,7 +70,7 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
  <aside class="panel">
    <h2>Escuela de prueba</h2>
    <div class="info">
-     <strong>Escuela de Vuelo Horizonte</strong>
+     <strong>Institución invitada</strong>
      <p>Prueba real de ingreso y permisos: sin uso operativo ni datos aeronáuticos reales.</p>
    </div>
    <p class="caption">Al ingresar como director solo podrás consultar la portada institucional. Los módulos operativos permanecerán bloqueados hasta que se complete su separación de datos.</p>
@@ -90,6 +90,7 @@ if(!schoolId||!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i
 }
 if(!window.supabase||!window.GDV_CONFIG){setStatus('No se pudo cargar el inicio de sesión.');return}
 const db=supabase.createClient(GDV_CONFIG.url,GDV_CONFIG.key);
+byId('openPortalButton').href='portal-escuela.html?institucion='+encodeURIComponent(schoolId);
 let user=null;
 async function refresh(){
  const result=await db.auth.getUser();
