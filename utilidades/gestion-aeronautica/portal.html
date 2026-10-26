@@ -885,7 +885,7 @@ function studentNextTurnReminder(ownBookings){
  return '<section id="studentTurnReminder" class="panel student-turn-reminder">'+
   '<div class="portal-title"><h2>Recordatorio de mi próximo turno</h2><span class="agenda-pill">'+label+'</span></div>'+
   '<div class="student-turn-detail"><strong>'+safe(next.date)+' · '+safe(next.start)+' a '+safe(next.end)+'</strong>'+
-  '<span>'+safe(portalType(next.type))+' · '+safe(portalResource(next))+'</span></div>'+
+  '<span>'+safe(members.find(m=>m.id===next.pilot)?.name||'Alumno')+' · '+safe(portalType(next.type))+' · '+safe(portalResource(next))+'</span></div>'+
   '<p class="student-turn-status">'+(confirmed?'Confirmado en esta demostración. No habilita el vuelo.':'La solicitud fue registrada solo en esta demostración y todavía necesita aceptación del instructor.')+'</p></section>';
 }
 function studentWeeklyTurnera(){
@@ -952,9 +952,11 @@ function studentPortal(){
  const d=studentPortalProjection(portalStudent,reservations,flights,lessons,demoPacks,groundActivities,trainingGoals);
  const instruction=flightActivityByRole(portalStudent,'alumno',flights);
  const stages={solicitada:'Pendiente de instructor',confirmada:'Confirmada',cancelada:'Cancelada'};
- const options=Object.entries(ACTIVITY_TYPES).map(([id,label])=>'<option value="'+id+'">'+safe(label)+'</option>').join('');
+ const options=Object.entries(ACTIVITY_TYPES).map(([id,label])=>'<option value="'+id+'" '+(id===studentBookingTypeChoice?'selected':'')+'>'+safe(label)+'</option>').join('');
  const resources=[...fleet.map(a=>({id:a.id,label:a.id+' · '+a.model,kind:'flight'})),
  ...DEMO_RESOURCES.map(x=>({id:x.id,label:x.name,kind:x.type}))];
+ const chosenResource=resources.find(r=>r.id===studentBookingResourceChoice&&r.kind===studentBookingTypeChoice)?.id||
+  resources.find(r=>r.kind===studentBookingTypeChoice)?.id||'';
  const suggested=studentBookingSelection||studentSuggestedSlot();
  const bookings=d.reservations.slice().reverse().map(b=>'<div class="portal-task"><div><strong>'+safe(portalType(b.type))+'</strong>'+
   '<div class="portal-small">'+portalDate(b)+' · '+safe(portalResource(b))+' · '+safe(members.find(m=>m.id===portalStudent)?.name||'Alumno')+'</div></div>'+
@@ -966,7 +968,7 @@ function studentPortal(){
  '<p id="studentBookingFeedback" role="status" aria-live="polite" class="student-booking-feedback">Seleccioná un horario marcado con + en la agenda; después enviá la solicitud.</p>'+ 
  '<form id="studentBookingForm"><div class="formgrid">'+
  '<label>Tipo de reserva<select id="studentBookingType">'+options+'</select></label>'+
- '<label>Recurso<select id="studentBookingResource">'+resources.map(x=>'<option value="'+safe(x.id)+'" data-kind="'+safe(x.kind)+'">'+safe(x.label)+'</option>').join('')+'</select></label>'+
+ '<label>Recurso<select id="studentBookingResource">'+resources.map(x=>'<option value="'+safe(x.id)+'" data-kind="'+safe(x.kind)+'" '+(x.id===chosenResource?'selected':'')+'>'+safe(x.label)+'</option>').join('')+'</select></label>'+
  '<label>Fecha<input type="date" id="studentBookingDate" min="'+safe(now())+'" value="'+safe(suggested.date)+'" required></label>'+
  '<label>Inicio<input type="time" id="studentBookingStart" value="'+safe(suggested.start)+'" required></label>'+
  '<label>Final<input type="time" id="studentBookingEnd" value="'+safe(suggested.end)+'" required></label></div>'+
@@ -1070,6 +1072,7 @@ function directorPortal(){
 let instructorEvaluationBooking='';
 let studentTurneraWeek=now();
 let studentBookingSelection=null;
+let studentBookingTypeChoice='flight',studentBookingResourceChoice='';
 function dashboard(){
  const hours=flights.reduce((sum,x)=>sum+x.blockHours,0),turns=reservations.filter(r=>r.status==='confirmada').length;
  const links=[['reservas','Agenda y reservas','Turnos y disponibilidad'],['vuelos','Registro de vuelos','Actividad y horas'],['flota','Aeronaves y mantenimiento','Flota y vencimientos'],['pistas','AeroLocator','Fuentes ANAC, LAD y pistas comunitarias'],['admin_personas','Personal y usuarios','Perfiles de prueba'],['admin_academia','Biblioteca de formación','Publicar fichas de teoría y CRM'],['finanzas','Contabilidad y Finanzas','Gastos generales y caja chica'],['stock','Combustible y aceite','Stock institucional'],['documentos','Documentos y avisos','Documentación y alertas']];
@@ -1695,7 +1698,7 @@ function wirePortals(){
     studentTurneraWeek=event.target.value;refreshWeek();
    }
   });
-  $('studentBookingResource')?.addEventListener('change',refreshWeek);
+  $('studentBookingResource')?.addEventListener('change',()=>{studentBookingResourceChoice=$('studentBookingResource').value;refreshWeek()});
   for(const id of ['studentBookingDate','studentBookingStart','studentBookingEnd']){
    $(id)?.addEventListener('change',()=>{
     studentBookingSelection={date:$('studentBookingDate').value,start:$('studentBookingStart').value,end:$('studentBookingEnd').value};
@@ -1709,8 +1712,11 @@ function wirePortals(){
    const first=[...list.options].find(o=>!o.hidden);
    if(first)list.value=first.value;
   };
-  $('studentBookingType')?.addEventListener('change',()=>{changeResources();refreshWeek()});
-  changeResources();refreshWeek();
+  $('studentBookingType')?.addEventListener('change',()=>{
+   studentBookingTypeChoice=$('studentBookingType').value;
+   changeResources();studentBookingResourceChoice=$('studentBookingResource').value;refreshWeek();
+  });
+  changeResources();studentBookingResourceChoice=$('studentBookingResource')?.value||'';refreshWeek();
   $('studentBookingForm')?.addEventListener('submit',e=>{
    e.preventDefault();
    try{
@@ -1721,6 +1727,8 @@ function wirePortals(){
     const student=members.find(m=>m.id===portalStudent);
     const requested=requestStudentBooking(draft,student,reservations,fleet,DEMO_RESOURCES,schoolPolicy);
     reservations.push(requested);
+    studentBookingTypeChoice=type;
+    studentBookingResourceChoice=resource;
     studentBookingSelection=null;
     render();
     notice('Solicitud de '+portalType(type)+' guardada solo en la demostración. Un instructor deberá tomarla.');
