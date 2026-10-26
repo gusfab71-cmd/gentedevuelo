@@ -1,6 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.57.0";
-import { S3Client, PutObjectCommand, HeadObjectCommand, GetObjectCommand, CopyObjectCommand, DeleteObjectCommand, ListObjectsV2Command, GetBucketCorsCommand, PutBucketCorsCommand, CreateMultipartUploadCommand, UploadPartCommand, CompleteMultipartUploadCommand, AbortMultipartUploadCommand } from "npm:@aws-sdk/client-s3@3.821.0";
+import { S3Client, HeadObjectCommand, GetObjectCommand, CopyObjectCommand, DeleteObjectCommand, CreateMultipartUploadCommand, UploadPartCommand, CompleteMultipartUploadCommand, AbortMultipartUploadCommand } from "npm:@aws-sdk/client-s3@3.821.0";
 import { getSignedUrl } from "npm:@aws-sdk/s3-request-presigner@3.821.0";
 import { AwsClient } from "npm:aws4fetch@1.0.20";
 
@@ -8,10 +8,7 @@ const origins=["https://gentedevuelo.com","https://www.gentedevuelo.com","https:
 const bucket="gente-de-vuelo-media";
 const publicBase="https://media.gentedevuelo.com/";
 const maxBytes=100*1024*1024;
-const keys:{[key:string]:string}={
- teoria:"biblioteca/teoria/fichas-teoria-30.pdf",
- crm:"biblioteca/crm/fichas-crm-06.pdf"
-};
+
 const cors=(origin:string|null)=>({
  "Access-Control-Allow-Origin":origin&&origins.includes(origin)?origin:origins[0],
  "Access-Control-Allow-Headers":"authorization, apikey, content-type, x-client-info, x-academia-action, x-academia-upload-id, x-academia-path, x-academia-part",
@@ -121,41 +118,7 @@ function r2(){
  return new S3Client({region:"auto",endpoint:"https://"+account+".r2.cloudflarestorage.com",
   credentials:{accessKeyId:key,secretAccessKey:secret},forcePathStyle:true,requestChecksumCalculation:"WHEN_REQUIRED"});
 }
-// La carga directa desde el navegador a una URL firmada requiere CORS en R2.
- // Se preservan las demás reglas del bucket, utilizadas por fotos y videos.
-async function ensureUploadCors(client:S3Client){
- let rules:any[]=[];
- try{
-  const result=await signedSend(client,new GetBucketCorsCommand({Bucket:bucket}));
-  rules=result.CORSRules||[];
- }catch(err){
-  const name=String((err as any)?.name||"");
-  if(!/NoSuchCORSConfiguration/i.test(name+" "+String(err)))throw err;
- }
- const id="gente-de-vuelo-academia-pdf";
- const existing=rules.find(rule=>rule.ID===id);
- const allowed=existing?.AllowedOrigins||[];
- if(existing&&origins.every(origin=>allowed.includes(origin))&&
-  (existing.AllowedMethods||[]).includes("PUT")&&
-  (existing.AllowedHeaders||[]).some((value:string)=>value==="*"||value.toLowerCase()==="content-type"))return;
- const rule={ID:id,AllowedOrigins:origins,AllowedMethods:["PUT"],AllowedHeaders:["Content-Type"],ExposeHeaders:["ETag"],MaxAgeSeconds:3600};
- await signedSend(client,new PutBucketCorsCommand({Bucket:bucket,CORSConfiguration:{CORSRules:[...rules.filter(item=>item.ID!==id),rule]}}));
-}
-async function state(client:S3Client,type:string){
- try{
-  const head=await signedSend(client,new HeadObjectCommand({Bucket:bucket,Key:keys[type]}));
-  const size=Number(head.ContentLength||0);
-  if(!size||size>maxBytes)return {published:false};
-  const version=[head.LastModified?.toISOString()||"",String(head.ETag||"").replace(/"/g,"")].join("-");
-  return {published:true,url:publicBase+keys[type],version,size,updatedAt:head.LastModified?.toISOString()||null};
- }catch(e){
-  if(/NoSuchKey|NotFound|404/i.test(String(e))||["NotFound","NoSuchKey"].includes(String((e as any)?.name)))return {published:false};
-  throw e;
- }
-}
 
-const legacyBucket="aerosuite-biblioteca";
-const legacyMain:{[key:string]:string}={teoria:"teoria/fichas-teoria-30.pdf",crm:"crm/fichas-crm-06.pdf"};
 const extraPrefix="biblioteca/materias/";
 const academyTypes:Record<string,string>={
  pdf:"application/pdf",jpg:"image/jpeg",jpeg:"image/jpeg",png:"image/png",webp:"image/webp",
@@ -218,16 +181,7 @@ async function listExtras(adminDb:any){
   extension:parseExtra(x.r2_key)?.extension||"pdf"
  }));
 }
-async function eraseLegacyExtras(adminDb:any,slug:string){
- const store=adminDb.storage.from(legacyBucket);
- const listed=await store.list("materias",{limit:1000});
- if(listed.error)throw listed.error;
- const paths=(listed.data||[]).filter((f:any)=>{
-  const m=String(f.name||"").match(/^(oculta--)?([a-z0-9-]+)--[0-9]+--/);
-  return m?.[2]===slug;
- }).map((f:any)=>"materias/"+f.name);
- if(paths.length){const removed=await store.remove(paths);if(removed.error)throw removed.error}
-}
+
 function validStaging(path:unknown,user:string){
  return typeof path==="string"&&new RegExp("^biblioteca/pendientes/"+user.replace(/-/g,"\\-")+"/[0-9a-f-]{36}\\.pdf$").test(path);
 }
@@ -261,7 +215,7 @@ Deno.serve(async req=>{
     return reply(origin,400,{error:"Fragmento de carga inválido"});
    const bytes=new Uint8Array(await req.arrayBuffer());
    if(bytes.length<1||bytes.length>5*1024*1024)
-    return reply(origin,413,{error:"Fragmento de PDF demasiado grande"});
+    return reply(origin,413,{error:"Fragmento de archivo demasiado grande"});
    const uploaded=await signedSend(client,new UploadPartCommand({
     Bucket:bucket,Key:path as string,UploadId:uploadId,PartNumber:partNumber,Body:bytes
    }));
@@ -271,73 +225,65 @@ Deno.serve(async req=>{
   let body:any;
   try{body=await req.json()}catch{return reply(origin,400,{error:"Solicitud inválida"})}
   const action=body?.action;
-  if(action==="status"){
-   const [th,cr,ex]=await Promise.allSettled([state(client,"teoria"),state(client,"crm"),listExtras(adminDb)]);
-   const teoria=th.status==="fulfilled"?th.value:{published:false,unavailable:true};
-   const crm=cr.status==="fulfilled"?cr.value:{published:false,unavailable:true};
-   const allExtras=ex.status==="fulfilled"?ex.value:[];
-   const warnings=[th,cr,ex].map((v,i)=>v.status==="rejected"?["Teoría","CRM","Materias"][i]+": "+String(v.reason?.message||"no disponible"):null).filter(Boolean);
-   return reply(origin,200,{teoria,crm,extras:admin?allExtras:allExtras.filter((item:any)=>!item.hidden),warnings,maxBytes});
-  }
 
+  if(action==="status"){
+   const extras=await listExtras(adminDb);
+   return reply(origin,200,{extras:admin?extras:extras.filter((item:any)=>!item.hidden),maxBytes});
+  }
   if(action==="download"){
-   const type=body?.type;
-   const row=type==="extra"?parseExtra(body?.path):null;
-   if((type==="extra"&&!row)||(!keys[type]&&type!=="extra"))return reply(origin,400,{error:"Archivo inválido"});
-   if(row?.hidden&&!admin)return reply(origin,403,{error:"Material oculto"});
-   const objectKey=type==="extra"?row!.path:keys[type];
-   const head=await signedSend(client,new HeadObjectCommand({Bucket:bucket,Key:objectKey}));
-   if(!head.ContentLength)return reply(origin,404,{error:"El PDF no existe"});
-   const safeName=(row?.name||"archivo").replace(/[^a-zA-Z0-9_.-]/g,"_").slice(0,110);
-   const filename=type==="extra"?(safeName.endsWith("."+row!.extension)?safeName:safeName+"."+row!.extension):type==="teoria"?"teoria-aeronautica.pdf":"crm-factores-humanos.pdf";
+   const row=body?.type==="extra"?parseExtra(body.path):null;
+   if(!row)return reply(origin,400,{error:"Archivo académico inválido"});
+   const {data:record,error:lookupError}=await adminDb.from("aerosuite_library_catalog")
+    .select("r2_key,hidden").eq("slug",row.slug).maybeSingle();
+   if(lookupError)throw Error("No se pudo consultar el archivo: "+lookupError.message);
+   if(!record||record.r2_key!==row.path)return reply(origin,404,{error:"Archivo no publicado"});
+   if(record.hidden&&!admin)return reply(origin,403,{error:"Material oculto"});
+   const head=await signedSend(client,new HeadObjectCommand({Bucket:bucket,Key:row.path}));
+   if(!head.ContentLength)return reply(origin,404,{error:"El archivo no existe en R2"});
+   const safeName=row.name.replace(/[^a-zA-Z0-9_.-]/g,"_").slice(0,110);
+   const filename=safeName.endsWith("."+row.extension)?safeName:safeName+"."+row.extension;
    const downloadUrl=await getSignedUrl(client,new GetObjectCommand({
-    Bucket:bucket,Key:objectKey,ResponseContentDisposition:'attachment; filename="'+filename+'"'
+    Bucket:bucket,Key:row.path,ResponseContentDisposition:'attachment; filename="'+filename+'"'
    }),{expiresIn:120});
    return reply(origin,200,{ok:true,downloadUrl});
   }
+
   if(!admin)return reply(origin,403,{error:"Solo administración puede modificar la biblioteca"});
-  if(action==="delete-legacy-extra"){
-   const path=body?.path;
-   if(typeof path!=="string"||!/^materias\/(oculta--)?[a-z0-9-]+--[0-9]+--[^/]+\.pdf$/.test(path))
-    return reply(origin,400,{error:"Ruta antigua inválida"});
-   const deleted=await adminDb.storage.from(legacyBucket).remove([path]);
-   if(deleted.error)throw deleted.error;
-   return reply(origin,200,{ok:true});
-  }
+
   if(action==="delete"){
-   const type=body?.type,row=type==="extra"?parseExtra(body?.path):null;
-   if(body?.confirm!==true||(!keys[type]&&type!=="extra")||(type==="extra"&&!row))
-    return reply(origin,400,{error:"Eliminación inválida o sin confirmar"});
-   if(type==="extra"){
-    await signedSend(client,new DeleteObjectCommand({Bucket:bucket,Key:row!.path}));
-    try{
-     await signedSend(client,new HeadObjectCommand({Bucket:bucket,Key:row!.path}));
-     throw Error("El archivo sigue presente en R2");
-    }catch(check:any){
-     if(!/404|NotFound/.test(check.message||"")&&check.name!=="NotFound")throw check;
-    }
-    const {error:catalogError}=await adminDb.from("aerosuite_library_catalog").delete().eq("slug",row!.slug);
-    if(catalogError)throw Error("Archivo eliminado de R2; error al limpiar la tarjeta: "+catalogError.message);
-    await eraseLegacyExtras(adminDb,row!.slug);
-   }else{
-    const legacyDeleted=await adminDb.storage.from(legacyBucket).remove([legacyMain[type]]);
-    if(legacyDeleted.error)throw Error("No se pudo eliminar el PDF antiguo de Supabase: "+legacyDeleted.error.message);
-    await signedSend(client,new DeleteObjectCommand({Bucket:bucket,Key:keys[type]}));
-    const checked=await state(client,type);
-    if(checked.published)throw Error("El archivo sigue publicado en R2");
+   const row=body?.type==="extra"?parseExtra(body.path):null;
+   if(body?.confirm!==true||!row)return reply(origin,400,{error:"Eliminación inválida o sin confirmar"});
+   const {data:record,error:lookupError}=await adminDb.from("aerosuite_library_catalog")
+    .select("r2_key").eq("slug",row.slug).maybeSingle();
+   if(lookupError)throw Error("No se pudo verificar el catálogo: "+lookupError.message);
+   if(!record||record.r2_key!==row.path)return reply(origin,404,{error:"Archivo no publicado"});
+   await signedSend(client,new DeleteObjectCommand({Bucket:bucket,Key:row.path}));
+   try{
+    await signedSend(client,new HeadObjectCommand({Bucket:bucket,Key:row.path}));
+    throw Error("El archivo todavía existe en Cloudflare R2");
+   }catch(check:any){
+    if(!/404|NotFound/.test(check.message||"")&&check.name!=="NotFound")throw check;
    }
+   const {error:catalogError}=await adminDb.from("aerosuite_library_catalog")
+    .delete().eq("slug",row.slug).eq("r2_key",row.path);
+   if(catalogError)throw Error("Se borró el objeto, pero falló el catálogo: "+catalogError.message);
    return reply(origin,200,{ok:true,deleted:true});
   }
+
   if(action==="toggle-extra"){
    const row=parseExtra(body?.path);
    if(!row)return reply(origin,400,{error:"Materia inválida"});
-   const target=extraKey(row.name,row.count,!row.hidden);
+   const {data:record,error:lookupError}=await adminDb.from("aerosuite_library_catalog")
+    .select("r2_key,hidden").eq("slug",row.slug).maybeSingle();
+   if(lookupError)throw Error("No se pudo comprobar el catálogo: "+lookupError.message);
+   if(!record||record.r2_key!==row.path)return reply(origin,404,{error:"Archivo no publicado"});
+   const target=extraKey(row.name,row.count,!record.hidden,row.extension);
    await signedSend(client,new CopyObjectCommand({Bucket:bucket,Key:target,
     CopySource:copySource(row.path),ContentType:row.mime,CacheControl:"public, max-age=60",MetadataDirective:"REPLACE"}));
    const verified=await signedSend(client,new HeadObjectCommand({Bucket:bucket,Key:target}));
    if(!verified.ContentLength)throw Error("No se confirmó el cambio");
    const {error:catalogError}=await adminDb.from("aerosuite_library_catalog").update({
-    r2_key:target,hidden:!row.hidden,updated_at:new Date().toISOString(),
+    r2_key:target,hidden:!record.hidden,updated_at:new Date().toISOString(),
     file_version:new Date().toISOString()
    }).eq("slug",row.slug);
    if(catalogError)throw Error("Materia copiada a R2 pero no cambió de estado: "+catalogError.message);
@@ -350,12 +296,12 @@ Deno.serve(async req=>{
    return reply(origin,200,{ok:true});
   }
   const type=body?.type;
-  if(!keys[type]&&type!=="extra")return reply(origin,400,{error:"Materia inválida"});
+  if(type!=="extra")return reply(origin,400,{error:"Usá el cargador genérico de Academia Aeronáutica"});
   if(action==="multipart-start"){
    if(!Number.isInteger(body.size)||body.size<5||body.size>maxBytes)
-    return reply(origin,413,{error:"Solo PDF de hasta 100 MB"});
+    return reply(origin,413,{error:"Solo archivos de hasta 100 MB"});
    const path="biblioteca/pendientes/"+user.id+"/"+crypto.randomUUID()+".pdf";
-   const fileType=type==="extra"?typeForName(body.filename):{extension:"pdf",mime:"application/pdf"};
+   const fileType=typeForName(body.filename);
    if(!fileType)return reply(origin,415,{error:"Formato de archivo no admitido para Academia Aeronáutica"});
    const created=await signedSend(client,new CreateMultipartUploadCommand({
     Bucket:bucket,Key:path,ContentType:fileType.mime
@@ -388,22 +334,13 @@ Deno.serve(async req=>{
    }
    return reply(origin,200,{ok:true,path});
   }
-  if(action==="prepare"){
-   if(body.contentType!=="application/pdf"||!Number.isInteger(body.size)||body.size<5||body.size>maxBytes)
-    return reply(origin,413,{error:"Solo PDF de hasta 100 MB"});
-   const path="biblioteca/pendientes/"+user.id+"/"+crypto.randomUUID()+".pdf";
-   // CORS se configura de forma idempotente en R2 antes de generar una URL firmada.
-   // Si la credencial no administra políticas del bucket, se devuelve un aviso claro.
-   const corsWarning="Si la carga directa falla por CORS, se utiliza transferencia por fragmentos.";
-   const uploadUrl=await getSignedUrl(client,new PutObjectCommand({Bucket:bucket,Key:path,ContentType:"application/pdf"}),{expiresIn:600});
-   return reply(origin,200,{uploadUrl,path,maxBytes,expiresIn:600,corsWarning});
-  }
+
   if(action==="finish"){
    const path=body?.path;
    if(!validStaging(path,user.id))return reply(origin,400,{error:"Ruta de carga inválida"});
    const head=await signedSend(client,new HeadObjectCommand({Bucket:bucket,Key:path}));
    const size=Number(head.ContentLength||0);
-   const format=type==="extra"?typeForName(body.filename):{extension:"pdf",mime:"application/pdf"};
+   const format=typeForName(body.filename);
    if(!format)return reply(origin,415,{error:"Formato de archivo no admitido"});
    if(size<5||size>maxBytes){await signedSend(client,new DeleteObjectCommand({Bucket:bucket,Key:path}));return reply(origin,413,{error:"El archivo supera los 100 MB"})}
    if((head.ContentType||"").split(";")[0]!==format.mime)return reply(origin,415,{error:"El tipo del archivo no coincide con su extensión"});
@@ -411,11 +348,12 @@ Deno.serve(async req=>{
    const magic=await sample.Body?.transformToByteArray();
    if(!magic||!matchesFileSignature(magic,format.extension))return reply(origin,415,{error:"Archivo inválido o formato no admitido"});
 
-   // Publicar primero y verificar; recién después retirar versiones anteriores.
-   if(type==="extra"){
-    const name=typeof body.name==="string"?body.name.trim():"",count=Number(body.count);
-    if(name.length<3||name.length>80||!Number.isInteger(count)||count<1||count>500)
-     return reply(origin,400,{error:"Nombre o cantidad de fichas inválida"});
+
+   // Publicar el archivo elegido sin temarios, materias ni cantidades prefijadas.
+
+    const name=typeof body.name==="string"?body.name.trim():"",count=1;
+    if(name.length<3||name.length>80)
+     return reply(origin,400,{error:"Nombre de archivo inválido"});
     const key=extraKey(name,count,false,format.extension);
     if(!extraSlug(name)||body.filename!==name)return reply(origin,400,{error:"Nombre o archivo inválido"});
     const previous=await adminDb.from("aerosuite_library_catalog").select("r2_key")
@@ -430,25 +368,16 @@ Deno.serve(async req=>{
      slug:extraSlug(name),name,fichas:count,r2_key:key,hidden:false,file_size:size,
      file_version:version,updated_at:new Date().toISOString()
     },{onConflict:"slug"});
-    if(catalogError)throw Error("PDF subido a R2, pero la ficha no quedó en el catálogo: "+catalogError.message);
+    if(catalogError)throw Error("Archivo subido a R2, pero no quedó registrado en el catálogo: "+catalogError.message);
     let cleanupWarning="";
     if(previous.data?.r2_key&&previous.data.r2_key!==key){
      try{await signedSend(client,new DeleteObjectCommand({Bucket:bucket,Key:previous.data.r2_key}))}
      catch{cleanupWarning="La versión anterior de R2 no pudo borrarse; hace falta repetir la limpieza."}
     }
-    try{await eraseLegacyExtras(adminDb,extraSlug(name))}
-    catch(error){cleanupWarning="Se publicó en R2, pero no se pudo eliminar el PDF antiguo de Supabase: "+String(error)}
     await signedSend(client,new DeleteObjectCommand({Bucket:bucket,Key:path})).catch(()=>{});
+
     return reply(origin,200,{ok:true,published:true,url:publicURL(key),size,path:key,cleanupWarning});
-   }
-   await signedSend(client,new CopyObjectCommand({Bucket:bucket,Key:keys[type],CopySource:copySource(path),ContentType:"application/pdf",CacheControl:"public, max-age=60",MetadataDirective:"REPLACE"}));
-   const published=await state(client,type);
-   if(!published.published||published.size!==size)return reply(origin,502,{error:"La publicación no pudo verificarse"});
-   let cleanupWarning="";
-   const legacy=await adminDb.storage.from(legacyBucket).remove([legacyMain[type]]);
-   if(legacy.error)cleanupWarning="La nueva versión está en R2, pero el PDF antiguo en Supabase no pudo eliminarse.";
-   await signedSend(client,new DeleteObjectCommand({Bucket:bucket,Key:path})).catch(()=>{});
-   return reply(origin,200,{ok:true,...published,cleanupWarning});
+
   }
   return reply(origin,400,{error:"Operación desconocida"});
  }catch(error){
