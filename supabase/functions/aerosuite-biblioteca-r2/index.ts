@@ -2,6 +2,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.57.0";
 import { S3Client, PutObjectCommand, HeadObjectCommand, GetObjectCommand, CopyObjectCommand, DeleteObjectCommand, ListObjectsV2Command, GetBucketCorsCommand, PutBucketCorsCommand, CreateMultipartUploadCommand, UploadPartCommand, CompleteMultipartUploadCommand, AbortMultipartUploadCommand } from "npm:@aws-sdk/client-s3@3.821.0";
 import { getSignedUrl } from "npm:@aws-sdk/s3-request-presigner@3.821.0";
+import { AwsClient } from "npm:aws4fetch@1.0.20";
 
 const origins=["https://gentedevuelo.com","https://www.gentedevuelo.com","https://gentedevuelo.vercel.app"];
 const bucket="gente-de-vuelo-media";
@@ -19,7 +20,57 @@ const cors=(origin:string|null)=>({
  "Vary":"Origin"
 });
 const reply=(origin:string|null,code:number,data:unknown)=>new Response(JSON.stringify(data),{status:code,headers:{...cors(origin),"Content-Type":"application/json"}});
+function r2Aws(){
+ const account=Deno.env.get("R2_ACCOUNT_ID"),id=Deno.env.get("R2_ACCESS_KEY_ID"),secret=Deno.env.get("R2_SECRET_ACCESS_KEY");
+ if(!account||!id||!secret)throw Error("Credenciales R2 no configuradas");
+ return {endpoint:"https://"+account+".r2.cloudflarestorage.com",client:new AwsClient({
+  accessKeyId:id,secretAccessKey:secret,service:"s3",region:"auto",retries:0
+ })};
+}
+function r2SignedKey(key:string){
+ return bucket+"/"+key.split("/").map(encodeURIComponent).join("/");
+}
+async function signedMultipartComplete(input:any){
+ const {endpoint,client}=r2Aws();
+ const parts=input.MultipartUpload?.Parts||[];
+ if(!parts.length)throw Error("Faltan fragmentos para completar el PDF");
+ const xml='<?xml version="1.0" encoding="UTF-8"?>'+
+  '<CompleteMultipartUpload xmlns="http://s3.amazonaws.com/doc/2006-03-01/">'+
+  parts.map((part:any)=>'<Part><PartNumber>'+Number(part.PartNumber)+'</PartNumber><ETag>'+
+  String(part.ETag).replace(/&/g,"&amp;").replace(/</g,"&lt;")+'</ETag></Part>').join('')+
+  '</CompleteMultipartUpload>';
+ const target=endpoint+"/"+r2SignedKey(input.Key)+"?uploadId="+encodeURIComponent(input.UploadId);
+ const response=await client.fetch(target,{method:"POST",headers:{"Content-Type":"application/xml"},body:xml,
+  signal:AbortSignal.timeout(45000)});
+ const result=await response.text();
+ if(!response.ok||/<(?:[a-z0-9]+:)?Error\b/i.test(result)){
+  const reason=result.match(/<Code>([^<]+)<\/Code>/)?.[1]||"Error de Cloudflare R2";
+  throw Error("R2 no completó el PDF: "+reason+" (HTTP "+response.status+")");
+ }
+ if(!/CompleteMultipartUploadResult/.test(result))throw Error("Cloudflare no confirmó la unión del PDF");
+ return {ok:true};
+}
+async function signedCopyObject(input:any){
+ const {endpoint,client}=r2Aws();
+ const target=endpoint+"/"+r2SignedKey(input.Key);
+ const source=String(input.CopySource||"");
+ const response=await client.fetch(target,{method:"PUT",headers:{
+  "x-amz-copy-source":source,
+  "x-amz-metadata-directive":"REPLACE",
+  "Content-Type":"application/pdf",
+  "Cache-Control":"public, max-age=60"
+ },signal:AbortSignal.timeout(45000)});
+ const xml=await response.text();
+ if(!response.ok||/<(?:[a-z0-9]+:)?Error\b/i.test(xml)){
+  const reason=xml.match(/<Code>([^<]+)<\/Code>/)?.[1]||"Error de Cloudflare R2";
+  throw Error("R2 no pudo publicar el PDF: "+reason+" (HTTP "+response.status+")");
+ }
+ if(!/CopyObjectResult/.test(xml))throw Error("Cloudflare no confirmó la publicación");
+ return {ok:true};
+}
 async function signedSend(client:S3Client,command:any){
+ if(command.constructor.name==="CompleteMultipartUploadCommand")return signedMultipartComplete(command.input);
+ if(command.constructor.name==="CopyObjectCommand")return signedCopyObject(command.input);
  const type=command.constructor.name,input=command.input;
  let method="GET",headers:any={},body:any=undefined;
  if(type==="HeadObjectCommand")method="HEAD";
