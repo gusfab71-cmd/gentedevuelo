@@ -46,7 +46,7 @@ th{color:#b9d1dd;font-size:11px;text-transform:uppercase;letter-spacing:.06em}
 <main>
 <div class="eyebrow">Acceso exclusivo del titular</div>
 <h1>Instituciones y licencias</h1>
-<p>Autorización central de escuelas de vuelo, aeroclubes y aeródromos. Las instituciones todavía no pueden acceder al portal comercial: sus invitaciones se incorporarán en una etapa posterior.</p>
+<p>Autorización central de escuelas de vuelo, aeroclubes y aeródromos. Las invitaciones de prueba pueden aceptarse con cuentas verificadas desde el ingreso institucional. Los módulos operativos reales todavía permanecen bloqueados para escuelas.</p>
 <div class="notice" id="accessMessage" role="status">Verificando tu identidad y los permisos de AeroSuite…</div>
 <div id="adminContent" hidden>
 <section class="panel" aria-labelledby="demoTitle" style="background:#203b51;border-color:#668dab">
@@ -134,7 +134,15 @@ async function reload(){
   const expiry=(row.status==='trial'?row.trial_ends_at:row.status==='active'?row.license_ends_at:null);
   if(expiry){const e=document.createElement('small');e.textContent=' Hasta '+dateOnly(expiry);e.style.display='block';state.append(e)}
   const actions=addCell(tr,'');const btn=document.createElement('button');btn.type='button';btn.textContent='Gestionar';
-  btn.addEventListener('click',()=>edit(row.id));actions.append(btn);body.append(tr);
+  btn.addEventListener('click',()=>edit(row.id));actions.append(btn);
+  const entry=document.createElement('a');
+  entry.href='ingreso-escuela.html?institucion='+encodeURIComponent(row.id);
+  entry.textContent=' Probar ingreso';
+  entry.style.display='inline-block';
+  entry.style.marginLeft='10px';
+  entry.style.fontSize='12px';
+  entry.title='Abrir en incógnito con el correo autorizado de la escuela';
+  actions.append(entry);body.append(tr);
  }
  recent.replaceChildren();
  if(history.error){const li=document.createElement('li');li.textContent='No se pudo consultar el historial.';recent.append(li);return}
