@@ -44,7 +44,11 @@ export function requestStudentBooking(data,student,bookings,fleet,resources=DEMO
  }
  if(bookings.some(x=>activeBooking(x.status)&&x.pilot===student.id&&overlap(x,data)))
   throw Error('Ya tenés otra actividad reservada para ese horario.');
- // En solicitud preliminar no se bloquea todavía el recurso: se valida otra vez al tomarla.
+ // Una solicitud pendiente ocupa el horario del recurso en esta demostración.
+ // Revalidar siempre en servidor antes de habilitar reservas multiusuario reales.
+ if(bookings.some(x=>activeBooking(x.status)&&overlap(x,data)&&
+  (aircraft?x.aircraft===aircraft:x.resourceId===resourceId)))
+  throw Error('Ese recurso ya tiene un turno solicitado o confirmado en ese horario.');
  return {id:crypto.randomUUID(),date:data.date,start:data.start,end:data.end,type:data.type,
   pilot:student.id,aircraft,resourceId,instructor:'',status:'solicitada',
   createdAt:new Date().toISOString(),history:[{event:'solicitada',actor:student.id,at:new Date().toISOString()}]};
