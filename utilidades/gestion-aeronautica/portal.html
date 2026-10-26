@@ -126,6 +126,12 @@ ol{color:#bbccd0;font-size:13px;line-height:1.85}
 .student-week-grid .agenda-hour-slot:not(:disabled){color:#d7f0fc;background:rgba(49,101,123,.16)}
 .student-week-grid .agenda-hour-slot:not(:disabled) span{font-size:10px;font-weight:800}
 .student-week-grid .agenda-hour-slot:not(:disabled):hover{background:#417088aa}
+.student-week-grid .student-ninety-slot{border-bottom:2px solid #476575;border-radius:5px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;text-align:center}
+.student-week-grid .student-ninety-slot span{font-size:12px!important;font-weight:800}
+.student-week-grid .student-ninety-slot small{font-size:11px;font-weight:700}
+.student-week-grid .student-ninety-slot:disabled{background:#21313b;color:#8da8b4;opacity:.75}
+.student-week-grid .student-ninety-slot.student-slot-conflict:disabled{background:#293942;color:#aac4ce;opacity:1}
+.student-week-grid .student-ninety-slot:disabled small{color:#9bb0bb}
 .student-turn-reminder{border-color:#637f91;background:#1c3546;margin-bottom:15px}
 .student-turn-reminder h2{font-size:18px;margin:0}
 .student-turn-empty,.student-turn-status{font-size:13px;line-height:1.55;color:#c4dce9;margin:11px 0 0}
@@ -898,7 +904,9 @@ function studentWeeklyTurnera(){
   (b.aircraft===resource||b.resourceId===resource));
  const open=minutes(schoolPolicy.openTime),close=minutes(schoolPolicy.closeTime);
  const startHour=Math.floor(open/60),endHour=Math.ceil(close/60);
- const step=schoolPolicy.slotMinutes,px=step===15?80:step===30?64:52;
+ // Cada fila de la turnera del alumno representa un turno completo de 90 minutos.
+ // La configuración administrativa de intervalos permanece independiente.
+ const step=90,px=64;
  const height=(endHour-startHour)*px;
  const hours=Array.from({length:endHour-startHour},(_,i)=>startHour+i);
  const suggested=studentBookingSelection||studentSuggestedSlot();
@@ -915,14 +923,21 @@ function studentWeeklyTurnera(){
  const columns=dates.map(date=>{
   const openDay=schoolPolicy.availableWeekdays.includes(new Date(date+'T12:00:00Z').getUTCDay());
   const slots=[];
-  for(let time=startHour*60;time<endHour*60;time+=step){
-   const label=hhmm(time);
-   const occupied=active.some(b=>b.date===date&&minutes(b.start)<time+schoolPolicy.studentDefaultMinutes&&time<minutes(b.end));
+  for(let time=open;time+step<=close;time+=step){
+   const label=hhmm(time),endLabel=hhmm(time+step);
+   const conflict=active.some(b=>b.date===date&&minutes(b.start)<time+step&&time<minutes(b.end));
    const past=date<today||(date===today&&time<=currentMinute);
-   const disabled=!openDay||past||time<open||time+schoolPolicy.studentDefaultMinutes>close||occupied;
+   const disabled=!openDay||past||conflict;
    const selected=!disabled&&date===dateField&&label===timeField;
-   const reason=occupied?' · Ocupado (demo)':!openDay?' · Cerrado':past?' · Horario pasado':'';
-   slots.push('<button type="button" class="agenda-hour-slot'+(selected?' student-slot-selected':'')+'" style="height:'+(px*step/60)+'px" data-student-slot-date="'+safe(date)+'" data-student-slot-time="'+label+'" title="'+safe(disabled?reason:'Elegir '+date+' a las '+label)+'" aria-label="'+safe(date)+' '+label+reason+'"'+(disabled?' disabled':'')+'><span>'+(disabled?'':'+ ')+label+'</span></button>');
+   const reason=conflict?'Cruza un turno de 90 minutos ya solicitado o confirmado':!openDay?'Día cerrado':past?'Horario pasado':'';
+   const title=disabled?reason:'Elegir '+date+' de '+label+' a '+endLabel;
+   const top=(time-startHour*60)/60*px;
+   slots.push('<button type="button" class="agenda-hour-slot student-ninety-slot'+(selected?' student-slot-selected':'')+
+    (conflict?' student-slot-conflict':'')+'" style="position:absolute;top:'+top+'px;left:0;height:'+(px*step/60)+
+    'px" data-student-slot-date="'+safe(date)+'" data-student-slot-time="'+label+
+    '" title="'+safe(title)+'" aria-label="'+safe(date)+' '+label+' a '+endLabel+(disabled?' · '+reason:'')+
+    '"'+(disabled?' disabled':'')+'><span>'+safe(label)+'–'+safe(endLabel)+'</span>'+
+    '<small>'+(disabled?(conflict?'No disponible':'Cerrado'):'+ Reservar')+'</small></button>');
   }
   // layoutDay distribuye las superposiciones y calcula alto real del bloque.
   // Le pasamos una copia con estado visible sin modificar las reservas reales.
@@ -939,7 +954,7 @@ function studentWeeklyTurnera(){
   }).join('');
   return '<div class="agenda-day-surface '+(openDay?'':'day-closed')+'" style="height:'+height+'px;--agenda-hour-height:'+px+'px" data-student-day="'+safe(date)+'">'+slots.join('')+events+'</div>';
  }).join('');
- return '<div class="agenda-toolbar"><div class="agenda-heading"><h3>Agenda semanal · Elegí día y horario</h3><p>'+safe(schoolPolicy.schoolName)+' · '+safe(schoolPolicy.openTime)+'–'+safe(schoolPolicy.closeTime)+' · Intervalos de '+step+' minutos</p></div>'+ 
+ return '<div class="agenda-toolbar"><div class="agenda-heading"><h3>Agenda semanal · Elegí día y horario</h3><p>'+safe(schoolPolicy.schoolName)+' · '+safe(schoolPolicy.openTime)+'–'+safe(schoolPolicy.closeTime)+' · Turnos de '+step+' minutos</p></div>'+ 
  '<div class="agenda-controls"><button type="button" data-student-week="-7" aria-label="Semana anterior">‹</button>'+ 
  '<button type="button" data-student-week-today>Hoy</button>'+ 
  '<button type="button" data-student-week="7" aria-label="Semana siguiente">›</button>'+ 
@@ -1681,7 +1696,7 @@ function wirePortals(){
    }
    if(button.hasAttribute('data-student-slot-date')){
     const date=button.dataset.studentSlotDate,start=button.dataset.studentSlotTime;
-    const finish=minutes(start)+schoolPolicy.studentDefaultMinutes;
+    const finish=minutes(start)+90;
     if(finish>minutes(schoolPolicy.closeTime))return;
     studentBookingSelection={date,start,end:hhmm(finish)};
     $('studentBookingDate').value=date;
