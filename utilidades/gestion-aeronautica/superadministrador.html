@@ -144,6 +144,13 @@ async function reload(){
   entry.style.fontSize='12px';
   entry.title='Abrir en incógnito con el correo autorizado de la escuela';
   actions.append(entry);
+  if((row.status==='trial'&&Date.parse(row.trial_ends_at)>now())||(row.status==='active'&&Date.parse(row.license_ends_at)>now())){
+    const send=document.createElement('button');
+    send.type='button';send.textContent='Enviar invitación al director';
+    send.style.marginLeft='8px';send.style.marginTop='6px';
+    send.addEventListener('click',()=>sendDirectorInvite(row,send));
+    actions.append(send);
+  }
   if(!invites.error){
    const inv=(invites.data||[]).find(it=>it.institution_id===row.id);
    if(inv){const note=document.createElement('small');
@@ -163,6 +170,20 @@ async function reload(){
   const li=document.createElement('li');const institution=records.find(r=>r.id===entry.institution_id);
   li.textContent=(entry.operation==='INSERT'?'Alta':'Modificación')+' · '+(institution?.name||'Institución')+' · '+new Date(entry.changed_at).toLocaleString('es-AR');recent.append(li);
  }
+}
+async function sendDirectorInvite(row,button){
+ if(!confirm('¿Enviar una invitación real por correo a '+row.contact_email+' para administrar '+row.name+'?'))return;
+ button.disabled=true;feedback.textContent='Enviando invitación al responsable…';
+ try{
+  const {data,error}=await db.functions.invoke('aerosuite-invitations',{
+   body:{mode:'send',institution_id:row.id,email:row.contact_email,role:'administrador'}
+  });
+  if(error)throw Error(data?.error||error.message);
+  if(!data?.ok)throw Error(data?.error||'El envío no fue confirmado.');
+  feedback.textContent='Invitación enviada a '+row.contact_email+'. El proveedor aceptó el correo; comprobá que llegue a la casilla.';
+  await reload();
+ }catch(err){showError(err)}
+ finally{button.disabled=false}
 }
 function edit(id){
  const r=records.find(item=>item.id===id);if(!r)return;
