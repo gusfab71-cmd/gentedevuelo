@@ -155,9 +155,9 @@ assert.match(html,/target="_blank" rel="noopener noreferrer">Abrir a pantalla co
 assert.match(html,/data-academy-tool-close/,'El alumno puede cerrar el visor');
 assert.match(html,/La bitácora utiliza la cuenta actual de Gente de Vuelo/,
  'El mantenimiento conserva el almacenamiento privado de la herramienta original');
-assert.match(html,/libraryCollection\('teoria',AEROSUITE_THEORY_TOPICS\)/);
-assert.match(html,/libraryCollection\('crm',AEROSUITE_CRM_TOPICS\)/);
-assert.match(html,/fichas\/fuerzas-del-vuelo\.html/);
+assert.match(html,/libraryCollection\('teoria',AEROSUITE_THEORY_TOPICS,canManage\)/);
+assert.match(html,/libraryCollection\('crm',AEROSUITE_CRM_TOPICS,canManage\)/);
+assert.doesNotMatch(html,/href="fichas\/fuerzas-del-vuelo\.html"/,'La ficha obsoleta no debe reaparecer');
 console.log('PASS: Academia del Alumno contiene mantenimiento, rodaje y sustentación, conserva biblioteca y registros');
 
 
@@ -529,16 +529,11 @@ assert.throws(()=>validateTrainingGoals({flightHours:40,simulatorHours:-1,theory
 assert.throws(()=>validateTrainingGoals({flightHours:40,simulatorHours:5.1,theoryHours:0}),/cuartos de hora/);
 assert.equal(trainingProgress({flightHours:45,simulatorHours:5,theoryHours:0},DEFAULT_TRAINING_GOALS).flightHours.percentage,100);
 for(const label of ['Horas de simulador','Horas de teoría','Configurar programa','Mi biblioteca de teoría y práctica',
- 'rodaje-viento.html','calculo-sustentacion.html','fichas/fuerzas-del-vuelo.html','trainingGoalsForm'])
+ 'rodaje-viento.html','calculo-sustentacion.html','trainingGoalsForm'])
  assert.ok(html.includes(label),'Falta interfaz de formación '+label);
 assert.match(html,/finishGroundLesson\(booking,portalInstructor,groundActivities,actual\)/);
-const teachingSheet=fs.readFileSync(new URL('../utilidades/gestion-aeronautica/fichas/fuerzas-del-vuelo.html',import.meta.url),'utf8');
-assert.match(teachingSheet,/<svg/);
-assert.match(teachingSheet,/Las cuatro fuerzas del vuelo/);
-assert.match(teachingSheet,/Imprimir ficha A4/);
-assert.match(teachingSheet,/Autoevaluación/);
-assert.doesNotMatch(teachingSheet,/AeroMaster|Aviacion pro|Pilotfy/);
-console.log('PASS: horas registradas de simulador y teoría, requisitos escolares y ficha visual original');
+assert.doesNotMatch(html,/href="fichas\/fuerzas-del-vuelo\.html"/);
+console.log('PASS: horas registradas de simulador y teoría, requisitos escolares y retirada de ficha obsoleta');
 
 console.log('PASS: tres tipos de reservas, recursos, aceptación por instructor, evaluación y datos aislados del alumno');
 
@@ -1146,6 +1141,12 @@ assert.ok(html.includes("const previousR2=libraryR2"),'No perder el PDF vigente 
 assert.ok(html.includes("libraryR2[type]?.published"),'Distinguir PDF R2 actual de versión Supabase anterior.');
 assert.ok(html.includes('data-library-replace="teoria"'),'Debe haber botón explícito de reemplazo de teoría.');
 assert.ok(html.includes('data-library-replace="crm"'),'Debe haber botón explícito de reemplazo de CRM.');
+assert.ok(html.includes('data-library-delete'),'Debe haber opción de eliminación definitiva.');
+assert.ok(html.includes('data-library-download'),'Debe haber descarga de PDFs desde R2.');
+assert.ok(html.includes("transferLibraryFileToR2('extra',file)"),'Las materias nuevas se deben subir a R2, no a Supabase.');
+assert.ok(html.includes("callLibraryR2('toggle-extra'"),'Las materias R2 admiten ocultar/publicar.');
+assert.ok(html.includes("callLibraryR2('delete',{type,confirm:true})"),'La eliminación de cuadernillos debe confirmarse en el servidor.');
+assert.doesNotMatch(html,/store\.upload\(path,file,\{upsert:true/,'No se deben subir nuevas materias a Supabase Storage.');
 assert.match(html,/signature!=='%PDF-'/,'Control de formato PDF requerido.');
 console.log('PASS: biblioteca AeroSuite, 30 fichas de teoría y 8 de CRM con carga R2 resistente a CORS');
 
