@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AeroSuite · Superadministración institucional</title>
+<style>
+:root{font-family:Inter,system-ui,Arial,sans-serif;color:#eef6fa;background:#111e2a;color-scheme:dark}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:linear-gradient(135deg,#142635,#111c29);min-height:100vh}
+a{color:#c2dff3}a:hover{text-decoration:underline}
+header{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:18px max(20px,calc((100vw - 1200px)/2));background:#172b3b;border-bottom:1px solid #536c7d}
+.brand{font-size:20px;font-weight:850;color:#f1d29e;text-decoration:none;letter-spacing:.025em}.brand small{display:block;color:#b4cad6;font-size:10px;letter-spacing:.15em}
+header nav{display:flex;gap:16px;font-size:12px}
+main{max-width:1200px;margin:auto;padding:25px 20px 65px}
+h1{margin:4px 0 9px;font-size:clamp(26px,3.6vw,39px)}h2{font-size:17px;margin:0 0 14px}
+p{color:#bdd0dd;line-height:1.5}.eyebrow{text-transform:uppercase;letter-spacing:.17em;color:#d7b77f;font-size:11px;font-weight:800}
+.notice{background:#26384a;border:1px solid #5c768b;border-radius:12px;padding:15px;margin:16px 0;font-size:13px;line-height:1.5;color:#e6f0f7}
+.layout{display:grid;grid-template-columns:minmax(300px,380px) minmax(0,1fr);gap:18px;align-items:start}
+.panel{background:#1b3041;border:1px solid #446075;border-radius:15px;padding:18px;margin-bottom:17px;min-width:0}
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:20px 0}
+.metric{background:#1b3041;border:1px solid #46657b;border-radius:13px;padding:16px}
+.metric strong{display:block;color:#efd19e;font-size:28px}.metric span{color:#b3c7d5;font-size:12px}
+form{display:grid;gap:11px}label{display:grid;gap:5px;color:#d3e3ea;font-size:12px}
+input,select,textarea{font:inherit;font-size:13px;color:#f3f8fa;background:#102332;border:1px solid #638197;border-radius:9px;width:100%;padding:11px}
+textarea{min-height:80px;resize:vertical}
+button{font:inherit;font-size:13px;cursor:pointer;border-radius:9px;padding:11px 14px;border:1px solid #7997aa;background:#304c61;color:#f2f7fa}
+button.primary{background:#e2c08e;border-color:#e2c08e;color:#18222c;font-weight:800}
+button:disabled{opacity:.55;cursor:not-allowed}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #d6b56d;outline-offset:2px}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}.muted{color:#afc2d0;font-size:12px}
+.table-scroll{overflow-x:auto}table{width:100%;border-collapse:collapse;min-width:600px;font-size:12px}
+th,td{text-align:left;border-bottom:1px solid #395569;padding:10px;vertical-align:middle}
+th{color:#b9d1dd;font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+.status{border:1px solid #69899b;border-radius:100px;padding:4px 8px;white-space:nowrap;font-size:11px}
+.status.active{color:#b7f3d7;border-color:#469779}.status.trial{color:#f4dfab;border-color:#b99b63}.status.suspended,.status.expired{color:#ffd1bb;border-color:#ba856b}
+#feedback{min-height:25px;color:#eec995;font-size:13px}#accessMessage{font-size:14px}
+#recent{margin:0;padding-left:20px;color:#d2e1e9;font-size:12px;line-height:2}
+@media(max-width:850px){.layout{grid-template-columns:1fr}.metrics{grid-template-columns:repeat(2,1fr)}}
+</style>
+<script src="../../assets/supabase-2.117.2.min.js"></script>
+<script src="../../assets/community-config.js"></script>
+<script src="../../assets/auth-guard.js?v=20261013registro2"></script>
+</head>
+<body>
+<header><a class="brand" href="index.html">AeroSuite <small>BY GENTE DE VUELO · SUPERADMINISTRACIÓN</small></a><nav><a href="portal.html">Portal demo</a><a href="../../index.html">Gente de Vuelo</a></nav></header>
+<main>
+<div class="eyebrow">Acceso exclusivo del titular</div>
+<h1>Instituciones y licencias</h1>
+<p>Autorización central de escuelas de vuelo, aeroclubes y aeródromos. Las instituciones todavía no pueden acceder al portal comercial: sus invitaciones se incorporarán en una etapa posterior.</p>
+<div class="notice" id="accessMessage" role="status">Verificando tu identidad y los permisos de AeroSuite…</div>
+<div id="adminContent" hidden>
+<div class="metrics" aria-label="Resumen de instituciones">
+<div class="metric"><strong id="totalCount">0</strong><span>Instituciones</span></div>
+<div class="metric"><strong id="activeCount">0</strong><span>Licencias activas</span></div>
+<div class="metric"><strong id="trialCount">0</strong><span>En período de prueba</span></div>
+<div class="metric"><strong id="pendingCount">0</strong><span>Pendientes / suspendidas</span></div>
+</div>
+<div class="layout">
+<section class="panel" aria-labelledby="formTitle">
+<h2 id="formTitle">Registrar institución</h2>
+<form id="institutionForm">
+<label>Nombre de la institución * <input name="name" required minlength="3" maxlength="160" autocomplete="organization"></label>
+<label>Tipo de institución * <select name="kind" required><option value="escuela">Escuela de vuelo</option><option value="aeroclub">Aeroclub</option><option value="aerodromo">Aeródromo</option></select></label>
+<label>CUIT (opcional) <input name="cuit" maxlength="20" inputmode="numeric"></label>
+<label>Responsable de contacto <input name="contact_name" maxlength="130"></label>
+<label>Correo institucional * <input name="contact_email" type="email" maxlength="254" required></label>
+<label>Plan <select name="plan"><option value="sin_asignar">Sin asignar</option><option value="institucional">Institucional</option><option value="essential">Essential</option><option value="pro">Pro</option><option value="aeroclub_pro">AeroClub Pro</option></select></label>
+<label>Estado <select name="status" id="statusField"><option value="pending">Pendiente de habilitación</option><option value="trial">Prueba gratuita (30 días)</option><option value="active">Licencia activa</option><option value="suspended">Suspendida</option><option value="expired">Vencida</option></select></label>
+<label id="licenseEndLabel" hidden>Vencimiento de la licencia * <input name="license_ends_date" id="licenseEnd" type="date"></label>
+<label>Observaciones internas <textarea name="notes" maxlength="3000"></textarea></label>
+<p class="muted">La prueba comienza al guardar la institución con estado «Prueba» y dura 30 días. No se convierte automáticamente en licencia paga.</p>
+<div class="actions"><button class="primary" id="saveButton" type="submit">Registrar institución</button><button type="button" id="cancelEdit" hidden>Cancelar edición</button></div>
+<div id="feedback" role="status" aria-live="polite"></div>
+</form>
+</section>
+<div>
+<section class="panel">
+<h2>Instituciones registradas</h2>
+<div class="table-scroll"><table><thead><tr><th>Institución</th><th>Contacto</th><th>Plan</th><th>Estado real</th><th>Acción</th></tr></thead><tbody id="institutionsBody"><tr><td colspan="5">Cargando…</td></tr></tbody></table></div>
+<p class="muted">El vencimiento se evalúa por fecha, aunque el estado administrativo aún no haya sido actualizado. Suspender no elimina datos.</p>
+</section>
+<section class="panel"><h2>Actividad reciente</h2><ol id="recent"><li>Sin operaciones registradas.</li></ol></section>
+</div>
+</div>
+</div>
+</main>
+<script>
+'use strict';
+(async()=>{
+const message=document.getElementById('accessMessage'),content=document.getElementById('adminContent');
+const form=document.getElementById('institutionForm'),feedback=document.getElementById('feedback');
+const statusField=document.getElementById('statusField'),endLabel=document.getElementById('licenseEndLabel'),endInput=document.getElementById('licenseEnd');
+const body=document.getElementById('institutionsBody'),recent=document.getElementById('recent');
+let db,currentUser,editingId=null,records=[];
+const statusText={pending:'Pendiente',trial:'Prueba',active:'Activa',suspended:'Suspendida',expired:'Vencida'};
+const kindText={escuela:'Escuela',aeroclub:'Aeroclub',aerodromo:'Aeródromo'};
+const planText={sin_asignar:'Sin asignar',institucional:'Institucional',essential:'Essential',pro:'Pro',aeroclub_pro:'AeroClub Pro'};
+const byId=id=>document.getElementById(id);
+const now=()=>Date.now();
+const effective=row=>{
+ if(row.status==='trial'&&row.trial_ends_at&&Date.parse(row.trial_ends_at)<=now())return {key:'expired',label:'Prueba vencida'};
+ if(row.status==='active'&&row.license_ends_at&&Date.parse(row.license_ends_at)<=now())return {key:'expired',label:'Licencia vencida'};
+ return {key:row.status,label:statusText[row.status]||'Sin estado'};
+};
+const addCell=(tr,value)=>{const td=document.createElement('td');td.textContent=value??'';tr.append(td);return td};
+const showError=err=>{feedback.textContent=err?.message||String(err)||'No se pudo completar la operación.'};
+const dateOnly=iso=>iso?new Date(iso).toLocaleDateString('es-AR'):'—';
+function syncLicenseField(){const active=statusField.value==='active';endLabel.hidden=!active;endInput.required=active}
+statusField.addEventListener('change',syncLicenseField);
+async function reload(){
+ const [found,history]=await Promise.all([
+ db.from('aerosuite_institutions').select('id,name,kind,cuit,contact_name,contact_email,plan,status,trial_started_at,trial_ends_at,license_started_at,license_ends_at,notes,updated_at').order('created_at',{ascending:false}).limit(500),
+ db.from('aerosuite_institution_audit').select('id,institution_id,operation,changed_at').order('changed_at',{ascending:false}).limit(12)
+ ]);
+ if(found.error)throw found.error;
+ records=found.data||[];
+ byId('totalCount').textContent=records.length;
+ byId('activeCount').textContent=records.filter(r=>effective(r).key==='active').length;
+ byId('trialCount').textContent=records.filter(r=>effective(r).key==='trial').length;
+ byId('pendingCount').textContent=records.filter(r=>['pending','suspended','expired'].includes(effective(r).key)).length;
+ body.replaceChildren();
+ if(!records.length){const tr=document.createElement('tr');addCell(tr,'Todavía no hay instituciones registradas.').colSpan=5;body.append(tr)}
+ for(const row of records){
+  const tr=document.createElement('tr');
+  const name=addCell(tr,row.name);const sub=document.createElement('small');sub.style.display='block';sub.textContent=kindText[row.kind]||'';name.append(sub);
+  addCell(tr,row.contact_email);addCell(tr,planText[row.plan]||row.plan);
+  const t=effective(row);const state=addCell(tr,'');const b=document.createElement('span');b.className='status '+t.key;
+  b.textContent=t.label;state.append(b);
+  const expiry=(row.status==='trial'?row.trial_ends_at:row.status==='active'?row.license_ends_at:null);
+  if(expiry){const e=document.createElement('small');e.textContent=' Hasta '+dateOnly(expiry);e.style.display='block';state.append(e)}
+  const actions=addCell(tr,'');const btn=document.createElement('button');btn.type='button';btn.textContent='Gestionar';
+  btn.addEventListener('click',()=>edit(row.id));actions.append(btn);body.append(tr);
+ }
+ recent.replaceChildren();
+ if(history.error){const li=document.createElement('li');li.textContent='No se pudo consultar el historial.';recent.append(li);return}
+ if(!history.data?.length){const li=document.createElement('li');li.textContent='Sin operaciones registradas.';recent.append(li);return}
+ for(const entry of history.data){
+  const li=document.createElement('li');const institution=records.find(r=>r.id===entry.institution_id);
+  li.textContent=(entry.operation==='INSERT'?'Alta':'Modificación')+' · '+(institution?.name||'Institución')+' · '+new Date(entry.changed_at).toLocaleString('es-AR');recent.append(li);
+ }
+}
+function edit(id){
+ const r=records.find(item=>item.id===id);if(!r)return;
+ editingId=r.id;for(const k of ['name','kind','cuit','contact_name','contact_email','plan','status','notes'])form.elements[k].value=r[k]||'';
+ endInput.value=r.license_ends_at?new Date(r.license_ends_at).toISOString().slice(0,10):'';
+ byId('formTitle').textContent='Gestionar: '+r.name;byId('saveButton').textContent='Guardar cambios';byId('cancelEdit').hidden=false;
+ syncLicenseField();feedback.textContent='';form.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function resetEditor(){
+ editingId=null;form.reset();byId('formTitle').textContent='Registrar institución';byId('saveButton').textContent='Registrar institución';
+ byId('cancelEdit').hidden=true;syncLicenseField();feedback.textContent='';
+}
+byId('cancelEdit').addEventListener('click',resetEditor);
+form.addEventListener('submit',async ev=>{
+ ev.preventDefault();feedback.textContent='';
+ const raw=new FormData(form);
+ const payload={name:String(raw.get('name')||'').trim(),kind:String(raw.get('kind')),cuit:String(raw.get('cuit')||'').trim()||null,
+ contact_name:String(raw.get('contact_name')||'').trim()||null,contact_email:String(raw.get('contact_email')||'').trim().toLowerCase(),
+ plan:String(raw.get('plan')),status:String(raw.get('status')),notes:String(raw.get('notes')||'').trim()};
+ if(!payload.name||!payload.contact_email){feedback.textContent='Completá el nombre y el correo institucional.';return}
+ const prev=editingId?records.find(x=>x.id===editingId):null;
+ if(payload.status==='active'){
+   if(!endInput.value){feedback.textContent='Ingresá la fecha de vencimiento de la licencia.';return}
+   const until=new Date(endInput.value+'T23:59:59');
+   if(!Number.isFinite(until.getTime())||until.getTime()<=now()){feedback.textContent='La licencia debe vencer en una fecha futura.';return}
+   payload.license_started_at=prev?.license_started_at||new Date().toISOString();
+   payload.license_ends_at=until.toISOString();
+ }
+ if(payload.status==='trial'&&prev?.trial_ends_at&&Date.parse(prev.trial_ends_at)<=now()){
+   feedback.textContent='La prueba de esta institución ya venció. No se inicia otra automáticamente.';return;
+ }
+ const button=byId('saveButton');button.disabled=true;feedback.textContent='Guardando cambios…';
+ try{
+  const result=editingId?await db.from('aerosuite_institutions').update(payload).eq('id',editingId).select('id').single():
+    await db.from('aerosuite_institutions').insert(payload).select('id').single();
+  if(result.error)throw result.error;
+  resetEditor();await reload();feedback.textContent='Institución guardada correctamente.';
+ }catch(error){showError(error)}finally{button.disabled=false}
+});
+try{
+ await window.GDV_AUTH.ready;db=window.GDV_AUTH?.client;
+ if(!db)throw new Error('No se pudo iniciar la autenticación.');
+ const auth=await db.auth.getUser();currentUser=auth.data?.user;
+ if(auth.error||!currentUser){message.textContent='Ingresá con tu cuenta de Gente de Vuelo para acceder.';return}
+ const role=await db.from('aerosuite_superadmins').select('user_id').eq('user_id',currentUser.id).maybeSingle();
+ if(role.error)throw role.error;
+ if(!role.data){message.textContent='Acceso denegado. Esta cuenta no tiene el rol de Superadministrador AeroSuite.';return}
+ message.textContent='Acceso autorizado. Las altas institucionales no envían invitaciones ni habilitan el portal de las escuelas.';
+ content.hidden=false;syncLicenseField();await reload();
+}catch(error){message.textContent='No se pudo validar el acceso: '+(error?.message||'error de servicio')}
+})();
+</script></body></html>
