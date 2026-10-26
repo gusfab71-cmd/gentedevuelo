@@ -14,17 +14,24 @@ assert.match(admission,/auth\.getUser/,'Validar sesión contra servidor');
 assert.match(admission,/\.rpc\('aerosuite_accept_my_invitation'/,'Aceptar solo por RPC verificado');
 assert.match(admission,/p_institution_id:schoolId/,'Invitación atada al identificador institucional');
 assert.match(admission,/\.rpc\('aerosuite_my_institution_access'/,'Lectura por membresía');
-assert.match(admission,/href="\.\.\/\.\.\/comunidad\.html#registro"/,'Registro de Gente de Vuelo');
+assert.match(admission,/auth\.signUp/,'Alta de cuenta directamente en AeroSuite');
+assert.match(admission,/auth\.resetPasswordForEmail/,'Recuperación de clave dentro de AeroSuite');
+assert.match(admission,/emailRedirectTo:activationUrl/,'Verificación redirigida a AeroSuite');
 assert.match(admission,/Cambiar de cuenta/);
 assert.match(admission,/ventana de incógnito/);
 
 assert.match(school,/\.rpc\('aerosuite_my_institution_access'/,'Portal solo lee instituciones autorizadas');
 assert.match(school,/institution_id===queryId/,'Consulta coincidencia institución');
-assert.match(school,/my_role==='administrador'/,'Portal predeterminado para director');
+assert.match(school,/school\.my_role==='administrador'&&school\.can_access/,'El envío de invitaciones se muestra solo a un director con licencia vigente');
+assert.match(school,/name="role" type="radio" value="instructor"/,'Invitaciones de instructores');
+assert.match(school,/name="role" type="radio" value="alumno"/,'Invitaciones de alumnos');
+assert.match(school,/client\.functions\.invoke\('aerosuite-invitations'/,'Correo enviado desde función autorizada');
 assert.match(school,/Pendiente de integración segura/,'No habilitar operaciones de la institución todavía');
 assert.doesNotMatch(school,/\.from\('aerosuite_institutions'\)/,'El portal no puede leer registros generales');
 assert.doesNotMatch(school,/\.from\('site_admins'\)/,'El portal no permite heredar Superadministración');
 assert.match(superadmin,/ingreso-escuela\.html\?institucion=/,'Panel central proporciona acceso a prueba');
+assert.match(superadmin,/sendDirectorInvite/,'Envío real del director desde Superadministrador');
+assert.match(superadmin,/last_sent_at/,'Diferenciar invitación creada del correo realmente enviado');
 
 for(const [name,html] of [['ingreso-escuela.html',admission],['portal-escuela.html',school]]){
  const scripts=[...html.matchAll(/<script(?![^>]*src=)[^>]*>([\s\S]*?)<\/script>/g)];
