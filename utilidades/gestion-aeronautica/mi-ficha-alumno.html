@@ -90,7 +90,7 @@ button:disabled{cursor:wait;opacity:.56}
       <label><input type="checkbox" name="role_pilot"><span><b>Piloto</b><small>Actividad y planificación personal</small></span></label>
     </fieldset>
     <div id="studentExtra" class="aerosuite-role-details" hidden>
-      <label class="field">Curso de interés <span class="required">*</span><input name="student_training_goal" maxlength="120" placeholder="PPA, PCA, otra formación"></label>
+      <label class="field">Curso de interés <span class="required">*</span><select name="student_training_goal"><option value="" selected disabled>Seleccioná un curso</option><option value="PPA">PPA · Piloto Privado de Avión</option><option value="PCA">PCA · Piloto Comercial de Avión</option><option value="Otra formación">Otra formación</option></select></label>
     </div>
     <div id="instructorExtra" class="aerosuite-role-details" hidden><div class="field-grid">
       <label class="field">Licencia/habilitación de instructor (declarada) <span class="required">*</span><input name="instructor_license_type" maxlength="100"></label>
@@ -205,7 +205,10 @@ button:disabled{cursor:wait;opacity:.56}
   }
   syncRoleFields();
   for(const row of data||[]){
-   if(row.role==='student')get('student_training_goal').value=row.training_goal||'';
+   if(row.role==='student'){
+    const savedGoal=String(row.training_goal||'').trim();
+    get('student_training_goal').value=['PPA','PCA','Otra formación'].includes(savedGoal)?savedGoal:(savedGoal?'Otra formación':'');
+   }
    if(row.role==='instructor'){
     for(const [field,col] of [['instructor_license_type','license_type'],['instructor_license_number','license_number'],
       ['instructor_organization','organization'],['instructor_airfield','home_airfield']]){
