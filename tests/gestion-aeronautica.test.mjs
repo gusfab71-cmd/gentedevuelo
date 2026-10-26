@@ -141,7 +141,7 @@ for(const [file,title] of [
   title+' debe estar integrado en Academia');
 }
 assert.match(html,/function academyStudentTools\(\)/,'Debe existir área de aplicaciones prácticas en Academia');
-assert.match(html,/function academyScreen\(\)\{[\s\S]*?academyStudentTools\(\)\+academyLibrary\(false\)/,
+assert.match(html,/function academyScreen\(\)\{[\s\S]*?academyLibrary\(false\)\+academyStudentTools\(\)/,
  'Academia del Alumno debe mostrar prácticas y las fichas originales');
 assert.match(html,/function adminAcademyScreen\(\)\{[\s\S]*?academyLibrary\(true\)/,
  'Administración debe mantener sus herramientas de publicación');
@@ -155,8 +155,8 @@ assert.match(html,/target="_blank" rel="noopener noreferrer">Abrir a pantalla co
 assert.match(html,/data-academy-tool-close/,'El alumno puede cerrar el visor');
 assert.match(html,/La bitácora utiliza la cuenta actual de Gente de Vuelo/,
  'El mantenimiento conserva el almacenamiento privado de la herramienta original');
-assert.match(html,/libraryCollection\('teoria',AEROSUITE_THEORY_TOPICS,canManage\)/);
-assert.match(html,/libraryCollection\('crm',AEROSUITE_CRM_TOPICS,canManage\)/);
+assert.doesNotMatch(html,/AEROSUITE_THEORY_TOPICS|AEROSUITE_CRM_TOPICS|AEROSUITE_LIBRARY_FILES|libraryCollection\(/,
+ 'No debe conservar temarios fijos ni rutas de Teoría y CRM en la biblioteca.');
 assert.doesNotMatch(html,/href="fichas\/fuerzas-del-vuelo\.html"/,'La ficha obsoleta no debe reaparecer');
 console.log('PASS: Academia del Alumno contiene mantenimiento, rodaje y sustentación, conserva biblioteca y registros');
 
@@ -1132,7 +1132,8 @@ assert.ok(html.includes("callLibraryR2('status'"),'El catálogo debe actualizars
 assert.ok(html.includes("callLibraryR2('toggle-extra'"),'Cada tarjeta se puede ocultar o publicar.');
 assert.ok(html.includes("data-extra-action=\"download\""),'Cada tarjeta ofrece descarga.');
 assert.ok(html.includes("data-extra-action=\"delete\""),'Cada tarjeta ofrece borrado.');
-assert.ok(html.includes('data-library-delete'),'El administrador aún puede borrar material heredado.');
+assert.doesNotMatch(html,/data-library-delete|fichas-teoria-30|fichas-crm-06/,
+ 'No quedan controles ni rutas de los PDF antiguos.');
 assert.doesNotMatch(html,/store\.upload\(path,file,\{upsert:true/,'Los materiales nuevos no van a Supabase Storage.');
 console.log('PASS: Academia Aeronáutica con cargador múltiple y tarjetas individuales en R2');
 
