@@ -1115,8 +1115,8 @@ assert.equal((theoryTitles[1].match(/'[^']*'/g)||[]).length,30,'Deben existir 30
 assert.equal((crmTitles[1].match(/'[^']*'/g)||[]).length,8,'Deben existir 8 temas CRM.');
 for(const key of [
  'aerosuite-biblioteca','function academyLibrary(canManage=false){',
- 'libraryCollection(\'teoria\',AEROSUITE_THEORY_TOPICS)',
- 'libraryCollection(\'crm\',AEROSUITE_CRM_TOPICS)',
+ 'libraryCollection(\'teoria\',AEROSUITE_THEORY_TOPICS,canManage)',
+ 'libraryCollection(\'crm\',AEROSUITE_CRM_TOPICS,canManage)',
  'data-library-upload="teoria"','data-library-upload="crm"',
  'createSignedUrl\(' /* Marker checked below for public URL alternative */
 ].slice(0,-1))assert.ok(html.includes(key),'Catálogo incompleto: '+key);
