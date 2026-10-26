@@ -1,0 +1,35 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import vm from 'node:vm';
+
+const root=new URL('../utilidades/gestion-aeronautica/',import.meta.url);
+const admission=fs.readFileSync(new URL('ingreso-escuela.html',root),'utf8');
+const school=fs.readFileSync(new URL('portal-escuela.html',root),'utf8');
+const superadmin=fs.readFileSync(new URL('superadministrador.html',root),'utf8');
+
+assert.match(admission,/id="signInPanel" hidden/,'No mostrar el formulario hasta verificar sesión');
+assert.match(admission,/id="verifiedPanel" hidden/,'No mostrar aceptación sin autenticar');
+assert.match(admission,/auth\.signInWithPassword/,'Ingreso personal usa Supabase Auth');
+assert.match(admission,/auth\.getUser/,'Validar sesión contra servidor');
+assert.match(admission,/\.rpc\('aerosuite_accept_my_invitation'/,'Aceptar solo por RPC verificado');
+assert.match(admission,/p_institution_id:schoolId/,'Invitación atada al identificador institucional');
+assert.match(admission,/\.rpc\('aerosuite_my_institution_access'/,'Lectura por membresía');
+assert.match(admission,/href="\.\.\/\.\.\/comunidad\.html#registro"/,'Registro de Gente de Vuelo');
+assert.match(admission,/Cambiar de cuenta/);
+assert.match(admission,/ventana de incógnito/);
+
+assert.match(school,/\.rpc\('aerosuite_my_institution_access'/,'Portal solo lee instituciones autorizadas');
+assert.match(school,/institution_id===queryId/,'Consulta coincidencia institución');
+assert.match(school,/my_role==='administrador'/,'Portal predeterminado para director');
+assert.match(school,/Pendiente de integración segura/,'No habilitar operaciones de la institución todavía');
+assert.doesNotMatch(school,/\.from\('aerosuite_institutions'\)/,'El portal no puede leer registros generales');
+assert.doesNotMatch(school,/\.from\('site_admins'\)/,'El portal no permite heredar Superadministración');
+assert.match(superadmin,/ingreso-escuela\.html\?institucion=/,'Panel central proporciona acceso a prueba');
+
+for(const [name,html] of [['ingreso-escuela.html',admission],['portal-escuela.html',school]]){
+ const scripts=[...html.matchAll(/<script(?![^>]*src=)[^>]*>([\s\S]*?)<\/script>/g)];
+ assert.equal(scripts.length,1,name+': un único controlador local');
+ new vm.Script(scripts[0][1],{filename:name});
+ assert.doesNotMatch(html,/service_role|SUPABASE_SERVICE_ROLE_KEY/,'No exponer clave privilegiada');
+}
+console.log('PASS: ingreso de director separado del Superadministrador, permisos verificados y módulos bloqueados');
