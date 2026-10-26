@@ -211,22 +211,26 @@ input,select{min-height:44px;padding:10px 12px;border:1px solid #6b8ca4;border-r
  for(const b of document.querySelectorAll('[data-back]'))b.addEventListener('click',()=>showStep(Number(b.dataset.back)));
  byId('schoolForm').addEventListener('submit',e=>{
   e.preventDefault();if(!e.currentTarget.reportValidity())return;
+  state.unlocked=0;state.startedAt=null;state.expiresAt=null;
   state.school={name:byId('schoolName').value.trim(),kind:byId('schoolKind').value,plan:byId('schoolPlan').value,contact:byId('schoolContact').value.trim(),email:byId('schoolEmail').value.trim()};
   if(!state.school.name||!state.school.contact||!state.school.email)return;
   text('confirmSchool',state.school.name);text('confirmContact',state.school.contact);text('confirmPlan',planNames[state.school.plan]||'Institucional');
   nextStep();
  });
  byId('authorizeDemo').addEventListener('click',()=>{
+  state.unlocked=1;
   state.startedAt=new Date();
   state.expiresAt=new Date(state.startedAt.getTime()+30*24*60*60*1000);
   text('emailContact',state.school.contact);text('emailSchool',state.school.name);text('emailTo',state.school.email);
   nextStep();
  });
  byId('simulateSend').addEventListener('click',()=>{
+  state.unlocked=2;
   text('activateSchool',state.school.name);text('activateEmail',state.school.email);
   nextStep();
  });
  byId('simulateActivate').addEventListener('click',()=>{
+  state.unlocked=3;
   text('portalSchool',state.school.name);
   text('portalTerm','Inicio: '+format(state.startedAt)+' · Fin: '+format(state.expiresAt)+' · Sin cobro automático');
   nextStep();
