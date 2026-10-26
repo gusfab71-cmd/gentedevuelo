@@ -218,7 +218,7 @@ ol{color:#bbccd0;font-size:13px;line-height:1.85}
 @media(max-width:900px){.portal-metrics:has(.metric:nth-child(4)){grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:520px){.portal-metrics:has(.metric:nth-child(4)){grid-template-columns:1fr}}
 
-/* Biblioteca didáctica AeroSuite: catálogo de 30 fichas y 6 fichas CRM. */
+/* Academia Aeronáutica: biblioteca dinámica de archivos independientes. */
 .library-group{border:1px solid #48636f;background:#182a35;border-radius:14px;padding:18px;margin:17px 0}
 .library-group-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:13px}
 .library-group-head h3{margin:0;font-size:17px;color:#f2f7f8}
@@ -363,42 +363,10 @@ import {FINANCE_AREAS,FINANCE_ACCOUNTS,FINANCE_KINDS,FINANCE_CATEGORIES,makeFina
 const $=id=>document.getElementById(id);
 const safe=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[ch]));
 
-const AEROSUITE_LIBRARY_BUCKET='aerosuite-biblioteca';
 const AEROSUITE_LIBRARY_MAX_MB=100;
-const AEROSUITE_LIBRARY_FILES={
- teoria:{path:'teoria/fichas-teoria-30.pdf',title:'Teoría aeronáutica',count:30},
- crm:{path:'crm/fichas-crm-06.pdf',title:'CRM y factores humanos',count:8}
-};
-const AEROSUITE_THEORY_TOPICS=[
- 'Introducción a la aviación','Atmósfera y clima','Presión y temperatura','Viento',
- 'Nubes y precipitaciones','Masas de aire, frentes y sistemas','Cartas meteorológicas y pronósticos',
- 'Aerodinámica: principios básicos','Sustentación','Resistencia y empuje',
- 'Centro de gravedad y estabilidad','Controles de vuelo','Instrumentos de vuelo',
- 'Navegación básica','Navegación avanzada','Espacio aéreo y servicios ATC',
- 'Reglas de vuelo (VFR / IFR)','Desempeño de la aeronave','Peso y balance',
- 'Planificación de vuelo','Combustible y sistemas','Motores de aviación','Hélices',
- 'Sistemas eléctricos y aviónicos','Procedimientos de emergencia','Factores humanos',
- 'Normativa aeronáutica','Seguridad operacional','Medio ambiente y aviación','Operaciones especiales'
-];
-const AEROSUITE_CRM_TOPICS=[
- 'Comunicación efectiva','Gestión del estrés','Gestión de la carga de trabajo',
- 'Toma de decisiones','Resolución de conflictos','Liderazgo',
- 'Gestión del equipo','Conclusión: las siete esferas del CRM'
-];
-// La biblioteca usa Cloudflare R2 como destino de las nuevas versiones.\n// Los PDF antiguos de Supabase permanecen como respaldo de lectura hasta migrarlos.
-let libraryUploaded={teoria:null,crm:null};
-let libraryR2={teoria:null,crm:null};
-let libraryFileVersions={teoria:null,crm:null};
-let libraryFileUpdatedAt={teoria:null,crm:null};
 let libraryExtra=[];
 let libraryStatusWarning='';
 const extraSlug=value=>String(value).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,55);
-const extraFilename=(name,count,hidden=false)=>'materias/'+(hidden?'oculta--':'')+extraSlug(name)+'--'+Number(count)+'--'+encodeURIComponent(name)+'.pdf';
-function parseExtraFile(file){
- const m=file.name.match(/^(oculta--)?([a-z0-9-]+)--(\d+)--(.+)\.pdf$/);
- if(!m)return null;
- try{return {name:decodeURIComponent(m[4]),count:Number(m[3]),hidden:!!m[1],path:'materias/'+file.name,source:'supabase',updatedAt:file.updated_at||file.created_at||null}}catch{return null}
-}
 
 const AEROSUITE_ACADEMY_EXTENSIONS={
  pdf:'PDF',jpg:'Imagen',jpeg:'Imagen',png:'Imagen',webp:'Imagen',
@@ -410,15 +378,13 @@ function academyFileExtension(filename){
  return Object.prototype.hasOwnProperty.call(AEROSUITE_ACADEMY_EXTENSIONS,ext)?ext:'';
 }
 function extraCard(item,canManage=false){
- const base=item.source==='r2'?item.url:window.GDV_AUTH.client.storage.from(AEROSUITE_LIBRARY_BUCKET).getPublicUrl(item.path).data.publicUrl;
- const url=base+(item.version||item.updatedAt?'?v='+encodeURIComponent(item.version||item.updatedAt):'');
+ const url=item.url+(item.version||item.updatedAt?'?v='+encodeURIComponent(item.version||item.updatedAt):'');
  const ext=item.extension||academyFileExtension(item.path)||'pdf';
  const label=AEROSUITE_ACADEMY_EXTENSIONS[ext]||'Archivo';
  const title=safe(item.name),path=safe(item.path);
  const actions=!canManage?'':'<div class="library-group-actions">'+
-  (item.source==='r2'?'<button type="button" data-extra-action="download" data-extra-path="'+path+'">Descargar</button>'+
-   ' <button type="button" data-extra-action="toggle" data-extra-path="'+path+'">'+(item.hidden?'Publicar':'Ocultar')+'</button>':
-   '<a href="'+safe(url)+'" target="_blank" rel="noopener noreferrer">Abrir original</a>')+
+  '<button type="button" data-extra-action="download" data-extra-path="'+path+'">Descargar</button>'+
+  ' <button type="button" data-extra-action="toggle" data-extra-path="'+path+'">'+(item.hidden?'Publicar':'Ocultar')+'</button>'+
   ' <button type="button" data-extra-action="delete" data-extra-path="'+path+'">Eliminar</button></div>';
  const detail=item.hidden?'<small class="academy-hidden">Oculto para alumnos</small>':
   '<small>'+(canManage?'Publicado en Cloudflare R2':'Abrir material de estudio')+'</small>';
@@ -427,43 +393,10 @@ function extraCard(item,canManage=false){
   '<strong>'+title+'</strong>'+detail+'</a></div>'+actions+'</article>';
 }
 
-function libraryPdfURL(type,page){
- const row=AEROSUITE_LIBRARY_FILES[type];
- const r2=libraryR2[type];
- const url=r2?.published&&r2.url?r2.url:window.GDV_AUTH.client.storage.from(AEROSUITE_LIBRARY_BUCKET).getPublicUrl(row.path).data.publicUrl;
- const version=libraryFileVersions[type];
- return url+(version?'?v='+encodeURIComponent(version):'')+(page?'#page='+page:'');
-}
-function libraryUpdatedLabel(type){
- const value=libraryFileUpdatedAt[type];
- if(!value)return '';
- const date=new Date(value);
- return Number.isNaN(date.getTime())?'':' · Actualizado: '+date.toLocaleString('es-AR',{dateStyle:'short',timeStyle:'short'});
-}
-function libraryCollection(type,topics,canManage=false){
- const row=AEROSUITE_LIBRARY_FILES[type],published=libraryUploaded[type]===true;
- if(!published)return '';
- const book=published?libraryPdfURL(type):null;
- const detail=type==='crm'?'Comunicación, decisiones, factores humanos y trabajo en equipo.':'Teoría aeronáutica organizada en 30 fichas ilustradas.';
- const caption=published?(libraryR2[type]?.published?'Cuadernillo publicado en Cloudflare R2':'PDF heredado en Supabase (todavía no actualizado en R2)')+libraryUpdatedLabel(type):'Cuadernillo pendiente de publicación en Cloudflare R2';
- return '<section class="library-group"><div class="library-group-head"><h3>'+safe(row.title)+'</h3>'+
-  '<span class="library-count">'+row.count+' fichas · '+(published?'Publicadas':'Pendientes de publicación')+'</span></div>'+
-  '<div class="library-list">'+
-  (book?'<a class="library-item library-book-card" href="'+safe(book)+'" target="_blank" rel="noopener noreferrer" aria-label="Abrir el cuadernillo completo de '+safe(row.title)+'">'+
-   '<span class="library-number">CUADERNILLO COMPLETO · '+row.count+' FICHAS</span>'+
-   '<strong>'+safe(row.title)+'</strong><small>'+safe(detail)+'</small>'+
-   '<small>'+caption+' · Abrir y recorrer todas las páginas del PDF</small></a>':
-   '<div class="library-item is-missing"><strong>'+safe(row.title)+'</strong><small>Pendiente de publicar PDF</small></div>')+
-  '</div>'+(canManage&&published?'<div class="library-group-actions">'+
-   (libraryR2[type]?.published?'<button type="button" data-library-download="'+type+'">Descargar PDF</button>':'<a href="'+safe(book)+'" target="_blank" rel="noopener noreferrer">Abrir PDF antiguo</a>')+
-   ' <button type="button" data-library-delete="'+type+'">Eliminar definitivamente</button></div>':'')+'</section>';
-}
-
 function academyLibrary(canManage=false){
  const visibleExtras=libraryExtra.filter(item=>!item.hidden);
  const files=canManage?libraryExtra:visibleExtras;
- const originalCount=['teoria','crm'].filter(type=>libraryUploaded[type]===true).length;
- const totalFiles=visibleExtras.length+originalCount;
+ const totalFiles=visibleExtras.length;
  const uploadBox='<details class="library-upload" id="aerosuiteUploader" open>'+
   '<summary>Agregar Academia Aeronáutica</summary>'+
   '<p class="muted">Seleccioná uno o varios archivos. Cada archivo se publica en Cloudflare R2 y genera su propia tarjeta para los alumnos.</p>'+
@@ -478,8 +411,6 @@ function academyLibrary(canManage=false){
   '<p>Material de instrucción organizado en tarjetas independientes. Cada documento se abre por separado.</p>'+
   (libraryStatusWarning?'<div class="notice" role="status">'+safe(libraryStatusWarning)+'</div>':'')+
   (canManage?uploadBox:'')+
-  libraryCollection('teoria',AEROSUITE_THEORY_TOPICS,canManage)+
-  libraryCollection('crm',AEROSUITE_CRM_TOPICS,canManage)+
   (files.length?'<div class="academy-files-grid">'+files.map(item=>extraCard(item,canManage)).join('')+'</div>':
    '<p class="muted">'+(canManage?'Aún no hay archivos adicionales. Cargá el primero desde el selector.':'Todavía no hay archivos de instrucción publicados.')+'</p>')+
   '<p class="muted">El material didáctico complementa, pero no reemplaza los manuales, procedimientos ni normativa aeronáutica vigente.</p></section>';
@@ -513,43 +444,17 @@ async function callLibraryR2(action,body={}){
 }
 async function refreshStudentLibrary(){
  const uploaderWasOpen=!!$('aerosuiteUploader')?.open;
- const store=window.GDV_AUTH.client.storage.from(AEROSUITE_LIBRARY_BUCKET);
  try{
-  const [theory,crm,extras,r2Query]=await Promise.all([
-   store.list('teoria',{limit:100}),
-   store.list('crm',{limit:100}),
-   store.list('materias',{limit:1000}),
-   callLibraryR2('status').then(data=>({data,error:null}),error=>({data:null,error}))
-  ]);
-  const r2State=r2Query.data;
-  libraryStatusWarning=r2Query.error?'No se pudo verificar Cloudflare R2: '+r2Query.error.message+'. No se borraron ni reemplazaron archivos.':(r2State?.warnings||[]).join(' · ');
-  const theoryFile=theory.error?null:(theory.data||[]).find(file=>file.name==='fichas-teoria-30.pdf');
-  const crmFile=crm.error?null:(crm.data||[]).find(file=>file.name==='fichas-crm-06.pdf');
-  const previousExtras=libraryExtra.filter(item=>item.source==='r2');
+  const r2State=await callLibraryR2('status');
   const catalogWarning=(r2State?.warnings||[]).some(w=>String(w).startsWith('Materias:'));
-  const r2Extras=r2State&&!catalogWarning?(r2State.extras||[]):previousExtras;
-  const legacyExtras=extras.error?[]:(extras.data||[]).map(parseExtraFile).filter(Boolean);
-  const r2Slugs=new Set(r2Extras.map(item=>extraSlug(item.name)));
-  libraryExtra=[...r2Extras,...legacyExtras.filter(item=>!r2Slugs.has(extraSlug(item.name)))]
-   .sort((a,b)=>a.name.localeCompare(b.name,'es'));
-  // Si falla status, no descartar el archivo ya verificado por finish.
-  const previousR2=libraryR2;
-  libraryR2={
-   teoria:r2State&&!r2State.teoria?.unavailable?(r2State.teoria?.published?r2State.teoria:null):previousR2.teoria,
-   crm:r2State&&!r2State.crm?.unavailable?(r2State.crm?.published?r2State.crm:null):previousR2.crm
-  };
-  libraryUploaded={teoria:!!libraryR2.teoria||!!theoryFile,crm:!!libraryR2.crm||!!crmFile};
-  libraryFileUpdatedAt={
-   teoria:libraryR2.teoria?.updatedAt||theoryFile?.updated_at||theoryFile?.created_at||null,
-   crm:libraryR2.crm?.updatedAt||crmFile?.updated_at||crmFile?.created_at||null
-  };
-  libraryFileVersions={
-   teoria:libraryR2.teoria?.version||libraryFileUpdatedAt.teoria||theoryFile?.id||null,
-   crm:libraryR2.crm?.version||libraryFileUpdatedAt.crm||crmFile?.id||null
-  };
- }catch(err){
-  libraryStatusWarning='No se pudo actualizar el listado de biblioteca: '+(err.message||'error de acceso');
-  notice(libraryStatusWarning);
+  if(catalogWarning){
+   libraryStatusWarning=(r2State.warnings||[]).join(' · ');
+  }else{
+   libraryStatusWarning='';
+   libraryExtra=(r2State?.extras||[]).sort((a,b)=>a.name.localeCompare(b.name,'es'));
+  }
+ }catch(error){
+  libraryStatusWarning='No se pudo verificar el catálogo de Academia Aeronáutica: '+(error.message||'error de acceso');
  }
  if(tab==='academia'||tab==='admin_academia'){
   render();
@@ -557,6 +462,7 @@ async function refreshStudentLibrary(){
   if(uploader)uploader.open=uploaderWasOpen;
  }
 }
+
 function libraryUploadMessage(message){
  const el=$('aerosuiteUploadStatus');
  if(el)el.textContent=message;
@@ -612,51 +518,12 @@ async function transferLibraryFileToR2(type,file){
  libraryUploadMessage('Enviando '+file.name+' a Cloudflare R2 por fragmentos seguros…');
  return uploadLibraryMultipart(type,file);
 }
-async function downloadLibraryFile(type,path){
- const signed=await callLibraryR2('download',type==='extra'?{type,path}:{type});
+async function downloadLibraryFile(path){
+ const signed=await callLibraryR2('download',{type:'extra',path});
  if(!signed?.downloadUrl)throw Error('No se recibió la descarga segura de Cloudflare R2.');
  const link=document.createElement('a');
  link.href=signed.downloadUrl;link.rel='noopener';link.download='material-aerosuite.pdf';
  document.body.appendChild(link);link.click();link.remove();
-}
-async function uploadStudentLibraryFile(input){
- const type=input.dataset.libraryUpload;
- const file=input.files&&input.files[0];
- if(!AEROSUITE_LIBRARY_FILES[type]||!file){libraryUploadMessage('Primero seleccioná un archivo PDF.');return;}
- if(file.size>AEROSUITE_LIBRARY_MAX_MB*1024*1024){
-  libraryUploadMessage('El PDF pesa '+(file.size/1024/1024).toFixed(1)+' MB y supera el máximo de 100 MB.');return;
- }
- const signature=String.fromCharCode(...new Uint8Array(await file.slice(0,5).arrayBuffer()));
- if(signature!=='%PDF-'){libraryUploadMessage('Seleccioná un archivo PDF válido.');return;}
- input.disabled=true;
- libraryUploadMessage('Preparando publicación en Cloudflare R2: '+AEROSUITE_LIBRARY_FILES[type].title+'…');
- let stagedPath=null;
- try{
-  stagedPath=await transferLibraryFileToR2(type,file);
-  const path=stagedPath;
-  libraryUploadMessage('Transferencia finalizada. Verificando y reemplazando el PDF publicado…');
-  const published=await callLibraryR2('finish',{type,path});
-  if(!published?.ok||!published?.published||published.size!==file.size)throw Error('No se pudo confirmar el reemplazo del archivo.');
-  stagedPath=null;
-  libraryR2[type]={...published,published:true};
-  libraryUploaded[type]=true;
-  libraryFileVersions[type]=published.version||Date.now().toString();
-  libraryFileUpdatedAt[type]=published.updatedAt||new Date().toISOString();
-  libraryUploadMessage('PDF publicado en Cloudflare R2 ('+(file.size/1024/1024).toFixed(1)+' MB). Actualizando biblioteca…');
-  await refreshStudentLibrary();
-  // Una consulta status fallida no debe hacer retroceder la publicación.
-  if(!libraryUploaded[type]){
-   libraryR2[type]={...published,published:true};
-   libraryUploaded[type]=true;
-   libraryFileVersions[type]=published.version||Date.now().toString();
-   libraryFileUpdatedAt[type]=published.updatedAt||new Date().toISOString();
-   if(tab==='admin_academia')render();
-  }
-  libraryUploadMessage('PDF reemplazado correctamente ('+(file.size/1024/1024).toFixed(1)+' MB): '+AEROSUITE_LIBRARY_FILES[type].title+'. Abrí la tarjeta para ver la nueva versión.'+(published.cleanupWarning?' Advertencia: '+published.cleanupWarning:''));
- }catch(err){
-  if(stagedPath)await callLibraryR2('discard',{path:stagedPath}).catch(()=>{});
-  libraryUploadMessage('No se pudo reemplazar el PDF: '+(err.message||'error de carga')+'. Revisá la publicación antes de volver a intentarlo.');
- }finally{input.disabled=false;input.value='';}
 }
 
 async function academyFileValid(file){
@@ -726,16 +593,13 @@ document.addEventListener('click',async event=>{
    if(!item)throw Error('Archivo no encontrado.');
    const command=action.dataset.extraAction;
    if(command==='download'){
-    if(item.source!=='r2')throw Error('Este archivo heredado debe migrarse primero a R2.');
-    await downloadLibraryFile('extra',item.path);
+    await downloadLibraryFile(item.path);
    }else if(command==='delete'){
     if(!confirm('¿ELIMINAR DEFINITIVAMENTE «'+item.name+'» y su archivo? No se puede deshacer.'))return;
-    await callLibraryR2(item.source==='r2'?'delete':'delete-legacy-extra',
-     item.source==='r2'?{type:'extra',path:item.path,confirm:true}:{path:item.path});
+    await callLibraryR2('delete',{type:'extra',path:item.path,confirm:true});
     libraryUploadMessage('Archivo eliminado: '+item.name);
     await refreshStudentLibrary();
    }else if(command==='toggle'){
-    if(item.source!=='r2')throw Error('El archivo antiguo debe migrarse a R2 para ocultarse.');
     await callLibraryR2('toggle-extra',{path:item.path});
     libraryUploadMessage(item.hidden?'Archivo publicado para alumnos.':'Archivo oculto para alumnos.');
     await refreshStudentLibrary();
@@ -746,27 +610,7 @@ document.addEventListener('click',async event=>{
  }finally{if(control.isConnected)control.disabled=false;}
 });
 
-document.addEventListener('click',async event=>{
- const button=event.target.closest('[data-library-download],[data-library-delete]');
- if(!button||button.disabled)return;
- const type=button.dataset.libraryDownload||button.dataset.libraryDelete;
- if(!AEROSUITE_LIBRARY_FILES[type])return;
- const deleting=!!button.dataset.libraryDelete;
- if(deleting&&!confirm('¿ELIMINAR DEFINITIVAMENTE las '+AEROSUITE_LIBRARY_FILES[type].count+' fichas de '+AEROSUITE_LIBRARY_FILES[type].title+'? Se borrarán de R2 y Supabase.'))return;
- button.disabled=true;
- try{
-  if(deleting){
-   await callLibraryR2('delete',{type,confirm:true});
-   libraryUploaded[type]=false;libraryR2[type]=null;libraryFileVersions[type]=null;libraryFileUpdatedAt[type]=null;
-   await refreshStudentLibrary();
-   libraryUploadMessage('Cuadernillo eliminado de Cloudflare R2 y del almacenamiento anterior.');
-  }else await downloadLibraryFile(type);
- }catch(error){
-  libraryUploadMessage('No se pudo '+(deleting?'eliminar':'descargar')+': '+(error.message||'error'));
-  if(deleting)await refreshStudentLibrary();
- }
- finally{if(button.isConnected)button.disabled=false}
-});
+
 const isoDay=d=>[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');
 const now=()=>isoDay(new Date());
 const addDays=(day,n)=>{const d=new Date(day+'T12:00:00');d.setDate(d.getDate()+n);return isoDay(d)};
@@ -1717,11 +1561,11 @@ function academyStudentTools(){
 }
 function academyScreen(){
  return '<section class="panel"><h2>Mi Academia Aeronáutica</h2>'+
-  '<p>Consultá primero los cuadernillos de teoría aeronáutica y CRM. Al final de esta sección encontrás las herramientas prácticas de estudio.</p></section>'+
+  '<p>Consultá los materiales publicados en Academia Aeronáutica. Al final de esta sección encontrás las herramientas prácticas de estudio.</p></section>'+
   academyLibrary(false)+academyStudentTools();
 }
 function adminAcademyScreen(){
- return '<section class="panel"><h2>Administración de la biblioteca de formación</h2><p>Publicá los cuadernillos aquí para que el alumno los consulte sin herramientas de edición en su área.</p></section>'+
+ return '<section class="panel"><h2>Administración de Academia Aeronáutica</h2><p>Publicá archivos individuales para que los alumnos los consulten sin herramientas de edición.</p></section>'+
   academyLibrary(true);
 }
 function studentProfileScreen(){
