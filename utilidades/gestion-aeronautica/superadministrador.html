@@ -116,7 +116,7 @@ async function reload(){
  const [found,history,invites]=await Promise.all([
  db.from('aerosuite_institutions').select('id,name,kind,cuit,contact_name,contact_email,plan,status,trial_started_at,trial_ends_at,license_started_at,license_ends_at,notes,updated_at').order('created_at',{ascending:false}).limit(500),
  db.from('aerosuite_institution_audit').select('id,institution_id,operation,changed_at').order('changed_at',{ascending:false}).limit(12),
- db.from('aerosuite_institution_invitations').select('institution_id,accepted_at,expires_at,revoked_at').order('created_at',{ascending:false}).limit(500)
+ db.from('aerosuite_institution_invitations').select('institution_id,accepted_at,expires_at,revoked_at,last_sent_at').order('created_at',{ascending:false}).limit(500)
  ]);
  if(found.error)throw found.error;
  records=found.data||[];
@@ -157,7 +157,7 @@ async function reload(){
     note.style.display='block';note.style.marginTop='7px';note.style.color='#b8d6e5';
     note.textContent=inv.accepted_at?'Director vinculado':
       inv.revoked_at?'Invitación revocada':
-      Date.parse(inv.expires_at)<=now()?'Invitación vencida':'Invitación pendiente de aceptación';
+      Date.parse(inv.expires_at)<=now()?'Invitación vencida':!inv.last_sent_at?'Invitación creada · correo todavía sin enviar':'Correo enviado · aceptación pendiente';
     actions.append(note);
    }
   }
