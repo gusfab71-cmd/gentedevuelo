@@ -111,6 +111,10 @@ ol{color:#bbccd0;font-size:13px;line-height:1.85}
 .agenda-hour-slot{display:block;width:100%;height:52px;border:0;border-bottom:0;background:transparent;position:relative;text-align:center;color:transparent;cursor:pointer}
 .agenda-hour-slot:hover,.agenda-hour-slot:focus-visible{background:#5e849238;color:#aac6cf;z-index:1;outline:1px dashed #80b5c8;outline-offset:-2px}
 .agenda-hour-slot span{font-size:11px}
+.student-slot-selected{background:#557a8760!important;outline:2px solid #eac98d!important;outline-offset:-2px}
+.student-week-busy{pointer-events:none}
+#studentWeeklyGrid .agenda-heading h3{font-size:17px;margin:0}
+#studentWeeklyGrid .agenda-hour-slot:not(:disabled):hover span{color:#f3f8fb}
 .agenda-event{position:absolute;border:1px solid #b59362;border-left:3px solid #eed197;border-radius:7px;background:#5c4b36;color:#f3f6ff;text-align:left;padding:5px 6px;overflow:hidden;cursor:pointer;z-index:2;box-shadow:0 2px 6px #08151d33;line-height:1.3;min-width:0}
 .agenda-event:hover,.agenda-event:focus-visible{outline:2px solid #f9e3b1;outline-offset:1px}
 .agenda-event.demo-flight{background:#245465;border-color:#5aabbf;border-left-color:#91d9d1}
@@ -697,7 +701,7 @@ let ravRecords=[],ravFormOpen=false;
 const trainingInstitution={institutionType:'non_ciac',reviewMode:'chief'};
 // Tres areas visual y funcionalmente aisladas dentro de la demostracion.
 const AREA_DEFS=Object.freeze({
- alumno:{title:'Área del Alumno',subtitle:'Formación, progreso, reservas y biblioteca aeronáutica.',home:'ficha_alumno',tabs:[['alumno','Mi reserva y formación'],['academia','Mi biblioteca · Teoría y CRM'],['piloto','Mi actividad personal · Demo'],['flightops','Flight Operations · Planificación'],['pistas','AeroLocator'],['ficha_alumno','Mi perfil y datos personales']]},
+ alumno:{title:'Área del Alumno',subtitle:'Formación, progreso, reservas y biblioteca aeronáutica.',home:'ficha_alumno',tabs:[['alumno','Mis Reservas y Formación'],['academia','Mi biblioteca · Teoría y CRM'],['piloto','Mi actividad personal · Demo'],['flightops','Flight Operations · Planificación'],['pistas','AeroLocator'],['ficha_alumno','Mi perfil y datos personales']]},
  instructor:{title:'Instructor y Jefe de Instructores',subtitle:'Evaluaciones, clases, seguimiento de alumnos y supervisión pedagógica.',home:'instructor',tabs:[['instructor','Panel del instructor'],['ficha_alumno','Mi perfil AeroSuite'],['direccion','Jefatura de instructores'],['personas','Seguimiento, fichas y RAV'],['flightops','Flight Operations · Instrucción'],['pistas','AeroLocator']]},
  administracion:{title:'Gestión Administrativa de Escuela',subtitle:'Agenda, operaciones, flota, personal, recursos y contabilidad.',home:'inicio',tabs:[['inicio','Panel administrativo'],['ficha_alumno','Mi perfil AeroSuite'],['reservas','Agenda y reservas'],['vuelos','Registro de vuelos'],['flota','Aeronaves y mantenimiento'],['pistas','AeroLocator'],['admin_personas','Personal y usuarios'],['admin_academia','Gestionar biblioteca'],['finanzas','Contabilidad y Finanzas'],['stock','Combustible y aceite'],['documentos','Documentos y avisos']]}
 });
@@ -832,6 +836,51 @@ function privatePilotPortal(){
  '<p class="muted">Otros vuelos del perfil con instructor (si los hubiera): '+all.byMode.coached.flights+
  '. Se contabilizan aparte de los vuelos sin instructor.</p></section>';
 }
+// Turnera semanal del alumno: reutiliza las reglas horarias institucionales,
+// pero no muestra nombres, identidades ni controles de gestión administrativa.
+function studentWeeklyTurnera(){
+ const dates=listWeek(studentTurneraWeek);
+ const resource=$('studentBookingResource')?.value||fleet[0]?.id||'';
+ const confirmed=visibleBookings(reservations,dates,resource);
+ const open=minutes(schoolPolicy.openTime),close=minutes(schoolPolicy.closeTime);
+ const startHour=Math.floor(open/60),endHour=Math.ceil(close/60);
+ const step=schoolPolicy.slotMinutes,px=step===15?80:step===30?64:52;
+ const height=(endHour-startHour)*px;
+ const hours=Array.from({length:endHour-startHour},(_,i)=>startHour+i);
+ const dateField=$('studentBookingDate')?.value||now();
+ const timeField=$('studentBookingStart')?.value||schoolPolicy.openTime;
+ const clock='<div class="agenda-clock" style="height:'+height+'px">'+
+  hours.map(h=>'<span class="agenda-clock-label" style="top:'+((h-startHour)*px)+'px">'+hhmm(h*60)+'</span>').join('')+
+  '<span class="agenda-clock-label" style="top:'+height+'px">'+hhmm(endHour*60)+'</span></div>';
+ const headings=dates.map(date=>{
+  const openDay=schoolPolicy.availableWeekdays.includes(new Date(date+'T12:00:00Z').getUTCDay());
+  return '<div class="agenda-day-heading '+(date===now()?'today ':'')+(openDay?'':'day-closed')+'"><strong>'+safe(shortDay(date))+'</strong><small>'+safe(date)+(openDay?'':' · Cerrado')+'</small></div>';
+ }).join('');
+ const columns=dates.map(date=>{
+  const openDay=schoolPolicy.availableWeekdays.includes(new Date(date+'T12:00:00Z').getUTCDay());
+  const slots=[];
+  for(let time=startHour*60;time<endHour*60;time+=step){
+   const label=hhmm(time);
+   const occupied=confirmed.some(b=>b.date===date&&minutes(b.start)<time+schoolPolicy.studentDefaultMinutes&&time<minutes(b.end));
+   const disabled=!openDay||date<now()||time<open||time+schoolPolicy.studentDefaultMinutes>close||occupied;
+   const selected=date===dateField&&label===timeField;
+   const reason=occupied?' · Ocupado (demo)':!openDay?' · Cerrado':date<now()?' · Fecha pasada':'';
+   slots.push('<button type="button" class="agenda-hour-slot'+(selected?' student-slot-selected':'')+'" style="height:'+(px*step/60)+'px" data-student-slot-date="'+safe(date)+'" data-student-slot-time="'+label+'" aria-label="'+safe(date)+' '+label+reason+'"'+(disabled?' disabled':'')+'><span>'+label+'</span></button>');
+  }
+  const events=layoutDay(confirmed,date,startHour*60,px).map(b=>{
+   const width=100/b.lanes;
+   return '<div class="agenda-event demo-flight student-week-busy" style="top:'+b.top+'px;height:'+b.height+'px;left:calc('+(b.lane*width)+'% + 3px);width:calc('+width+'% - 6px)" title="Horario ocupado (demo)" aria-label="Ocupado de '+safe(b.start)+' a '+safe(b.end)+'"><small>'+safe(b.start)+'–'+safe(b.end)+'</small><b>Ocupado</b></div>';
+  }).join('');
+  return '<div class="agenda-day-surface '+(openDay?'':'day-closed')+'" style="height:'+height+'px;--agenda-hour-height:'+px+'px" data-student-day="'+safe(date)+'">'+slots.join('')+events+'</div>';
+ }).join('');
+ return '<div class="agenda-toolbar"><div class="agenda-heading"><h3>Agenda semanal · Elegí día y horario</h3><p>'+safe(schoolPolicy.schoolName)+' · '+safe(schoolPolicy.openTime)+'–'+safe(schoolPolicy.closeTime)+' · Intervalos de '+step+' minutos</p></div>'+ 
+ '<div class="agenda-controls"><button type="button" data-student-week="-7" aria-label="Semana anterior">‹</button>'+ 
+ '<button type="button" data-student-week-today>Hoy</button>'+ 
+ '<button type="button" data-student-week="7" aria-label="Semana siguiente">›</button>'+ 
+ '<label><span class="visually-hidden">Elegir semana</span><input type="date" id="studentWeekDate" aria-label="Elegir semana" value="'+safe(studentTurneraWeek)+'"></label></div></div>'+ 
+ '<div class="agenda-scroll" aria-label="Turnera semanal del alumno"><div class="agenda-columns"><div class="agenda-clock-heading">HORA</div>'+headings+clock+columns+'</div></div>'+ 
+ '<p class="agenda-viewnote">Elegí un horario libre para completar la solicitud de abajo. Los turnos son ficticios y no reflejan disponibilidad real.</p>';
+}
 function studentPortal(){
  const d=studentPortalProjection(portalStudent,reservations,flights,lessons,demoPacks,groundActivities,trainingGoals);
  const instruction=flightActivityByRole(portalStudent,'alumno',flights);
@@ -844,6 +893,7 @@ function studentPortal(){
   '<span class="agenda-pill">'+safe(stages[b.status]||b.status)+'</span></div>').join('');
  return '<section id="studentBookingPanel" class="panel"><div class="portal-title"><h2>Turnera · Sacá tu próximo turno</h2><span class="tag">Reserva de demostración</span></div>'+
  '<p class="portal-private">Elegí la actividad, aeronave o recurso, fecha y horario para solicitar tu turno. Podés consultar tus solicitudes debajo. Un instructor deberá confirmar la reserva.</p>'+
+ '<div id="studentWeeklyGrid">'+studentWeeklyTurnera()+'</div>'+ 
  '<form id="studentBookingForm"><div class="formgrid">'+
  '<label>Tipo de reserva<select id="studentBookingType">'+options+'</select></label>'+
  '<label>Recurso<select id="studentBookingResource">'+resources.map(x=>'<option value="'+safe(x.id)+'" data-kind="'+safe(x.kind)+'">'+safe(x.label)+'</option>').join('')+'</select></label>'+
@@ -852,7 +902,7 @@ function studentPortal(){
  '<label>Final<input type="time" id="studentBookingEnd" value="'+safe(hhmm(minutes(schoolPolicy.openTime)+schoolPolicy.studentDefaultMinutes))+'" required></label></div>'+
  '<p class="muted">Duración mínima: '+schoolPolicy.studentMinMinutes+' minutos según la turnera de la escuela. La solicitud queda pendiente hasta que un instructor la acepte.</p>'+
  '<button class="action" type="submit">Solicitar reserva (demo)</button></form></section>'+
- '<section class="panel"><h2>Mis reservas y solicitudes</h2>'+
+ '<section class="panel"><h2>Mis Reservas</h2>'+
  (bookings||'<p class="muted">No tenés solicitudes registradas en esta demostración.</p>')+'</section>'+
  '<section class="panel"><div class="portal-title"><h2>Mi espacio de alumno · Demostración</h2><span class="tag">Vista alumno · Datos ficticios</span></div>'+
  '<p class="portal-private">Aquí el alumno puede solicitar turnos y consultar únicamente sus reservas, horas de vuelo, prácticas registradas y packs comprados. Las notas de instructores, sus correcciones y la supervisión interna no se muestran.</p>'+
@@ -948,6 +998,7 @@ function directorPortal(){
  '<button class="secondary" type="button" data-go="personas">Abrir seguimiento y gestión de RAV</button></section>';
 }
 let instructorEvaluationBooking='';
+let studentTurneraWeek=now();
 function dashboard(){
  const hours=flights.reduce((sum,x)=>sum+x.blockHours,0),turns=reservations.filter(r=>r.status==='confirmada').length;
  const links=[['reservas','Agenda y reservas','Turnos y disponibilidad'],['vuelos','Registro de vuelos','Actividad y horas'],['flota','Aeronaves y mantenimiento','Flota y vencimientos'],['pistas','AeroLocator','Fuentes ANAC, LAD y pistas comunitarias'],['admin_personas','Personal y usuarios','Perfiles de prueba'],['admin_academia','Biblioteca de formación','Publicar fichas de teoría y CRM'],['finanzas','Contabilidad y Finanzas','Gastos generales y caja chica'],['stock','Combustible y aceite','Stock institucional'],['documentos','Documentos y avisos','Documentación y alertas']];
@@ -1542,6 +1593,35 @@ function documentsScreen(){
 }
 function wirePortals(){
  if(tab==='alumno'){
+  const weeklyGrid=$('studentWeeklyGrid');
+  const refreshWeek=()=>{if(weeklyGrid)weeklyGrid.innerHTML=studentWeeklyTurnera()};
+  weeklyGrid?.addEventListener('click',event=>{
+   const button=event.target.closest('button');
+   if(!button||button.disabled)return;
+   if(button.hasAttribute('data-student-week')){
+    studentTurneraWeek=shiftDate(studentTurneraWeek,Number(button.dataset.studentWeek));
+    refreshWeek();return;
+   }
+   if(button.hasAttribute('data-student-week-today')){
+    studentTurneraWeek=now();refreshWeek();return;
+   }
+   if(button.hasAttribute('data-student-slot-date')){
+    const date=button.dataset.studentSlotDate,start=button.dataset.studentSlotTime;
+    const finish=minutes(start)+schoolPolicy.studentDefaultMinutes;
+    if(finish>minutes(schoolPolicy.closeTime))return;
+    $('studentBookingDate').value=date;
+    $('studentBookingStart').value=start;
+    $('studentBookingEnd').value=hhmm(finish);
+    refreshWeek();
+    $('studentBookingForm')?.scrollIntoView({behavior:'smooth',block:'nearest'});
+   }
+  });
+  weeklyGrid?.addEventListener('change',event=>{
+   if(event.target.id==='studentWeekDate'&&validDate(event.target.value)){
+    studentTurneraWeek=event.target.value;refreshWeek();
+   }
+  });
+  $('studentBookingResource')?.addEventListener('change',refreshWeek);
   const changeResources=()=>{
    const type=$('studentBookingType')?.value,list=$('studentBookingResource');
    if(!list)return;
@@ -1549,8 +1629,8 @@ function wirePortals(){
    const first=[...list.options].find(o=>!o.hidden);
    if(first)list.value=first.value;
   };
-  $('studentBookingType')?.addEventListener('change',changeResources);
-  changeResources();
+  $('studentBookingType')?.addEventListener('change',()=>{changeResources();refreshWeek()});
+  changeResources();refreshWeek();
   $('studentBookingForm')?.addEventListener('submit',e=>{
    e.preventDefault();
    try{
