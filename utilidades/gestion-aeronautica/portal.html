@@ -112,7 +112,15 @@ ol{color:#bbccd0;font-size:13px;line-height:1.85}
 .agenda-hour-slot:hover,.agenda-hour-slot:focus-visible{background:#5e849238;color:#aac6cf;z-index:1;outline:1px dashed #80b5c8;outline-offset:-2px}
 .agenda-hour-slot span{font-size:11px}
 .student-slot-selected{background:#557a8760!important;outline:2px solid #eac98d!important;outline-offset:-2px}
-.student-week-busy{pointer-events:none}
+.student-week-busy{pointer-events:none;display:flex;flex-direction:column;gap:2px;justify-content:center;z-index:3;box-shadow:0 2px 9px #06131a88}
+.student-week-pending{background:#63502c!important;border:1px solid #d0a66d!important;border-left:4px solid #f2c584!important;color:#fff4de!important}
+.student-week-confirmed{background:#245869!important;border:1px solid #79c1ca!important;border-left:4px solid #a1e4d5!important;color:#efffff!important}
+.student-week-busy b{font-size:11px!important;font-weight:850;white-space:normal;line-height:1.2}
+.student-week-busy small{font-size:10px!important;white-space:nowrap}
+.student-week-legend{display:flex;gap:12px;align-items:center;flex-wrap:wrap;font-size:12px;color:#c5dce6;margin:8px 0 12px}
+.student-week-legend span::before{content:"";display:inline-block;width:9px;height:9px;margin-right:6px;border-radius:3px;vertical-align:middle}
+.student-week-legend .pending::before{background:#d0a66d}
+.student-week-legend .confirmed::before{background:#79c1ca}
 #studentWeeklyGrid .agenda-heading h3{font-size:17px;margin:0}
 #studentWeeklyGrid .agenda-hour-slot:not(:disabled):hover span{color:#f3f8fb}
 .student-week-grid .agenda-hour-slot:not(:disabled){color:#d7f0fc;background:rgba(49,101,123,.16)}
@@ -883,7 +891,11 @@ function studentNextTurnReminder(ownBookings){
 function studentWeeklyTurnera(){
  const dates=listWeek(studentTurneraWeek);
  const resource=$('studentBookingResource')?.value||fleet[0]?.id||'';
- const confirmed=visibleBookings(reservations,dates,resource);
+ // Las solicitudes pendientes también ocupan visualmente la franja hasta que
+ // sean rechazadas/canceladas; la aceptación del instructor cambia su estado.
+ const active=reservations.filter(b=>
+  (b.status==='solicitada'||b.status==='confirmada')&&dates.includes(b.date)&&
+  (b.aircraft===resource||b.resourceId===resource));
  const open=minutes(schoolPolicy.openTime),close=minutes(schoolPolicy.closeTime);
  const startHour=Math.floor(open/60),endHour=Math.ceil(close/60);
  const step=schoolPolicy.slotMinutes,px=step===15?80:step===30?64:52;
@@ -905,16 +917,25 @@ function studentWeeklyTurnera(){
   const slots=[];
   for(let time=startHour*60;time<endHour*60;time+=step){
    const label=hhmm(time);
-   const occupied=confirmed.some(b=>b.date===date&&minutes(b.start)<time+schoolPolicy.studentDefaultMinutes&&time<minutes(b.end));
+   const occupied=active.some(b=>b.date===date&&minutes(b.start)<time+schoolPolicy.studentDefaultMinutes&&time<minutes(b.end));
    const past=date<today||(date===today&&time<=currentMinute);
    const disabled=!openDay||past||time<open||time+schoolPolicy.studentDefaultMinutes>close||occupied;
    const selected=!disabled&&date===dateField&&label===timeField;
    const reason=occupied?' · Ocupado (demo)':!openDay?' · Cerrado':past?' · Horario pasado':'';
    slots.push('<button type="button" class="agenda-hour-slot'+(selected?' student-slot-selected':'')+'" style="height:'+(px*step/60)+'px" data-student-slot-date="'+safe(date)+'" data-student-slot-time="'+label+'" title="'+safe(disabled?reason:'Elegir '+date+' a las '+label)+'" aria-label="'+safe(date)+' '+label+reason+'"'+(disabled?' disabled':'')+'><span>'+(disabled?'':'+ ')+label+'</span></button>');
   }
-  const events=layoutDay(confirmed,date,startHour*60,px).map(b=>{
+  // layoutDay distribuye las superposiciones y calcula alto real del bloque.
+  // Le pasamos una copia con estado visible sin modificar las reservas reales.
+  const events=layoutDay(active.map(b=>({...b,status:'confirmada'})),date,startHour*60,px).map(b=>{
+   const real=active.find(x=>x.id===b.id);
+   const pending=real?.status==='solicitada';
+   const state=pending?'Pendiente':'Confirmado';
+   const name=members.find(m=>m.id===b.pilot)?.name||'Alumno';
    const width=100/b.lanes;
-   return '<div class="agenda-event demo-flight student-week-busy" style="top:'+b.top+'px;height:'+b.height+'px;left:calc('+(b.lane*width)+'% + 3px);width:calc('+width+'% - 6px)" title="Horario ocupado (demo)" aria-label="Ocupado de '+safe(b.start)+' a '+safe(b.end)+'"><small>'+safe(b.start)+'–'+safe(b.end)+'</small><b>Ocupado</b></div>';
+   const label=name+' · '+b.start+' a '+b.end+' · '+state+' (demo)';
+   return '<div class="agenda-event student-week-busy '+(pending?'student-week-pending':'student-week-confirmed')+
+    '" style="top:'+b.top+'px;height:'+b.height+'px;left:calc('+(b.lane*width)+'% + 3px);width:calc('+width+'% - 6px)" title="'+safe(label)+'" aria-label="'+safe(label)+'">'+
+    '<small>'+safe(b.start)+'–'+safe(b.end)+'</small><b>'+safe(name)+'</b><small>'+state+'</small></div>';
   }).join('');
   return '<div class="agenda-day-surface '+(openDay?'':'day-closed')+'" style="height:'+height+'px;--agenda-hour-height:'+px+'px" data-student-day="'+safe(date)+'">'+slots.join('')+events+'</div>';
  }).join('');
@@ -923,6 +944,7 @@ function studentWeeklyTurnera(){
  '<button type="button" data-student-week-today>Hoy</button>'+ 
  '<button type="button" data-student-week="7" aria-label="Semana siguiente">›</button>'+ 
  '<label><span class="visually-hidden">Elegir semana</span><input type="date" id="studentWeekDate" aria-label="Elegir semana" value="'+safe(studentTurneraWeek)+'"></label></div></div>'+ 
+ '<div class="student-week-legend"><span class="pending">Pendiente de instructor</span><span class="confirmed">Confirmado (demo)</span></div>'+ 
  '<div class="agenda-scroll student-week-grid" aria-label="Turnera semanal del alumno"><div class="agenda-columns"><div class="agenda-clock-heading">HORA</div>'+headings+clock+columns+'</div></div>'+ 
  '<p class="agenda-viewnote">Los horarios con + permiten seleccionar una franja. Los días y horarios vencidos no admiten solicitudes. Esta agenda es ficticia y no refleja disponibilidad real.</p>';
 }
@@ -935,7 +957,7 @@ function studentPortal(){
  ...DEMO_RESOURCES.map(x=>({id:x.id,label:x.name,kind:x.type}))];
  const suggested=studentBookingSelection||studentSuggestedSlot();
  const bookings=d.reservations.slice().reverse().map(b=>'<div class="portal-task"><div><strong>'+safe(portalType(b.type))+'</strong>'+
-  '<div class="portal-small">'+portalDate(b)+' · '+safe(portalResource(b))+'</div></div>'+
+  '<div class="portal-small">'+portalDate(b)+' · '+safe(portalResource(b))+' · '+safe(members.find(m=>m.id===portalStudent)?.name||'Alumno')+'</div></div>'+
   '<span class="agenda-pill">'+safe(stages[b.status]||b.status)+'</span></div>').join('');
  return studentNextTurnReminder(d.reservations)+
  '<section id="studentBookingPanel" class="panel"><div class="portal-title"><h2>Turnera · Sacá tu próximo turno</h2><span class="tag">Reserva de demostración</span></div>'+
