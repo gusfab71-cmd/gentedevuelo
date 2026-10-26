@@ -1107,48 +1107,34 @@ assert.match(ravWithDraft,/sin certificar|sin firmar|NO se firma/i);
 console.log('PASS: Registro de vuelo separado de RAV institucional en Pilotos y alumnos');
 
 
-// Biblioteca de Academia: 30 temas y 8 fichas CRM; material previo en Supabase y nuevas versiones de hasta 100 MB en Cloudflare R2.
-const theoryTitles=html.match(/const AEROSUITE_THEORY_TOPICS=\[([\s\S]*?)\];/);
-const crmTitles=html.match(/const AEROSUITE_CRM_TOPICS=\[([\s\S]*?)\];/);
-assert.ok(theoryTitles&&crmTitles,'Faltan los dos catálogos de fichas.');
-assert.equal((theoryTitles[1].match(/'[^']*'/g)||[]).length,30,'Deben existir 30 temas de teoría.');
-assert.equal((crmTitles[1].match(/'[^']*'/g)||[]).length,8,'Deben existir 8 temas CRM.');
-for(const key of [
- 'aerosuite-biblioteca','function academyLibrary(canManage=false){',
- 'libraryCollection(\'teoria\',AEROSUITE_THEORY_TOPICS,canManage)',
- 'libraryCollection(\'crm\',AEROSUITE_CRM_TOPICS,canManage)',
- 'data-library-upload="teoria"','data-library-upload="crm"',
- 'createSignedUrl\(' /* Marker checked below for public URL alternative */
-].slice(0,-1))assert.ok(html.includes(key),'Catálogo incompleto: '+key);
-assert.match(html,/getPublicUrl\(row\.path\)/,'Solo generar links a PDFs cargados.');
-assert.match(html,/function academyScreen\(\)\{[\s\S]*?academyLibrary\(false\)/,'La biblioteca de Alumno debe ser solo de lectura.');
-assert.match(html,/function adminAcademyScreen\(\)\{[\s\S]*?academyLibrary\(true\)/,'Los PDF deben editarse desde Gestión Administrativa.');
-assert.ok(html.includes("(canManage?uploadBox:'')"),'No mostrar botones de edición al alumno.');
-assert.doesNotMatch(html,/studentLibrary\(\)/,'El Portal del alumno no debe incluir la biblioteca.');
-assert.doesNotMatch(html,/AEROSUITE_DRIVE_THEORY_URLS/,'Academia no debe depender de Google Drive.');
-assert.match(html,/libraryUploaded\[type\]===true/,'No activar enlaces hasta confirmar la carga.');
-assert.match(html,/const AEROSUITE_LIBRARY_MAX_MB=100/,'El límite para los cuadernillos principales debe ser 100 MB.');
-assert.ok(html.includes("file.size>AEROSUITE_LIBRARY_MAX_MB*1024*1024"),'Debe validar el tamaño de 100 MB.');
-assert.ok(html.includes("file.size<=AEROSUITE_LIBRARY_MAX_MB*1024*1024"),'El selector debe habilitar archivos de 100 MB.');
-assert.ok(html.includes('return uploadLibraryMultipart(type,file);'),'La transferencia debe usar por defecto carga fragmentada segura, sin CORS en el navegador.');
-assert.ok(html.includes("callLibraryR2('finish'"),'La publicación debe confirmar el reemplazo.');
-assert.ok(html.includes("callLibraryR2('status'"),'La biblioteca debe detectar la versión publicada en R2.');
-assert.match(html,/async function uploadLibraryMultipart\(type,file\)/,'Debe existir la carga por fragmentos como respaldo cuando falle CORS.');
-assert.ok(html.includes("callLibraryR2('multipart-start'"),'Debe iniciar multipart en R2.');
-assert.ok(html.includes("callLibraryR2('multipart-complete'"),'Debe confirmar multipart antes de publicar.');
-assert.ok(html.includes("'x-academia-action':'multipart-part'"),'La transferencia por fragmentos debe autenticarse.');
-assert.ok(html.includes("const previousR2=libraryR2"),'No perder el PDF vigente cuando status falla.');
-assert.ok(html.includes("libraryR2[type]?.published"),'Distinguir PDF R2 actual de versión Supabase anterior.');
-assert.ok(html.includes('data-library-replace="teoria"'),'Debe haber botón explícito de reemplazo de teoría.');
-assert.ok(html.includes('data-library-replace="crm"'),'Debe haber botón explícito de reemplazo de CRM.');
-assert.ok(html.includes('data-library-delete'),'Debe haber opción de eliminación definitiva.');
-assert.ok(html.includes('data-library-download'),'Debe haber descarga de PDFs desde R2.');
-assert.ok(html.includes("transferLibraryFileToR2('extra',file)"),'Las materias nuevas se deben subir a R2, no a Supabase.');
-assert.ok(html.includes("callLibraryR2('toggle-extra'"),'Las materias R2 admiten ocultar/publicar.');
-assert.ok(html.includes("callLibraryR2('delete',{type,confirm:true})"),'La eliminación de cuadernillos debe confirmarse en el servidor.');
-assert.doesNotMatch(html,/store\.upload\(path,file,\{upsert:true/,'No se deben subir nuevas materias a Supabase Storage.');
-assert.match(html,/signature!=='%PDF-'/,'Control de formato PDF requerido.');
-console.log('PASS: biblioteca AeroSuite, 30 fichas de teoría y 8 de CRM con carga R2 resistente a CORS');
+// Academia Aeronáutica: una sola carga múltiple, cada archivo con tarjeta independiente.
+assert.ok(html.includes('function academyLibrary(canManage=false){'),'Falta el espacio de biblioteca.');
+assert.ok(html.includes('id="academyFiles" type="file" multiple'),'La carga tiene que admitir varios archivos en un solo selector.');
+assert.ok(html.includes('Agregar Academia Aeronáutica'),'Título único de administración requerido.');
+assert.ok(html.includes('extraCard(item,canManage)'),'Cada material debe contar con tarjeta y controles propios.');
+assert.ok(html.includes('academy-file-card'),'Cada archivo debe visualizarse en una tarjeta individual.');
+assert.ok(html.includes("Array.from($('academyFiles')?.files||[])"),'El selector debe procesar todos los archivos elegidos.');
+assert.ok(html.includes('name,count:1,filename:name'),'Cada fichero se publica con su nombre como material independiente.');
+assert.ok(html.includes('filename:file.name'),'El backend debe conocer el formato del archivo.');
+assert.ok(html.includes('AEROSUITE_ACADEMY_EXTENSIONS'),'Debe validar los formatos permitidos.');
+assert.doesNotMatch(html,/data-library-upload="teoria"/,'Se elimina el campo fijo de teoría.');
+assert.doesNotMatch(html,/data-library-upload="crm"/,'Se elimina el campo fijo de CRM.');
+assert.doesNotMatch(html,/id="extraSubjectName"/,'No debe exigirse un campo separado para el nombre.');
+assert.doesNotMatch(html,/id="extraSubjectCount"/,'No debe exigirse otro campo para número de fichas.');
+assert.match(html,/function academyScreen\(\)\{[\s\S]*?academyLibrary\(false\)/,'El alumno solo puede consultar la biblioteca.');
+assert.match(html,/function adminAcademyScreen\(\)\{[\s\S]*?academyLibrary\(true\)/,'La administración conserva la publicación.');
+assert.ok(html.includes("(canManage?uploadBox:'')"),'No mostrar el cargador a alumnos.');
+assert.ok(html.includes('return uploadLibraryMultipart(type,file);'),'La subida debe pasar por el proxy multipart seguro.');
+assert.ok(html.includes("callLibraryR2('multipart-start'"),'Se debe iniciar la transferencia R2.');
+assert.ok(html.includes("callLibraryR2('multipart-complete'"),'Se debe completar la transferencia R2.');
+assert.ok(html.includes("callLibraryR2('finish'"),'El backend confirma la publicación antes de mostrar tarjeta.');
+assert.ok(html.includes("callLibraryR2('status'"),'El catálogo debe actualizarse.');
+assert.ok(html.includes("callLibraryR2('toggle-extra'"),'Cada tarjeta se puede ocultar o publicar.');
+assert.ok(html.includes("data-extra-action=\"download\""),'Cada tarjeta ofrece descarga.');
+assert.ok(html.includes("data-extra-action=\"delete\""),'Cada tarjeta ofrece borrado.');
+assert.ok(html.includes('data-library-delete'),'El administrador aún puede borrar material heredado.');
+assert.doesNotMatch(html,/store\.upload\(path,file,\{upsert:true/,'Los materiales nuevos no van a Supabase Storage.');
+console.log('PASS: Academia Aeronáutica con cargador múltiple y tarjetas individuales en R2');
 
 
 /* AeroSuite: balances separados de escuela/aeródromo, cuentas y caja chica. */
