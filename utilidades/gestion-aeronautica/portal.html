@@ -412,6 +412,7 @@ function libraryUpdatedLabel(type){
 }
 function libraryCollection(type,topics,canManage=false){
  const row=AEROSUITE_LIBRARY_FILES[type],published=libraryUploaded[type]===true;
+ if(!published&&!canManage)return '';
  const book=published?libraryPdfURL(type):null;
  const detail=type==='crm'?'Comunicación, decisiones, factores humanos y trabajo en equipo.':'Teoría aeronáutica organizada en 30 fichas ilustradas.';
  const caption=published?(libraryR2[type]?.published?'Cuadernillo publicado en Cloudflare R2':'PDF heredado en Supabase (todavía no actualizado en R2)')+libraryUpdatedLabel(type):'Cuadernillo pendiente de publicación en Cloudflare R2';
@@ -431,6 +432,8 @@ function academyLibrary(canManage=false){
  const teoriaLista=libraryUploaded.teoria===true;
  const crmLista=libraryUploaded.crm===true;
  const complete=teoriaLista&&crmLista;
+ const visibleExtras=libraryExtra.filter(item=>!item.hidden);
+ const totalFichas=(teoriaLista?30:0)+(crmLista?8:0)+visibleExtras.reduce((n,item)=>n+item.count,0);
  const uploadBox='<details class="library-upload" id="aerosuiteUploader">'+
   '<summary>Administración · Cargar, descargar, reemplazar y eliminar material</summary>'+
   '<p class="muted">Todos los archivos nuevos se publican en Cloudflare R2. Podés reemplazar, descargar o eliminar cada cuadernillo; al eliminar se retira también el archivo heredado de Supabase para que no reaparezca.</p>'+
@@ -445,12 +448,12 @@ function academyLibrary(canManage=false){
    (item.source==='r2'?' <button type="button" data-extra-action="download" data-extra-path="'+safe(item.path)+'">Descargar</button> <button type="button" data-extra-action="toggle" data-extra-path="'+safe(item.path)+'">'+(item.hidden?'Publicar':'Ocultar')+'</button>':' <a href="'+safe(window.GDV_AUTH.client.storage.from(AEROSUITE_LIBRARY_BUCKET).getPublicUrl(item.path).data.publicUrl)+'" target="_blank" rel="noopener noreferrer">Abrir PDF antiguo</a>')+
    ' <button type="button" data-extra-action="delete" data-extra-path="'+safe(item.path)+'">Eliminar definitivamente</button></div>').join('')+'</div>'+
   '<p id="aerosuiteUploadStatus" class="muted" role="status" aria-live="polite"></p></details>';
- return '<section class="panel" id="aerosuiteBiblioteca"><h2>Biblioteca de formación aeronáutica · 38 fichas</h2>'+
-  '<p>Dos cuadernillos de formación aeronáutica de Gente de Vuelo: 30 fichas de teoría y 8 de CRM. Abrí cada tarjeta para recorrer todas las páginas en un solo PDF.</p>'+
+ return '<section class="panel" id="aerosuiteBiblioteca"><h2>Biblioteca de formación aeronáutica · '+totalFichas+' fichas publicadas</h2>'+
+  '<p>Material didáctico disponible: teoría aeronáutica, CRM y otras materias publicadas. Cada tarjeta abre su PDF.</p>'+
   (libraryStatusWarning?'<div class="notice" role="status">'+safe(libraryStatusWarning)+'</div>':'')+
   (!complete?'<div class="notice">Estado de publicación: '+(teoriaLista?'Teoría (30 fichas) publicada en AeroSuite. ':'Teoría (30 fichas) pendiente de publicar en Cloudflare R2. ')+(crmLista?'CRM (8 fichas) publicado en AeroSuite.':'CRM (8 fichas) pendiente de publicar en Cloudflare R2.')+'</div>':'')+
   (canManage?uploadBox:'')+
-  libraryCollection('teoria',AEROSUITE_THEORY_TOPICS,canManage)+libraryCollection('crm',AEROSUITE_CRM_TOPICS,canManage)+libraryExtra.filter(item=>!item.hidden).map(extraCard).join('')+
+  libraryCollection('teoria',AEROSUITE_THEORY_TOPICS,canManage)+libraryCollection('crm',AEROSUITE_CRM_TOPICS,canManage)+visibleExtras.map(extraCard).join('')+
   '<p class="muted">Material complementario: no reemplaza manuales, procedimientos ni normativa vigente. Consultar estas fichas no acredita horas académicas.</p></section>';
 }
 async function callLibraryR2(action,body={}){
