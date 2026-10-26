@@ -429,6 +429,14 @@ assert.equal(requestStudentBooking({...competitor,start:'10:00',end:'11:30'},oth
  'Al cancelar se libera el recurso');
 assert.match(html,/student-week-pending/);
 assert.match(html,/student-week-confirmed/);
+// La grilla del alumno separa turnos consecutivos de 90 minutos;
+// las reservas existentes conservan su hora real de inicio y fin.
+assert.match(html,/const step=90,px=64;/);
+assert.match(html,/time=open;time\+step<=close;time\+=step/);
+assert.match(html,/student-ninety-slot/);
+assert.match(html,/const top=\(time-startHour\*60\)\/60\*px/);
+assert.match(html,/selectedEnd-selectedStart!==90/);
+assert.match(html,/const label=hhmm\(time\),endLabel=hhmm\(time\+step\)/);
 assert.match(html,/members\.find\(m=>m\.id===b\.pilot\)\?\.name/);
 
 const flightTaken=takeStudentBooking(schoolPlane,teacher,[schoolPlane],members);
