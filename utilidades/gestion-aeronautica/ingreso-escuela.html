@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="es"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>AeroSuite · Ingreso de institución</title>
+<style>
+:root{font-family:Inter,system-ui,Arial,sans-serif;color:#edf4f9;background:#0d1b28;color-scheme:dark}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 75% 5%,#2b59824b,transparent 50%),linear-gradient(145deg,#0c1b29,#132536)}
+header{background:#152b3e;border-bottom:1px solid #476781;padding:18px max(20px,calc((100vw - 1050px)/2));display:flex;justify-content:space-between;gap:15px;flex-wrap:wrap;align-items:center}
+a{color:#a9d7f5}.brand{font-size:23px;text-decoration:none;font-weight:850;color:#e6f4ff}.brand span{color:#8cbee6}.brand small{display:block;font-size:10px;color:#9fbccc;letter-spacing:.14em}
+main{max-width:1050px;padding:40px 18px 80px;margin:0 auto}
+h1{font-size:clamp(28px,4vw,43px);margin:4px 0 12px}h2{font-size:20px;margin:2px 0 10px}
+p{color:#becfdd;line-height:1.6}
+.eyebrow{font-weight:800;text-transform:uppercase;letter-spacing:.13em;font-size:11px;color:#dec18d}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,380px);gap:20px;align-items:start}
+.panel{padding:24px;background:#1b3041;border:1px solid #53768b;border-radius:16px;margin:16px 0}
+.panel strong{color:#fff}
+.notice{border:1px solid #7097a9;background:#274253;border-radius:11px;padding:14px;color:#e6f1f7;font-size:13px;line-height:1.6;margin:16px 0;overflow-wrap:anywhere}
+.status{min-height:30px;color:#e7d19e;font-size:13px;line-height:1.5}
+label{display:grid;gap:6px;font-size:12px;color:#cce2ec;margin:0 0 14px}
+input{width:100%;border-radius:9px;border:1px solid #7092a6;background:#0f2432;color:#fff;padding:12px;font:inherit;font-size:14px}
+button,.button{display:inline-flex;justify-content:center;align-items:center;gap:6px;cursor:pointer;font:inherit;font-size:13px;font-weight:800;padding:12px 17px;border-radius:9px;border:1px solid #7795a9;background:#29495e;color:#f3f9ff;text-decoration:none}
+button.primary,.button.primary{background:#e6c996;color:#152535;border-color:#e6c996}
+button:disabled{opacity:.5;cursor:not-allowed}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid #c1e4ff;outline-offset:3px}
+.actions{display:flex;flex-wrap:wrap;gap:10px}
+.info{border:1px solid #395870;background:#162b3c;padding:16px;border-radius:12px;font-size:13px}
+.info p{font-size:12px;margin:8px 0 0}
+code{color:#f4d8a5;overflow-wrap:anywhere}
+.caption{font-size:12px;color:#a9bed0}
+@media(max-width:720px){.grid{grid-template-columns:1fr}.panel{padding:17px}}
+</style>
+<script src="../../assets/supabase-2.117.2.min.js"></script>
+<script src="../../assets/community-config.js"></script>
+</head>
+<body>
+<header>
+ <a class="brand" href="index.html">Aero<span>Suite</span><small>BY GENTE DE VUELO · ACCESO INSTITUCIONAL</small></a>
+ <a href="../../index.html">Inicio de Gente de Vuelo</a>
+</header>
+<main>
+ <span class="eyebrow">Acceso a una institución autorizada</span>
+ <h1>Ingresar como director de escuela</h1>
+ <div class="grid">
+ <div>
+  <p>Este acceso es independiente del Superadministrador. Para la prueba, iniciá sesión con tu <strong>correo personal</strong> y aceptá la invitación que fue registrada para esa cuenta.</p>
+  <div class="notice">La invitación solo puede aceptarla una cuenta autenticada y con correo verificado que coincida con la dirección autorizada. Ninguna clave se comparte con AeroSuite.</div>
+  <section class="panel" id="signInPanel" hidden>
+    <h2>Ingresar con tu cuenta personal</h2>
+    <form id="loginForm">
+      <label>Correo electrónico<input id="email" type="email" name="email" autocomplete="username" required maxlength="254"></label>
+      <label>Contraseña<input id="password" type="password" name="password" autocomplete="current-password" required minlength="1"></label>
+      <div class="actions"><button type="submit" class="primary" id="loginButton">Ingresar</button></div>
+    </form>
+    <p class="caption">Si tu cuenta personal utiliza Google, <a href="../../comunidad.html#ingresar">ingresá a través de Gente de Vuelo</a> y después regresá a esta página. Si todavía no tenés cuenta, <a href="../../comunidad.html#registrarse">registrate primero</a>.</p>
+  </section>
+  <section class="panel" id="verifiedPanel" hidden>
+    <h2>Confirmación del director</h2>
+    <p>Cuenta autenticada: <strong id="accountEmail">—</strong></p>
+    <p id="accountHelp" class="caption">La activación se realiza después de comprobar tu correo y el permiso de la institución.</p>
+    <div class="actions">
+      <button class="primary" type="button" id="acceptButton">Aceptar invitación de esta escuela</button>
+      <button type="button" id="switchButton">Cambiar de cuenta</button>
+      <a href="portal-escuela.html" class="button" id="openPortalButton" hidden>Abrir portal institucional</a>
+    </div>
+  </section>
+  <div id="status" class="status" role="status" aria-live="polite">Comprobando la sesión…</div>
+ </div>
+ <aside class="panel">
+   <h2>Escuela de prueba</h2>
+   <div class="info">
+     <strong>Escuela de Vuelo Horizonte</strong>
+     <p>Prueba real de ingreso y permisos: sin uso operativo ni datos aeronáuticos reales.</p>
+   </div>
+   <p class="caption">Al ingresar como director solo podrás consultar la portada institucional. Los módulos operativos permanecerán bloqueados hasta que se complete su separación de datos.</p>
+   <p class="caption"><strong>Consejo:</strong> abrí este enlace en una ventana de incógnito para conservar tu sesión de Superadministrador en la ventana habitual.</p>
+ </aside>
+ </div>
+</main>
+<script>
+'use strict';
+(async()=>{
+const byId=id=>document.getElementById(id);
+const setStatus=s=>{byId('status').textContent=s};
+const search=new URLSearchParams(location.search);
+const schoolId=search.get('institucion');
+if(!schoolId||!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(schoolId)){
+ setStatus('Falta identificar la escuela. Solicitá un enlace institucional al Superadministrador.');return;
+}
+if(!window.supabase||!window.GDV_CONFIG){setStatus('No se pudo cargar el inicio de sesión.');return}
+const db=supabase.createClient(GDV_CONFIG.url,GDV_CONFIG.key);
+let user=null;
+async function refresh(){
+ const result=await db.auth.getUser();
+ user=result.error?null:result.data?.user||null;
+ byId('signInPanel').hidden=!!user;
+ byId('verifiedPanel').hidden=!user;
+ if(!user){setStatus('Ingresá con tu correo personal para verificar la invitación.');return}
+ byId('accountEmail').textContent=user.email||'(sin correo)';
+ const {data,error}=await db.rpc('aerosuite_my_institution_access');
+ const match=(!error&&Array.isArray(data))?data.find(x=>x.institution_id===schoolId&&x.can_access&&x.my_role==='administrador'):null;
+ byId('openPortalButton').hidden=!match;
+ byId('acceptButton').hidden=!!match;
+ setStatus(match?'La cuenta ya es administradora de esta escuela. Podés abrir el portal.':'Identidad verificada. Revisá la invitación con el botón «Aceptar invitación».');
+}
+byId('loginForm').addEventListener('submit',async e=>{
+ e.preventDefault();setStatus('Verificando correo y contraseña…');
+ const btn=byId('loginButton');btn.disabled=true;
+ try{
+  const {error}=await db.auth.signInWithPassword({email:byId('email').value.trim(),password:byId('password').value});
+  if(error)throw error;
+  byId('password').value='';
+  await refresh();
+ }catch(error){setStatus('No se pudo iniciar sesión: '+(error.message||'verificá las credenciales.'))}
+ finally{btn.disabled=false}
+});
+byId('switchButton').addEventListener('click',async()=>{
+ setStatus('Cerrando sesión de esta ventana…');
+ const {error}=await db.auth.signOut();
+ if(error){setStatus('No se pudo cambiar de cuenta: '+error.message);return}
+ byId('openPortalButton').hidden=true;
+ await refresh();
+});
+byId('acceptButton').addEventListener('click',async()=>{
+ const btn=byId('acceptButton');btn.disabled=true;
+ setStatus('Verificando la invitación en Supabase…');
+ try{
+  const {data,error}=await db.rpc('aerosuite_accept_my_invitation',{p_institution_id:schoolId});
+  if(error)throw error;
+  if(!data?.ok)throw Error('La autorización no pudo verificarse.');
+  await refresh();
+  setStatus('Invitación aceptada. Tu cuenta quedó asociada como director de la escuela de prueba.');
+ }catch(error){setStatus('No se pudo activar: '+(error.message||'La invitación no es válida para esta cuenta.'))}
+ finally{btn.disabled=false}
+});
+await refresh();
+})();
+</script>
+</body></html>
