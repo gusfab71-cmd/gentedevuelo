@@ -493,7 +493,7 @@ async function refreshStudentLibrary(){
    callLibraryR2('status').then(data=>({data,error:null}),error=>({data:null,error}))
   ]);
   const r2State=r2Query.data;
-  libraryStatusWarning=r2Query.error?'No se pudo verificar Cloudflare R2: '+r2Query.error.message+'. Se conserva la última versión R2 confirmada en esta sesión; los PDF de Supabase son versiones antiguas.':'';
+  libraryStatusWarning=r2Query.error?'No se pudo verificar Cloudflare R2: '+r2Query.error.message+'. No se borraron ni reemplazaron archivos.':(r2State?.warnings||[]).join(' · ');
   const theoryFile=theory.error?null:(theory.data||[]).find(file=>file.name==='fichas-teoria-30.pdf');
   const crmFile=crm.error?null:(crm.data||[]).find(file=>file.name==='fichas-crm-06.pdf');
   const previousExtras=libraryExtra.filter(item=>item.source==='r2');
@@ -505,8 +505,8 @@ async function refreshStudentLibrary(){
   // Si falla status, no descartar el archivo ya verificado por finish.
   const previousR2=libraryR2;
   libraryR2={
-   teoria:r2State?(r2State.teoria?.published?r2State.teoria:null):previousR2.teoria,
-   crm:r2State?(r2State.crm?.published?r2State.crm:null):previousR2.crm
+   teoria:r2State&&!r2State.teoria?.unavailable?(r2State.teoria?.published?r2State.teoria:null):previousR2.teoria,
+   crm:r2State&&!r2State.crm?.unavailable?(r2State.crm?.published?r2State.crm:null):previousR2.crm
   };
   libraryUploaded={teoria:!!libraryR2.teoria||!!theoryFile,crm:!!libraryR2.crm||!!crmFile};
   libraryFileUpdatedAt={
@@ -538,7 +538,7 @@ async function uploadLibraryMultipart(type,file){
  const client=window.GDV_AUTH.client;
  const session=await callLibraryR2('multipart-start',{type,size:file.size});
  if(!session?.ok||!session?.uploadId||!session?.path)throw Error('No se pudo abrir la carga fragmentada en R2.');
- const blockSize=session.partBytes||6*1024*1024;
+ const blockSize=session.partBytes||5*1024*1024;
  const parts=[];
  try{
   const total=Math.ceil(file.size/blockSize);
@@ -577,21 +577,10 @@ async function uploadLibraryMultipart(type,file){
  }
 }
 async function transferLibraryFileToR2(type,file){
- let staging=null;
- try{
-  const prepared=await callLibraryR2('prepare',{type,contentType:'application/pdf',size:file.size});
-  if(!prepared?.uploadUrl||!prepared?.path)throw Error('No se recibió un enlace seguro de carga.');
-  staging=prepared.path;
-  libraryUploadMessage('Subiendo '+file.name+' ('+(file.size/1024/1024).toFixed(1)+' MB) a Cloudflare R2…');
-  const response=await fetch(prepared.uploadUrl,{method:'PUT',headers:{'Content-Type':'application/pdf'},body:file});
-  if(!response.ok)throw Error('La transferencia directa respondió '+response.status);
-  return staging;
- }catch(error){
-  console.warn('Carga directa R2 falló; se usa transferencia fragmentada:',error.message);
-  if(staging)await callLibraryR2('discard',{path:staging}).catch(()=>{});
-  libraryUploadMessage('Usando transferencia segura por fragmentos a Cloudflare R2…');
-  return uploadLibraryMultipart(type,file);
- }
+ // Priorizar el proxy autenticado: Cloudflare R2 no permite configurar CORS
+ // con las credenciales actuales, así que el PUT directo del navegador falla.
+ libraryUploadMessage('Enviando '+file.name+' a Cloudflare R2 por fragmentos seguros…');
+ return uploadLibraryMultipart(type,file);
 }
 async function downloadLibraryFile(type,path){
  const signed=await callLibraryR2('download',type==='extra'?{type,path}:{type});
@@ -688,7 +677,7 @@ document.addEventListener('click',async event=>{
    }else throw Error('Acción inválida');
   }
   await refreshStudentLibrary();
- }catch(err){libraryUploadMessage('No se pudo completar: '+(err.message||'error'))}
+ }catch(err){libraryUploadMessage('No se pudo completar: '+(err.message||'error'));await refreshStudentLibrary();}
  finally{if(control.isConnected)control.disabled=false}
 });
 document.addEventListener('click',async event=>{
@@ -706,7 +695,10 @@ document.addEventListener('click',async event=>{
    await refreshStudentLibrary();
    libraryUploadMessage('Cuadernillo eliminado de Cloudflare R2 y del almacenamiento anterior.');
   }else await downloadLibraryFile(type);
- }catch(error){libraryUploadMessage('No se pudo '+(deleting?'eliminar':'descargar')+': '+(error.message||'error'))}
+ }catch(error){
+  libraryUploadMessage('No se pudo '+(deleting?'eliminar':'descargar')+': '+(error.message||'error'));
+  if(deleting)await refreshStudentLibrary();
+ }
  finally{if(button.isConnected)button.disabled=false}
 });
 document.addEventListener('click',async event=>{
