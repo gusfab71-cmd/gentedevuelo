@@ -115,6 +115,16 @@ ol{color:#bbccd0;font-size:13px;line-height:1.85}
 .student-week-busy{pointer-events:none}
 #studentWeeklyGrid .agenda-heading h3{font-size:17px;margin:0}
 #studentWeeklyGrid .agenda-hour-slot:not(:disabled):hover span{color:#f3f8fb}
+.student-week-grid .agenda-hour-slot:not(:disabled){color:#d7f0fc;background:rgba(49,101,123,.16)}
+.student-week-grid .agenda-hour-slot:not(:disabled) span{font-size:10px;font-weight:800}
+.student-week-grid .agenda-hour-slot:not(:disabled):hover{background:#417088aa}
+.student-turn-reminder{border-color:#637f91;background:#1c3546;margin-bottom:15px}
+.student-turn-reminder h2{font-size:18px;margin:0}
+.student-turn-empty,.student-turn-status{font-size:13px;line-height:1.55;color:#c4dce9;margin:11px 0 0}
+.student-turn-detail{display:flex;gap:8px;flex-direction:column;margin-top:12px}
+.student-turn-detail strong{font-size:20px;color:#f6d8a0}
+.student-turn-detail span{font-size:13px;color:#d5e9f4}
+.student-booking-feedback{margin:12px 0 4px;padding:10px 12px;border-left:3px solid #9ac7d8;background:#1e3847;border-radius:6px;font-size:12px;color:#e6f4fa}
 .agenda-event{position:absolute;border:1px solid #b59362;border-left:3px solid #eed197;border-radius:7px;background:#5c4b36;color:#f3f6ff;text-align:left;padding:5px 6px;overflow:hidden;cursor:pointer;z-index:2;box-shadow:0 2px 6px #08151d33;line-height:1.3;min-width:0}
 .agenda-event:hover,.agenda-event:focus-visible{outline:2px solid #f9e3b1;outline-offset:1px}
 .agenda-event.demo-flight{background:#245465;border-color:#5aabbf;border-left-color:#91d9d1}
@@ -745,6 +755,8 @@ async function switchArea(key){
  try{
   let firstTab=AREA_DEFS[key].home;
   if(key==='alumno'){
+   studentBookingSelection=null;
+   studentTurneraWeek=studentSuggestedSlot().date;
    try{
     firstTab=(await aerosuiteProfileCompleted())?'alumno':'ficha_alumno';
    }catch(error){
@@ -838,6 +850,36 @@ function privatePilotPortal(){
 }
 // Turnera semanal del alumno: reutiliza las reglas horarias institucionales,
 // pero no muestra nombres, identidades ni controles de gestión administrativa.
+
+function studentSuggestedSlot(){
+ const current=new Date(),today=isoDay(current),currentMinute=current.getHours()*60+current.getMinutes();
+ const open=minutes(schoolPolicy.openTime),close=minutes(schoolPolicy.closeTime);
+ const step=schoolPolicy.slotMinutes,duration=schoolPolicy.studentDefaultMinutes;
+ for(let days=0;days<28;days++){
+  const date=addDays(today,days);
+  if(!schoolPolicy.availableWeekdays.includes(new Date(date+'T12:00:00Z').getUTCDay()))continue;
+  const first=days===0?Math.max(open,currentMinute+1):open;
+  const start=open+Math.ceil((first-open)/step)*step;
+  if(start+duration<=close)return {date,start:hhmm(start),end:hhmm(start+duration)};
+ }
+ return {date:today,start:schoolPolicy.openTime,end:hhmm(Math.min(close,open+duration))};
+}
+function studentNextTurnReminder(ownBookings){
+ const current=new Date(),today=isoDay(current),currentMinutes=current.getHours()*60+current.getMinutes();
+ const next=ownBookings.filter(b=>['solicitada','confirmada'].includes(b.status)&&
+  (b.date>today||(b.date===today&&minutes(b.end)>currentMinutes)))
+  .sort((a,b)=>a.date.localeCompare(b.date)||a.start.localeCompare(b.start))[0];
+ if(!next)return '<section id="studentTurnReminder" class="panel student-turn-reminder">'+
+  '<div class="portal-title"><h2>Recordatorio de mi próximo turno</h2><span class="tag">Demostración</span></div>'+
+  '<p class="student-turn-empty">Todavía no tenés próximos turnos. Elegí un día y un horario libre en la turnera para solicitar uno.</p></section>';
+ const confirmed=next.status==='confirmada';
+ const label=confirmed?'Turno confirmado · Demo':'Solicitud pendiente de confirmación';
+ return '<section id="studentTurnReminder" class="panel student-turn-reminder">'+
+  '<div class="portal-title"><h2>Recordatorio de mi próximo turno</h2><span class="agenda-pill">'+label+'</span></div>'+
+  '<div class="student-turn-detail"><strong>'+safe(next.date)+' · '+safe(next.start)+' a '+safe(next.end)+'</strong>'+
+  '<span>'+safe(portalType(next.type))+' · '+safe(portalResource(next))+'</span></div>'+
+  '<p class="student-turn-status">'+(confirmed?'Confirmado en esta demostración. No habilita el vuelo.':'La solicitud fue registrada solo en esta demostración y todavía necesita aceptación del instructor.')+'</p></section>';
+}
 function studentWeeklyTurnera(){
  const dates=listWeek(studentTurneraWeek);
  const resource=$('studentBookingResource')?.value||fleet[0]?.id||'';
@@ -847,8 +889,10 @@ function studentWeeklyTurnera(){
  const step=schoolPolicy.slotMinutes,px=step===15?80:step===30?64:52;
  const height=(endHour-startHour)*px;
  const hours=Array.from({length:endHour-startHour},(_,i)=>startHour+i);
- const dateField=$('studentBookingDate')?.value||now();
- const timeField=$('studentBookingStart')?.value||schoolPolicy.openTime;
+ const suggested=studentBookingSelection||studentSuggestedSlot();
+ const dateField=$('studentBookingDate')?.value||suggested.date;
+ const timeField=$('studentBookingStart')?.value||suggested.start;
+ const current=new Date(),today=isoDay(current),currentMinute=current.getHours()*60+current.getMinutes();
  const clock='<div class="agenda-clock" style="height:'+height+'px">'+
   hours.map(h=>'<span class="agenda-clock-label" style="top:'+((h-startHour)*px)+'px">'+hhmm(h*60)+'</span>').join('')+
   '<span class="agenda-clock-label" style="top:'+height+'px">'+hhmm(endHour*60)+'</span></div>';
@@ -862,10 +906,11 @@ function studentWeeklyTurnera(){
   for(let time=startHour*60;time<endHour*60;time+=step){
    const label=hhmm(time);
    const occupied=confirmed.some(b=>b.date===date&&minutes(b.start)<time+schoolPolicy.studentDefaultMinutes&&time<minutes(b.end));
-   const disabled=!openDay||date<now()||time<open||time+schoolPolicy.studentDefaultMinutes>close||occupied;
-   const selected=date===dateField&&label===timeField;
-   const reason=occupied?' · Ocupado (demo)':!openDay?' · Cerrado':date<now()?' · Fecha pasada':'';
-   slots.push('<button type="button" class="agenda-hour-slot'+(selected?' student-slot-selected':'')+'" style="height:'+(px*step/60)+'px" data-student-slot-date="'+safe(date)+'" data-student-slot-time="'+label+'" aria-label="'+safe(date)+' '+label+reason+'"'+(disabled?' disabled':'')+'><span>'+label+'</span></button>');
+   const past=date<today||(date===today&&time<=currentMinute);
+   const disabled=!openDay||past||time<open||time+schoolPolicy.studentDefaultMinutes>close||occupied;
+   const selected=!disabled&&date===dateField&&label===timeField;
+   const reason=occupied?' · Ocupado (demo)':!openDay?' · Cerrado':past?' · Horario pasado':'';
+   slots.push('<button type="button" class="agenda-hour-slot'+(selected?' student-slot-selected':'')+'" style="height:'+(px*step/60)+'px" data-student-slot-date="'+safe(date)+'" data-student-slot-time="'+label+'" title="'+safe(disabled?reason:'Elegir '+date+' a las '+label)+'" aria-label="'+safe(date)+' '+label+reason+'"'+(disabled?' disabled':'')+'><span>'+(disabled?'':'+ ')+label+'</span></button>');
   }
   const events=layoutDay(confirmed,date,startHour*60,px).map(b=>{
    const width=100/b.lanes;
@@ -878,8 +923,8 @@ function studentWeeklyTurnera(){
  '<button type="button" data-student-week-today>Hoy</button>'+ 
  '<button type="button" data-student-week="7" aria-label="Semana siguiente">›</button>'+ 
  '<label><span class="visually-hidden">Elegir semana</span><input type="date" id="studentWeekDate" aria-label="Elegir semana" value="'+safe(studentTurneraWeek)+'"></label></div></div>'+ 
- '<div class="agenda-scroll" aria-label="Turnera semanal del alumno"><div class="agenda-columns"><div class="agenda-clock-heading">HORA</div>'+headings+clock+columns+'</div></div>'+ 
- '<p class="agenda-viewnote">Elegí un horario libre para completar la solicitud de abajo. Los turnos son ficticios y no reflejan disponibilidad real.</p>';
+ '<div class="agenda-scroll student-week-grid" aria-label="Turnera semanal del alumno"><div class="agenda-columns"><div class="agenda-clock-heading">HORA</div>'+headings+clock+columns+'</div></div>'+ 
+ '<p class="agenda-viewnote">Los horarios con + permiten seleccionar una franja. Los días y horarios vencidos no admiten solicitudes. Esta agenda es ficticia y no refleja disponibilidad real.</p>';
 }
 function studentPortal(){
  const d=studentPortalProjection(portalStudent,reservations,flights,lessons,demoPacks,groundActivities,trainingGoals);
@@ -888,18 +933,21 @@ function studentPortal(){
  const options=Object.entries(ACTIVITY_TYPES).map(([id,label])=>'<option value="'+id+'">'+safe(label)+'</option>').join('');
  const resources=[...fleet.map(a=>({id:a.id,label:a.id+' · '+a.model,kind:'flight'})),
  ...DEMO_RESOURCES.map(x=>({id:x.id,label:x.name,kind:x.type}))];
+ const suggested=studentBookingSelection||studentSuggestedSlot();
  const bookings=d.reservations.slice().reverse().map(b=>'<div class="portal-task"><div><strong>'+safe(portalType(b.type))+'</strong>'+
   '<div class="portal-small">'+portalDate(b)+' · '+safe(portalResource(b))+'</div></div>'+
   '<span class="agenda-pill">'+safe(stages[b.status]||b.status)+'</span></div>').join('');
- return '<section id="studentBookingPanel" class="panel"><div class="portal-title"><h2>Turnera · Sacá tu próximo turno</h2><span class="tag">Reserva de demostración</span></div>'+
+ return studentNextTurnReminder(d.reservations)+
+ '<section id="studentBookingPanel" class="panel"><div class="portal-title"><h2>Turnera · Sacá tu próximo turno</h2><span class="tag">Reserva de demostración</span></div>'+
  '<p class="portal-private">Elegí la actividad, aeronave o recurso, fecha y horario para solicitar tu turno. Podés consultar tus solicitudes debajo. Un instructor deberá confirmar la reserva.</p>'+
  '<div id="studentWeeklyGrid">'+studentWeeklyTurnera()+'</div>'+ 
+ '<p id="studentBookingFeedback" role="status" aria-live="polite" class="student-booking-feedback">Seleccioná un horario marcado con + en la agenda; después enviá la solicitud.</p>'+ 
  '<form id="studentBookingForm"><div class="formgrid">'+
  '<label>Tipo de reserva<select id="studentBookingType">'+options+'</select></label>'+
  '<label>Recurso<select id="studentBookingResource">'+resources.map(x=>'<option value="'+safe(x.id)+'" data-kind="'+safe(x.kind)+'">'+safe(x.label)+'</option>').join('')+'</select></label>'+
- '<label>Fecha<input type="date" id="studentBookingDate" value="'+safe(now())+'" required></label>'+
- '<label>Inicio<input type="time" id="studentBookingStart" value="'+safe(schoolPolicy.openTime)+'" required></label>'+
- '<label>Final<input type="time" id="studentBookingEnd" value="'+safe(hhmm(minutes(schoolPolicy.openTime)+schoolPolicy.studentDefaultMinutes))+'" required></label></div>'+
+ '<label>Fecha<input type="date" id="studentBookingDate" min="'+safe(now())+'" value="'+safe(suggested.date)+'" required></label>'+
+ '<label>Inicio<input type="time" id="studentBookingStart" value="'+safe(suggested.start)+'" required></label>'+
+ '<label>Final<input type="time" id="studentBookingEnd" value="'+safe(suggested.end)+'" required></label></div>'+
  '<p class="muted">Duración mínima: '+schoolPolicy.studentMinMinutes+' minutos según la turnera de la escuela. La solicitud queda pendiente hasta que un instructor la acepte.</p>'+
  '<button class="action" type="submit">Solicitar reserva (demo)</button></form></section>'+
  '<section class="panel"><h2>Mis Reservas</h2>'+
@@ -999,6 +1047,7 @@ function directorPortal(){
 }
 let instructorEvaluationBooking='';
 let studentTurneraWeek=now();
+let studentBookingSelection=null;
 function dashboard(){
  const hours=flights.reduce((sum,x)=>sum+x.blockHours,0),turns=reservations.filter(r=>r.status==='confirmada').length;
  const links=[['reservas','Agenda y reservas','Turnos y disponibilidad'],['vuelos','Registro de vuelos','Actividad y horas'],['flota','Aeronaves y mantenimiento','Flota y vencimientos'],['pistas','AeroLocator','Fuentes ANAC, LAD y pistas comunitarias'],['admin_personas','Personal y usuarios','Perfiles de prueba'],['admin_academia','Biblioteca de formación','Publicar fichas de teoría y CRM'],['finanzas','Contabilidad y Finanzas','Gastos generales y caja chica'],['stock','Combustible y aceite','Stock institucional'],['documentos','Documentos y avisos','Documentación y alertas']];
@@ -1609,9 +1658,12 @@ function wirePortals(){
     const date=button.dataset.studentSlotDate,start=button.dataset.studentSlotTime;
     const finish=minutes(start)+schoolPolicy.studentDefaultMinutes;
     if(finish>minutes(schoolPolicy.closeTime))return;
+    studentBookingSelection={date,start,end:hhmm(finish)};
     $('studentBookingDate').value=date;
     $('studentBookingStart').value=start;
     $('studentBookingEnd').value=hhmm(finish);
+    const feedback=$('studentBookingFeedback');
+    if(feedback)feedback.textContent='Horario seleccionado: '+date+' de '+start+' a '+hhmm(finish)+'. Completá la solicitud debajo.';
     refreshWeek();
     $('studentBookingForm')?.scrollIntoView({behavior:'smooth',block:'nearest'});
    }
@@ -1622,6 +1674,12 @@ function wirePortals(){
    }
   });
   $('studentBookingResource')?.addEventListener('change',refreshWeek);
+  for(const id of ['studentBookingDate','studentBookingStart','studentBookingEnd']){
+   $(id)?.addEventListener('change',()=>{
+    studentBookingSelection={date:$('studentBookingDate').value,start:$('studentBookingStart').value,end:$('studentBookingEnd').value};
+    refreshWeek();
+   });
+  }
   const changeResources=()=>{
    const type=$('studentBookingType')?.value,list=$('studentBookingResource');
    if(!list)return;
@@ -1640,9 +1698,16 @@ function wirePortals(){
      aircraft:type==='flight'?resource:'',resourceId:type==='flight'?'':resource};
     const student=members.find(m=>m.id===portalStudent);
     const requested=requestStudentBooking(draft,student,reservations,fleet,DEMO_RESOURCES,schoolPolicy);
-    reservations.push(requested);render();
+    reservations.push(requested);
+    studentBookingSelection=null;
+    render();
     notice('Solicitud de '+portalType(type)+' guardada solo en la demostración. Un instructor deberá tomarla.');
-   }catch(err){notice(err.message)}
+    $('studentTurnReminder')?.scrollIntoView({behavior:'smooth',block:'start'});
+   }catch(err){
+    notice(err.message);
+    const feedback=$('studentBookingFeedback');
+    if(feedback){feedback.textContent='No se pudo solicitar el turno: '+err.message;feedback.scrollIntoView({behavior:'smooth',block:'nearest'});}
+   }
   });
  }
  if(tab==='instructor'){
