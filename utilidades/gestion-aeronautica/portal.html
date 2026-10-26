@@ -868,15 +868,19 @@ function privatePilotPortal(){
 function studentSuggestedSlot(){
  const current=new Date(),today=isoDay(current),currentMinute=current.getHours()*60+current.getMinutes();
  const open=minutes(schoolPolicy.openTime),close=minutes(schoolPolicy.closeTime);
- const step=schoolPolicy.slotMinutes,duration=schoolPolicy.studentDefaultMinutes;
+ const step=90,resource=studentBookingResourceChoice||fleet[0]?.id||'';
  for(let days=0;days<28;days++){
   const date=addDays(today,days);
   if(!schoolPolicy.availableWeekdays.includes(new Date(date+'T12:00:00Z').getUTCDay()))continue;
-  const first=days===0?Math.max(open,currentMinute+1):open;
-  const start=open+Math.ceil((first-open)/step)*step;
-  if(start+duration<=close)return {date,start:hhmm(start),end:hhmm(start+duration)};
+  for(let start=open;start+step<=close;start+=step){
+   if(days===0&&start<=currentMinute)continue;
+   const collision=reservations.some(b=>['solicitada','confirmada'].includes(b.status)&&
+    b.date===date&&(b.pilot===portalStudent||b.aircraft===resource||b.resourceId===resource)&&
+    minutes(b.start)<start+step&&start<minutes(b.end));
+   if(!collision)return {date,start:hhmm(start),end:hhmm(start+step)};
+  }
  }
- return {date:today,start:schoolPolicy.openTime,end:hhmm(Math.min(close,open+duration))};
+ return {date:today,start:schoolPolicy.openTime,end:hhmm(open+step)};
 }
 function studentNextTurnReminder(ownBookings){
  const current=new Date(),today=isoDay(current),currentMinutes=current.getHours()*60+current.getMinutes();
@@ -987,7 +991,7 @@ function studentPortal(){
  '<label>Fecha<input type="date" id="studentBookingDate" min="'+safe(now())+'" value="'+safe(suggested.date)+'" required></label>'+
  '<label>Inicio<input type="time" id="studentBookingStart" value="'+safe(suggested.start)+'" required></label>'+
  '<label>Final<input type="time" id="studentBookingEnd" value="'+safe(suggested.end)+'" required></label></div>'+
- '<p class="muted">Duración mínima: '+schoolPolicy.studentMinMinutes+' minutos según la turnera de la escuela. La solicitud queda pendiente hasta que un instructor la acepte.</p>'+
+ '<p class="muted">Turnos de 1 hora y 30 minutos. La solicitud queda pendiente hasta que un instructor la acepte. Las reservas de demostración no son permanentes.</p>'+
  '<button class="action" type="submit">Solicitar reserva (demo)</button></form></section>'+
  '<section class="panel"><h2>Mis Reservas</h2>'+
  (bookings||'<p class="muted">No tenés solicitudes registradas en esta demostración.</p>')+'</section>'+
@@ -1736,6 +1740,9 @@ function wirePortals(){
    e.preventDefault();
    try{
     const type=$('studentBookingType').value,resource=$('studentBookingResource').value;
+    const selectedStart=minutes($('studentBookingStart').value),selectedEnd=minutes($('studentBookingEnd').value);
+    if(selectedEnd-selectedStart!==90||((selectedStart-minutes(schoolPolicy.openTime))%90)!==0)
+     throw Error('Elegí un turno completo de 1 hora y 30 minutos desde la grilla semanal.');
     const draft={pilot:portalStudent,type,date:$('studentBookingDate').value,
      start:$('studentBookingStart').value,end:$('studentBookingEnd').value,
      aircraft:type==='flight'?resource:'',resourceId:type==='flight'?'':resource};
