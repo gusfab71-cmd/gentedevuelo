@@ -25,6 +25,8 @@ nav{align-self:start;position:sticky;top:20px;border:1px solid #344c56;backgroun
 nav button{background:transparent;color:#c8d5db;border:1px solid transparent;text-align:left;padding:12px 13px;border-radius:10px;font:inherit;font-size:13px;cursor:pointer}
 nav button.active{background:#304955;border-color:#547582;color:white;font-weight:800}
 nav button:hover{background:#263b46}
+body[data-aerosuite-area="alumno"] #sidebar button[data-tab="ficha_alumno"]{margin-top:14px;border-top:1px solid #577582;color:#b9d7e7}
+@media(max-width:690px){body[data-aerosuite-area="alumno"] #sidebar button[data-tab="ficha_alumno"]{margin-top:0;margin-left:10px}}
 main button.action,main button.secondary{font:inherit;cursor:pointer;border:1px solid #6d9ba7;padding:10px 15px;border-radius:9px;font-size:13px}
 .action{color:#101820;background:#e1bd82;font-weight:800}
 .secondary{color:#dfebef;background:#30444e}
@@ -695,7 +697,7 @@ let ravRecords=[],ravFormOpen=false;
 const trainingInstitution={institutionType:'non_ciac',reviewMode:'chief'};
 // Tres areas visual y funcionalmente aisladas dentro de la demostracion.
 const AREA_DEFS=Object.freeze({
- alumno:{title:'Área del Alumno',subtitle:'Formación, progreso, reservas y biblioteca aeronáutica.',home:'ficha_alumno',tabs:[['ficha_alumno','Mi perfil AeroSuite · Registro ampliado'],['alumno','Mi formación y reservas'],['academia','Mi biblioteca · Teoría y CRM'],['piloto','Mi actividad personal · Demo'],['flightops','Flight Operations · Planificación'],['pistas','AeroLocator']]},
+ alumno:{title:'Área del Alumno',subtitle:'Formación, progreso, reservas y biblioteca aeronáutica.',home:'ficha_alumno',tabs:[['alumno','Mi formación y reservas'],['academia','Mi biblioteca · Teoría y CRM'],['piloto','Mi actividad personal · Demo'],['flightops','Flight Operations · Planificación'],['pistas','AeroLocator'],['ficha_alumno','Mi perfil y datos personales']]},
  instructor:{title:'Instructor y Jefe de Instructores',subtitle:'Evaluaciones, clases, seguimiento de alumnos y supervisión pedagógica.',home:'instructor',tabs:[['instructor','Panel del instructor'],['ficha_alumno','Mi perfil AeroSuite'],['direccion','Jefatura de instructores'],['personas','Seguimiento, fichas y RAV'],['flightops','Flight Operations · Instrucción'],['pistas','AeroLocator']]},
  administracion:{title:'Gestión Administrativa de Escuela',subtitle:'Agenda, operaciones, flota, personal, recursos y contabilidad.',home:'inicio',tabs:[['inicio','Panel administrativo'],['ficha_alumno','Mi perfil AeroSuite'],['reservas','Agenda y reservas'],['vuelos','Registro de vuelos'],['flota','Aeronaves y mantenimiento'],['pistas','AeroLocator'],['admin_personas','Personal y usuarios'],['admin_academia','Gestionar biblioteca'],['finanzas','Contabilidad y Finanzas'],['stock','Combustible y aceite'],['documentos','Documentos y avisos']]}
 });
@@ -715,9 +717,42 @@ function areaPortalMarkup(){
 function notice(message){$('alert').textContent=message}
 const metric=(value,label)=>'<div class="metric"><strong>'+safe(value)+'</strong><span>'+safe(label)+'</span></div>';
 const options=(rows,value='id',label='name')=>rows.map(row=>'<option value="'+safe(row[value])+'">'+safe(row[label])+'</option>').join('');
-function switchArea(key){
- if(!Object.prototype.hasOwnProperty.call(AREA_DEFS,key))return;
- currentArea=key;tab=AREA_DEFS[key].home;notice('');render();
+// Consultar solo el estado de la ficha privada de la cuenta activa; no utilizar
+// los alumnos ficticios ni el registro comunitario como prueba de inscripción.
+async function aerosuiteProfileCompleted(){
+ const client=window.GDV_AUTH?.client;
+ if(!client)throw Error('No se pudo verificar la ficha AeroSuite.');
+ const {data:{user},error:authError}=await client.auth.getUser();
+ if(authError||!user)throw Error('Sesión no válida para comprobar el registro.');
+ const [profile,documents,roles]=await Promise.all([
+  client.from('aerosuite_member_profiles').select('user_id').eq('user_id',user.id).maybeSingle(),
+  client.from('aerosuite_member_documents').select('id').eq('user_id',user.id).limit(1),
+  client.from('aerosuite_role_declarations').select('role').eq('user_id',user.id).limit(1)
+ ]);
+ if(profile.error||documents.error||roles.error)throw Error('No se pudo comprobar el estado de la ficha.');
+ return Boolean(profile.data?.user_id&&(documents.data||[]).length&&(roles.data||[]).length);
+}
+let openingArea=false;
+async function switchArea(key){
+ if(!Object.prototype.hasOwnProperty.call(AREA_DEFS,key)||openingArea)return;
+ openingArea=true;
+ const areaPicker=$('areaPortal');
+ areaPicker.setAttribute('aria-busy','true');
+ try{
+  let firstTab=AREA_DEFS[key].home;
+  if(key==='alumno'){
+   try{
+    firstTab=(await aerosuiteProfileCompleted())?'alumno':'ficha_alumno';
+   }catch(error){
+    console.warn('No se pudo verificar el registro AeroSuite:',error?.message||error);
+    firstTab='ficha_alumno';
+   }
+  }
+  currentArea=key;tab=firstTab;notice('');render();
+ }finally{
+  openingArea=false;
+  areaPicker.removeAttribute('aria-busy');
+ }
 }
 function backToAreaPortal(){currentArea=null;tab='inicio';notice('');render()}
 function switchTab(value){
