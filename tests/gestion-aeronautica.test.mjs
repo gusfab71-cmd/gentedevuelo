@@ -95,6 +95,10 @@ const landing=fs.readFileSync(new URL('../utilidades/gestion-aeronautica/index.h
 const html=fs.readFileSync(new URL('../utilidades/gestion-aeronautica/portal.html',import.meta.url),'utf8');
 // La portada institucional es pública; el portal real conserva la barrera administrativa.
 assert.match(landing,/<title>AeroSuite .* Gente de Vuelo<\/title>/);
+assert.match(landing,/id="aerosuite-superadmin-link"[^>]*href="superadministrador\.html"[^>]*hidden/,'El acceso a Superadministración debe estar oculto por defecto en la presentación');
+assert.match(landing,/from\('aerosuite_superadmins'\)\.select\('user_id'\)/,'Solo el rol específico puede mostrar el botón de Superadministración');
+assert.match(landing,/data\?\.user_id===user\.id\)link\.hidden=false/,'La presentación debe confirmar el usuario autorizado antes de mostrar el botón');
+
 // Utilidades: AeroSuite operativo solo para el administrador, no para usuarios públicos.
 const utilitiesPage=fs.readFileSync(new URL('../utilidades/index.html',import.meta.url),'utf8');
 assert.match(utilitiesPage,/id="gdv-gestion-aeronautica-link"[^>]*href="gestion-aeronautica\/"[^>]*hidden/,'AeroSuite debe iniciar oculto y abrir presentación');
