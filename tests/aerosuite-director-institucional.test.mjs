@@ -6,6 +6,7 @@ const root=new URL('../utilidades/gestion-aeronautica/',import.meta.url);
 const admission=fs.readFileSync(new URL('ingreso-escuela.html',root),'utf8');
 const school=fs.readFileSync(new URL('portal-escuela.html',root),'utf8');
 const superadmin=fs.readFileSync(new URL('superadministrador.html',root),'utf8');
+const demo=fs.readFileSync(new URL('demo-autorizacion.html',root),'utf8');
 
 assert.match(admission,/id="signInPanel" hidden/,'No mostrar el formulario hasta verificar sesión');
 assert.match(admission,/id="verifiedPanel" hidden/,'No mostrar aceptación sin autenticar');
@@ -54,6 +55,10 @@ assert.match(superadmin,/window\.confirm\('¿Eliminar definitivamente la institu
 assert.match(superadmin,/p_institution_id:row\.id,p_confirm_name:row\.name/,'La eliminación envía el ID y el nombre de la tarjeta seleccionada');
 assert.match(superadmin,/\.rpc\('aerosuite_delete_institution'/,'La eliminación va por RPC controlada por Superadministrador');
 assert.match(superadmin,/readFunctionError\(error,data\)/,'Mostrar el error real del servicio de email');
+assert.match(superadmin,/<select name="plan" required><option value="essential">Essential<\/option><option value="pro">Pro<\/option><\/select>/,'Solo se muestran Essential y Pro en el Superadministrador');
+assert.match(superadmin,/!\['essential','pro'\]\.includes\(payload\.plan\)/,'Validación client-side de planes vigentes');
+assert.doesNotMatch(superadmin,/<option value="(institucional|aeroclub_pro|sin_asignar)">/,'No quedan planes comerciales anteriores');
+assert.match(demo,/<select id="schoolPlan"><option value="essential">Essential<\/option><option value="pro">Pro<\/option><\/select>/,'La demo usa los mismos dos planes');
 assert.match(superadmin,/El correo NO se envió/,'No declarar éxito si la función devuelve error');
 assert.match(superadmin,/row\.status==='pending'&&!row\.trial_started_at/,'Una institución pendiente ofrece el alta guiada');
 assert.match(superadmin,/Habilitar 30 días y enviar invitación/,'Botón de activación y correo en un paso');
