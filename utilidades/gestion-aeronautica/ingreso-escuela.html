@@ -166,7 +166,7 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
    showPanel('verifiedPanel');
    byId('accountEmail').textContent=user.email||'(correo no disponible)';
    if(!user.email_confirmed_at){setStatus('Tu correo todavía debe verificarse. Revisá el mensaje de confirmación.');return}
-   const access=await db.rpc('aerosuite_my_institution_access');
+   const access=await db.rpc('aerosuite_my_institution_access_v2');
    if(access.error)throw access.error;
    const member=(access.data||[]).find(x=>x.institution_id===schoolId&&x.can_access&&(!selectedRole||x.my_role===selectedRole));
    if(member){
