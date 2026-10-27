@@ -55,6 +55,13 @@ assert.match(superadmin,/p_institution_id:row\.id,p_confirm_name:row\.name/,'La 
 assert.match(superadmin,/\.rpc\('aerosuite_delete_institution'/,'La eliminación va por RPC controlada por Superadministrador');
 assert.match(superadmin,/readFunctionError\(error,data\)/,'Mostrar el error real del servicio de email');
 assert.match(superadmin,/El correo NO se envió/,'No declarar éxito si la función devuelve error');
+assert.match(superadmin,/row\.status==='pending'&&!row\.trial_started_at/,'Una institución pendiente ofrece el alta guiada');
+assert.match(superadmin,/Habilitar 30 días y enviar invitación/,'Botón de activación y correo en un paso');
+assert.match(superadmin,/\.eq\('status','pending'\)\.is\('trial_started_at',null\)/,'Evitar reiniciar pruebas ya activadas o carreras');
+assert.match(superadmin,/async function enableTrialAndInvite/,'Alta de prueba y envío integrado');
+assert.match(superadmin,/await deliverDirectorInvite\(updated\)/,'El envío se solicita después de confirmar la licencia');
+assert.match(superadmin,/HABILITADA, pero la invitación NO se pudo enviar/,'Si falla el correo se informa por separado y se permite reintentar');
+
 
 
 for(const [name,html] of [['ingreso-escuela.html',admission],['portal-escuela.html',school]]){
