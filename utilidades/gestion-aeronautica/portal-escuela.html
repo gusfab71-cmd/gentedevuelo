@@ -133,7 +133,7 @@ try{
  el('actorLine').textContent='Cuenta: '+(user.email||'verificada en Supabase');
  el('schoolKind').textContent='Tipo: '+({escuela:'Escuela de vuelo',aeroclub:'Aeroclub',aerodromo:'Aeródromo'}[school.institution_kind]||school.institution_kind);
  el('schoolRole').textContent='Rol: '+school.my_role;
- el('schoolPlan').textContent='Plan: '+school.plan;
+ el('schoolPlan').textContent='Plan: '+({essential:'Essential',pro:'Pro'}[school.plan]||'Consultar con AeroSuite');
  const until=school.expires_at?new Date(school.expires_at).toLocaleDateString('es-AR'):'sin fecha';
  el('schoolExpiry').textContent='Vencimiento: '+until;
  el('schoolAccessLine').textContent=school.can_access?'Acceso institucional vigente':'Institución sin licencia vigente';
