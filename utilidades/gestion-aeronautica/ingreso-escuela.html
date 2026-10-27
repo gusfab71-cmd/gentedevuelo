@@ -124,6 +124,7 @@ async function refresh(){
  user=result.error?null:result.data?.user||null;
  byId('signInPanel').hidden=!!user;
  byId('verifiedPanel').hidden=!user;
+ if(user){byId('registerPanel').hidden=true;if(byId('changePasswordForm').hidden)byId('recoveryPanel').hidden=true;}
  if(!user){setStatus('Ingresá con tu correo personal para verificar la invitación.');return}
  byId('accountEmail').textContent=user.email||'(sin correo)';
  const {data,error}=await db.rpc('aerosuite_my_institution_access');
