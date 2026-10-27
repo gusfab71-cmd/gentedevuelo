@@ -16,7 +16,9 @@ const reply=(origin:string|null,status:number,body:unknown)=>new Response(JSON.s
 });
 const esc=(value:string)=>value.replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]||ch));
 const roleLabels:Record<string,string>={administrador:"administrador",instructor:"instructor",alumno:"alumno"};
-const allowedStatus=(org:any)=>org?.status==="trial"&&Date.parse(org.trial_ends_at)>Date.now()
+// Invitaciones habilitadas durante la prueba y los 15 días de cortesía; nunca en modo consulta.
+const allowedStatus=(org:any)=>org?.status==="trial"&&Number.isFinite(Date.parse(org.trial_ends_at))
+ &&Date.parse(org.trial_ends_at)+15*24*60*60*1000>Date.now()
  ||org?.status==="active"&&Date.parse(org.license_ends_at)>Date.now();
 
 Deno.serve(async(req:Request)=>{
