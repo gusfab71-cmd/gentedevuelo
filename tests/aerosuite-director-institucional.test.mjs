@@ -127,7 +127,11 @@ assert.match(superadmin,/Su cuenta personal y los accesos a otras escuelas se co
 assert.match(superadmin,/15\*86400000/,'Cálculo de 15 días de cortesía para el listado');
 assert.doesNotMatch(school,/\.from\('aerosuite_institutions'\)/,'El portal no puede leer registros generales');
 assert.doesNotMatch(school,/\.from\('site_admins'\)/,'El portal no permite heredar Superadministración');
-assert.match(superadmin,/ingreso-escuela\.html\?institucion=/,'Panel central proporciona acceso a prueba');
+assert.doesNotMatch(superadmin,/entry\.textContent='Probar ingreso'/,'Sin acceso de prueba redundante por escuela');
+assert.doesNotMatch(superadmin,/btn\.textContent='Gestionar'/,'Sin botón Gestionar redundante en la tarjeta');
+assert.match(superadmin,/editIcon\.className='institution-edit'/,'La edición institucional se conserva como icono discreto');
+assert.match(superadmin,/editIcon\.addEventListener\('click',\(\)=>edit\(row\.id\)\)/,'El lápiz permite cambiar datos y licencia');
+assert.match(superadmin,/staffButton\.textContent='Gestionar cuentas'/,'Se conserva la gestión del personal');
 assert.match(superadmin,/sendDirectorInvite/,'Envío real del director desde Superadministrador');
 assert.match(superadmin,/last_sent_at/,'Diferenciar invitación creada del correo realmente enviado');
 assert.match(superadmin,/className='institution-card'/,'Cada institución tiene un recuadro propio');
