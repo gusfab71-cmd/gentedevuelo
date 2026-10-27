@@ -162,10 +162,11 @@ try{
  el('schoolExpiry').hidden=!isDirector;
  el('schoolAccessLine').hidden=!isDirector;
  el('subscriptionNotice').hidden=!isDirector;
- if(isDirector)el('schoolPlan').textContent='Plan: '+({essential:'Essential',pro:'Pro'}[school.plan]||'Consultar con AeroSuite');
+ const mode=school.access_mode;
+ if(isDirector){
+ el('schoolPlan').textContent='Plan: '+({essential:'Essential',pro:'Pro'}[school.plan]||'Consultar con AeroSuite');
  const until=school.expires_at?new Date(school.expires_at).toLocaleDateString('es-AR'):'sin fecha';
  el('schoolExpiry').textContent=school.license_status==='trial'?'Fin de la prueba: '+until:'Vencimiento: '+until;
- const mode=school.access_mode;
  const view=el('subscriptionNotice');
  const extra=school.grace_ends_at?new Date(school.grace_ends_at).toLocaleDateString('es-AR'):'';
  view.className='subscription-notice '+(mode==='grace'?'grace':mode==='read_only'?'readonly':'active');
@@ -181,6 +182,10 @@ try{
  }else{
    el('schoolAccessLine').textContent='Licencia activa';
    view.textContent='Tu licencia institucional está vigente hasta el '+until+'. La facturación mensual automática todavía no está implementada.';
+ }
+
+ }else{
+   for(const key of ['schoolPlan','schoolExpiry','schoolAccessLine','subscriptionNotice'])el(key).textContent='';
  }
  if(isDirector){
    el('directorPeoplePanel').hidden=false;
