@@ -22,6 +22,11 @@ p{color:#c2d3dd;line-height:1.6}
 .tile{background:#1c394d;border:1px solid #537993;padding:21px;border-radius:13px;min-height:150px}
 .tile h3{font-size:15px;margin:0 0 10px}.tile p{font-size:12px;margin:0 0 14px}
 .pill{font-size:10px;font-weight:850;color:#eecda1;border:1px solid #987b54;background:#433b31;padding:5px 9px;border-radius:999px}
+.subscription-notice{border:1px solid #809bb1;background:#243f53;border-radius:12px;padding:15px 17px;margin-top:14px;font-size:13px;line-height:1.55;color:#eff7fb}
+.subscription-notice strong{display:block;font-size:14px;margin-bottom:4px}
+.subscription-notice.grace{border-color:#c6a77a;background:#483e30}
+.subscription-notice.readonly{border-color:#92a4b2;background:#303b46}
+.subscription-notice.active{border-color:#76a692;background:#21453d}
 button{cursor:pointer;border:1px solid #7193a9;border-radius:9px;padding:11px 14px;font:inherit;font-size:13px;color:#edf7ff;background:#304e64}
 button:disabled{opacity:.6;cursor:not-allowed}
 label{display:grid;gap:7px;font-size:12px;color:#e2eff8}
@@ -59,6 +64,7 @@ input[type=email]{width:100%;background:#122737;border:1px solid #7394aa;border-
     <span id="schoolExpiry">—</span>
    </div>
    <p id="schoolAccessLine" style="font-weight:750"></p>
+   <div id="subscriptionNotice" class="subscription-notice" role="status" aria-live="polite"></div>
   </section>
   <h2>Áreas disponibles para tu rol</h2>
   <div class="metrics">
@@ -107,7 +113,7 @@ try{
   return;
  }
  el('signOutButton').hidden=false;
- const access=await client.rpc('aerosuite_my_institution_access');
+ const access=await client.rpc('aerosuite_my_institution_access_v2');
  if(access.error)throw access.error;
  data=access.data||[];
  const queryId=new URLSearchParams(location.search).get('institucion');
@@ -120,7 +126,7 @@ try{
   return;
  }
  if(!school.can_access){
-  message.textContent='Esta institución no tiene una licencia vigente. Consultá a su administrador.';
+  message.textContent='El servicio de esta institución está suspendido. Consultá al Superadministrador de AeroSuite.';
   return;
  }
  el('schoolArea').hidden=false;
@@ -135,9 +141,25 @@ try{
  el('schoolRole').textContent='Rol: '+school.my_role;
  el('schoolPlan').textContent='Plan: '+({essential:'Essential',pro:'Pro'}[school.plan]||'Consultar con AeroSuite');
  const until=school.expires_at?new Date(school.expires_at).toLocaleDateString('es-AR'):'sin fecha';
- el('schoolExpiry').textContent='Vencimiento: '+until;
- el('schoolAccessLine').textContent=school.can_access?'Acceso institucional vigente':'Institución sin licencia vigente';
- if(school.my_role==='administrador'&&school.can_access){
+ el('schoolExpiry').textContent=school.license_status==='trial'?'Fin de la prueba: '+until:'Vencimiento: '+until;
+ const mode=school.access_mode;
+ const view=el('subscriptionNotice');
+ const extra=school.grace_ends_at?new Date(school.grace_ends_at).toLocaleDateString('es-AR'):'';
+ view.className='subscription-notice '+(mode==='grace'?'grace':mode==='read_only'?'readonly':'active');
+ if(mode==='trial'){
+   el('schoolAccessLine').textContent='Prueba gratuita de 30 días';
+   view.textContent='Tenés acceso a tu plan durante la prueba gratuita. Antes de su vencimiento podrás contratar voluntariamente Essential o Pro. No habrá cargos automáticos.';
+ }else if(mode==='grace'){
+   el('schoolAccessLine').textContent='Período de cortesía: 15 días adicionales';
+   view.textContent='La prueba terminó, pero tu escuela sigue habilitada durante 15 días adicionales, hasta el '+extra+'. Podrás contratar sin interrumpir el servicio. No se genera ningún cargo automático.';
+ }else if(mode==='read_only'){
+   el('schoolAccessLine').textContent='Modo consulta · Datos conservados';
+   view.innerHTML='<strong>Período gratuito y cortesía finalizados</strong>El acceso de consulta permanece disponible, pero no se pueden crear nuevas reservas, invitar personas ni modificar datos institucionales. La información sigue conservada. La exportación de datos se incorporará cuando los módulos estén implementados.';
+ }else{
+   el('schoolAccessLine').textContent='Licencia activa';
+   view.textContent='Tu licencia institucional está vigente hasta el '+until+'. La facturación mensual automática todavía no está implementada.';
+ }
+ if(school.my_role==='administrador'&&school.can_write){
    el('directorInvitePanel').hidden=false;
    el('instituteInviteForm').addEventListener('submit',async ev=>{
      ev.preventDefault();
@@ -160,7 +182,9 @@ try{
    });
  }
 
- message.textContent='Identidad, institución y rol «'+school.my_role+'» verificados. Las áreas de otros roles permanecen ocultas.';
+ message.textContent=mode==='read_only'?
+  'Acceso de consulta habilitado. Se conserva la información; las operaciones y nuevas invitaciones permanecen deshabilitadas.':
+  'Identidad, institución y rol «'+school.my_role+'» verificados. Las áreas de otros roles permanecen ocultas.';
 }catch(err){message.textContent='No se pudo verificar el permiso de la escuela: '+(err?.message||'Error de servidor');}
 el('signOutButton').addEventListener('click',async()=>{
  const r=await client.auth.signOut();
