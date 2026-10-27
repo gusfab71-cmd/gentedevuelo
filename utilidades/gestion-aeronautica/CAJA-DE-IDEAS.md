@@ -62,6 +62,14 @@ Este es el registro central de las decisiones, ideas y pendientes tratados para 
 - **PRUEBA DE 30 DÍAS:** no es un tercer plan sino un **estado de licencia** disponible para cualquiera de los dos planes. No hay conversión automática a pago.
 - **PENDIENTE DE DEFINIR:** beneficios y precios definitivos de Essential y Pro; los modelos de costos preliminares no se toman como tarifa aprobada y no se modificaron en esta decisión.
 
+### Alta institucional directamente en prueba gratuita — 27/10/2026
+
+- **DECISIÓN APROBADA:** cualquier escuela de vuelo, aeroclub o aeródromo nuevo entra **siempre** con **30 días de prueba gratuita** desde el momento del alta. El estado intermedio «Pendiente de habilitación» se elimina por innecesario. No es un tercer plan: la institución se registra con el plan comercial **Essential** o **Pro**.
+- **IMPLEMENTADO EN SUPERADMINISTRACIÓN:** el formulario de alta ya no permite elegir el estado; explica que la prueba comienza automáticamente y guarda `status='trial'`. La institución aparece inmediatamente como **Prueba** con vencimiento. En su propia tarjeta se pulsa **«Enviar invitación al director»**; el correo no se dispara automáticamente sin confirmación.
+- **IMPLEMENTADO EN SUPABASE:** valor predeterminado de `status` = `trial`. El trigger fuerza `trial` en toda creación y calcula `trial_started_at` y `trial_ends_at` exactamente a 30 días, aunque un cliente antiguo intente insertar `pending` o `active`. La restricción SQL elimina el estado `pending` en las actualizaciones. Las fechas originales de prueba son inmutables tras el alta, de manera que ni la suspensión ni una edición reinician el mes gratuito.
+- **GESTIÓN POSTERIOR:** solo el Superadministrador puede editar el estado de una institución existente para dejarla en prueba, activar licencia de pago con vencimiento, suspenderla o marcarla vencida. La licencia no se convierte automáticamente en paga. Si el correo de invitación no llega, se reintenta desde la tarjeta sin cambiar la prueba.
+- **VERIFICACIÓN:** comprobación transaccional en Supabase (ROLLBACK): alta enviada como `pending` fue registrada como `trial` de 30 días; se bloqueó modificar fechas o volver al estado pendiente, y suspender no prorrogó la prueba. No se generaron instituciones de ensayo permanentes.
+
 ## 1. Visión, marca e integración con Gente de Vuelo
 
 - **APROBADO:** el nombre del producto es **AeroSuite** con firma **By Gente de Vuelo**. Su identidad: A aerodinámica, colores azul aeronáutico/plata, base azul oscuro, estilo moderno y premium. Verificación legal de marca/dominio pendiente.
