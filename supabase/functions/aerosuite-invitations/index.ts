@@ -95,7 +95,14 @@ Deno.serve(async(req:Request)=>{
     .update({expires_at:new Date(Date.now()+7*86400000).toISOString()}).eq("id",inviteId);
   if(renew.error)return reply(origin,503,{error:"No se pudo renovar la invitación."});
  }
- const link="https://gentedevuelo.com/utilidades/gestion-aeronautica/ingreso-escuela.html?institucion="+encodeURIComponent(id)+"&rol="+encodeURIComponent(role);
+ // Supabase Auth verifica la titularidad del correo mediante un vínculo personal de un solo uso.
+ // NO se envía un enlace público con solo institución y rol: eso exigiría un segundo correo de verificación.
+ const generated=await db.auth.admin.generateLink({type:"magiclink",email});
+ if(generated.error||!generated.data?.properties?.hashed_token)
+  return reply(origin,503,{error:"No se pudo generar un enlace de verificación personal. Reintentá desde el panel."});
+ const tokenHash=generated.data.properties.hashed_token;
+ const link="https://gentedevuelo.com/utilidades/gestion-aeronautica/ingreso-escuela.html?institucion="+encodeURIComponent(id)+
+   "&rol="+encodeURIComponent(role)+"#token_hash="+encodeURIComponent(tokenHash)+"&type=magiclink";
  const subject="Invitación a AeroSuite · "+String(org.name).slice(0,80);
  const safeName=esc(String(org.name));
  const safeLabel=esc(roleLabels[role]);
@@ -104,15 +111,15 @@ Deno.serve(async(req:Request)=>{
  +'<div style="padding:28px;background:#152d47;color:#fff"><strong style="font-size:25px">AeroSuite</strong><div style="font-size:11px;letter-spacing:2px;color:#9bd2f1;margin-top:7px">BY GENTE DE VUELO</div></div>'
  +'<div style="padding:28px"><h1 style="font-size:23px;margin:0 0 15px">Invitación institucional</h1>'
  +'<p>Fuiste invitado para crear una cuenta en <strong>AeroSuite de Gente de Vuelo</strong> como <strong>'+safeLabel+'</strong> de <strong>'+safeName+'</strong>.</p>'
- +'<p>Accedé directamente a AeroSuite con el enlace. Completá tus propios datos de usuario y creá una contraseña segura. Si ya tenés cuenta con ese correo, ingresá con tu contraseña existente.</p>'
+ +'<p>El botón confirma que sos el destinatario de esta invitación. Después podrás crear tu contraseña e ingresar directamente al portal sin un segundo correo ni volver a escribir usuario y clave.</p>'
  +'<p style="margin:26px 0"><a href="'+link+'" style="background:#255a85;color:#fff;text-decoration:none;padding:13px 20px;border-radius:9px;font-weight:700">Ingresar a AeroSuite</a></p>'
- +'<p>La invitación vence en 7 días. Solo la cuenta verificada de este correo podrá aceptarla.</p>'
+ +'<p>El enlace es personal, de un solo uso y de duración limitada. Si vence, solicitá una nueva invitación. El permiso institucional tiene una vigencia máxima de 7 días.</p>'
  +'<p style="font-size:12px;color:#637686">Nunca solicitaremos tu DNI como contraseña. No compartas claves ni códigos de acceso.</p>'
  +'</div><div style="padding:17px 28px;background:#edf3f9;color:#657787;font-size:12px">AeroSuite · By Gente de Vuelo</div></div></body></html>';
  const plain="Invitación institucional AeroSuite\n\nFuiste invitado para crear una cuenta en AeroSuite de Gente de Vuelo como "+roleLabels[role]+
    " de "+org.name+".\n\nIngresá directamente a AeroSuite: "+link+
-   "\n\nCompletá tu propio correo y creá una contraseña segura. Si ya tenés una cuenta, usá su contraseña vigente."+
-   "\n\nLa invitación vence en 7 días. Nunca uses tu DNI como contraseña.";
+   "\n\nEl enlace es personal y verifica tu correo en un paso. Desde AeroSuite podrás establecer la contraseña e ingresar sin un segundo correo."+
+   "\n\nEl enlace es de un solo uso y puede vencer antes que la invitación institucional (7 días). Si vence, solicitá que te lo reenvíen. Nunca uses tu DNI como contraseña.";
  try{
   const remote=await fetch("https://api.resend.com/emails",{method:"POST",
    headers:{"Authorization":"Bearer "+key,"Content-Type":"application/json"},
