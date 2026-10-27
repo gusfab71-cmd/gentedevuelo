@@ -29,6 +29,12 @@ assert.match(admission,/data-password-target="password"/,'Ojito del ingreso');
 assert.match(admission,/data-password-target="signupPassword"/,'Ojito de contraseña nueva');
 assert.match(admission,/data-password-target="signupRepeat"/,'Ojito de confirmación de contraseña');
 assert.match(admission,/data-password-target="newPassword"/,'Ojito de recuperación de contraseña');
+assert.match(admission,/id="showConfirmationFromLogin"/,'Acceso a verificar correo también desde pantalla de inicio');
+assert.match(admission,/id="confirmationEmail"/,'Reenvío de confirmación a dirección elegida');
+assert.match(admission,/authenticationError\.has\('error_code'\)/,'Manejo de enlace de verificación caducado');
+assert.match(admission,/El enlace de confirmación no pudo completarse o venció/,'Error explicado al usuario');
+assert.match(admission,/no hace falta volver a crearla ni ingresarla de nuevo/i,'Explicar que no se repite la contraseña');
+
 assert.match(admission,/aria-pressed/,'Control indica estado visible');
 assert.match(admission,/input\.type=isVisible\?'text':'password'/,'Botón alterna ocultar y mostrar caracteres');
 
