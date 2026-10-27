@@ -18,6 +18,9 @@ assert.match(admission,/\.rpc\('aerosuite_accept_my_invitation'/,'Los enlaces an
 assert.match(admission,/p_institution_id:schoolId/,'Invitación atada al identificador institucional');
 assert.match(admission,/\.rpc\('aerosuite_my_institution_access_v2'/,'Ingreso consulta los derechos de cortesía y solo lectura');
 assert.match(emailSender,/auth\.admin\.generateLink\(\{type:"magiclink",email\}\)/,'La invitación verifica identidad con Magic Link personal');
+assert.match(emailSender,/\.is\("revoked_at",null\)\.limit\(1\)/,'Una invitación aceptada que fue revocada no impide invitar nuevamente');
+assert.match(admission,/Necesito una invitación nueva/,'El ingreso anterior no induce a usar registro con segundo correo');
+assert.match(admission,/una invitación nueva/,'Enlace sin token remite al director para reenvío');
 assert.match(emailSender,/properties\?\.hashed_token/,'Se toma únicamente el token hash emitido por Supabase');
 assert.match(emailSender,/#token_hash=/,'Token en fragmento para evitar enviarlo por HTTP al servidor web');
 assert.match(emailSender,/roleLabels\[role\]/,'Misma invitación para administrador, instructor y alumno');
@@ -71,6 +74,21 @@ assert.match(admission,/emailRedirectTo:activationUrl/,'La verificación retorna
 assert.match(admission,/sesión institucional separada/i,'El ingreso no requiere incógnito gracias a las sesiones aisladas');
 
 assert.match(school,/\.rpc\('aerosuite_my_institution_access_v2'/,'Portal solo lee instituciones autorizadas y estado de suscripción');
+assert.match(school,/const isDirector=school\.my_role==='administrador'/,'Solo director visualiza sección comercial');
+assert.match(school,/el\('schoolPlan'\)\.hidden=!isDirector/,'Plan no visible para instructor y alumno');
+assert.match(school,/el\('schoolExpiry'\)\.hidden=!isDirector/,'Fecha de vencimiento oculta para roles operativos');
+assert.match(school,/el\('schoolAccessLine'\)\.hidden=!isDirector/,'Estado comercial oculto para staff');
+assert.match(school,/el\('subscriptionNotice'\)\.hidden=!isDirector/,'Avisos comerciales solo del director');
+assert.match(school,/id="directorPeoplePanel" hidden/,'Panel exclusivo de integrantes');
+assert.match(school,/id="peopleList"/,'Listado de instructores y alumnos');
+assert.match(school,/\.rpc\('aerosuite_director_people'/,'El listado está validado por RPC');
+assert.match(school,/\.rpc\('aerosuite_director_remove_person'/,'El director puede desvincular personas');
+assert.match(school,/p_institution_id:school\.institution_id/,'Las bajas indican explícitamente la escuela');
+assert.match(school,/p_person_id:person\.person_id,p_kind:person\.kind/,'Las bajas indican miembro o invitación');
+assert.match(school,/person\.kind==='integrante'\?'Desvincular':'Cancelar invitación'/,'El director puede cancelar invitaciones y desvincular cuentas');
+assert.match(school,/if\(school\.can_write\)/,'Modo consulta no admite bajas');
+assert.match(school,/window\.confirm\(msg\)/,'Una confirmación para dar de baja');
+assert.match(school,/La cuenta personal no se elimina/i,'Dar de baja conserva la identidad global');
 assert.match(school,/institution_id===queryId/,'Consulta coincidencia institución');
 assert.match(school,/school\.my_role==='administrador'&&school\.can_write/,'Solo el director con derecho a operar puede invitar');
 assert.match(school,/storageKey:'aerosuite-institucional-v2-auth'/,'El portal comparte únicamente la sesión institucional');
