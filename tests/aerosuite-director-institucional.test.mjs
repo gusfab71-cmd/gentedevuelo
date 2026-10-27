@@ -26,7 +26,7 @@ assert.match(admission,/showPanel\('registerPanel'\)/,'La invitación empieza co
 assert.match(admission,/location\.replace\(portalUrl\)/,'El ingreso confirmado abre directamente el portal del rol');
 assert.match(admission,/normalizeError\(error\)/,'Mensaje útil para credenciales incorrectas');
 assert.match(admission,/emailRedirectTo:activationUrl/,'La verificación retorna a AeroSuite');
-assert.match(admission,/ventana de incógnito/);
+assert.match(admission,/sesión institucional separada/i,'El ingreso no requiere incógnito gracias a las sesiones aisladas');
 
 assert.match(school,/\.rpc\('aerosuite_my_institution_access'/,'Portal solo lee instituciones autorizadas');
 assert.match(school,/institution_id===queryId/,'Consulta coincidencia institución');
