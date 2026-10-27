@@ -35,6 +35,10 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
 .institution-card{min-width:0;display:flex;flex-direction:column;gap:13px;padding:18px;border:1px solid #5a7890;border-radius:15px;background:linear-gradient(145deg,#233e52,#172d3f);box-shadow:0 10px 25px #06131f45}
 .institution-card-header{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
 .institution-card h3{margin:0;font-size:17px;line-height:1.32;color:#eff8ff;overflow-wrap:anywhere}
+.institution-name-row{display:flex;gap:8px;align-items:center}
+.institution-edit{min-width:32px;min-height:32px;padding:5px;border:1px solid #6b8a9b;background:transparent;border-radius:8px;display:inline-flex;justify-content:center;align-items:center;color:#b9d9e9;flex-shrink:0}
+.institution-edit:hover{background:#34566d;color:#fff}
+.institution-edit svg{display:block;width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .institution-type{font-size:11px;color:#b0ccdc;margin-top:5px}
 .institution-details{display:grid;grid-template-columns:minmax(90px,1fr) minmax(0,1.6fr);gap:9px 10px;margin:0;padding:12px 0;border-top:1px solid #49657a;border-bottom:1px solid #49657a;font-size:12px}
 .institution-details dt{color:#afc9d9}
@@ -190,7 +194,15 @@ async function reload(){
   const heading=document.createElement('div');
   const title=document.createElement('h3');title.textContent=row.name;
   const type=document.createElement('div');type.className='institution-type';type.textContent=kindText[row.kind]||row.kind;
-  heading.append(title,type);
+  const nameRow=document.createElement('div');nameRow.className='institution-name-row';
+  const editIcon=document.createElement('button');
+  editIcon.type='button';editIcon.className='institution-edit';
+  editIcon.setAttribute('aria-label','Editar datos y licencia de '+row.name);
+  editIcon.title='Editar los datos y la licencia de esta institución';
+  editIcon.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m16 5 3 3M4 20l4.5-.8L20 7.7a2.1 2.1 0 0 0-3-3L5.5 16.2 4 20Z"/></svg>';
+  editIcon.addEventListener('click',()=>edit(row.id));
+  nameRow.append(title,editIcon);
+  heading.append(nameRow,type);
   const state=effective(row);
   const badge=document.createElement('span');badge.className='status '+state.key;badge.textContent=state.label;
   header.append(heading,badge);card.append(header);
@@ -223,13 +235,6 @@ async function reload(){
    }
   }
   const actions=document.createElement('div');actions.className='institution-actions';
-  const btn=document.createElement('button');btn.type='button';btn.textContent='Gestionar';
-  btn.addEventListener('click',()=>edit(row.id));actions.append(btn);
-  const entry=document.createElement('a');
-  entry.href='ingreso-escuela.html?institucion='+encodeURIComponent(row.id);
-  entry.textContent='Probar ingreso';
-  entry.title='Abrir en incógnito con el correo autorizado de la institución';
-  actions.append(entry);
   const staffButton=document.createElement('button');
   staffButton.type='button';staffButton.textContent='Gestionar cuentas';staffButton.className='full staff-button';
   staffButton.title='Ver instructores, alumnos e invitaciones y desvincular el acceso de esta institución';
