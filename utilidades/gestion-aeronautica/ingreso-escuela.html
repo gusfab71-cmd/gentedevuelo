@@ -55,8 +55,25 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
  <h1 id="inviteTitle">Crear cuenta o ingresar a AeroSuite</h1>
  <div class="grid">
  <div>
-  <p>Fuiste invitado a utilizar <strong>AeroSuite de Gente de Vuelo</strong>. Creá una cuenta con el correo que recibió la invitación y elegí tu propia contraseña. Si ya tenés cuenta, ingresá con ella.</p>
-  <div class="notice">La invitación solo puede aceptarla una cuenta autenticada y con correo verificado que coincida con la dirección autorizada. Ninguna clave se comparte con AeroSuite.</div>
+  <p>Fuiste invitado a utilizar <strong>AeroSuite de Gente de Vuelo</strong>. Abrí el enlace personal recibido por correo, elegí tu contraseña y entrá directamente al portal correspondiente a tu rol.</p>
+  <div class="notice">El correo de invitación nuevo verifica tu identidad con un enlace de un solo uso. No se envía una segunda verificación y nunca utilizamos tu DNI como contraseña.</div>
+  <section class="panel" id="welcomePanel" hidden>
+    <h2>Creá tu contraseña para AeroSuite</h2>
+    <p>Ya confirmamos que este enlace pertenece al correo <strong id="inviteEmail">—</strong>. Elegí tu contraseña para completar el ingreso; no necesitás otro correo ni volver a ingresar tus datos.</p>
+    <form id="welcomeForm" autocomplete="off">
+      <label>Nueva contraseña
+       <span class="password-wrap"><input id="welcomePassword" type="password" name="aero-password-new" autocomplete="new-password" required minlength="10"><button type="button" class="password-eye" data-password-target="welcomePassword" aria-label="Mostrar contraseña" aria-pressed="false" title="Mostrar contraseña"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.7-7 10-7 10 7 10 7-3.7 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/><path class="eye-slash" d="M3 3l18 18"/></svg></button></span>
+      </label>
+      <label>Repetí tu contraseña
+       <span class="password-wrap"><input id="welcomeRepeat" type="password" name="aero-password-confirm" autocomplete="new-password" required minlength="10"><button type="button" class="password-eye" data-password-target="welcomeRepeat" aria-label="Mostrar contraseña" aria-pressed="false" title="Mostrar contraseña"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.7-7 10-7 10 7 10 7-3.7 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/><path class="eye-slash" d="M3 3l18 18"/></svg></button></span>
+      </label>
+      <p class="caption">Al menos 10 caracteres, incluyendo mayúscula, minúscula, número y símbolo. No utilices tu DNI.</p>
+      <div class="actions">
+       <button type="submit" id="welcomeButton" class="primary">Crear contraseña e ingresar al portal</button>
+       <button type="button" id="existingAccountButton">Ya tengo contraseña · Continuar sin cambiarla</button>
+      </div>
+    </form>
+  </section>
   <section class="panel" id="signInPanel" hidden>
     <h2>¿Ya tenés cuenta? Ingresá</h2>
     <form id="loginForm" autocomplete="off">
@@ -129,6 +146,9 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
  const byId=id=>document.getElementById(id);
  const setStatus=message=>{byId('status').textContent=message};
  const query=new URLSearchParams(location.search);
+ const oneTimeHash=new URLSearchParams(location.hash.slice(1));
+ const oneTimeToken=oneTimeHash.get('token_hash');
+ const oneTimeType=oneTimeHash.get('type');
  const schoolId=query.get('institucion');
  const selectedRole=query.get('rol')||'';
  const roles={administrador:'administrador',instructor:'instructor',alumno:'alumno'};
@@ -173,9 +193,9 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
  window.addEventListener('pageshow',event=>{
   if(event.persisted){for(const id of ['password','signupPassword','signupRepeat'])byId(id).value=''}
  });
- let user=null,processing=false,recovering=false,lastSignupEmail='';
+ let user=null,processing=false,recovering=false,lastSignupEmail='',holdMagicFlow=Boolean(oneTimeToken),passwordSetupRequired=false;
  const showPanel=panel=>{
-  for(const id of ['signInPanel','registerPanel','confirmationPanel','recoveryPanel','verifiedPanel'])
+  for(const id of ['welcomePanel','signInPanel','registerPanel','confirmationPanel','recoveryPanel','verifiedPanel'])
    byId(id).hidden=id!==panel;
  };
  const normalizeError=error=>{
@@ -190,6 +210,11 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
   if(processing||recovering)return;
   processing=true;
   try{
+   if(passwordSetupRequired){
+    showPanel('welcomePanel');
+    setStatus('Tu correo ya fue verificado con la invitación. Creá tu contraseña para entrar directamente al portal.');
+    return;
+   }
    const {data:auth,error:authError}=await db.auth.getUser();
    user=authError?null:auth?.user||null;
    if(!user){
@@ -227,6 +252,34 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
    setStatus('No se pudo completar la activación: '+normalizeError(error)+'. Si tenés otra cuenta abierta, usá «Cambiar de cuenta».');
   }finally{processing=false}
  }
+ byId('welcomeForm').addEventListener('submit',async event=>{
+  event.preventDefault();
+  const password=byId('welcomePassword').value;
+  const repeat=byId('welcomeRepeat').value;
+  if(!validPassword(password)){
+   setStatus('La contraseña debe tener 10 caracteres como mínimo, mayúscula, minúscula, número y símbolo.');return;
+  }
+  if(password!==repeat){setStatus('Las contraseñas no coinciden.');return}
+  const button=byId('welcomeButton');button.disabled=true;
+  setStatus('Guardando tu contraseña segura…');
+  try{
+   const {data,error}=await db.auth.updateUser({password});
+   if(error)throw error;
+   if(!data?.user)throw Error('No se confirmó la actualización de la contraseña.');
+   byId('welcomeForm').reset();
+   passwordSetupRequired=false;
+   setStatus('Contraseña creada. Activando tu rol institucional…');
+   await verifyAndEnter();
+  }catch(error){
+   setStatus('No se pudo guardar la contraseña: '+normalizeError(error)+'. Mantené esta pantalla abierta y reintentá.');
+  }finally{button.disabled=false}
+ });
+ byId('existingAccountButton').addEventListener('click',async()=>{
+  // Evitar reemplazar la contraseña de una cuenta personal que ya existía.
+  passwordSetupRequired=false;
+  setStatus('Conservamos tu contraseña actual. Comprobando tu acceso institucional…');
+  await verifyAndEnter();
+ });
  byId('showRegister').addEventListener('click',()=>{showPanel('registerPanel');setStatus('Creá una contraseña personal distinta de la del administrador.')});
  byId('backLogin').addEventListener('click',()=>{showPanel('signInPanel');setStatus('Ingresá con tu correo y tu contraseña existente.')});
  byId('showConfirmationFromLogin').addEventListener('click',()=>{
@@ -316,7 +369,7 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
    recovering=true;showPanel('recoveryPanel');
    byId('forgotForm').hidden=true;byId('changePasswordForm').hidden=false;
    setStatus('Elegí y confirmá tu nueva contraseña.');
-  }else if(event==='SIGNED_IN'&&!recovering){
+  }else if(event==='SIGNED_IN'&&!recovering&&!holdMagicFlow&&!passwordSetupRequired){
    setTimeout(()=>{void verifyAndEnter()},0);
   }
  });
@@ -339,7 +392,32 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
  });
  byId('acceptButton').addEventListener('click',()=>void verifyAndEnter());
  const authenticationError=new URLSearchParams(location.hash.slice(1));
- if(authenticationError.has('error_code')||authenticationError.has('error_description')){
+ if(oneTimeToken){
+  if(oneTimeType!=='magiclink'){
+   holdMagicFlow=false;
+   showPanel('signInPanel');
+   setStatus('El formato del enlace de invitación es inválido. Pedí una nueva invitación desde AeroSuite.');
+  }else{
+   // El fragmento se retira de la barra del navegador, nunca de datos persistentes o registros.
+   history.replaceState(null,'',location.pathname+location.search);
+   setStatus('Verificando el enlace personal de invitación…');
+   try{
+    const {data,error}=await db.auth.verifyOtp({token_hash:oneTimeToken,type:'magiclink'});
+    if(error)throw error;
+    if(!data?.session||!data?.user?.email)throw Error('La verificación no devolvió una sesión válida.');
+    user=data.user;
+    holdMagicFlow=false;
+    passwordSetupRequired=true;
+    byId('inviteEmail').textContent=data.user.email;
+    showPanel('welcomePanel');
+    setStatus('¡Correo verificado! Elegí y confirmá tu contraseña para ingresar directamente como '+humanRole+'.');
+   }catch(error){
+    holdMagicFlow=false;
+    showPanel('signInPanel');
+    setStatus('El enlace de un solo uso ya venció, fue utilizado o no pudo verificarse: '+normalizeError(error)+'. Solicitá al responsable una nueva invitación o ingresá con tu contraseña si ya tenés cuenta.');
+   }
+  }
+ }else if(authenticationError.has('error_code')||authenticationError.has('error_description')){
   showPanel('confirmationPanel');
   setStatus('El enlace de confirmación no pudo completarse o venció. Solicitá otro con «Reenviar confirmación».');
  }else{
