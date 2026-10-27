@@ -223,9 +223,9 @@ try{
              if(!window.confirm(msg))return;
              remove.disabled=true;listFeedback.textContent='Guardando la baja…';
              try{
-               const {data,error}=await client.rpc('aerosuite_director_remove_person',{
+               const {data,error}=await client.rpc('aerosuite_manage_staff_remove',{
                  p_institution_id:school.institution_id,
-                 p_person_id:person.person_id,p_kind:person.kind
+                 p_person_id:person.person_id,p_kind:person.kind,p_role:person.role
                });
                if(error)throw error;
                if(!data?.ok)throw Error('No se confirmó la baja.');
