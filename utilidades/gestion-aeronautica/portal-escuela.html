@@ -60,12 +60,16 @@ input[type=email]{width:100%;background:#122737;border:1px solid #7394aa;border-
    </div>
    <p id="schoolAccessLine" style="font-weight:750"></p>
   </section>
-  <h2>Áreas de la escuela</h2>
+  <h2>Áreas disponibles para tu rol</h2>
   <div class="metrics">
-   <section class="tile"><h3>Reservas y vuelos</h3><p>Agenda institucional y actividad operativa.</p><span class="pill">Pendiente de integración segura</span></section>
-   <section class="tile"><h3>Alumnos e instructores</h3><p>Usuarios y documentación exclusiva de la escuela.</p><span class="pill">Pendiente de integración segura</span></section>
-   <section class="tile"><h3>Flota y mantenimiento</h3><p>Aeronaves, disponibilidad y seguimiento técnico.</p><span class="pill">Pendiente de integración segura</span></section>
-   <section class="tile"><h3>Academia Aeronáutica</h3><p>Biblioteca institucional y recursos didácticos.</p><span class="pill">Pendiente de integración segura</span></section>
+   <section class="tile" data-visible-role="administrador"><h3>Reservas y vuelos</h3><p>Agenda institucional y actividad operativa.</p><span class="pill">Pendiente de integración segura</span></section>
+   <section class="tile" data-visible-role="administrador"><h3>Alumnos e instructores</h3><p>Usuarios y documentación exclusiva de la escuela.</p><span class="pill">Pendiente de integración segura</span></section>
+   <section class="tile" data-visible-role="administrador"><h3>Flota y mantenimiento</h3><p>Aeronaves, disponibilidad y seguimiento técnico.</p><span class="pill">Pendiente de integración segura</span></section>
+   <section class="tile" data-visible-role="administrador"><h3>Academia Aeronáutica</h3><p>Biblioteca institucional y recursos didácticos.</p><span class="pill">Pendiente de integración segura</span></section>
+   <section class="tile" data-visible-role="instructor" hidden><h3>Mi actividad de instrucción</h3><p>Seguimiento de alumnos asignados a este instructor.</p><span class="pill">Pendiente de integración segura</span></section>
+   <section class="tile" data-visible-role="instructor" hidden><h3>Recursos para instructores</h3><p>Materiales docentes autorizados por la escuela.</p><span class="pill">Pendiente de integración segura</span></section>
+   <section class="tile" data-visible-role="alumno" hidden><h3>Mi formación aeronáutica</h3><p>Acceso futuro a Academia Aeronáutica y materiales del alumno.</p><span class="pill">Pendiente de integración segura</span></section>
+   <section class="tile" data-visible-role="alumno" hidden><h3>Mis reservas</h3><p>Consulta futura de los turnos y vuelos propios.</p><span class="pill">Pendiente de integración segura</span></section>
   </div>
   <section class="panel" id="directorInvitePanel" hidden>
    <span class="label">Gestión exclusiva del director</span>
@@ -91,7 +95,9 @@ input[type=email]{width:100%;background:#122737;border:1px solid #7394aa;border-
 'use strict';
 (async()=>{
 const el=id=>document.getElementById(id),message=el('message');
-const client=supabase.createClient(GDV_CONFIG.url,GDV_CONFIG.key);
+const client=supabase.createClient(GDV_CONFIG.url,GDV_CONFIG.key,{
+ auth:{storageKey:'aerosuite-institucional-v2-auth',persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}
+});
 let data;
 try{
  const result=await client.auth.getUser();
@@ -105,12 +111,24 @@ try{
  if(access.error)throw access.error;
  data=access.data||[];
  const queryId=new URLSearchParams(location.search).get('institucion');
- const school=queryId?data.find(x=>x.institution_id===queryId):data.find(x=>x.can_access&&x.my_role==='administrador');
+ const requestedRole=new URLSearchParams(location.search).get('rol');
+ const school=queryId?
+   data.find(x=>x.institution_id===queryId&&(!requestedRole||x.my_role===requestedRole)):
+   data.find(x=>x.can_access&&x.my_role==='administrador');
  if(!school){
-  message.textContent='Tu cuenta todavía no está asociada a una institución autorizada. Ingresá desde el enlace de invitación con el correo correspondiente.';
+  message.textContent='Tu cuenta no está asociada a esta escuela con el rol indicado. Ingresá desde tu invitación personal y verificá el correo; las cuentas de otra institución no tienen acceso.';
+  return;
+ }
+ if(!school.can_access){
+  message.textContent='Esta institución no tiene una licencia vigente. Consultá a su administrador.';
   return;
  }
  el('schoolArea').hidden=false;
+ const roleNames={administrador:'director / administrador',instructor:'instructor',alumno:'alumno'};
+ document.querySelector('h1').textContent='Portal del '+(roleNames[school.my_role]||'integrante');
+ for(const card of document.querySelectorAll('[data-visible-role]')){
+  card.hidden=card.dataset.visibleRole!==school.my_role;
+ }
  el('schoolName').textContent=school.institution_name;
  el('actorLine').textContent='Cuenta: '+(user.email||'verificada en Supabase');
  el('schoolKind').textContent='Tipo: '+({escuela:'Escuela de vuelo',aeroclub:'Aeroclub',aerodromo:'Aeródromo'}[school.institution_kind]||school.institution_kind);
@@ -142,12 +160,12 @@ try{
    });
  }
 
- message.textContent=school.can_access?'Identidad, institución y permiso verificados correctamente.':'El permiso figura asociado, pero la licencia está suspendida o vencida.';
+ message.textContent='Identidad, institución y rol «'+school.my_role+'» verificados. Las áreas de otros roles permanecen ocultas.';
 }catch(err){message.textContent='No se pudo verificar el permiso de la escuela: '+(err?.message||'Error de servidor');}
 el('signOutButton').addEventListener('click',async()=>{
  const r=await client.auth.signOut();
  if(r.error){message.textContent='No se pudo salir: '+r.error.message;return}
- location.replace('index.html');
+ location.replace('ingreso-escuela.html');
 });
 })();
 </script>
