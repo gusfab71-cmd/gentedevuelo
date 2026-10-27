@@ -17,7 +17,7 @@ p{color:#bdd0dd;line-height:1.5}.eyebrow{text-transform:uppercase;letter-spacing
 .notice{background:#26384a;border:1px solid #5c768b;border-radius:12px;padding:15px;margin:16px 0;font-size:13px;line-height:1.5;color:#e6f0f7}
 .layout{display:grid;grid-template-columns:minmax(300px,380px) minmax(0,1fr);gap:18px;align-items:start}
 .panel{background:#1b3041;border:1px solid #446075;border-radius:15px;padding:18px;margin-bottom:17px;min-width:0}
-.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:20px 0}
+.metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:20px 0}
 .metric{background:#1b3041;border:1px solid #46657b;border-radius:13px;padding:16px}
 .metric strong{display:block;color:#efd19e;font-size:28px}.metric span{color:#b3c7d5;font-size:12px}
 form{display:grid;gap:11px}label{display:grid;gap:5px;color:#d3e3ea;font-size:12px}
@@ -50,7 +50,11 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
 .institution-empty{padding:23px;border:1px dashed #627d90;border-radius:12px;color:#c4d8e5;font-size:13px}
 @media(max-width:440px){.institution-actions{grid-template-columns:1fr}.institution-actions .full,.institution-actions .danger{grid-column:1}}
 .status{border:1px solid #69899b;border-radius:100px;padding:4px 8px;white-space:nowrap;font-size:11px}
-.status.active{color:#b7f3d7;border-color:#469779}.status.trial{color:#f4dfab;border-color:#b99b63}.status.suspended,.status.expired{color:#ffd1bb;border-color:#ba856b}
+.status.active{color:#b7f3d7;border-color:#469779}
+.status.trial{color:#f4dfab;border-color:#b99b63}
+.status.grace{color:#ffe4af;border-color:#d2a66c}
+.status.readonly{color:#cedbe5;border-color:#93a6b7}
+.status.suspended,.status.expired{color:#ffd1bb;border-color:#ba856b}
 #feedback{min-height:25px;color:#eec995;font-size:13px}#accessMessage{font-size:14px}
 #recent{margin:0;padding-left:20px;color:#d2e1e9;font-size:12px;line-height:2}
 @media(max-width:850px){.layout{grid-template-columns:1fr}.metrics{grid-template-columns:repeat(2,1fr)}}
@@ -75,7 +79,9 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
 <div class="metrics" aria-label="Resumen de instituciones">
 <div class="metric"><strong id="totalCount">0</strong><span>Instituciones</span></div>
 <div class="metric"><strong id="activeCount">0</strong><span>Licencias activas</span></div>
-<div class="metric"><strong id="trialCount">0</strong><span>En período de prueba</span></div>
+<div class="metric"><strong id="trialCount">0</strong><span>Prueba gratuita</span></div>
+<div class="metric"><strong id="graceCount">0</strong><span>En cortesía (15 días)</span></div>
+<div class="metric"><strong id="readOnlyCount">0</strong><span>Solo consulta</span></div>
 <div class="metric"><strong id="pendingCount">0</strong><span>Suspendidas / vencidas</span></div>
 </div>
 <div class="layout">
@@ -92,7 +98,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
 <label id="statusEditLabel" hidden>Estado de licencia <select name="status" id="statusField"><option value="trial">Prueba gratuita (30 días)</option><option value="active">Licencia activa</option><option value="suspended">Suspendida</option><option value="expired">Vencida</option></select></label>
 <label id="licenseEndLabel" hidden>Vencimiento de la licencia * <input name="license_ends_date" id="licenseEnd" type="date"></label>
 <label>Observaciones internas <textarea name="notes" maxlength="3000"></textarea></label>
-<p class="muted">Los 30 días comienzan al registrar la institución. La prueba no se renueva automáticamente ni se convierte en licencia paga. Solo el Superadministrador puede cambiar el estado posteriormente.</p>
+<p class="muted">La prueba comienza al registrar la institución. Al vencer los 30 días, siguen 15 días de cortesía y luego solo consulta. Sin contratación expresa no se cobra nada ni se pierden datos.</p>
 <div class="actions"><button class="primary" id="saveButton" type="submit">Registrar institución</button><button type="button" id="cancelEdit" hidden>Cancelar edición</button></div>
 <div id="feedback" role="status" aria-live="polite"></div>
 </form>
@@ -102,7 +108,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
 <h2>Instituciones registradas</h2>
 <div id="listFeedback" role="status" aria-live="polite"></div>
 <div class="institution-grid" id="institutionsBody" aria-live="polite"><div class="institution-empty">Cargando instituciones…</div></div>
-<p class="muted">Todas las instituciones comienzan con una prueba gratuita de 30 días. El correo al director se envía desde su tarjeta cuando pulses «Enviar invitación al director». Si falla, podrás reintentarlo sin reiniciar la prueba. «Eliminar» requiere una confirmación y no borra las cuentas personales.</p>
+<p class="muted">Cada institución tiene 30 días gratis y 15 días adicionales de cortesía con acceso operativo. Desde el día 46 permanece en modo consulta, conservando sus datos. Solo se facturará cuando el cliente contrate expresamente; los cobros y los recordatorios automáticos aún no están conectados. El correo al director se envía desde su tarjeta y puede reenviarse durante la cortesía.</p>
 </section>
 <section class="panel"><h2>Actividad reciente</h2><ol id="recent"><li>Sin operaciones registradas.</li></ol></section>
 </div>
@@ -123,8 +129,15 @@ const planText={essential:'Essential',pro:'Pro'};
 const byId=id=>document.getElementById(id);
 const now=()=>Date.now();
 const effective=row=>{
- if(row.status==='trial'&&row.trial_ends_at&&Date.parse(row.trial_ends_at)<=now())return {key:'expired',label:'Prueba vencida'};
- if(row.status==='active'&&row.license_ends_at&&Date.parse(row.license_ends_at)<=now())return {key:'expired',label:'Licencia vencida'};
+ if(row.status==='trial'&&row.trial_ends_at){
+   const end=Date.parse(row.trial_ends_at);
+   if(Number.isFinite(end)){
+     if(end<=now()&&end+15*86400000>now())return {key:'grace',label:'Cortesía (15 días)'};
+     if(end+15*86400000<=now())return {key:'readonly',label:'Solo consulta'};
+   }
+ }
+ if(row.status==='active'&&row.license_ends_at&&Date.parse(row.license_ends_at)<=now())
+   return {key:'readonly',label:'Licencia vencida · consulta'};
  return {key:row.status,label:statusText[row.status]||'Sin estado'};
 };
 const showError=err=>{feedback.textContent=err?.message||String(err)||'No se pudo completar la operación.'};
@@ -142,6 +155,8 @@ async function reload(){
  byId('totalCount').textContent=records.length;
  byId('activeCount').textContent=records.filter(r=>effective(r).key==='active').length;
  byId('trialCount').textContent=records.filter(r=>effective(r).key==='trial').length;
+ byId('graceCount').textContent=records.filter(r=>effective(r).key==='grace').length;
+ byId('readOnlyCount').textContent=records.filter(r=>effective(r).key==='readonly').length;
  byId('pendingCount').textContent=records.filter(r=>['suspended','expired'].includes(effective(r).key)).length;
  body.replaceChildren();
  if(!records.length){
@@ -169,7 +184,9 @@ async function reload(){
   addDetail('Correo del director',row.contact_email);
   addDetail('Plan',planText[row.plan]||row.plan);
   const expiry=row.status==='trial'?row.trial_ends_at:row.status==='active'?row.license_ends_at:null;
-  if(expiry)addDetail('Vigencia hasta',dateOnly(expiry));
+  if(expiry)addDetail(row.status==='trial'?'Fin de prueba':'Vigencia hasta',dateOnly(expiry));
+  if(row.status==='trial'&&Number.isFinite(Date.parse(row.trial_ends_at)))
+    addDetail('Fin de cortesía',dateOnly(new Date(Date.parse(row.trial_ends_at)+15*86400000).toISOString()));
   card.append(details);
   if(!invites.error){
    const inv=(invites.data||[]).find(it=>it.institution_id===row.id);
@@ -190,7 +207,7 @@ async function reload(){
   entry.textContent='Probar ingreso';
   entry.title='Abrir en incógnito con el correo autorizado de la institución';
   actions.append(entry);
-  if((row.status==='trial'&&Date.parse(row.trial_ends_at)>now())||
+  if((row.status==='trial'&&Number.isFinite(Date.parse(row.trial_ends_at))&&Date.parse(row.trial_ends_at)+15*86400000>now())||
      (row.status==='active'&&Date.parse(row.license_ends_at)>now())){
     const send=document.createElement('button');
     send.type='button';send.textContent='Enviar invitación al director';send.className='full';
