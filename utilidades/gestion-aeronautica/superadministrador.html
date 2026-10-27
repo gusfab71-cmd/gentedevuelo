@@ -26,6 +26,9 @@ textarea{min-height:80px;resize:vertical}
 button{font:inherit;font-size:13px;cursor:pointer;border-radius:9px;padding:11px 14px;border:1px solid #7997aa;background:#304c61;color:#f2f7fa}
 button.primary{background:#e2c08e;border-color:#e2c08e;color:#18222c;font-weight:800}
 button:disabled{opacity:.55;cursor:not-allowed}
+button.danger{background:#462a31;border-color:#c87783;color:#ffdee3;font-weight:800;margin-top:7px}
+button.danger:hover{background:#6b3540}
+#listFeedback{min-height:25px;font-size:13px;color:#f4d4ab;margin:12px 0 4px}
 button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #d6b56d;outline-offset:2px}
 .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}.muted{color:#afc2d0;font-size:12px}
 .table-scroll{overflow-x:auto}table{width:100%;border-collapse:collapse;min-width:600px;font-size:12px}
@@ -81,8 +84,9 @@ th{color:#b9d1dd;font-size:11px;text-transform:uppercase;letter-spacing:.06em}
 <div>
 <section class="panel">
 <h2>Instituciones registradas</h2>
+<div id="listFeedback" role="status" aria-live="polite"></div>
 <div class="table-scroll"><table><thead><tr><th>Institución</th><th>Contacto</th><th>Plan</th><th>Estado real</th><th>Acción</th></tr></thead><tbody id="institutionsBody"><tr><td colspan="5">Cargando…</td></tr></tbody></table></div>
-<p class="muted">El vencimiento se evalúa por fecha, aunque el estado administrativo aún no haya sido actualizado. Suspender no elimina datos.</p>
+<p class="muted">El vencimiento se evalúa por fecha. Suspender conserva los datos; «Eliminar» borra definitivamente la institución, sus invitaciones, asignaciones y el historial relacionado, sin borrar las cuentas personales.</p>
 </section>
 <section class="panel"><h2>Actividad reciente</h2><ol id="recent"><li>Sin operaciones registradas.</li></ol></section>
 </div>
@@ -95,7 +99,7 @@ th{color:#b9d1dd;font-size:11px;text-transform:uppercase;letter-spacing:.06em}
 const message=document.getElementById('accessMessage'),content=document.getElementById('adminContent');
 const form=document.getElementById('institutionForm'),feedback=document.getElementById('feedback');
 const statusField=document.getElementById('statusField'),endLabel=document.getElementById('licenseEndLabel'),endInput=document.getElementById('licenseEnd');
-const body=document.getElementById('institutionsBody'),recent=document.getElementById('recent');
+const body=document.getElementById('institutionsBody'),recent=document.getElementById('recent'),listFeedback=document.getElementById('listFeedback');
 let db,currentUser,editingId=null,records=[];
 const statusText={pending:'Pendiente',trial:'Prueba',active:'Activa',suspended:'Suspendida',expired:'Vencida'};
 const kindText={escuela:'Escuela',aeroclub:'Aeroclub',aerodromo:'Aeródromo'};
@@ -151,6 +155,11 @@ async function reload(){
     send.addEventListener('click',()=>sendDirectorInvite(row,send));
     actions.append(send);
   }
+  const erase=document.createElement('button');
+  erase.type='button';erase.className='danger';erase.textContent='Eliminar institución';
+  erase.title='Eliminación definitiva con confirmación del nombre';
+  erase.addEventListener('click',()=>deleteInstitution(row,erase));
+  actions.append(erase);
   if(!invites.error){
    const inv=(invites.data||[]).find(it=>it.institution_id===row.id);
    if(inv){const note=document.createElement('small');
@@ -171,18 +180,44 @@ async function reload(){
   li.textContent=(entry.operation==='INSERT'?'Alta':'Modificación')+' · '+(institution?.name||'Institución')+' · '+new Date(entry.changed_at).toLocaleString('es-AR');recent.append(li);
  }
 }
+async function deleteInstitution(row,button){
+ const label='Para eliminar definitivamente «'+row.name+'», escribí exactamente su nombre. Esto elimina las invitaciones, los permisos de la institución y su historial, pero NO borra las cuentas personales. No se puede deshacer.';
+ const name=window.prompt(label,'');
+ if(name===null)return;
+ if(name!==row.name){listFeedback.textContent='No se eliminó. El nombre escrito no coincide exactamente con la institución.';return}
+ if(!window.confirm('¿Confirmás la eliminación DEFINITIVA de «'+row.name+'»? Las invitaciones y membresías quedarán sin efecto.'))return;
+ button.disabled=true;listFeedback.textContent='Eliminando institución y registros relacionados…';
+ try{
+  const {data,error}=await db.rpc('aerosuite_delete_institution',{p_institution_id:row.id,p_confirm_name:name});
+  if(error)throw error;
+  if(!data?.ok||data.deleted_id!==row.id)throw Error('Supabase no confirmó la eliminación.');
+  if(editingId===row.id)resetEditor();
+  await reload();
+  listFeedback.textContent='Se eliminó «'+row.name+'». Invitaciones eliminadas: '+data.removed_invitations+'. Membresías desvinculadas: '+data.removed_members+'. Las cuentas personales permanecen intactas.';
+ }catch(err){listFeedback.textContent='No se pudo eliminar: '+(err?.message||'Error de servicio')}
+ finally{button.disabled=false}
+}
+async function readFunctionError(error,data){
+ if(data?.error)return data.error;
+ try{const details=error?.context;
+  if(details&&typeof details.json==='function'){
+   const payload=await details.clone().json();if(payload?.error)return payload.error;
+  }
+ }catch(_){}
+ return error?.message||'El servidor no pudo completar el envío.';
+}
 async function sendDirectorInvite(row,button){
  if(!confirm('¿Enviar una invitación real por correo a '+row.contact_email+' para administrar '+row.name+'?'))return;
- button.disabled=true;feedback.textContent='Enviando invitación al responsable…';
+ button.disabled=true;listFeedback.textContent='Enviando invitación al responsable…';
  try{
   const {data,error}=await db.functions.invoke('aerosuite-invitations',{
    body:{mode:'send',institution_id:row.id,email:row.contact_email,role:'administrador'}
   });
-  if(error)throw Error(data?.error||error.message);
+  if(error)throw Error(await readFunctionError(error,data));
   if(!data?.ok)throw Error(data?.error||'El envío no fue confirmado.');
-  feedback.textContent='Invitación enviada a '+row.contact_email+'. El proveedor aceptó el correo; comprobá que llegue a la casilla.';
   await reload();
- }catch(err){showError(err)}
+  listFeedback.textContent='El proveedor de correo aceptó la invitación a '+row.contact_email+'. Revisá Recibidos y Spam.';
+ }catch(err){listFeedback.textContent='El correo NO se envió: '+(err?.message||'Error de servicio')+'. Comprobá la configuración del servicio de correo.'}
  finally{button.disabled=false}
 }
 function edit(id){
