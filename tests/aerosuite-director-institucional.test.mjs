@@ -60,12 +60,15 @@ assert.match(superadmin,/!\['essential','pro'\]\.includes\(payload\.plan\)/,'Val
 assert.doesNotMatch(superadmin,/<option value="(institucional|aeroclub_pro|sin_asignar)">/,'No quedan planes comerciales anteriores');
 assert.match(demo,/<select id="schoolPlan"><option value="essential">Essential<\/option><option value="pro">Pro<\/option><\/select>/,'La demo usa los mismos dos planes');
 assert.match(superadmin,/El correo NO se envió/,'No declarar éxito si la función devuelve error');
-assert.match(superadmin,/row\.status==='pending'&&!row\.trial_started_at/,'Una institución pendiente ofrece el alta guiada');
-assert.match(superadmin,/Habilitar 30 días y enviar invitación/,'Botón de activación y correo en un paso');
-assert.match(superadmin,/\.eq\('status','pending'\)\.is\('trial_started_at',null\)/,'Evitar reiniciar pruebas ya activadas o carreras');
-assert.match(superadmin,/async function enableTrialAndInvite/,'Alta de prueba y envío integrado');
-assert.match(superadmin,/await deliverDirectorInvite\(updated\)/,'El envío se solicita después de confirmar la licencia');
-assert.match(superadmin,/HABILITADA, pero la invitación NO se pudo enviar/,'Si falla el correo se informa por separado y se permite reintentar');
+assert.doesNotMatch(superadmin,/<option value="pending">/,'No mostrar Pendiente de habilitación');
+assert.doesNotMatch(superadmin,/Habilitar 30 días y enviar invitación/,'No pedir habilitar una prueba ya automática');
+assert.doesNotMatch(superadmin,/async function enableTrialAndInvite/,'No conservar el circuito antiguo de pendiente');
+assert.match(superadmin,/id="statusEditLabel" hidden/,'Ocultar el selector de estado en altas nuevas');
+assert.match(superadmin,/id="initialTrialNotice"/,'Mostrar la prueba automática en el formulario');
+assert.match(superadmin,/status:editingId\?String\(raw\.get\('status'\)\):'trial'/,'Las nuevas instituciones siempre se registran con estado de prueba');
+assert.match(superadmin,/statusField\.value='trial'/,'Restablecer formulario con prueba gratuita');
+assert.match(superadmin,/statusEditLabel\.hidden=false/,'Permitir gestión posterior del estado a instituciones existentes');
+assert.match(superadmin,/Enviar invitación al director/,'El botón de invitación sigue disponible en las tarjetas activas');
 
 
 
