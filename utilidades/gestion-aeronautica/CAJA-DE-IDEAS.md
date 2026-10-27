@@ -48,6 +48,13 @@ Este es el registro central de las decisiones, ideas y pendientes tratados para 
 - **PERMISOS:** nueva función `aerosuite_accept_invitation_role(p_institution_id,p_role)` acepta únicamente la invitación vigente del correo verificado, institución y **rol exactos**, con chequeo de licencia. Comprobado en transacción con ROLLBACK que un instructor no se activa como alumno ni puede consultar otra institución. `portal-escuela.html` muestra tarjetas diferentes para los tres roles; solo el administrador puede invitar personal, con módulos operativos aún bloqueados.
 - **ESTADO / PENDIENTES:** Vercel y Edge Function desplegados; faltan pruebas de interfaz reales por cuentas invitadas y validar la lista de Redirect URLs de Supabase Auth para retorno a AeroSuite tras la verificación. En la inspección de la base en esta fecha no había instituciones ni invitaciones activas; recrear una escuela de prueba antes de probar el circuito nuevamente. Ninguna contraseña del Superadministrador se modifica.
 
+### Habilitación de escuelas pendientes + invitación — 27/10/2026
+
+- **MEJORA APLICADA:** cuando el Superadministrador registra una institución con estado **Pendiente de habilitación**, la tarjeta muestra **«Habilitar 30 días y enviar invitación»**, sin obligarlo a ingresar a «Gestionar», cambiar estado y guardar por separado. Requiere una única confirmación con nombre de institución y correo del director.
+- **OPERACIÓN:** tras confirmar, actualiza **solo** una institución todavía pendiente que no haya iniciado una prueba (filtros por `id`, `status='pending'` y `trial_started_at IS NULL`). El trigger de Supabase genera las fechas de 30 días; recién tras verificar que la licencia se activó se solicita el correo al director mediante la función existente `aerosuite-invitations`.
+- **FALLOS:** si el correo falla luego de habilitar la prueba, la ficha queda en **Prueba** y muestra **«Enviar invitación al director»** para reintentar sin reiniciar los 30 días. Se informa por separado qué acción se completó y qué acción falló. Sin envío automático mientras no haya clic de confirmación.
+- **ESTADO AL VERIFICAR:** durante esta revisión la escuela temporal `aero moron` dejó de figurar en la lista de instituciones (hay un asiento de eliminación en el historial); el botón quedará disponible al registrar una nueva institución pendiente. No se recreó una escuela en nombre del usuario.
+
 ## 1. Visión, marca e integración con Gente de Vuelo
 
 - **APROBADO:** el nombre del producto es **AeroSuite** con firma **By Gente de Vuelo**. Su identidad: A aerodinámica, colores azul aeronáutico/plata, base azul oscuro, estilo moderno y premium. Verificación legal de marca/dominio pendiente.
