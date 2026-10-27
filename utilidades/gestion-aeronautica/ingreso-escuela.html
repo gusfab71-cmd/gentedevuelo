@@ -79,9 +79,9 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
     <form id="loginForm" autocomplete="off">
       <label>Correo electrónico<input id="email" type="email" name="as-invite-user" autocomplete="off" readonly required maxlength="254"></label>
       <label>Contraseña<span class="password-wrap"><input id="password" type="password" name="as-invite-pass" autocomplete="off" readonly required minlength="1"><button type="button" class="password-eye" data-password-target="password" aria-label="Mostrar contraseña" aria-pressed="false" title="Mostrar contraseña"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.7-7 10-7 10 7 10 7-3.7 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/><path class="eye-slash" d="M3 3l18 18"/></svg></button></span></label>
-      <div class="actions"><button type="submit" class="primary" id="loginButton">Ingresar a AeroSuite</button><button type="button" id="showRegister">Crear cuenta nueva</button><button type="button" id="forgotButton">Olvidé mi contraseña</button><button type="button" id="showConfirmationFromLogin">Verificar correo</button></div>
+      <div class="actions"><button type="submit" class="primary" id="loginButton">Ingresar a AeroSuite</button><button type="button" id="showRegister">Necesito una invitación nueva</button><button type="button" id="forgotButton">Olvidé mi contraseña</button><button type="button" id="showConfirmationFromLogin">Verificar correo</button></div>
     </form>
-    <p class="caption">Si ya tenés una cuenta Gente de Vuelo con ese correo y contraseña, podés utilizarla aquí. No crees otra cuenta ni cambies su contraseña.</p>
+    <p class="caption">¿Ya tenés cuenta con este correo? Ingresá con tu contraseña habitual. Para crear una cuenta nueva sin segunda verificación, utilizá una invitación reciente con enlace personal y seguro.</p>
   </section>
   <section class="panel" id="registerPanel" hidden>
   <h2>Crear tu cuenta AeroSuite</h2>
@@ -222,8 +222,8 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
       showPanel('confirmationPanel');byId('confirmationEmail').value=lastSignupEmail;
       setStatus('Falta verificar tu correo. No crees otra contraseña: abrí el segundo correo de confirmación.');
     }else{
-      showPanel('registerPanel');
-      setStatus('Creá tu contraseña una sola vez. Si ya creaste la cuenta y falta verificarla, elegí «Verificar mi correo».');
+      showPanel('signInPanel');
+      setStatus('Si todavía no tenés cuenta, pedí al director de tu escuela una invitación nueva. Al abrir su enlace personal vas a crear la contraseña y entrar directamente, sin otro correo de verificación.');
     }
     return;
    }
@@ -280,7 +280,10 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
   setStatus('Conservamos tu contraseña actual. Comprobando tu acceso institucional…');
   await verifyAndEnter();
  });
- byId('showRegister').addEventListener('click',()=>{showPanel('registerPanel');setStatus('Creá una contraseña personal distinta de la del administrador.')});
+ byId('showRegister').addEventListener('click',()=>{
+  showPanel('signInPanel');
+  setStatus('Pedí al director de tu escuela que envíe una invitación nueva desde su portal. Ese enlace personal permite crear tu contraseña y entrar sin una segunda verificación por correo.');
+ });
  byId('backLogin').addEventListener('click',()=>{showPanel('signInPanel');setStatus('Ingresá con tu correo y tu contraseña existente.')});
  byId('showConfirmationFromLogin').addEventListener('click',()=>{
   showPanel('confirmationPanel');
@@ -386,7 +389,7 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
   await db.auth.signOut();
   user=null;recovering=false;
   for(const id of credentialFields)byId(id).value='';
-  lastSignupEmail='';showPanel('registerPanel');
+  lastSignupEmail='';showPanel('signInPanel');
   byId('acceptButton').hidden=false;
   setStatus('Ingresá o creá la cuenta correspondiente al correo que recibió la invitación.');
  });
