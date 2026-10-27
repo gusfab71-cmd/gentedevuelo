@@ -82,7 +82,8 @@ Deno.serve(async(req:Request)=>{
  let inviteId=existing?.id;
  if(!inviteId){
   const previous=await db.from("aerosuite_institution_invitations")
-    .select("id").eq("institution_id",id).eq("email",email).eq("role",role).not("accepted_at","is",null).limit(1);
+    .select("id").eq("institution_id",id).eq("email",email).eq("role",role)
+    .not("accepted_at","is",null).is("revoked_at",null).limit(1);
   if(previous.error)return reply(origin,503,{error:"No se pudo verificar el historial."});
   if(previous.data?.length)return reply(origin,409,{error:"Este usuario ya aceptó una invitación para ese rol."});
   const inserted=await db.from("aerosuite_institution_invitations")
