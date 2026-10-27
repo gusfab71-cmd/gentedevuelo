@@ -17,6 +17,21 @@ assert.match(admission,/\.rpc\('aerosuite_accept_my_invitation'/,'Los enlaces an
 assert.match(admission,/p_institution_id:schoolId/,'Invitación atada al identificador institucional');
 assert.match(admission,/\.rpc\('aerosuite_my_institution_access_v2'/,'Ingreso consulta los derechos de cortesía y solo lectura');
 assert.match(admission,/auth\.signUp/,'Alta de cuenta directamente en AeroSuite');
+assert.match(admission,/id="confirmationPanel" hidden/,'Crear cuenta habilita un segundo paso claro de confirmación');
+assert.match(admission,/id="resendForm"/,'Permitir reenviar confirmación desde AeroSuite');
+assert.match(admission,/auth\.resend\(\{type:'signup',email,options:\{emailRedirectTo:activationUrl\}\}\)/,'Reenvío conserva la URL original y el rol de invitación');
+assert.match(admission,/showPanel\('confirmationPanel'\)/,'Mostrar verificación tras registrarse cuando no hay sesión');
+assert.match(admission,/if\(data\?\.session\)\{await verifyAndEnter\(\);return\}/,'Si el alta devuelve sesión, ingresar automáticamente');
+assert.match(admission,/onAuthStateChange/,'Atender evento de ingreso tras confirmar correo');
+assert.match(admission,/event==='SIGNED_IN'/,'Continuar automáticamente tras confirmar por el segundo correo');
+assert.match(admission,/\.password-eye/,'Botón accesible para mostrar contraseña');
+assert.match(admission,/data-password-target="password"/,'Ojito del ingreso');
+assert.match(admission,/data-password-target="signupPassword"/,'Ojito de contraseña nueva');
+assert.match(admission,/data-password-target="signupRepeat"/,'Ojito de confirmación de contraseña');
+assert.match(admission,/data-password-target="newPassword"/,'Ojito de recuperación de contraseña');
+assert.match(admission,/aria-pressed/,'Control indica estado visible');
+assert.match(admission,/input\.type=isVisible\?'text':'password'/,'Botón alterna ocultar y mostrar caracteres');
+
 assert.match(admission,/auth\.resetPasswordForEmail/,'Recuperación de clave dentro de AeroSuite');
 assert.match(admission,/emailRedirectTo:activationUrl/,'Verificación redirigida a AeroSuite');
 assert.match(admission,/Cambiar de cuenta/);
