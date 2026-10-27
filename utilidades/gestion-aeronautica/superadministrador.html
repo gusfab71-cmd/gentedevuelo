@@ -31,9 +31,23 @@ button.danger:hover{background:#6b3540}
 #listFeedback{min-height:25px;font-size:13px;color:#f4d4ab;margin:12px 0 4px}
 button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #d6b56d;outline-offset:2px}
 .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}.muted{color:#afc2d0;font-size:12px}
-.table-scroll{overflow-x:auto}table{width:100%;border-collapse:collapse;min-width:600px;font-size:12px}
-th,td{text-align:left;border-bottom:1px solid #395569;padding:10px;vertical-align:middle}
-th{color:#b9d1dd;font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+.institution-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:14px;margin:12px 0}
+.institution-card{min-width:0;display:flex;flex-direction:column;gap:13px;padding:18px;border:1px solid #5a7890;border-radius:15px;background:linear-gradient(145deg,#233e52,#172d3f);box-shadow:0 10px 25px #06131f45}
+.institution-card-header{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.institution-card h3{margin:0;font-size:17px;line-height:1.32;color:#eff8ff;overflow-wrap:anywhere}
+.institution-type{font-size:11px;color:#b0ccdc;margin-top:5px}
+.institution-details{display:grid;grid-template-columns:minmax(90px,1fr) minmax(0,1.6fr);gap:9px 10px;margin:0;padding:12px 0;border-top:1px solid #49657a;border-bottom:1px solid #49657a;font-size:12px}
+.institution-details dt{color:#afc9d9}
+.institution-details dd{margin:0;font-weight:700;overflow-wrap:anywhere}
+.institution-invite{padding:10px 12px;border-radius:10px;border:1px solid #58778e;background:#1a3345;color:#d3e5ee;font-size:12px;line-height:1.5}
+.institution-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:auto}
+.institution-actions button,.institution-actions a{display:flex;justify-content:center;align-items:center;text-align:center;min-height:42px;padding:9px 11px;border:1px solid #7599af;border-radius:9px;background:#2b4a61;color:#ecf6fb;font-size:12px;font-weight:750;text-decoration:none;cursor:pointer}
+.institution-actions a:hover,.institution-actions button:hover:not(:disabled){background:#345a75}
+.institution-actions .full{grid-column:1/-1}
+.institution-actions .danger{grid-column:1/-1;background:#482f37;border-color:#b77b83;color:#ffe1e4;margin:0}
+.institution-actions .danger:hover:not(:disabled){background:#653a44}
+.institution-empty{padding:23px;border:1px dashed #627d90;border-radius:12px;color:#c4d8e5;font-size:13px}
+@media(max-width:440px){.institution-actions{grid-template-columns:1fr}.institution-actions .full,.institution-actions .danger{grid-column:1}}
 .status{border:1px solid #69899b;border-radius:100px;padding:4px 8px;white-space:nowrap;font-size:11px}
 .status.active{color:#b7f3d7;border-color:#469779}.status.trial{color:#f4dfab;border-color:#b99b63}.status.suspended,.status.expired{color:#ffd1bb;border-color:#ba856b}
 #feedback{min-height:25px;color:#eec995;font-size:13px}#accessMessage{font-size:14px}
@@ -85,8 +99,8 @@ th{color:#b9d1dd;font-size:11px;text-transform:uppercase;letter-spacing:.06em}
 <section class="panel">
 <h2>Instituciones registradas</h2>
 <div id="listFeedback" role="status" aria-live="polite"></div>
-<div class="table-scroll"><table><thead><tr><th>Institución</th><th>Contacto</th><th>Plan</th><th>Estado real</th><th>Acción</th></tr></thead><tbody id="institutionsBody"><tr><td colspan="5">Cargando…</td></tr></tbody></table></div>
-<p class="muted">El vencimiento se evalúa por fecha. Suspender conserva los datos; «Eliminar» borra definitivamente la institución, sus invitaciones, asignaciones y el historial relacionado, sin borrar las cuentas personales.</p>
+<div class="institution-grid" id="institutionsBody" aria-live="polite"><div class="institution-empty">Cargando instituciones…</div></div>
+<p class="muted">Cada recuadro corresponde a una sola institución. «Eliminar institución» pide una única confirmación y borra sus invitaciones y asignaciones relacionadas; las cuentas personales no se borran.</p>
 </section>
 <section class="panel"><h2>Actividad reciente</h2><ol id="recent"><li>Sin operaciones registradas.</li></ol></section>
 </div>
@@ -111,7 +125,6 @@ const effective=row=>{
  if(row.status==='active'&&row.license_ends_at&&Date.parse(row.license_ends_at)<=now())return {key:'expired',label:'Licencia vencida'};
  return {key:row.status,label:statusText[row.status]||'Sin estado'};
 };
-const addCell=(tr,value)=>{const td=document.createElement('td');td.textContent=value??'';tr.append(td);return td};
 const showError=err=>{feedback.textContent=err?.message||String(err)||'No se pudo completar la operación.'};
 const dateOnly=iso=>iso?new Date(iso).toLocaleDateString('es-AR'):'—';
 function syncLicenseField(){const active=statusField.value==='active';endLabel.hidden=!active;endInput.required=active}
@@ -129,48 +142,65 @@ async function reload(){
  byId('trialCount').textContent=records.filter(r=>effective(r).key==='trial').length;
  byId('pendingCount').textContent=records.filter(r=>['pending','suspended','expired'].includes(effective(r).key)).length;
  body.replaceChildren();
- if(!records.length){const tr=document.createElement('tr');addCell(tr,'Todavía no hay instituciones registradas.').colSpan=5;body.append(tr)}
+ if(!records.length){
+  const empty=document.createElement('div');empty.className='institution-empty';
+  empty.textContent='Todavía no hay instituciones registradas.';
+  body.append(empty);
+ }
  for(const row of records){
-  const tr=document.createElement('tr');
-  const name=addCell(tr,row.name);const sub=document.createElement('small');sub.style.display='block';sub.textContent=kindText[row.kind]||'';name.append(sub);
-  addCell(tr,row.contact_email);addCell(tr,planText[row.plan]||row.plan);
-  const t=effective(row);const state=addCell(tr,'');const b=document.createElement('span');b.className='status '+t.key;
-  b.textContent=t.label;state.append(b);
-  const expiry=(row.status==='trial'?row.trial_ends_at:row.status==='active'?row.license_ends_at:null);
-  if(expiry){const e=document.createElement('small');e.textContent=' Hasta '+dateOnly(expiry);e.style.display='block';state.append(e)}
-  const actions=addCell(tr,'');const btn=document.createElement('button');btn.type='button';btn.textContent='Gestionar';
+  const card=document.createElement('article');
+  card.className='institution-card';card.dataset.institutionId=row.id;
+  const header=document.createElement('div');header.className='institution-card-header';
+  const heading=document.createElement('div');
+  const title=document.createElement('h3');title.textContent=row.name;
+  const type=document.createElement('div');type.className='institution-type';type.textContent=kindText[row.kind]||row.kind;
+  heading.append(title,type);
+  const state=effective(row);
+  const badge=document.createElement('span');badge.className='status '+state.key;badge.textContent=state.label;
+  header.append(heading,badge);card.append(header);
+  const details=document.createElement('dl');details.className='institution-details';
+  const addDetail=(key,value)=>{
+   const term=document.createElement('dt');term.textContent=key;
+   const desc=document.createElement('dd');desc.textContent=value||'—';
+   details.append(term,desc);
+  };
+  addDetail('Correo del director',row.contact_email);
+  addDetail('Plan',planText[row.plan]||row.plan);
+  const expiry=row.status==='trial'?row.trial_ends_at:row.status==='active'?row.license_ends_at:null;
+  if(expiry)addDetail('Vigencia hasta',dateOnly(expiry));
+  card.append(details);
+  if(!invites.error){
+   const inv=(invites.data||[]).find(it=>it.institution_id===row.id);
+   if(inv){
+    const note=document.createElement('div');note.className='institution-invite';
+    note.textContent=inv.accepted_at?'Director vinculado':
+     inv.revoked_at?'Invitación revocada':
+     Date.parse(inv.expires_at)<=now()?'Invitación vencida':
+     !inv.last_sent_at?'Invitación creada · correo todavía sin enviar':'Correo enviado · aceptación pendiente';
+    card.append(note);
+   }
+  }
+  const actions=document.createElement('div');actions.className='institution-actions';
+  const btn=document.createElement('button');btn.type='button';btn.textContent='Gestionar';
   btn.addEventListener('click',()=>edit(row.id));actions.append(btn);
   const entry=document.createElement('a');
   entry.href='ingreso-escuela.html?institucion='+encodeURIComponent(row.id);
-  entry.textContent=' Probar ingreso';
-  entry.style.display='inline-block';
-  entry.style.marginLeft='10px';
-  entry.style.fontSize='12px';
-  entry.title='Abrir en incógnito con el correo autorizado de la escuela';
+  entry.textContent='Probar ingreso';
+  entry.title='Abrir en incógnito con el correo autorizado de la institución';
   actions.append(entry);
-  if((row.status==='trial'&&Date.parse(row.trial_ends_at)>now())||(row.status==='active'&&Date.parse(row.license_ends_at)>now())){
+  if((row.status==='trial'&&Date.parse(row.trial_ends_at)>now())||
+     (row.status==='active'&&Date.parse(row.license_ends_at)>now())){
     const send=document.createElement('button');
-    send.type='button';send.textContent='Enviar invitación al director';
-    send.style.marginLeft='8px';send.style.marginTop='6px';
+    send.type='button';send.textContent='Enviar invitación al director';send.className='full';
     send.addEventListener('click',()=>sendDirectorInvite(row,send));
     actions.append(send);
   }
   const erase=document.createElement('button');
   erase.type='button';erase.className='danger';erase.textContent='Eliminar institución';
-  erase.title='Eliminación definitiva con confirmación del nombre';
+  erase.title='Eliminar esta institución con una sola confirmación';
   erase.addEventListener('click',()=>deleteInstitution(row,erase));
   actions.append(erase);
-  if(!invites.error){
-   const inv=(invites.data||[]).find(it=>it.institution_id===row.id);
-   if(inv){const note=document.createElement('small');
-    note.style.display='block';note.style.marginTop='7px';note.style.color='#b8d6e5';
-    note.textContent=inv.accepted_at?'Director vinculado':
-      inv.revoked_at?'Invitación revocada':
-      Date.parse(inv.expires_at)<=now()?'Invitación vencida':!inv.last_sent_at?'Invitación creada · correo todavía sin enviar':'Correo enviado · aceptación pendiente';
-    actions.append(note);
-   }
-  }
-  body.append(tr);
+  card.append(actions);body.append(card);
  }
  recent.replaceChildren();
  if(history.error){const li=document.createElement('li');li.textContent='No se pudo consultar el historial.';recent.append(li);return}
@@ -181,14 +211,13 @@ async function reload(){
  }
 }
 async function deleteInstitution(row,button){
- const label='Para eliminar definitivamente «'+row.name+'», escribí exactamente su nombre. Esto elimina las invitaciones, los permisos de la institución y su historial, pero NO borra las cuentas personales. No se puede deshacer.';
- const name=window.prompt(label,'');
- if(name===null)return;
- if(name!==row.name){listFeedback.textContent='No se eliminó. El nombre escrito no coincide exactamente con la institución.';return}
- if(!window.confirm('¿Confirmás la eliminación DEFINITIVA de «'+row.name+'»? Las invitaciones y membresías quedarán sin efecto.'))return;
- button.disabled=true;listFeedback.textContent='Eliminando institución y registros relacionados…';
+ const ok=window.confirm('¿Eliminar definitivamente la institución «'+row.name+'»?\n\nSe quitarán también sus invitaciones y sus membresías. Las cuentas personales permanecerán intactas. Esta acción no se puede deshacer.');
+ if(!ok)return;
+ button.disabled=true;listFeedback.textContent='Eliminando «'+row.name+'»…';
  try{
-  const {data,error}=await db.rpc('aerosuite_delete_institution',{p_institution_id:row.id,p_confirm_name:name});
+  const {data,error}=await db.rpc('aerosuite_delete_institution',{
+   p_institution_id:row.id,p_confirm_name:row.name
+  });
   if(error)throw error;
   if(!data?.ok||data.deleted_id!==row.id)throw Error('Supabase no confirmó la eliminación.');
   if(editingId===row.id)resetEditor();
