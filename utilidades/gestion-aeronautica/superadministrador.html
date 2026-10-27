@@ -48,6 +48,17 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
 .institution-actions .danger:hover:not(:disabled){background:#653a44}
 .institution-actions button:disabled{cursor:not-allowed;opacity:.55}
 .institution-empty{padding:23px;border:1px dashed #627d90;border-radius:12px;color:#c4d8e5;font-size:13px}
+.staff-manager{border-top:1px solid #5c8097;padding-top:14px;display:grid;gap:10px}
+.staff-manager h4{font-size:14px;margin:0;color:#f0e1c4}
+.staff-manager p{font-size:12px;line-height:1.45;margin:0}
+.staff-list{display:grid;gap:8px}
+.staff-person{background:#102637;border:1px solid #55778e;border-radius:10px;padding:11px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.staff-person span{min-width:0;overflow-wrap:anywhere;font-size:12px}
+.staff-person strong{display:block;font-size:12px}
+.staff-person small{color:#a9c2d3}
+.staff-person .remove-person{background:#52313d;border:1px solid #b0717c;color:#ffe2e6;font-size:12px}
+.staff-person .remove-person:hover:not(:disabled){background:#793e48}
+.staff-summary{font-weight:700;color:#e0ecf2}
 @media(max-width:440px){.institution-actions{grid-template-columns:1fr}.institution-actions .full,.institution-actions .danger{grid-column:1}}
 .status{border:1px solid #69899b;border-radius:100px;padding:4px 8px;white-space:nowrap;font-size:11px}
 .status.active{color:#b7f3d7;border-color:#469779}
@@ -83,6 +94,8 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
 <div class="metric"><strong id="graceCount">0</strong><span>En cortesía (15 días)</span></div>
 <div class="metric"><strong id="readOnlyCount">0</strong><span>Solo consulta</span></div>
 <div class="metric"><strong id="pendingCount">0</strong><span>Suspendidas / vencidas</span></div>
+<div class="metric"><strong id="instructorsTotal">—</strong><span>Instructores con acceso activo</span></div>
+<div class="metric"><strong id="studentsTotal">—</strong><span>Alumnos con acceso activo</span></div>
 </div>
 <div class="layout">
 <section class="panel" aria-labelledby="formTitle">
@@ -105,10 +118,10 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
 </section>
 <div>
 <section class="panel">
-<h2>Instituciones registradas</h2>
+<h2>Instituciones registradas y cuentas habilitadas</h2>
 <div id="listFeedback" role="status" aria-live="polite"></div>
 <div class="institution-grid" id="institutionsBody" aria-live="polite"><div class="institution-empty">Cargando instituciones…</div></div>
-<p class="muted">Cada institución tiene 30 días gratis y 15 días adicionales de cortesía con acceso operativo. Desde el día 46 permanece en modo consulta, conservando sus datos. Solo se facturará cuando el cliente contrate expresamente; los cobros y los recordatorios automáticos aún no están conectados. El correo al director se envía desde su tarjeta y puede reenviarse durante la cortesía.</p>
+<p class="muted">Los contadores distinguen integrantes con acceso activado de invitaciones pendientes. «Gestionar cuentas» permite desvincular instructores y alumnos de una escuela, o cancelar invitaciones; nunca elimina sus cuentas personales. Cada institución tiene 30 días gratis y 15 días adicionales de cortesía con acceso operativo. Desde el día 46 permanece en modo consulta, conservando sus datos. Solo se facturará cuando el cliente contrate expresamente; los cobros y los recordatorios automáticos aún no están conectados. El correo al director se envía desde su tarjeta y puede reenviarse durante la cortesía.</p>
 </section>
 <section class="panel"><h2>Actividad reciente</h2><ol id="recent"><li>Sin operaciones registradas.</li></ol></section>
 </div>
@@ -145,12 +158,18 @@ const dateOnly=iso=>iso?new Date(iso).toLocaleDateString('es-AR'):'—';
 function syncLicenseField(){const active=statusField.value==='active';endLabel.hidden=!active;endInput.required=active}
 statusField.addEventListener('change',syncLicenseField);
 async function reload(){
- const [found,history,invites]=await Promise.all([
+ const [found,history,invites,staffCounts]=await Promise.all([
  db.from('aerosuite_institutions').select('id,name,kind,cuit,contact_name,contact_email,plan,status,trial_started_at,trial_ends_at,license_started_at,license_ends_at,notes,updated_at').order('created_at',{ascending:false}).limit(500),
  db.from('aerosuite_institution_audit').select('id,institution_id,operation,changed_at').order('changed_at',{ascending:false}).limit(12),
- db.from('aerosuite_institution_invitations').select('institution_id,accepted_at,expires_at,revoked_at,last_sent_at').order('created_at',{ascending:false}).limit(500)
+ db.from('aerosuite_institution_invitations').select('institution_id,role,accepted_at,expires_at,revoked_at,last_sent_at').order('created_at',{ascending:false}).limit(500),
+ db.rpc('aerosuite_superadmin_staff_counts')
  ]);
  if(found.error)throw found.error;
+ if(staffCounts.error)throw staffCounts.error;
+ const countsByInstitution=new Map((staffCounts.data||[]).map(item=>[item.institution_id,item]));
+ const sum=field=>(staffCounts.data||[]).reduce((total,item)=>total+Number(item[field]||0),0);
+ byId('instructorsTotal').textContent=String(sum('instructors'));
+ byId('studentsTotal').textContent=String(sum('students'));
  records=found.data||[];
  byId('totalCount').textContent=records.length;
  byId('activeCount').textContent=records.filter(r=>effective(r).key==='active').length;
@@ -182,6 +201,10 @@ async function reload(){
    details.append(term,desc);
   };
   addDetail('Correo del director',row.contact_email);
+  const rosterTotals=countsByInstitution.get(row.id)||{instructors:0,students:0,instructor_invitations:0,student_invitations:0};
+  addDetail('Instructores activos',String(rosterTotals.instructors));
+  addDetail('Alumnos activos',String(rosterTotals.students));
+  addDetail('Invitaciones pendientes','Instructores: '+rosterTotals.instructor_invitations+' · Alumnos: '+rosterTotals.student_invitations);
   addDetail('Plan',planText[row.plan]||row.plan);
   const expiry=row.status==='trial'?row.trial_ends_at:row.status==='active'?row.license_ends_at:null;
   if(expiry)addDetail(row.status==='trial'?'Fin de prueba':'Vigencia hasta',dateOnly(expiry));
@@ -189,7 +212,7 @@ async function reload(){
     addDetail('Fin de cortesía',dateOnly(new Date(Date.parse(row.trial_ends_at)+15*86400000).toISOString()));
   card.append(details);
   if(!invites.error){
-   const inv=(invites.data||[]).find(it=>it.institution_id===row.id);
+   const inv=(invites.data||[]).find(it=>it.institution_id===row.id&&it.role==='administrador');
    if(inv){
     const note=document.createElement('div');note.className='institution-invite';
     note.textContent=inv.accepted_at?'Director vinculado':
@@ -207,6 +230,11 @@ async function reload(){
   entry.textContent='Probar ingreso';
   entry.title='Abrir en incógnito con el correo autorizado de la institución';
   actions.append(entry);
+  const staffButton=document.createElement('button');
+  staffButton.type='button';staffButton.textContent='Gestionar cuentas';staffButton.className='full staff-button';
+  staffButton.title='Ver instructores, alumnos e invitaciones y desvincular el acceso de esta institución';
+  staffButton.addEventListener('click',()=>toggleStaffRoster(row,staffButton,card));
+  actions.append(staffButton);
   if((row.status==='trial'&&Number.isFinite(Date.parse(row.trial_ends_at))&&Date.parse(row.trial_ends_at)+15*86400000>now())||
      (row.status==='active'&&Date.parse(row.license_ends_at)>now())){
     const send=document.createElement('button');
@@ -228,6 +256,74 @@ async function reload(){
   const li=document.createElement('li');const institution=records.find(r=>r.id===entry.institution_id);
   li.textContent=(entry.operation==='INSERT'?'Alta':'Modificación')+' · '+(institution?.name||'Institución')+' · '+new Date(entry.changed_at).toLocaleString('es-AR');recent.append(li);
  }
+}
+async function toggleStaffRoster(row,button,card){
+ let manager=card.querySelector('.staff-manager');
+ if(manager){
+  manager.hidden=!manager.hidden;
+  button.textContent=manager.hidden?'Gestionar cuentas':'Ocultar cuentas';
+  return;
+ }
+ manager=document.createElement('section');manager.className='staff-manager';
+ const title=document.createElement('h4');title.textContent='Personal de '+row.name;
+ const caption=document.createElement('p');caption.textContent='Solo instructores y alumnos de esta institución. La baja conserva sus cuentas personales y no modifica otras escuelas.';
+ const feedback=document.createElement('div');feedback.className='muted';feedback.setAttribute('role','status');
+ const list=document.createElement('div');list.className='staff-list';
+ const refresh=document.createElement('button');refresh.type='button';refresh.textContent='Actualizar listado';
+ manager.append(title,caption,feedback,list,refresh);
+ card.append(manager);button.textContent='Ocultar cuentas';
+ async function load(){
+  refresh.disabled=true;feedback.textContent='Consultando integrantes…';list.replaceChildren();
+  try{
+   const response=await db.rpc('aerosuite_director_people',{p_institution_id:row.id});
+   if(response.error)throw response.error;
+   const entries=response.data||[];
+   if(!entries.length){
+    const empty=document.createElement('p');empty.textContent='No hay instructores, alumnos ni invitaciones pendientes.';
+    list.append(empty);
+   }
+   for(const person of entries){
+    const line=document.createElement('div');line.className='staff-person';
+    const description=document.createElement('span');
+    const name=document.createElement('strong');name.textContent=(person.role==='instructor'?'Instructor':'Alumno')+' · '+person.email;
+    const status=document.createElement('small');
+    status.textContent=person.kind==='integrante'?'Cuenta activa desde '+dateOnly(person.registered_at):
+      person.situation==='vencida'?'Invitación vencida':'Invitación pendiente desde '+dateOnly(person.registered_at);
+    description.append(name,status);line.append(description);
+    const remove=document.createElement('button');remove.type='button';remove.className='remove-person';
+    remove.textContent=person.kind==='integrante'?'Desvincular':'Cancelar invitación';
+    remove.addEventListener('click',async()=>{
+     const description=person.kind==='integrante'?
+      '¿Desvincular a '+person.email+' como '+person.role+' de «'+row.name+'»? Su cuenta personal y los accesos a otras escuelas se conservarán.':
+      '¿Cancelar la invitación de '+person.email+' para «'+row.name+'»? El enlace dejará de funcionar.';
+     if(!window.confirm(description))return;
+     remove.disabled=true;feedback.textContent='Guardando la baja…';
+     try{
+      const result=await db.rpc('aerosuite_manage_staff_remove',{
+       p_institution_id:row.id,p_person_id:person.person_id,
+       p_kind:person.kind,p_role:person.role
+      });
+      if(result.error)throw result.error;
+      if(!result.data?.ok)throw Error('Supabase no confirmó la baja.');
+      await reload();
+      listFeedback.textContent='Se '+(person.kind==='integrante'?'desvinculó':'canceló la invitación de')+
+        ' '+person.email+' en «'+row.name+'». Sus otras cuentas y escuelas permanecen intactas.';
+      const next=Array.from(body.querySelectorAll('.institution-card')).find(x=>x.dataset.institutionId===row.id);
+      const open=next?.querySelector('.staff-button');
+      if(open)open.click();
+     }catch(err){
+      feedback.textContent='No se pudo realizar la baja: '+(err?.message||'Error desconocido');
+      remove.disabled=false;
+     }
+    });
+    line.append(remove);list.append(line);
+   }
+   feedback.textContent=entries.length+' registro(s). Los integrantes activos se cuentan por rol, no por correo enviado.';
+  }catch(err){feedback.textContent='No se pudo cargar el personal: '+(err?.message||'Error desconocido');}
+  finally{refresh.disabled=false;}
+ }
+ refresh.addEventListener('click',load);
+ await load();
 }
 async function deleteInstitution(row,button){
  const ok=window.confirm('¿Eliminar definitivamente la institución «'+row.name+'»?\n\nSe quitarán también sus invitaciones y sus membresías. Las cuentas personales permanecerán intactas. Esta acción no se puede deshacer.');
