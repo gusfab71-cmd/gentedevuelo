@@ -115,6 +115,12 @@ Este es el registro central de las decisiones, ideas y pendientes tratados para 
 - **VERIFICACIONES:** control de lectura exclusivo del Superadministrador en contadores, rechazo de instrucciones/lecturas por instructor, prohibición de que un director modifique otra escuela o se elimine como director, y alta capacidad de baja excepcional del Superadministrador aun con institución suspendida. SQL probado dentro de transacciones `BEGIN/ROLLBACK` sin retirar personal real. **La prueba manual desde la interfaz sigue pendiente.**
 - **NOTA DE MODELO:** los recuentos representan **membresías institucionales**, no necesariamente cuentas nuevas de Auth; una persona puede estar asignada a distintas instituciones o a roles distintos, por lo que se cuenta por vínculo de institución y rol. Las invitaciones enviadas, aceptadas, vencidas, revocadas y las cuentas suspendidas deben distinguirse cuidadosamente.
 
+### Simplificación de tarjetas en Superadministrador — 27/10/2026
+
+- **DECISIÓN DEL USUARIO:** quitar de cada tarjeta los botones grandes **«Gestionar»** y **«Probar ingreso»** por redundantes.
+- **CAMBIO EN CÓDIGO:** las acciones principales por institución son **«Gestionar cuentas»**, **«Enviar invitación al director»** cuando corresponde y **«Eliminar institución»**. Para conservar la administración de nombre, plan y licencia sin ocupar otro botón grande, se deja un **lápiz discreto junto al nombre de la escuela**, que abre el formulario de edición existente.
+- **VALIDACIÓN:** pruebas estáticas comprueban la ausencia de las dos acciones anteriores, la conservación del formulario de edición y la gestión de instructores/alumnos. La publicación pública depende del próximo despliegue exitoso de Vercel; si persiste el límite de compilaciones, no se debe afirmar que ya aparece visible.
+
 ## 1. Visión, marca e integración con Gente de Vuelo
 
 - **APROBADO:** el nombre del producto es **AeroSuite** con firma **By Gente de Vuelo**. Su identidad: A aerodinámica, colores azul aeronáutico/plata, base azul oscuro, estilo moderno y premium. Verificación legal de marca/dominio pendiente.
