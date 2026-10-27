@@ -62,10 +62,10 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
     <p>Ya confirmamos que este enlace pertenece al correo <strong id="inviteEmail">—</strong>. Elegí tu contraseña para completar el ingreso; no necesitás otro correo ni volver a ingresar tus datos.</p>
     <form id="welcomeForm" autocomplete="off">
       <label>Nueva contraseña
-       <span class="password-wrap"><input id="welcomePassword" type="password" name="aero-password-new" autocomplete="new-password" required minlength="10"><button type="button" class="password-eye" data-password-target="welcomePassword" aria-label="Mostrar contraseña" aria-pressed="false" title="Mostrar contraseña"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.7-7 10-7 10 7 10 7-3.7 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/><path class="eye-slash" d="M3 3l18 18"/></svg></button></span>
+       <span class="password-wrap"><input id="welcomePassword" type="password" name="aero-password-new" autocomplete="new-password" readonly required minlength="10"><button type="button" class="password-eye" data-password-target="welcomePassword" aria-label="Mostrar contraseña" aria-pressed="false" title="Mostrar contraseña"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.7-7 10-7 10 7 10 7-3.7 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/><path class="eye-slash" d="M3 3l18 18"/></svg></button></span>
       </label>
       <label>Repetí tu contraseña
-       <span class="password-wrap"><input id="welcomeRepeat" type="password" name="aero-password-confirm" autocomplete="new-password" required minlength="10"><button type="button" class="password-eye" data-password-target="welcomeRepeat" aria-label="Mostrar contraseña" aria-pressed="false" title="Mostrar contraseña"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.7-7 10-7 10 7 10 7-3.7 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/><path class="eye-slash" d="M3 3l18 18"/></svg></button></span>
+       <span class="password-wrap"><input id="welcomeRepeat" type="password" name="aero-password-confirm" autocomplete="new-password" readonly required minlength="10"><button type="button" class="password-eye" data-password-target="welcomeRepeat" aria-label="Mostrar contraseña" aria-pressed="false" title="Mostrar contraseña"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.7-7 10-7 10 7 10 7-3.7 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/><path class="eye-slash" d="M3 3l18 18"/></svg></button></span>
       </label>
       <p class="caption">Al menos 10 caracteres, incluyendo mayúscula, minúscula, número y símbolo. No utilices tu DNI.</p>
       <div class="actions">
@@ -172,7 +172,7 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
  byId('roleHeading').textContent='AeroSuite · acceso de '+humanRole;
  byId('openPortalButton').href=portalUrl;
  // Impedir que Chrome y gestores de contraseñas completen silenciosamente las claves del Superadministrador.
- const credentialFields=['email','password','signupEmail','signupPassword','signupRepeat'];
+ const credentialFields=['email','password','signupEmail','signupPassword','signupRepeat','welcomePassword','welcomeRepeat'];
  for(const button of document.querySelectorAll('[data-password-target]')){
   button.addEventListener('click',()=>{
    const input=byId(button.dataset.passwordTarget);
