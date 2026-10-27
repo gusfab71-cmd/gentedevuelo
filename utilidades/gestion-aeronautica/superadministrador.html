@@ -46,8 +46,6 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
 .institution-actions .full{grid-column:1/-1}
 .institution-actions .danger{grid-column:1/-1;background:#482f37;border-color:#b77b83;color:#ffe1e4;margin:0}
 .institution-actions .danger:hover:not(:disabled){background:#653a44}
-.institution-actions .enable-trial{grid-column:1/-1;background:#e2c08e;border:1px solid #e2c08e;color:#18222c;font-weight:850}
-.institution-actions .enable-trial:hover:not(:disabled){background:#f1d3a6}
 .institution-actions button:disabled{cursor:not-allowed;opacity:.55}
 .institution-empty{padding:23px;border:1px dashed #627d90;border-radius:12px;color:#c4d8e5;font-size:13px}
 @media(max-width:440px){.institution-actions{grid-template-columns:1fr}.institution-actions .full,.institution-actions .danger{grid-column:1}}
@@ -78,7 +76,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
 <div class="metric"><strong id="totalCount">0</strong><span>Instituciones</span></div>
 <div class="metric"><strong id="activeCount">0</strong><span>Licencias activas</span></div>
 <div class="metric"><strong id="trialCount">0</strong><span>En período de prueba</span></div>
-<div class="metric"><strong id="pendingCount">0</strong><span>Pendientes / suspendidas</span></div>
+<div class="metric"><strong id="pendingCount">0</strong><span>Suspendidas / vencidas</span></div>
 </div>
 <div class="layout">
 <section class="panel" aria-labelledby="formTitle">
@@ -90,10 +88,11 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
 <label>Responsable de contacto <input name="contact_name" maxlength="130"></label>
 <label>Correo institucional * <input name="contact_email" type="email" maxlength="254" required></label>
 <label>Plan <select name="plan" required><option value="essential">Essential</option><option value="pro">Pro</option></select></label>
-<label>Estado <select name="status" id="statusField"><option value="pending">Pendiente de habilitación</option><option value="trial">Prueba gratuita (30 días)</option><option value="active">Licencia activa</option><option value="suspended">Suspendida</option><option value="expired">Vencida</option></select></label>
+<div class="notice" id="initialTrialNotice">Al registrar la institución, se habilita automáticamente una <strong>prueba gratuita de 30 días</strong>. Luego podrás enviar la invitación al director desde su tarjeta.</div>
+<label id="statusEditLabel" hidden>Estado de licencia <select name="status" id="statusField"><option value="trial">Prueba gratuita (30 días)</option><option value="active">Licencia activa</option><option value="suspended">Suspendida</option><option value="expired">Vencida</option></select></label>
 <label id="licenseEndLabel" hidden>Vencimiento de la licencia * <input name="license_ends_date" id="licenseEnd" type="date"></label>
 <label>Observaciones internas <textarea name="notes" maxlength="3000"></textarea></label>
-<p class="muted">La prueba comienza al guardar la institución con estado «Prueba» y dura 30 días. No se convierte automáticamente en licencia paga.</p>
+<p class="muted">Los 30 días comienzan al registrar la institución. La prueba no se renueva automáticamente ni se convierte en licencia paga. Solo el Superadministrador puede cambiar el estado posteriormente.</p>
 <div class="actions"><button class="primary" id="saveButton" type="submit">Registrar institución</button><button type="button" id="cancelEdit" hidden>Cancelar edición</button></div>
 <div id="feedback" role="status" aria-live="polite"></div>
 </form>
@@ -103,7 +102,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
 <h2>Instituciones registradas</h2>
 <div id="listFeedback" role="status" aria-live="polite"></div>
 <div class="institution-grid" id="institutionsBody" aria-live="polite"><div class="institution-empty">Cargando instituciones…</div></div>
-<p class="muted">Para escuelas pendientes, usá «Habilitar 30 días y enviar invitación»: activa la prueba y solicita el correo al director en un solo paso. Si el correo falla, podrás reenviarlo desde la misma tarjeta. «Eliminar» requiere una confirmación y no borra las cuentas personales.</p>
+<p class="muted">Todas las instituciones comienzan con una prueba gratuita de 30 días. El correo al director se envía desde su tarjeta cuando pulses «Enviar invitación al director». Si falla, podrás reintentarlo sin reiniciar la prueba. «Eliminar» requiere una confirmación y no borra las cuentas personales.</p>
 </section>
 <section class="panel"><h2>Actividad reciente</h2><ol id="recent"><li>Sin operaciones registradas.</li></ol></section>
 </div>
@@ -115,10 +114,10 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
 (async()=>{
 const message=document.getElementById('accessMessage'),content=document.getElementById('adminContent');
 const form=document.getElementById('institutionForm'),feedback=document.getElementById('feedback');
-const statusField=document.getElementById('statusField'),endLabel=document.getElementById('licenseEndLabel'),endInput=document.getElementById('licenseEnd');
+const statusField=document.getElementById('statusField'),statusEditLabel=document.getElementById('statusEditLabel'),initialTrialNotice=document.getElementById('initialTrialNotice'),endLabel=document.getElementById('licenseEndLabel'),endInput=document.getElementById('licenseEnd');
 const body=document.getElementById('institutionsBody'),recent=document.getElementById('recent'),listFeedback=document.getElementById('listFeedback');
 let db,currentUser,editingId=null,records=[];
-const statusText={pending:'Pendiente',trial:'Prueba',active:'Activa',suspended:'Suspendida',expired:'Vencida'};
+const statusText={trial:'Prueba',active:'Activa',suspended:'Suspendida',expired:'Vencida'};
 const kindText={escuela:'Escuela',aeroclub:'Aeroclub',aerodromo:'Aeródromo'};
 const planText={essential:'Essential',pro:'Pro'};
 const byId=id=>document.getElementById(id);
@@ -143,7 +142,7 @@ async function reload(){
  byId('totalCount').textContent=records.length;
  byId('activeCount').textContent=records.filter(r=>effective(r).key==='active').length;
  byId('trialCount').textContent=records.filter(r=>effective(r).key==='trial').length;
- byId('pendingCount').textContent=records.filter(r=>['pending','suspended','expired'].includes(effective(r).key)).length;
+ byId('pendingCount').textContent=records.filter(r=>['suspended','expired'].includes(effective(r).key)).length;
  body.replaceChildren();
  if(!records.length){
   const empty=document.createElement('div');empty.className='institution-empty';
@@ -191,14 +190,6 @@ async function reload(){
   entry.textContent='Probar ingreso';
   entry.title='Abrir en incógnito con el correo autorizado de la institución';
   actions.append(entry);
-  if(row.status==='pending'&&!row.trial_started_at){
-    const start=document.createElement('button');
-    start.type='button';start.className='enable-trial';
-    start.textContent='Habilitar 30 días y enviar invitación';
-    start.title='Activar una única prueba de 30 días y enviar el correo al director';
-    start.addEventListener('click',()=>enableTrialAndInvite(row,start));
-    actions.append(start);
-  }
   if((row.status==='trial'&&Date.parse(row.trial_ends_at)>now())||
      (row.status==='active'&&Date.parse(row.license_ends_at)>now())){
     const send=document.createElement('button');
@@ -254,34 +245,6 @@ async function deliverDirectorInvite(row){
  if(!data?.ok)throw Error(data?.error||'El servicio no confirmó el envío.');
  return data;
 }
-async function enableTrialAndInvite(row,button){
- if(!window.confirm('¿Habilitar 30 días gratuitos para «'+row.name+'» y enviar una invitación real al director '+row.contact_email+'?'))return;
- button.disabled=true;
- let activated=false;
- listFeedback.textContent='Habilitando la prueba de «'+row.name+'»…';
- try{
-  const {data:updated,error:updateError}=await db.from('aerosuite_institutions')
-   .update({status:'trial'})
-   .eq('id',row.id).eq('status','pending').is('trial_started_at',null)
-   .select('id,name,status,trial_started_at,trial_ends_at,contact_email').maybeSingle();
-  if(updateError)throw updateError;
-  if(!updated||updated.status!=='trial'||!updated.trial_ends_at||
-     Date.parse(updated.trial_ends_at)<=now())
-    throw Error('La institución ya cambió de estado o no pudo habilitarse. Actualizá el panel.');
-  activated=true;
-  await reload();
-  listFeedback.textContent='Prueba habilitada hasta '+dateOnly(updated.trial_ends_at)+'. Enviando invitación al director…';
-  await deliverDirectorInvite(updated);
-  await reload();
-  listFeedback.textContent='«'+updated.name+'» tiene 30 días de prueba hasta '+dateOnly(updated.trial_ends_at)+
-   '. El proveedor aceptó la invitación para '+updated.contact_email+'. Revisá Recibidos y Spam.';
- }catch(err){
-  try{await reload()}catch(_){}
-  listFeedback.textContent=activated?
-   'La prueba de «'+row.name+'» quedó HABILITADA, pero la invitación NO se pudo enviar: '+(err?.message||'Error desconocido')+'. Usá «Enviar invitación al director» para reintentar sin reiniciar la prueba.':
-   'No se pudo habilitar «'+row.name+'»: '+(err?.message||'Error desconocido');
- }finally{button.disabled=false}
-}
 async function sendDirectorInvite(row,button){
  if(!confirm('¿Enviar una invitación real por correo a '+row.contact_email+' para administrar '+row.name+'?'))return;
  button.disabled=true;listFeedback.textContent='Enviando invitación al responsable…';
@@ -295,12 +258,14 @@ async function sendDirectorInvite(row,button){
 function edit(id){
  const r=records.find(item=>item.id===id);if(!r)return;
  editingId=r.id;for(const k of ['name','kind','cuit','contact_name','contact_email','plan','status','notes'])form.elements[k].value=r[k]||'';
+ statusEditLabel.hidden=false;initialTrialNotice.hidden=true;
  endInput.value=r.license_ends_at?new Date(r.license_ends_at).toISOString().slice(0,10):'';
  byId('formTitle').textContent='Gestionar: '+r.name;byId('saveButton').textContent='Guardar cambios';byId('cancelEdit').hidden=false;
  syncLicenseField();feedback.textContent='';form.scrollIntoView({behavior:'smooth',block:'start'});
 }
 function resetEditor(){
- editingId=null;form.reset();byId('formTitle').textContent='Registrar institución';byId('saveButton').textContent='Registrar institución';
+ editingId=null;form.reset();statusField.value='trial';statusEditLabel.hidden=true;initialTrialNotice.hidden=false;
+ byId('formTitle').textContent='Registrar institución';byId('saveButton').textContent='Registrar institución';
  byId('cancelEdit').hidden=true;syncLicenseField();feedback.textContent='';
 }
 byId('cancelEdit').addEventListener('click',resetEditor);
@@ -309,9 +274,10 @@ form.addEventListener('submit',async ev=>{
  const raw=new FormData(form);
  const payload={name:String(raw.get('name')||'').trim(),kind:String(raw.get('kind')),cuit:String(raw.get('cuit')||'').trim()||null,
  contact_name:String(raw.get('contact_name')||'').trim()||null,contact_email:String(raw.get('contact_email')||'').trim().toLowerCase(),
- plan:String(raw.get('plan')),status:String(raw.get('status')),notes:String(raw.get('notes')||'').trim()};
+ plan:String(raw.get('plan')),status:editingId?String(raw.get('status')):'trial',notes:String(raw.get('notes')||'').trim()};
  if(!payload.name||!payload.contact_email){feedback.textContent='Completá el nombre y el correo institucional.';return}
  if(!['essential','pro'].includes(payload.plan)){feedback.textContent='Seleccioná Essential o Pro.';return}
+ if(!['trial','active','suspended','expired'].includes(payload.status)){feedback.textContent='El estado seleccionado no es válido.';return}
  const prev=editingId?records.find(x=>x.id===editingId):null;
  if(payload.status==='active'){
    if(!endInput.value){feedback.textContent='Ingresá la fecha de vencimiento de la licencia.';return}
@@ -328,7 +294,9 @@ form.addEventListener('submit',async ev=>{
   const result=editingId?await db.from('aerosuite_institutions').update(payload).eq('id',editingId).select('id').single():
     await db.from('aerosuite_institutions').insert(payload).select('id').single();
   if(result.error)throw result.error;
-  resetEditor();await reload();feedback.textContent='Institución guardada correctamente.';
+  const wasEditing=Boolean(editingId);
+  resetEditor();await reload();
+  feedback.textContent=wasEditing?'Institución actualizada correctamente.':'Institución registrada con 30 días de prueba gratuita. Desde su tarjeta podés enviar la invitación al director.';
  }catch(error){showError(error)}finally{button.disabled=false}
 });
 try{
@@ -339,7 +307,7 @@ try{
  const role=await db.from('aerosuite_superadmins').select('user_id').eq('user_id',currentUser.id).maybeSingle();
  if(role.error)throw role.error;
  if(!role.data){message.textContent='Acceso denegado. Esta cuenta no tiene el rol de Superadministrador AeroSuite.';return}
- message.textContent='Acceso autorizado. Las altas institucionales no envían invitaciones ni habilitan el portal de las escuelas.';
+ message.textContent='Acceso autorizado. Cada nueva institución comienza automáticamente una prueba de 30 días. Para enviar el correo al director, usá el botón de su tarjeta.';
  content.hidden=false;syncLicenseField();await reload();
 }catch(error){message.textContent='No se pudo validar el acceso: '+(error?.message||'error de servicio')}
 })();
