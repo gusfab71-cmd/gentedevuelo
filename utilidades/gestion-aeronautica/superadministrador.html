@@ -46,6 +46,9 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
 .institution-actions .full{grid-column:1/-1}
 .institution-actions .danger{grid-column:1/-1;background:#482f37;border-color:#b77b83;color:#ffe1e4;margin:0}
 .institution-actions .danger:hover:not(:disabled){background:#653a44}
+.institution-actions .enable-trial{grid-column:1/-1;background:#e2c08e;border:1px solid #e2c08e;color:#18222c;font-weight:850}
+.institution-actions .enable-trial:hover:not(:disabled){background:#f1d3a6}
+.institution-actions button:disabled{cursor:not-allowed;opacity:.55}
 .institution-empty{padding:23px;border:1px dashed #627d90;border-radius:12px;color:#c4d8e5;font-size:13px}
 @media(max-width:440px){.institution-actions{grid-template-columns:1fr}.institution-actions .full,.institution-actions .danger{grid-column:1}}
 .status{border:1px solid #69899b;border-radius:100px;padding:4px 8px;white-space:nowrap;font-size:11px}
@@ -100,7 +103,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
 <h2>Instituciones registradas</h2>
 <div id="listFeedback" role="status" aria-live="polite"></div>
 <div class="institution-grid" id="institutionsBody" aria-live="polite"><div class="institution-empty">Cargando instituciones…</div></div>
-<p class="muted">Cada recuadro corresponde a una sola institución. «Eliminar institución» pide una única confirmación y borra sus invitaciones y asignaciones relacionadas; las cuentas personales no se borran.</p>
+<p class="muted">Para escuelas pendientes, usá «Habilitar 30 días y enviar invitación»: activa la prueba y solicita el correo al director en un solo paso. Si el correo falla, podrás reenviarlo desde la misma tarjeta. «Eliminar» requiere una confirmación y no borra las cuentas personales.</p>
 </section>
 <section class="panel"><h2>Actividad reciente</h2><ol id="recent"><li>Sin operaciones registradas.</li></ol></section>
 </div>
@@ -188,6 +191,14 @@ async function reload(){
   entry.textContent='Probar ingreso';
   entry.title='Abrir en incógnito con el correo autorizado de la institución';
   actions.append(entry);
+  if(row.status==='pending'&&!row.trial_started_at){
+    const start=document.createElement('button');
+    start.type='button';start.className='enable-trial';
+    start.textContent='Habilitar 30 días y enviar invitación';
+    start.title='Activar una única prueba de 30 días y enviar el correo al director';
+    start.addEventListener('click',()=>enableTrialAndInvite(row,start));
+    actions.append(start);
+  }
   if((row.status==='trial'&&Date.parse(row.trial_ends_at)>now())||
      (row.status==='active'&&Date.parse(row.license_ends_at)>now())){
     const send=document.createElement('button');
@@ -235,15 +246,47 @@ async function readFunctionError(error,data){
  }catch(_){}
  return error?.message||'El servidor no pudo completar el envío.';
 }
+async function deliverDirectorInvite(row){
+ const {data,error}=await db.functions.invoke('aerosuite-invitations',{
+  body:{mode:'send',institution_id:row.id,email:row.contact_email,role:'administrador'}
+ });
+ if(error)throw Error(await readFunctionError(error,data));
+ if(!data?.ok)throw Error(data?.error||'El servicio no confirmó el envío.');
+ return data;
+}
+async function enableTrialAndInvite(row,button){
+ if(!window.confirm('¿Habilitar 30 días gratuitos para «'+row.name+'» y enviar una invitación real al director '+row.contact_email+'?'))return;
+ button.disabled=true;
+ let activated=false;
+ listFeedback.textContent='Habilitando la prueba de «'+row.name+'»…';
+ try{
+  const {data:updated,error:updateError}=await db.from('aerosuite_institutions')
+   .update({status:'trial'})
+   .eq('id',row.id).eq('status','pending').is('trial_started_at',null)
+   .select('id,name,status,trial_started_at,trial_ends_at,contact_email').maybeSingle();
+  if(updateError)throw updateError;
+  if(!updated||updated.status!=='trial'||!updated.trial_ends_at||
+     Date.parse(updated.trial_ends_at)<=now())
+    throw Error('La institución ya cambió de estado o no pudo habilitarse. Actualizá el panel.');
+  activated=true;
+  await reload();
+  listFeedback.textContent='Prueba habilitada hasta '+dateOnly(updated.trial_ends_at)+'. Enviando invitación al director…';
+  await deliverDirectorInvite(updated);
+  await reload();
+  listFeedback.textContent='«'+updated.name+'» tiene 30 días de prueba hasta '+dateOnly(updated.trial_ends_at)+
+   '. El proveedor aceptó la invitación para '+updated.contact_email+'. Revisá Recibidos y Spam.';
+ }catch(err){
+  try{await reload()}catch(_){}
+  listFeedback.textContent=activated?
+   'La prueba de «'+row.name+'» quedó HABILITADA, pero la invitación NO se pudo enviar: '+(err?.message||'Error desconocido')+'. Usá «Enviar invitación al director» para reintentar sin reiniciar la prueba.':
+   'No se pudo habilitar «'+row.name+'»: '+(err?.message||'Error desconocido');
+ }finally{button.disabled=false}
+}
 async function sendDirectorInvite(row,button){
  if(!confirm('¿Enviar una invitación real por correo a '+row.contact_email+' para administrar '+row.name+'?'))return;
  button.disabled=true;listFeedback.textContent='Enviando invitación al responsable…';
  try{
-  const {data,error}=await db.functions.invoke('aerosuite-invitations',{
-   body:{mode:'send',institution_id:row.id,email:row.contact_email,role:'administrador'}
-  });
-  if(error)throw Error(await readFunctionError(error,data));
-  if(!data?.ok)throw Error(data?.error||'El envío no fue confirmado.');
+  await deliverDirectorInvite(row);
   await reload();
   listFeedback.textContent='El proveedor de correo aceptó la invitación a '+row.contact_email+'. Revisá Recibidos y Spam.';
  }catch(err){listFeedback.textContent='El correo NO se envió: '+(err?.message||'Error de servicio')+'. Comprobá la configuración del servicio de correo.'}
