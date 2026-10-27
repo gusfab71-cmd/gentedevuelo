@@ -6,6 +6,7 @@ const root=new URL('../utilidades/gestion-aeronautica/',import.meta.url);
 const admission=fs.readFileSync(new URL('ingreso-escuela.html',root),'utf8');
 const school=fs.readFileSync(new URL('portal-escuela.html',root),'utf8');
 const superadmin=fs.readFileSync(new URL('superadministrador.html',root),'utf8');
+const emailSender=fs.readFileSync(new URL('../../supabase/functions/aerosuite-invitations/index.ts',root),'utf8');
 const demo=fs.readFileSync(new URL('demo-autorizacion.html',root),'utf8');
 
 assert.match(admission,/id="signInPanel" hidden/,'No mostrar el formulario hasta verificar sesión');
@@ -16,6 +17,25 @@ assert.match(admission,/\.rpc\('aerosuite_accept_invitation_role'/,'La invitaci�
 assert.match(admission,/\.rpc\('aerosuite_accept_my_invitation'/,'Los enlaces anteriores mantienen compatibilidad');
 assert.match(admission,/p_institution_id:schoolId/,'Invitación atada al identificador institucional');
 assert.match(admission,/\.rpc\('aerosuite_my_institution_access_v2'/,'Ingreso consulta los derechos de cortesía y solo lectura');
+assert.match(emailSender,/auth\.admin\.generateLink\(\{type:"magiclink",email\}\)/,'La invitación verifica identidad con Magic Link personal');
+assert.match(emailSender,/properties\?\.hashed_token/,'Se toma únicamente el token hash emitido por Supabase');
+assert.match(emailSender,/#token_hash=/,'Token en fragmento para evitar enviarlo por HTTP al servidor web');
+assert.match(emailSender,/roleLabels\[role\]/,'Misma invitación para administrador, instructor y alumno');
+assert.match(emailSender,/role==="administrador"/,'Solo Superadministrador autoriza directores');
+assert.match(emailSender,/member\.data/,'Director verificado autoriza instructores y alumnos');
+assert.doesNotMatch(emailSender,/body:JSON\.stringify\(\{[^}]*password/,'Ninguna contraseña viaja por el correo');
+
+assert.match(admission,/id="welcomePanel" hidden/,'Nueva pantalla para crear contraseña desde el propio enlace');
+assert.match(admission,/db\.auth\.verifyOtp\(\{token_hash:oneTimeToken,type:'magiclink'\}\)/,'Verificar el enlace directamente con Supabase Auth');
+assert.match(admission,/passwordSetupRequired=true/,'Crear contraseña solo luego de verificar enlace');
+assert.match(admission,/db\.auth\.updateUser\(\{password\}\)/,'Guardar contraseña directamente en sesión verificada');
+assert.match(admission,/await verifyAndEnter\(\)/,'Una vez creada, ingresar al portal sin segundo correo');
+assert.match(admission,/existingAccountButton/,'Cuenta existente puede conservar contraseña');
+assert.match(admission,/history\.replaceState\(null,''/,'Eliminar token de URL visible tras procesarlo');
+assert.match(admission,/data-password-target="welcomePassword"/,'Ojito en nueva clave');
+assert.match(admission,/data-password-target="welcomeRepeat"/,'Ojito al repetir nueva clave');
+assert.match(admission,/oneTimeToken/,'Detectar token en invitación');
+assert.match(admission,/const humanRole=selectedRole==='administrador'/,'La activación usa el rol exacto del enlace');
 assert.match(admission,/auth\.signUp/,'Alta de cuenta directamente en AeroSuite');
 assert.match(admission,/id="confirmationPanel" hidden/,'Crear cuenta habilita un segundo paso claro de confirmación');
 assert.match(admission,/id="resendForm"/,'Permitir reenviar confirmación desde AeroSuite');
