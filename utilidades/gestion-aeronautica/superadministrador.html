@@ -89,7 +89,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
 <label>CUIT (opcional) <input name="cuit" maxlength="20" inputmode="numeric"></label>
 <label>Responsable de contacto <input name="contact_name" maxlength="130"></label>
 <label>Correo institucional * <input name="contact_email" type="email" maxlength="254" required></label>
-<label>Plan <select name="plan"><option value="sin_asignar">Sin asignar</option><option value="institucional">Institucional</option><option value="essential">Essential</option><option value="pro">Pro</option><option value="aeroclub_pro">AeroClub Pro</option></select></label>
+<label>Plan <select name="plan" required><option value="essential">Essential</option><option value="pro">Pro</option></select></label>
 <label>Estado <select name="status" id="statusField"><option value="pending">Pendiente de habilitación</option><option value="trial">Prueba gratuita (30 días)</option><option value="active">Licencia activa</option><option value="suspended">Suspendida</option><option value="expired">Vencida</option></select></label>
 <label id="licenseEndLabel" hidden>Vencimiento de la licencia * <input name="license_ends_date" id="licenseEnd" type="date"></label>
 <label>Observaciones internas <textarea name="notes" maxlength="3000"></textarea></label>
@@ -120,7 +120,7 @@ const body=document.getElementById('institutionsBody'),recent=document.getElemen
 let db,currentUser,editingId=null,records=[];
 const statusText={pending:'Pendiente',trial:'Prueba',active:'Activa',suspended:'Suspendida',expired:'Vencida'};
 const kindText={escuela:'Escuela',aeroclub:'Aeroclub',aerodromo:'Aeródromo'};
-const planText={sin_asignar:'Sin asignar',institucional:'Institucional',essential:'Essential',pro:'Pro',aeroclub_pro:'AeroClub Pro'};
+const planText={essential:'Essential',pro:'Pro'};
 const byId=id=>document.getElementById(id);
 const now=()=>Date.now();
 const effective=row=>{
@@ -311,6 +311,7 @@ form.addEventListener('submit',async ev=>{
  contact_name:String(raw.get('contact_name')||'').trim()||null,contact_email:String(raw.get('contact_email')||'').trim().toLowerCase(),
  plan:String(raw.get('plan')),status:String(raw.get('status')),notes:String(raw.get('notes')||'').trim()};
  if(!payload.name||!payload.contact_email){feedback.textContent='Completá el nombre y el correo institucional.';return}
+ if(!['essential','pro'].includes(payload.plan)){feedback.textContent='Seleccioná Essential o Pro.';return}
  const prev=editingId?records.find(x=>x.id===editingId):null;
  if(payload.status==='active'){
    if(!endInput.value){feedback.textContent='Ingresá la fecha de vencimiento de la licencia.';return}
