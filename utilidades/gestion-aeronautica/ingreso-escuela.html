@@ -62,7 +62,7 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
     <form id="loginForm" autocomplete="off">
       <label>Correo electrónico<input id="email" type="email" name="as-invite-user" autocomplete="off" readonly required maxlength="254"></label>
       <label>Contraseña<span class="password-wrap"><input id="password" type="password" name="as-invite-pass" autocomplete="off" readonly required minlength="1"><button type="button" class="password-eye" data-password-target="password" aria-label="Mostrar contraseña" aria-pressed="false" title="Mostrar contraseña"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.7-7 10-7 10 7 10 7-3.7 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/><path class="eye-slash" d="M3 3l18 18"/></svg></button></span></label>
-      <div class="actions"><button type="submit" class="primary" id="loginButton">Ingresar a AeroSuite</button><button type="button" id="showRegister">Crear cuenta nueva</button><button type="button" id="forgotButton">Olvidé mi contraseña</button></div>
+      <div class="actions"><button type="submit" class="primary" id="loginButton">Ingresar a AeroSuite</button><button type="button" id="showRegister">Crear cuenta nueva</button><button type="button" id="forgotButton">Olvidé mi contraseña</button><button type="button" id="showConfirmationFromLogin">Verificar correo</button></div>
     </form>
     <p class="caption">Si ya tenés una cuenta Gente de Vuelo con ese correo y contraseña, podés utilizarla aquí. No crees otra cuenta ni cambies su contraseña.</p>
   </section>
@@ -229,6 +229,11 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
  }
  byId('showRegister').addEventListener('click',()=>{showPanel('registerPanel');setStatus('Creá una contraseña personal distinta de la del administrador.')});
  byId('backLogin').addEventListener('click',()=>{showPanel('signInPanel');setStatus('Ingresá con tu correo y tu contraseña existente.')});
+ byId('showConfirmationFromLogin').addEventListener('click',()=>{
+  showPanel('confirmationPanel');
+  byId('confirmationEmail').value=lastSignupEmail||byId('email').value.trim().toLowerCase();
+  setStatus('Si ya creaste tu contraseña, verificá tu correo con el segundo mensaje. Podés reenviar la confirmación aquí.');
+ });
  byId('showConfirmation').addEventListener('click',()=>{
   showPanel('confirmationPanel');
   byId('confirmationEmail').value=lastSignupEmail||byId('signupEmail').value.trim().toLowerCase();
@@ -333,7 +338,13 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
   setStatus('Ingresá o creá la cuenta correspondiente al correo que recibió la invitación.');
  });
  byId('acceptButton').addEventListener('click',()=>void verifyAndEnter());
- await verifyAndEnter();
+ const authenticationError=new URLSearchParams(location.hash.slice(1));
+ if(authenticationError.has('error_code')||authenticationError.has('error_description')){
+  showPanel('confirmationPanel');
+  setStatus('El enlace de confirmación no pudo completarse o venció. Solicitá otro con «Reenviar confirmación».');
+ }else{
+  await verifyAndEnter();
+ }
 })();
 </script>
 </body></html>
