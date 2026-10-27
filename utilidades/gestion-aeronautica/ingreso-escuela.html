@@ -44,28 +44,28 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
 </header>
 <main>
  <span class="eyebrow">Acceso a una institución autorizada</span>
- <h1>Ingresar a AeroSuite</h1>
+ <h1 id="inviteTitle">Crear cuenta o ingresar a AeroSuite</h1>
  <div class="grid">
  <div>
-  <p>Acceso directo para directores, instructores y alumnos. Ingresá con el <strong>correo que recibió la invitación</strong> y tu contraseña personal, o creá tu cuenta AeroSuite desde esta misma pantalla.</p>
+  <p>Fuiste invitado a utilizar <strong>AeroSuite de Gente de Vuelo</strong>. Creá una cuenta con el correo que recibió la invitación y elegí tu propia contraseña. Si ya tenés cuenta, ingresá con ella.</p>
   <div class="notice">La invitación solo puede aceptarla una cuenta autenticada y con correo verificado que coincida con la dirección autorizada. Ninguna clave se comparte con AeroSuite.</div>
   <section class="panel" id="signInPanel" hidden>
-    <h2>Correo y contraseña</h2>
-    <form id="loginForm">
-      <label>Correo electrónico<input id="email" type="email" name="email" autocomplete="username" required maxlength="254"></label>
-      <label>Contraseña<input id="password" type="password" name="password" autocomplete="current-password" required minlength="1"></label>
-      <div class="actions"><button type="submit" class="primary" id="loginButton">Ingresar a AeroSuite</button><button type="button" id="showRegister">Crear cuenta</button><button type="button" id="forgotButton">Olvidé mi contraseña</button></div>
+    <h2>¿Ya tenés cuenta? Ingresá</h2>
+    <form id="loginForm" autocomplete="off">
+      <label>Correo electrónico<input id="email" type="email" name="as-invite-user" autocomplete="off" readonly required maxlength="254"></label>
+      <label>Contraseña<input id="password" type="password" name="as-invite-pass" autocomplete="off" readonly required minlength="1"></label>
+      <div class="actions"><button type="submit" class="primary" id="loginButton">Ingresar a AeroSuite</button><button type="button" id="showRegister">Crear cuenta nueva</button><button type="button" id="forgotButton">Olvidé mi contraseña</button></div>
     </form>
     <p class="caption">Si ya tenés una cuenta Gente de Vuelo con ese correo y contraseña, podés utilizarla aquí. No crees otra cuenta ni cambies su contraseña.</p>
   </section>
   <section class="panel" id="registerPanel" hidden>
-  <h2>Crear mi cuenta AeroSuite</h2>
+  <h2>Crear tu cuenta AeroSuite</h2>
   <p class="caption">Elegí una clave nueva, segura y privada. No uses tu DNI ni la misma contraseña de otra cuenta. Tu correo deberá verificarse antes de habilitar la institución.</p>
-  <form id="signupForm">
-   <label>Correo que recibió la invitación<input id="signupEmail" type="email" autocomplete="email" maxlength="254" required></label>
-   <label>Elegí tu contraseña<input id="signupPassword" type="password" autocomplete="new-password" minlength="10" required></label>
-   <label>Repetí tu contraseña<input id="signupRepeat" type="password" autocomplete="new-password" minlength="10" required></label>
-   <div class="actions"><button class="primary" id="signupButton" type="submit">Crear cuenta y verificar correo</button><button id="backLogin" type="button">Volver al ingreso</button></div>
+  <form id="signupForm" autocomplete="off">
+   <label>Correo que recibió la invitación<input id="signupEmail" type="email" name="as-register-identity" autocomplete="off" readonly maxlength="254" required></label>
+   <label>Elegí tu contraseña<input id="signupPassword" type="password" name="as-new-secret" autocomplete="new-password" readonly minlength="10" required></label>
+   <label>Repetí tu contraseña<input id="signupRepeat" type="password" name="as-confirm-secret" autocomplete="new-password" readonly minlength="10" required></label>
+   <div class="actions"><button class="primary" id="signupButton" type="submit">Crear cuenta y verificar correo</button><button id="backLogin" type="button">Ya tengo cuenta · Ingresar</button></div>
   </form>
 </section>
 <section class="panel" id="recoveryPanel" hidden>
@@ -95,122 +95,175 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
  <aside class="panel">
    <h2>Portal institucional</h2>
    <div class="info">
-     <strong>Institución invitada</strong>
+     <strong id="roleHeading">Invitación institucional</strong>
      <p>El correo de la invitación determina a qué institución y rol podrás vincularte.</p>
    </div>
    <p class="caption">Durante esta fase podrás consultar la portada institucional de tu rol. Los módulos operativos permanecerán bloqueados hasta que se complete su separación de datos.</p>
-   <p class="caption"><strong>Si administrás otra cuenta, usá una ventana de incógnito para mantener las sesiones separadas.</p>
+   <p class="caption">AeroSuite mantiene su sesión institucional separada de la sesión de Superadministrador, incluso en el mismo navegador.</p>
  </aside>
  </div>
 </main>
 <script>
 'use strict';
 (async()=>{
-const byId=id=>document.getElementById(id);
-const setStatus=s=>{byId('status').textContent=s};
-const search=new URLSearchParams(location.search);
-const schoolId=search.get('institucion');
-if(!schoolId||!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(schoolId)){
- setStatus('Falta identificar la escuela. Solicitá un enlace institucional al Superadministrador.');return;
-}
-if(!window.supabase||!window.GDV_CONFIG){setStatus('No se pudo cargar el inicio de sesión.');return}
-const db=supabase.createClient(GDV_CONFIG.url,GDV_CONFIG.key);
-const activationUrl=location.origin+location.pathname+'?institucion='+encodeURIComponent(schoolId);
-const securePassword=value=>value.length>=10&&/[A-Z]/.test(value)&&/[a-z]/.test(value)&&/[0-9]/.test(value)&&/[^A-Za-z0-9]/.test(value);
-byId('openPortalButton').href='portal-escuela.html?institucion='+encodeURIComponent(schoolId);
-let user=null;
-async function refresh(){
- const result=await db.auth.getUser();
- user=result.error?null:result.data?.user||null;
- byId('signInPanel').hidden=!!user;
- byId('verifiedPanel').hidden=!user;
- if(user){byId('registerPanel').hidden=true;if(byId('changePasswordForm').hidden)byId('recoveryPanel').hidden=true;}
- if(!user){setStatus('Ingresá con tu correo personal para verificar la invitación.');return}
- byId('accountEmail').textContent=user.email||'(sin correo)';
- const {data,error}=await db.rpc('aerosuite_my_institution_access');
- const match=(!error&&Array.isArray(data))?data.find(x=>x.institution_id===schoolId&&x.can_access):null;
- byId('openPortalButton').hidden=!match;
- byId('acceptButton').hidden=!!match;
- setStatus(match?'Tu cuenta ya está autorizada en esta institución. Podés abrir el portal.':'Identidad verificada. Revisá la invitación con el botón «Aceptar invitación».');
-}
-const displayOnly=(panelId)=>{
- for(const id of ['signInPanel','registerPanel','recoveryPanel'])byId(id).hidden=id!==panelId;
-};
-byId('showRegister').addEventListener('click',()=>{displayOnly('registerPanel');setStatus('Elegí una contraseña personal. Nunca utilices tu DNI.')});
-byId('backLogin').addEventListener('click',()=>{displayOnly('signInPanel');setStatus('Ingresá con tu cuenta personal.')});
-byId('forgotButton').addEventListener('click',()=>{displayOnly('recoveryPanel');byId('forgotForm').hidden=false;byId('changePasswordForm').hidden=true;setStatus('Ingresá el correo para recibir instrucciones de recuperación.')});
-byId('backRecovery').addEventListener('click',()=>{displayOnly('signInPanel');setStatus('Ingresá con tu cuenta personal.')});
-byId('signupForm').addEventListener('submit',async ev=>{
- ev.preventDefault();
- const email=byId('signupEmail').value.trim().toLowerCase();
- const pwd=byId('signupPassword').value;
- if(!securePassword(pwd)){setStatus('La contraseña debe tener al menos 10 caracteres, mayúscula, minúscula, número y símbolo.');return}
- if(pwd!==byId('signupRepeat').value){setStatus('Las contraseñas no coinciden.');return}
- const button=byId('signupButton');button.disabled=true;setStatus('Registrando cuenta en AeroSuite…');
- try{
-  const {error}=await db.auth.signUp({email,password:pwd,options:{emailRedirectTo:activationUrl}});
-  if(error)throw error;
-  byId('signupPassword').value='';byId('signupRepeat').value='';
-  setStatus('Revisá el correo para confirmar tu cuenta. Volvé a este ingreso luego de verificarla. Si el correo ya estaba registrado, usá su contraseña existente o recuperala.');
- }catch(err){setStatus('No se pudo registrar la cuenta: '+(err?.message||'Error de servicio'))}
- finally{button.disabled=false}
-});
-byId('forgotForm').addEventListener('submit',async ev=>{
- ev.preventDefault();
- try{
-  const {error}=await db.auth.resetPasswordForEmail(byId('forgotEmail').value.trim(),{redirectTo:activationUrl});
-  if(error)throw error;
-  setStatus('Si el correo está registrado, recibirás instrucciones para restablecer la contraseña.');
- }catch(err){setStatus('No se pudo solicitar la recuperación: '+(err?.message||'Error de servicio'))}
-});
-db.auth.onAuthStateChange((event)=>{
- if(event==='PASSWORD_RECOVERY'){
-  displayOnly('recoveryPanel');
-  byId('forgotForm').hidden=true;byId('changePasswordForm').hidden=false;
-  byId('verifiedPanel').hidden=true;
-  setStatus('Creá una nueva contraseña para completar la recuperación.');
+ const byId=id=>document.getElementById(id);
+ const setStatus=message=>{byId('status').textContent=message};
+ const query=new URLSearchParams(location.search);
+ const schoolId=query.get('institucion');
+ const selectedRole=query.get('rol')||'';
+ const roles={administrador:'administrador',instructor:'instructor',alumno:'alumno'};
+ if(!schoolId||!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(schoolId)){
+  setStatus('Este enlace no identifica una institución válida. Pedí una nueva invitación a AeroSuite.');return;
  }
-});
-byId('changePasswordForm').addEventListener('submit',async ev=>{
- ev.preventDefault();
- const password=byId('newPassword').value;
- if(!securePassword(password)||password!==byId('newPassword2').value){setStatus('Revisá la complejidad y confirmación de la contraseña.');return}
- const {error}=await db.auth.updateUser({password});
- if(error){setStatus('No se pudo cambiar la contraseña: '+error.message);return}
- byId('changePasswordForm').reset();setStatus('Contraseña actualizada. Podés aceptar la invitación.');
- await refresh();
-});
-byId('loginForm').addEventListener('submit',async e=>{
- e.preventDefault();setStatus('Verificando correo y contraseña…');
- const btn=byId('loginButton');btn.disabled=true;
- try{
-  const {error}=await db.auth.signInWithPassword({email:byId('email').value.trim(),password:byId('password').value});
-  if(error)throw error;
-  byId('password').value='';
-  await refresh();
- }catch(error){setStatus('No se pudo iniciar sesión: '+(error.message||'verificá las credenciales.'))}
- finally{btn.disabled=false}
-});
-byId('switchButton').addEventListener('click',async()=>{
- setStatus('Cerrando sesión de esta ventana…');
- const {error}=await db.auth.signOut();
- if(error){setStatus('No se pudo cambiar de cuenta: '+error.message);return}
- byId('openPortalButton').hidden=true;
- await refresh();
-});
-byId('acceptButton').addEventListener('click',async()=>{
- const btn=byId('acceptButton');btn.disabled=true;
- setStatus('Verificando la invitación en Supabase…');
- try{
-  const {data,error}=await db.rpc('aerosuite_accept_my_invitation',{p_institution_id:schoolId});
-  if(error)throw error;
-  if(!data?.ok)throw Error('La autorización no pudo verificarse.');
-  await refresh();
-  setStatus('Invitación aceptada. Tu cuenta quedó asociada a esta institución con su rol autorizado.');
- }catch(error){setStatus('No se pudo activar: '+(error.message||'La invitación no es válida para esta cuenta.'))}
- finally{btn.disabled=false}
-});
-await refresh();
+ if(selectedRole&&!roles[selectedRole]){setStatus('El rol indicado en la invitación no es válido. Solicitá un enlace actualizado.');return}
+ if(!window.supabase||!window.GDV_CONFIG){setStatus('No se pudo cargar el servicio de ingreso.');return}
+ // La sesión del Superadministrador/Gente de Vuelo usa otra clave de almacenamiento.
+ const db=supabase.createClient(GDV_CONFIG.url,GDV_CONFIG.key,{
+  auth:{storageKey:'aerosuite-institucional-v2-auth',autoRefreshToken:true,
+   persistSession:true,detectSessionInUrl:true,flowType:'implicit'}
+ });
+ const activationUrl=location.origin+location.pathname+'?institucion='+encodeURIComponent(schoolId)
+  +(selectedRole?'&rol='+encodeURIComponent(selectedRole):'');
+ const portalUrl='portal-escuela.html?institucion='+encodeURIComponent(schoolId)
+  +(selectedRole?'&rol='+encodeURIComponent(selectedRole):'');
+ const validPassword=value=>value.length>=10&&/[A-Z]/.test(value)&&/[a-z]/.test(value)&&/[0-9]/.test(value)&&/[^A-Za-z0-9]/.test(value);
+ const humanRole=selectedRole==='administrador'?'administrador':selectedRole==='instructor'?'instructor':selectedRole==='alumno'?'alumno':'integrante';
+ byId('inviteTitle').textContent='Invitación para crear cuenta como '+humanRole;
+ byId('roleHeading').textContent='AeroSuite · acceso de '+humanRole;
+ byId('openPortalButton').href=portalUrl;
+ // Impedir que Chrome y gestores de contraseñas completen silenciosamente las claves del Superadministrador.
+ const credentialFields=['email','password','signupEmail','signupPassword','signupRepeat'];
+ for(const id of credentialFields){
+  const input=byId(id);
+  input.value='';
+  input.addEventListener('focus',()=>input.removeAttribute('readonly'),{once:true});
+  input.addEventListener('pointerdown',()=>input.removeAttribute('readonly'),{once:true});
+  input.addEventListener('keydown',()=>input.removeAttribute('readonly'),{once:true});
+ }
+ window.addEventListener('pageshow',event=>{
+  if(event.persisted){for(const id of ['password','signupPassword','signupRepeat'])byId(id).value=''}
+ });
+ let user=null,processing=false,recovering=false;
+ const showPanel=panel=>{
+  for(const id of ['signInPanel','registerPanel','recoveryPanel','verifiedPanel'])
+   byId(id).hidden=id!==panel;
+ };
+ const normalizeError=error=>{
+  const message=String(error?.message||error||'Error desconocido');
+  if(/invalid login credentials|invalid_credentials/i.test(message))
+   return 'El correo o la contraseña no coinciden con una cuenta habilitada. Si nunca creaste tu cuenta, usá «Crear cuenta». Si ya existe, utilizá tu clave actual o «Olvidé mi contraseña».';
+  if(/email not confirmed/i.test(message))
+   return 'Primero verificá el correo con el enlace que envió Supabase Auth. Después volvé a la invitación.';
+  return message;
+ };
+ async function verifyAndEnter(){
+  if(processing||recovering)return;
+  processing=true;
+  try{
+   const {data:auth,error:authError}=await db.auth.getUser();
+   user=authError?null:auth?.user||null;
+   if(!user){showPanel('registerPanel');setStatus('Completá tu propio correo y creá una contraseña. Si ya tenés una cuenta, elegí «Ya tengo cuenta».');return}
+   showPanel('verifiedPanel');
+   byId('accountEmail').textContent=user.email||'(correo no disponible)';
+   if(!user.email_confirmed_at){setStatus('Tu correo todavía debe verificarse. Revisá el mensaje de confirmación.');return}
+   const access=await db.rpc('aerosuite_my_institution_access');
+   if(access.error)throw access.error;
+   const member=(access.data||[]).find(x=>x.institution_id===schoolId&&x.can_access&&(!selectedRole||x.my_role===selectedRole));
+   if(member){
+    setStatus('Cuenta autorizada. Accediendo al portal '+member.my_role+'…');
+    location.replace(portalUrl);return;
+   }
+   setStatus('Correo verificado. Activando tu invitación como '+humanRole+'…');
+   const claim=selectedRole?
+    await db.rpc('aerosuite_accept_invitation_role',{p_institution_id:schoolId,p_role:selectedRole}):
+    await db.rpc('aerosuite_accept_my_invitation',{p_institution_id:schoolId});
+   if(claim.error)throw claim.error;
+   if(!claim.data?.ok)throw Error('No fue posible asociar esta cuenta con la institución.');
+   const activatedRole=claim.data.role||selectedRole;
+   setStatus('Invitación activada como '+activatedRole+'. Entrando a tu portal…');
+   location.replace('portal-escuela.html?institucion='+encodeURIComponent(schoolId)+'&rol='+encodeURIComponent(activatedRole));
+  }catch(error){
+   showPanel('verifiedPanel');
+   byId('acceptButton').hidden=false;
+   setStatus('No se pudo completar la activación: '+normalizeError(error)+'. Si tenés otra cuenta abierta, usá «Cambiar de cuenta».');
+  }finally{processing=false}
+ }
+ byId('showRegister').addEventListener('click',()=>{showPanel('registerPanel');setStatus('Creá una contraseña personal distinta de la del administrador.')});
+ byId('backLogin').addEventListener('click',()=>{showPanel('signInPanel');setStatus('Ingresá con tu correo y tu contraseña existente.')});
+ byId('forgotButton').addEventListener('click',()=>{
+  showPanel('recoveryPanel');byId('forgotForm').hidden=false;byId('changePasswordForm').hidden=true;
+  setStatus('Ingresá tu propio correo para recuperar el acceso.');
+ });
+ byId('backRecovery').addEventListener('click',()=>{showPanel('signInPanel');setStatus('Ingresá con tu cuenta.')});
+ byId('signupForm').addEventListener('submit',async event=>{
+  event.preventDefault();
+  const email=byId('signupEmail').value.trim().toLowerCase();
+  const password=byId('signupPassword').value;
+  if(!validPassword(password)){setStatus('La contraseña requiere 10 caracteres, mayúscula, minúscula, número y símbolo.');return}
+  if(password!==byId('signupRepeat').value){setStatus('Las contraseñas no coinciden.');return}
+  const button=byId('signupButton');button.disabled=true;
+  try{
+   setStatus('Creando tu cuenta personal…');
+   const {data,error}=await db.auth.signUp({email,password,options:{emailRedirectTo:activationUrl}});
+   if(error)throw error;
+   byId('signupPassword').value='';byId('signupRepeat').value='';
+   if(data?.user&&Array.isArray(data.user.identities)&&data.user.identities.length===0){
+    setStatus('Este correo podría estar registrado. Si ya tenés cuenta, seleccioná «Ya tengo cuenta» o recuperá tu contraseña. Crear otra clave aquí no modifica una cuenta existente.');
+    return;
+   }
+   if(data?.session){await verifyAndEnter();return}
+   setStatus('Solicitud recibida. Revisá tu correo y confirmá la dirección desde el mensaje de Supabase. Cuando vuelvas a AeroSuite desde el enlace, continuaremos con la activación sin pedirte ingresar dos veces. Si ya tenías cuenta, usá su clave vigente.');
+  }catch(error){setStatus('No se pudo crear la cuenta: '+normalizeError(error))}
+  finally{button.disabled=false}
+ });
+ byId('loginForm').addEventListener('submit',async event=>{
+  event.preventDefault();const button=byId('loginButton');button.disabled=true;
+  try{
+   const email=byId('email').value.trim();
+   const password=byId('password').value;
+   if(!email||!password){setStatus('Completá tu correo y contraseña.');return}
+   setStatus('Verificando tu identidad…');
+   const {error}=await db.auth.signInWithPassword({email,password});
+   byId('password').value='';
+   if(error)throw error;
+   await verifyAndEnter();
+  }catch(error){setStatus(normalizeError(error))}
+  finally{button.disabled=false}
+ });
+ byId('forgotForm').addEventListener('submit',async event=>{
+  event.preventDefault();
+  const {error}=await db.auth.resetPasswordForEmail(byId('forgotEmail').value.trim(),{redirectTo:activationUrl});
+  setStatus(error?'No se pudo solicitar recuperación: '+normalizeError(error):
+   'Si la cuenta existe, llegará un correo con instrucciones para elegir una contraseña nueva.');
+ });
+ db.auth.onAuthStateChange((event)=>{
+  if(event==='PASSWORD_RECOVERY'){
+   recovering=true;showPanel('recoveryPanel');
+   byId('forgotForm').hidden=true;byId('changePasswordForm').hidden=false;
+   setStatus('Elegí y confirmá tu nueva contraseña.');
+  }else if(event==='SIGNED_IN'&&!recovering){
+   setTimeout(()=>{void verifyAndEnter()},0);
+  }
+ });
+ byId('changePasswordForm').addEventListener('submit',async event=>{
+  event.preventDefault();const password=byId('newPassword').value;
+  if(!validPassword(password)||password!==byId('newPassword2').value){setStatus('La contraseña nueva no cumple los requisitos o no coincide.');return}
+  const {error}=await db.auth.updateUser({password});
+  if(error){setStatus(normalizeError(error));return}
+  byId('changePasswordForm').reset();recovering=false;
+  setStatus('Contraseña actualizada. Verificando tu invitación…');
+  await verifyAndEnter();
+ });
+ byId('switchButton').addEventListener('click',async()=>{
+  await db.auth.signOut();
+  user=null;recovering=false;
+  for(const id of credentialFields)byId(id).value='';
+  showPanel('registerPanel');
+  byId('acceptButton').hidden=false;
+  setStatus('Ingresá o creá la cuenta correspondiente al correo que recibió la invitación.');
+ });
+ byId('acceptButton').addEventListener('click',()=>void verifyAndEnter());
+ await verifyAndEnter();
 })();
 </script>
 </body></html>
