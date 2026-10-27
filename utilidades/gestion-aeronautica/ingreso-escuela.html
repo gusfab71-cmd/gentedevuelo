@@ -23,7 +23,15 @@ input{width:100%;border-radius:9px;border:1px solid #7092a6;background:#0f2432;c
 button,.button{display:inline-flex;justify-content:center;align-items:center;gap:6px;cursor:pointer;font:inherit;font-size:13px;font-weight:800;padding:12px 17px;border-radius:9px;border:1px solid #7795a9;background:#29495e;color:#f3f9ff;text-decoration:none}
 button.primary,.button.primary{background:#e6c996;color:#152535;border-color:#e6c996}
 .inlink{background:transparent;border:0;padding:0;color:#a9d7f5;text-decoration:underline;font-size:13px;font-weight:600}
-#registerPanel,#recoveryPanel{border-color:#7a98a9}
+#registerPanel,#recoveryPanel,#confirmationPanel{border-color:#7a98a9}
+.password-wrap{position:relative;display:block}
+.password-wrap input{padding-right:58px}
+.password-eye{position:absolute;right:5px;top:50%;transform:translateY(-50%);padding:9px;min-width:42px;min-height:40px;border:0;background:transparent;color:#d9ebf6;border-radius:7px}
+.password-eye:hover{background:#32516b}
+.password-eye svg{display:block;width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.password-eye .eye-slash{display:none}
+.password-eye[aria-pressed="true"] .eye-slash{display:block}
+.confirm-action{background:#20483f;border:1px solid #629787;color:#d8f3eb}
 
 button:disabled{opacity:.5;cursor:not-allowed}
 button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid #c1e4ff;outline-offset:3px}
@@ -53,7 +61,7 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
     <h2>¿Ya tenés cuenta? Ingresá</h2>
     <form id="loginForm" autocomplete="off">
       <label>Correo electrónico<input id="email" type="email" name="as-invite-user" autocomplete="off" readonly required maxlength="254"></label>
-      <label>Contraseña<input id="password" type="password" name="as-invite-pass" autocomplete="off" readonly required minlength="1"></label>
+      <label>Contraseña<span class="password-wrap"><input id="password" type="password" name="as-invite-pass" autocomplete="off" readonly required minlength="1"><button type="button" class="password-eye" data-password-target="password" aria-label="Mostrar contraseña" aria-pressed="false" title="Mostrar contraseña"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.7-7 10-7 10 7 10 7-3.7 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/><path class="eye-slash" d="M3 3l18 18"/></svg></button></span></label>
       <div class="actions"><button type="submit" class="primary" id="loginButton">Ingresar a AeroSuite</button><button type="button" id="showRegister">Crear cuenta nueva</button><button type="button" id="forgotButton">Olvidé mi contraseña</button></div>
     </form>
     <p class="caption">Si ya tenés una cuenta Gente de Vuelo con ese correo y contraseña, podés utilizarla aquí. No crees otra cuenta ni cambies su contraseña.</p>
@@ -63,10 +71,22 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
   <p class="caption">Elegí una clave nueva, segura y privada. No uses tu DNI ni la misma contraseña de otra cuenta. Tu correo deberá verificarse antes de habilitar la institución.</p>
   <form id="signupForm" autocomplete="off">
    <label>Correo que recibió la invitación<input id="signupEmail" type="email" name="as-register-identity" autocomplete="off" readonly maxlength="254" required></label>
-   <label>Elegí tu contraseña<input id="signupPassword" type="password" name="as-new-secret" autocomplete="new-password" readonly minlength="10" required></label>
-   <label>Repetí tu contraseña<input id="signupRepeat" type="password" name="as-confirm-secret" autocomplete="new-password" readonly minlength="10" required></label>
-   <div class="actions"><button class="primary" id="signupButton" type="submit">Crear cuenta y verificar correo</button><button id="backLogin" type="button">Ya tengo cuenta · Ingresar</button></div>
+   <label>Elegí tu contraseña<span class="password-wrap"><input id="signupPassword" type="password" name="as-new-secret" autocomplete="new-password" readonly minlength="10" required><button type="button" class="password-eye" data-password-target="signupPassword" aria-label="Mostrar contraseña" aria-pressed="false" title="Mostrar contraseña"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.7-7 10-7 10 7 10 7-3.7 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/><path class="eye-slash" d="M3 3l18 18"/></svg></button></span></label>
+   <label>Repetí tu contraseña<span class="password-wrap"><input id="signupRepeat" type="password" name="as-confirm-secret" autocomplete="new-password" readonly minlength="10" required><button type="button" class="password-eye" data-password-target="signupRepeat" aria-label="Mostrar contraseña" aria-pressed="false" title="Mostrar contraseña"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.7-7 10-7 10 7 10 7-3.7 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/><path class="eye-slash" d="M3 3l18 18"/></svg></button></span></label>
+   <div class="actions"><button class="primary" id="signupButton" type="submit">Crear cuenta</button><button id="backLogin" type="button">Ya tengo cuenta · Ingresar</button></div>
+   <p class="caption">¿Ya creaste una contraseña, pero todavía no ingresaste? <button type="button" class="inlink" id="showConfirmation">Verificar mi correo</button></p>
   </form>
+</section>
+<section class="panel" id="confirmationPanel" hidden>
+ <h2>Un último paso: verificá tu correo</h2>
+ <p>La contraseña ya quedó registrada. <strong>No hace falta volver a crearla ni ingresarla de nuevo.</strong> Por seguridad, Supabase envía un segundo correo para confirmar que la dirección es tuya.</p>
+ <p><strong>1.</strong> Abrí tu Gmail y buscá el mensaje de confirmación de correo de Gente de Vuelo / Supabase. Revisá Spam si no aparece.</p>
+ <p><strong>2.</strong> Pulsá el enlace de confirmación. Al regresar a AeroSuite, se activará tu invitación y se abrirá directamente el portal de tu escuela.</p>
+ <form id="resendForm">
+  <label>Correo que recibió la invitación<input id="confirmationEmail" type="email" autocomplete="email" maxlength="254" required></label>
+  <div class="actions"><button type="submit" class="confirm-action" id="resendButton">Reenviar confirmación</button><button type="button" id="confirmationCheck">Ya confirmé mi correo</button><button type="button" id="confirmationToLogin">Ya tenía cuenta · Ingresar</button></div>
+ </form>
+ <p class="caption">La invitación a AeroSuite y la confirmación de cuenta son correos diferentes. Nunca compartas la contraseña ni códigos de verificación.</p>
 </section>
 <section class="panel" id="recoveryPanel" hidden>
  <h2>Recuperar acceso</h2>
@@ -75,8 +95,8 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
   <div class="actions"><button class="primary" type="submit">Enviar recuperación</button><button id="backRecovery" type="button">Volver</button></div>
  </form>
  <form id="changePasswordForm" hidden>
-  <label>Nueva contraseña<input id="newPassword" type="password" minlength="10" required autocomplete="new-password"></label>
-  <label>Repetir nueva contraseña<input id="newPassword2" type="password" minlength="10" required autocomplete="new-password"></label>
+  <label>Nueva contraseña<span class="password-wrap"><input id="newPassword" type="password" minlength="10" required autocomplete="new-password"><button type="button" class="password-eye" data-password-target="newPassword" aria-label="Mostrar contraseña" aria-pressed="false" title="Mostrar contraseña"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.7-7 10-7 10 7 10 7-3.7 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/><path class="eye-slash" d="M3 3l18 18"/></svg></button></span></label>
+  <label>Repetir nueva contraseña<span class="password-wrap"><input id="newPassword2" type="password" minlength="10" required autocomplete="new-password"><button type="button" class="password-eye" data-password-target="newPassword2" aria-label="Mostrar contraseña" aria-pressed="false" title="Mostrar contraseña"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.7-7 10-7 10 7 10 7-3.7 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/><path class="eye-slash" d="M3 3l18 18"/></svg></button></span></label>
   <div class="actions"><button class="primary" type="submit">Cambiar contraseña</button></div>
  </form>
 </section>
@@ -133,6 +153,16 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
  byId('openPortalButton').href=portalUrl;
  // Impedir que Chrome y gestores de contraseñas completen silenciosamente las claves del Superadministrador.
  const credentialFields=['email','password','signupEmail','signupPassword','signupRepeat'];
+ for(const button of document.querySelectorAll('[data-password-target]')){
+  button.addEventListener('click',()=>{
+   const input=byId(button.dataset.passwordTarget);
+   const isVisible=input.type==='password';
+   input.type=isVisible?'text':'password';
+   button.setAttribute('aria-pressed',String(isVisible));
+   button.setAttribute('aria-label',isVisible?'Ocultar contraseña':'Mostrar contraseña');
+   button.title=isVisible?'Ocultar contraseña':'Mostrar contraseña';
+  });
+ }
  for(const id of credentialFields){
   const input=byId(id);
   input.value='';
@@ -143,17 +173,17 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
  window.addEventListener('pageshow',event=>{
   if(event.persisted){for(const id of ['password','signupPassword','signupRepeat'])byId(id).value=''}
  });
- let user=null,processing=false,recovering=false;
+ let user=null,processing=false,recovering=false,lastSignupEmail='';
  const showPanel=panel=>{
-  for(const id of ['signInPanel','registerPanel','recoveryPanel','verifiedPanel'])
+  for(const id of ['signInPanel','registerPanel','confirmationPanel','recoveryPanel','verifiedPanel'])
    byId(id).hidden=id!==panel;
  };
  const normalizeError=error=>{
   const message=String(error?.message||error||'Error desconocido');
   if(/invalid login credentials|invalid_credentials/i.test(message))
-   return 'El correo o la contraseña no coinciden con una cuenta habilitada. Si nunca creaste tu cuenta, usá «Crear cuenta». Si ya existe, utilizá tu clave actual o «Olvidé mi contraseña».';
-  if(/email not confirmed/i.test(message))
-   return 'Primero verificá el correo con el enlace que envió Supabase Auth. Después volvé a la invitación.';
+   return 'No se pudo ingresar con esas credenciales. Si acabás de registrarte, primero confirmá el correo desde el segundo mensaje recibido. Si ya tenías cuenta, recuperá tu contraseña si hace falta.';
+  if(/email not confirmed|email_not_confirmed/i.test(message))
+   return 'La contraseña fue creada, pero falta confirmar el correo. Usá «Verificar mi correo» y abrí el enlace del segundo mensaje.';
   return message;
  };
  async function verifyAndEnter(){
@@ -162,7 +192,16 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
   try{
    const {data:auth,error:authError}=await db.auth.getUser();
    user=authError?null:auth?.user||null;
-   if(!user){showPanel('registerPanel');setStatus('Completá tu propio correo y creá una contraseña. Si ya tenés una cuenta, elegí «Ya tengo cuenta».');return}
+   if(!user){
+    if(lastSignupEmail){
+      showPanel('confirmationPanel');byId('confirmationEmail').value=lastSignupEmail;
+      setStatus('Falta verificar tu correo. No crees otra contraseña: abrí el segundo correo de confirmación.');
+    }else{
+      showPanel('registerPanel');
+      setStatus('Creá tu contraseña una sola vez. Si ya creaste la cuenta y falta verificarla, elegí «Verificar mi correo».');
+    }
+    return;
+   }
    showPanel('verifiedPanel');
    byId('accountEmail').textContent=user.email||'(correo no disponible)';
    if(!user.email_confirmed_at){setStatus('Tu correo todavía debe verificarse. Revisá el mensaje de confirmación.');return}
@@ -190,6 +229,33 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
  }
  byId('showRegister').addEventListener('click',()=>{showPanel('registerPanel');setStatus('Creá una contraseña personal distinta de la del administrador.')});
  byId('backLogin').addEventListener('click',()=>{showPanel('signInPanel');setStatus('Ingresá con tu correo y tu contraseña existente.')});
+ byId('showConfirmation').addEventListener('click',()=>{
+  showPanel('confirmationPanel');
+  byId('confirmationEmail').value=lastSignupEmail||byId('signupEmail').value.trim().toLowerCase();
+  setStatus('Comprobá la bandeja de entrada. Si no llegó el correo de confirmación, podés reenviarlo.');
+ });
+ byId('confirmationToLogin').addEventListener('click',()=>{
+  showPanel('signInPanel');setStatus('Si tu cuenta ya está confirmada, ingresá con tu contraseña habitual.');
+ });
+ byId('resendForm').addEventListener('submit',async event=>{
+  event.preventDefault();
+  const email=byId('confirmationEmail').value.trim().toLowerCase();
+  if(!email)return;
+  const button=byId('resendButton');button.disabled=true;
+  try{
+   setStatus('Solicitando una nueva confirmación…');
+   const {error}=await db.auth.resend({type:'signup',email,options:{emailRedirectTo:activationUrl}});
+   if(error)throw error;
+   lastSignupEmail=email;
+   setStatus('Si tu cuenta está pendiente de confirmación, recibirás otro mensaje. Abrí su enlace y AeroSuite te llevará al portal automáticamente. Revisá también Spam.');
+  }catch(error){setStatus('No se pudo reenviar la confirmación: '+normalizeError(error)+'. Si lo intentaste hace poco, revisá el primer correo antes de repetir.')}
+  finally{button.disabled=false}
+ });
+ byId('confirmationCheck').addEventListener('click',async()=>{
+  setStatus('Comprobando si la sesión ya fue confirmada…');
+  await verifyAndEnter();
+  if(!user) setStatus('Todavía no hay una sesión confirmada en esta ventana. Usá el enlace del segundo correo; se abrirá directamente el portal.');
+ });
  byId('forgotButton').addEventListener('click',()=>{
   showPanel('recoveryPanel');byId('forgotForm').hidden=false;byId('changePasswordForm').hidden=true;
   setStatus('Ingresá tu propio correo para recuperar el acceso.');
@@ -208,11 +274,15 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
    if(error)throw error;
    byId('signupPassword').value='';byId('signupRepeat').value='';
    if(data?.user&&Array.isArray(data.user.identities)&&data.user.identities.length===0){
-    setStatus('Este correo podría estar registrado. Si ya tenés cuenta, seleccioná «Ya tengo cuenta» o recuperá tu contraseña. Crear otra clave aquí no modifica una cuenta existente.');
+    setStatus('El correo ya podría tener una cuenta registrada. Crear otra contraseña aquí no modifica la anterior. Elegí «Ya tengo cuenta» o «Olvidé mi contraseña».');
+    showPanel('signInPanel');
     return;
    }
    if(data?.session){await verifyAndEnter();return}
-   setStatus('Solicitud recibida. Revisá tu correo y confirmá la dirección desde el mensaje de Supabase. Cuando vuelvas a AeroSuite desde el enlace, continuaremos con la activación sin pedirte ingresar dos veces. Si ya tenías cuenta, usá su clave vigente.');
+   lastSignupEmail=email;
+   byId('confirmationEmail').value=email;
+   showPanel('confirmationPanel');
+   setStatus('¡Contraseña creada! Solo falta confirmar tu correo con el segundo mensaje. Cuando hagas clic en su enlace, AeroSuite activará tu invitación y te llevará al portal sin volver a pedirte usuario y clave.');
   }catch(error){setStatus('No se pudo crear la cuenta: '+normalizeError(error))}
   finally{button.disabled=false}
  });
@@ -258,7 +328,7 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
   await db.auth.signOut();
   user=null;recovering=false;
   for(const id of credentialFields)byId(id).value='';
-  showPanel('registerPanel');
+  lastSignupEmail='';showPanel('registerPanel');
   byId('acceptButton').hidden=false;
   setStatus('Ingresá o creá la cuenta correspondiente al correo que recibió la invitación.');
  });
