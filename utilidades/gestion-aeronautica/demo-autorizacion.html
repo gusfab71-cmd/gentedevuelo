@@ -93,7 +93,7 @@ input,select{min-height:44px;padding:10px 12px;border:1px solid #6b8ca4;border-r
      <div class="form-grid">
       <label class="wide">Institución <input id="schoolName" value="Escuela de Vuelo Horizonte (DEMO)" required minlength="3" maxlength="160"></label>
       <label>Tipo <select id="schoolKind"><option value="escuela">Escuela de vuelo</option><option value="aeroclub">Aeroclub</option><option value="aerodromo">Aeródromo</option></select></label>
-      <label>Plan inicial <select id="schoolPlan"><option value="institucional">Institucional (prueba)</option><option value="essential">Essential (propuesto)</option><option value="pro">Pro (propuesto)</option><option value="aeroclub_pro">AeroClub Pro (propuesto)</option></select></label>
+      <label>Plan inicial <select id="schoolPlan"><option value="essential">Essential</option><option value="pro">Pro</option></select></label>
       <label>Responsable institucional <input id="schoolContact" value="María Torres (ficticia)" required minlength="3" maxlength="130"></label>
       <label>Correo de ejemplo <input type="email" id="schoolEmail" value="direccion@escuela-ejemplo.invalid" required maxlength="254"></label>
      </div>
@@ -190,7 +190,7 @@ input,select{min-height:44px;padding:10px 12px;border:1px solid #6b8ca4;border-r
  const screens=[...document.querySelectorAll('[data-screen]')];
  const state={step:0,unlocked:0,school:null,startedAt:null,expiresAt:null};
  const text=(id,value)=>{byId(id).textContent=value};
- const planNames={institucional:'Institucional',essential:'Essential',pro:'Pro',aeroclub_pro:'AeroClub Pro'};
+ const planNames={essential:'Essential',pro:'Pro'};
  const format=d=>d.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'});
  const showStep=i=>{
   if(i<0||i>state.unlocked||i>4)return;
