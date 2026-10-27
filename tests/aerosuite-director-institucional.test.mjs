@@ -32,6 +32,13 @@ assert.doesNotMatch(school,/\.from\('site_admins'\)/,'El portal no permite hered
 assert.match(superadmin,/ingreso-escuela\.html\?institucion=/,'Panel central proporciona acceso a prueba');
 assert.match(superadmin,/sendDirectorInvite/,'Envío real del director desde Superadministrador');
 assert.match(superadmin,/last_sent_at/,'Diferenciar invitación creada del correo realmente enviado');
+assert.match(superadmin,/erase\.textContent='Eliminar institución'/,'Debe existir acción de eliminar institución');
+assert.match(superadmin,/window\.prompt\(label,''\)/,'La eliminación exige escribir el nombre');
+assert.match(superadmin,/window\.confirm\('¿Confirmás la eliminación DEFINITIVA/,'La eliminación exige segunda confirmación');
+assert.match(superadmin,/\.rpc\('aerosuite_delete_institution'/,'La eliminación va por RPC controlada por Superadministrador');
+assert.match(superadmin,/readFunctionError\(error,data\)/,'Mostrar el error real del servicio de email');
+assert.match(superadmin,/El correo NO se envió/,'No declarar éxito si la función devuelve error');
+
 
 for(const [name,html] of [['ingreso-escuela.html',admission],['portal-escuela.html',school]]){
  const scripts=[...html.matchAll(/<script(?![^>]*src=)[^>]*>([\s\S]*?)<\/script>/g)];
