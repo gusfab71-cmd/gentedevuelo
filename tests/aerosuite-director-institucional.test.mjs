@@ -15,7 +15,7 @@ assert.match(admission,/auth\.getUser/,'Validar sesión contra servidor');
 assert.match(admission,/\.rpc\('aerosuite_accept_invitation_role'/,'La invitación selecciona exactamente el rol asignado');
 assert.match(admission,/\.rpc\('aerosuite_accept_my_invitation'/,'Los enlaces anteriores mantienen compatibilidad');
 assert.match(admission,/p_institution_id:schoolId/,'Invitación atada al identificador institucional');
-assert.match(admission,/\.rpc\('aerosuite_my_institution_access'/,'Lectura por membresía');
+assert.match(admission,/\.rpc\('aerosuite_my_institution_access_v2'/,'Ingreso consulta los derechos de cortesía y solo lectura');
 assert.match(admission,/auth\.signUp/,'Alta de cuenta directamente en AeroSuite');
 assert.match(admission,/auth\.resetPasswordForEmail/,'Recuperación de clave dentro de AeroSuite');
 assert.match(admission,/emailRedirectTo:activationUrl/,'Verificación redirigida a AeroSuite');
@@ -29,9 +29,9 @@ assert.match(admission,/normalizeError\(error\)/,'Mensaje útil para credenciale
 assert.match(admission,/emailRedirectTo:activationUrl/,'La verificación retorna a AeroSuite');
 assert.match(admission,/sesión institucional separada/i,'El ingreso no requiere incógnito gracias a las sesiones aisladas');
 
-assert.match(school,/\.rpc\('aerosuite_my_institution_access'/,'Portal solo lee instituciones autorizadas');
+assert.match(school,/\.rpc\('aerosuite_my_institution_access_v2'/,'Portal solo lee instituciones autorizadas y estado de suscripción');
 assert.match(school,/institution_id===queryId/,'Consulta coincidencia institución');
-assert.match(school,/school\.my_role==='administrador'&&school\.can_access/,'Solo el director puede invitar');
+assert.match(school,/school\.my_role==='administrador'&&school\.can_write/,'Solo el director con derecho a operar puede invitar');
 assert.match(school,/storageKey:'aerosuite-institucional-v2-auth'/,'El portal comparte únicamente la sesión institucional');
 assert.match(school,/data-visible-role="administrador"/,'Portal administrador separado');
 assert.match(school,/data-visible-role="instructor"/,'Portal instructor separado');
@@ -42,6 +42,13 @@ assert.match(school,/name="role" type="radio" value="instructor"/,'Invitaciones 
 assert.match(school,/name="role" type="radio" value="alumno"/,'Invitaciones de alumnos');
 assert.match(school,/client\.functions\.invoke\('aerosuite-invitations'/,'Correo enviado desde función autorizada');
 assert.match(school,/Pendiente de integración segura/,'No habilitar operaciones de la institución todavía');
+assert.match(school,/mode==='grace'/,'Mostrar acceso normal durante los 15 días de cortesía');
+assert.match(school,/mode==='read_only'/,'Mostrar modo consulta después de los 45 días');
+assert.match(school,/grace_ends_at/,'Mostrar la fecha de fin de cortesía');
+assert.match(school,/no se pueden crear nuevas reservas, invitar personas ni modificar datos/,'Solo consulta no concede escritura');
+assert.match(superadmin,/id="graceCount"/,'El Superadministrador ve instituciones en cortesía');
+assert.match(superadmin,/id="readOnlyCount"/,'El Superadministrador ve instituciones en modo consulta');
+assert.match(superadmin,/15\*86400000/,'Cálculo de 15 días de cortesía para el listado');
 assert.doesNotMatch(school,/\.from\('aerosuite_institutions'\)/,'El portal no puede leer registros generales');
 assert.doesNotMatch(school,/\.from\('site_admins'\)/,'El portal no permite heredar Superadministración');
 assert.match(superadmin,/ingreso-escuela\.html\?institucion=/,'Panel central proporciona acceso a prueba');
