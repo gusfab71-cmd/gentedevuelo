@@ -55,6 +55,13 @@ Este es el registro central de las decisiones, ideas y pendientes tratados para 
 - **FALLOS:** si el correo falla luego de habilitar la prueba, la ficha queda en **Prueba** y muestra **«Enviar invitación al director»** para reintentar sin reiniciar los 30 días. Se informa por separado qué acción se completó y qué acción falló. Sin envío automático mientras no haya clic de confirmación.
 - **ESTADO AL VERIFICAR:** durante esta revisión la escuela temporal `aero moron` dejó de figurar en la lista de instituciones (hay un asiento de eliminación en el historial); el botón quedará disponible al registrar una nueva institución pendiente. No se recreó una escuela en nombre del usuario.
 
+### Planes comerciales definitivos — 27/10/2026
+
+- **DECISIÓN CONFIRMADA:** AeroSuite se comercializará con **solo dos planes: Essential y Pro**, aplicables a escuelas de vuelo, aeroclubes y aeródromos. No ofrecer en nuevas altas `Sin asignar`, `Institucional` ni `AeroClub Pro` como planes diferenciados.
+- **IMPLEMENTADO EN SISTEMA:** el campo `plan` de `aerosuite_institutions` acepta únicamente `essential` y `pro`, con `essential` como valor predeterminado; el Superadministrador y el camino demo muestran solo estas dos opciones y el portal de clientes presenta los nombres comerciales correctamente.
+- **PRUEBA DE 30 DÍAS:** no es un tercer plan sino un **estado de licencia** disponible para cualquiera de los dos planes. No hay conversión automática a pago.
+- **PENDIENTE DE DEFINIR:** beneficios y precios definitivos de Essential y Pro; los modelos de costos preliminares no se toman como tarifa aprobada y no se modificaron en esta decisión.
+
 ## 1. Visión, marca e integración con Gente de Vuelo
 
 - **APROBADO:** el nombre del producto es **AeroSuite** con firma **By Gente de Vuelo**. Su identidad: A aerodinámica, colores azul aeronáutico/plata, base azul oscuro, estilo moderno y premium. Verificación legal de marca/dominio pendiente.
