@@ -37,6 +37,15 @@ input[type=email]{width:100%;background:#122737;border:1px solid #7394aa;border-
 .role-options strong{font-size:14px}.role-options small{color:#bbd0dd;font-size:11px}
 .primary{background:#e7c899;color:#122739;font-weight:800;border-color:#e7c899}
 #inviteFeedback{font-size:13px;color:#edcf9b;min-height:20px;margin-top:10px}
+.people-list{display:grid;gap:10px;margin-top:14px}
+.person-card{background:#152a3a;border:1px solid #476a83;padding:13px 15px;border-radius:11px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.person-meta{min-width:0;overflow-wrap:anywhere;font-size:13px;line-height:1.5}
+.person-meta strong{display:block;color:#f3fbff}
+.person-meta small{color:#a9c5d6}
+.person-card button.danger{background:#502d37;border-color:#aa6270}
+.person-card button.danger:hover{background:#743849}
+.people-feedback{min-height:18px;color:#e7c999;font-size:13px;line-height:1.4}
+
 @media(max-width:520px){.role-options{grid-template-columns:1fr}}
 
 @media(max-width:830px){.metrics{grid-template-columns:repeat(2,1fr)}}@media(max-width:480px){.metrics{grid-template-columns:1fr}.panel{padding:15px}}
@@ -93,6 +102,15 @@ input[type=email]{width:100%;background:#122737;border:1px solid #7394aa;border-
     <div id="inviteFeedback" role="status" aria-live="polite"></div>
    </form>
    <p style="font-size:12px">La invitación vence en siete días. La escuela solo puede invitar personas vinculadas a su institución y nunca puede crear otro Superadministrador.</p>
+
+  </section>
+  <section class="panel" id="directorPeoplePanel" hidden>
+    <span class="label">Gestión exclusiva del director</span>
+    <h2>Instructores y alumnos de mi escuela</h2>
+    <p>Podés desvincular instructores y alumnos o cancelar invitaciones pendientes. Esto retira el acceso a tu escuela, pero <strong>no elimina la cuenta personal ni afecta a otras instituciones</strong>.</p>
+    <div id="peopleFeedback" class="people-feedback" role="status" aria-live="polite"></div>
+    <div id="peopleList" class="people-list"></div>
+    <div class="actions" style="margin-top:15px"><button id="reloadPeople" type="button">Actualizar integrantes</button></div>
   </section>
   <div class="status">Este es un portal de verificación de acceso. Ninguna tarjeta está habilitada para operar: todavía falta aplicar permisos institucionales específicos a cada módulo, sin compartir datos entre escuelas.</div>
  </div>
@@ -139,7 +157,12 @@ try{
  el('actorLine').textContent='Cuenta: '+(user.email||'verificada en Supabase');
  el('schoolKind').textContent='Tipo: '+({escuela:'Escuela de vuelo',aeroclub:'Aeroclub',aerodromo:'Aeródromo'}[school.institution_kind]||school.institution_kind);
  el('schoolRole').textContent='Rol: '+school.my_role;
- el('schoolPlan').textContent='Plan: '+({essential:'Essential',pro:'Pro'}[school.plan]||'Consultar con AeroSuite');
+ const isDirector=school.my_role==='administrador';
+ el('schoolPlan').hidden=!isDirector;
+ el('schoolExpiry').hidden=!isDirector;
+ el('schoolAccessLine').hidden=!isDirector;
+ el('subscriptionNotice').hidden=!isDirector;
+ if(isDirector)el('schoolPlan').textContent='Plan: '+({essential:'Essential',pro:'Pro'}[school.plan]||'Consultar con AeroSuite');
  const until=school.expires_at?new Date(school.expires_at).toLocaleDateString('es-AR'):'sin fecha';
  el('schoolExpiry').textContent=school.license_status==='trial'?'Fin de la prueba: '+until:'Vencimiento: '+until;
  const mode=school.access_mode;
@@ -159,7 +182,68 @@ try{
    el('schoolAccessLine').textContent='Licencia activa';
    view.textContent='Tu licencia institucional está vigente hasta el '+until+'. La facturación mensual automática todavía no está implementada.';
  }
- if(school.my_role==='administrador'&&school.can_write){
+ if(isDirector){
+   el('directorPeoplePanel').hidden=false;
+   const list=el('peopleList'),listFeedback=el('peopleFeedback');
+   const roles={instructor:'Instructor',alumno:'Alumno'};
+   async function loadPeople(){
+     listFeedback.textContent='Consultando integrantes de tu institución…';
+     list.replaceChildren();
+     try{
+       const {data:people,error}=await client.rpc('aerosuite_director_people',{p_institution_id:school.institution_id});
+       if(error)throw error;
+       const entries=people||[];
+       if(!entries.length){
+         const empty=document.createElement('p');empty.className='caption';
+         empty.textContent='Todavía no hay instructores, alumnos ni invitaciones pendientes.';
+         list.append(empty);
+       }
+       for(const person of entries){
+         const card=document.createElement('div');card.className='person-card';
+         const meta=document.createElement('div');meta.className='person-meta';
+         const label=document.createElement('strong');
+         label.textContent=(roles[person.role]||person.role)+' · '+person.email;
+         const detail=document.createElement('small');
+         detail.textContent=person.kind==='integrante'?'Cuenta activa en tu escuela':
+           person.situation==='vencida'?'Invitación vencida':'Invitación pendiente de aceptación';
+         meta.append(label,detail);card.append(meta);
+         if(school.can_write){
+           const remove=document.createElement('button');remove.type='button';remove.className='danger';
+           remove.textContent=person.kind==='integrante'?'Desvincular':'Cancelar invitación';
+           remove.setAttribute('aria-label',(person.kind==='integrante'?'Desvincular':'Cancelar invitación de')+' '+person.email);
+           remove.addEventListener('click',async()=>{
+             const msg=person.kind==='integrante'?
+               '¿Desvincular a '+person.email+' como '+person.role+' de '+school.institution_name+'? Su cuenta personal no se elimina.':
+               '¿Cancelar la invitación pendiente de '+person.email+'? El enlace ya no podrá activarse.';
+             if(!window.confirm(msg))return;
+             remove.disabled=true;listFeedback.textContent='Guardando la baja…';
+             try{
+               const {data,error}=await client.rpc('aerosuite_director_remove_person',{
+                 p_institution_id:school.institution_id,
+                 p_person_id:person.person_id,p_kind:person.kind
+               });
+               if(error)throw error;
+               if(!data?.ok)throw Error('No se confirmó la baja.');
+               await loadPeople();
+               listFeedback.textContent=person.kind==='integrante'?
+                 'Integrante desvinculado de esta institución. Su cuenta personal continúa intacta.':
+                 'Invitación cancelada. Ya no podrá aceptarse con ese enlace.';
+             }catch(err){
+               listFeedback.textContent='No se pudo completar la baja: '+(err?.message||'Error desconocido');
+               remove.disabled=false;
+             }
+           });
+           card.append(remove);
+         }
+         list.append(card);
+       }
+       listFeedback.textContent='Se muestran '+entries.length+' integrantes o invitaciones de esta escuela.';
+     }catch(err){listFeedback.textContent='No se pudo consultar el personal: '+(err?.message||'Error desconocido');}
+   }
+   el('reloadPeople').addEventListener('click',loadPeople);
+   await loadPeople();
+ }
+ if(isDirector&&school.can_write){
    el('directorInvitePanel').hidden=false;
    el('instituteInviteForm').addEventListener('submit',async ev=>{
      ev.preventDefault();
@@ -177,14 +261,16 @@ try{
        if(!data?.ok)throw Error(data?.error||'El correo no fue confirmado.');
        feedback.textContent='Invitación enviada a '+email+'. El proveedor aceptó el correo; revisá la casilla.';
        f.reset();
+       el('reloadPeople').click();
      }catch(error){feedback.textContent='No se pudo enviar: '+(error?.message||'Error de servicio')}
      finally{button.disabled=false}
    });
  }
 
  message.textContent=mode==='read_only'?
-  'Acceso de consulta habilitado. Se conserva la información; las operaciones y nuevas invitaciones permanecen deshabilitadas.':
-  'Identidad, institución y rol «'+school.my_role+'» verificados. Las áreas de otros roles permanecen ocultas.';
+  'Acceso de consulta habilitado. Los datos permanecen conservados y las operaciones están deshabilitadas.':
+  isDirector?'Portal del director habilitado. Podés gestionar instructores y alumnos de tu escuela.':
+  'Acceso de '+school.my_role+' verificado. Estás viendo únicamente las funciones de tu rol.';
 }catch(err){message.textContent='No se pudo verificar el permiso de la escuela: '+(err?.message||'Error de servidor');}
 el('signOutButton').addEventListener('click',async()=>{
  const r=await client.auth.signOut();
