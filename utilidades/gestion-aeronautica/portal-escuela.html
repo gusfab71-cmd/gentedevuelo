@@ -165,7 +165,9 @@ try{
 el('signOutButton').addEventListener('click',async()=>{
  const r=await client.auth.signOut();
  if(r.error){message.textContent='No se pudo salir: '+r.error.message;return}
- location.replace('ingreso-escuela.html');
+ const params=new URLSearchParams(location.search);
+ const qs=params.toString();
+ location.replace('ingreso-escuela.html'+(qs?'?'+qs:''));
 });
 })();
 </script>
