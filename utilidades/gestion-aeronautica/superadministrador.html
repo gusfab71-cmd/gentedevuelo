@@ -63,6 +63,20 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
 .staff-person .remove-person{background:#52313d;border:1px solid #b0717c;color:#ffe2e6;font-size:12px}
 .staff-person .remove-person:hover:not(:disabled){background:#793e48}
 .staff-summary{font-weight:700;color:#e0ecf2}
+.registration-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:10px 0 20px}
+.registration-metrics>div{padding:13px;border:1px solid #59778c;background:#102a3b;border-radius:10px}
+.registration-metrics strong{display:block;font-size:23px;color:#efd19e}
+.registration-metrics span{font-size:11px;color:#b8ccda}
+.registration-filters{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.registration-list{display:grid;gap:9px;max-height:650px;overflow-y:auto;margin:12px 0}
+.registration-entry{background:#10283a;border:1px solid #4e7089;border-radius:11px;padding:13px;display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1.2fr) auto;gap:10px;align-items:center}
+.registration-entry h3{margin:0 0 4px;font-size:14px;overflow-wrap:anywhere}
+.registration-entry p{font-size:12px;margin:3px 0;overflow-wrap:anywhere}
+.registration-entry .registration-state{font-size:12px;font-weight:800;color:#f0d29d}
+.registration-entry button{font-size:12px;white-space:nowrap}
+#registrationFeedback{min-height:18px;margin-top:9px}
+@media(max-width:900px){.registration-filters,.registration-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.registration-entry{grid-template-columns:1fr}}
+@media(max-width:450px){.registration-filters,.registration-metrics{grid-template-columns:1fr}}
 @media(max-width:440px){.institution-actions{grid-template-columns:1fr}.institution-actions .full,.institution-actions .danger{grid-column:1}}
 .status{border:1px solid #69899b;border-radius:100px;padding:4px 8px;white-space:nowrap;font-size:11px}
 .status.active{color:#b7f3d7;border-color:#469779}
@@ -86,11 +100,6 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
 <p>Autorización central de escuelas de vuelo, aeroclubes y aeródromos. Las invitaciones de prueba pueden aceptarse con cuentas verificadas desde el ingreso institucional. Los módulos operativos reales todavía permanecen bloqueados para escuelas.</p>
 <div class="notice" id="accessMessage" role="status">Verificando tu identidad y los permisos de AeroSuite…</div>
 <div id="adminContent" hidden>
-<section class="panel" aria-labelledby="demoTitle" style="background:#203b51;border-color:#668dab">
- <h2 id="demoTitle">Probar el camino de una nueva escuela</h2>
- <p>Recorrido guiado con una institución ficticia: registrar → autorizar 30 días → ver invitación → activar cuenta → ingresar al portal de la escuela. No envía correos ni modifica licencias reales.</p>
- <a href="demo-autorizacion.html" style="display:inline-flex;background:#e2c08e;border:1px solid #e2c08e;border-radius:10px;padding:11px 16px;color:#18222c;text-decoration:none;font-size:13px;font-weight:850">Iniciar camino demo de escuelas</a>
-</section>
 <div class="metrics" aria-label="Resumen de instituciones">
 <div class="metric"><strong id="totalCount">0</strong><span>Instituciones</span></div>
 <div class="metric"><strong id="activeCount">0</strong><span>Licencias activas</span></div>
@@ -101,6 +110,25 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
 <div class="metric"><strong id="instructorsTotal">—</strong><span>Instructores con acceso activo</span></div>
 <div class="metric"><strong id="studentsTotal">—</strong><span>Alumnos con acceso activo</span></div>
 </div>
+<section class="panel" aria-labelledby="registrationsTitle" id="registros-aerosuite">
+ <h2 id="registrationsTitle">Registros de AeroSuite</h2>
+ <p class="muted">Control central de directores, instructores y alumnos por institución. La invitación aparece al generarse; la creación de la cuenta, verificación del correo y habilitación se actualizan desde Supabase. Una cuenta existente puede recibir una invitación sin volver a registrarse.</p>
+ <div class="registration-metrics" aria-label="Estado de registros">
+  <div><strong id="allRegistrationCount">0</strong><span>Registros e invitaciones</span></div>
+  <div><strong id="accountRegistrationCount">0</strong><span>Con cuenta verificada</span></div>
+  <div><strong id="enabledRegistrationCount">0</strong><span>Accesos habilitados</span></div>
+  <div><strong id="waitingRegistrationCount">0</strong><span>Sin habilitar</span></div>
+ </div>
+ <div class="registration-filters">
+  <label>Buscar correo o institución <input id="registrationSearch" type="search" placeholder="Buscar registro" autocomplete="off"></label>
+  <label>Institución <select id="registrationInstitution"><option value="">Todas</option></select></label>
+  <label>Rol <select id="registrationRole"><option value="">Todos los roles</option><option value="administrador">Director</option><option value="instructor">Instructor</option><option value="alumno">Alumno</option><option value="operaciones">Operaciones</option><option value="tesoreria">Tesorería</option></select></label>
+  <label>Estado <select id="registrationStatus"><option value="">Todos los estados</option><option value="habilitada">Habilitados</option><option value="cuenta_verificada">Cuenta verificada</option><option value="cuenta_creada">Cuenta creada</option><option value="invitacion_enviada">Correo enviado</option><option value="invitacion_creada">Invitación preparada</option><option value="vencida">Vencidas</option><option value="revocada">Revocadas</option><option value="desvinculada">Desvinculadas</option></select></label>
+ </div>
+ <div class="actions registration-actions"><button id="refreshRegistrations" type="button">Actualizar registros</button></div>
+ <div id="registrationFeedback" class="muted" role="status" aria-live="polite"></div>
+ <div id="registrationList" class="registration-list" aria-live="polite"><p class="muted">Cargando registros…</p></div>
+</section>
 <div class="layout">
 <section class="panel" aria-labelledby="formTitle">
 <h2 id="formTitle">Registrar institución</h2>
@@ -125,7 +153,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
 <h2>Instituciones registradas y cuentas habilitadas</h2>
 <div id="listFeedback" role="status" aria-live="polite"></div>
 <div class="institution-grid" id="institutionsBody" aria-live="polite"><div class="institution-empty">Cargando instituciones…</div></div>
-<p class="muted">Los contadores distinguen integrantes con acceso activado de invitaciones pendientes. «Gestionar cuentas» permite desvincular instructores y alumnos de una escuela, o cancelar invitaciones; nunca elimina sus cuentas personales. Cada institución tiene 30 días gratis y 15 días adicionales de cortesía con acceso operativo. Desde el día 46 permanece en modo consulta, conservando sus datos. Solo se facturará cuando el cliente contrate expresamente; los cobros y los recordatorios automáticos aún no están conectados. El correo al director se envía desde su tarjeta y puede reenviarse durante la cortesía.</p>
+<p class="muted">La gestión de directores, instructores, alumnos e invitaciones está reunida en «Registros de AeroSuite», arriba. El lápiz junto a cada institución edita exclusivamente sus datos y licencia. Las cuentas personales no se borran al desvincular un acceso. Los cobros y recordatorios automáticos aún no están conectados.</p>
 </section>
 <section class="panel"><h2>Actividad reciente</h2><ol id="recent"><li>Sin operaciones registradas.</li></ol></section>
 </div>
@@ -139,7 +167,7 @@ const message=document.getElementById('accessMessage'),content=document.getEleme
 const form=document.getElementById('institutionForm'),feedback=document.getElementById('feedback');
 const statusField=document.getElementById('statusField'),statusEditLabel=document.getElementById('statusEditLabel'),initialTrialNotice=document.getElementById('initialTrialNotice'),endLabel=document.getElementById('licenseEndLabel'),endInput=document.getElementById('licenseEnd');
 const body=document.getElementById('institutionsBody'),recent=document.getElementById('recent'),listFeedback=document.getElementById('listFeedback');
-let db,currentUser,editingId=null,records=[];
+let db,currentUser,editingId=null,records=[],registrationRows=[];
 const statusText={trial:'Prueba',active:'Activa',suspended:'Suspendida',expired:'Vencida'};
 const kindText={escuela:'Escuela',aeroclub:'Aeroclub',aerodromo:'Aeródromo'};
 const planText={essential:'Essential',pro:'Pro'};
@@ -161,15 +189,108 @@ const showError=err=>{feedback.textContent=err?.message||String(err)||'No se pud
 const dateOnly=iso=>iso?new Date(iso).toLocaleDateString('es-AR'):'—';
 function syncLicenseField(){const active=statusField.value==='active';endLabel.hidden=!active;endInput.required=active}
 statusField.addEventListener('change',syncLicenseField);
+
+const registrationState={
+  habilitada:'Acceso habilitado',cuenta_verificada:'Cuenta verificada · invitación sin aceptar',
+  cuenta_creada:'Cuenta creada · correo sin verificar',
+  invitacion_enviada:'Invitación enviada',invitacion_creada:'Invitación preparada',
+  vencida:'Invitación vencida',revocada:'Invitación cancelada',desvinculada:'Acceso desvinculado'
+};
+const personRole={administrador:'Director',instructor:'Instructor',alumno:'Alumno',operaciones:'Operaciones',tesoreria:'Tesorería'};
+const registrationSearch=byId('registrationSearch'),registrationInstitution=byId('registrationInstitution');
+const registrationRole=byId('registrationRole'),registrationStatus=byId('registrationStatus');
+const registrationFeedback=byId('registrationFeedback'),registrationList=byId('registrationList');
+function appendRegisterLabel(parent,tag,label,cls){
+ const el=document.createElement(tag);if(cls)el.className=cls;el.textContent=label;parent.append(el);return el;
+}
+function paintRegistrations(){
+ const query=registrationSearch.value.trim().toLocaleLowerCase('es-AR');
+ const shown=registrationRows.filter(p=>
+   (!registrationInstitution.value||p.institution_id===registrationInstitution.value)
+   &&(!registrationRole.value||p.role===registrationRole.value)
+   &&(!registrationStatus.value||p.registration_status===registrationStatus.value)
+   &&(!query||(p.institution_name+' '+p.email+' '+(personRole[p.role]||p.role)).toLocaleLowerCase('es-AR').includes(query))
+ );
+ registrationList.replaceChildren();
+ if(!shown.length){appendRegisterLabel(registrationList,'p',registrationRows.length?'Ningún registro coincide con los filtros.':'Aún no hay invitaciones ni usuarios institucionales.','muted');return}
+ for(const r of shown){
+  const item=document.createElement('article');item.className='registration-entry';
+  const info=document.createElement('div');
+  appendRegisterLabel(info,'h3',r.email||'Sin correo');
+  appendRegisterLabel(info,'p',r.institution_name+' · '+(personRole[r.role]||r.role));
+  appendRegisterLabel(info,'p','Invitación: '+dateOnly(r.invitation_at)+' · Cuenta: '+dateOnly(r.account_created_at),'muted');
+  const details=document.createElement('div');
+  appendRegisterLabel(details,'div',registrationState[r.registration_status]||r.registration_status,'registration-state');
+  appendRegisterLabel(details,'p','Correo verificado: '+dateOnly(r.email_verified_at));
+  appendRegisterLabel(details,'p','Vinculación: '+dateOnly(r.accepted_at));
+  const actions=document.createElement('div');
+  const canUnlink=r.kind==='integrante'&&r.registration_status==='habilitada';
+  const canCancel=r.kind==='invitacion'&&!r.accepted_at&&!r.revoked_at;
+  if(canUnlink||canCancel){
+   const button=document.createElement('button');button.type='button';
+   button.className='danger';button.textContent=canUnlink?'Desvincular acceso':'Cancelar invitación';
+   button.addEventListener('click',()=>removeRegistration(r,button));
+   actions.append(button);
+  }else appendRegisterLabel(actions,'span','Sin acciones pendientes','muted');
+  item.append(info,details,actions);registrationList.append(item);
+ }
+}
+async function removeRegistration(r,button){
+ const unlink=r.kind==='integrante';
+ const verb=unlink?'desvincular el acceso':'cancelar la invitación';
+ const message='¿Querés '+verb+' de '+r.email+' como '+(personRole[r.role]||r.role)+' en «'+r.institution_name+'»? La cuenta personal y sus accesos a otras instituciones se conservan.';
+ if(!window.confirm(message))return;
+ button.disabled=true;registrationFeedback.textContent='Actualizando registro…';
+ try{
+  const {data,error}=await db.rpc('aerosuite_superadmin_manage_registration',{
+   p_institution_id:r.institution_id,p_person_id:r.person_id,p_kind:r.kind,p_role:r.role
+  });
+  if(error)throw error;
+  if(!data?.ok)throw Error('El servidor no confirmó la operación.');
+  await reload();
+  registrationFeedback.textContent='Cambio registrado. La cuenta personal se conserva y el historial queda auditado.';
+ }catch(error){
+  registrationFeedback.textContent='No se pudo modificar el registro: '+(error?.message||'Error de servicio');
+  button.disabled=false;
+ }
+}
+for(const el of [registrationSearch,registrationInstitution,registrationRole,registrationStatus]){
+ el.addEventListener('input',paintRegistrations);
+}
+byId('refreshRegistrations').addEventListener('click',async()=>{
+ const button=byId('refreshRegistrations');button.disabled=true;
+ registrationFeedback.textContent='Actualizando…';
+ try{await reload();registrationFeedback.textContent='Registros actualizados.'}
+ catch(error){registrationFeedback.textContent='No se pudo actualizar: '+(error?.message||'Error de servicio')}
+ finally{button.disabled=false}
+});
+
 async function reload(){
- const [found,history,invites,staffCounts]=await Promise.all([
+ const [found,history,invites,staffCounts,registrations]=await Promise.all([
  db.from('aerosuite_institutions').select('id,name,kind,cuit,contact_name,contact_email,plan,status,trial_started_at,trial_ends_at,license_started_at,license_ends_at,notes,updated_at').order('created_at',{ascending:false}).limit(500),
  db.from('aerosuite_institution_audit').select('id,institution_id,operation,changed_at').order('changed_at',{ascending:false}).limit(12),
  db.from('aerosuite_institution_invitations').select('institution_id,role,accepted_at,expires_at,revoked_at,last_sent_at').order('created_at',{ascending:false}).limit(500),
- db.rpc('aerosuite_superadmin_staff_counts')
+ db.rpc('aerosuite_superadmin_staff_counts'),
+ db.rpc('aerosuite_superadmin_registrations')
  ]);
  if(found.error)throw found.error;
  if(staffCounts.error)throw staffCounts.error;
+ if(registrations.error)throw registrations.error;
+ registrationRows=registrations.data||[];
+ byId('allRegistrationCount').textContent=String(registrationRows.length);
+ byId('accountRegistrationCount').textContent=String(registrationRows.filter(r=>r.email_verified_at!==null).length);
+ byId('enabledRegistrationCount').textContent=String(registrationRows.filter(r=>r.registration_status==='habilitada').length);
+ byId('waitingRegistrationCount').textContent=String(registrationRows.filter(r=>!['habilitada','revocada','desvinculada'].includes(r.registration_status)).length);
+ const selectedInstitution=registrationInstitution.value;
+ registrationInstitution.replaceChildren();
+ const defaultOption=document.createElement('option');defaultOption.value='';defaultOption.textContent='Todas';
+ registrationInstitution.append(defaultOption);
+ for(const org of (found.data||[])){
+   const option=document.createElement('option');option.value=org.id;option.textContent=org.name;
+   registrationInstitution.append(option);
+ }
+ registrationInstitution.value=selectedInstitution;
+ paintRegistrations();
  const countsByInstitution=new Map((staffCounts.data||[]).map(item=>[item.institution_id,item]));
  const sum=field=>(staffCounts.data||[]).reduce((total,item)=>total+Number(item[field]||0),0);
  byId('instructorsTotal').textContent=String(sum('instructors'));
@@ -235,11 +356,6 @@ async function reload(){
    }
   }
   const actions=document.createElement('div');actions.className='institution-actions';
-  const staffButton=document.createElement('button');
-  staffButton.type='button';staffButton.textContent='Gestionar cuentas';staffButton.className='full staff-button';
-  staffButton.title='Ver instructores, alumnos e invitaciones y desvincular el acceso de esta institución';
-  staffButton.addEventListener('click',()=>toggleStaffRoster(row,staffButton,card));
-  actions.append(staffButton);
   if((row.status==='trial'&&Number.isFinite(Date.parse(row.trial_ends_at))&&Date.parse(row.trial_ends_at)+15*86400000>now())||
      (row.status==='active'&&Date.parse(row.license_ends_at)>now())){
     const send=document.createElement('button');
@@ -261,74 +377,6 @@ async function reload(){
   const li=document.createElement('li');const institution=records.find(r=>r.id===entry.institution_id);
   li.textContent=(entry.operation==='INSERT'?'Alta':'Modificación')+' · '+(institution?.name||'Institución')+' · '+new Date(entry.changed_at).toLocaleString('es-AR');recent.append(li);
  }
-}
-async function toggleStaffRoster(row,button,card){
- let manager=card.querySelector('.staff-manager');
- if(manager){
-  manager.hidden=!manager.hidden;
-  button.textContent=manager.hidden?'Gestionar cuentas':'Ocultar cuentas';
-  return;
- }
- manager=document.createElement('section');manager.className='staff-manager';
- const title=document.createElement('h4');title.textContent='Personal de '+row.name;
- const caption=document.createElement('p');caption.textContent='Solo instructores y alumnos de esta institución. La baja conserva sus cuentas personales y no modifica otras escuelas.';
- const feedback=document.createElement('div');feedback.className='muted';feedback.setAttribute('role','status');
- const list=document.createElement('div');list.className='staff-list';
- const refresh=document.createElement('button');refresh.type='button';refresh.textContent='Actualizar listado';
- manager.append(title,caption,feedback,list,refresh);
- card.append(manager);button.textContent='Ocultar cuentas';
- async function load(){
-  refresh.disabled=true;feedback.textContent='Consultando integrantes…';list.replaceChildren();
-  try{
-   const response=await db.rpc('aerosuite_director_people',{p_institution_id:row.id});
-   if(response.error)throw response.error;
-   const entries=response.data||[];
-   if(!entries.length){
-    const empty=document.createElement('p');empty.textContent='No hay instructores, alumnos ni invitaciones pendientes.';
-    list.append(empty);
-   }
-   for(const person of entries){
-    const line=document.createElement('div');line.className='staff-person';
-    const description=document.createElement('span');
-    const name=document.createElement('strong');name.textContent=(person.role==='instructor'?'Instructor':'Alumno')+' · '+person.email;
-    const status=document.createElement('small');
-    status.textContent=person.kind==='integrante'?'Cuenta activa desde '+dateOnly(person.registered_at):
-      person.situation==='vencida'?'Invitación vencida':'Invitación pendiente desde '+dateOnly(person.registered_at);
-    description.append(name,status);line.append(description);
-    const remove=document.createElement('button');remove.type='button';remove.className='remove-person';
-    remove.textContent=person.kind==='integrante'?'Desvincular':'Cancelar invitación';
-    remove.addEventListener('click',async()=>{
-     const description=person.kind==='integrante'?
-      '¿Desvincular a '+person.email+' como '+person.role+' de «'+row.name+'»? Su cuenta personal y los accesos a otras escuelas se conservarán.':
-      '¿Cancelar la invitación de '+person.email+' para «'+row.name+'»? El enlace dejará de funcionar.';
-     if(!window.confirm(description))return;
-     remove.disabled=true;feedback.textContent='Guardando la baja…';
-     try{
-      const result=await db.rpc('aerosuite_manage_staff_remove',{
-       p_institution_id:row.id,p_person_id:person.person_id,
-       p_kind:person.kind,p_role:person.role
-      });
-      if(result.error)throw result.error;
-      if(!result.data?.ok)throw Error('Supabase no confirmó la baja.');
-      await reload();
-      listFeedback.textContent='Se '+(person.kind==='integrante'?'desvinculó':'canceló la invitación de')+
-        ' '+person.email+' en «'+row.name+'». Sus otras cuentas y escuelas permanecen intactas.';
-      const next=Array.from(body.querySelectorAll('.institution-card')).find(x=>x.dataset.institutionId===row.id);
-      const open=next?.querySelector('.staff-button');
-      if(open)open.click();
-     }catch(err){
-      feedback.textContent='No se pudo realizar la baja: '+(err?.message||'Error desconocido');
-      remove.disabled=false;
-     }
-    });
-    line.append(remove);list.append(line);
-   }
-   feedback.textContent=entries.length+' registro(s). Los integrantes activos se cuentan por rol, no por correo enviado.';
-  }catch(err){feedback.textContent='No se pudo cargar el personal: '+(err?.message||'Error desconocido');}
-  finally{refresh.disabled=false;}
- }
- refresh.addEventListener('click',load);
- await load();
 }
 async function deleteInstitution(row,button){
  const ok=window.confirm('¿Eliminar definitivamente la institución «'+row.name+'»?\n\nSe quitarán también sus invitaciones y sus membresías. Las cuentas personales permanecerán intactas. Esta acción no se puede deshacer.');
@@ -378,7 +426,7 @@ function edit(id){
  editingId=r.id;for(const k of ['name','kind','cuit','contact_name','contact_email','plan','status','notes'])form.elements[k].value=r[k]||'';
  statusEditLabel.hidden=false;initialTrialNotice.hidden=true;
  endInput.value=r.license_ends_at?new Date(r.license_ends_at).toISOString().slice(0,10):'';
- byId('formTitle').textContent='Gestionar: '+r.name;byId('saveButton').textContent='Guardar cambios';byId('cancelEdit').hidden=false;
+ byId('formTitle').textContent='Editar institución: '+r.name;byId('saveButton').textContent='Guardar cambios';byId('cancelEdit').hidden=false;
  syncLicenseField();feedback.textContent='';form.scrollIntoView({behavior:'smooth',block:'start'});
 }
 function resetEditor(){
@@ -425,7 +473,7 @@ try{
  const role=await db.from('aerosuite_superadmins').select('user_id').eq('user_id',currentUser.id).maybeSingle();
  if(role.error)throw role.error;
  if(!role.data){message.textContent='Acceso denegado. Esta cuenta no tiene el rol de Superadministrador AeroSuite.';return}
- message.textContent='Acceso autorizado. Cada nueva institución comienza automáticamente una prueba de 30 días. Para enviar el correo al director, usá el botón de su tarjeta.';
+ message.textContent='Acceso autorizado. Administrá los registros de AeroSuite desde el padrón central y las licencias con el lápiz de cada institución.';
  content.hidden=false;syncLicenseField();await reload();
 }catch(error){message.textContent='No se pudo validar el acceso: '+(error?.message||'error de servicio')}
 })();
