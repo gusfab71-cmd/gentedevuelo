@@ -29,7 +29,9 @@ assert.match(emailSender,/member\.data/,'Director verificado autoriza instructor
 assert.doesNotMatch(emailSender,/body:JSON\.stringify\(\{[^}]*password/,'Ninguna contraseña viaja por el correo');
 
 assert.match(admission,/id="welcomePanel" hidden/,'Nueva pantalla para crear contraseña desde el propio enlace');
-assert.match(admission,/db\.auth\.verifyOtp\(\{token_hash:oneTimeToken,type:'magiclink'\}\)/,'Verificar el enlace directamente con Supabase Auth');
+assert.match(admission,/db\.auth\.verifyOtp\(\{token_hash:oneTimeToken,type:oneTimeType\}\)/,'Verificar el enlace con el tipo real que emitió Supabase Auth');
+assert.match(admission,/value\.length===9/,'La contraseña institucional exige nueve caracteres exactos');
+assert.match(emailSender,/verification_type==="signup"/,'Si la primera invitación crea la cuenta, se vuelve a generar un enlace de acceso');
 assert.match(admission,/passwordSetupRequired=true/,'Crear contraseña solo luego de verificar enlace');
 assert.match(admission,/db\.auth\.updateUser\(\{password\}\)/,'Guardar contraseña directamente en sesión verificada');
 assert.match(admission,/await verifyAndEnter\(\)/,'Una vez creada, ingresar al portal sin segundo correo');
