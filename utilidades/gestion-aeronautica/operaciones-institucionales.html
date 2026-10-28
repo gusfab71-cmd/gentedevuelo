@@ -152,7 +152,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   $("schoolTitle").textContent=school.institution_name;
   $("roleText").textContent="Rol: "+(roleLabel[role]||role)+" · "+user.email+(school.can_write?"":" · Solo consulta");
   $("pageTitle").textContent=manager?"Administración de la escuela":role==="instructor"?"Mi actividad de instrucción":"Mi reserva y formación";
-  $("backPortal").href="portal-escuela.html?institucion="+encodeURIComponent(inst)+"&rol="+encodeURIComponent(role);
+  $("backPortal").href="portal-escuela.html?institucion="+encodeURIComponent(inst)+"&rol="+encodeURIComponent(role)+"&elegida=1";
   $("adminBooking").hidden=!manager;$("reportForm").hidden=role!=="instructor";$("financeForm").hidden=!manager;
   $("moneyArea").hidden=!manager;
   $("bookingHelp").textContent=role==="alumno"?"Solicitá un turno libre de 90 minutos. Quedará pendiente hasta que lo confirme la escuela.":role==="instructor"?"Consultá la actividad de la escuela y confirmá un turno pendiente cuando puedas asumirlo.":"Controlá y confirmá solicitudes, asigná instructores y cancelá reservas cuando corresponda.";
