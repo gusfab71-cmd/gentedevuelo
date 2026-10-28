@@ -8,6 +8,7 @@ const school=fs.readFileSync(new URL('portal-escuela.html',root),'utf8');
 const superadmin=fs.readFileSync(new URL('superadministrador.html',root),'utf8');
 const emailSender=fs.readFileSync(new URL('../../supabase/functions/aerosuite-invitations/index.ts',root),'utf8');
 const demo=fs.readFileSync(new URL('demo-autorizacion.html',root),'utf8');
+const viewer=fs.readFileSync(new URL('superadmin-visor-roles.html',root),'utf8');
 
 assert.match(admission,/id="signInPanel" hidden/,'No mostrar el formulario hasta verificar sesión');
 assert.match(admission,/id="verifiedPanel" hidden/,'No mostrar aceptación sin autenticar');
@@ -243,6 +244,34 @@ assert.equal(h.mondayOf('2026-10-28'),'2026-10-26','La semana actual comienza lu
 assert.equal(h.addDays(h.mondayOf('2026-10-28'),7),'2026-11-02','La semana siguiente avanza siete días');
 assert.ok(Date.parse('2026-10-28T14:00:00-03:00')>TestDate.now(),'Un turno futuro de hoy no puede considerarse pasado');
 assert.ok(Date.parse('2026-10-26T09:30:00-03:00')<TestDate.now(),'Un turno de lunes ya pasado sigue bloqueado');
+
+
+assert.match(superadmin,/Revisar portales por rol/,'El acceso al visor aparece en cada institución');
+assert.match(superadmin,/superadmin-visor-roles\.html\?institucion=/,'El enlace lleva la institución concreta');
+assert.match(viewer,/Control de portales por rol/,'El visor tiene una pantalla propia');
+assert.match(viewer,/id="institutionChoice"/,'Permite seleccionar institución');
+assert.match(viewer,/data-role="administrador"/,'Muestra Dirección y Secretaría');
+assert.match(viewer,/data-role="instructor"/,'Muestra Instructor');
+assert.match(viewer,/data-role="alumno"/,'Muestra Alumno');
+assert.match(viewer,/querySelectorAll\('\[data-visible-role\]'\)/,'La vista extrae tarjetas del portal real');
+assert.match(viewer,/fetch\('portal-escuela\.html'/,'El visor lee la plantilla de producción');
+assert.match(viewer,/db\.from\('aerosuite_superadmins'\)/,'El visor exige rol de Superadministrador');
+assert.match(viewer,/db\.auth\.getUser\(\)/,'El visor verifica identidad actual');
+assert.match(viewer,/\.rpc\('aerosuite_superadmin_portal_health'/,'El visor consulta RPC agregada protegida');
+assert.match(viewer,/id="checkSummary"/,'La pantalla muestra el resultado del diagnóstico');
+assert.match(viewer,/instructor_cross_institution_overlap/,'Revisión de superposiciones entre escuelas');
+assert.match(viewer,/negative_pack_balance/,'Revisión de packs');
+assert.match(viewer,/double_settlement/,'Revisión de cobro doble');
+assert.match(viewer,/completed_without_approved_report/,'Revisión de informes');
+assert.match(viewer,/past_pending|stale_pending/,'Revisión de turnos pendientes vencidos');
+assert.match(viewer,/credentials:'omit'/,'La plantilla se lee sin reutilizar sesión institucional');
+assert.match(viewer,/Vista de referencia · Solo lectura/,'No aparenta una sesión real');
+assert.doesNotMatch(viewer,/auth\.signInWithPassword\(|auth\.updateUser\(|\.rpc\('aerosuite_booking_action'|\.rpc\('aerosuite_finance_action'/,
+ 'El visor no cambia claves ni ejecuta acciones de reservas o dinero');
+assert.match(viewer,/No es una sesión del usuario/,'No se presenta como suplantación');
+const previewScripts=[...viewer.matchAll(/<script(?![^>]*src=)[^>]*>([\s\S]*?)<\/script>/g)];
+assert.equal(previewScripts.length,1,'Un único script de visor');
+new vm.Script(previewScripts[0][1],{filename:'superadmin-visor-roles.html'});
 
 for(const [name,html] of [['ingreso-escuela.html',admission],['portal-escuela.html',school]]){
  const scripts=[...html.matchAll(/<script(?![^>]*src=)[^>]*>([\s\S]*?)<\/script>/g)];
