@@ -79,12 +79,12 @@ input[type=email]{width:100%;background:#122737;border:1px solid #7394aa;border-
   <h2>Áreas de trabajo de tu institución</h2>
   <p>Las operaciones se consultan y registran con los permisos de tu propia escuela. Las áreas aún no conectadas se identifican como próximas integraciones.</p>
   <div class="metrics">
-   <a class="tile operational-link" data-visible-role="administrador" data-module="turnera" href="#"><h3>Turnera y reservas</h3><p>Solicitudes pendientes, confirmaciones y cancelaciones.</p><span class="pill ready">Operativa</span></a>
-   <a class="tile operational-link" data-visible-role="administrador" data-module="informes" href="#"><h3>Informes de instrucción</h3><p>Revisar devoluciones, horas, combustible y aceite.</p><span class="pill ready">Operativa</span></a>
-   <a class="tile operational-link" data-visible-role="administrador" data-module="finanzas" href="#"><h3>Contaduría y packs</h3><p>Cobros, packs, egresos y caja chica.</p><span class="pill ready">Operativa</span></a>
-   <a class="tile operational-link" data-visible-role="administrador" href="#directorPeoplePanel"><h3>Alumnos e instructores</h3><p>Invitaciones, integrantes y desvinculaciones.</p><span class="pill ready">Operativa</span></a>
-   <a class="tile operational-link" data-visible-role="administrador" data-module="flota" href="#"><h3>Flota y disponibilidad</h3><p>Registrar aeronaves y administrar su disponibilidad para reservas.</p><span class="pill ready">Operativa</span></a>
-   <section class="tile" data-visible-role="administrador"><h3>Academia Aeronáutica</h3><p>Biblioteca institucional y recursos didácticos.</p><span class="pill">En integración</span></section>
+   <a class="tile operational-link" data-visible-role="administrador secretaria" data-module="turnera" href="#"><h3>Turnera y reservas</h3><p>Solicitudes pendientes, confirmaciones y cancelaciones.</p><span class="pill ready">Operativa</span></a>
+   <a class="tile operational-link" data-visible-role="administrador secretaria" data-module="informes" href="#"><h3>Informes de instrucción</h3><p>Revisar devoluciones, horas, combustible y aceite.</p><span class="pill ready">Operativa</span></a>
+   <a class="tile operational-link" data-visible-role="administrador secretaria" data-module="finanzas" href="#"><h3>Contaduría y packs</h3><p>Cobros, packs, egresos y caja chica.</p><span class="pill ready">Operativa</span></a>
+   <a class="tile operational-link" data-visible-role="administrador secretaria" href="#directorPeoplePanel"><h3>Alumnos e instructores</h3><p>Invitaciones, integrantes y desvinculaciones.</p><span class="pill ready">Operativa</span></a>
+   <a class="tile operational-link" data-visible-role="administrador secretaria" data-module="flota" href="#"><h3>Flota y disponibilidad</h3><p>Registrar aeronaves y administrar su disponibilidad para reservas.</p><span class="pill ready">Operativa</span></a>
+   <section class="tile" data-visible-role="administrador secretaria"><h3>Academia Aeronáutica</h3><p>Biblioteca institucional y recursos didácticos.</p><span class="pill">En integración</span></section>
    <a class="tile operational-link" data-visible-role="instructor" data-module="turnera" href="#" hidden><h3>Turnera de instrucción</h3><p>Consultá horarios y confirmá solicitudes que puedas atender.</p><span class="pill ready">Operativa</span></a>
    <a class="tile operational-link" data-visible-role="instructor" data-module="informes" href="#" hidden><h3>Mis informes</h3><p>Registrá clases, horas, devoluciones, combustible y aceite.</p><span class="pill ready">Operativa</span></a>
    <a class="tile operational-link" data-visible-role="instructor" data-module="flota" href="#" hidden><h3>Flota de la escuela</h3><p>Consultá qué aeronaves están disponibles o fuera de servicio.</p><span class="pill ready">Consulta</span></a>
@@ -95,8 +95,8 @@ input[type=email]{width:100%;background:#122737;border:1px solid #7394aa;border-
    <section class="tile" data-visible-role="alumno" hidden><h3>Academia Aeronáutica</h3><p>Fichas y utilidades de la institución.</p><span class="pill">En integración</span></section>
   </div>
   <section class="panel" id="directorInvitePanel" hidden>
-   <span class="label">Gestión exclusiva del director</span>
-   <h2>Invitar instructores y alumnos</h2>
+   <span class="label">Gestión administrativa de la institución</span>
+   <h2 id="inviteHeading">Invitar instructores y alumnos</h2>
    <p>Seleccioná el permiso correspondiente a cada persona. Recibirá un correo oficial con un enlace para ingresar directamente a AeroSuite y activar su cuenta. La contraseña la elige el destinatario; no se utiliza el DNI.</p>
    <form id="instituteInviteForm">
     <label>Correo del destinatario
@@ -105,6 +105,7 @@ input[type=email]{width:100%;background:#122737;border:1px solid #7394aa;border-
     <div class="role-options">
      <label><input name="role" type="radio" value="instructor" checked><span><strong>Instructor</strong><small>Personal autorizado a instruir</small></span></label>
      <label><input name="role" type="radio" value="alumno"><span><strong>Alumno</strong><small>Cuenta personal de formación</small></span></label>
+     <label id="secretaryInviteOption" hidden><input name="role" type="radio" value="secretaria"><span><strong>Secretaría (opcional)</strong><small>Mismos permisos administrativos que Dirección</small></span></label>
     </div>
     <button class="primary" type="submit" id="sendInviteButton">Enviar invitación por correo</button>
     <div id="inviteFeedback" role="status" aria-live="polite"></div>
@@ -113,9 +114,9 @@ input[type=email]{width:100%;background:#122737;border:1px solid #7394aa;border-
 
   </section>
   <section class="panel" id="directorPeoplePanel" hidden>
-    <span class="label">Gestión exclusiva del director</span>
-    <h2>Instructores y alumnos de mi escuela</h2>
-    <p>Podés desvincular instructores y alumnos o cancelar invitaciones pendientes. En instituciones de prueba se limpia además la cuenta técnica exclusiva, para poder registrar nuevamente el mismo correo. <strong>Las cuentas de Gente de Vuelo y los accesos a otras instituciones se conservan.</strong></p>
+    <span class="label">Gestión administrativa de la institución</span>
+    <h2>Personal de mi escuela</h2>
+    <p>Podés desvincular integrantes autorizados o cancelar invitaciones pendientes. En instituciones de prueba se limpia además la cuenta técnica exclusiva, para poder registrar nuevamente el mismo correo. <strong>Las cuentas de Gente de Vuelo y los accesos a otras instituciones se conservan.</strong></p>
     <div id="peopleFeedback" class="people-feedback" role="status" aria-live="polite"></div>
     <div id="peopleList" class="people-list"></div>
     <div class="actions" style="margin-top:15px"><button id="reloadPeople" type="button">Actualizar integrantes</button></div>
@@ -146,7 +147,7 @@ try{
  const requestedRole=new URLSearchParams(location.search).get('rol');
  const school=queryId?
    data.find(x=>x.institution_id===queryId&&(!requestedRole||x.my_role===requestedRole)):
-   data.find(x=>x.can_access&&x.my_role==='administrador');
+   data.find(x=>x.can_access&&['administrador','secretaria','instructor','alumno'].includes(x.my_role));
  if(!school){
   message.textContent='Tu cuenta no está asociada a esta escuela con el rol indicado. Ingresá desde tu invitación personal y verificá el correo; las cuentas de otra institución no tienen acceso.';
   return;
@@ -159,7 +160,7 @@ try{
  const roleNames={administrador:'director / administrador',secretaria:'administración / secretaría',instructor:'instructor',alumno:'alumno'};
  document.querySelector('h1').textContent='Portal del '+(roleNames[school.my_role]||'integrante');
  for(const card of document.querySelectorAll('[data-visible-role]')){
-  card.hidden=card.dataset.visibleRole!==school.my_role;
+  card.hidden=!card.dataset.visibleRole.split(/\s+/).includes(school.my_role);
  }
  for(const link of document.querySelectorAll('.operational-link[data-module]')){
    link.href=(link.dataset.module==='flota'?'flota-institucional.html':'operaciones-institucionales.html')+'?institucion='+encodeURIComponent(school.institution_id)+'&rol='+encodeURIComponent(school.my_role)+(link.dataset.module==='flota'?'':'#'+encodeURIComponent(link.dataset.module));
@@ -169,12 +170,13 @@ try{
  el('schoolKind').textContent='Tipo: '+({escuela:'Escuela de vuelo',aeroclub:'Aeroclub',aerodromo:'Aeródromo'}[school.institution_kind]||school.institution_kind);
  el('schoolRole').textContent='Rol: '+school.my_role;
  const isDirector=school.my_role==='administrador';
- el('schoolPlan').hidden=!isDirector;
- el('schoolExpiry').hidden=!isDirector;
- el('schoolAccessLine').hidden=!isDirector;
- el('subscriptionNotice').hidden=!isDirector;
+ const isManager=isDirector||school.my_role==='secretaria';
+ el('schoolPlan').hidden=!isManager;
+ el('schoolExpiry').hidden=!isManager;
+ el('schoolAccessLine').hidden=!isManager;
+ el('subscriptionNotice').hidden=!isManager;
  const mode=school.access_mode;
- if(isDirector){
+ if(isManager){
  el('schoolPlan').textContent='Plan: '+({essential:'Essential',pro:'Pro'}[school.plan]||'Consultar con AeroSuite');
  const until=school.expires_at?new Date(school.expires_at).toLocaleDateString('es-AR'):'sin fecha';
  el('schoolExpiry').textContent=school.license_status==='trial'?'Fin de la prueba: '+until:'Vencimiento: '+until;
@@ -198,10 +200,12 @@ try{
  }else{
    for(const key of ['schoolPlan','schoolExpiry','schoolAccessLine','subscriptionNotice'])el(key).textContent='';
  }
- if(isDirector){
+ if(isManager){
    el('directorPeoplePanel').hidden=false;
    const list=el('peopleList'),listFeedback=el('peopleFeedback');
-   const roles={instructor:'Instructor',alumno:'Alumno'};
+   const roles={secretaria:'Secretaría',instructor:'Instructor',alumno:'Alumno'};
+   el('secretaryInviteOption').hidden=!isDirector;
+   el('inviteHeading').textContent=isDirector?'Invitar Secretaría, instructores y alumnos':'Invitar instructores y alumnos';
    async function loadPeople(){
      listFeedback.textContent='Consultando integrantes de tu institución…';
      list.replaceChildren();
@@ -223,7 +227,7 @@ try{
          detail.textContent=person.kind==='integrante'?'Cuenta activa en tu escuela':
            person.situation==='vencida'?'Invitación vencida':'Invitación pendiente de aceptación';
          meta.append(label,detail);card.append(meta);
-         if(school.can_write){
+         if(school.can_write&&(person.role!=='secretaria'||isDirector)){
            const remove=document.createElement('button');remove.type='button';remove.className='danger';
            remove.textContent=person.kind==='integrante'?'Desvincular':'Cancelar invitación';
            remove.setAttribute('aria-label',(person.kind==='integrante'?'Desvincular':'Cancelar invitación de')+' '+person.email);
@@ -259,14 +263,14 @@ try{
    el('reloadPeople').addEventListener('click',loadPeople);
    await loadPeople();
  }
- if(isDirector&&school.can_write){
+ if(isManager&&school.can_write){
    el('directorInvitePanel').hidden=false;
    el('instituteInviteForm').addEventListener('submit',async ev=>{
      ev.preventDefault();
      const f=ev.currentTarget,button=el('sendInviteButton'),feedback=el('inviteFeedback');
      const email=String(new FormData(f).get('recipient')||'').trim().toLowerCase();
      const role=String(new FormData(f).get('role')||'');
-     if(!['instructor','alumno'].includes(role)||!email){feedback.textContent='Completá el correo y elegí un rol válido.';return}
+     if(!(isDirector?['secretaria','instructor','alumno']:['instructor','alumno']).includes(role)||!email){feedback.textContent='Completá el correo y elegí un rol válido.';return}
      if(!confirm('¿Enviar una invitación real a '+email+' como '+role+' de '+school.institution_name+'?'))return;
      button.disabled=true;feedback.textContent='Enviando invitación…';
      try{
@@ -285,7 +289,7 @@ try{
 
  message.textContent=mode==='read_only'?
   'Acceso de consulta habilitado. Los datos permanecen conservados y las operaciones están deshabilitadas.':
-  isDirector?'Administración habilitada. Podés gestionar turnera, informes, alumnos y contaduría.':
+  isManager?'Administración habilitada. Podés gestionar turnera, informes, alumnos y contaduría.':
   'Acceso de '+school.my_role+' verificado. Estás viendo únicamente las funciones de tu rol.';
 }catch(err){message.textContent='No se pudo verificar el permiso de la escuela: '+(err?.message||'Error de servidor');}
 el('signOutButton').addEventListener('click',async()=>{
