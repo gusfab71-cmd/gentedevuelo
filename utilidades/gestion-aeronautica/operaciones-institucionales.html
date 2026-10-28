@@ -30,6 +30,9 @@ table{width:100%;min-width:790px;border-collapse:separate;border-spacing:5px;fon
 th{padding:10px 4px;color:#b7d6e7;font-weight:800}td{vertical-align:middle;text-align:center}th:first-child{min-width:82px}
 .slot{min-height:51px;width:100%;border-radius:8px;padding:6px 3px;background:#214b4d;border:1px solid #477f75;font-size:11px}
 .slot.past{background:#263644;border-color:#435465;color:#aec0cd}
+.slot.today-slot{box-shadow:inset 0 0 0 1px #e7c18a}
+th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
+.slot.available{background:#1b5c50;border-color:#6db79a;color:#fff;font-weight:750}
 .slot.busy{background:#35465c;border-color:#60768f}.slot.mine{background:#3d593f;border-color:#b1ca87}.slot.cancelled{background:#263746}
 .slot small{display:block;margin-top:4px;color:#d1dee7}.slot:hover:not(:disabled){filter:brightness(1.13)}
 .row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.row.between{justify-content:space-between}
@@ -60,7 +63,8 @@ th{padding:10px 4px;color:#b7d6e7;font-weight:800}td{vertical-align:middle;text-
    <span class="eyebrow" id="bookingEyebrow">Agenda de 90 minutos</span>
    <h2 id="bookingTitle">Turnera semanal compartida</h2>
    <p id="bookingHelp">Los turnos solicitados quedan pendientes hasta su confirmación por Administración o un instructor.</p>
-   <div class="row"><label>Semana del <input type="date" id="weekDate"></label><button id="updateWeek" type="button">Ver semana</button></div>
+   <div class="row"><label>Semana del <input type="date" id="weekDate"></label><button id="updateWeek" type="button">Ver semana</button><button id="thisWeek" type="button">Esta semana</button><button id="nextWeek" type="button">Semana siguiente</button></div>
+   <p id="bookingFutureNotice" class="hint" role="status">Los horarios anteriores aparecen como «Pasado». Para reservar, buscá una casilla «Libre · Reservar» en los próximos días o avanzá una semana.</p>
    <div id="adminBooking" class="notice" hidden>Para solicitar un turno en nombre de un alumno, seleccioná su nombre antes de tocar una casilla libre.
     <label style="margin-top:9px">Alumno <select id="bookingStudent"><option value="">Elegí un alumno</option></select></label>
     <p id="bookingStudentNotice" class="hint warn" hidden>Esta institución todavía no tiene alumnos habilitados. Primero invitá uno desde «Alumnos e instructores» en tu portal.</p>
@@ -125,7 +129,10 @@ th{padding:10px 4px;color:#b7d6e7;font-weight:800}td{vertical-align:middle;text-
  const $=id=>document.getElementById(id),stat=$("message");
  const esc=x=>String(x===null||x===undefined?"":x).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
  const stamp=x=>new Date(x).toLocaleString("es-AR",{dateStyle:"short",timeStyle:"short",timeZone:"America/Argentina/Buenos_Aires"});
- const ymd=d=>[d.getFullYear(),String(d.getMonth()+1).padStart(2,"0"),String(d.getDate()).padStart(2,"0")].join("-");
+ // Fecha actual y semanas definidas en ART, independientemente de la zona horaria del dispositivo.
+ const artToday=()=>new Date(Date.now()-3*3600000).toISOString().slice(0,10);
+ const addDays=(value,days)=>new Date(Date.parse(value+'T12:00:00Z')+days*86400000).toISOString().slice(0,10);
+ const mondayOf=date=>addDays(date,-((new Date(date+'T12:00:00Z').getUTCDay()+6)%7));
  const arDate=d=>new Date(new Date(d).getTime()-3*3600000).toISOString().slice(0,10);
  const arTime=d=>new Date(new Date(d).getTime()-3*3600000).toISOString().slice(11,16);
  const safeError=e=>String(e&&e.message||e||"Error desconocido");
@@ -161,9 +168,7 @@ th{padding:10px 4px;color:#b7d6e7;font-weight:800}td{vertical-align:middle;text-
     const s=$(id);people.filter(x=>x.role===kind).forEach(x=>s.add(new Option(x.email,x.person_id)));
    }
   }
-  const today=new Date(),monday=new Date(today.getFullYear(),today.getMonth(),today.getDate());
-  monday.setDate(monday.getDate()-(monday.getDay()+6)%7);
-  $("weekDate").value=ymd(monday);
+  $("weekDate").value=mondayOf(artToday());
   $("workArea").hidden=false;
   for(const b of $("tabs").querySelectorAll("button")){
    b.addEventListener("click",()=>showTab(b.dataset.tab));
@@ -179,9 +184,8 @@ th{padding:10px 4px;color:#b7d6e7;font-weight:800}td{vertical-align:middle;text-
   }
   function labelOf(v){return people.find(x=>x.person_id===v)?.email||v||"Sin asignar";}
   const weekDates=()=>{
-   const [y,m,d]=$("weekDate").value.split("-").map(Number);
-   const base=new Date(y,m-1,d),offset=(base.getDay()+6)%7;base.setDate(base.getDate()-offset);
-   return Array.from({length:7},(_,i)=>{const dt=new Date(base);dt.setDate(base.getDate()+i);return ymd(dt)});
+   const monday=mondayOf($("weekDate").value);
+   return Array.from({length:7},(_,i)=>addDays(monday,i));
   };
   const times=["08:00","09:30","11:00","12:30","14:00","15:30","17:00","18:30"];
   async function loadAircraftChoices(){
@@ -195,16 +199,21 @@ th{padding:10px 4px;color:#b7d6e7;font-weight:800}td{vertical-align:middle;text-
   async function loadWeek(){
    const dates=weekDates();bookings=await rpc("aerosuite_booking_schedule",{p_institution_id:inst,p_date_from:dates[0],p_date_to:dates[6]});
    renderWeek(dates);renderBookings();renderReportFormChoices();renderFinanceBookingChoices();
+   const lastSlotStart=new Date(dates[6]+"T"+times[times.length-1]+":00-03:00").getTime();
+   $("bookingFutureNotice").textContent=lastSlotStart<=Date.now()?
+    "Esta semana ya no tiene horarios futuros. Pulsá «Semana siguiente» para encontrar turnos.":
+    "Los turnos «Pasado» ya comenzaron y no se pueden reservar. Elegí «Libre · Reservar» en un horario futuro de la grilla. Hoy es "+artToday().split("-").reverse().join("/")+" (Argentina).";
   }
   function renderWeek(dates){
-   $("weekHead").innerHTML="<tr><th>Horario</th>"+dates.map((d,i)=>"<th>"+["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"][i]+"<br>"+esc(d.slice(8,10)+"/"+d.slice(5,7))+"</th>").join("")+"</tr>";
+   const today=artToday();
+   $("weekHead").innerHTML="<tr><th>Horario</th>"+dates.map((d,i)=>'<th'+(d===today?' class="today-head"':'')+'>'+["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"][i]+(d===today?' · Hoy':'')+"<br>"+esc(d.slice(8,10)+"/"+d.slice(5,7))+"</th>").join("")+"</tr>";
    const body=$("weekBody");body.replaceChildren();
    for(const time of times){
     const tr=document.createElement("tr"),th=document.createElement("th");th.textContent=time+"–"+(()=>{const [h,mi]=time.split(":").map(Number);const n=h*60+mi+90;return String(Math.floor(n/60)%24).padStart(2,"0")+":"+String(n%60).padStart(2,"0")})();tr.append(th);
     for(const date of dates){
      const td=document.createElement("td"),b=document.createElement("button"),start=new Date(date+"T"+time+":00-03:00");
      const booking=bookings.find(x=>x.status!=="cancelled"&&new Date(x.starts_at).getTime()===start.getTime());
-     b.type="button";b.className="slot"+(booking?" busy":"")+(booking&&booking.my_booking?" mine":"");
+     b.type="button";b.className="slot"+(booking?" busy":"")+(booking&&booking.my_booking?" mine":"")+(date===today?" today-slot":"");
      if(booking){
       b.textContent=booking.my_booking?"Mi turno":statuses[booking.status]||"Ocupado";
       const small=document.createElement("small");small.textContent=booking.instructor_email&&role!=="alumno"?"Instructor asignado":"";b.append(small);
@@ -212,11 +221,13 @@ th{padding:10px 4px;color:#b7d6e7;font-weight:800}td{vertical-align:middle;text-
       if(!booking.booking_id)b.onclick=()=>stat.textContent="Turno ocupado. Seleccioná uno libre.";
      }else{
       b.textContent="Libre";
-      if(start.getTime()<Date.now()){
+      if(start.getTime()<=Date.now()){
        b.textContent="Pasado";b.classList.add("past");b.disabled=true;
       }else if(role==="instructor"||!school.can_write||(manager&&!people.some(x=>x.role==="alumno"))){
        b.disabled=true;
       }else{
+       b.classList.add("available");
+       b.textContent="Libre · Reservar";
        b.onclick=async()=>{
         const student=manager?$("bookingStudent").value:user.id;
         if(!student){stat.textContent="Seleccioná el alumno para registrar la solicitud.";return;}
@@ -378,7 +389,10 @@ th{padding:10px 4px;color:#b7d6e7;font-weight:800}td{vertical-align:middle;text-
    try{await loadAircraftChoices();await loadWeek();await loadReports();await loadFinance();renderReportFormChoices();stat.textContent="Información institucional actualizada."; }
    catch(e){stat.textContent="Error al cargar el área: "+safeError(e);}
   }
-  $("updateWeek").onclick=refresh;$("reloadAll").onclick=refresh;
+  $("updateWeek").onclick=refresh;
+  $("thisWeek").onclick=async()=>{$("weekDate").value=mondayOf(artToday());await refresh();};
+  $("nextWeek").onclick=async()=>{$("weekDate").value=addDays(mondayOf($("weekDate").value),7);await refresh();};
+  $("reloadAll").onclick=refresh;
   await refresh();
   const initial=(location.hash||"#turnera").slice(1);
   if(["turnera","informes","finanzas","recursos"].includes(initial))showTab(initial);
