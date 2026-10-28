@@ -79,7 +79,7 @@ async function load(){
   allRows('gdv_topics'),
   allRows('gdv_comments'),
   allRows('gdv_media'),
-  allRows('profiles','id,username,full_name,avatar_url,bio,created_at,aviation_role,aircraft_flown,home_airfield,flight_hours,aviation_license,flight_simulators,hangar_intro,onboarding_completed'),
+  allRows('profiles','id,username,full_name,avatar_url,bio,created_at,aviation_role,aircraft_flown,home_airfield,flight_hours,aviation_license,flight_simulators,hangar_intro,onboarding_completed,gdv_community_member'),
   allRows('gdv_reactions'),
   db.from('shimoda_publicaciones').select('id,titulo,contenido,categoria,fecha_publicacion,created_at').eq('publicado',true).order('created_at',{ascending:false}),
   db.from('shimoda_comentarios').select('id,publicacion_id,contenido,created_at,user_id').eq('estado','aprobado').order('created_at',{ascending:true})
@@ -87,7 +87,7 @@ async function load(){
  [categories,topics,comments,media]=results;
  categories=categories.map(c=>({...c,color:categoryColors[c.slug]||c.color}));
  topics.reverse();
- profiles=new Map(results[4].map(p=>[p.id,p]));
+ profiles=new Map(results[4].filter(p=>p.gdv_community_member===true||p.id===user?.id).map(p=>[p.id,p]));
  reactions=results[5];
  legacyShimoda=results[6].error?[]:(results[6].data||[]);
  legacyShimodaComments=results[7].error?[]:(results[7].data||[]);
@@ -1211,7 +1211,8 @@ async function googleOnboarding(){
     flight_simulators:$('google-profile-simulator').value.trim(),
     hangar_intro:$('google-profile-intro').value.trim(),
     flight_hours:flight?Number(flight):null,
-    onboarding_completed:true
+    onboarding_completed:true,
+    gdv_community_member:true
    };
    const result=await db.from('profiles').update(payload).eq('id',user.id).select('id,onboarding_completed').single();
    if(result.error){status.textContent='No se pudo guardar el perfil: '+result.error.message;return}
@@ -1268,7 +1269,7 @@ function authView(mode){
  crumbs([[mode==='registro'?'Registrarse':mode==='recuperar'?'Recuperar contraseña':'Ingresar']]);
  if(mode==='registro'){app.innerHTML=`<section class="card auth"><h1>Registrarse</h1><p class="steps" id="register-step">Paso 1 de 2 · Elegí tu usuario</p><form id="register"><div id="register-first"><label for="register-name">Nombre de usuario</label><input id="register-name" required minlength="3" maxlength="25" pattern="[A-Za-z0-9_-]{3,25}" autocomplete="username"><p class="small muted">Entre 3 y 25 caracteres: letras, números, guion o guion bajo.</p><label for="register-pass">Contraseña</label><input id="register-pass" required type="password" minlength="9" autocomplete="new-password"><label for="register-confirm">Confirmar contraseña</label><input id="register-confirm" required type="password" minlength="9" autocomplete="new-password"><p class="small muted">Usá al menos 9 caracteres, con mayúscula, minúscula, número y símbolo (por ejemplo, !, @ o #).</p></div><div id="register-second" hidden><label for="register-email">Correo electrónico privado</label><input id="register-email" type="email" autocomplete="email"><label class="legal"><input id="register-consent" type="checkbox"> Acepto la <a href="#normativa" target="_blank">Normativa de la Comunidad</a> y su información de privacidad.</label></div><div class="toolbar"><button id="register-submit" class="primary">Continuar</button><button id="register-back" type="button" hidden>Volver</button></div><div class="toolbar"><button id="register-google" type="button">Registrarse con Google</button></div><p class="small muted">Si es tu primera vez con Google, se creará tu cuenta automáticamente.</p><p id="auth-status" role="status"></p></form><div class="card" style="margin-top:14px"><h2>¿No llegó la confirmación?</h2><p>Si ya te registraste, pedí un nuevo enlace y usá siempre el correo más reciente. Revisá también spam.</p><label for="register-resend-email">Correo electrónico</label><input id="register-resend-email" type="email" autocomplete="email" placeholder="tu@email.com"><div class="toolbar"><button type="button" id="register-resend">Reenviar confirmación</button></div></div></section>`;
  let step=1;$('register-back').onclick=()=>{step=1;$('register-first').hidden=false;$('register-second').hidden=true;$('register-email').required=false;$('register-consent').required=false;$('register-step').textContent='Paso 1 de 2 · Elegí tu usuario';$('register-submit').textContent='Continuar';$('register-submit').disabled=false;$('register-back').hidden=true};
- $('register').onsubmit=e=>{e.preventDefault();busy(e.submitter,async()=>{const username=$('register-name').value.trim(),password=$('register-pass').value;if(password!==$('register-confirm').value)throw new Error('Las contraseñas no coinciden.');if(step===1){if(!validNewPassword(password))throw new Error('La contraseña debe tener al menos 9 caracteres, una mayúscula, una minúscula, un número y un símbolo.');if(!/^[A-Za-z0-9_-]{3,25}$/.test(username))throw new Error('Revisá el nombre de usuario.');if(/^(admin|administrador|moderador|shimoda|gentedevuelo|soporte)$/i.test(username))throw new Error('Ese nombre está reservado.');const r=await db.from('profiles').select('id').ilike('username',username.replaceAll('_','\\_')).limit(1);if(checked(r).length)throw new Error('Ese nombre ya está en uso. Elegí otro.');step=2;$('register-first').hidden=true;$('register-second').hidden=false;$('register-email').required=true;$('register-consent').required=true;$('register-back').hidden=false;$('register-step').textContent='Paso 2 de 2 · Verificá tu correo';$('register-submit').textContent='Enviar verificación';return}const r=await db.auth.signUp({email:$('register-email').value.trim(),password,options:{emailRedirectTo:new URL('comunidad.html',location.href).href,data:{username,bio:''}}});if(r.error)throw r.error;$('register-resend-email').value=$('register-email').value.trim();$('register').reset();$('auth-status').textContent='Revisá tu correo y confirmá el enlace para activar la cuenta. Revisá también spam. Si ya tenías cuenta, ingresá o recuperá tu contraseña.';if(r.data.session){await db.auth.signOut();message('La cuenta no se activará aquí hasta verificar el correo.')}})};
+ $('register').onsubmit=e=>{e.preventDefault();busy(e.submitter,async()=>{const username=$('register-name').value.trim(),password=$('register-pass').value;if(password!==$('register-confirm').value)throw new Error('Las contraseñas no coinciden.');if(step===1){if(!validNewPassword(password))throw new Error('La contraseña debe tener al menos 9 caracteres, una mayúscula, una minúscula, un número y un símbolo.');if(!/^[A-Za-z0-9_-]{3,25}$/.test(username))throw new Error('Revisá el nombre de usuario.');if(/^(admin|administrador|moderador|shimoda|gentedevuelo|soporte)$/i.test(username))throw new Error('Ese nombre está reservado.');const r=await db.from('profiles').select('id').ilike('username',username.replaceAll('_','\\_')).limit(1);if(checked(r).length)throw new Error('Ese nombre ya está en uso. Elegí otro.');step=2;$('register-first').hidden=true;$('register-second').hidden=false;$('register-email').required=true;$('register-consent').required=true;$('register-back').hidden=false;$('register-step').textContent='Paso 2 de 2 · Verificá tu correo';$('register-submit').textContent='Enviar verificación';return}const r=await db.auth.signUp({email:$('register-email').value.trim(),password,options:{emailRedirectTo:new URL('comunidad.html',location.href).href,data:{username,bio:'',gdv_community_signup:true}}});if(r.error)throw r.error;$('register-resend-email').value=$('register-email').value.trim();$('register').reset();$('auth-status').textContent='Revisá tu correo y confirmá el enlace para activar la cuenta. Revisá también spam. Si ya tenías cuenta, ingresá o recuperá tu contraseña.';if(r.data.session){await db.auth.signOut();message('La cuenta no se activará aquí hasta verificar el correo.')}})};
  $('register-resend').onclick=()=>busy($('register-resend'),async()=>{
     const email=$('register-resend-email').value.trim();
     if(!email)throw Error('Escribí tu correo para reenviar la confirmación.');
@@ -1623,7 +1624,7 @@ async function membersView(){
  const following=new Set(user?follows.filter(f=>f.follower_id===user.id).map(f=>f.followed_id):[]);
  const counts=new Map();
  follows.forEach(f=>counts.set(f.followed_id,(counts.get(f.followed_id)||0)+1));
- const people=[...profiles.values()].filter(p=>p.onboarding_completed===true)
+ const people=[...profiles.values()].filter(p=>p.onboarding_completed===true&&p.gdv_community_member===true&&!/^piloto[_-][0-9a-f]{8,}$/i.test(p.username||''))
   .sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
  const shown=membersFilter==='following'?people.filter(p=>following.has(p.id)):people;
  app.innerHTML='<h1>Integrantes</h1><p>Conocé a quienes forman parte de nuestra comunidad aeronáutica. La presencia se actualiza periódicamente.</p>'+
