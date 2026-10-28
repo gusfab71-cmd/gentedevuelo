@@ -93,7 +93,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
 <script src="../../assets/auth-guard.js?v=20261013registro2"></script>
 </head>
 <body>
-<header><a class="brand" href="index.html">AeroSuite <small>BY GENTE DE VUELO · SUPERADMINISTRACIÓN</small></a><nav><a href="portal.html">Portal demo</a><a href="../../index.html">Gente de Vuelo</a></nav></header>
+<header><a class="brand" href="index.html">AeroSuite <small>BY GENTE DE VUELO · SUPERADMINISTRACIÓN</small></a><nav><a href="../../index.html">Gente de Vuelo</a></nav></header>
 <main>
 <div class="eyebrow">Acceso exclusivo del titular</div>
 <h1>Instituciones y licencias</h1>
@@ -333,7 +333,7 @@ async function reload(){
    const desc=document.createElement('dd');desc.textContent=value||'—';
    details.append(term,desc);
   };
-  addDetail('Correo del director',row.contact_email);
+  addDetail('Correo de contacto',row.contact_email);
   const rosterTotals=countsByInstitution.get(row.id)||{instructors:0,students:0,instructor_invitations:0,student_invitations:0};
   addDetail('Instructores activos',String(rosterTotals.instructors));
   addDetail('Alumnos activos',String(rosterTotals.students));
