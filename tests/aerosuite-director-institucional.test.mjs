@@ -125,7 +125,7 @@ assert.match(admission,/aerosuite_record_my_registration/,'Las altas verificadas
 assert.doesNotMatch(superadmin,/Gestionar cuentas|Probar el camino de una nueva escuela|href="demo-autorizacion\.html"/,'No hay acciones redundantes ni enlaces demo');
 assert.match(superadmin,/personRole=\{/,'Los registros distinguen director, instructor y alumno');
 assert.match(superadmin,/La cuenta personal y sus accesos a otras instituciones se conservan/,'Desvincular no borra usuarios globales');
-assert.match(superadmin,/staffButton\.textContent='Gestionar cuentas'/,'Gestión directa desde tarjeta de escuela');
+
 
 assert.match(superadmin,/15\*86400000/,'Cálculo de 15 días de cortesía para el listado');
 assert.doesNotMatch(school,/\.from\('aerosuite_institutions'\)/,'El portal no puede leer registros generales');
