@@ -1,6 +1,6 @@
 # Caja de Ideas de AeroSuite — Documento Maestro
 
-**Actualizado:** 26/10/2026  ·  **Proyecto:** AeroSuite, By Gente de Vuelo
+**Actualizado:** 28/10/2026  ·  **Proyecto:** AeroSuite, By Gente de Vuelo
 
 Este es el registro central de las decisiones, ideas y pendientes tratados para AeroSuite. No implica que todos los módulos estén publicados o habilitados.
 
@@ -363,3 +363,12 @@ Se estableció la prueba de extremo a extremo: el Superadministrador crea una in
 8. **Revisión de seguridad y cierre de calidad**: autorización por rol y por escuela en cada RPC, límites de caja y packs, pruebas concurrentes, UI adaptable a móvil, integridad de historiales y publicación estable.
 
 **Punto exacto para retomar:** trabajar sobre los módulos ya publicados; no reiniciar el diseño ni abrir nuevas preguntas generales sobre jerarquías. Priorizar pruebas de interfaz y correcciones operativas; conservar todos los criterios aprobados.
+
+
+## Continuación 28/10/2026 — Secretaría opcional habilitada
+
+**IMPLEMENTADO EN SUPABASE:** las restricciones de rol admiten ahora `secretaria` en integrantes e invitaciones. Se adaptaron las RPC de aceptación de invitación, registro, acceso institucional, padrón y bajas. Dirección y Secretaría comparten la turnera, informes, contaduría/packs, flota y administración de instructores y alumnos. Solo Dirección (o Superadministración para contingencias) puede desvincular una Secretaría; solo Dirección puede cursar su invitación institucional. La actuación se mantiene asociada a la cuenta personal de cada operador.
+
+**IMPLEMENTADO EN FRONTEND Y EDGE FUNCTION:** `ingreso-escuela.html` acepta el rol `secretaria`; `portal-escuela.html` presenta los módulos comunes de Administración, permite a Dirección invitar a Secretaría de forma opcional, y permite a Secretaría invitar o retirar instructores y alumnos pero no otras Secretarías. `aerosuite-invitations` v7 verifica estos permisos en servidor y envía el correo personal habitual. No se comparte una única contraseña entre personas.
+
+**VERIFICADO EN BASE:** ensayo reversible con una invitación a Secretaría aceptada, acceso a licencia/Contaduría/flota, y denegación del intento de baja de Secretaría desde ese mismo rol; todo se ejecutó con `ROLLBACK` y no persistió registros ficticios. **PENDIENTE:** prueba visual real de invitación, correo, sesión de Secretaría y flujos en PC/celular; no asegurar que esté completamente validada hasta probar con la cuenta destinataria. Mantener pendientes de turnera multiaeronave, Academia institucional y cierre contable.
