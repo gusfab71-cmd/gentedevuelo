@@ -57,7 +57,7 @@ textarea{font:inherit;color:#fff;background:#102738;border:1px solid #63879b;bor
 <div class="tile"><strong>Instructor de AeroSuite</strong><span>Ver turnos asignados, confirmar solicitudes y cargar informes.</span><br><a id="instructor" target="_blank" rel="noopener">Abrir Instructor de AeroSuite</a></div>
 <div class="tile"><strong>Alumno de AeroSuite</strong><span>Solicitar turnos, revisar devoluciones y saldos de packs.</span><br><a id="alumno" target="_blank" rel="noopener">Abrir Alumno de AeroSuite</a></div>
 </div>
-<p class="muted">Cada enlace exige iniciar sesión con la identidad real de prueba correspondiente. Si tu sesión no tiene ese rol, el portal denegará acceso; no alteramos permisos ni usamos cuentas ajenas.</p>
+<div class="notice warn" id="roleReadiness" role="status">Comprobando las cuentas disponibles para el laboratorio...</div><p class="muted">Cada enlace abre el portal operativo de producción, no una maqueta. Debés ingresar con una cuenta que tenga ese rol en el laboratorio. Para Instructor y Alumno creá usuarios de prueba mediante invitaciones del Director; las cuentas de Gente de Vuelo no deben compartirse ni suplantarse.</p>
 </section>
 <section class="panel"><div class="actions"><h2 style="flex:1;margin:0">Estado operativo consultado en Supabase</h2><button id="refresh" type="button">Actualizar diagnóstico</button></div>
 <div id="metrics" class="metrics" style="margin-top:15px"></div>
@@ -79,7 +79,7 @@ textarea{font:inherit;color:#fff;background:#102738;border:1px solid #63879b;bor
 </main><script>
 'use strict';
 (async()=>{
-const TEST_INSTITUTION='00d3f425-7947-45f7-be8c-e83a763abc15';
+// El identificador del laboratorio se obtiene de Supabase; nunca depende de instituciones eliminadas.
 const names=[
  ['director','Acceso Director de AeroSuite','Ingresar con Director de AeroSuite y comprobar su turnera y módulos.'],
  ['alumno','Reserva del Alumno de AeroSuite','Solicitar un turno futuro de 90 minutos desde el portal del alumno.'],
@@ -91,7 +91,7 @@ const names=[
  ['alumno_resultado','Resultado para Alumno de AeroSuite','Alumno comprueba informe aprobado, historial y saldo actualizado.'],
  ['integridad','Diagnóstico sin anomalías','Actualizar indicadores y revisar que no haya inconsistencias.']
 ];
-const $=id=>document.getElementById(id);const status=$('status'),testId=TEST_INSTITUTION;
+const $=id=>document.getElementById(id);const status=$('status');let testId=null;
 let db,user,health={},active=null;
 function msg(s){status.textContent=s;}
 function setText(id,s){$(id).textContent=s;}
@@ -107,6 +107,9 @@ async function reloadHealth(){
   if(r.error)throw r.error;
   if(r.data?.institution_id!==testId)throw Error('Diagnóstico de otra institución');
   health=r.data;
+  const missing=[];if(!Number(health.instructors))missing.push('Instructor de AeroSuite');if(!Number(health.students))missing.push('Alumno de AeroSuite');
+  $('roleReadiness').classList.toggle('warn',missing.length>0);
+  $('roleReadiness').textContent=missing.length?'Faltan cuentas de prueba habilitadas: '+missing.join(' y ')+'. Desde Director de AeroSuite, invitá las cuentas que usarás exclusivamente para testear. Los enlaces no simulan el acceso de otros roles.':'Director, Instructor y Alumno ya tienen integrantes vinculados al laboratorio; verificá sus credenciales y permisos antes de marcar pruebas como correctas.';
   const data=[['Directores',health.directors],['Secretarías',health.secretaries],['Instructores',health.instructors],['Alumnos',health.students],['Aeronaves',health.aircraft_available],['Pendientes',health.bookings_pending],['Confirmados',health.bookings_confirmed],['Realizados',health.bookings_completed],['Informes aprobados',health.reports_approved],['Packs',health.packs_total],['Movimientos de caja',health.money_movements_total]];
   $('metrics').replaceChildren();
   for(const [label,value] of data){const div=document.createElement('div');div.className='metric';const strong=document.createElement('strong');strong.textContent=safeNumber(value);const span=document.createElement('span');span.textContent=label;div.append(strong,span);$('metrics').append(div);}
@@ -179,10 +182,13 @@ try{
  if(au.error||!user)throw Error('Ingresá a Gente de Vuelo con tu cuenta de Superadministrador.');
  const p=await db.from('aerosuite_superadmins').select('user_id').eq('user_id',user.id).maybeSingle();
  if(p.error||!p.data)throw Error('Solo Superadministración puede acceder a estas pruebas.');
+ const lab=await db.from('aerosuite_permanent_test_lab').select('institution_id').eq('singleton',true).single();
+ if(lab.error||!lab.data?.institution_id)throw Error('El laboratorio permanente todavía no está configurado en Supabase.');
+ testId=lab.data.institution_id;
  const org=await db.from('aerosuite_institutions').select('id,name,is_test,status,kind').eq('id',testId).single();
  if(org.error)throw org.error;
- if(org.data?.is_test!==true)throw Error('La institución ya no está marcada como prueba; se ha bloqueado el circuito para proteger datos.');
- setText('institutionTitle',org.data.name);setText('institutionInfo','Institución de prueba existente · '+org.data.kind+' · Estado: '+org.data.status+'. No se generan usuarios ni registros operativos automáticamente.');
+ if(org.data?.is_test!==true||org.data?.status!=='active')throw Error('El laboratorio no está marcado como activo y de prueba. Se bloquea el test por seguridad.');
+ setText('institutionTitle',org.data.name);setText('institutionInfo','Laboratorio técnico exclusivo para control de calidad · '+org.data.kind+' · Estado: '+org.data.status+'. Este laboratorio no es una escuela cliente; no se generan cobros ni usuarios automáticamente.');
  for(const role of ['administrador','secretaria','instructor','alumno'])$(role==='administrador'?'director':role).href=url(role);
  $('content').hidden=false;msg('Acceso autorizado. Los resultados se conservan en Supabase y se restringen a la institución de prueba.');
  $('refresh').onclick=reloadHealth;$('historyRefresh').onclick=reloadHistory;
