@@ -141,7 +141,7 @@ async function sendLabInvite(role){
   $('inviteFeedback').textContent='El proveedor aceptó el correo de '+role+'. Revisá la casilla de Gmail y completá el registro desde el enlace personal. La entrega todavía debe verificarse.';
   await reloadInvites();
  }catch(e){$('inviteFeedback').textContent='No se pudo enviar el enlace de '+role+': '+(e.message||e);}
- finally{if(button.disabled)await reloadInvites();}
+ finally{button.disabled=false;await reloadInvites();}
 }
 async function reloadHealth(){
  $('refresh').disabled=true;
