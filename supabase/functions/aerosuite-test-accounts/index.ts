@@ -14,7 +14,7 @@ function respond(origin: string, status: number, body: Record<string,unknown>): 
 }
 Deno.serve(async req => {
   const origin=req.headers.get("origin")||"";
-  if(req.method==="OPTIONS")return respond(origin,204,{});
+  if(req.method==="OPTIONS")return respond(origin,200,{ok:true});
   if(req.method!=="POST")return respond(origin,405,{error:"Método no permitido."});
   if(origin&&!allowedOrigins.has(origin))return respond(origin,403,{error:"Origen no autorizado."});
   if(!URL||!SERVICE||!ANON)return respond(origin,503,{error:"Configuración incompleta."});
