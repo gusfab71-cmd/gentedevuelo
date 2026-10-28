@@ -34,7 +34,7 @@
   // A completed Google sign-in is not the same as a completed community registration.
   async function refreshOnboarding(account = verifiedUser) {
     if (!account) { onboardingRequired = false; initialPasswordRequired = false; return false; }
-    const result = await client.from('profiles').select('onboarding_completed,username,full_name,aviation_role').eq('id', account.id).maybeSingle();
+    const result = await client.from('profiles').select('onboarding_completed,gdv_community_member,username,full_name,aviation_role').eq('id', account.id).maybeSingle();
     if (result.error) throw result.error;
     // Fail closed if the profile has not been generated yet.
     const hasGoogle = account.app_metadata?.provider === 'google' ||
@@ -42,7 +42,7 @@
       account.identities?.some(identity => identity.provider === 'google');
     const p = result.data;
     initialPasswordRequired = account.app_metadata?.gdv_initial_password === true;
-    onboardingRequired = !p || p.onboarding_completed !== true ||
+    onboardingRequired = !p || p.gdv_community_member !== true || p.onboarding_completed !== true ||
       (hasGoogle && (/^piloto[_-]/i.test(p.username || '') ||
         !p.full_name?.trim() || !p.aviation_role?.trim()));
     return onboardingRequired;
