@@ -181,7 +181,7 @@ assert.match(superadmin,/className='institution-roster'/,'Cada institución tien
 assert.match(superadmin,/Ver nombres y correos del personal/,'Los nombres y correos se pueden desplegar');
 assert.match(superadmin,/aerosuite_superadmin_institution_roster/,'Los datos personales se consultan por RPC protegida');
 assert.match(superadmin,/p_institution_id:orgId/,'No se mezclan instituciones en la consulta de integrantes');
-assert.match(superadmin,/member\.profile_name/,'Se muestra nombre del perfil si existe');
+assert.match(superadmin,/person\.profile_name/,'Se muestra nombre del perfil si existe');
 assert.match(superadmin,/Sin nombre de perfil/,'No se inventan nombres faltantes');
 assert.match(superadmin,/person\.email/,'Siempre se muestra correo del integrante');
 assert.match(superadmin,/x\.institution_id===orgId&&x\.kind==='invitacion'/,'Invitaciones pendientes también quedan separadas por institución');
