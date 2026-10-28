@@ -113,7 +113,14 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
 <p>Autorización central de escuelas de vuelo, aeroclubes y aeródromos. Las invitaciones de prueba pueden aceptarse con cuentas verificadas desde el ingreso institucional. La revisión de portales por rol se realiza en modo consulta sin usar sesiones institucionales.</p>
 <div class="notice" id="accessMessage" role="status">Verificando tu identidad y los permisos de AeroSuite…</div>
 <div id="adminContent" hidden>
-<div class="metrics" aria-label="Resumen de instituciones">
+<section class="panel" aria-labelledby="permanentLabTitle" style="border-color:#d9b66f;background:#223d50">
+ <div class="eyebrow">Entorno técnico independiente · No es cliente</div>
+ <h2 id="permanentLabTitle" style="margin-top:7px">Centro de Testeo Permanente de AeroSuite</h2>
+ <p id="permanentLabName">Verificando laboratorio...</p>
+ <p class="muted">Usá los portales reales de Director, Instructor y Alumno con identidades de prueba separadas. Esta institución está protegida contra borrados accidentales, no vence como una licencia comercial y no figura en el listado de clientes.</p>
+ <div class="actions"><a href="centro-pruebas-operativas.html" class="button primary" style="display:inline-block;padding:12px 15px;text-decoration:none;background:#e2c08e;color:#172b3b;border-radius:9px;font-weight:800">Abrir Centro de Testeo Permanente</a></div>
+</section>
+<div class="metrics" aria-label="Resumen de instituciones clientes">
 <div class="metric"><strong id="totalCount">0</strong><span>Instituciones</span></div>
 <div class="metric"><strong id="activeCount">0</strong><span>Licencias activas</span></div>
 <div class="metric"><strong id="trialCount">0</strong><span>Prueba gratuita</span></div>
@@ -351,17 +358,23 @@ async function showInstitutionRoster(orgId,details,contents){
 }
 
 async function reload(){
- const [found,history,invites,staffCounts,registrations]=await Promise.all([
+ const [labInfo,found,history,invites,staffCounts,registrations]=await Promise.all([
+ db.from('aerosuite_permanent_test_lab').select('institution_id').eq('singleton',true).single(),
  db.from('aerosuite_institutions').select('id,name,kind,cuit,contact_name,contact_email,plan,status,is_test,trial_started_at,trial_ends_at,license_started_at,license_ends_at,notes,updated_at').order('created_at',{ascending:false}).limit(500),
  db.from('aerosuite_institution_audit').select('id,institution_id,operation,changed_at').order('changed_at',{ascending:false}).limit(12),
  db.from('aerosuite_institution_invitations').select('institution_id,role,accepted_at,expires_at,revoked_at,last_sent_at').order('created_at',{ascending:false}).limit(500),
  db.rpc('aerosuite_superadmin_staff_counts'),
  db.rpc('aerosuite_superadmin_registrations')
  ]);
+ if(labInfo.error||!labInfo.data?.institution_id)throw labInfo.error||new Error('Falta la institución técnica permanente.');
  if(found.error)throw found.error;
  if(staffCounts.error)throw staffCounts.error;
+ const labId=labInfo.data.institution_id;
+ const labRecord=(found.data||[]).find(x=>x.id===labId);
+ byId('permanentLabName').textContent=labRecord?.name||'Laboratorio técnico configurado';
+
  if(registrations.error)throw registrations.error;
- registrationRows=registrations.data||[];
+ registrationRows=(registrations.data||[]).filter(x=>x.institution_id!==labId);
  byId('allRegistrationCount').textContent=String(registrationRows.length);
  byId('accountRegistrationCount').textContent=String(registrationRows.filter(r=>r.email_verified_at!==null).length);
  byId('enabledRegistrationCount').textContent=String(registrationRows.filter(r=>r.registration_status==='habilitada').length);
@@ -370,17 +383,17 @@ async function reload(){
  registrationInstitution.replaceChildren();
  const defaultOption=document.createElement('option');defaultOption.value='';defaultOption.textContent='Todas';
  registrationInstitution.append(defaultOption);
- for(const org of (found.data||[])){
+ for(const org of (found.data||[]).filter(x=>x.id!==labId)){
    const option=document.createElement('option');option.value=org.id;option.textContent=org.name;
    registrationInstitution.append(option);
  }
  registrationInstitution.value=selectedInstitution;
  paintRegistrations();
  const countsByInstitution=new Map((staffCounts.data||[]).map(item=>[item.institution_id,item]));
- const sum=field=>(staffCounts.data||[]).reduce((total,item)=>total+Number(item[field]||0),0);
+ const sum=field=>(staffCounts.data||[]).filter(x=>x.institution_id!==labId).reduce((total,item)=>total+Number(item[field]||0),0);
  byId('instructorsTotal').textContent=String(sum('instructors'));
  byId('studentsTotal').textContent=String(sum('students'));
- records=found.data||[];
+ records=(found.data||[]).filter(x=>x.id!==labId);
  byId('totalCount').textContent=records.length;
  byId('activeCount').textContent=records.filter(r=>effective(r).key==='active').length;
  byId('trialCount').textContent=records.filter(r=>effective(r).key==='trial').length;
@@ -455,14 +468,7 @@ async function reload(){
   inspect.href='superadmin-visor-roles.html?institucion='+encodeURIComponent(row.id);
   inspect.title='Revisar Dirección/Secretaría, Instructor y Alumno sin modificar sus datos';
   actions.append(inspect);
-  if(row.id==='00d3f425-7947-45f7-be8c-e83a763abc15'&&row.is_test){
-   const lab=document.createElement('a');
-   lab.className='full';lab.textContent='Centro de Testeo Permanente';
-   lab.href='centro-pruebas-operativas.html';
-   lab.title='Abrir el circuito real de pruebas con historial y diagnóstico';
-   actions.append(lab);
-  }
-  if((row.status==='trial'&&Number.isFinite(Date.parse(row.trial_ends_at))&&Date.parse(row.trial_ends_at)+15*86400000>now())||
+   if((row.status==='trial'&&Number.isFinite(Date.parse(row.trial_ends_at))&&Date.parse(row.trial_ends_at)+15*86400000>now())||
      (row.status==='active'&&Date.parse(row.license_ends_at)>now())){
     const send=document.createElement('button');
     send.type='button';send.textContent='Enviar invitación al director';send.className='full';
@@ -479,8 +485,9 @@ async function reload(){
  applyInstitutionFilters();
  recent.replaceChildren();
  if(history.error){const li=document.createElement('li');li.textContent='No se pudo consultar el historial.';recent.append(li);return}
- if(!history.data?.length){const li=document.createElement('li');li.textContent='Sin operaciones registradas.';recent.append(li);return}
- for(const entry of history.data){
+ const clientHistory=(history.data||[]).filter(entry=>entry.institution_id!==labId);
+ if(!clientHistory.length){const li=document.createElement('li');li.textContent='Sin operaciones registradas.';recent.append(li);return}
+ for(const entry of clientHistory){
   const li=document.createElement('li');const institution=records.find(r=>r.id===entry.institution_id);
   li.textContent=(entry.operation==='INSERT'?'Alta':'Modificación')+' · '+(institution?.name||'Institución')+' · '+new Date(entry.changed_at).toLocaleString('es-AR');recent.append(li);
  }
