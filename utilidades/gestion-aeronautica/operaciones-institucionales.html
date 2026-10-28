@@ -62,7 +62,7 @@ th{padding:10px 4px;color:#b7d6e7;font-weight:800}td{vertical-align:middle;text-
    <div class="row"><label>Semana del <input type="date" id="weekDate"></label><button id="updateWeek" type="button">Ver semana</button></div>
    <div id="adminBooking" class="notice" hidden>Para solicitar un turno en nombre de un alumno, seleccioná su nombre antes de tocar una casilla libre.
     <label style="margin-top:9px">Alumno <select id="bookingStudent"><option value="">Elegí un alumno</option></select></label>
-    <div class="formgrid" style="margin-top:12px"><label>Instructor para confirmar el turno<select id="bookingInstructor"><option value="">Elegí un instructor habilitado</option></select></label><label>Matrícula (opcional)<input id="bookingAircraft" maxlength="60" placeholder="Ej.: LV-ABC"></label></div>
+    <div class="formgrid" style="margin-top:12px"><label>Instructor para confirmar el turno<select id="bookingInstructor"><option value="">Elegí un instructor habilitado</option></select></label><label>Aeronave para asignar<select id="bookingAircraft"><option value="">A definir después</option></select></label></div>
    </div>
    <div class="table-scroll"><table aria-label="Turnos de la semana"><thead id="weekHead"></thead><tbody id="weekBody"></tbody></table></div>
    <p class="hint">Horarios de referencia de Buenos Aires (ART). Verde: libre · Amarillo: pendiente · Azul: confirmada · Gris: ocupada · Propias: resaltadas. Los turnos ocupados de otros alumnos no muestran información privada al alumno.</p>
@@ -180,6 +180,14 @@ th{padding:10px 4px;color:#b7d6e7;font-weight:800}td{vertical-align:middle;text-
    return Array.from({length:7},(_,i)=>{const dt=new Date(base);dt.setDate(base.getDate()+i);return ymd(dt)});
   };
   const times=["08:00","09:30","11:00","12:30","14:00","15:30","17:00","18:30"];
+  async function loadAircraftChoices(){
+   if(!manager)return;
+   const aircraft=await rpc("aerosuite_aircraft_list",{p_institution_id:inst});
+   const picker=$("bookingAircraft");const previous=picker.value;picker.length=1;
+   for(const a of aircraft.filter(x=>x.availability==="available"))
+    picker.add(new Option(a.registration+" · "+(a.model||"Sin modelo"),a.registration));
+   if([...picker.options].some(x=>x.value===previous))picker.value=previous;
+  }
   async function loadWeek(){
    const dates=weekDates();bookings=await rpc("aerosuite_booking_schedule",{p_institution_id:inst,p_date_from:dates[0],p_date_to:dates[6]});
    renderWeek(dates);renderBookings();renderReportFormChoices();renderFinanceBookingChoices();
@@ -243,6 +251,12 @@ th{padding:10px 4px;color:#b7d6e7;font-weight:800}td{vertical-align:middle;text-
       if(!confirm("¿Confirmar este turno"+(role==="instructor"?" a tu cargo":"")+"?"))return;
       await takeAction("confirm",b,{p_instructor_id:instructorId,p_aircraft:aircraft});
      },"primary");
+    }
+    if(b.booking_id&&manager&&b.status==="confirmed"){
+     btn("Asignar aeronave",async()=>{const aircraft=$("bookingAircraft").value;
+      if(!confirm("¿"+(aircraft?"Asignar "+aircraft:"Dejar pendiente la aeronave")+" para este turno?"))return;
+      await takeAction("assign_aircraft",b,{p_aircraft:aircraft});
+     });
     }
     if(b.booking_id&&(manager||role==="alumno"&&b.my_booking&&b.status==="pending")&&["pending","confirmed"].includes(b.status)){
      btn("Cancelar reserva",async()=>{const reason=prompt("Motivo de cancelación (obligatorio):");if(!reason||!reason.trim())return;
@@ -353,7 +367,7 @@ th{padding:10px 4px;color:#b7d6e7;font-weight:800}td{vertical-align:middle;text-
   });
   async function refresh(){
    stat.textContent="Actualizando datos de la institución…";
-   try{await loadWeek();await loadReports();await loadFinance();renderReportFormChoices();stat.textContent="Información institucional actualizada."; }
+   try{await loadAircraftChoices();await loadWeek();await loadReports();await loadFinance();renderReportFormChoices();stat.textContent="Información institucional actualizada."; }
    catch(e){stat.textContent="Error al cargar el área: "+safeError(e);}
   }
   $("updateWeek").onclick=refresh;$("reloadAll").onclick=refresh;
