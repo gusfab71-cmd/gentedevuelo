@@ -201,7 +201,7 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
  const normalizeError=error=>{
   const message=String(error?.message||error||'Error desconocido');
   if(/invalid login credentials|invalid_credentials/i.test(message))
-   return 'No se pudo ingresar con esas credenciales. Si acabás de registrarte, primero confirmá el correo desde el segundo mensaje recibido. Si ya tenías cuenta, recuperá tu contraseña si hace falta.';
+   return 'Las credenciales no corresponden a una cuenta activada. Si es tu primer acceso, abrí la última invitación recibida por correo para crear tu contraseña. No necesitás un segundo correo de confirmación.';
   if(/email not confirmed|email_not_confirmed/i.test(message))
    return 'La contraseña fue creada, pero falta confirmar el correo. Usá «Verificar mi correo» y abrí el enlace del segundo mensaje.';
   return message;
@@ -410,7 +410,7 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
  byId('acceptButton').addEventListener('click',()=>void verifyAndEnter());
  const authenticationError=new URLSearchParams(location.hash.slice(1));
  if(oneTimeToken){
-  if(oneTimeType!=='magiclink'){
+  if(!['magiclink','signup','invite'].includes(oneTimeType)){
    holdMagicFlow=false;
    showPanel('signInPanel');
    setStatus('El formato del enlace de invitación es inválido. Pedí una nueva invitación desde AeroSuite.');
@@ -419,7 +419,7 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
    history.replaceState(null,'',location.pathname+location.search);
    setStatus('Verificando el enlace personal de invitación…');
    try{
-    const {data,error}=await db.auth.verifyOtp({token_hash:oneTimeToken,type:'magiclink'});
+    const {data,error}=await db.auth.verifyOtp({token_hash:oneTimeToken,type:oneTimeType});
     if(error)throw error;
     if(!data?.session||!data?.user?.email)throw Error('La verificación no devolvió una sesión válida.');
     user=data.user;
