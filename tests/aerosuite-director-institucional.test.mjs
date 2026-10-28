@@ -82,7 +82,7 @@ assert.match(school,/el\('schoolExpiry'\)\.hidden=!isManager/,'Dirección y Secr
 assert.match(school,/el\('schoolAccessLine'\)\.hidden=!isManager/,'Dirección y Secretaría comparten el estado comercial');
 assert.match(school,/el\('subscriptionNotice'\)\.hidden=!isManager/,'Dirección y Secretaría ven las mismas advertencias de licencia');
 assert.match(school,/id="institutionSwitcher" hidden/,'El selector de institución permanece oculto con un solo vínculo');
-assert.match(school,/accessibleInstitutions=data\.filter\(x=>x\.can_access\)/,'Solo ofrece instituciones habilitadas a la cuenta');
+assert.match(school,/accessibleInstitutions=data\.filter\(x=>x\.can_access&&/,'Solo ofrece instituciones habilitadas a la cuenta');
 assert.match(school,/accessibleInstitutions\.length>1/,'Solo muestra el selector con dos o más accesos');
 assert.match(school,/entry\.institution_id\)\+'&rol='\+encodeURIComponent\(entry\.my_role\)/,'El cambio de institución preserva el rol de ese vínculo');
 assert.match(school,/id="directorPeoplePanel" hidden/,'Panel exclusivo de integrantes');
@@ -212,6 +212,37 @@ assert.match(admission,/byId\('backRecovery'\)\.hidden=true/,
 assert.ok(admission.indexOf('if(recoveryFlow){')<admission.indexOf('}else if(oneTimeToken){'),
  'Atender recuperación antes de las invitaciones normales');
 assert.match(admission,/Guardar contraseña nueva e ingresar/,'Acción explícita y clara para recuperación');
+
+
+const operations=fs.readFileSync(new URL('operaciones-institucionales.html',root),'utf8');
+const fleet=fs.readFileSync(new URL('flota-institucional.html',root),'utf8');
+assert.match(school,/id="chooseInstitution" class="panel" hidden/,'La selección de institución se muestra antes del portal');
+assert.match(school,/id="chooseInstitutionList"/,'Se crean tarjetas independientes por cada institución');
+assert.match(school,/accessibleInstitutions\.length>1&&!chosen/,'Elección inicial obligatoria si la cuenta tiene varios vínculos');
+assert.match(school,/message\.textContent='Acceso verificado\. Seleccioná primero una institución/,'El usuario sabe qué hacer');
+assert.match(school,/location\.assign\(institutionURL\(entry\)\)/,'Solo la tarjeta elegida abre la institución');
+assert.match(school,/encodeURIComponent\(entry\.my_role\)\+'&elegida=1'/,'Preserva institución y rol de forma explícita');
+assert.match(school,/el\('changeInstitution'\)\.addEventListener/,'Se puede cambiar de institución más tarde');
+assert.match(school,/if\(!school\.can_access\)/,'No abre una institución bloqueada');
+assert.match(operations,/id="thisWeek"/,'La turnera ofrece volver a esta semana');
+assert.match(operations,/id="nextWeek"/,'La turnera permite avanzar a la siguiente semana');
+assert.match(operations,/id="bookingFutureNotice"/,'Se explica cómo encontrar horarios futuros');
+assert.match(operations,/b\.textContent="Libre · Reservar"/,'Los turnos futuros quedan identificados como reservables');
+assert.match(operations,/if\(start\.getTime\(\)<=Date\.now\(\)\)/,'Solo los turnos que ya comenzaron se marcan como pasados');
+assert.match(operations,/start=new Date\(date\+"T"\+time\+":00-03:00"\)/,'Los turnos se calculan en hora Argentina');
+assert.match(operations,/return Array\.from\(\{length:7\},\(_,i\)=>addDays\(monday,i\)\)/,'Las semanas son independientes de la zona del navegador');
+assert.match(operations,/class="today-head"/,'Se resalta visualmente el día actual');
+assert.match(operations,/\+"&elegida=1";/,'Volver de la turnera conserva la elección');
+assert.match(fleet,/\+"&elegida=1";/,'Volver de Flota conserva la elección');
+const helpers=operations.match(/const artToday=\(\)=>[^\n]+\n\s*const addDays=\(value,days\)=>[^\n]+\n\s*const mondayOf=date=>[^\n]+/);
+assert.ok(helpers,'Las funciones de calendario ART deben estar presentes');
+class TestDate extends Date{static now(){return Date.parse('2026-10-28T12:50:00-03:00')}}
+const h=vm.runInNewContext('(function(){'+helpers[0]+';return {artToday,addDays,mondayOf}})()',{Date:TestDate});
+assert.equal(h.artToday(),'2026-10-28','La fecha ART no depende de la zona del dispositivo');
+assert.equal(h.mondayOf('2026-10-28'),'2026-10-26','La semana actual comienza lunes');
+assert.equal(h.addDays(h.mondayOf('2026-10-28'),7),'2026-11-02','La semana siguiente avanza siete días');
+assert.ok(Date.parse('2026-10-28T14:00:00-03:00')>TestDate.now(),'Un turno futuro de hoy no puede considerarse pasado');
+assert.ok(Date.parse('2026-10-26T09:30:00-03:00')<TestDate.now(),'Un turno de lunes ya pasado sigue bloqueado');
 
 for(const [name,html] of [['ingreso-escuela.html',admission],['portal-escuela.html',school]]){
  const scripts=[...html.matchAll(/<script(?![^>]*src=)[^>]*>([\s\S]*?)<\/script>/g)];
