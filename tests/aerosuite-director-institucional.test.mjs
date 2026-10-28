@@ -115,14 +115,17 @@ assert.match(superadmin,/new Map\(\(staffCounts\.data\|\|\[\]\)\.map/,'Contadore
 assert.match(superadmin,/addDetail\('Instructores activos'/,'Se cuentan instructores por escuela');
 assert.match(superadmin,/addDetail\('Alumnos activos'/,'Se cuentan alumnos por escuela');
 assert.match(superadmin,/addDetail\('Invitaciones pendientes'/,'No confundir cuentas con correos enviados');
+assert.match(superadmin,/id="registros-aerosuite"/,'Debe existir un padrón central de registros');
+assert.match(superadmin,/aerosuite_superadmin_registrations/,'La consulta agregada requiere autorización del Superadministrador');
+assert.match(superadmin,/aerosuite_superadmin_manage_registration/,'La administración de accesos usa RPC limitada');
+assert.match(superadmin,/registrationInstitution/,'Filtrar registros por institución');
+assert.match(superadmin,/registrationRole/,'Filtrar registros por rol');
+assert.match(superadmin,/registrationStatus/,'Filtrar registros por estado');
+assert.match(admission,/aerosuite_record_my_registration/,'Las altas verificadas se registran cuando el usuario ingresa a AeroSuite');
+assert.doesNotMatch(superadmin,/Gestionar cuentas|Probar el camino de una nueva escuela|href="demo-autorizacion\.html"/,'No hay acciones redundantes ni enlaces demo');
+assert.match(superadmin,/personRole=\{/,'Los registros distinguen director, instructor y alumno');
+assert.match(superadmin,/La cuenta personal y sus accesos a otras instituciones se conservan/,'Desvincular no borra usuarios globales');
 assert.match(superadmin,/staffButton\.textContent='Gestionar cuentas'/,'Gestión directa desde tarjeta de escuela');
-assert.match(superadmin,/async function toggleStaffRoster/,'Listado exclusivo por escuela');
-assert.match(superadmin,/\.rpc\('aerosuite_director_people'/,'Superadministrador consulta personal por RPC');
-assert.match(superadmin,/\.rpc\('aerosuite_manage_staff_remove'/,'Superadministrador puede desvincular personal');
-assert.match(superadmin,/p_institution_id:row\.id,p_person_id:person\.person_id/,'La baja se limita a la tarjeta de la institución');
-assert.match(superadmin,/p_kind:person\.kind,p_role:person\.role/,'Baja vinculada al rol correcto');
-assert.match(superadmin,/window\.confirm\(description\)/,'El superadministrador confirma la baja');
-assert.match(superadmin,/Su cuenta personal y los accesos a otras escuelas se conservarán/,'Se informa que no se borrarán identidades ni otras instituciones');
 
 assert.match(superadmin,/15\*86400000/,'Cálculo de 15 días de cortesía para el listado');
 assert.doesNotMatch(school,/\.from\('aerosuite_institutions'\)/,'El portal no puede leer registros generales');
@@ -131,7 +134,6 @@ assert.doesNotMatch(superadmin,/entry\.textContent='Probar ingreso'/,'Sin acceso
 assert.doesNotMatch(superadmin,/btn\.textContent='Gestionar'/,'Sin botón Gestionar redundante en la tarjeta');
 assert.match(superadmin,/editIcon\.className='institution-edit'/,'La edición institucional se conserva como icono discreto');
 assert.match(superadmin,/editIcon\.addEventListener\('click',\(\)=>edit\(row\.id\)\)/,'El lápiz permite cambiar datos y licencia');
-assert.match(superadmin,/staffButton\.textContent='Gestionar cuentas'/,'Se conserva la gestión del personal');
 assert.match(superadmin,/sendDirectorInvite/,'Envío real del director desde Superadministrador');
 assert.match(superadmin,/last_sent_at/,'Diferenciar invitación creada del correo realmente enviado');
 assert.match(superadmin,/className='institution-card'/,'Cada institución tiene un recuadro propio');
