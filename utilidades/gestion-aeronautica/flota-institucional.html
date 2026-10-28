@@ -36,7 +36,7 @@ button{background:#e9c993;color:#193041;border:1px solid #e9c993;border-radius:9
   school=(access.data||[]).find(x=>x.institution_id===inst&&x.can_access&&["administrador","secretaria","instructor"].includes(x.my_role));
   if(!school)throw Error("No tenés acceso a la flota de esta institución.");
   $("school").textContent=school.institution_name;
-  $("back").href="portal-escuela.html?institucion="+encodeURIComponent(inst)+"&rol="+encodeURIComponent(school.my_role);
+  $("back").href="portal-escuela.html?institucion="+encodeURIComponent(inst)+"&rol="+encodeURIComponent(school.my_role)+"&elegida=1";
   const manager=["administrador","secretaria"].includes(school.my_role);
   $("createPanel").hidden=!manager||!school.can_write;$("area").hidden=false;
   async function action(args){const r=await db.rpc("aerosuite_aircraft_action",{p_institution_id:inst,...args});if(r.error)throw r.error;return r.data;}
