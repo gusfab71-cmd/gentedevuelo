@@ -29,6 +29,7 @@ fieldset{border:0;padding:0;margin:0}.formgrid{display:grid;grid-template-column
 table{width:100%;min-width:790px;border-collapse:separate;border-spacing:5px;font-size:12px}
 th{padding:10px 4px;color:#b7d6e7;font-weight:800}td{vertical-align:middle;text-align:center}th:first-child{min-width:82px}
 .slot{min-height:51px;width:100%;border-radius:8px;padding:6px 3px;background:#214b4d;border:1px solid #477f75;font-size:11px}
+.slot.past{background:#263644;border-color:#435465;color:#aec0cd}
 .slot.busy{background:#35465c;border-color:#60768f}.slot.mine{background:#3d593f;border-color:#b1ca87}.slot.cancelled{background:#263746}
 .slot small{display:block;margin-top:4px;color:#d1dee7}.slot:hover:not(:disabled){filter:brightness(1.13)}
 .row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.row.between{justify-content:space-between}
@@ -62,6 +63,7 @@ th{padding:10px 4px;color:#b7d6e7;font-weight:800}td{vertical-align:middle;text-
    <div class="row"><label>Semana del <input type="date" id="weekDate"></label><button id="updateWeek" type="button">Ver semana</button></div>
    <div id="adminBooking" class="notice" hidden>Para solicitar un turno en nombre de un alumno, seleccioná su nombre antes de tocar una casilla libre.
     <label style="margin-top:9px">Alumno <select id="bookingStudent"><option value="">Elegí un alumno</option></select></label>
+    <p id="bookingStudentNotice" class="hint warn" hidden>Esta institución todavía no tiene alumnos habilitados. Primero invitá uno desde «Alumnos e instructores» en tu portal.</p>
     <div class="formgrid" style="margin-top:12px"><label>Instructor para confirmar el turno<select id="bookingInstructor"><option value="">Elegí un instructor habilitado</option></select></label><label>Aeronave para asignar<select id="bookingAircraft"><option value="">A definir después</option></select></label></div>
    </div>
    <div class="table-scroll"><table aria-label="Turnos de la semana"><thead id="weekHead"></thead><tbody id="weekBody"></tbody></table></div>
@@ -153,6 +155,8 @@ th{padding:10px 4px;color:#b7d6e7;font-weight:800}td{vertical-align:middle;text-
   if(manager){
    const r=await db.rpc("aerosuite_director_people",{p_institution_id:inst});
    if(!r.error)people=(r.data||[]).filter(x=>x.kind==="integrante");
+   const studentCount=people.filter(x=>x.role==="alumno").length;
+   $("bookingStudentNotice").hidden=studentCount>0;
    for(const [id,kind] of [["bookingStudent","alumno"],["financeStudent","alumno"],["bookingInstructor","instructor"]]){
     const s=$(id);people.filter(x=>x.role===kind).forEach(x=>s.add(new Option(x.email,x.person_id)));
    }
@@ -208,7 +212,11 @@ th{padding:10px 4px;color:#b7d6e7;font-weight:800}td{vertical-align:middle;text-
       if(!booking.booking_id)b.onclick=()=>stat.textContent="Turno ocupado. Seleccioná uno libre.";
      }else{
       b.textContent="Libre";
-      if(role==="instructor"||!school.can_write){b.disabled=true;}else{
+      if(start.getTime()<Date.now()){
+       b.textContent="Pasado";b.classList.add("past");b.disabled=true;
+      }else if(role==="instructor"||!school.can_write||(manager&&!people.some(x=>x.role==="alumno"))){
+       b.disabled=true;
+      }else{
        b.onclick=async()=>{
         const student=manager?$("bookingStudent").value:user.id;
         if(!student){stat.textContent="Seleccioná el alumno para registrar la solicitud.";return;}
