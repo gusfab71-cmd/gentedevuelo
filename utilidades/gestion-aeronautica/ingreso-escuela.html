@@ -230,6 +230,14 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
    showPanel('verifiedPanel');
    byId('accountEmail').textContent=user.email||'(correo no disponible)';
    if(!user.email_confirmed_at){setStatus('Tu correo todavía debe verificarse. Revisá el mensaje de confirmación.');return}
+   // Registrar el ingreso efectivo a AeroSuite; generar una invitación magiclink no es un alta real.
+   if(selectedRole){
+    const registration=await db.rpc('aerosuite_record_my_registration',{
+     p_institution_id:schoolId,p_role:selectedRole
+    });
+    if(registration.error)throw registration.error;
+    if(!registration.data?.ok)throw Error('No se pudo registrar el ingreso institucional.');
+   }
    const access=await db.rpc('aerosuite_my_institution_access_v2');
    if(access.error)throw access.error;
    const member=(access.data||[]).find(x=>x.institution_id===schoolId&&x.can_access&&(!selectedRole||x.my_role===selectedRole));
@@ -244,6 +252,12 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
    if(claim.error)throw claim.error;
    if(!claim.data?.ok)throw Error('No fue posible asociar esta cuenta con la institución.');
    const activatedRole=claim.data.role||selectedRole;
+   if(!selectedRole){
+    const registration=await db.rpc('aerosuite_record_my_registration',{
+     p_institution_id:schoolId,p_role:activatedRole
+    });
+    if(registration.error)throw registration.error;
+   }
    setStatus('Invitación activada como '+activatedRole+'. Entrando a tu portal…');
    location.replace('portal-escuela.html?institucion='+encodeURIComponent(schoolId)+'&rol='+encodeURIComponent(activatedRole));
   }catch(error){
