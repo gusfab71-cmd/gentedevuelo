@@ -22,6 +22,10 @@ p{color:#c2d3dd;line-height:1.6}
 .tile{background:#1c394d;border:1px solid #537993;padding:21px;border-radius:13px;min-height:150px}
 .tile h3{font-size:15px;margin:0 0 10px}.tile p{font-size:12px;margin:0 0 14px}
 .operational-link{display:block;text-decoration:none;color:inherit}.operational-link:hover{border-color:#e7c899;background:#23475f}.pill.ready{background:#214c40;color:#bcf0cf;border-color:#69ae88}.pill{font-size:10px;font-weight:850;color:#eecda1;border:1px solid #987b54;background:#433b31;padding:5px 9px;border-radius:999px}
+.institution-choice{margin:0 0 18px;padding:17px 20px;border:1px solid #63869a;border-radius:13px;background:#1a3345}
+.institution-choice label{max-width:620px;font-size:13px;font-weight:750}
+.institution-choice select{padding:11px 13px;border-radius:9px;border:1px solid #88aac0;background:#112737;color:#fff;font:inherit;font-size:14px;width:100%;margin-top:5px}
+.institution-choice p{margin:8px 0 0;font-size:12px}
 .subscription-notice{border:1px solid #809bb1;background:#243f53;border-radius:12px;padding:15px 17px;margin-top:14px;font-size:13px;line-height:1.55;color:#eff7fb}
 .subscription-notice strong{display:block;font-size:14px;margin-bottom:4px}
 .subscription-notice.grace{border-color:#c6a77a;background:#483e30}
@@ -62,6 +66,12 @@ input[type=email]{width:100%;background:#122737;border:1px solid #7394aa;border-
  <p>Tu espacio de trabajo institucional. Cada rol utiliza únicamente los módulos autorizados de su propia escuela.</p>
  <div class="status" id="message" role="status" aria-live="polite">Verificando tu cuenta y la licencia…</div>
  <div id="schoolArea" hidden>
+  <section class="institution-choice" id="institutionSwitcher" hidden>
+   <label for="institutionSelect">Institución en la que estás trabajando
+    <select id="institutionSelect" aria-label="Cambiar institución de AeroSuite"></select>
+   </label>
+   <p>Usás una sola cuenta. Cada institución conserva sus propios turnos, alumnos, aeronaves e informes.</p>
+  </section>
   <section class="panel">
    <span class="label">Entidad autorizada</span>
    <h2 id="schoolName">—</h2>
@@ -157,6 +167,21 @@ try{
   return;
  }
  el('schoolArea').hidden=false;
+ const accessibleInstitutions=data.filter(x=>x.can_access);
+ if(accessibleInstitutions.length>1){
+  const switcher=el('institutionSwitcher'),selector=el('institutionSelect');
+  accessibleInstitutions.forEach((entry,index)=>{
+   const opt=new Option(entry.institution_name+' · '+({administrador:'Dirección',secretaria:'Secretaría',instructor:'Instructor',alumno:'Alumno'}[entry.my_role]||entry.my_role),String(index));
+   opt.selected=entry.institution_id===school.institution_id&&entry.my_role===school.my_role;
+   selector.add(opt);
+  });
+  selector.addEventListener('change',()=>{
+   const entry=accessibleInstitutions[Number(selector.value)];
+   if(!entry||!entry.can_access)return;
+   location.assign('portal-escuela.html?institucion='+encodeURIComponent(entry.institution_id)+'&rol='+encodeURIComponent(entry.my_role));
+  });
+  switcher.hidden=false;
+ }
  const roleNames={administrador:'director / administrador',secretaria:'administración / secretaría',instructor:'instructor',alumno:'alumno'};
  document.querySelector('h1').textContent='Portal del '+(roleNames[school.my_role]||'integrante');
  for(const card of document.querySelectorAll('[data-visible-role]')){
