@@ -149,6 +149,7 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
  const oneTimeHash=new URLSearchParams(location.hash.slice(1));
  const oneTimeToken=oneTimeHash.get('token_hash');
  const oneTimeType=oneTimeHash.get('type');
+ const recoveryFlow=query.get('recuperar')==='1'||oneTimeType==='recovery';
  const schoolId=query.get('institucion');
  const selectedRole=query.get('rol')||'';
  const roles={administrador:'administrador',secretaria:'secretaria',instructor:'instructor',alumno:'alumno'};
@@ -164,6 +165,7 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
  });
  const activationUrl=location.origin+location.pathname+'?institucion='+encodeURIComponent(schoolId)
   +(selectedRole?'&rol='+encodeURIComponent(selectedRole):'');
+ const recoveryUrl=activationUrl+'&recuperar=1';
  const portalUrl='portal-escuela.html?institucion='+encodeURIComponent(schoolId)
   +(selectedRole?'&rol='+encodeURIComponent(selectedRole):'');
  const validPassword=value=>value.length===9&&/[A-Z]/.test(value)&&/[a-z]/.test(value)&&/[0-9]/.test(value)&&/[^A-Za-z0-9]/.test(value);
@@ -193,7 +195,8 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
  window.addEventListener('pageshow',event=>{
   if(event.persisted){for(const id of ['password','signupPassword','signupRepeat'])byId(id).value=''}
  });
- let user=null,processing=false,recovering=false,lastSignupEmail='',holdMagicFlow=Boolean(oneTimeToken),passwordSetupRequired=false;
+ let user=null,processing=false,recovering=recoveryFlow,recoveryLinkVerified=false,recoveryCompleted=false;
+ let lastSignupEmail='',holdMagicFlow=Boolean(oneTimeToken)||recoveryFlow,passwordSetupRequired=false;
  const showPanel=panel=>{
   for(const id of ['welcomePanel','signInPanel','registerPanel','confirmationPanel','recoveryPanel','verifiedPanel'])
    byId(id).hidden=id!==panel;
@@ -207,7 +210,8 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
   return message;
  };
  async function verifyAndEnter(){
-  if(processing||recovering)return;
+  // Un enlace de recuperación nunca equivale a haber cambiado la contraseña.
+  if(processing||recovering||(recoveryFlow&&!recoveryCompleted))return;
   processing=true;
   try{
    if(passwordSetupRequired){
@@ -377,13 +381,13 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
  });
  byId('forgotForm').addEventListener('submit',async event=>{
   event.preventDefault();
-  const {error}=await db.auth.resetPasswordForEmail(byId('forgotEmail').value.trim(),{redirectTo:activationUrl});
+  const {error}=await db.auth.resetPasswordForEmail(byId('forgotEmail').value.trim(),{redirectTo:recoveryUrl});
   setStatus(error?'No se pudo solicitar recuperación: '+normalizeError(error):
    'Si la cuenta existe, llegará un correo con instrucciones para elegir una contraseña nueva.');
  });
  db.auth.onAuthStateChange((event)=>{
   if(event==='PASSWORD_RECOVERY'){
-   recovering=true;showPanel('recoveryPanel');
+   recovering=true;recoveryLinkVerified=true;showPanel('recoveryPanel');
    byId('forgotForm').hidden=true;byId('changePasswordForm').hidden=false;
    setStatus('Elegí y confirmá tu nueva contraseña.');
   }else if(event==='SIGNED_IN'&&!recovering&&!holdMagicFlow&&!passwordSetupRequired){
@@ -392,12 +396,22 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
  });
  byId('changePasswordForm').addEventListener('submit',async event=>{
   event.preventDefault();const password=byId('newPassword').value;
+  if(!recovering||!recoveryLinkVerified){setStatus('Abrí un enlace de recuperación válido antes de elegir una contraseña.');return}
   if(!validPassword(password)||password!==byId('newPassword2').value){setStatus('La contraseña nueva no cumple los requisitos o no coincide.');return}
-  const {error}=await db.auth.updateUser({password});
-  if(error){setStatus(normalizeError(error));return}
-  byId('changePasswordForm').reset();recovering=false;
-  setStatus('Contraseña actualizada. Verificando tu invitación…');
-  await verifyAndEnter();
+  const submit=byId('changePasswordForm').querySelector('button[type="submit"]');
+  submit.disabled=true;
+  try{
+   const {data,error}=await db.auth.updateUser({password});
+   if(error)throw error;
+   if(!data?.user)throw Error('No se confirmó la actualización de contraseña.');
+   byId('changePasswordForm').reset();
+   recovering=false;recoveryCompleted=true;
+   // Eliminar credenciales temporales y marcador del enlace solo al guardar exitosamente.
+   history.replaceState(null,'',activationUrl);
+   setStatus('Contraseña actualizada. Accediendo al portal institucional…');
+   await verifyAndEnter();
+  }catch(error){setStatus('No se pudo actualizar la contraseña: '+normalizeError(error)+'. Reintentá desde esta pantalla.')}
+  finally{submit.disabled=false}
  });
  byId('switchButton').addEventListener('click',async()=>{
   await db.auth.signOut();
@@ -409,7 +423,50 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
  });
  byId('acceptButton').addEventListener('click',()=>void verifyAndEnter());
  const authenticationError=new URLSearchParams(location.hash.slice(1));
- if(oneTimeToken){
+ if(recoveryFlow){
+  // El flujo de recuperación se trata antes de cualquier ingreso automático.
+  recovering=true;holdMagicFlow=true;
+  byId('inviteTitle').textContent='Restablecer contraseña de AeroSuite';
+  byId('roleHeading').textContent='Recuperación segura de cuenta';
+  showPanel('recoveryPanel');
+  byId('forgotForm').hidden=true;
+  byId('changePasswordForm').hidden=true;
+  setStatus('Validando el enlace personal para restablecer tu contraseña…');
+  try{
+   if(oneTimeToken&&oneTimeType==='recovery'){
+    // Compatibilidad con los enlaces de recuperación con token_hash.
+    history.replaceState(null,'',location.pathname+location.search);
+    const {data,error}=await db.auth.verifyOtp({token_hash:oneTimeToken,type:'recovery'});
+    if(error)throw error;
+    if(!data?.session||!data?.user)throw Error('El enlace no devolvió una sesión válida.');
+    recoveryLinkVerified=true;
+   }else if(oneTimeType==='recovery'&&oneTimeHash.has('access_token')){
+    // Enlace de recuperación implícito: Supabase procesa los tokens al iniciar Auth.
+    const {data,error}=await db.auth.getSession();
+    if(error)throw error;
+    if(!data?.session||data.session.access_token!==oneTimeHash.get('access_token'))
+     throw Error('El enlace no pudo verificarse.');
+    recoveryLinkVerified=true;
+   }else if(!recoveryLinkVerified){
+    throw Error('No encontramos un enlace vigente de recuperación.');
+   }
+   const {data,error}=await db.auth.getUser();
+   if(error||!data?.user||!recoveryLinkVerified)throw Error('La sesión de recuperación no está verificada.');
+   // Nunca continuar automáticamente desde el enlace de recuperación.
+   byId('forgotForm').hidden=true;
+   byId('changePasswordForm').hidden=false;
+   byId('backRecovery').hidden=true;
+   history.replaceState(null,'',location.pathname+location.search);
+   setStatus('Correo verificado. Elegí una contraseña nueva de 9 caracteres y confirmala para ingresar.');
+  }catch(error){
+   recoveryLinkVerified=false;
+   byId('forgotForm').hidden=false;
+   byId('changePasswordForm').hidden=true;
+   byId('backRecovery').hidden=true;
+   history.replaceState(null,'',location.pathname+location.search);
+   setStatus('No se pudo validar el enlace: '+normalizeError(error)+'. Solicitá un nuevo correo de recuperación.');
+  }
+ }else if(oneTimeToken){
   if(!['magiclink','signup','invite'].includes(oneTimeType)){
    holdMagicFlow=false;
    showPanel('signInPanel');
