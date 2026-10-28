@@ -58,17 +58,25 @@ textarea{font:inherit;color:#fff;background:#102738;border:1px solid #63879b;bor
 <div class="tile"><strong>Alumno de AeroSuite</strong><span>Solicitar turnos, revisar devoluciones y saldos de packs.</span><br><a id="alumno" target="_blank" rel="noopener">Abrir Alumno de AeroSuite</a></div>
 </div>
 <div class="notice warn" id="roleReadiness" role="status">Comprobando las cuentas disponibles para el laboratorio...</div>
-<p class="muted">Cada enlace abre el portal operativo real. Para evitar permisos incorrectos, Director, Instructor y Alumno utilizan cuentas independientes. Las dos direcciones de prueba que terminan en +instructor y +alumno entregan sus mensajes en la misma casilla de Gmail del Director.</p>
+<p class="muted">Cada enlace abre el ingreso institucional real, no una vista simulada. Cada rol utiliza una identidad independiente. Los alias +instructor y +alumno identifican cuentas técnicas distintas administradas desde la misma casilla principal; no se envían correos de invitación.</p>
 </section>
 <section class="panel" aria-labelledby="testAccountsTitle">
- <h2 id="testAccountsTitle">Activar Instructor y Alumno de AeroSuite</h2>
- <p>Las invitaciones ya están preparadas. Enviá cada vínculo de activación a la misma bandeja Gmail, abrilo y creá una contraseña personal para cada rol. No se crea ni confirma ninguna cuenta sin verificar el correo. Así el test comprueba el mismo ingreso, permisos y operaciones que usaría una institución real.</p>
+ <h2 id="testAccountsTitle">Cuentas técnicas permanentes · Sin invitaciones</h2>
+ <p>Habilitá una vez los perfiles independientes de Instructor y Alumno desde Superadministración. Elegí una contraseña diferente para cada uno. Los usuarios se crean confirmados directamente en el laboratorio de prueba, sin enviar invitaciones ni correos de activación. Los clientes reales conservan su procedimiento habitual.</p>
  <div class="grid">
-  <div class="tile"><strong>Instructor de AeroSuite</strong><span id="instructorAlias">gentedevuelo+instructor@gmail.com</span><p class="muted" id="instructorInviteState">Comprobando invitación…</p><button type="button" id="inviteInstructor" class="primary">Enviar invitación de Instructor</button></div>
-  <div class="tile"><strong>Alumno de AeroSuite</strong><span id="alumnoAlias">gentedevuelo+alumno@gmail.com</span><p class="muted" id="alumnoInviteState">Comprobando invitación…</p><button type="button" id="inviteAlumno" class="primary">Enviar invitación de Alumno</button></div>
+  <div class="tile"><strong>Instructor de AeroSuite</strong><span id="instructorAlias">gentedevuelo+instructor@gmail.com</span><p class="muted" id="instructorInviteState">Consultando...</p>
+    <label for="passwordInstructor" class="muted">Contraseña técnica del Instructor</label><input id="passwordInstructor" type="password" autocomplete="new-password" minlength="9" maxlength="9" placeholder="9 caracteres" style="width:100%;padding:10px;background:#102738;color:#fff;border:1px solid #63879b;border-radius:8px">
+    <label for="repeatInstructor" class="muted">Confirmar contraseña</label><input id="repeatInstructor" type="password" autocomplete="new-password" minlength="9" maxlength="9" style="width:100%;padding:10px;background:#102738;color:#fff;border:1px solid #63879b;border-radius:8px">
+    <button type="button" id="inviteInstructor" class="primary" style="margin-top:12px">Crear Instructor sin correo</button>
+  </div>
+  <div class="tile"><strong>Alumno de AeroSuite</strong><span id="alumnoAlias">gentedevuelo+alumno@gmail.com</span><p class="muted" id="alumnoInviteState">Consultando...</p>
+    <label for="passwordAlumno" class="muted">Contraseña técnica del Alumno</label><input id="passwordAlumno" type="password" autocomplete="new-password" minlength="9" maxlength="9" placeholder="9 caracteres" style="width:100%;padding:10px;background:#102738;color:#fff;border:1px solid #63879b;border-radius:8px">
+    <label for="repeatAlumno" class="muted">Confirmar contraseña</label><input id="repeatAlumno" type="password" autocomplete="new-password" minlength="9" maxlength="9" style="width:100%;padding:10px;background:#102738;color:#fff;border:1px solid #63879b;border-radius:8px">
+    <button type="button" id="inviteAlumno" class="primary" style="margin-top:12px">Crear Alumno sin correo</button>
+  </div>
  </div>
- <div class="notice" role="status" aria-live="polite" id="inviteFeedback" style="margin-top:12px">No se enviaron correos desde esta pantalla.</div>
- <p class="muted">Para alternar usuarios, cerrá la sesión del rol anterior antes de ingresar con otra cuenta. No se suplantan usuarios ni se comparte la misma contraseña.</p>
+ <div class="notice" role="status" aria-live="polite" id="inviteFeedback" style="margin-top:12px">Las claves deben contener exactamente 9 caracteres con mayúscula, minúscula, número y símbolo. No se guardan en el Centro de Testeo.</div>
+ <p class="muted">Para alternar perfiles, cerrá la sesión institucional del rol anterior e ingresá con la cuenta técnica correspondiente. El Director mantiene su cuenta actual; nunca se mezclan permisos de Director, Instructor y Alumno.</p>
 </section>
 <section class="panel"><div class="actions"><h2 style="flex:1;margin:0">Estado operativo consultado en Supabase</h2><button id="refresh" type="button">Actualizar diagnóstico</button></div>
 <div id="metrics" class="metrics" style="margin-top:15px"></div>
@@ -107,41 +115,42 @@ let db,user,health={},active=null;
 const LAB_EMAILS=Object.freeze({instructor:'gentedevuelo+instructor@gmail.com',alumno:'gentedevuelo+alumno@gmail.com'});
 function msg(s){status.textContent=s;}
 function setText(id,s){$(id).textContent=s;}
-function url(role){return 'portal-escuela.html?institucion='+encodeURIComponent(testId)+'&rol='+encodeURIComponent(role)+'&elegida=1';}
+function url(role){return 'ingreso-escuela.html?institucion='+encodeURIComponent(testId)+'&rol='+encodeURIComponent(role)+'&prueba=1';}
 function time(v){return v?new Date(v).toLocaleString('es-AR',{dateStyle:'short',timeStyle:'short',timeZone:'America/Argentina/Buenos_Aires'}):'—';}
 function outcomes(steps){const vals=names.map(x=>steps?.[x[0]]?.status||'pending');return {ok:vals.filter(x=>x==='passed').length,failed:vals.filter(x=>x==='failed').length,blocked:vals.filter(x=>x==='blocked').length,pending:vals.filter(x=>x==='pending').length};}
 function summary(t){const o=outcomes(t.steps);return o.ok+' correctos · '+o.failed+' fallidos · '+o.blocked+' bloqueados · '+o.pending+' pendientes';}
 function safeNumber(n){return Number.isFinite(Number(n))?Number(n).toLocaleString('es-AR'):'—';}
-async function reloadInvites(){
- const response=await db.from('aerosuite_institution_invitations')
-   .select('email,role,accepted_at,last_sent_at,expires_at')
-   .eq('institution_id',testId)
-   .in('role',['instructor','alumno'])
-   .order('created_at',{ascending:false});
- if(response.error){$('inviteFeedback').textContent='No se pudieron consultar las invitaciones: '+response.error.message;return;}
- for(const role of ['instructor','alumno']){
-   const matching=(response.data||[]).find(x=>x.role===role&&x.email.toLowerCase()===LAB_EMAILS[role]);
-   const label=$(role+'InviteState');
-   label.textContent=matching?.accepted_at?'Cuenta habilitada · '+time(matching.accepted_at):matching?.last_sent_at?
-     'Correo enviado: '+time(matching.last_sent_at)+' · aceptación pendiente':matching?'Invitación preparada · falta enviar el enlace':'Invitación pendiente de preparación';
-   $(role==='instructor'?'inviteInstructor':'inviteAlumno').disabled=Boolean(matching?.accepted_at);
+function renderLabAccounts(){
+ for(const [role,key] of [['instructor','instructors'],['alumno','students']]){
+  const created=Number(health[key]||0)>0;
+  $(role+'InviteState').textContent=created?'Cuenta técnica habilitada en Supabase · acceso real':'Todavía sin cuenta técnica habilitada';
+  $(role==='instructor'?'inviteInstructor':'inviteAlumno').disabled=created;
+  $(role==='instructor'?'passwordInstructor':'passwordAlumno').disabled=created;
+  $(role==='instructor'?'repeatInstructor':'repeatAlumno').disabled=created;
  }
 }
-async function sendLabInvite(role){
+async function provisionLabRole(role){
  if(!['instructor','alumno'].includes(role))return;
- const email=LAB_EMAILS[role];
+ const type=role==='instructor'?'Instructor':'Alumno';
+ const passwordInput=$(role==='instructor'?'passwordInstructor':'passwordAlumno');
+ const repeatInput=$(role==='instructor'?'repeatInstructor':'repeatAlumno');
+ const password=passwordInput.value;
+ if(password.length!==9||!/[A-Z]/.test(password)||!/[a-z]/.test(password)||!/[0-9]/.test(password)||!/[^a-zA-Z0-9]/.test(password)){
+   $('inviteFeedback').textContent='La contraseña requiere exactamente 9 caracteres, mayúscula, minúscula, número y símbolo.';return;
+ }
+ if(password!==repeatInput.value){$('inviteFeedback').textContent='Las contraseñas no coinciden.';return;}
+ if(!confirm('¿Crear la cuenta técnica de '+type+' sin enviar ningún correo de invitación?'))return;
  const button=$(role==='instructor'?'inviteInstructor':'inviteAlumno');
- if(!confirm('¿Enviar el vínculo real de activación de '+role+' a '+email+'? Llegará a la bandeja gentedevuelo@gmail.com.'))return;
- button.disabled=true;
- $('inviteFeedback').textContent='Enviando invitación de '+role+'…';
+ button.disabled=true;$('inviteFeedback').textContent='Creando identidad técnica de '+type+'…';
  try{
-  const {data,error}=await db.functions.invoke('aerosuite-invitations',{body:{mode:'send',institution_id:testId,email,role}});
-  if(error)throw Error(data?.error||error.message||'El servicio rechazó la petición.');
-  if(!data?.ok||data?.provider_accepted!==true)throw Error(data?.error||'El servicio no confirmó la aceptación del envío.');
-  $('inviteFeedback').textContent='El proveedor aceptó el correo de '+role+'. Revisá la casilla de Gmail y completá el registro desde el enlace personal. La entrega todavía debe verificarse.';
-  await reloadInvites();
- }catch(e){$('inviteFeedback').textContent='No se pudo enviar el enlace de '+role+': '+(e.message||e);}
- finally{button.disabled=false;await reloadInvites();}
+  const {data,error}=await db.functions.invoke('aerosuite-test-accounts',{body:{role,password}});
+  if(error)throw Error(data?.error||error.message||'Error de creación');
+  if(!data?.ok||data?.mail_sent!==false)throw Error(data?.error||'No se confirmó la creación sin correo.');
+  passwordInput.value='';repeatInput.value='';
+  $('inviteFeedback').textContent='Cuenta técnica de '+type+' creada y vinculada al laboratorio, sin enviar invitaciones. Ingresá al portal con su alias y la clave definida.';
+  await reloadHealth();
+ }catch(e){$('inviteFeedback').textContent='No se pudo configurar '+type+': '+(e.message||e);}
+ finally{button.disabled=false;renderLabAccounts();}
 }
 async function reloadHealth(){
  $('refresh').disabled=true;
@@ -150,9 +159,10 @@ async function reloadHealth(){
   if(r.error)throw r.error;
   if(r.data?.institution_id!==testId)throw Error('Diagnóstico de otra institución');
   health=r.data;
+  renderLabAccounts();
   const missing=[];if(!Number(health.instructors))missing.push('Instructor de AeroSuite');if(!Number(health.students))missing.push('Alumno de AeroSuite');
   $('roleReadiness').classList.toggle('warn',missing.length>0);
-  $('roleReadiness').textContent=missing.length?'Faltan cuentas de prueba habilitadas: '+missing.join(' y ')+'. Desde Director de AeroSuite, invitá las cuentas que usarás exclusivamente para testear. Los enlaces no simulan el acceso de otros roles.':'Director, Instructor y Alumno ya tienen integrantes vinculados al laboratorio; verificá sus credenciales y permisos antes de marcar pruebas como correctas.';
+  $('roleReadiness').textContent=missing.length?'Faltan cuentas de prueba habilitadas: '+missing.join(' y ')+'. Creá las cuentas técnicas directamente desde esta pantalla, sin invitaciones. Los enlaces usan la autenticación real del rol.':'Director, Instructor y Alumno ya tienen integrantes vinculados al laboratorio; verificá sus credenciales y permisos antes de marcar pruebas como correctas.';
   const data=[['Directores',health.directors],['Secretarías',health.secretaries],['Instructores',health.instructors],['Alumnos',health.students],['Aeronaves',health.aircraft_available],['Pendientes',health.bookings_pending],['Confirmados',health.bookings_confirmed],['Realizados',health.bookings_completed],['Informes aprobados',health.reports_approved],['Packs',health.packs_total],['Movimientos de caja',health.money_movements_total]];
   $('metrics').replaceChildren();
   for(const [label,value] of data){const div=document.createElement('div');div.className='metric';const strong=document.createElement('strong');strong.textContent=safeNumber(value);const span=document.createElement('span');span.textContent=label;div.append(strong,span);$('metrics').append(div);}
@@ -234,9 +244,9 @@ try{
  setText('institutionTitle',org.data.name);setText('institutionInfo','Laboratorio técnico exclusivo para control de calidad · '+org.data.kind+' · Estado: '+org.data.status+'. Este laboratorio no es una escuela cliente; no se generan cobros ni usuarios automáticamente.');
  for(const role of ['administrador','secretaria','instructor','alumno'])$(role==='administrador'?'director':role).href=url(role);
  $('content').hidden=false;msg('Acceso autorizado. Los resultados se conservan en Supabase y se restringen a la institución de prueba.');
- $('refresh').onclick=async()=>{await Promise.all([reloadHealth(),reloadInvites()]);};$('historyRefresh').onclick=reloadHistory;
- $('inviteInstructor').onclick=()=>sendLabInvite('instructor');
- $('inviteAlumno').onclick=()=>sendLabInvite('alumno');
+ $('refresh').onclick=async()=>{await reloadHealth();};$('historyRefresh').onclick=reloadHistory;
+ $('inviteInstructor').onclick=()=>provisionLabRole('instructor');
+ $('inviteAlumno').onclick=()=>provisionLabRole('alumno');
  $('save').onclick=()=>save(false);$('finish').onclick=()=>save(true);
  $('start').onclick=async()=>{
   $('start').disabled=true;setText('runStatus','Creando sesión de pruebas…');
@@ -246,7 +256,7 @@ try{
    if(r.error)throw r.error;active=r.data;renderRun();await reloadHistory();
   }catch(e){setText('runStatus','No se pudo iniciar la prueba: '+(e.message||e));$('start').disabled=false;}
  };
- await Promise.all([reloadHealth(),reloadHistory(),reloadInvites()]);
+ await Promise.all([reloadHealth(),reloadHistory()]);
 }catch(e){msg('Acceso no disponible: '+(e.message||e));}
 })();
 </script></body></html>
