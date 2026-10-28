@@ -107,7 +107,7 @@ input[type=email]{width:100%;background:#122737;border:1px solid #7394aa;border-
   <section class="panel" id="directorPeoplePanel" hidden>
     <span class="label">Gestión exclusiva del director</span>
     <h2>Instructores y alumnos de mi escuela</h2>
-    <p>Podés desvincular instructores y alumnos o cancelar invitaciones pendientes. Esto retira el acceso a tu escuela, pero <strong>no elimina la cuenta personal ni afecta a otras instituciones</strong>.</p>
+    <p>Podés desvincular instructores y alumnos o cancelar invitaciones pendientes. En instituciones de prueba se limpia además la cuenta técnica exclusiva, para poder registrar nuevamente el mismo correo. <strong>Las cuentas de Gente de Vuelo y los accesos a otras instituciones se conservan.</strong></p>
     <div id="peopleFeedback" class="people-feedback" role="status" aria-live="polite"></div>
     <div id="peopleList" class="people-list"></div>
     <div class="actions" style="margin-top:15px"><button id="reloadPeople" type="button">Actualizar integrantes</button></div>
@@ -218,7 +218,7 @@ try{
            remove.setAttribute('aria-label',(person.kind==='integrante'?'Desvincular':'Cancelar invitación de')+' '+person.email);
            remove.addEventListener('click',async()=>{
              const msg=person.kind==='integrante'?
-               '¿Desvincular a '+person.email+' como '+person.role+' de '+school.institution_name+'? Su cuenta personal no se elimina.':
+               '¿Desvincular a '+person.email+' como '+person.role+' de '+school.institution_name+'? Si es una cuenta técnica exclusiva de prueba se reiniciará también su identidad; los demás usuarios se conservan.':
                '¿Cancelar la invitación pendiente de '+person.email+'? El enlace ya no podrá activarse.';
              if(!window.confirm(msg))return;
              remove.disabled=true;listFeedback.textContent='Guardando la baja…';
@@ -230,9 +230,9 @@ try{
                if(error)throw error;
                if(!data?.ok)throw Error('No se confirmó la baja.');
                await loadPeople();
-               listFeedback.textContent=person.kind==='integrante'?
-                 'Integrante desvinculado de esta institución. Su cuenta personal continúa intacta.':
-                 'Invitación cancelada. Ya no podrá aceptarse con ese enlace.';
+               listFeedback.textContent=data.removed_test_account?
+                 'Cuenta técnica de prueba eliminada por completo de Auth. Ya se puede invitar el mismo correo desde cero.':
+                 'Acceso o invitación cancelado. Se conservó la cuenta personal porque no es exclusiva de pruebas o tiene datos protegidos.';
              }catch(err){
                listFeedback.textContent='No se pudo completar la baja: '+(err?.message||'Error desconocido');
                remove.disabled=false;
