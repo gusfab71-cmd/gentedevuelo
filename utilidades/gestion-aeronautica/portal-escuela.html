@@ -83,10 +83,11 @@ input[type=email]{width:100%;background:#122737;border:1px solid #7394aa;border-
    <a class="tile operational-link" data-visible-role="administrador" data-module="informes" href="#"><h3>Informes de instrucción</h3><p>Revisar devoluciones, horas, combustible y aceite.</p><span class="pill ready">Operativa</span></a>
    <a class="tile operational-link" data-visible-role="administrador" data-module="finanzas" href="#"><h3>Contaduría y packs</h3><p>Cobros, packs, egresos y caja chica.</p><span class="pill ready">Operativa</span></a>
    <a class="tile operational-link" data-visible-role="administrador" href="#directorPeoplePanel"><h3>Alumnos e instructores</h3><p>Invitaciones, integrantes y desvinculaciones.</p><span class="pill ready">Operativa</span></a>
-   <section class="tile" data-visible-role="administrador"><h3>Flota y mantenimiento</h3><p>Aeronaves, disponibilidad y seguimiento técnico.</p><span class="pill">En preparación</span></section>
+   <a class="tile operational-link" data-visible-role="administrador" data-module="flota" href="#"><h3>Flota y disponibilidad</h3><p>Registrar aeronaves y administrar su disponibilidad para reservas.</p><span class="pill ready">Operativa</span></a>
    <section class="tile" data-visible-role="administrador"><h3>Academia Aeronáutica</h3><p>Biblioteca institucional y recursos didácticos.</p><span class="pill">En integración</span></section>
    <a class="tile operational-link" data-visible-role="instructor" data-module="turnera" href="#" hidden><h3>Turnera de instrucción</h3><p>Consultá horarios y confirmá solicitudes que puedas atender.</p><span class="pill ready">Operativa</span></a>
    <a class="tile operational-link" data-visible-role="instructor" data-module="informes" href="#" hidden><h3>Mis informes</h3><p>Registrá clases, horas, devoluciones, combustible y aceite.</p><span class="pill ready">Operativa</span></a>
+   <a class="tile operational-link" data-visible-role="instructor" data-module="flota" href="#" hidden><h3>Flota de la escuela</h3><p>Consultá qué aeronaves están disponibles o fuera de servicio.</p><span class="pill ready">Consulta</span></a>
    <section class="tile" data-visible-role="instructor" hidden><h3>Recursos docentes</h3><p>Material autorizado de la Academia Aeronáutica.</p><span class="pill">En integración</span></section>
    <a class="tile operational-link" data-visible-role="alumno" data-module="turnera" href="#" hidden><h3>Mi reserva y formación</h3><p>Turnera semanal y estado de mis solicitudes.</p><span class="pill ready">Operativa</span></a>
    <a class="tile operational-link" data-visible-role="alumno" data-module="finanzas" href="#" hidden><h3>Mis packs de horas</h3><p>Horas adquiridas, usadas y disponibles.</p><span class="pill ready">Operativa</span></a>
@@ -119,7 +120,7 @@ input[type=email]{width:100%;background:#122737;border:1px solid #7394aa;border-
     <div id="peopleList" class="people-list"></div>
     <div class="actions" style="margin-top:15px"><button id="reloadPeople" type="button">Actualizar integrantes</button></div>
   </section>
-  <div class="status">Turnera, informes de instrucción y Contaduría cuentan con funciones institucionales. Flota y Academia todavía requieren integración específica.</div>
+  <div class="status">Turnera, informes de instrucción y Contaduría cuentan con funciones institucionales. El seguimiento técnico de mantenimiento y la Academia Aeronáutica todavía requieren integración específica.</div>
  </div>
 </main>
 <script>
@@ -161,7 +162,7 @@ try{
   card.hidden=card.dataset.visibleRole!==school.my_role;
  }
  for(const link of document.querySelectorAll('.operational-link[data-module]')){
-   link.href='operaciones-institucionales.html?institucion='+encodeURIComponent(school.institution_id)+'&rol='+encodeURIComponent(school.my_role)+'#'+encodeURIComponent(link.dataset.module);
+   link.href=(link.dataset.module==='flota'?'flota-institucional.html':'operaciones-institucionales.html')+'?institucion='+encodeURIComponent(school.institution_id)+'&rol='+encodeURIComponent(school.my_role)+(link.dataset.module==='flota'?'':'#'+encodeURIComponent(link.dataset.module));
   }
   el('schoolName').textContent=school.institution_name;
  el('actorLine').textContent='Cuenta: '+(user.email||'verificada en Supabase');
