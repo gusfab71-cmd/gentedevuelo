@@ -77,10 +77,10 @@ assert.match(admission,/sesión institucional separada/i,'El ingreso no requiere
 
 assert.match(school,/\.rpc\('aerosuite_my_institution_access_v2'/,'Portal solo lee instituciones autorizadas y estado de suscripción');
 assert.match(school,/const isDirector=school\.my_role==='administrador'/,'Solo director visualiza sección comercial');
-assert.match(school,/el\('schoolPlan'\)\.hidden=!isDirector/,'Plan no visible para instructor y alumno');
-assert.match(school,/el\('schoolExpiry'\)\.hidden=!isDirector/,'Fecha de vencimiento oculta para roles operativos');
-assert.match(school,/el\('schoolAccessLine'\)\.hidden=!isDirector/,'Estado comercial oculto para staff');
-assert.match(school,/el\('subscriptionNotice'\)\.hidden=!isDirector/,'Avisos comerciales solo del director');
+assert.match(school,/el\('schoolPlan'\)\.hidden=!isManager/,'Plan visible para Dirección y Secretaría, no para instructor o alumno');
+assert.match(school,/el\('schoolExpiry'\)\.hidden=!isManager/,'Dirección y Secretaría comparten fecha de vencimiento');
+assert.match(school,/el\('schoolAccessLine'\)\.hidden=!isManager/,'Dirección y Secretaría comparten el estado comercial');
+assert.match(school,/el\('subscriptionNotice'\)\.hidden=!isManager/,'Dirección y Secretaría ven las mismas advertencias de licencia');
 assert.match(school,/id="directorPeoplePanel" hidden/,'Panel exclusivo de integrantes');
 assert.match(school,/id="peopleList"/,'Listado de instructores y alumnos');
 assert.match(school,/\.rpc\('aerosuite_director_people'/,'El listado está validado por RPC');
@@ -89,22 +89,22 @@ assert.match(school,/p_role:person\.role/,'La baja indica el rol exacto para no 
 assert.match(school,/p_institution_id:school\.institution_id/,'Las bajas indican explícitamente la escuela');
 assert.match(school,/p_person_id:person\.person_id,p_kind:person\.kind/,'Las bajas indican miembro o invitación');
 assert.match(school,/person\.kind==='integrante'\?'Desvincular':'Cancelar invitación'/,'El director puede cancelar invitaciones y desvincular cuentas');
-assert.match(school,/if\(school\.can_write\)/,'Modo consulta no admite bajas');
+assert.match(school,/if\(school\.can_write&&\(person\.role!=='secretaria'\|\|isDirector\)\)/,'El modo consulta no admite bajas y solo el director desvincula Secretaría');
 assert.match(school,/window\.confirm\(msg\)/,'Una confirmación para dar de baja');
 assert.match(school,/cuenta técnica exclusiva de prueba/i,'Baja de una cuenta de pruebas reinicia su identidad únicamente si es exclusiva');
 assert.match(school,/data.removed_test_account/,'El director recibe el resultado del reinicio seguro');
 assert.match(school,/institution_id===queryId/,'Consulta coincidencia institución');
-assert.match(school,/if\(isDirector&&school\.can_write\)/,'Solo el director con derecho a operar puede invitar');
+assert.match(school,/if\(isManager&&school\.can_write\)/,'Dirección y Secretaría pueden invitar instructores y alumnos');
 assert.match(school,/storageKey:'aerosuite-institucional-v2-auth'/,'El portal comparte únicamente la sesión institucional');
-assert.match(school,/data-visible-role="administrador"/,'Portal administrador separado');
+assert.match(school,/data-visible-role="administrador secretaria"/,'Dirección y Secretaría comparten el portal administrativo');
 assert.match(school,/data-visible-role="instructor"/,'Portal instructor separado');
 assert.match(school,/data-visible-role="alumno"/,'Portal alumno separado');
-assert.match(school,/card\.dataset\.visibleRole!==school\.my_role/,'No mostrar tarjetas de otros roles');
+assert.match(school,/card\.dataset\.visibleRole\.split\(/,'La interfaz oculta las tarjetas no habilitadas para el rol');
 assert.match(school,/x\.institution_id===queryId&&\(!requestedRole\|\|x\.my_role===requestedRole\)/,'Consulta vinculada a institución y rol recibidos');
 assert.match(school,/name="role" type="radio" value="instructor"/,'Invitaciones de instructores');
 assert.match(school,/name="role" type="radio" value="alumno"/,'Invitaciones de alumnos');
 assert.match(school,/client\.functions\.invoke\('aerosuite-invitations'/,'Correo enviado desde función autorizada');
-assert.match(school,/Pendiente de integración segura/,'No habilitar operaciones de la institución todavía');
+assert.match(school,/Turnera, informes de instrucción y Contaduría cuentan con funciones institucionales/,'No ocultar los módulos operativos que ya fueron habilitados');
 assert.match(school,/mode==='grace'/,'Mostrar acceso normal durante los 15 días de cortesía');
 assert.match(school,/mode==='read_only'/,'Mostrar modo consulta después de los 45 días');
 assert.match(school,/grace_ends_at/,'Mostrar la fecha de fin de cortesía');
@@ -174,4 +174,14 @@ for(const [name,html] of [['ingreso-escuela.html',admission],['portal-escuela.ht
  new vm.Script(scripts[0][1],{filename:name});
  assert.doesNotMatch(html,/service_role|SUPABASE_SERVICE_ROLE_KEY/,'No exponer clave privilegiada');
 }
+
+// Secretaría opcional: mismos módulos económicos que Dirección, alta/baja del rol reservada al Director.
+assert.match(admission,/secretaria:'secretaria'/,'El enlace institucional reconoce a Secretaría');
+assert.match(school,/id="secretaryInviteOption" hidden/,'Solo se muestra la opción Secretaría cuando corresponde');
+assert.match(school,/el\('secretaryInviteOption'\)\.hidden=!isDirector/,'El Director controla el alta de Secretaría');
+assert.match(school,/person\.role!=='secretaria'\|\|isDirector/,'Secretaría no puede desvincular Secretaría');
+assert.match(emailSender,/role==="secretaria"\|\|!isSuper/,'La invitación de Secretaría requiere autorización institucional específica');
+assert.match(emailSender,/role==="secretaria"\?\["administrador"\]:\["administrador","secretaria"\]/,'Solo Dirección invita Secretaría; ambos administran el resto del personal');
+assert.match(emailSender,/secretaria:"secretaría"/,'La notificación identifica el rol Secretaría');
+
 console.log('PASS: ingreso de director separado del Superadministrador, permisos verificados y módulos bloqueados');
