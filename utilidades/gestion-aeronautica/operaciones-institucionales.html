@@ -241,6 +241,15 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     }
     body.append(tr);
    }
+   // En pantallas angostas, el lunes y martes ya vencidos podían tapar los próximos turnos.
+   // Desplazar la grilla al día de hoy para que el alumno vea las casillas futuras.
+   const currentIndex=dates.indexOf(today);
+   if(currentIndex>=0){
+    const scroll=$("weekBody").closest(".table-scroll");
+    const columns=$("weekHead").querySelectorAll("th");
+    const current=columns[currentIndex+1];
+    if(scroll&&current)scroll.scrollLeft=Math.max(0,current.offsetLeft-(columns[0]?.offsetLeft||0)-8);
+   }
   }
   async function takeAction(action,b,options={}){
    try{
