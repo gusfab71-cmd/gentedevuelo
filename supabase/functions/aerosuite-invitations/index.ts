@@ -98,14 +98,17 @@ Deno.serve(async(req:Request)=>{
  }
  // Supabase Auth verifica la titularidad del correo mediante un vínculo personal de un solo uso.
  // NO se envía un enlace público con solo institución y rol: eso exigiría un segundo correo de verificación.
- const generated=await db.auth.admin.generateLink({type:"magiclink",email});
+ let generated=await db.auth.admin.generateLink({type:"magiclink",email});
+ // Si la primera llamada abrió un usuario nuevo, el siguiente token es de acceso normal.
+ if(!generated.error&&generated.data?.properties?.verification_type==="signup")
+   generated=await db.auth.admin.generateLink({type:"magiclink",email});
  if(generated.error||!generated.data?.properties?.hashed_token)
   return reply(origin,503,{error:"No se pudo generar un enlace de verificación personal. Reintentá desde el panel."});
  // Para un correo sin usuario previo, GoTrue cambia generateLink(magiclink) a signup.
  // La verificación DEBE usar el tipo real retornado por Auth, no uno fijo.
  const tokenHash=generated.data.properties.hashed_token;
  const verificationType=String(generated.data.properties.verification_type||"");
- if(!["signup","magiclink","invite"].includes(verificationType))
+ if(verificationType!=="magiclink")
    return reply(origin,503,{error:"El servicio de identidad devolvió un tipo de enlace no compatible. No se envió el correo."});
  const link="https://gentedevuelo.com/utilidades/gestion-aeronautica/ingreso-escuela.html?institucion="+encodeURIComponent(id)+
    "&rol="+encodeURIComponent(role)+"#token_hash="+encodeURIComponent(tokenHash)+"&type="+encodeURIComponent(verificationType);
