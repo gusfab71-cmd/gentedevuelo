@@ -62,12 +62,12 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
     <p>Ya confirmamos que este enlace pertenece al correo <strong id="inviteEmail">—</strong>. Elegí tu contraseña para completar el ingreso; no necesitás otro correo ni volver a ingresar tus datos.</p>
     <form id="welcomeForm" autocomplete="off">
       <label>Nueva contraseña
-       <span class="password-wrap"><input id="welcomePassword" type="password" name="aero-password-new" autocomplete="new-password" readonly required minlength="10"><button type="button" class="password-eye" data-password-target="welcomePassword" aria-label="Mostrar contraseña" aria-pressed="false" title="Mostrar contraseña"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.7-7 10-7 10 7 10 7-3.7 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/><path class="eye-slash" d="M3 3l18 18"/></svg></button></span>
+       <span class="password-wrap"><input id="welcomePassword" type="password" name="aero-password-new" autocomplete="new-password" readonly required minlength="9" maxlength="9"><button type="button" class="password-eye" data-password-target="welcomePassword" aria-label="Mostrar contraseña" aria-pressed="false" title="Mostrar contraseña"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.7-7 10-7 10 7 10 7-3.7 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/><path class="eye-slash" d="M3 3l18 18"/></svg></button></span>
       </label>
       <label>Repetí tu contraseña
-       <span class="password-wrap"><input id="welcomeRepeat" type="password" name="aero-password-confirm" autocomplete="new-password" readonly required minlength="10"><button type="button" class="password-eye" data-password-target="welcomeRepeat" aria-label="Mostrar contraseña" aria-pressed="false" title="Mostrar contraseña"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.7-7 10-7 10 7 10 7-3.7 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/><path class="eye-slash" d="M3 3l18 18"/></svg></button></span>
+       <span class="password-wrap"><input id="welcomeRepeat" type="password" name="aero-password-confirm" autocomplete="new-password" readonly required minlength="9" maxlength="9"><button type="button" class="password-eye" data-password-target="welcomeRepeat" aria-label="Mostrar contraseña" aria-pressed="false" title="Mostrar contraseña"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.7-7 10-7 10 7 10 7-3.7 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/><path class="eye-slash" d="M3 3l18 18"/></svg></button></span>
       </label>
-      <p class="caption">Al menos 10 caracteres, incluyendo mayúscula, minúscula, número y símbolo. No utilices tu DNI.</p>
+      <p class="caption">Exactamente 9 caracteres, incluyendo mayúscula, minúscula, número y símbolo. No utilices tu DNI.</p>
       <div class="actions">
        <button type="submit" id="welcomeButton" class="primary">Crear contraseña e ingresar al portal</button>
        <button type="button" id="existingAccountButton">Ya tengo contraseña · Continuar sin cambiarla</button>
@@ -88,8 +88,8 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
   <p class="caption">Elegí una clave nueva, segura y privada. No uses tu DNI ni la misma contraseña de otra cuenta. Tu correo deberá verificarse antes de habilitar la institución.</p>
   <form id="signupForm" autocomplete="off">
    <label>Correo que recibió la invitación<input id="signupEmail" type="email" name="as-register-identity" autocomplete="off" readonly maxlength="254" required></label>
-   <label>Elegí tu contraseña<span class="password-wrap"><input id="signupPassword" type="password" name="as-new-secret" autocomplete="new-password" readonly minlength="10" required><button type="button" class="password-eye" data-password-target="signupPassword" aria-label="Mostrar contraseña" aria-pressed="false" title="Mostrar contraseña"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.7-7 10-7 10 7 10 7-3.7 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/><path class="eye-slash" d="M3 3l18 18"/></svg></button></span></label>
-   <label>Repetí tu contraseña<span class="password-wrap"><input id="signupRepeat" type="password" name="as-confirm-secret" autocomplete="new-password" readonly minlength="10" required><button type="button" class="password-eye" data-password-target="signupRepeat" aria-label="Mostrar contraseña" aria-pressed="false" title="Mostrar contraseña"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.7-7 10-7 10 7 10 7-3.7 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/><path class="eye-slash" d="M3 3l18 18"/></svg></button></span></label>
+   <label>Elegí tu contraseña<span class="password-wrap"><input id="signupPassword" type="password" name="as-new-secret" autocomplete="new-password" readonly minlength="9" maxlength="9" required><button type="button" class="password-eye" data-password-target="signupPassword" aria-label="Mostrar contraseña" aria-pressed="false" title="Mostrar contraseña"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.7-7 10-7 10 7 10 7-3.7 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/><path class="eye-slash" d="M3 3l18 18"/></svg></button></span></label>
+   <label>Repetí tu contraseña<span class="password-wrap"><input id="signupRepeat" type="password" name="as-confirm-secret" autocomplete="new-password" readonly minlength="9" maxlength="9" required><button type="button" class="password-eye" data-password-target="signupRepeat" aria-label="Mostrar contraseña" aria-pressed="false" title="Mostrar contraseña"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.7-7 10-7 10 7 10 7-3.7 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/><path class="eye-slash" d="M3 3l18 18"/></svg></button></span></label>
    <div class="actions"><button class="primary" id="signupButton" type="submit">Crear cuenta</button><button id="backLogin" type="button">Ya tengo cuenta · Ingresar</button></div>
    <p class="caption">¿Ya creaste una contraseña, pero todavía no ingresaste? <button type="button" class="inlink" id="showConfirmation">Verificar mi correo</button></p>
   </form>
@@ -112,8 +112,8 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
   <div class="actions"><button class="primary" type="submit">Enviar recuperación</button><button id="backRecovery" type="button">Volver</button></div>
  </form>
  <form id="changePasswordForm" hidden>
-  <label>Nueva contraseña<span class="password-wrap"><input id="newPassword" type="password" minlength="10" required autocomplete="new-password"><button type="button" class="password-eye" data-password-target="newPassword" aria-label="Mostrar contraseña" aria-pressed="false" title="Mostrar contraseña"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.7-7 10-7 10 7 10 7-3.7 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/><path class="eye-slash" d="M3 3l18 18"/></svg></button></span></label>
-  <label>Repetir nueva contraseña<span class="password-wrap"><input id="newPassword2" type="password" minlength="10" required autocomplete="new-password"><button type="button" class="password-eye" data-password-target="newPassword2" aria-label="Mostrar contraseña" aria-pressed="false" title="Mostrar contraseña"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.7-7 10-7 10 7 10 7-3.7 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/><path class="eye-slash" d="M3 3l18 18"/></svg></button></span></label>
+  <label>Nueva contraseña<span class="password-wrap"><input id="newPassword" type="password" minlength="9" maxlength="9" required autocomplete="new-password"><button type="button" class="password-eye" data-password-target="newPassword" aria-label="Mostrar contraseña" aria-pressed="false" title="Mostrar contraseña"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.7-7 10-7 10 7 10 7-3.7 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/><path class="eye-slash" d="M3 3l18 18"/></svg></button></span></label>
+  <label>Repetir nueva contraseña<span class="password-wrap"><input id="newPassword2" type="password" minlength="9" maxlength="9" required autocomplete="new-password"><button type="button" class="password-eye" data-password-target="newPassword2" aria-label="Mostrar contraseña" aria-pressed="false" title="Mostrar contraseña"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.7-7 10-7 10 7 10 7-3.7 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/><path class="eye-slash" d="M3 3l18 18"/></svg></button></span></label>
   <div class="actions"><button class="primary" type="submit">Cambiar contraseña</button></div>
  </form>
 </section>
@@ -166,7 +166,7 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
   +(selectedRole?'&rol='+encodeURIComponent(selectedRole):'');
  const portalUrl='portal-escuela.html?institucion='+encodeURIComponent(schoolId)
   +(selectedRole?'&rol='+encodeURIComponent(selectedRole):'');
- const validPassword=value=>value.length>=10&&/[A-Z]/.test(value)&&/[a-z]/.test(value)&&/[0-9]/.test(value)&&/[^A-Za-z0-9]/.test(value);
+ const validPassword=value=>value.length===9&&/[A-Z]/.test(value)&&/[a-z]/.test(value)&&/[0-9]/.test(value)&&/[^A-Za-z0-9]/.test(value);
  const humanRole=selectedRole==='administrador'?'administrador':selectedRole==='instructor'?'instructor':selectedRole==='alumno'?'alumno':'integrante';
  byId('inviteTitle').textContent='Invitación para crear cuenta como '+humanRole;
  byId('roleHeading').textContent='AeroSuite · acceso de '+humanRole;
@@ -271,7 +271,7 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
   const password=byId('welcomePassword').value;
   const repeat=byId('welcomeRepeat').value;
   if(!validPassword(password)){
-   setStatus('La contraseña debe tener 10 caracteres como mínimo, mayúscula, minúscula, número y símbolo.');return;
+   setStatus('La contraseña debe tener 9 caracteres exactos, mayúscula, minúscula, número y símbolo.');return;
   }
   if(password!==repeat){setStatus('Las contraseñas no coinciden.');return}
   const button=byId('welcomeButton');button.disabled=true;
@@ -340,7 +340,7 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
   event.preventDefault();
   const email=byId('signupEmail').value.trim().toLowerCase();
   const password=byId('signupPassword').value;
-  if(!validPassword(password)){setStatus('La contraseña requiere 10 caracteres, mayúscula, minúscula, número y símbolo.');return}
+  if(!validPassword(password)){setStatus('La contraseña requiere exactamente 9 caracteres, mayúscula, minúscula, número y símbolo.');return}
   if(password!==byId('signupRepeat').value){setStatus('Las contraseñas no coinciden.');return}
   const button=byId('signupButton');button.disabled=true;
   try{
