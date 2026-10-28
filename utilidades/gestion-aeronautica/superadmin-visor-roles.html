@@ -81,7 +81,8 @@ td:first-child{color:#bcd6e6;font-weight:700}
 <button type="button" id="refresh">Actualizar diagnóstico</button>
 </div>
 <div class="role-tabs" role="group" aria-label="Rol para revisar" id="roleTabs">
-<button type="button" data-role="administrador" class="selected">Director / Secretaría</button>
+<button type="button" data-role="administrador" class="selected">Director</button>
+<button type="button" data-role="secretaria">Secretaría</button>
 <button type="button" data-role="instructor">Instructor</button>
 <button type="button" data-role="alumno">Alumno</button>
 </div>
@@ -110,7 +111,7 @@ td:first-child{color:#bcd6e6;font-weight:700}
 'use strict';
 (async()=>{
 const $=id=>document.getElementById(id);
-const status=$('accessStatus'),roles={administrador:'Director / Secretaría',instructor:'Instructor',alumno:'Alumno'};
+const status=$('accessStatus'),roles={administrador:'Director',secretaria:'Secretaría',instructor:'Instructor',alumno:'Alumno'};
 const kindLabels={escuela:'Escuela de vuelo',aerodromo:'Aeródromo',aeroclub:'Aeroclub'};
 const humanDate=stamp=>new Date(stamp).toLocaleString('es-AR',{timeZone:'America/Argentina/Buenos_Aires',dateStyle:'short',timeStyle:'short'});
 const numeric=value=>Number(value||0);
@@ -237,7 +238,7 @@ function showModule(module){
   area.append(node('p',selectedRole==='instructor'?'Consulta de disponibilidad. El instructor no modifica la flota.':'Dirección/Secretaría puede administrar la disponibilidad de aeronaves.'),block);
  }else if(module==='personas'){
   const block=node('div',null,'metric-grid');block.append(makeMetric('Instructores',health.instructors),makeMetric('Alumnos',health.students),makeMetric('Secretaría',health.secretaries));
-  area.append(node('p','Dirección y Secretaría pueden gestionar instructores y alumnos. Solo el Director gestiona el alta/baja de Secretaría.'),block);
+  area.append(node('p',selectedRole==='secretaria'?'Secretaría gestiona instructores y alumnos, pero no puede invitar ni desvincular a otra Secretaría.':'Dirección gestiona instructores, alumnos y el alta/baja de Secretaría.'),block);
  }else{
   area.append(node('p','Este módulo todavía figura como «En integración» en el portal real. No se presenta como operativo.'),node('p','Quedará sujeto a validación institucional antes de habilitarse.','readonly-text'));
  }
