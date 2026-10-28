@@ -110,7 +110,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
 <main>
 <div class="eyebrow">Acceso exclusivo del titular</div>
 <h1>Instituciones y licencias</h1>
-<p>Autorización central de escuelas de vuelo, aeroclubes y aeródromos. Las invitaciones de prueba pueden aceptarse con cuentas verificadas desde el ingreso institucional. Los módulos operativos reales todavía permanecen bloqueados para escuelas.</p>
+<p>Autorización central de escuelas de vuelo, aeroclubes y aeródromos. Las invitaciones de prueba pueden aceptarse con cuentas verificadas desde el ingreso institucional. La revisión de portales por rol se realiza en modo consulta sin usar sesiones institucionales.</p>
 <div class="notice" id="accessMessage" role="status">Verificando tu identidad y los permisos de AeroSuite…</div>
 <div id="adminContent" hidden>
 <div class="metrics" aria-label="Resumen de instituciones">
@@ -448,6 +448,13 @@ async function reload(){
    }
   }
   const actions=document.createElement('div');actions.className='institution-actions';
+  // Visor de referencia sin suplantar la sesión de ningún miembro.
+  const inspect=document.createElement('a');
+  inspect.className='full';
+  inspect.textContent='Revisar portales por rol';
+  inspect.href='superadmin-visor-roles.html?institucion='+encodeURIComponent(row.id);
+  inspect.title='Revisar Dirección/Secretaría, Instructor y Alumno sin modificar sus datos';
+  actions.append(inspect);
   if((row.status==='trial'&&Number.isFinite(Date.parse(row.trial_ends_at))&&Date.parse(row.trial_ends_at)+15*86400000>now())||
      (row.status==='active'&&Date.parse(row.license_ends_at)>now())){
     const send=document.createElement('button');
