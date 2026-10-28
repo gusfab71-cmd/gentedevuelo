@@ -6,7 +6,7 @@
 <style>
 :root{font-family:Inter,system-ui,Arial,sans-serif;color:#eef6fb;background:#101c2a;color-scheme:dark}
 *{box-sizing:border-box}[hidden]{display:none!important}body{margin:0;min-height:100vh;background:linear-gradient(140deg,#101e2c,#142c3f)}
-a{color:#b5ddfb}a:focus-visible,button:focus-visible{outline:3px solid #b5ddfb;outline-offset:3px}
+a{color:#b5ddfb}a:focus-visible,button:focus-visible,select:focus-visible{outline:3px solid #b5ddfb;outline-offset:3px}
 header{padding:18px max(20px,calc((100vw - 1200px)/2));background:#172b40;border-bottom:1px solid #4a6d84;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .brand{color:#edf8ff;text-decoration:none;font-size:22px;font-weight:850}.brand span{color:#9ac9ef}.brand small{font-size:10px;color:#b4cde0;display:block;letter-spacing:.14em}
 nav{display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:12px}
@@ -22,6 +22,10 @@ p{color:#c2d3dd;line-height:1.6}
 .tile{background:#1c394d;border:1px solid #537993;padding:21px;border-radius:13px;min-height:150px}
 .tile h3{font-size:15px;margin:0 0 10px}.tile p{font-size:12px;margin:0 0 14px}
 .operational-link{display:block;text-decoration:none;color:inherit}.operational-link:hover{border-color:#e7c899;background:#23475f}.pill.ready{background:#214c40;color:#bcf0cf;border-color:#69ae88}.pill{font-size:10px;font-weight:850;color:#eecda1;border:1px solid #987b54;background:#433b31;padding:5px 9px;border-radius:999px}
+.choose-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:13px;margin-top:18px}
+.choose-card{display:flex;text-align:left;flex-direction:column;align-items:flex-start;gap:9px;width:100%;min-height:135px;padding:20px;background:#1d3a50;border:1px solid #6f9ab5;border-radius:13px}
+.choose-card:hover{background:#285273;border-color:#e7c899}
+.choose-card strong{font-size:17px;color:#fff}.choose-card span{font-size:13px;color:#c8dce8}.choose-card small{font-size:12px;color:#e7c899}
 .institution-choice{margin:0 0 18px;padding:17px 20px;border:1px solid #63869a;border-radius:13px;background:#1a3345}
 .institution-choice label{max-width:620px;font-size:13px;font-weight:750}
 .institution-choice select{padding:11px 13px;border-radius:9px;border:1px solid #88aac0;background:#112737;color:#fff;font:inherit;font-size:14px;width:100%;margin-top:5px}
@@ -65,8 +69,15 @@ input[type=email]{width:100%;background:#122737;border:1px solid #7394aa;border-
  <h1>Portal de la escuela</h1>
  <p>Tu espacio de trabajo institucional. Cada rol utiliza únicamente los módulos autorizados de su propia escuela.</p>
  <div class="status" id="message" role="status" aria-live="polite">Verificando tu cuenta y la licencia…</div>
+ <section id="chooseInstitution" class="panel" hidden aria-labelledby="chooseTitle">
+  <span class="label">Acceso con una sola cuenta</span>
+  <h2 id="chooseTitle">Elegí la institución que querés consultar</h2>
+  <p>Trabajás con una cuenta personal. Cada institución mantiene sus propias reservas, alumnos, aeronaves e informes. Elegí dónde querés ingresar.</p>
+  <div id="chooseInstitutionList" class="choose-grid"></div>
+ </section>
  <div id="schoolArea" hidden>
   <section class="institution-choice" id="institutionSwitcher" hidden>
+    <button type="button" id="changeInstitution" style="margin:0 0 12px">Cambiar de institución</button>
    <label for="institutionSelect">Institución en la que estás trabajando
     <select id="institutionSelect" aria-label="Cambiar institución de AeroSuite"></select>
    </label>
@@ -153,8 +164,35 @@ try{
  const access=await client.rpc('aerosuite_my_institution_access_v2');
  if(access.error)throw access.error;
  data=access.data||[];
- const queryId=new URLSearchParams(location.search).get('institucion');
- const requestedRole=new URLSearchParams(location.search).get('rol');
+ const search=new URLSearchParams(location.search);
+ const queryId=search.get('institucion');
+ const requestedRole=search.get('rol');
+ const accessibleInstitutions=data.filter(x=>x.can_access&&['administrador','secretaria','instructor','alumno'].includes(x.my_role));
+ const chosen=search.get('elegida')==='1';
+ const institutionURL=entry=>'portal-escuela.html?institucion='+encodeURIComponent(entry.institution_id)+'&rol='+encodeURIComponent(entry.my_role)+'&elegida=1';
+ // Con varios vínculos, presentar la elección antes de mostrar contenido institucional.
+ if(accessibleInstitutions.length>1&&!chosen){
+  document.querySelector('h1').textContent='Mis instituciones de AeroSuite';
+  el('chooseInstitution').hidden=false;
+  const list=el('chooseInstitutionList');
+  const names={escuela:'Escuela de vuelo',aerodromo:'Aeródromo',aeroclub:'Aeroclub'};
+  const roles={administrador:'Dirección',secretaria:'Secretaría',instructor:'Instructor',alumno:'Alumno'};
+  for(const entry of accessibleInstitutions){
+   const card=document.createElement('button');card.type='button';card.className='choose-card';
+   const title=document.createElement('strong');title.textContent=entry.institution_name;
+   const kind=document.createElement('span');kind.textContent=names[entry.institution_kind]||entry.institution_kind;
+   const role=document.createElement('small');role.textContent='Acceso: '+(roles[entry.my_role]||entry.my_role);
+   card.append(title,kind,role);
+   card.addEventListener('click',()=>location.assign(institutionURL(entry)));
+   list.append(card);
+  }
+  message.textContent='Acceso verificado. Seleccioná primero una institución para continuar.';
+  return;
+ }
+ if(accessibleInstitutions.length===1&&!queryId){
+  location.replace(institutionURL(accessibleInstitutions[0]));return;
+ }
+ if(chosen&&!queryId){message.textContent='Elegí primero una institución autorizada.';return;}
  const school=queryId?
    data.find(x=>x.institution_id===queryId&&(!requestedRole||x.my_role===requestedRole)):
    data.find(x=>x.can_access&&['administrador','secretaria','instructor','alumno'].includes(x.my_role));
@@ -167,7 +205,6 @@ try{
   return;
  }
  el('schoolArea').hidden=false;
- const accessibleInstitutions=data.filter(x=>x.can_access);
  if(accessibleInstitutions.length>1){
   const switcher=el('institutionSwitcher'),selector=el('institutionSelect');
   accessibleInstitutions.forEach((entry,index)=>{
@@ -178,8 +215,9 @@ try{
   selector.addEventListener('change',()=>{
    const entry=accessibleInstitutions[Number(selector.value)];
    if(!entry||!entry.can_access)return;
-   location.assign('portal-escuela.html?institucion='+encodeURIComponent(entry.institution_id)+'&rol='+encodeURIComponent(entry.my_role));
+   location.assign(institutionURL(entry));
   });
+  el('changeInstitution').addEventListener('click',()=>location.assign('portal-escuela.html'));
   switcher.hidden=false;
  }
  const roleNames={administrador:'director / administrador',secretaria:'administración / secretaría',instructor:'instructor',alumno:'alumno'};
