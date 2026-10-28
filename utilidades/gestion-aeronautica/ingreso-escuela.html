@@ -55,8 +55,8 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
  <h1 id="inviteTitle">Crear cuenta o ingresar a AeroSuite</h1>
  <div class="grid">
  <div>
-  <p>Fuiste invitado a utilizar <strong>AeroSuite de Gente de Vuelo</strong>. Abrí el enlace personal recibido por correo, elegí tu contraseña y entrá directamente al portal correspondiente a tu rol.</p>
-  <div class="notice">El correo de invitación nuevo verifica tu identidad con un enlace de un solo uso. No se envía una segunda verificación y nunca utilizamos tu DNI como contraseña.</div>
+  <p id="loginIntroduction">Fuiste invitado a utilizar <strong>AeroSuite de Gente de Vuelo</strong>. Abrí el enlace personal recibido por correo, elegí tu contraseña y entrá directamente al portal correspondiente a tu rol.</p>
+  <div class="notice" id="loginNotice">El correo de invitación nuevo verifica tu identidad con un enlace de un solo uso. No se envía una segunda verificación y nunca utilizamos tu DNI como contraseña.</div>
   <section class="panel" id="welcomePanel" hidden>
     <h2>Creá tu contraseña para AeroSuite</h2>
     <p>Ya confirmamos que este enlace pertenece al correo <strong id="inviteEmail">—</strong>. Elegí tu contraseña para completar el ingreso; no necesitás otro correo ni volver a ingresar tus datos.</p>
@@ -153,6 +153,7 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
  const recoveryFlow=query.get('recuperar')==='1'||oneTimeType==='recovery';
  const schoolId=query.get('institucion');
  const selectedRole=query.get('rol')||'';
+ const labLogin=query.get('prueba')==='1'&&(selectedRole==='instructor'||selectedRole==='alumno'||selectedRole==='administrador'||selectedRole==='secretaria');
  const roles={administrador:'administrador',secretaria:'secretaria',instructor:'instructor',alumno:'alumno'};
  if(!schoolId||!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(schoolId)){
   setStatus('Este enlace no identifica una institución válida. Pedí una nueva invitación a AeroSuite.');return;
@@ -171,8 +172,15 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
   +(selectedRole?'&rol='+encodeURIComponent(selectedRole):'');
  const validPassword=value=>value.length===9&&/[A-Z]/.test(value)&&/[a-z]/.test(value)&&/[0-9]/.test(value)&&/[^A-Za-z0-9]/.test(value);
  const humanRole=selectedRole==='administrador'?'administrador':selectedRole==='secretaria'?'secretaría':selectedRole==='instructor'?'instructor':selectedRole==='alumno'?'alumno':'integrante';
- byId('inviteTitle').textContent='Invitación para crear cuenta como '+humanRole;
- byId('roleHeading').textContent='AeroSuite · acceso de '+humanRole;
+ byId('inviteTitle').textContent=labLogin?'Ingreso de pruebas · '+humanRole:'Invitación para crear cuenta como '+humanRole;
+ byId('roleHeading').textContent=labLogin?'AeroSuite · laboratorio permanente · '+humanRole:'AeroSuite · acceso de '+humanRole;
+ if(labLogin){
+  byId('loginIntroduction').textContent='Estás ingresando a la institución permanente de pruebas con una identidad técnica separada. Usarás el mismo portal y los mismos permisos operativos que una cuenta real, sin necesidad de invitación.';
+  byId('loginNotice').textContent='Los accesos técnicos se habilitan exclusivamente desde Superadministración. No se envían correos de invitación ni de activación. El Director mantiene su cuenta; Instructor y Alumno tienen identidades independientes.';
+  byId('showRegister').hidden=true;
+  byId('showConfirmationFromLogin').hidden=true;
+ }
+
  byId('openPortalButton').href=portalUrl;
  // Impedir que Chrome y gestores de contraseñas completen silenciosamente las claves del Superadministrador.
  const credentialFields=['email','password','signupEmail','signupPassword','signupRepeat','welcomePassword','welcomeRepeat'];
@@ -193,6 +201,9 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
   input.addEventListener('pointerdown',()=>input.removeAttribute('readonly'),{once:true});
   input.addEventListener('keydown',()=>input.removeAttribute('readonly'),{once:true});
  }
+ if(labLogin&&selectedRole==='instructor')byId('email').value='gentedevuelo+instructor@gmail.com';
+ if(labLogin&&selectedRole==='alumno')byId('email').value='gentedevuelo+alumno@gmail.com';
+ if(labLogin&&selectedRole==='administrador')byId('email').value='gentedevuelo@gmail.com';
  window.addEventListener('pageshow',event=>{
   if(event.persisted){for(const id of ['password','signupPassword','signupRepeat'])byId(id).value=''}
  });
@@ -205,7 +216,7 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
  const normalizeError=error=>{
   const message=String(error?.message||error||'Error desconocido');
   if(/invalid login credentials|invalid_credentials/i.test(message))
-   return 'Las credenciales no corresponden a una cuenta activada. Si es tu primer acceso, abrí la última invitación recibida por correo para crear tu contraseña. No necesitás un segundo correo de confirmación.';
+   return labLogin?'Las credenciales técnicas son incorrectas o todavía no fueron configuradas en el Centro de Testeo Permanente.':'Las credenciales no corresponden a una cuenta activada. Si es tu primer acceso, abrí la última invitación recibida por correo para crear tu contraseña. No necesitás un segundo correo de confirmación.';
   if(/email not confirmed|email_not_confirmed/i.test(message))
    return 'La contraseña fue creada, pero falta confirmar el correo. Usá «Verificar mi correo» y abrí el enlace del segundo mensaje.';
   return message;
@@ -228,7 +239,7 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
       setStatus('Falta verificar tu correo. No crees otra contraseña: abrí el segundo correo de confirmación.');
     }else{
       showPanel('signInPanel');
-      setStatus('Si todavía no tenés cuenta, pedí al director de tu escuela una invitación nueva. Al abrir su enlace personal vas a crear la contraseña y entrar directamente, sin otro correo de verificación.');
+      setStatus(labLogin?'Ingresá con la identidad técnica habilitada por Superadministración. No necesitás invitación.':'Si todavía no tenés cuenta, pedí al director de tu escuela una invitación nueva. Al abrir su enlace personal vas a crear la contraseña y entrar directamente, sin otro correo de verificación.');
     }
     return;
    }
