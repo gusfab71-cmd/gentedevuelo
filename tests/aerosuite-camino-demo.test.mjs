@@ -7,7 +7,7 @@ const demo = fs.readFileSync(new URL('demo-autorizacion.html',root),'utf8');
 const superadmin = fs.readFileSync(new URL('superadministrador.html',root),'utf8');
 
 assert.match(superadmin,/id="adminContent" hidden/,'El contenido administrativo se oculta hasta verificar el rol');
-assert.match(superadmin,/href="demo-autorizacion\.html"/,'Superadministrador debe enlazar la simulación');
+assert.doesNotMatch(superadmin,/href="demo-autorizacion\.html"/,'No se muestra el recorrido demo en el panel real');
 assert.match(demo,/id="demo" class="layout" hidden/,'La demo debe comenzar oculta');
 assert.match(demo,/from\('aerosuite_superadmins'\)\.select\('user_id'\)/,'Verificar el rol específico de AeroSuite');
 assert.match(demo,/permission\.data\.user_id!==user\.id/,'Comparar rol con la identidad autenticada');
