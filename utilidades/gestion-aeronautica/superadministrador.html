@@ -240,7 +240,7 @@ function paintRegistrations(){
 async function removeRegistration(r,button){
  const unlink=r.kind==='integrante';
  const verb=unlink?'desvincular el acceso':'cancelar la invitación';
- const message='¿Querés '+verb+' de '+r.email+' como '+(personRole[r.role]||r.role)+' en «'+r.institution_name+'»? La cuenta personal y sus accesos a otras instituciones se conservan.';
+ const message='¿Querés '+verb+' de '+r.email+' como '+(personRole[r.role]||r.role)+' en «'+r.institution_name+'»? Si es una cuenta técnica exclusiva de una institución de prueba, también se reiniciará su identidad de acceso. Las cuentas comunitarias y los accesos compartidos se conservan.';
  if(!window.confirm(message))return;
  button.disabled=true;registrationFeedback.textContent='Actualizando registro…';
  try{
