@@ -261,7 +261,7 @@
     dmInboxBusy=true;
     try{
       if(!dmDirectory.length){
-        const users=await db.from('profiles').select('id,username').eq('onboarding_completed',true).order('username');
+        const users=await db.from('profiles').select('id,username').eq('gdv_community_member',true).eq('onboarding_completed',true).order('username');
         if(users.error)throw users.error;
         dmDirectory=users.data||[];
       }
