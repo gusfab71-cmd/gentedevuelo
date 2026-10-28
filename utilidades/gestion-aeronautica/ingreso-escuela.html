@@ -151,7 +151,7 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
  const oneTimeType=oneTimeHash.get('type');
  const schoolId=query.get('institucion');
  const selectedRole=query.get('rol')||'';
- const roles={administrador:'administrador',instructor:'instructor',alumno:'alumno'};
+ const roles={administrador:'administrador',secretaria:'secretaria',instructor:'instructor',alumno:'alumno'};
  if(!schoolId||!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(schoolId)){
   setStatus('Este enlace no identifica una institución válida. Pedí una nueva invitación a AeroSuite.');return;
  }
@@ -167,7 +167,7 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
  const portalUrl='portal-escuela.html?institucion='+encodeURIComponent(schoolId)
   +(selectedRole?'&rol='+encodeURIComponent(selectedRole):'');
  const validPassword=value=>value.length===9&&/[A-Z]/.test(value)&&/[a-z]/.test(value)&&/[0-9]/.test(value)&&/[^A-Za-z0-9]/.test(value);
- const humanRole=selectedRole==='administrador'?'administrador':selectedRole==='instructor'?'instructor':selectedRole==='alumno'?'alumno':'integrante';
+ const humanRole=selectedRole==='administrador'?'administrador':selectedRole==='secretaria'?'secretaría':selectedRole==='instructor'?'instructor':selectedRole==='alumno'?'alumno':'integrante';
  byId('inviteTitle').textContent='Invitación para crear cuenta como '+humanRole;
  byId('roleHeading').textContent='AeroSuite · acceso de '+humanRole;
  byId('openPortalButton').href=portalUrl;
