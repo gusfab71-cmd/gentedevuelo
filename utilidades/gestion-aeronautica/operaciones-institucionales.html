@@ -62,6 +62,7 @@ th{padding:10px 4px;color:#b7d6e7;font-weight:800}td{vertical-align:middle;text-
    <div class="row"><label>Semana del <input type="date" id="weekDate"></label><button id="updateWeek" type="button">Ver semana</button></div>
    <div id="adminBooking" class="notice" hidden>Para solicitar un turno en nombre de un alumno, seleccioná su nombre antes de tocar una casilla libre.
     <label style="margin-top:9px">Alumno <select id="bookingStudent"><option value="">Elegí un alumno</option></select></label>
+    <div class="formgrid" style="margin-top:12px"><label>Instructor para confirmar el turno<select id="bookingInstructor"><option value="">Elegí un instructor habilitado</option></select></label><label>Matrícula (opcional)<input id="bookingAircraft" maxlength="60" placeholder="Ej.: LV-ABC"></label></div>
    </div>
    <div class="table-scroll"><table aria-label="Turnos de la semana"><thead id="weekHead"></thead><tbody id="weekBody"></tbody></table></div>
    <p class="hint">Horarios de referencia de Buenos Aires (ART). Verde: libre · Amarillo: pendiente · Azul: confirmada · Gris: ocupada · Propias: resaltadas. Los turnos ocupados de otros alumnos no muestran información privada al alumno.</p>
@@ -106,7 +107,7 @@ th{padding:10px 4px;color:#b7d6e7;font-weight:800}td{vertical-align:middle;text-
     <button class="primary" type="submit">Registrar movimiento</button>
    </form>
    <h3>Packs de alumnos</h3><div class="list" id="packsList"></div>
-   <div id="moneyArea"><h3>Movimientos de caja y contaduría</h3><div class="cards" id="moneySummary"></div><div class="list" id="moneyList"></div></div>
+   <div id="moneyArea"><h3>Movimientos de caja y contaduría</h3><p class="hint">Resumen orientativo de los últimos 150 movimientos, separados por moneda. No sustituye la contabilidad fiscal.</p><div class="cards" id="moneySummary"></div><div class="list" id="moneyList"></div></div>
   </section>
   <section class="panel tab-panel" id="recursos">
    <span class="eyebrow">Siguiente integración</span><h2>Academia Aeronáutica y recursos</h2>
@@ -152,7 +153,7 @@ th{padding:10px 4px;color:#b7d6e7;font-weight:800}td{vertical-align:middle;text-
   if(manager){
    const r=await db.rpc("aerosuite_director_people",{p_institution_id:inst});
    if(!r.error)people=(r.data||[]).filter(x=>x.kind==="integrante");
-   for(const [id,kind] of [["bookingStudent","alumno"],["financeStudent","alumno"]]){
+   for(const [id,kind] of [["bookingStudent","alumno"],["financeStudent","alumno"],["bookingInstructor","instructor"]]){
     const s=$(id);people.filter(x=>x.role===kind).forEach(x=>s.add(new Option(x.email,x.person_id)));
    }
   }
@@ -235,11 +236,9 @@ th{padding:10px 4px;color:#b7d6e7;font-weight:800}td{vertical-align:middle;text-
      btn("Confirmar turno",async()=>{
       let instructorId=null,aircraft="";
       if(manager){
-       const eligible=people.filter(x=>x.role==="instructor");
-       if(!eligible.length){stat.textContent="Primero invitá a un instructor desde el portal.";return;}
-       instructorId=prompt("Pegá el identificador del instructor habilitado:\n"+eligible.map(x=>x.email+" : "+x.person_id).join("\n"),eligible[0].person_id);
-       if(!instructorId)return;
-       aircraft=prompt("Matrícula de la aeronave (podés dejarla pendiente):","")||"";
+       instructorId=$("bookingInstructor").value;
+       if(!instructorId){stat.textContent="Seleccioná un instructor habilitado antes de confirmar.";return;}
+       aircraft=$("bookingAircraft").value.trim();
       }
       if(!confirm("¿Confirmar este turno"+(role==="instructor"?" a tu cargo":"")+"?"))return;
       await takeAction("confirm",b,{p_instructor_id:instructorId,p_aircraft:aircraft});
@@ -336,7 +335,7 @@ th{padding:10px 4px;color:#b7d6e7;font-weight:800}td{vertical-align:middle;text-
    }
    const sum=$("moneySummary");sum.replaceChildren();
    for(const [currency,amount] of Object.entries(totals)){
-    const box=document.createElement("div");box.className="card";box.innerHTML='<strong>Saldo neto registrado en '+esc(currency)+'</strong><h3>'+Number(amount).toLocaleString("es-AR",{minimumFractionDigits:2})+'</h3>';sum.append(box);
+    const box=document.createElement("div");box.className="card";box.innerHTML='<strong>Saldo neto de movimientos recientes en '+esc(currency)+'</strong><h3>'+Number(amount).toLocaleString("es-AR",{minimumFractionDigits:2})+'</h3>';sum.append(box);
    }
   }
   $("financeForm").addEventListener("submit",async e=>{
