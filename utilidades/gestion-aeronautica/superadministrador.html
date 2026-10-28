@@ -113,7 +113,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
 </div>
 <section class="panel" aria-labelledby="registrationsTitle" id="registros-aerosuite">
  <h2 id="registrationsTitle">Registros de AeroSuite</h2>
- <p class="muted">Control central de directores, instructores y alumnos por institución. La invitación aparece al generarse; la creación de la cuenta, verificación del correo y habilitación se actualizan desde Supabase. Una cuenta existente puede recibir una invitación sin volver a registrarse.</p>
+ <p class="muted">Control central de directores, Secretarías, instructores y alumnos por institución. La invitación aparece al generarse; la creación de la cuenta, verificación del correo y habilitación se actualizan desde Supabase. Una cuenta existente puede recibir una invitación sin volver a registrarse.</p>
  <div class="registration-metrics" aria-label="Estado de registros">
   <div><strong id="allRegistrationCount">0</strong><span>Registros e invitaciones</span></div>
   <div><strong id="accountRegistrationCount">0</strong><span>Con cuenta verificada</span></div>
@@ -123,7 +123,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
  <div class="registration-filters">
   <label>Buscar correo o institución <input id="registrationSearch" type="search" placeholder="Buscar registro" autocomplete="off"></label>
   <label>Institución <select id="registrationInstitution"><option value="">Todas</option></select></label>
-  <label>Rol <select id="registrationRole"><option value="">Todos los roles</option><option value="administrador">Director</option><option value="instructor">Instructor</option><option value="alumno">Alumno</option><option value="operaciones">Operaciones</option><option value="tesoreria">Tesorería</option></select></label>
+  <label>Rol <select id="registrationRole"><option value="">Todos los roles</option><option value="administrador">Director</option><option value="secretaria">Secretaría</option><option value="instructor">Instructor</option><option value="alumno">Alumno</option><option value="operaciones">Operaciones</option><option value="tesoreria">Tesorería</option></select></label>
   <label>Estado <select id="registrationStatus"><option value="">Todos los estados</option><option value="habilitada">Habilitados</option><option value="cuenta_verificada">Cuenta verificada</option><option value="cuenta_creada">Cuenta creada</option><option value="invitacion_enviada">Correo enviado</option><option value="invitacion_creada">Invitación preparada</option><option value="vencida">Vencidas</option><option value="revocada">Revocadas</option><option value="desvinculada">Desvinculadas</option></select></label>
  </div>
  <div class="actions registration-actions"><button id="refreshRegistrations" type="button">Actualizar registros</button></div>
@@ -143,7 +143,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
 <div class="notice" id="initialTrialNotice">Al registrar la institución, se habilita automáticamente una <strong>prueba gratuita de 30 días</strong>. Luego podrás enviar la invitación al director desde su tarjeta.</div>
 <label id="statusEditLabel" hidden>Estado de licencia <select name="status" id="statusField"><option value="trial">Prueba gratuita (30 días)</option><option value="active">Licencia activa</option><option value="suspended">Suspendida</option><option value="expired">Vencida</option></select></label>
 <label id="licenseEndLabel" hidden>Vencimiento de la licencia * <input name="license_ends_date" id="licenseEnd" type="date"></label>
-<label class="test-option" style="display:flex;align-items:flex-start;gap:10px"><input type="checkbox" id="institutionTest" name="is_test"><span><strong>Institución de prueba (reinicio automático)</strong><span class="muted" style="display:block;margin-top:4px">Al eliminar esta institución o desvincular un instructor/alumno, se borrarán también sus cuentas técnicas de prueba de Auth, solo si no tienen membresía en Gente de Vuelo ni datos o accesos compartidos. Las cuentas existentes o protegidas se conservan.</span></span></label>
+<label class="test-option" style="display:flex;align-items:flex-start;gap:10px"><input type="checkbox" id="institutionTest" name="is_test"><span><strong>Institución de prueba (reinicio automático)</strong><span class="muted" style="display:block;margin-top:4px">Al eliminar esta institución o desvincular una Secretaría, instructor o alumno, se borrarán también sus cuentas técnicas de prueba de Auth, solo si no tienen membresía en Gente de Vuelo ni datos o accesos compartidos. Las cuentas existentes o protegidas se conservan.</span></span></label>
 <label>Observaciones internas <textarea name="notes" maxlength="3000"></textarea></label>
 <p class="muted">La prueba comienza al registrar la institución. Al vencer los 30 días, siguen 15 días de cortesía y luego solo consulta. Sin contratación expresa no se cobra nada ni se pierden datos.</p>
 <div class="actions"><button class="primary" id="saveButton" type="submit">Registrar institución</button><button type="button" id="cancelEdit" hidden>Cancelar edición</button></div>
@@ -198,7 +198,7 @@ const registrationState={
   invitacion_enviada:'Invitación enviada',invitacion_creada:'Invitación preparada',
   vencida:'Invitación vencida',revocada:'Invitación cancelada',desvinculada:'Acceso desvinculado'
 };
-const personRole={administrador:'Director',instructor:'Instructor',alumno:'Alumno',operaciones:'Operaciones',tesoreria:'Tesorería'};
+const personRole={administrador:'Director',secretaria:'Secretaría',instructor:'Instructor',alumno:'Alumno',operaciones:'Operaciones',tesoreria:'Tesorería'};
 const registrationSearch=byId('registrationSearch'),registrationInstitution=byId('registrationInstitution');
 const registrationRole=byId('registrationRole'),registrationStatus=byId('registrationStatus');
 const registrationFeedback=byId('registrationFeedback'),registrationList=byId('registrationList');
