@@ -89,7 +89,8 @@ assert.match(school,/p_person_id:person\.person_id,p_kind:person\.kind/,'Las baj
 assert.match(school,/person\.kind==='integrante'\?'Desvincular':'Cancelar invitación'/,'El director puede cancelar invitaciones y desvincular cuentas');
 assert.match(school,/if\(school\.can_write\)/,'Modo consulta no admite bajas');
 assert.match(school,/window\.confirm\(msg\)/,'Una confirmación para dar de baja');
-assert.match(school,/Su cuenta personal no se elimina/i,'Dar de baja conserva la identidad global');
+assert.match(school,/cuenta técnica exclusiva de prueba/i,'Baja de una cuenta de pruebas reinicia su identidad únicamente si es exclusiva');
+assert.match(school,/data.removed_test_account/,'El director recibe el resultado del reinicio seguro');
 assert.match(school,/institution_id===queryId/,'Consulta coincidencia institución');
 assert.match(school,/if\(isDirector&&school\.can_write\)/,'Solo el director con derecho a operar puede invitar');
 assert.match(school,/storageKey:'aerosuite-institucional-v2-auth'/,'El portal comparte únicamente la sesión institucional');
@@ -124,7 +125,11 @@ assert.match(superadmin,/registrationStatus/,'Filtrar registros por estado');
 assert.match(admission,/aerosuite_record_my_registration/,'Las altas verificadas se registran cuando el usuario ingresa a AeroSuite');
 assert.doesNotMatch(superadmin,/Gestionar cuentas|Probar el camino de una nueva escuela|href="demo-autorizacion\.html"/,'No hay acciones redundantes ni enlaces demo');
 assert.match(superadmin,/personRole=\{/,'Los registros distinguen director, instructor y alumno');
-assert.match(superadmin,/La cuenta personal y sus accesos a otras instituciones se conservan/,'Desvincular no borra usuarios globales');
+assert.match(superadmin,/Las cuentas comunitarias y los accesos compartidos se conservan/,'El reinicio de pruebas protege cuentas compartidas y comunitarias');
+assert.match(superadmin,/id="institutionTest"/,'El modo pruebas se habilita expresamente por institución');
+assert.match(superadmin,/is_test:raw.get\('is_test'\)==='on'/,'La modalidad de prueba se guarda en Supabase');
+assert.match(superadmin,/data.removed_test_account/,'El panel distingue cuentas purgadas de protegidas');
+assert.match(superadmin,/data.removed_test_accounts/,'Se notifica el número de identidades purgadas al borrar una escuela');
 
 
 assert.match(superadmin,/15\*86400000/,'Cálculo de 15 días de cortesía para el listado');
