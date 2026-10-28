@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="es"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>AeroSuite · Control de portales por rol</title>
+<style>
+:root{font-family:Inter,system-ui,Arial,sans-serif;color:#eef7fb;background:#101d2b;color-scheme:dark}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;min-height:100vh;background:linear-gradient(145deg,#102032,#1a3245)}
+a{color:#badff8}a:focus-visible,button:focus-visible,select:focus-visible{outline:3px solid #ebce9b;outline-offset:3px}
+header{background:#162e40;border-bottom:1px solid #53748b;padding:17px max(18px,calc((100vw - 1250px)/2));display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+.brand{font-size:22px;text-decoration:none;font-weight:850;color:#f4f7fc}
+.brand span{color:#efc986}.brand small{display:block;font-size:10px;letter-spacing:.15em;color:#b5ccd9}
+nav{display:flex;flex-wrap:wrap;gap:15px;font-size:13px}
+main{max-width:1250px;margin:auto;padding:30px 18px 72px}
+h1{font-size:clamp(25px,4vw,38px);margin:7px 0 6px}
+h2{font-size:20px;margin:3px 0 13px}h3{font-size:15px;margin:3px 0 9px}
+p{line-height:1.55;color:#c5d8e4}
+.eyebrow{font-size:11px;font-weight:800;letter-spacing:.15em;color:#efc986;text-transform:uppercase}
+.panel{background:#1b3447;border:1px solid #597b90;border-radius:14px;padding:18px;margin:17px 0}
+.notice{background:#293f50;border-left:4px solid #e5bf83;padding:12px 14px;border-radius:7px;font-size:13px;line-height:1.55}
+.status{background:#1a3e49;border:1px solid #638f95;border-radius:11px;padding:12px 14px;font-size:13px;margin:14px 0}
+.controls{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+.controls label{flex:1;min-width:210px;font-size:12px;display:grid;gap:7px}
+select{font:inherit;background:#112838;color:#f3f8fd;border:1px solid #769aaf;border-radius:9px;padding:11px;width:100%;font-size:14px}
+button{font:inherit;font-size:13px;cursor:pointer;border-radius:9px;border:1px solid #6f9cb4;padding:11px 14px;color:#f3f8fd;background:#28516a}
+button:disabled{opacity:.58;cursor:not-allowed}
+button:hover:not(:disabled){background:#346b87}
+button.selected{background:#ebca91;color:#172a3b;border-color:#ebca91;font-weight:800}
+.role-tabs,.module-tabs{display:flex;gap:9px;flex-wrap:wrap;margin:13px 0}
+.role-tabs button{flex:1;min-width:145px}
+.preview{background:#122637;border:1px solid #64849b;border-radius:16px;padding:20px;margin:12px 0}
+.preview-top{display:flex;justify-content:space-between;gap:14px;align-items:start;flex-wrap:wrap}
+.preview-name{font-size:25px;font-weight:850;line-height:1.2}
+.preview-badge{font-size:11px;color:#f6d9a3;background:#3c3935;border:1px solid #b09360;border-radius:20px;padding:6px 10px}
+.preview-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(205px,1fr));gap:11px;margin:17px 0 10px}
+.preview-tile{text-align:left;min-height:145px;border:1px solid #547c95;background:#1e3c53;border-radius:13px;padding:16px;display:flex;flex-direction:column;align-items:flex-start;gap:9px}
+.preview-tile strong{font-size:15px}.preview-tile span{font-size:12px;color:#c8dce7;line-height:1.45}.preview-tile small{font-size:11px;color:#f0d0a0}
+.preview-tile:hover{border-color:#e7c38b;background:#28526d}
+.preview-tile.integration{border-style:dashed}
+.preview-details{background:#182f40;border:1px solid #50748e;border-radius:13px;padding:17px}
+.metric-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px;margin:13px 0}
+.metric{padding:13px;border:1px solid #507a91;background:#142b3b;border-radius:10px}
+.metric strong{font-size:23px;display:block;color:#ecd19f}
+.metric span{color:#c3d5e0;font-size:11px}
+.checks{display:grid;gap:9px;margin:13px 0}
+.check{padding:10px 13px;background:#152f41;border:1px solid #4d748d;border-radius:9px;font-size:13px}
+.check b{color:#ecc88f}.check small{display:block;color:#a9c5d6;margin-top:4px}
+.table-scroll{overflow-x:auto;border-radius:10px;border:1px solid #476d85;margin-top:15px}
+table{width:100%;min-width:780px;border-collapse:collapse;font-size:11px;table-layout:fixed}
+th,td{padding:7px 3px;text-align:center;border:1px solid #33526a}
+th{background:#1b425b;color:#e8d5b0}
+td:first-child{color:#bcd6e6;font-weight:700}
+.slot{padding:7px 2px;border-radius:5px;background:#185549;color:#e8f8ef;display:block}
+.slot.past{background:#273b49;color:#9caebc}
+.slot.pending{background:#66532d;color:#fff0c2}
+.slot.confirmed{background:#285575;color:#d6f3ff}
+.slot.today{outline:1px solid #eac78f}
+.readonly-text{font-size:12px;color:#b5cbd8}
+.warning{color:#f0d39c}
+.success{color:#afe3c8}
+@media(max-width:560px){main{padding:18px 12px 50px}.panel,.preview{padding:13px}.role-tabs button{min-width:100px}.preview-name{font-size:20px}}
+</style>
+<script src="../../assets/supabase-2.117.2.min.js"></script>
+<script src="../../assets/community-config.js"></script>
+<script src="../../assets/auth-guard.js?v=20261013registro2"></script>
+</head><body>
+<header>
+<a class="brand" href="superadministrador.html">Aero<span>Suite</span><small>CONTROL DE PORTALES · SUPERADMINISTRACIÓN</small></a>
+<nav><a href="superadministrador.html">Volver a Superadministración</a><a href="../../index.html">Gente de Vuelo</a></nav>
+</header>
+<main>
+<span class="eyebrow">Control interno · Sin suplantación de usuarios</span>
+<h1>Revisión de portales por rol</h1>
+<p>Compará qué módulos presenta el portal de cada rol y consultá el estado de sus datos operativos. No se abrirán sesiones de Directores, Instructores ni Alumnos.</p>
+<div id="accessStatus" class="status" role="status" aria-live="polite">Verificando permisos de Superadministración…</div>
+<div id="workArea" hidden>
+<section class="panel">
+<div class="controls">
+<label>Institución a revisar<select id="institutionChoice" aria-label="Seleccionar institución"></select></label>
+<button type="button" id="refresh">Actualizar diagnóstico</button>
+</div>
+<div class="role-tabs" role="group" aria-label="Rol para revisar" id="roleTabs">
+<button type="button" data-role="administrador" class="selected">Director / Secretaría</button>
+<button type="button" data-role="instructor">Instructor</button>
+<button type="button" data-role="alumno">Alumno</button>
+</div>
+<div id="checkSummary" class="notice" role="status">Consultando institución…</div>
+</section>
+<section class="preview" aria-labelledby="previewTitle">
+<div class="preview-top">
+<div><span class="eyebrow">Vista de referencia · Solo lectura</span><h2 id="previewTitle" class="preview-name">Portal institucional</h2><p id="previewSubtitle"></p></div>
+<span class="preview-badge">No es una sesión del usuario</span>
+</div>
+<div id="moduleGrid" class="preview-grid"></div>
+<div id="moduleDetail" class="preview-details">
+<p>Seleccioná un módulo para consultar su funcionamiento previsto.</p>
+</div>
+</section>
+<section class="panel" aria-labelledby="healthTitle">
+<h2 id="healthTitle">Comprobación operativa de la institución</h2>
+<p class="readonly-text" id="checkedAt"></p>
+<div id="healthMetrics" class="metric-grid"></div>
+<div id="healthChecks" class="checks"></div>
+<p class="readonly-text">Los contadores proceden de Supabase y muestran registros reales, sin datos personales. Una consulta correcta no sustituye una prueba de inicio de sesión, creación de reservas, confirmación o cobro.</p>
+</section>
+</div>
+</main>
+<script>
+'use strict';
+(async()=>{
+const $=id=>document.getElementById(id);
+const status=$('accessStatus'),roles={administrador:'Director / Secretaría',instructor:'Instructor',alumno:'Alumno'};
+const kindLabels={escuela:'Escuela de vuelo',aerodromo:'Aeródromo',aeroclub:'Aeroclub'};
+const humanDate=stamp=>new Date(stamp).toLocaleString('es-AR',{timeZone:'America/Argentina/Buenos_Aires',dateStyle:'short',timeStyle:'short'});
+const numeric=value=>Number(value||0);
+let db,institutions=[],selectedInstitution=null,selectedRole='administrador',health=null,portalDoc=null,selectedModule='turnera',weekOffset=0,loadSequence=0;
+const node=(tag,txt,className)=>{
+ const el=document.createElement(tag);if(txt!==undefined&&txt!==null)el.textContent=String(txt);
+ if(className)el.className=className;return el;
+};
+const put=(box,children)=>{box.replaceChildren(...children);};
+function tileFor(role){
+ if(!portalDoc)return [];
+ return Array.from(portalDoc.querySelectorAll('[data-visible-role]')).filter(el=>el.dataset.visibleRole.split(/\s+/).includes(role)).map(el=>({
+  title:el.querySelector('h3')?.textContent?.trim()||'Módulo',
+  description:el.querySelector('p')?.textContent?.trim()||'',
+  status:el.querySelector('.pill')?.textContent?.trim()||'Sin estado',
+  module:el.dataset.module|| (el.getAttribute('href')==='#directorPeoplePanel'?'personas':el.querySelector('h3')?.textContent?.includes('Academia')||el.querySelector('h3')?.textContent?.includes('Recursos')?'recursos':'otro')
+ }));
+}
+function makeMetric(title,value){const box=node('div',null,'metric');box.append(node('strong',value),node('span',title));return box;}
+function notice(summary,detail){
+ const item=node('div',null,'check');item.append(node('b',summary),node('small',detail));return item;
+}
+function showHealth(){
+ if(!health)return;
+ $('checkedAt').textContent='Última consulta: '+humanDate(health.checked_at)+' · '+health.institution_name;
+ const fields=[
+  ['Directores',health.directors],['Secretarías',health.secretaries],
+  ['Instructores',health.instructors],['Alumnos',health.students],
+  ['Turnos pendientes',health.bookings_pending],['Turnos confirmados',health.bookings_confirmed],
+  ['Turnos realizados',health.bookings_completed],['Próximos 7 días',health.bookings_upcoming],
+  ['Informes pendientes',health.reports_submitted],['Informes validados',health.reports_approved],
+  ['Aeronaves disponibles',health.aircraft_available],['Packs registrados',health.packs_total]
+ ];
+ put($('healthMetrics'),fields.map(x=>makeMetric(x[0],x[1])));
+ const checks=[
+  notice('Consulta a Supabase: correcta','El servidor respondió al diagnóstico de '+health.institution_name+'.'),
+  notice(numeric(health.directors)>0?'Dirección: registrada':'Dirección: sin usuarios','Directores vinculados: '+numeric(health.directors)+'.'),
+  notice(numeric(health.instructors)>0?'Instructores: registrados':'Instructores: sin usuarios','Instructores vinculados: '+numeric(health.instructors)+'.'),
+  notice(numeric(health.students)>0?'Alumnos: registrados':'Alumnos: sin usuarios','Alumnos vinculados: '+numeric(health.students)+'.'),
+  notice('Licencia: '+String(health.access_mode||'sin dato'),'Si la institución está en consulta, las operaciones de escritura no deben estar disponibles.'),
+  notice('Prueba transaccional: no ejecutada','Este visor solo lee datos; comprobá el circuito con una cuenta de prueba de cada rol.')
+ ];
+ put($('healthChecks'),checks);
+}
+function startOfWeekART(offset){
+ const ymd=new Date(Date.now()-3*3600000).toISOString().slice(0,10);
+ const base=new Date(ymd+'T12:00:00Z');
+ const day=(base.getUTCDay()+6)%7;
+ return new Date(base.getTime()+(offset*7-day)*86400000);
+}
+function makeTurnera(){
+ const area=node('div');
+ const nav=node('div',null,'controls');
+ const title=node('p','Turnera de 90 minutos · Horarios de Argentina · Vista sin acciones','readonly-text');
+ const prev=node('button','Esta semana'),next=node('button','Semana siguiente');
+ prev.type='button';next.type='button';
+ prev.onclick=()=>{weekOffset=0;showModule('turnera');};
+ next.onclick=()=>{weekOffset=Math.min(12,weekOffset+1);showModule('turnera');};
+ nav.append(prev,next);area.append(title,nav);
+ const week=startOfWeekART(weekOffset),dates=Array.from({length:7},(_,i)=>new Date(week.getTime()+i*86400000));
+ const scroll=node('div',null,'table-scroll'),table=node('table'),thead=node('thead'),head=node('tr');
+ head.append(node('th','Horario'));
+ for(let i=0;i<7;i++){head.append(node('th',['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'][i]+' '+dates[i].toISOString().slice(8,10)+'/'+dates[i].toISOString().slice(5,7)));}
+ thead.append(head);table.append(thead);
+ const body=node('tbody');
+ const times=['08:00','09:30','11:00','12:30','14:00','15:30','17:00','18:30'];
+ const occupied=Array.isArray(health?.upcoming_slots)?health.upcoming_slots:[];
+ for(const time of times){
+  const row=node('tr');row.append(node('td',time));
+  for(const date of dates){
+   const day=date.toISOString().slice(0,10),instant=new Date(day+'T'+time+':00-03:00').getTime();
+   const booking=occupied.find(b=>new Date(b.starts_at).getTime()===instant);
+   const past=instant<=Date.now();
+   const state=booking?.status==='pending'?'Pendiente':booking?.status==='confirmed'?'Confirmado':past?'Pasado':'Libre';
+   const cls=booking?.status==='pending'?'pending':booking?.status==='confirmed'?'confirmed':past?'past':'';
+   const cell=node('td'),tag=node('span',state,'slot '+cls);cell.append(tag);row.append(cell);
+  }
+  body.append(row);
+ }
+ table.append(body);scroll.append(table);area.append(scroll);
+ area.append(node('p','La grilla utiliza las reservas futuras devueltas por Supabase. Los espacios libres son ilustrativos: no se comprueba disponibilidad de instructores ni condiciones del alumno.','readonly-text'));
+ return area;
+}
+function showModule(module){
+ selectedModule=module;
+ const area=$('moduleDetail');area.replaceChildren();
+ if(!health){area.append(node('p','Cargando datos operativos…'));return;}
+ const labels={turnera:'Turnera semanal',informes:'Informes de instrucción',finanzas:'Contaduría y packs',flota:'Flota de aeronaves',personas:'Personal institucional',recursos:'Academia Aeronáutica',otro:'Módulo'};
+ area.append(node('h3',labels[module]||module));
+ if(module==='turnera'){
+  const text=selectedRole==='alumno'?'El alumno puede solicitar un turno futuro; la institución debe confirmarlo.':selectedRole==='instructor'?'El instructor ve solicitudes y puede confirmar turnos pendientes según sus permisos.':'Dirección/Secretaría puede revisar solicitudes, asignar instructor y gestionar cancelaciones.';
+  area.append(node('p',text),makeTurnera());
+ }else if(module==='informes'){
+  area.append(node('p',selectedRole==='alumno'?'Se muestran únicamente las devoluciones aprobadas del alumno.':selectedRole==='instructor'?'El instructor presenta el informe de vuelos asignados, que luego revisa Administración.':'Dirección/Secretaría valida o devuelve informes y registra horas del vuelo.'));
+  put(node('div'),[]);
+  const block=node('div',null,'metric-grid');block.append(
+   makeMetric('Presentados',health.reports_submitted),
+   makeMetric('Devueltos',health.reports_returned),
+   makeMetric('Validados',health.reports_approved));
+  area.append(block);
+ }else if(module==='finanzas'){
+  area.append(node('p',selectedRole==='alumno'?'El alumno solo consulta sus packs de horas, sin ver la caja institucional.':'Dirección/Secretaría gestiona cobros, consumo de packs y movimientos de caja.'));
+  const block=node('div',null,'metric-grid');block.append(
+   makeMetric('Packs registrados',health.packs_total),
+   makeMetric('Horas disponibles, todos los packs',(numeric(health.pack_minutes_available)/60).toFixed(1)),
+   makeMetric('Movimientos de caja',selectedRole==='alumno'?'No visible':health.money_movements_total));
+  area.append(block);
+  if(selectedRole==='alumno')area.append(node('p','Los valores son agregados institucionales de diagnóstico; no representan el estado de cuenta de un alumno particular.','readonly-text'));
+ }else if(module==='flota'){
+  const block=node('div',null,'metric-grid');block.append(makeMetric('Aeronaves',health.aircraft_total),makeMetric('Disponibles',health.aircraft_available),makeMetric('Fuera de servicio',health.aircraft_out_of_service));
+  area.append(node('p',selectedRole==='instructor'?'Consulta de disponibilidad. El instructor no modifica la flota.':'Dirección/Secretaría puede administrar la disponibilidad de aeronaves.'),block);
+ }else if(module==='personas'){
+  const block=node('div',null,'metric-grid');block.append(makeMetric('Instructores',health.instructors),makeMetric('Alumnos',health.students),makeMetric('Secretaría',health.secretaries));
+  area.append(node('p','Dirección y Secretaría pueden gestionar instructores y alumnos. Solo el Director gestiona el alta/baja de Secretaría.'),block);
+ }else{
+  area.append(node('p','Este módulo todavía figura como «En integración» en el portal real. No se presenta como operativo.'),node('p','Quedará sujeto a validación institucional antes de habilitarse.','readonly-text'));
+ }
+}
+function renderRole(){
+ if(!health)return;
+ for(const button of $('roleTabs').querySelectorAll('button[data-role]')){
+  const isCurrent=button.dataset.role===selectedRole;
+  button.classList.toggle('selected',isCurrent);button.setAttribute('aria-pressed',String(isCurrent));
+ }
+ const label=roles[selectedRole];
+ $('previewTitle').textContent='Portal de '+label;
+ $('previewSubtitle').textContent=(kindLabels[health.institution_kind]||health.institution_kind)+' · '+health.institution_name+' · Vista de referencia (no suplantación)';
+ const cards=tileFor(selectedRole);
+ const grid=$('moduleGrid');grid.replaceChildren();
+ if(!cards.length){grid.append(node('p','No se pudo obtener la plantilla del portal. Comprobá la publicación del archivo.','warning'));return;}
+ for(const card of cards){
+  const b=node('button',null,'preview-tile'+(/integración/i.test(card.status)?' integration':''));
+  b.type='button';b.append(node('strong',card.title),node('span',card.description),node('small',card.status));
+  b.onclick=()=>showModule(card.module);
+  grid.append(b);
+ }
+ showModule(selectedModule&&cards.some(c=>c.module===selectedModule)?selectedModule:cards[0].module);
+}
+async function reload(){
+ const id=$('institutionChoice').value,seq=++loadSequence;
+ const entry=institutions.find(x=>x.id===id);
+ if(!entry){status.textContent='Elegí una institución registrada.';return}
+ selectedInstitution=entry;status.textContent='Leyendo diagnóstico de '+entry.name+'…';
+ $('refresh').disabled=true;
+ try{
+  const result=await db.rpc('aerosuite_superadmin_portal_health',{p_institution_id:id});
+  if(result.error)throw result.error;
+  if(seq!==loadSequence)return;
+  if(!result.data||result.data.institution_id!==id)throw Error('La respuesta no corresponde a la institución seleccionada.');
+  health=result.data;weekOffset=0;
+  $('checkSummary').textContent='Institución: '+health.institution_name+' · Estado: '+health.access_mode+' · Consulta completada '+humanDate(health.checked_at)+'. No se alteraron registros.';
+  showHealth();renderRole();
+  status.textContent='Diagnóstico obtenido. Elegí un rol y seleccioná las tarjetas para inspeccionar sus áreas.';
+ }catch(error){
+  if(seq!==loadSequence)return;
+  health=null;$('healthMetrics').replaceChildren();$('healthChecks').replaceChildren();$('moduleGrid').replaceChildren();$('moduleDetail').replaceChildren();
+  status.textContent='No se pudo obtener el diagnóstico: '+(error?.message||'Error de servidor');
+  $('checkSummary').textContent='Datos no disponibles. No se puede determinar el estado de los portales.';
+ }finally{if(seq===loadSequence)$('refresh').disabled=false;}
+}
+try{
+ await window.GDV_AUTH.ready;
+ db=window.GDV_AUTH?.client;
+ if(!db)throw Error('No fue posible iniciar la autenticación del Superadministrador.');
+ const auth=await db.auth.getUser();
+ if(auth.error||!auth.data?.user)throw Error('Necesitás una sesión de Gente de Vuelo.');
+ const superadmin=await db.from('aerosuite_superadmins').select('user_id').eq('user_id',auth.data.user.id).maybeSingle();
+ if(superadmin.error)throw superadmin.error;
+ if(!superadmin.data)throw Error('Acceso denegado: esta cuenta no es Superadministrador de AeroSuite.');
+ const list=await db.from('aerosuite_institutions').select('id,name,kind').order('name').limit(500);
+ if(list.error)throw list.error;
+ institutions=list.data||[];
+ if(!institutions.length)throw Error('No hay instituciones registradas para revisar.');
+ // Solo plantillas estáticas del mismo origen: no cookies, ni suplantación, ni datos personales.
+ try{
+  const response=await fetch('portal-escuela.html',{cache:'no-store',credentials:'omit'});
+  if(response.ok)portalDoc=new DOMParser().parseFromString(await response.text(),'text/html');
+ }catch(_){} 
+ if(!portalDoc)status.textContent='No se pudo obtener la plantilla del portal. El diagnóstico de base se consultará igualmente.';
+ const selector=$('institutionChoice');
+ for(const org of institutions){const option=node('option',org.name);option.value=org.id;selector.append(option);}
+ const idFromURL=new URLSearchParams(location.search).get('institucion');
+ if(institutions.some(x=>x.id===idFromURL))selector.value=idFromURL;
+ selector.onchange=()=>{selectedModule='turnera';void reload();};
+ $('refresh').onclick=()=>void reload();
+ for(const b of $('roleTabs').querySelectorAll('button[data-role]')){
+  b.onclick=()=>{selectedRole=b.dataset.role;selectedModule='turnera';renderRole();};
+ }
+ $('workArea').hidden=false;
+ await reload();
+}catch(error){status.textContent='No se pudo abrir Control de Portales: '+(error?.message||'Error de acceso');}
+})();
+</script>
+</body></html>
