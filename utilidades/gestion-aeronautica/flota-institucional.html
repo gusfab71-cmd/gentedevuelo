@@ -1,0 +1,71 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><title>AeroSuite · Flota institucional</title>
+<style>
+:root{font-family:Inter,system-ui,Arial,sans-serif;color:#edf7fc;background:#102130;color-scheme:dark}*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:linear-gradient(135deg,#0d1d2c,#1b3a4b);min-height:100vh}header{background:#152c41;border-bottom:1px solid #597f98;padding:18px max(18px,calc((100vw - 1120px)/2));display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.brand{font-size:22px;font-weight:850;color:#fff;text-decoration:none}.brand span{color:#eac58f}a{color:#b9dfff}
+main{max-width:1120px;margin:auto;padding:28px 18px 60px}.panel{border:1px solid #5a7b93;background:#1d3346;border-radius:14px;padding:20px;margin:20px 0}
+h1{font-size:32px;margin:8px 0}p{color:#c7d5df;line-height:1.6}h2{font-size:21px}.eyebrow{color:#eac58f;font-size:11px;letter-spacing:.16em;text-transform:uppercase;font-weight:800}
+.status{background:#29485c;border:1px solid #719bb3;padding:13px;border-radius:10px;font-size:13px}
+form{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;align-items:end}label{display:grid;gap:6px;font-size:13px}input{background:#0e2535;border:1px solid #7794a9;border-radius:9px;padding:11px;color:#fff;font:inherit;width:100%}
+button{background:#e9c993;color:#193041;border:1px solid #e9c993;border-radius:9px;padding:11px 14px;font-weight:750;cursor:pointer}button:disabled{opacity:.5}
+.list{display:grid;grid-template-columns:repeat(auto-fit,minmax(255px,1fr));gap:12px}.card{padding:17px;background:#152e42;border:1px solid #507791;border-radius:12px}.card p{font-size:13px}
+.chip{font-size:11px;border:1px solid #86a5b1;border-radius:999px;padding:5px 9px;color:#dfedf4}.chip.ok{background:#2b5144}.chip.no{background:#543b36}
+</style><script src="../../assets/supabase-2.117.2.min.js"></script><script src="../../assets/community-config.js"></script></head>
+<body><header><a class="brand" href="index.html">Aero<span>Suite</span></a><nav><a id="back" href="portal-escuela.html">Volver al portal</a></nav></header>
+<main><span class="eyebrow">Área de flota · Control institucional</span><h1>Flota y disponibilidad</h1>
+<div id="status" class="status" role="status" aria-live="polite">Verificando acceso…</div>
+<div id="area" hidden>
+<section class="panel"><h2 id="school">Mi escuela</h2>
+<p>Esta sección administra la disponibilidad para reservas. Si una aeronave necesita reparación, el Director se informa directamente por el procedimiento habitual. <strong>El estado de AeroSuite no certifica aeronavegabilidad ni sustituye registros de mantenimiento.</strong></p>
+</section>
+<section class="panel" id="createPanel" hidden><h2>Registrar aeronave</h2>
+<form id="createForm"><label>Matrícula<input name="registration" required maxlength="18" placeholder="LV-ABC"></label>
+<label>Modelo<input name="model" maxlength="100" placeholder="Cessna 152"></label>
+<label>Nota inicial<input name="remarks" maxlength="300" placeholder="Opcional"></label><button type="submit">Agregar a la flota</button></form></section>
+<section class="panel"><h2>Aeronaves de la escuela</h2><div id="list" class="list"></div><button type="button" id="reload" style="margin-top:14px">Actualizar flota</button></section>
+</div></main>
+<script>"use strict";(async()=>{
+ const $=id=>document.getElementById(id),st=$("status");
+ const db=supabase.createClient(GDV_CONFIG.url,GDV_CONFIG.key,{auth:{storageKey:"aerosuite-institucional-v2-auth",persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+ const params=new URLSearchParams(location.search),inst=params.get("institucion");let school;
+ try{
+  if(!inst)throw Error("Ingresá desde el portal de tu institución.");
+  const u=await db.auth.getUser();if(!u.data?.user||u.error)throw Error("La sesión de AeroSuite no está activa.");
+  const access=await db.rpc("aerosuite_my_institution_access_v2");if(access.error)throw access.error;
+  school=(access.data||[]).find(x=>x.institution_id===inst&&x.can_access&&["administrador","secretaria","instructor"].includes(x.my_role));
+  if(!school)throw Error("No tenés acceso a la flota de esta institución.");
+  $("school").textContent=school.institution_name;
+  $("back").href="portal-escuela.html?institucion="+encodeURIComponent(inst)+"&rol="+encodeURIComponent(school.my_role);
+  const manager=["administrador","secretaria"].includes(school.my_role);
+  $("createPanel").hidden=!manager||!school.can_write;$("area").hidden=false;
+  async function action(args){const r=await db.rpc("aerosuite_aircraft_action",{p_institution_id:inst,...args});if(r.error)throw r.error;return r.data;}
+  async function load(){
+   const r=await db.rpc("aerosuite_aircraft_list",{p_institution_id:inst});if(r.error)throw r.error;
+   const list=$("list");list.replaceChildren();
+   if(!(r.data||[]).length)list.textContent="Todavía no hay aeronaves cargadas en esta institución.";
+   for(const a of r.data||[]){
+    const box=document.createElement("div");box.className="card";
+    const title=document.createElement("h2");title.textContent=a.registration+" · "+(a.model||"Sin modelo");
+    const chip=document.createElement("span");chip.className="chip "+(a.availability==="available"?"ok":"no");chip.textContent=a.availability==="available"?"Disponible para asignaciones":"Fuera de servicio";
+    const note=document.createElement("p");note.textContent=a.remarks||"Sin observaciones administrativas.";
+    box.append(title,chip,note);
+    if(manager&&school.can_write){
+     const btn=document.createElement("button");btn.textContent=a.availability==="available"?"Marcar fuera de servicio":"Marcar disponible";
+     btn.onclick=async()=>{const status=a.availability==="available"?"out_of_service":"available";
+      if(!confirm("¿Actualizar la disponibilidad administrativa de "+a.registration+"?"))return;
+      const remarks=prompt("Observaciones (opcional):",a.remarks||"");if(remarks===null)return;
+      btn.disabled=true;try{await action({p_operation:"status",p_aircraft_id:a.id,p_availability:status,p_remarks:remarks});st.textContent="Estado actualizado y registrado en el historial de flota.";await load();}
+      catch(e){st.textContent="Error: "+(e.message||e);btn.disabled=false;}
+     };box.append(btn);
+    }list.append(box);
+   }
+   st.textContent="Flota de "+school.institution_name+" actualizada.";
+  }
+  $("createForm").onsubmit=async ev=>{ev.preventDefault();const f=ev.currentTarget,b=f.querySelector("button"),d=new FormData(f);
+   b.disabled=true;try{await action({p_operation:"create",p_registration:d.get("registration"),p_model:d.get("model"),p_remarks:d.get("remarks")});f.reset();await load();}
+   catch(e){st.textContent="No se pudo registrar: "+(e.message||e);}finally{b.disabled=false;}
+  };
+  $("reload").onclick=()=>load().catch(e=>st.textContent=e.message||String(e));await load();
+ }catch(e){st.textContent="No se pudo abrir flota: "+(e.message||e);}
+})();</script></body></html>
