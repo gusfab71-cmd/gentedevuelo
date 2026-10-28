@@ -455,6 +455,13 @@ async function reload(){
   inspect.href='superadmin-visor-roles.html?institucion='+encodeURIComponent(row.id);
   inspect.title='Revisar Dirección/Secretaría, Instructor y Alumno sin modificar sus datos';
   actions.append(inspect);
+  if(row.id==='00d3f425-7947-45f7-be8c-e83a763abc15'&&row.is_test){
+   const lab=document.createElement('a');
+   lab.className='full';lab.textContent='Centro de Testeo Permanente';
+   lab.href='centro-pruebas-operativas.html';
+   lab.title='Abrir el circuito real de pruebas con historial y diagnóstico';
+   actions.append(lab);
+  }
   if((row.status==='trial'&&Number.isFinite(Date.parse(row.trial_ends_at))&&Date.parse(row.trial_ends_at)+15*86400000>now())||
      (row.status==='active'&&Date.parse(row.license_ends_at)>now())){
     const send=document.createElement('button');
