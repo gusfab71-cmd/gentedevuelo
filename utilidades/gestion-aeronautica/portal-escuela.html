@@ -2,7 +2,7 @@
 <html lang="es"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
-<title>AeroSuite · Portal institucional de prueba</title>
+<title>AeroSuite · Portal institucional</title>
 <style>
 :root{font-family:Inter,system-ui,Arial,sans-serif;color:#eef6fb;background:#101c2a;color-scheme:dark}
 *{box-sizing:border-box}[hidden]{display:none!important}body{margin:0;min-height:100vh;background:linear-gradient(140deg,#101e2c,#142c3f)}
@@ -21,7 +21,7 @@ p{color:#c2d3dd;line-height:1.6}
 .metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
 .tile{background:#1c394d;border:1px solid #537993;padding:21px;border-radius:13px;min-height:150px}
 .tile h3{font-size:15px;margin:0 0 10px}.tile p{font-size:12px;margin:0 0 14px}
-.pill{font-size:10px;font-weight:850;color:#eecda1;border:1px solid #987b54;background:#433b31;padding:5px 9px;border-radius:999px}
+.operational-link{display:block;text-decoration:none;color:inherit}.operational-link:hover{border-color:#e7c899;background:#23475f}.pill.ready{background:#214c40;color:#bcf0cf;border-color:#69ae88}.pill{font-size:10px;font-weight:850;color:#eecda1;border:1px solid #987b54;background:#433b31;padding:5px 9px;border-radius:999px}
 .subscription-notice{border:1px solid #809bb1;background:#243f53;border-radius:12px;padding:15px 17px;margin-top:14px;font-size:13px;line-height:1.55;color:#eff7fb}
 .subscription-notice strong{display:block;font-size:14px;margin-bottom:4px}
 .subscription-notice.grace{border-color:#c6a77a;background:#483e30}
@@ -59,7 +59,7 @@ input[type=email]{width:100%;background:#122737;border:1px solid #7394aa;border-
 <main>
  <span class="label">Acceso institucional verificado</span>
  <h1>Portal de la escuela</h1>
- <p>Vista real del vínculo entre una cuenta y su institución. La autorización se consulta en Supabase y no da acceso a los módulos del prototipo general.</p>
+ <p>Tu espacio de trabajo institucional. Cada rol utiliza únicamente los módulos autorizados de su propia escuela.</p>
  <div class="status" id="message" role="status" aria-live="polite">Verificando tu cuenta y la licencia…</div>
  <div id="schoolArea" hidden>
   <section class="panel">
@@ -75,16 +75,23 @@ input[type=email]{width:100%;background:#122737;border:1px solid #7394aa;border-
    <p id="schoolAccessLine" style="font-weight:750"></p>
    <div id="subscriptionNotice" class="subscription-notice" role="status" aria-live="polite"></div>
   </section>
-  <h2>Áreas disponibles para tu rol</h2>
+
+  <h2>Áreas de trabajo de tu institución</h2>
+  <p>Las operaciones se consultan y registran con los permisos de tu propia escuela. Las áreas aún no conectadas se identifican como próximas integraciones.</p>
   <div class="metrics">
-   <section class="tile" data-visible-role="administrador"><h3>Reservas y vuelos</h3><p>Agenda institucional y actividad operativa.</p><span class="pill">Pendiente de integración segura</span></section>
-   <section class="tile" data-visible-role="administrador"><h3>Alumnos e instructores</h3><p>Usuarios y documentación exclusiva de la escuela.</p><span class="pill">Pendiente de integración segura</span></section>
-   <section class="tile" data-visible-role="administrador"><h3>Flota y mantenimiento</h3><p>Aeronaves, disponibilidad y seguimiento técnico.</p><span class="pill">Pendiente de integración segura</span></section>
-   <section class="tile" data-visible-role="administrador"><h3>Academia Aeronáutica</h3><p>Biblioteca institucional y recursos didácticos.</p><span class="pill">Pendiente de integración segura</span></section>
-   <section class="tile" data-visible-role="instructor" hidden><h3>Mi actividad de instrucción</h3><p>Seguimiento de alumnos asignados a este instructor.</p><span class="pill">Pendiente de integración segura</span></section>
-   <section class="tile" data-visible-role="instructor" hidden><h3>Recursos para instructores</h3><p>Materiales docentes autorizados por la escuela.</p><span class="pill">Pendiente de integración segura</span></section>
-   <section class="tile" data-visible-role="alumno" hidden><h3>Mi formación aeronáutica</h3><p>Acceso futuro a Academia Aeronáutica y materiales del alumno.</p><span class="pill">Pendiente de integración segura</span></section>
-   <section class="tile" data-visible-role="alumno" hidden><h3>Mis reservas</h3><p>Consulta futura de los turnos y vuelos propios.</p><span class="pill">Pendiente de integración segura</span></section>
+   <a class="tile operational-link" data-visible-role="administrador" data-module="turnera" href="#"><h3>Turnera y reservas</h3><p>Solicitudes pendientes, confirmaciones y cancelaciones.</p><span class="pill ready">Operativa</span></a>
+   <a class="tile operational-link" data-visible-role="administrador" data-module="informes" href="#"><h3>Informes de instrucción</h3><p>Revisar devoluciones, horas, combustible y aceite.</p><span class="pill ready">Operativa</span></a>
+   <a class="tile operational-link" data-visible-role="administrador" data-module="finanzas" href="#"><h3>Contaduría y packs</h3><p>Cobros, packs, egresos y caja chica.</p><span class="pill ready">Operativa</span></a>
+   <a class="tile operational-link" data-visible-role="administrador" href="#directorPeoplePanel"><h3>Alumnos e instructores</h3><p>Invitaciones, integrantes y desvinculaciones.</p><span class="pill ready">Operativa</span></a>
+   <section class="tile" data-visible-role="administrador"><h3>Flota y mantenimiento</h3><p>Aeronaves, disponibilidad y seguimiento técnico.</p><span class="pill">En preparación</span></section>
+   <section class="tile" data-visible-role="administrador"><h3>Academia Aeronáutica</h3><p>Biblioteca institucional y recursos didácticos.</p><span class="pill">En integración</span></section>
+   <a class="tile operational-link" data-visible-role="instructor" data-module="turnera" href="#" hidden><h3>Turnera de instrucción</h3><p>Consultá horarios y confirmá solicitudes que puedas atender.</p><span class="pill ready">Operativa</span></a>
+   <a class="tile operational-link" data-visible-role="instructor" data-module="informes" href="#" hidden><h3>Mis informes</h3><p>Registrá clases, horas, devoluciones, combustible y aceite.</p><span class="pill ready">Operativa</span></a>
+   <section class="tile" data-visible-role="instructor" hidden><h3>Recursos docentes</h3><p>Material autorizado de la Academia Aeronáutica.</p><span class="pill">En integración</span></section>
+   <a class="tile operational-link" data-visible-role="alumno" data-module="turnera" href="#" hidden><h3>Mi reserva y formación</h3><p>Turnera semanal y estado de mis solicitudes.</p><span class="pill ready">Operativa</span></a>
+   <a class="tile operational-link" data-visible-role="alumno" data-module="finanzas" href="#" hidden><h3>Mis packs de horas</h3><p>Horas adquiridas, usadas y disponibles.</p><span class="pill ready">Operativa</span></a>
+   <a class="tile operational-link" data-visible-role="alumno" data-module="informes" href="#" hidden><h3>Mi progreso</h3><p>Devoluciones de instrucción ya validadas.</p><span class="pill ready">Operativa</span></a>
+   <section class="tile" data-visible-role="alumno" hidden><h3>Academia Aeronáutica</h3><p>Fichas y utilidades de la institución.</p><span class="pill">En integración</span></section>
   </div>
   <section class="panel" id="directorInvitePanel" hidden>
    <span class="label">Gestión exclusiva del director</span>
@@ -112,7 +119,7 @@ input[type=email]{width:100%;background:#122737;border:1px solid #7394aa;border-
     <div id="peopleList" class="people-list"></div>
     <div class="actions" style="margin-top:15px"><button id="reloadPeople" type="button">Actualizar integrantes</button></div>
   </section>
-  <div class="status">Este es un portal de verificación de acceso. Ninguna tarjeta está habilitada para operar: todavía falta aplicar permisos institucionales específicos a cada módulo, sin compartir datos entre escuelas.</div>
+  <div class="status">Turnera, informes de instrucción y Contaduría cuentan con funciones institucionales. Flota y Academia todavía requieren integración específica.</div>
  </div>
 </main>
 <script>
@@ -148,12 +155,15 @@ try{
   return;
  }
  el('schoolArea').hidden=false;
- const roleNames={administrador:'director / administrador',instructor:'instructor',alumno:'alumno'};
+ const roleNames={administrador:'director / administrador',secretaria:'administración / secretaría',instructor:'instructor',alumno:'alumno'};
  document.querySelector('h1').textContent='Portal del '+(roleNames[school.my_role]||'integrante');
  for(const card of document.querySelectorAll('[data-visible-role]')){
   card.hidden=card.dataset.visibleRole!==school.my_role;
  }
- el('schoolName').textContent=school.institution_name;
+ for(const link of document.querySelectorAll('.operational-link[data-module]')){
+   link.href='operaciones-institucionales.html?institucion='+encodeURIComponent(school.institution_id)+'&rol='+encodeURIComponent(school.my_role)+'#'+encodeURIComponent(link.dataset.module);
+  }
+  el('schoolName').textContent=school.institution_name;
  el('actorLine').textContent='Cuenta: '+(user.email||'verificada en Supabase');
  el('schoolKind').textContent='Tipo: '+({escuela:'Escuela de vuelo',aeroclub:'Aeroclub',aerodromo:'Aeródromo'}[school.institution_kind]||school.institution_kind);
  el('schoolRole').textContent='Rol: '+school.my_role;
@@ -274,7 +284,7 @@ try{
 
  message.textContent=mode==='read_only'?
   'Acceso de consulta habilitado. Los datos permanecen conservados y las operaciones están deshabilitadas.':
-  isDirector?'Portal del director habilitado. Podés gestionar instructores y alumnos de tu escuela.':
+  isDirector?'Administración habilitada. Podés gestionar turnera, informes, alumnos y contaduría.':
   'Acceso de '+school.my_role+' verificado. Estás viendo únicamente las funciones de tu rol.';
 }catch(err){message.textContent='No se pudo verificar el permiso de la escuela: '+(err?.message||'Error de servidor');}
 el('signOutButton').addEventListener('click',async()=>{
