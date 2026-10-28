@@ -250,7 +250,9 @@ assert.match(superadmin,/Revisar portales por rol/,'El acceso al visor aparece e
 assert.match(superadmin,/superadmin-visor-roles\.html\?institucion=/,'El enlace lleva la institución concreta');
 assert.match(viewer,/Control de portales por rol/,'El visor tiene una pantalla propia');
 assert.match(viewer,/id="institutionChoice"/,'Permite seleccionar institución');
-assert.match(viewer,/data-role="administrador"/,'Muestra Dirección y Secretaría');
+assert.match(viewer,/data-role="administrador"/,'Muestra Dirección');
+assert.match(viewer,/data-role="secretaria"/,'Muestra Secretaría por separado');
+assert.match(viewer,/selectedRole==='secretaria'\?'Secretaría gestiona instructores y alumnos/,'Secretaría no administra otras Secretarías');
 assert.match(viewer,/data-role="instructor"/,'Muestra Instructor');
 assert.match(viewer,/data-role="alumno"/,'Muestra Alumno');
 assert.match(viewer,/querySelectorAll\('\[data-visible-role\]'\)/,'La vista extrae tarjetas del portal real');
