@@ -52,10 +52,10 @@ textarea{font:inherit;color:#fff;background:#102738;border:1px solid #63879b;bor
 <section class="panel"><h2 id="institutionTitle">Institución de prueba</h2>
 <p id="institutionInfo" class="muted">Se consulta la institución existente: no se crea una nueva.</p>
 <div class="grid">
-<div class="tile"><strong>Director</strong><span>Administrar turnera, asignaciones, aeronaves, informes y contaduría.</span><br><a id="director" target="_blank" rel="noopener">Abrir portal Director</a></div>
-<div class="tile"><strong>Secretaría</strong><span>Mismas funciones administrativas si existe una cuenta de Secretaría habilitada. No se usa la clave del Director.</span><br><a id="secretaria" target="_blank" rel="noopener">Abrir portal Secretaría</a></div>
-<div class="tile"><strong>Instructor</strong><span>Ver turnos asignados, confirmar solicitudes y cargar informes.</span><br><a id="instructor" target="_blank" rel="noopener">Abrir portal Instructor</a></div>
-<div class="tile"><strong>Alumno</strong><span>Solicitar turnos, revisar devoluciones y saldos de packs.</span><br><a id="alumno" target="_blank" rel="noopener">Abrir portal Alumno</a></div>
+<div class="tile"><strong>Director de AeroSuite</strong><span>Administrar turnera, asignaciones, aeronaves, informes y contaduría.</span><br><a id="director" target="_blank" rel="noopener">Abrir Director de AeroSuite</a></div>
+<div class="tile"><strong>Secretaría de AeroSuite</strong><span>Mismas funciones administrativas si existe una cuenta de Secretaría habilitada. No se usa la clave del Director.</span><br><a id="secretaria" target="_blank" rel="noopener">Abrir Secretaría de AeroSuite</a></div>
+<div class="tile"><strong>Instructor de AeroSuite</strong><span>Ver turnos asignados, confirmar solicitudes y cargar informes.</span><br><a id="instructor" target="_blank" rel="noopener">Abrir Instructor de AeroSuite</a></div>
+<div class="tile"><strong>Alumno de AeroSuite</strong><span>Solicitar turnos, revisar devoluciones y saldos de packs.</span><br><a id="alumno" target="_blank" rel="noopener">Abrir Alumno de AeroSuite</a></div>
 </div>
 <p class="muted">Cada enlace exige iniciar sesión con la identidad real de prueba correspondiente. Si tu sesión no tiene ese rol, el portal denegará acceso; no alteramos permisos ni usamos cuentas ajenas.</p>
 </section>
@@ -81,14 +81,14 @@ textarea{font:inherit;color:#fff;background:#102738;border:1px solid #63879b;bor
 (async()=>{
 const TEST_INSTITUTION='00d3f425-7947-45f7-be8c-e83a763abc15';
 const names=[
- ['director','Acceso Director','Ingresar con Director y comprobar su turnera y módulos.'],
- ['alumno','Reserva del Alumno','Solicitar un turno futuro de 90 minutos desde el portal del alumno.'],
+ ['director','Acceso Director de AeroSuite','Ingresar con Director de AeroSuite y comprobar su turnera y módulos.'],
+ ['alumno','Reserva del Alumno de AeroSuite','Solicitar un turno futuro de 90 minutos desde el portal del alumno.'],
  ['asignacion','Confirmación institucional','Director confirma el turno con instructor habilitado y aeronave disponible.'],
- ['instructor','Vista del Instructor','Instructor comprueba que el turno asignado figura correctamente.'],
+ ['instructor','Vista del Instructor de AeroSuite','Instructor comprueba que el turno asignado figura correctamente.'],
  ['informe','Informe de vuelo','Tras una reserva válida, Instructor carga el informe con horas y observaciones.'],
  ['aprobacion','Aprobación de Dirección','Director verifica, aprueba y consulta el informe.'],
  ['contaduria','Cobro o pack','Director o Secretaría registra una operación ficticia de cobro o pack y comprueba su reflejo en Contaduría.'],
- ['alumno_resultado','Resultado para Alumno','Alumno comprueba informe aprobado, historial y saldo actualizado.'],
+ ['alumno_resultado','Resultado para Alumno de AeroSuite','Alumno comprueba informe aprobado, historial y saldo actualizado.'],
  ['integridad','Diagnóstico sin anomalías','Actualizar indicadores y revisar que no haya inconsistencias.']
 ];
 const $=id=>document.getElementById(id);const status=$('status'),testId=TEST_INSTITUTION;
