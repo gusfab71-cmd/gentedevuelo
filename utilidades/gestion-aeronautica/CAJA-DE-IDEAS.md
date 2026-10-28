@@ -268,3 +268,13 @@ Este es el registro central de las decisiones, ideas y pendientes tratados para 
 - **ESTADO EL 25/10/2026:** varios cambios de código y pruebas automáticas en GitHub se completaron, pero algunos despliegues de Vercel fallaron por límite de frecuencia (build-rate-limit). No decir «ya publicado» si no se confirmó despliegue posterior.
 
 - **SEGUIMIENTO:** actualizar cada decisión comercial, función y resultado de encuesta aquí, dejando fecha, motivo, alcance, cambios sobre decisiones anteriores y estado verificable. El archivo IDEAS-seguimiento-aeronaves.md conserva detalle del modelo económico.
+
+
+## 28/10/2026 — Padrón central de registros AeroSuite
+
+- **Superadministrador:** reemplazada la gestión de cuentas dentro de cada tarjeta por una sección única **«Registros de AeroSuite»**, con búsqueda y filtros por institución, rol y estado. Incluye directores, instructores, alumnos y otros roles institucionales previstos. El lápiz de cada tarjeta sigue editando únicamente nombre, plan y licencia.
+- **Interfaz simplificada:** removidos del panel real los accesos a recorrido demo; se mantienen las acciones necesarias para enviar invitación y administrar instituciones.
+- **Flujo de registro verificable:** la invitación se registra al crearse en `aerosuite_institution_invitations`. El estado de **registro efectivo** solo se marca al iniciar sesión en el portal de AeroSuite con correo confirmado mediante `aerosuite_record_my_registration`; un usuario técnico creado por `auth.admin.generateLink(type:magiclink)` no equivale a un registro concluido.
+- **Consulta segura:** `aerosuite_superadmin_registrations()` reúne invitaciones y cuentas vinculadas y presenta fecha de invitación, fecha del ingreso efectivo, verificación, aceptación y estado. Validación de identidad en el servidor; los datos privados no son públicos.
+- **Administración no destructiva de identidades:** `aerosuite_superadmin_manage_registration` permite revocar invitaciones o desvincular accesos institucionales por rol e institución, incluido director, con registro en auditoría. Las credenciales de Auth no se eliminan y un acceso a otra institución se conserva.
+- **Verificaciones técnicas:** validación de sintaxis JavaScript, controles de acceso por rol a las RPC y estado de despliegue de Vercel. Pendiente prueba funcional completa con un usuario que efectivamente acepte una invitación en navegador; **no se fabricaron usuarios de prueba ni se alteraron los existentes**.
