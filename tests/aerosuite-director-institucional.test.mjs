@@ -81,6 +81,10 @@ assert.match(school,/el\('schoolPlan'\)\.hidden=!isManager/,'Plan visible para D
 assert.match(school,/el\('schoolExpiry'\)\.hidden=!isManager/,'Dirección y Secretaría comparten fecha de vencimiento');
 assert.match(school,/el\('schoolAccessLine'\)\.hidden=!isManager/,'Dirección y Secretaría comparten el estado comercial');
 assert.match(school,/el\('subscriptionNotice'\)\.hidden=!isManager/,'Dirección y Secretaría ven las mismas advertencias de licencia');
+assert.match(school,/id="institutionSwitcher" hidden/,'El selector de institución permanece oculto con un solo vínculo');
+assert.match(school,/accessibleInstitutions=data\.filter\(x=>x\.can_access\)/,'Solo ofrece instituciones habilitadas a la cuenta');
+assert.match(school,/accessibleInstitutions\.length>1/,'Solo muestra el selector con dos o más accesos');
+assert.match(school,/entry\.institution_id\)\+'&rol='\+encodeURIComponent\(entry\.my_role\)/,'El cambio de institución preserva el rol de ese vínculo');
 assert.match(school,/id="directorPeoplePanel" hidden/,'Panel exclusivo de integrantes');
 assert.match(school,/id="peopleList"/,'Listado de instructores y alumnos');
 assert.match(school,/\.rpc\('aerosuite_director_people'/,'El listado está validado por RPC');
