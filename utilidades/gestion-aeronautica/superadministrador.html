@@ -52,6 +52,18 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
 .institution-actions .danger{grid-column:1/-1;background:#482f37;border-color:#b77b83;color:#ffe1e4;margin:0}
 .institution-actions .danger:hover:not(:disabled){background:#653a44}
 .institution-actions button:disabled{cursor:not-allowed;opacity:.55}
+.institution-filters{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:10px;margin:14px 0 6px}
+.institution-filter-count{font-size:12px;color:#c1d6e5;margin:8px 0 12px}
+.institution-roster{background:#142d3f;border:1px solid #587d96;border-radius:11px;padding:12px 13px;min-width:0}
+.institution-roster summary{cursor:pointer;color:#f5d5a4;font-size:13px;font-weight:800;line-height:1.5}
+.institution-roster summary:focus-visible{outline:2px solid #e2c08e;outline-offset:4px}
+.institution-roster[open]{background:#102637}
+.institution-roster-group{margin-top:13px;border-top:1px solid #486b83;padding-top:10px}
+.institution-roster-group h4{margin:0 0 8px;font-size:12px;color:#f1d9b6}
+.institution-roster-person{display:grid;gap:3px;padding:9px 0;border-top:1px solid #334f62;overflow-wrap:anywhere}
+.institution-roster-person strong{font-size:12px;color:#eef8ff}
+.institution-roster-person small{font-size:12px;color:#b8cfde}
+@media(max-width:620px){.institution-filters{grid-template-columns:1fr}}
 .institution-empty{padding:23px;border:1px dashed #627d90;border-radius:12px;color:#c4d8e5;font-size:13px}
 .staff-manager{border-top:1px solid #5c8097;padding-top:14px;display:grid;gap:10px}
 .staff-manager h4{font-size:14px;margin:0;color:#f0e1c4}
@@ -111,25 +123,6 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
 <div class="metric"><strong id="instructorsTotal">—</strong><span>Instructores con acceso activo</span></div>
 <div class="metric"><strong id="studentsTotal">—</strong><span>Alumnos con acceso activo</span></div>
 </div>
-<section class="panel" aria-labelledby="registrationsTitle" id="registros-aerosuite">
- <h2 id="registrationsTitle">Registros de AeroSuite</h2>
- <p class="muted">Control central de directores, Secretarías, instructores y alumnos por institución. La invitación aparece al generarse; la creación de la cuenta, verificación del correo y habilitación se actualizan desde Supabase. Una cuenta existente puede recibir una invitación sin volver a registrarse.</p>
- <div class="registration-metrics" aria-label="Estado de registros">
-  <div><strong id="allRegistrationCount">0</strong><span>Registros e invitaciones</span></div>
-  <div><strong id="accountRegistrationCount">0</strong><span>Con cuenta verificada</span></div>
-  <div><strong id="enabledRegistrationCount">0</strong><span>Accesos habilitados</span></div>
-  <div><strong id="waitingRegistrationCount">0</strong><span>Sin habilitar</span></div>
- </div>
- <div class="registration-filters">
-  <label>Buscar correo o institución <input id="registrationSearch" type="search" placeholder="Buscar registro" autocomplete="off"></label>
-  <label>Institución <select id="registrationInstitution"><option value="">Todas</option></select></label>
-  <label>Rol <select id="registrationRole"><option value="">Todos los roles</option><option value="administrador">Director</option><option value="secretaria">Secretaría</option><option value="instructor">Instructor</option><option value="alumno">Alumno</option><option value="operaciones">Operaciones</option><option value="tesoreria">Tesorería</option></select></label>
-  <label>Estado <select id="registrationStatus"><option value="">Todos los estados</option><option value="habilitada">Habilitados</option><option value="cuenta_verificada">Cuenta verificada</option><option value="cuenta_creada">Cuenta creada</option><option value="invitacion_enviada">Correo enviado</option><option value="invitacion_creada">Invitación preparada</option><option value="vencida">Vencidas</option><option value="revocada">Revocadas</option><option value="desvinculada">Desvinculadas</option></select></label>
- </div>
- <div class="actions registration-actions"><button id="refreshRegistrations" type="button">Actualizar registros</button></div>
- <div id="registrationFeedback" class="muted" role="status" aria-live="polite"></div>
- <div id="registrationList" class="registration-list" aria-live="polite"><p class="muted">Cargando registros…</p></div>
-</section>
 <div class="layout">
 <section class="panel" aria-labelledby="formTitle">
 <h2 id="formTitle">Registrar institución</h2>
@@ -153,6 +146,12 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
 <div>
 <section class="panel">
 <h2>Instituciones registradas y cuentas habilitadas</h2>
+<p class="muted">Buscá la institución y abrí «Ver nombres y correos» para consultar Dirección, Secretaría, instructores y alumnos que pertenecen a ella.</p>
+<div class="institution-filters">
+ <label>Buscar institución <input id="institutionSearch" type="search" placeholder="Nombre o correo de contacto" autocomplete="off"></label>
+ <label>Filtrar por tipo <select id="institutionKind"><option value="">Todas</option><option value="escuela">Escuelas de vuelo</option><option value="aerodromo">Aeródromos</option><option value="aeroclub">Aeroclubes</option></select></label>
+</div>
+<div id="institutionFilterCount" class="institution-filter-count" role="status" aria-live="polite"></div>
 <div id="listFeedback" role="status" aria-live="polite"></div>
 <div class="institution-grid" id="institutionsBody" aria-live="polite"><div class="institution-empty">Cargando instituciones…</div></div>
 <p class="muted">Las cuentas de una <strong>institución de prueba</strong> se reinician al dar de baja su acceso o eliminar la institución, siempre que sean identidades técnicas exclusivas. Las cuentas de Gente de Vuelo o compartidas se conservan. El lápiz permite editar institución, plan, licencia y modo de pruebas.</p>
@@ -160,6 +159,25 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
 <section class="panel"><h2>Actividad reciente</h2><ol id="recent"><li>Sin operaciones registradas.</li></ol></section>
 </div>
 </div>
+<section class="panel" aria-labelledby="registrationsTitle" id="registros-aerosuite">
+ <h2 id="registrationsTitle">Padrón global de registros (consulta secundaria)</h2>
+ <p class="muted">Control central de directores, Secretarías, instructores y alumnos por institución. La invitación aparece al generarse; la creación de la cuenta, verificación del correo y habilitación se actualizan desde Supabase. Una cuenta existente puede recibir una invitación sin volver a registrarse.</p>
+ <div class="registration-metrics" aria-label="Estado de registros">
+  <div><strong id="allRegistrationCount">0</strong><span>Registros e invitaciones</span></div>
+  <div><strong id="accountRegistrationCount">0</strong><span>Con cuenta verificada</span></div>
+  <div><strong id="enabledRegistrationCount">0</strong><span>Accesos habilitados</span></div>
+  <div><strong id="waitingRegistrationCount">0</strong><span>Sin habilitar</span></div>
+ </div>
+ <div class="registration-filters">
+  <label>Buscar correo o institución <input id="registrationSearch" type="search" placeholder="Buscar registro" autocomplete="off"></label>
+  <label>Institución <select id="registrationInstitution"><option value="">Todas</option></select></label>
+  <label>Rol <select id="registrationRole"><option value="">Todos los roles</option><option value="administrador">Director</option><option value="secretaria">Secretaría</option><option value="instructor">Instructor</option><option value="alumno">Alumno</option><option value="operaciones">Operaciones</option><option value="tesoreria">Tesorería</option></select></label>
+  <label>Estado <select id="registrationStatus"><option value="">Todos los estados</option><option value="habilitada">Habilitados</option><option value="cuenta_verificada">Cuenta verificada</option><option value="cuenta_creada">Cuenta creada</option><option value="invitacion_enviada">Correo enviado</option><option value="invitacion_creada">Invitación preparada</option><option value="vencida">Vencidas</option><option value="revocada">Revocadas</option><option value="desvinculada">Desvinculadas</option></select></label>
+ </div>
+ <div class="actions registration-actions"><button id="refreshRegistrations" type="button">Actualizar registros</button></div>
+ <div id="registrationFeedback" class="muted" role="status" aria-live="polite"></div>
+ <div id="registrationList" class="registration-list" aria-live="polite"><p class="muted">Cargando registros…</p></div>
+</section>
 </div>
 </main>
 <script>
@@ -169,6 +187,8 @@ const message=document.getElementById('accessMessage'),content=document.getEleme
 const form=document.getElementById('institutionForm'),feedback=document.getElementById('feedback');
 const statusField=document.getElementById('statusField'),statusEditLabel=document.getElementById('statusEditLabel'),initialTrialNotice=document.getElementById('initialTrialNotice'),endLabel=document.getElementById('licenseEndLabel'),endInput=document.getElementById('licenseEnd');
 const body=document.getElementById('institutionsBody'),recent=document.getElementById('recent'),listFeedback=document.getElementById('listFeedback');
+const institutionSearch=document.getElementById('institutionSearch'),institutionKind=document.getElementById('institutionKind');
+const institutionFilterCount=document.getElementById('institutionFilterCount');
 let db,currentUser,editingId=null,records=[],registrationRows=[];
 const statusText={trial:'Prueba',active:'Activa',suspended:'Suspendida',expired:'Vencida'};
 const kindText={escuela:'Escuela',aeroclub:'Aeroclub',aerodromo:'Aeródromo'};
@@ -269,6 +289,67 @@ byId('refreshRegistrations').addEventListener('click',async()=>{
  finally{button.disabled=false}
 });
 
+
+function applyInstitutionFilters(){
+ const query=institutionSearch.value.trim().toLocaleLowerCase('es-AR');
+ const kind=institutionKind.value;
+ let visible=0;
+ for(const card of body.querySelectorAll('.institution-card')){
+  const org=records.find(x=>x.id===card.dataset.institutionId);
+  const match=Boolean(org)&&(!kind||org.kind===kind)&&(!query||(org.name+' '+org.contact_email).toLocaleLowerCase('es-AR').includes(query));
+  card.hidden=!match;
+  if(match)visible++;
+ }
+ institutionFilterCount.textContent=visible+' institución(es) de '+records.length+' registradas';
+ if(!visible&&records.length)institutionFilterCount.textContent+=' · No hay coincidencias con los filtros.';
+}
+for(const ctrl of [institutionSearch,institutionKind])ctrl.addEventListener('input',applyInstitutionFilters);
+function makeRosterEntry(parent,person){
+ const row=document.createElement('div');row.className='institution-roster-person';
+ const name=document.createElement('strong');
+ name.textContent=person.profile_name?.trim()||'Sin nombre de perfil';
+ const email=document.createElement('small');
+ email.textContent=person.email||'Sin correo registrado';
+ row.append(name,email);parent.append(row);
+}
+async function showInstitutionRoster(orgId,details,contents){
+ contents.replaceChildren();
+ const loading=document.createElement('p');loading.className='muted';loading.textContent='Cargando nombres y correos de esta institución…';
+ contents.append(loading);
+ try{
+  const {data,error}=await db.rpc('aerosuite_superadmin_institution_roster',{p_institution_id:orgId});
+  if(error)throw error;
+  if(!details.isConnected||!details.open)return;
+  if(data?.institution_id!==orgId||!Array.isArray(data.members))throw Error('El servidor no devolvió el padrón solicitado.');
+  contents.replaceChildren();
+  const groups=[['administrador','Dirección'],['secretaria','Secretaría'],['instructor','Instructores'],['alumno','Alumnos'],['operaciones','Operaciones'],['tesoreria','Tesorería']];
+  for(const [role,title] of groups){
+   const members=data.members.filter(x=>x.role===role);
+   if(!members.length)continue;
+   const group=document.createElement('section');group.className='institution-roster-group';
+   const h=document.createElement('h4');h.textContent=title+' ('+members.length+')';
+   group.append(h);
+   for(const member of members)makeRosterEntry(group,member);
+   contents.append(group);
+  }
+  if(!data.members.length){
+   const empty=document.createElement('p');empty.className='muted';empty.textContent='Todavía no hay integrantes habilitados en esta institución.';contents.append(empty);
+  }
+  const pending=registrationRows.filter(x=>x.institution_id===orgId&&x.kind==='invitacion'&&!x.accepted_at&&!x.revoked_at&&x.registration_status!=='vencida');
+  if(pending.length){
+   const group=document.createElement('section');group.className='institution-roster-group';
+   const h=document.createElement('h4');h.textContent='Invitaciones pendientes ('+pending.length+')';group.append(h);
+   for(const invite of pending)makeRosterEntry(group,{profile_name:(personRole[invite.role]||invite.role)+' · Pendiente',email:invite.email});
+   contents.append(group);
+  }
+ }catch(err){
+  if(!details.isConnected)return;
+  contents.replaceChildren();
+  const note=document.createElement('p');note.className='muted';note.textContent='No se pudo cargar el personal: '+(err?.message||'Error de servidor')+'. Cerrá y volvé a abrir para reintentar.';
+  contents.append(note);
+ }
+}
+
 async function reload(){
  const [found,history,invites,staffCounts,registrations]=await Promise.all([
  db.from('aerosuite_institutions').select('id,name,kind,cuit,contact_name,contact_email,plan,status,is_test,trial_started_at,trial_ends_at,license_started_at,license_ends_at,notes,updated_at').order('created_at',{ascending:false}).limit(500),
@@ -349,6 +430,12 @@ async function reload(){
   if(row.status==='trial'&&Number.isFinite(Date.parse(row.trial_ends_at)))
     addDetail('Fin de cortesía',dateOnly(new Date(Date.parse(row.trial_ends_at)+15*86400000).toISOString()));
   card.append(details);
+  const roster=document.createElement('details');roster.className='institution-roster';
+  const summary=document.createElement('summary');summary.textContent='Ver nombres y correos del personal';
+  const rosterContents=document.createElement('div');rosterContents.className='institution-roster-contents';
+  roster.append(summary,rosterContents);
+  roster.addEventListener('toggle',()=>{if(roster.open)showInstitutionRoster(row.id,roster,rosterContents);});
+  card.append(roster);
   if(!invites.error){
    const inv=(invites.data||[]).find(it=>it.institution_id===row.id&&it.role==='administrador');
    if(inv){
@@ -375,6 +462,7 @@ async function reload(){
   actions.append(erase);
   card.append(actions);body.append(card);
  }
+ applyInstitutionFilters();
  recent.replaceChildren();
  if(history.error){const li=document.createElement('li');li.textContent='No se pudo consultar el historial.';recent.append(li);return}
  if(!history.data?.length){const li=document.createElement('li');li.textContent='Sin operaciones registradas.';recent.append(li);return}
