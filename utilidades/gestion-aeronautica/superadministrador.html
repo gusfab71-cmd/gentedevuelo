@@ -26,6 +26,7 @@ textarea{min-height:80px;resize:vertical}
 button{font:inherit;font-size:13px;cursor:pointer;border-radius:9px;padding:11px 14px;border:1px solid #7997aa;background:#304c61;color:#f2f7fa}
 button.primary{background:#e2c08e;border-color:#e2c08e;color:#18222c;font-weight:800}
 button:disabled{opacity:.55;cursor:not-allowed}
+input[type="checkbox"]{width:auto;accent-color:#e2c08e;min-width:18px;min-height:18px}
 button.danger{background:#462a31;border-color:#c87783;color:#ffdee3;font-weight:800;margin-top:7px}
 button.danger:hover{background:#6b3540}
 #listFeedback{min-height:25px;font-size:13px;color:#f4d4ab;margin:12px 0 4px}
@@ -142,6 +143,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
 <div class="notice" id="initialTrialNotice">Al registrar la institución, se habilita automáticamente una <strong>prueba gratuita de 30 días</strong>. Luego podrás enviar la invitación al director desde su tarjeta.</div>
 <label id="statusEditLabel" hidden>Estado de licencia <select name="status" id="statusField"><option value="trial">Prueba gratuita (30 días)</option><option value="active">Licencia activa</option><option value="suspended">Suspendida</option><option value="expired">Vencida</option></select></label>
 <label id="licenseEndLabel" hidden>Vencimiento de la licencia * <input name="license_ends_date" id="licenseEnd" type="date"></label>
+<label class="test-option" style="display:flex;align-items:flex-start;gap:10px"><input type="checkbox" id="institutionTest" name="is_test"><span><strong>Institución de prueba (reinicio automático)</strong><span class="muted" style="display:block;margin-top:4px">Al eliminar esta institución o desvincular un instructor/alumno, se borrarán también sus cuentas técnicas de prueba de Auth, solo si no tienen membresía en Gente de Vuelo ni datos o accesos compartidos. Las cuentas existentes o protegidas se conservan.</span></span></label>
 <label>Observaciones internas <textarea name="notes" maxlength="3000"></textarea></label>
 <p class="muted">La prueba comienza al registrar la institución. Al vencer los 30 días, siguen 15 días de cortesía y luego solo consulta. Sin contratación expresa no se cobra nada ni se pierden datos.</p>
 <div class="actions"><button class="primary" id="saveButton" type="submit">Registrar institución</button><button type="button" id="cancelEdit" hidden>Cancelar edición</button></div>
@@ -153,7 +155,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
 <h2>Instituciones registradas y cuentas habilitadas</h2>
 <div id="listFeedback" role="status" aria-live="polite"></div>
 <div class="institution-grid" id="institutionsBody" aria-live="polite"><div class="institution-empty">Cargando instituciones…</div></div>
-<p class="muted">La gestión de directores, instructores, alumnos e invitaciones está reunida en «Registros de AeroSuite», arriba. El lápiz junto a cada institución edita exclusivamente sus datos y licencia. Las cuentas personales no se borran al desvincular un acceso. Los cobros y recordatorios automáticos aún no están conectados.</p>
+<p class="muted">Las cuentas de una <strong>institución de prueba</strong> se reinician al dar de baja su acceso o eliminar la institución, siempre que sean identidades técnicas exclusivas. Las cuentas de Gente de Vuelo o compartidas se conservan. El lápiz permite editar institución, plan, licencia y modo de pruebas.</p>
 </section>
 <section class="panel"><h2>Actividad reciente</h2><ol id="recent"><li>Sin operaciones registradas.</li></ol></section>
 </div>
@@ -248,7 +250,9 @@ async function removeRegistration(r,button){
   if(error)throw error;
   if(!data?.ok)throw Error('El servidor no confirmó la operación.');
   await reload();
-  registrationFeedback.textContent='Cambio registrado. La cuenta personal se conserva y el historial queda auditado.';
+  registrationFeedback.textContent=data.removed_test_account?
+   'Cuenta técnica de prueba eliminada de Supabase Auth. Podés volver a invitar el mismo correo desde cero.':
+   'Acceso desvinculado. La identidad en Auth se conservó porque no es una cuenta exclusiva de pruebas o tiene información protegida.';
  }catch(error){
   registrationFeedback.textContent='No se pudo modificar el registro: '+(error?.message||'Error de servicio');
   button.disabled=false;
@@ -267,7 +271,7 @@ byId('refreshRegistrations').addEventListener('click',async()=>{
 
 async function reload(){
  const [found,history,invites,staffCounts,registrations]=await Promise.all([
- db.from('aerosuite_institutions').select('id,name,kind,cuit,contact_name,contact_email,plan,status,trial_started_at,trial_ends_at,license_started_at,license_ends_at,notes,updated_at').order('created_at',{ascending:false}).limit(500),
+ db.from('aerosuite_institutions').select('id,name,kind,cuit,contact_name,contact_email,plan,status,is_test,trial_started_at,trial_ends_at,license_started_at,license_ends_at,notes,updated_at').order('created_at',{ascending:false}).limit(500),
  db.from('aerosuite_institution_audit').select('id,institution_id,operation,changed_at').order('changed_at',{ascending:false}).limit(12),
  db.from('aerosuite_institution_invitations').select('institution_id,role,accepted_at,expires_at,revoked_at,last_sent_at').order('created_at',{ascending:false}).limit(500),
  db.rpc('aerosuite_superadmin_staff_counts'),
@@ -339,6 +343,7 @@ async function reload(){
   addDetail('Alumnos activos',String(rosterTotals.students));
   addDetail('Invitaciones pendientes','Instructores: '+rosterTotals.instructor_invitations+' · Alumnos: '+rosterTotals.student_invitations);
   addDetail('Plan',planText[row.plan]||row.plan);
+  addDetail('Modalidad',row.is_test?'Pruebas · reinicio automático':'Normal · cuentas protegidas');
   const expiry=row.status==='trial'?row.trial_ends_at:row.status==='active'?row.license_ends_at:null;
   if(expiry)addDetail(row.status==='trial'?'Fin de prueba':'Vigencia hasta',dateOnly(expiry));
   if(row.status==='trial'&&Number.isFinite(Date.parse(row.trial_ends_at)))
@@ -379,7 +384,8 @@ async function reload(){
  }
 }
 async function deleteInstitution(row,button){
- const ok=window.confirm('¿Eliminar definitivamente la institución «'+row.name+'»?\n\nSe quitarán también sus invitaciones y sus membresías. Las cuentas personales permanecerán intactas. Esta acción no se puede deshacer.');
+ const detail=row.is_test?'Se eliminarán además las identidades técnicas exclusivas de prueba, con sus credenciales. Las cuentas de Gente de Vuelo y las compartidas estarán protegidas.':'Las cuentas personales de Auth permanecerán intactas.';
+ const ok=window.confirm('¿Eliminar definitivamente la institución «'+row.name+'»?\n\nSe quitarán invitaciones y vínculos. '+detail+'\n\nEsta acción no se puede deshacer.');
  if(!ok)return;
  button.disabled=true;listFeedback.textContent='Eliminando «'+row.name+'»…';
  try{
@@ -390,7 +396,7 @@ async function deleteInstitution(row,button){
   if(!data?.ok||data.deleted_id!==row.id)throw Error('Supabase no confirmó la eliminación.');
   if(editingId===row.id)resetEditor();
   await reload();
-  listFeedback.textContent='Se eliminó «'+row.name+'». Invitaciones eliminadas: '+data.removed_invitations+'. Membresías desvinculadas: '+data.removed_members+'. Las cuentas personales permanecen intactas.';
+  listFeedback.textContent='Se eliminó «'+row.name+'». Invitaciones: '+data.removed_invitations+'. Membresías: '+data.removed_members+'. Identidades técnicas eliminadas: '+(data.removed_test_accounts||0)+'. Cuentas protegidas conservadas: '+(data.protected_accounts||0)+'.';
  }catch(err){listFeedback.textContent='No se pudo eliminar: '+(err?.message||'Error de servicio')}
  finally{button.disabled=false}
 }
@@ -424,6 +430,7 @@ async function sendDirectorInvite(row,button){
 function edit(id){
  const r=records.find(item=>item.id===id);if(!r)return;
  editingId=r.id;for(const k of ['name','kind','cuit','contact_name','contact_email','plan','status','notes'])form.elements[k].value=r[k]||'';
+ form.elements['is_test'].checked=Boolean(r.is_test);
  statusEditLabel.hidden=false;initialTrialNotice.hidden=true;
  endInput.value=r.license_ends_at?new Date(r.license_ends_at).toISOString().slice(0,10):'';
  byId('formTitle').textContent='Editar institución: '+r.name;byId('saveButton').textContent='Guardar cambios';byId('cancelEdit').hidden=false;
@@ -439,6 +446,7 @@ form.addEventListener('submit',async ev=>{
  ev.preventDefault();feedback.textContent='';
  const raw=new FormData(form);
  const payload={name:String(raw.get('name')||'').trim(),kind:String(raw.get('kind')),cuit:String(raw.get('cuit')||'').trim()||null,
+ is_test:raw.get('is_test')==='on',
  contact_name:String(raw.get('contact_name')||'').trim()||null,contact_email:String(raw.get('contact_email')||'').trim().toLowerCase(),
  plan:String(raw.get('plan')),status:editingId?String(raw.get('status')):'trial',notes:String(raw.get('notes')||'').trim()};
  if(!payload.name||!payload.contact_email){feedback.textContent='Completá el nombre y el correo institucional.';return}
