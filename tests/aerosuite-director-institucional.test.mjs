@@ -186,6 +186,33 @@ assert.match(superadmin,/Sin nombre de perfil/,'No se inventan nombres faltantes
 assert.match(superadmin,/person\.email/,'Siempre se muestra correo del integrante');
 assert.match(superadmin,/x\.institution_id===orgId&&x\.kind==='invitacion'/,'Invitaciones pendientes también quedan separadas por institución');
 
+
+assert.match(admission,/const recoveryFlow=query\.get\('recuperar'\)==='1'\|\|oneTimeType==='recovery'/,
+ 'Detectar recuperación antes de interpretar eventos Auth');
+assert.match(admission,/recovering=recoveryFlow,recoveryLinkVerified=false,recoveryCompleted=false/,
+ 'Mantener bloqueo del ingreso hasta guardar la contraseña');
+assert.match(admission,/if\(processing\|\|recovering\|\|\(recoveryFlow&&!recoveryCompleted\)\)return/,
+ 'El portal no se abre desde una sesión temporal de recuperación');
+assert.match(admission,/redirectTo:recoveryUrl/,'El correo vuelve al flujo de recuperación explícito');
+assert.match(admission,/event==='PASSWORD_RECOVERY'/,'Aceptar evento verificado de recuperación');
+assert.match(admission,/data\.session\.access_token!==oneTimeHash\.get\('access_token'\)/,
+ 'Validar que la sesión procede del token incluido en el enlace');
+assert.match(admission,/db\.auth\.verifyOtp\(\{token_hash:oneTimeToken,type:'recovery'\}\)/,
+ 'Permitir enlaces de recuperación con token_hash');
+assert.match(admission,/if\(!recovering\|\|!recoveryLinkVerified\)/,
+ 'No permitir restablecer contraseña sin un enlace válido');
+assert.match(admission,/if\(!data\?\.user\)throw Error\('No se confirmó la actualización de contraseña\.'/,
+ 'La actualización debe estar confirmada antes de continuar');
+assert.match(admission,/recovering=false;recoveryCompleted=true;/,
+ 'Se habilita el portal solo después del cambio exitoso');
+assert.match(admission,/history\.replaceState\(null,'',activationUrl\)/,
+ 'Quitar el marcador de recuperación cuando termina');
+assert.match(admission,/byId\('backRecovery'\)\.hidden=true/,
+ 'No permitir saltarse el formulario desde el enlace verificado');
+assert.ok(admission.indexOf('if(recoveryFlow){')<admission.indexOf('}else if(oneTimeToken){'),
+ 'Atender recuperación antes de las invitaciones normales');
+assert.match(admission,/Guardar contraseña nueva e ingresar/,'Acción explícita y clara para recuperación');
+
 for(const [name,html] of [['ingreso-escuela.html',admission],['portal-escuela.html',school]]){
  const scripts=[...html.matchAll(/<script(?![^>]*src=)[^>]*>([\s\S]*?)<\/script>/g)];
  assert.equal(scripts.length,1,name+': un único controlador local');
