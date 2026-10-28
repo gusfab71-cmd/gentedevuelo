@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="es"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>AeroSuite · Operaciones institucionales</title>
+<style>
+:root{font-family:Inter,system-ui,Arial,sans-serif;color:#ecf5fb;background:#0f1d2b;color-scheme:dark}
+*{box-sizing:border-box}[hidden]{display:none!important}body{margin:0;background:linear-gradient(145deg,#0d1b28,#173347);min-height:100vh}
+header{background:#132a3d;border-bottom:1px solid #56738b;padding:15px max(16px,calc((100vw - 1220px)/2));display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}
+a{color:#b7ddf8}a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #f7d79b;outline-offset:2px}
+.brand{font-size:22px;font-weight:850;color:#f0f8ff;text-decoration:none}.brand span{color:#e7c18a}.brand small{display:block;letter-spacing:.17em;font-size:10px;color:#b4cedb}
+nav{display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-size:13px}
+main{max-width:1220px;margin:auto;padding:25px 16px 76px}
+h1{font-size:clamp(24px,4vw,36px);margin:6px 0}h2{font-size:21px;margin:2px 0 12px}h3{font-size:16px;margin:8px 0}
+p{line-height:1.5;color:#c1d3de}.eyebrow{color:#e7c18a;text-transform:uppercase;letter-spacing:.14em;font-size:11px;font-weight:800}
+.panel{padding:21px;border:1px solid #58778e;border-radius:14px;background:#1b3042;margin-top:18px}
+.status{padding:14px;border:1px solid #7b9db4;border-radius:10px;background:#274458;margin:14px 0;font-size:13px;line-height:1.5}
+.tabs{display:flex;gap:9px;flex-wrap:wrap;margin:19px 0}
+.tabs button{flex-grow:1}.tabs button.active{background:#e7c18a;border-color:#e7c18a;color:#17283a;font-weight:800}
+button,.button{border:1px solid #7598b0;background:#294d66;color:#ecf7ff;border-radius:9px;padding:10px 13px;font:inherit;font-size:13px;cursor:pointer}
+button:disabled{opacity:.55;cursor:not-allowed}.primary{background:#e7c18a;color:#152637;font-weight:800;border-color:#e7c18a}
+.danger{background:#592d39;border-color:#b07886}.ok{color:#b1ecd0}.warn{color:#f5dca9}.muted,.hint{color:#b9cfdc;font-size:12px}
+label{display:grid;gap:6px;font-size:13px}input,select,textarea{width:100%;border:1px solid #7696ac;background:#102839;color:#fff;border-radius:8px;padding:10px 11px;font:inherit;font-size:14px}textarea{min-height:85px;resize:vertical}
+fieldset{border:0;padding:0;margin:0}.formgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:12px;align-items:end}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
+.card{background:#142b3e;border:1px solid #496c83;padding:15px;border-radius:12px}.card strong{display:block;margin-bottom:7px;overflow-wrap:anywhere}
+.card p{font-size:12px;margin:5px 0}
+.table-scroll{overflow-x:auto;scrollbar-color:#62869d #163247}
+table{width:100%;min-width:790px;border-collapse:separate;border-spacing:5px;font-size:12px}
+th{padding:10px 4px;color:#b7d6e7;font-weight:800}td{vertical-align:middle;text-align:center}th:first-child{min-width:82px}
+.slot{min-height:51px;width:100%;border-radius:8px;padding:6px 3px;background:#214b4d;border:1px solid #477f75;font-size:11px}
+.slot.busy{background:#35465c;border-color:#60768f}.slot.mine{background:#3d593f;border-color:#b1ca87}.slot.cancelled{background:#263746}
+.slot small{display:block;margin-top:4px;color:#d1dee7}.slot:hover:not(:disabled){filter:brightness(1.13)}
+.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.row.between{justify-content:space-between}
+.list{display:grid;gap:10px;margin-top:12px}.list-item{border:1px solid #4e748d;border-radius:10px;padding:13px 15px;background:#142c3e}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:11px}
+.chip{padding:4px 8px;border-radius:999px;font-size:11px;background:#3b4d60;border:1px solid #74869a;display:inline-block}
+.chip.pending{background:#58492c;border-color:#b69a62}.chip.confirmed{background:#244a59;border-color:#4fa7c4}.chip.completed{background:#235343;border-color:#60a68a}.chip.returned{background:#58392e;border-color:#ba865b}
+.tab-panel{display:none}.tab-panel.active{display:block}
+.notice{padding:14px;border-left:4px solid #e7c18a;background:#293d4c;border-radius:8px;font-size:13px;line-height:1.5;margin:15px 0}
+@media(max-width:600px){.panel{padding:14px}.tabs button{flex:1 1 43%}.formgrid{grid-template-columns:1fr}header{padding:14px 16px}}
+</style>
+<script src="../../assets/supabase-2.117.2.min.js"></script><script src="../../assets/community-config.js"></script>
+</head><body>
+<header><a class="brand" href="index.html">Aero<span>Suite</span><small>BY GENTE DE VUELO</small></a><nav><a id="backPortal" href="portal-escuela.html">Volver a mi portal</a><a href="../../index.html">Gente de Vuelo</a></nav></header>
+<main>
+ <span class="eyebrow">Gestión institucional segura · Primera etapa</span>
+ <h1 id="pageTitle">Operaciones de la escuela</h1>
+ <div class="status" id="message" role="status" aria-live="polite">Verificando los permisos de tu institución…</div>
+ <div id="workArea" hidden>
+  <div class="row between"><div><h2 id="schoolTitle">—</h2><div class="muted" id="roleText"></div></div><button id="reloadAll" type="button">Actualizar información</button></div>
+  <div class="tabs" role="tablist" aria-label="Áreas de AeroSuite" id="tabs">
+   <button data-tab="turnera" class="active" type="button">Turnera semanal</button>
+   <button data-tab="informes" type="button">Informes de instrucción</button>
+   <button data-tab="finanzas" type="button">Contaduría y packs</button>
+   <button data-tab="recursos" type="button">Academia y recursos</button>
+  </div>
+  <section class="panel tab-panel active" id="turnera">
+   <span class="eyebrow" id="bookingEyebrow">Agenda de 90 minutos</span>
+   <h2 id="bookingTitle">Turnera semanal compartida</h2>
+   <p id="bookingHelp">Los turnos solicitados quedan pendientes hasta su confirmación por Administración o un instructor.</p>
+   <div class="row"><label>Semana del <input type="date" id="weekDate"></label><button id="updateWeek" type="button">Ver semana</button></div>
+   <div id="adminBooking" class="notice" hidden>Para solicitar un turno en nombre de un alumno, seleccioná su nombre antes de tocar una casilla libre.
+    <label style="margin-top:9px">Alumno <select id="bookingStudent"><option value="">Elegí un alumno</option></select></label>
+   </div>
+   <div class="table-scroll"><table aria-label="Turnos de la semana"><thead id="weekHead"></thead><tbody id="weekBody"></tbody></table></div>
+   <p class="hint">Horarios de referencia de Buenos Aires (ART). Verde: libre · Amarillo: pendiente · Azul: confirmada · Gris: ocupada · Propias: resaltadas. Los turnos ocupados de otros alumnos no muestran información privada al alumno.</p>
+   <h3>Detalle de reservas de esta semana</h3><div id="bookingList" class="list"></div>
+  </section>
+  <section class="panel tab-panel" id="informes">
+   <span class="eyebrow">Actividad posterior al vuelo</span><h2>Informes de instrucción</h2>
+   <p>El instructor declara la actividad, el combustible y aceite cargados y su devolución al alumno. Administración valida o devuelve el informe; las versiones anteriores quedan conservadas.</p>
+   <form id="reportForm" hidden>
+    <h3 id="reportFormTitle">Presentar informe</h3>
+    <div class="formgrid">
+     <label>Vuelo asignado<select name="booking" id="reportBooking" required></select></label>
+     <label>Minutos reales de vuelo<input name="minutes" type="number" min="1" max="600" required></label>
+     <label>Combustible cargado (litros)<input name="fuel" type="number" step=".01" min="0" value="0" required></label>
+     <label>Aceite agregado (litros)<input name="oil" type="number" step=".01" min="0" value="0" required></label>
+    </div>
+    <label style="margin-top:12px">Devolución pedagógica<textarea name="teaching" minlength="3" maxlength="3000" required placeholder="Prácticas realizadas, desempeño del alumno, recomendaciones…"></textarea></label>
+    <label style="margin-top:12px">Novedades observadas de la aeronave<textarea name="aircraft" maxlength="2000" placeholder="Opcional. Las novedades urgentes se comunican directamente al Director."></textarea></label>
+    <button class="primary" type="submit" style="margin-top:12px">Presentar informe a Administración</button>
+   </form>
+   <div class="list" id="reportsList"></div>
+  </section>
+  <section class="panel tab-panel" id="finanzas">
+   <span class="eyebrow">Gestión económica institucional</span><h2 id="financeTitle">Contaduría y packs de horas</h2>
+   <p id="financeHelp">Los packs descontados son consumo de horas, no un segundo ingreso. Los cobros reales, egresos y caja chica quedan individualizados.</p>
+   <form id="financeForm" hidden>
+    <div class="formgrid">
+     <label>Movimiento<select name="op" id="financeOp">
+      <option value="pack_sale">Venta y cobro de pack</option><option value="pack_use">Descontar horas del pack</option>
+      <option value="hour_payment">Cobro de vuelo por hora</option><option value="expense">Egreso habitual</option>
+      <option value="petty_expense">Gasto de caja chica</option><option value="refund">Devolución de dinero</option>
+     </select></label>
+     <label>Alumno<select name="student" id="financeStudent"><option value="">Elegí un alumno cuando corresponda</option></select></label>
+     <label>Vuelo realizado<select name="booking" id="financeBooking"><option value="">Elegí un vuelo cuando corresponda</option></select></label>
+     <label>Pack para descontar<select name="pack" id="financePack"><option value="">Seleccioná un pack cuando corresponda</option></select></label>
+     <label>Horas de pack o descuento<input name="hours" type="number" step=".01" min=".01" max="1000" placeholder="Ej.: 1.5 ó 10"></label>
+     <label>Importe cobrado o pagado<input name="amount" type="number" step=".01" min=".01" placeholder="0,00"></label>
+     <label>Moneda<select name="currency"><option value="ARS">Pesos (ARS)</option><option value="USD">Dólares (USD)</option></select></label>
+    </div>
+    <label style="margin-top:12px">Concepto o referencia del comprobante<input name="description" maxlength="500" placeholder="Detalle del movimiento"></label>
+    <p class="hint">Para descontar un pack, elegí pack, vuelo realizado y horas; no corresponde ingresar dinero. Para registrar un cobro por hora, elegí alumno, vuelo realizado e importe.</p>
+    <button class="primary" type="submit">Registrar movimiento</button>
+   </form>
+   <h3>Packs de alumnos</h3><div class="list" id="packsList"></div>
+   <div id="moneyArea"><h3>Movimientos de caja y contaduría</h3><div class="cards" id="moneySummary"></div><div class="list" id="moneyList"></div></div>
+  </section>
+  <section class="panel tab-panel" id="recursos">
+   <span class="eyebrow">Siguiente integración</span><h2>Academia Aeronáutica y recursos</h2>
+   <p>Esta área reunirá el material pedagógico de la institución, el Simulador PPA y las utilidades de instrucción, respetando los permisos del Director, Instructor y Alumno.</p>
+   <div class="notice">La biblioteca existente de AeroSuite todavía no está conectada a este nuevo acceso institucional. No habilitaremos carpetas ni archivos entre escuelas hasta verificar sus permisos de lectura y escritura.</div>
+   <p>El módulo de flota y mantenimiento también se incorporará a Administración con controles específicos. La disponibilidad técnica se gestionará manualmente y no se enviarán alertas automáticas por desperfectos.</p>
+  </section>
+ </div>
+</main>
+<script>
+"use strict";
+(async function(){
+ const $=id=>document.getElementById(id),stat=$("message");
+ const esc=x=>String(x===null||x===undefined?"":x).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+ const stamp=x=>new Date(x).toLocaleString("es-AR",{dateStyle:"short",timeStyle:"short",timeZone:"America/Argentina/Buenos_Aires"});
+ const ymd=d=>[d.getFullYear(),String(d.getMonth()+1).padStart(2,"0"),String(d.getDate()).padStart(2,"0")].join("-");
+ const arDate=d=>new Date(new Date(d).getTime()-3*3600000).toISOString().slice(0,10);
+ const arTime=d=>new Date(new Date(d).getTime()-3*3600000).toISOString().slice(11,16);
+ const safeError=e=>String(e&&e.message||e||"Error desconocido");
+ const roleLabel={administrador:"Administración",secretaria:"Administración · Secretaría",instructor:"Instructor",alumno:"Alumno"};
+ const statuses={pending:"Pendiente",confirmed:"Confirmada",completed:"Realizada",cancelled:"Cancelada",submitted:"Presentado",returned:"Devuelto para corregir",approved:"Validado"};
+ const db=supabase.createClient(GDV_CONFIG.url,GDV_CONFIG.key,{auth:{storageKey:"aerosuite-institucional-v2-auth",persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+ let user,school,role,manager,bookings=[],people=[],reports=[],finance={packs:[],movements:[]};
+ const params=new URLSearchParams(location.search),inst=params.get("institucion");
+ if(!inst){stat.textContent="Entrá desde el portal de tu institución.";return;}
+ try{
+  const me=await db.auth.getUser();user=me.data&&me.data.user;
+  if(me.error||!user)throw Error("No hay una sesión institucional válida. Volvé a ingresar.");
+  const a=await db.rpc("aerosuite_my_institution_access_v2");if(a.error)throw a.error;
+  school=(a.data||[]).find(x=>x.institution_id===inst&&x.can_access&&(!params.get("rol")||x.my_role===params.get("rol")));
+  if(!school)throw Error("No tenés acceso a esta escuela con el rol solicitado.");
+  role=school.my_role; manager=role==="administrador"||role==="secretaria";
+  $("schoolTitle").textContent=school.institution_name;
+  $("roleText").textContent="Rol: "+(roleLabel[role]||role)+" · "+user.email+(school.can_write?"":" · Solo consulta");
+  $("pageTitle").textContent=manager?"Administración de la escuela":role==="instructor"?"Mi actividad de instrucción":"Mi reserva y formación";
+  $("backPortal").href="portal-escuela.html?institucion="+encodeURIComponent(inst)+"&rol="+encodeURIComponent(role);
+  $("adminBooking").hidden=!manager;$("reportForm").hidden=role!=="instructor";$("financeForm").hidden=!manager;
+  $("moneyArea").hidden=!manager;
+  $("bookingHelp").textContent=role==="alumno"?"Solicitá un turno libre de 90 minutos. Quedará pendiente hasta que lo confirme la escuela.":role==="instructor"?"Consultá la actividad de la escuela y confirmá un turno pendiente cuando puedas asumirlo.":"Controlá y confirmá solicitudes, asigná instructores y cancelá reservas cuando corresponda.";
+  $("financeTitle").textContent=role==="alumno"?"Mis packs de horas":"Contaduría y packs de horas";
+  if(role==="instructor")$("tabs").querySelector('[data-tab="finanzas"]').hidden=true;
+  if(!school.can_write){document.querySelectorAll("form input,form select,form textarea,form button").forEach(x=>x.disabled=true);$("financeHelp").textContent="Modo consulta: no se pueden guardar movimientos."; }
+  if(manager){
+   const r=await db.rpc("aerosuite_director_people",{p_institution_id:inst});
+   if(!r.error)people=(r.data||[]).filter(x=>x.kind==="integrante");
+   for(const [id,kind] of [["bookingStudent","alumno"],["financeStudent","alumno"]]){
+    const s=$(id);people.filter(x=>x.role===kind).forEach(x=>s.add(new Option(x.email,x.person_id)));
+   }
+  }
+  const today=new Date(),monday=new Date(today.getFullYear(),today.getMonth(),today.getDate());
+  monday.setDate(monday.getDate()-(monday.getDay()+6)%7);
+  $("weekDate").value=ymd(monday);
+  $("workArea").hidden=false;
+  for(const b of $("tabs").querySelectorAll("button")){
+   b.addEventListener("click",()=>showTab(b.dataset.tab));
+  }
+  function showTab(which){
+   if(which==="finanzas"&&role==="instructor")return;
+   for(const b of $("tabs").querySelectorAll("button"))b.classList.toggle("active",b.dataset.tab===which);
+   for(const s of document.querySelectorAll(".tab-panel"))s.classList.toggle("active",s.id===which);
+   location.hash=which;
+  }
+  async function rpc(name,args){
+   const r=await db.rpc(name,args);if(r.error)throw r.error;return r.data;
+  }
+  function labelOf(v){return people.find(x=>x.person_id===v)?.email||v||"Sin asignar";}
+  const weekDates=()=>{
+   const [y,m,d]=$("weekDate").value.split("-").map(Number);
+   const base=new Date(y,m-1,d),offset=(base.getDay()+6)%7;base.setDate(base.getDate()-offset);
+   return Array.from({length:7},(_,i)=>{const dt=new Date(base);dt.setDate(base.getDate()+i);return ymd(dt)});
+  };
+  const times=["08:00","09:30","11:00","12:30","14:00","15:30","17:00","18:30"];
+  async function loadWeek(){
+   const dates=weekDates();bookings=await rpc("aerosuite_booking_schedule",{p_institution_id:inst,p_date_from:dates[0],p_date_to:dates[6]});
+   renderWeek(dates);renderBookings();renderReportFormChoices();renderFinanceBookingChoices();
+  }
+  function renderWeek(dates){
+   $("weekHead").innerHTML="<tr><th>Horario</th>"+dates.map((d,i)=>"<th>"+["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"][i]+"<br>"+esc(d.slice(8,10)+"/"+d.slice(5,7))+"</th>").join("")+"</tr>";
+   const body=$("weekBody");body.replaceChildren();
+   for(const time of times){
+    const tr=document.createElement("tr"),th=document.createElement("th");th.textContent=time+"–"+(()=>{const [h,mi]=time.split(":").map(Number);const n=h*60+mi+90;return String(Math.floor(n/60)%24).padStart(2,"0")+":"+String(n%60).padStart(2,"0")})();tr.append(th);
+    for(const date of dates){
+     const td=document.createElement("td"),b=document.createElement("button"),start=new Date(date+"T"+time+":00-03:00");
+     const booking=bookings.find(x=>x.status!=="cancelled"&&new Date(x.starts_at).getTime()===start.getTime());
+     b.type="button";b.className="slot"+(booking?" busy":"")+(booking&&booking.my_booking?" mine":"");
+     if(booking){
+      b.textContent=booking.my_booking?"Mi turno":statuses[booking.status]||"Ocupado";
+      const small=document.createElement("small");small.textContent=booking.instructor_email&&role!=="alumno"?"Instructor asignado":"";b.append(small);
+      b.onclick=()=>document.getElementById("booking-"+(booking.booking_id||"")).scrollIntoView({behavior:"smooth",block:"center"});
+      if(!booking.booking_id)b.onclick=()=>stat.textContent="Turno ocupado. Seleccioná uno libre.";
+     }else{
+      b.textContent="Libre";
+      if(role==="instructor"||!school.can_write){b.disabled=true;}else{
+       b.onclick=async()=>{
+        const student=manager?$("bookingStudent").value:user.id;
+        if(!student){stat.textContent="Seleccioná el alumno para registrar la solicitud.";return;}
+        if(!confirm("¿Solicitar "+date+" a las "+time+" (90 minutos)? Quedará pendiente de confirmación."))return;
+        try{b.disabled=true;await rpc("aerosuite_booking_action",{p_institution_id:inst,p_action:"request",p_starts_at:start.toISOString(),p_student_id:student});stat.textContent="Reserva solicitada. Está pendiente de confirmación.";await loadWeek();}
+        catch(e){stat.textContent="No se pudo reservar: "+safeError(e);b.disabled=false;}
+       };
+      }
+     }
+     td.append(b);tr.append(td);
+    }
+    body.append(tr);
+   }
+  }
+  async function takeAction(action,b,options={}){
+   try{
+    await rpc("aerosuite_booking_action",Object.assign({p_institution_id:inst,p_action:action,p_booking_id:b.booking_id},options));
+    stat.textContent="Reserva actualizada correctamente.";await loadWeek();
+   }catch(e){stat.textContent="No se pudo actualizar la reserva: "+safeError(e);}
+  }
+  function renderBookings(){
+   const target=$("bookingList");target.replaceChildren();
+   const list=bookings.filter(x=>x.status!=="cancelled"&&(manager||role==="instructor"||x.my_booking));
+   if(!list.length){target.textContent="No hay reservas visibles para esta semana.";return;}
+   for(const b of list){
+    const card=document.createElement("div");card.className="list-item";card.id="booking-"+(b.booking_id||"");
+    const sensitive=role!=="alumno"||b.my_booking;
+    card.innerHTML='<div class="row between"><strong>'+esc(stamp(b.starts_at))+' · 90 min</strong><span class="chip '+esc(b.status)+'">'+esc(statuses[b.status]||b.status)+'</span></div>'+
+     (sensitive?'<p>Alumno: '+esc(b.student_email||"Reservado")+' · Instructor: '+esc(b.instructor_email||"Sin asignar")+' · Aeronave: '+esc(b.aircraft||"A definir")+'</p>':'<p>Turno ocupado de otro alumno.</p>');
+    const actions=document.createElement("div");actions.className="actions";
+    function btn(text,action,cls){const el=document.createElement("button");el.type="button";el.textContent=text;el.className=cls||"";el.disabled=!school.can_write;el.onclick=action;actions.append(el);}
+    if(b.booking_id&&b.status==="pending"&&(manager||role==="instructor")){
+     btn("Confirmar turno",async()=>{
+      let instructorId=null,aircraft="";
+      if(manager){
+       const eligible=people.filter(x=>x.role==="instructor");
+       if(!eligible.length){stat.textContent="Primero invitá a un instructor desde el portal.";return;}
+       instructorId=prompt("Pegá el identificador del instructor habilitado:\n"+eligible.map(x=>x.email+" : "+x.person_id).join("\n"),eligible[0].person_id);
+       if(!instructorId)return;
+       aircraft=prompt("Matrícula de la aeronave (podés dejarla pendiente):","")||"";
+      }
+      if(!confirm("¿Confirmar este turno"+(role==="instructor"?" a tu cargo":"")+"?"))return;
+      await takeAction("confirm",b,{p_instructor_id:instructorId,p_aircraft:aircraft});
+     },"primary");
+    }
+    if(b.booking_id&&(manager||role==="alumno"&&b.my_booking&&b.status==="pending")&&["pending","confirmed"].includes(b.status)){
+     btn("Cancelar reserva",async()=>{const reason=prompt("Motivo de cancelación (obligatorio):");if(!reason||!reason.trim())return;
+      if(confirm("¿Cancelar esta reserva? Se conservará el registro histórico."))await takeAction("cancel",b,{p_reason:reason});},"danger");
+    }
+    if(actions.childNodes.length)card.append(actions);
+    target.append(card);
+   }
+  }
+  function renderReportFormChoices(){
+   if(role!=="instructor")return;
+   const target=$("reportBooking");target.replaceChildren();
+   for(const b of bookings.filter(x=>x.instructor_id===user.id&&["confirmed","completed"].includes(x.status))){
+    const report=reports.find(r=>r.booking_id===b.booking_id);
+    if(report&&report.status!=="returned")continue;
+    target.add(new Option(stamp(b.starts_at)+" · "+(b.student_email||"Alumno")+(report?" · corregir":""),
+     b.booking_id));
+   }
+   $("reportForm").querySelector("button").disabled=!school.can_write||!target.options.length;
+  }
+  async function loadReports(){
+   reports=await rpc("aerosuite_reports_list",{p_institution_id:inst});renderReportFormChoices();renderReports();
+  }
+  function renderReports(){
+   const target=$("reportsList");target.replaceChildren();
+   if(!reports.length){target.textContent="Todavía no hay informes de instrucción para consultar.";return;}
+   for(const r of reports){
+    const card=document.createElement("div");card.className="list-item";
+    card.innerHTML='<div class="row between"><strong>'+esc(stamp(r.starts_at))+" · "+esc(r.student_email)+'</strong><span class="chip '+esc(r.status)+'">'+esc(statuses[r.status])+'</span></div>'+
+     '<p><strong>Instructor:</strong> '+esc(r.instructor_email)+' · <strong>Vuelo real:</strong> '+esc(r.flight_minutes)+' minutos · <strong>Combustible:</strong> '+esc(r.fuel_liters)+' L · <strong>Aceite:</strong> '+esc(r.oil_liters)+' L · Versión '+esc(r.revision)+'</p>'+
+     '<p><strong>Devolución:</strong> '+esc(r.teaching_notes)+'</p><p><strong>Novedades:</strong> '+esc(r.aircraft_notes||"Sin novedades registradas")+'</p>'+
+     (r.return_reason?'<p class="warn"><strong>Motivo de devolución:</strong> '+esc(r.return_reason)+'</p>':"");
+    if(manager&&r.status==="submitted"){
+     const row=document.createElement("div");row.className="actions";
+     for(const [label,action,cls] of [["Validar informe","approve","primary"],["Devolver para corregir","return",""]]){
+      const b=document.createElement("button");b.textContent=label;b.className=cls;b.disabled=!school.can_write;b.onclick=async()=>{
+       const reason=action==="return"?prompt("Indicá por qué debe corregirse el informe:"):null;
+       if(action==="return"&&(!reason||!reason.trim()))return;
+       if(action==="approve"&&!confirm("¿Validar este informe y cerrar el vuelo como realizado?"))return;
+       try{b.disabled=true;await rpc("aerosuite_report_action",{p_institution_id:inst,p_booking_id:r.booking_id,p_action:action,p_review_note:reason});
+        stat.textContent="Informe "+(action==="approve"?"validado":"devuelto al instructor")+".";
+        await Promise.all([loadWeek(),loadReports()]);}catch(e){stat.textContent=safeError(e);}finally{b.disabled=false;}
+      };row.append(b);
+     }card.append(row);
+    }
+    target.append(card);
+   }
+  }
+  $("reportForm").addEventListener("submit",async e=>{
+   e.preventDefault();const f=e.currentTarget,fd=new FormData(f),button=f.querySelector("button");button.disabled=true;
+   try{
+    await rpc("aerosuite_report_action",{p_institution_id:inst,p_booking_id:fd.get("booking"),p_action:"submit",
+     p_flight_minutes:Number(fd.get("minutes")),p_fuel_liters:Number(fd.get("fuel")),p_oil_liters:Number(fd.get("oil")),
+     p_teaching_notes:fd.get("teaching"),p_aircraft_notes:fd.get("aircraft")});
+    f.reset();stat.textContent="Informe presentado a Administración para su revisión.";await loadReports();
+   }catch(e){stat.textContent="No se pudo enviar el informe: "+safeError(e);}finally{button.disabled=false;}
+  });
+  function renderFinanceBookingChoices(){
+   if(!manager)return;const target=$("financeBooking");target.length=1;
+   bookings.filter(x=>x.status==="completed").forEach(b=>target.add(new Option(stamp(b.starts_at)+" · "+(b.student_email||"Alumno"),b.booking_id)));
+  }
+  async function loadFinance(){
+   if(role==="instructor")return;
+   finance=await rpc("aerosuite_finance_snapshot",{p_institution_id:inst});renderFinance();
+  }
+  function renderFinance(){
+   const packs=$("packsList");packs.replaceChildren();
+   const all=finance.packs||[];
+   if(!all.length)packs.textContent="Todavía no hay packs de horas registrados.";
+   for(const p of all){
+    const box=document.createElement("div");box.className="list-item";
+    box.innerHTML='<strong>'+esc(p.student_email||"Mi pack")+'</strong><p>Compradas: '+(p.total_minutes/60).toFixed(2)+' h · Usadas: '+(p.used_minutes/60).toFixed(2)+' h · <strong>Disponibles: '+(p.remaining_minutes/60).toFixed(2)+' h</strong></p>'+
+     (manager?'<p class="hint">Importe cobrado al comprar: '+esc(p.currency)+' '+Number(p.paid_amount).toLocaleString("es-AR")+'</p>':"");
+    packs.append(box);
+   }
+   if(!manager)return;
+   const select=$("financePack");select.length=1;
+   for(const p of all.filter(x=>x.remaining_minutes>0))select.add(new Option((p.student_email||"Alumno")+" · "+(p.remaining_minutes/60).toFixed(2)+" h",p.id));
+   const list=$("moneyList");list.replaceChildren();
+   const movements=finance.movements||[];
+   if(!movements.length)list.textContent="Todavía no se registraron movimientos económicos.";
+   const totals={};
+   for(const m of movements){
+    const sign=["expense","petty_expense","refund"].includes(m.movement_type)?-1:1;
+    totals[m.currency]=(totals[m.currency]||0)+sign*Number(m.amount);
+    const item=document.createElement("div");item.className="list-item";
+    item.innerHTML='<div class="row between"><strong>'+esc({hour_payment:"Cobro por hora",pack_sale:"Venta de pack",expense:"Egreso",petty_expense:"Caja chica",refund:"Devolución"}[m.movement_type]||m.movement_type)+'</strong><strong>'+esc(m.currency)+' '+(sign*Number(m.amount)).toLocaleString("es-AR")+'</strong></div>'+
+     '<p>'+esc(stamp(m.created_at))+' · '+esc(m.description||"Sin detalle")+'</p>';
+    list.append(item);
+   }
+   const sum=$("moneySummary");sum.replaceChildren();
+   for(const [currency,amount] of Object.entries(totals)){
+    const box=document.createElement("div");box.className="card";box.innerHTML='<strong>Saldo neto registrado en '+esc(currency)+'</strong><h3>'+Number(amount).toLocaleString("es-AR",{minimumFractionDigits:2})+'</h3>';sum.append(box);
+   }
+  }
+  $("financeForm").addEventListener("submit",async e=>{
+   e.preventDefault();const f=e.currentTarget,fd=new FormData(f),op=fd.get("op");
+   const hours=Number(fd.get("hours")),amount=Number(fd.get("amount")),button=f.querySelector("button");
+   if(!confirm("¿Registrar este movimiento en la contaduría de la escuela? Se conservará el historial."))return;
+   button.disabled=true;
+   try{
+    await rpc("aerosuite_finance_action",{p_institution_id:inst,p_operation:op,
+     p_student_id:fd.get("student")||null,p_booking_id:fd.get("booking")||null,p_pack_id:fd.get("pack")||null,
+     p_minutes:Number.isFinite(hours)&&hours>0?Math.round(hours*60):null,
+     p_amount:Number.isFinite(amount)&&amount>0?amount:null,p_currency:fd.get("currency"),p_description:fd.get("description")});
+    f.reset();stat.textContent="Movimiento registrado en Contaduría y en el historial institucional.";await loadFinance();
+   }catch(e){stat.textContent="No se pudo registrar el movimiento: "+safeError(e);}finally{button.disabled=false;}
+  });
+  async function refresh(){
+   stat.textContent="Actualizando datos de la institución…";
+   try{await loadWeek();await loadReports();await loadFinance();renderReportFormChoices();stat.textContent="Información institucional actualizada."; }
+   catch(e){stat.textContent="Error al cargar el área: "+safeError(e);}
+  }
+  $("updateWeek").onclick=refresh;$("reloadAll").onclick=refresh;
+  await refresh();
+  const initial=(location.hash||"#turnera").slice(1);
+  if(["turnera","informes","finanzas","recursos"].includes(initial))showTab(initial);
+ }catch(e){stat.textContent="No se pudo abrir la gestión institucional: "+safeError(e);}
+})();
+</script>
+</body></html>
