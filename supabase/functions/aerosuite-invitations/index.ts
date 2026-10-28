@@ -15,7 +15,7 @@ const reply=(origin:string|null,status:number,body:unknown)=>new Response(JSON.s
  status,headers:{...cors(origin),"Content-Type":"application/json; charset=utf-8"}
 });
 const esc=(value:string)=>value.replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]||ch));
-const roleLabels:Record<string,string>={administrador:"administrador",instructor:"instructor",alumno:"alumno"};
+const roleLabels:Record<string,string>={administrador:"administrador",secretaria:"secretaría",instructor:"instructor",alumno:"alumno"};
 // Invitaciones habilitadas durante la prueba y los 15 días de cortesía; nunca en modo consulta.
 const allowedStatus=(org:any)=>org?.status==="trial"&&Number.isFinite(Date.parse(org.trial_ends_at))
  &&Date.parse(org.trial_ends_at)+15*24*60*60*1000>Date.now()
@@ -41,7 +41,7 @@ Deno.serve(async(req:Request)=>{
  const id=String(input.institution_id||"");
  const role=String(input.role||"");
  const email=String(input.email||"").trim().toLowerCase();
- if(!/^[a-f0-9]{8}-[a-f0-9-]{27,}$/.test(id)||!["administrador","instructor","alumno"].includes(role)
+ if(!/^[a-f0-9]{8}-[a-f0-9-]{27,}$/.test(id)||!["administrador","secretaria","instructor","alumno"].includes(role)
    ||email.length>254||email.length<5||!/^\S+@\S+\.\S+$/.test(email))
    return reply(origin,400,{error:"Revisá institución, rol y correo."});
  const db=createClient(url,service,{auth:{persistSession:false}});
@@ -58,10 +58,10 @@ Deno.serve(async(req:Request)=>{
    if(!isSuper)return reply(origin,403,{error:"Solo el Superadministrador autoriza directores."});
    if(email!==String(org.contact_email||"").trim().toLowerCase())
       return reply(origin,400,{error:"El director debe coincidir con el correo institucional registrado."});
- }else if(!isSuper){
+ }else if(role==="secretaria"||!isSuper){
    const member=await db.from("aerosuite_institution_members")
-     .select("user_id").eq("institution_id",id).eq("user_id",user.id).eq("role","administrador").maybeSingle();
-   if(member.error||!member.data)return reply(origin,403,{error:"Solo el director autorizado invita alumnos e instructores."});
+     .select("user_id").eq("institution_id",id).eq("user_id",user.id).in("role",role==="secretaria"?["administrador"]:["administrador","secretaria"]).maybeSingle();
+   if(member.error||!member.data)return reply(origin,403,{error:role==="secretaria"?"Solo Dirección puede invitar a Secretaría.":"Solo Dirección o Secretaría pueden invitar alumnos e instructores."});
    const recent=await db.from("aerosuite_institution_invitations")
      .select("id",{count:"exact",head:true}).eq("institution_id",id)
      .eq("created_by",user.id).gte("created_at",new Date(Date.now()-86400000).toISOString());
