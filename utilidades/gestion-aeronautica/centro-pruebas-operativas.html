@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="es"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>AeroSuite · Centro de Testeo Permanente</title>
+<style>
+:root{font-family:Inter,system-ui,Arial,sans-serif;color:#ecf5fb;background:#101e2d;color-scheme:dark}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:linear-gradient(150deg,#102234,#182f42);min-height:100vh}
+a{color:#c4e4f9}a:focus-visible,button:focus-visible,textarea:focus-visible{outline:3px solid #efce91;outline-offset:2px}
+header{padding:18px max(18px,calc((100vw - 1180px)/2));background:#152a3b;border-bottom:1px solid #587991;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.brand{font-size:21px;font-weight:850;color:#f0c990;text-decoration:none}.brand small{display:block;font-size:10px;letter-spacing:.13em;color:#afcadb}
+nav{display:flex;gap:15px;flex-wrap:wrap;font-size:13px}
+main{max-width:1180px;margin:auto;padding:28px 18px 70px}
+.eyebrow{font-size:11px;font-weight:850;letter-spacing:.14em;text-transform:uppercase;color:#ecc58a}
+h1{font-size:clamp(27px,4vw,38px);margin:8px 0 10px}h2{margin:0 0 12px;font-size:20px}h3{margin:0 0 8px;font-size:15px}
+p{line-height:1.55;color:#c5d8e5}.muted{color:#b9ccd9;font-size:12px}
+.panel{background:#193246;border:1px solid #537791;border-radius:15px;padding:20px;margin:17px 0}
+.notice{padding:13px 15px;border:1px solid #608b9e;border-radius:10px;background:#234454;font-size:13px;line-height:1.6}
+.notice.warn{border-color:#dcb878;background:#423729;color:#ffe6b9}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
+.tile{background:#122b3d;border:1px solid #466d87;padding:15px;border-radius:12px}
+.tile strong{display:block;font-size:15px;margin-bottom:6px}
+.tile span{color:#bfd2df;font-size:12px;line-height:1.45}
+.tile a,.action{display:inline-block;background:#e6c68f;color:#1c2b39;text-decoration:none;font-weight:800;padding:10px 13px;border:1px solid #e6c68f;border-radius:8px;margin-top:12px;font-size:13px}
+button{font:inherit;cursor:pointer;font-size:13px;border-radius:9px;padding:10px 13px;border:1px solid #86a4b7;background:#2a516b;color:#fff}
+button.primary{background:#e6c68f;color:#182b3a;border-color:#e6c68f;font-weight:800}
+button:disabled{opacity:.5;cursor:not-allowed}
+.actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.step{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:14px;padding:13px 2px;border-bottom:1px solid #3c5a6d}
+.step:last-child{border:0}.step strong{font-size:14px}.step p{font-size:12px;margin:5px 0}
+.step select{max-width:170px;background:#12293b;color:#fff;border:1px solid #688ea5;padding:10px;border-radius:8px;font-size:12px}
+textarea{font:inherit;color:#fff;background:#102738;border:1px solid #63879b;border-radius:9px;padding:12px;width:100%;min-height:82px}
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:10px}
+.metric{border:1px solid #41677e;background:#142d3e;border-radius:11px;padding:12px}
+.metric strong{font-size:23px;color:#f0cd93;display:block}.metric span{font-size:11px;color:#bcd0dd}
+.history{display:grid;gap:9px}.history-item{padding:12px;border:1px solid #456881;border-radius:9px;background:#142d3e;font-size:13px;line-height:1.7}
+.history-item strong{color:#f1d59e}
+@media(max-width:600px){.step{grid-template-columns:1fr}.step select{max-width:100%}}
+</style>
+<script src="../../assets/supabase-2.117.2.min.js"></script>
+<script src="../../assets/community-config.js"></script>
+<script src="../../assets/auth-guard.js?v=20261013registro2"></script>
+</head><body>
+<header><a class="brand" href="index.html">AeroSuite <small>BY GENTE DE VUELO · CONTROL DE CALIDAD</small></a><nav><a href="superadministrador.html">Superadministración</a><a href="../../index.html">Gente de Vuelo</a></nav></header>
+<main>
+<div class="eyebrow">Exclusivo Superadministración · Institución aislada de prueba</div>
+<h1>Centro de Testeo Permanente</h1>
+<p>Probá los portales reales de cada rol y registrá resultados para comparar versiones. No hay suplantación de usuarios ni simulaciones de reservas, vuelos o pagos: cada operación debe realizarse con una cuenta autorizada en la institución de prueba.</p>
+<div class="notice" id="status" role="status">Comprobando permisos de Superadministración…</div>
+<div id="content" hidden>
+<section class="panel"><h2 id="institutionTitle">Institución de prueba</h2>
+<p id="institutionInfo" class="muted">Se consulta la institución existente: no se crea una nueva.</p>
+<div class="grid">
+<div class="tile"><strong>Director</strong><span>Administrar turnera, asignaciones, aeronaves, informes y contaduría.</span><br><a id="director" target="_blank" rel="noopener">Abrir portal Director</a></div>
+<div class="tile"><strong>Secretaría</strong><span>Mismas funciones administrativas si existe una cuenta de Secretaría habilitada. No se usa la clave del Director.</span><br><a id="secretaria" target="_blank" rel="noopener">Abrir portal Secretaría</a></div>
+<div class="tile"><strong>Instructor</strong><span>Ver turnos asignados, confirmar solicitudes y cargar informes.</span><br><a id="instructor" target="_blank" rel="noopener">Abrir portal Instructor</a></div>
+<div class="tile"><strong>Alumno</strong><span>Solicitar turnos, revisar devoluciones y saldos de packs.</span><br><a id="alumno" target="_blank" rel="noopener">Abrir portal Alumno</a></div>
+</div>
+<p class="muted">Cada enlace exige iniciar sesión con la identidad real de prueba correspondiente. Si tu sesión no tiene ese rol, el portal denegará acceso; no alteramos permisos ni usamos cuentas ajenas.</p>
+</section>
+<section class="panel"><div class="actions"><h2 style="flex:1;margin:0">Estado operativo consultado en Supabase</h2><button id="refresh" type="button">Actualizar diagnóstico</button></div>
+<div id="metrics" class="metrics" style="margin-top:15px"></div>
+<div class="notice" id="healthStatus" style="margin-top:12px">Pendiente de diagnóstico.</div>
+<p class="muted">Los contadores y alertas son automáticos; no prueban por sí solos que el flujo de ingreso, reserva, informe y cobro funcione en las pantallas.</p>
+</section>
+<section class="panel"><div class="actions"><h2 style="flex:1;margin:0">Nueva sesión de pruebas</h2><button id="start" class="primary" type="button">Iniciar nueva prueba</button></div>
+<p class="muted">Primero abrí los portales reales y realizá cada operación con datos ficticios. Después marcá el resultado observado. Solo el Superadministrador guarda el registro de esta revisión.</p>
+<div id="runStatus" class="notice">No hay una prueba en curso.</div>
+<div id="steps" hidden></div>
+<div id="runEditor" hidden>
+<label for="notes" style="display:block;margin:15px 0 6px">Observaciones de esta prueba (no escribas contraseñas ni datos sensibles)</label>
+<textarea id="notes" maxlength="2500" placeholder="Ej.: versión del sitio, error observado y paso para reproducirlo…"></textarea>
+<div class="actions" style="margin-top:12px"><button id="save" type="button">Guardar avance</button><button id="finish" class="primary" type="button">Cerrar y guardar resultado</button></div>
+</div>
+</section>
+<section class="panel"><div class="actions"><h2 style="flex:1;margin:0">Historial de verificaciones</h2><button id="historyRefresh" type="button">Actualizar historial</button></div><div id="history" class="history"><p class="muted">Sin consultar.</p></div></section>
+</div>
+</main><script>
+'use strict';
+(async()=>{
+const TEST_INSTITUTION='00d3f425-7947-45f7-be8c-e83a763abc15';
+const names=[
+ ['director','Acceso Director','Ingresar con Director y comprobar su turnera y módulos.'],
+ ['alumno','Reserva del Alumno','Solicitar un turno futuro de 90 minutos desde el portal del alumno.'],
+ ['asignacion','Confirmación institucional','Director confirma el turno con instructor habilitado y aeronave disponible.'],
+ ['instructor','Vista del Instructor','Instructor comprueba que el turno asignado figura correctamente.'],
+ ['informe','Informe de vuelo','Tras una reserva válida, Instructor carga el informe con horas y observaciones.'],
+ ['aprobacion','Aprobación de Dirección','Director verifica, aprueba y consulta el informe.'],
+ ['contaduria','Cobro o pack','Director o Secretaría registra una operación ficticia de cobro o pack y comprueba su reflejo en Contaduría.'],
+ ['alumno_resultado','Resultado para Alumno','Alumno comprueba informe aprobado, historial y saldo actualizado.'],
+ ['integridad','Diagnóstico sin anomalías','Actualizar indicadores y revisar que no haya inconsistencias.']
+];
+const $=id=>document.getElementById(id);const status=$('status'),testId=TEST_INSTITUTION;
+let db,user,health={},active=null;
+function msg(s){status.textContent=s;}
+function setText(id,s){$(id).textContent=s;}
+function url(role){return 'portal-escuela.html?institucion='+encodeURIComponent(testId)+'&rol='+encodeURIComponent(role)+'&elegida=1';}
+function time(v){return v?new Date(v).toLocaleString('es-AR',{dateStyle:'short',timeStyle:'short',timeZone:'America/Argentina/Buenos_Aires'}):'—';}
+function outcomes(steps){const vals=names.map(x=>steps?.[x[0]]?.status||'pending');return {ok:vals.filter(x=>x==='passed').length,failed:vals.filter(x=>x==='failed').length,blocked:vals.filter(x=>x==='blocked').length,pending:vals.filter(x=>x==='pending').length};}
+function summary(t){const o=outcomes(t.steps);return o.ok+' correctos · '+o.failed+' fallidos · '+o.blocked+' bloqueados · '+o.pending+' pendientes';}
+function safeNumber(n){return Number.isFinite(Number(n))?Number(n).toLocaleString('es-AR'):'—';}
+async function reloadHealth(){
+ $('refresh').disabled=true;
+ try{
+  const r=await db.rpc('aerosuite_superadmin_portal_health',{p_institution_id:testId});
+  if(r.error)throw r.error;
+  if(r.data?.institution_id!==testId)throw Error('Diagnóstico de otra institución');
+  health=r.data;
+  const data=[['Directores',health.directors],['Secretarías',health.secretaries],['Instructores',health.instructors],['Alumnos',health.students],['Aeronaves',health.aircraft_available],['Pendientes',health.bookings_pending],['Confirmados',health.bookings_confirmed],['Realizados',health.bookings_completed],['Informes aprobados',health.reports_approved],['Packs',health.packs_total],['Movimientos de caja',health.money_movements_total]];
+  $('metrics').replaceChildren();
+  for(const [label,value] of data){const div=document.createElement('div');div.className='metric';const strong=document.createElement('strong');strong.textContent=safeNumber(value);const span=document.createElement('span');span.textContent=label;div.append(strong,span);$('metrics').append(div);}
+  const rules=['stale_pending','confirmed_without_instructor','completed_without_approved_report','negative_pack_balance','double_settlement','overlapping_institution_slots','instructor_cross_institution_overlap'];
+  const anomalies=rules.reduce((a,x)=>a+Number(health[x]||0),0);
+  const el=$('healthStatus');el.classList.toggle('warn',anomalies>0);
+  el.textContent=(anomalies?'Atención: '+anomalies+' anomalías detectadas.':'Siete reglas de integridad: sin anomalías detectadas.')+' Consulta: '+time(health.checked_at)+'. Los resultados de interfaz deben verificarse manualmente.';
+ }catch(e){$('healthStatus').classList.add('warn');$('healthStatus').textContent='Error de diagnóstico: '+(e.message||e);}
+ finally{$('refresh').disabled=false;}
+}
+function renderRun(){
+ const editing=active&&active.status==='in_progress';
+ $('steps').hidden=!editing;$('runEditor').hidden=!editing;
+ $('start').disabled=Boolean(editing);
+ setText('runStatus',editing?'Prueba iniciada '+time(active.started_at)+' · '+summary(active):'No hay prueba en curso. Seleccioná «Iniciar nueva prueba» para documentar una verificación.');
+ if(!editing)return;
+ $('steps').replaceChildren();
+ for(const [key,title,description] of names){
+  const row=document.createElement('div');row.className='step';
+  const left=document.createElement('div');const strong=document.createElement('strong');strong.textContent=title;
+  const p=document.createElement('p');p.textContent=description;left.append(strong,p);
+  const sel=document.createElement('select');sel.setAttribute('aria-label','Resultado: '+title);sel.dataset.step=key;
+  for(const [val,label] of [['pending','Pendiente'],['passed','Comprobado'],['failed','Falló'],['blocked','No disponible']]){const o=new Option(label,val);sel.add(o);}
+  sel.value=active.steps?.[key]?.status||'pending';
+  sel.onchange=()=>{const next={...active.steps,[key]:{status:sel.value,at:new Date().toISOString()}};active={...active,steps:next};setText('runStatus','Prueba iniciada '+time(active.started_at)+' · '+summary(active)+' · Cambios sin guardar');};
+  row.append(left,sel);$('steps').append(row);
+ }
+ $('notes').value=active.notes||'';
+}
+async function save(finish){
+ if(!active||active.status!=='in_progress')return;
+ if(finish&&outcomes(active.steps).pending){setText('runStatus','Para cerrar la prueba marcá todos los pasos como comprobados, fallidos o no disponibles.');return;}
+ $('save').disabled=true;$('finish').disabled=true;
+ try{
+  const next={steps:active.steps,notes:$('notes').value.slice(0,2500),updated_at:new Date().toISOString()};
+  if(finish){await reloadHealth();if(!health.checked_at)throw Error('No hay diagnóstico final disponible.');next.final_snapshot=health;next.finished_at=new Date().toISOString();next.status='finished';}
+  const r=await db.from('aerosuite_test_runs').update(next).eq('id',active.id).eq('institution_id',testId).select().single();
+  if(r.error)throw r.error;
+  active=r.data;renderRun();if(!finish)setText('runStatus','Avance guardado en Supabase · '+summary(active));await reloadHistory();
+ }catch(e){setText('runStatus','No se pudo guardar la prueba: '+(e.message||e));}
+ finally{$('save').disabled=false;$('finish').disabled=false;}
+}
+async function reloadHistory(){
+ $('historyRefresh').disabled=true;
+ try{
+  const r=await db.from('aerosuite_test_runs').select('id,started_at,finished_at,status,steps,notes').eq('institution_id',testId).order('started_at',{ascending:false}).limit(20);
+  if(r.error)throw r.error;
+  $('history').replaceChildren();
+  if(!r.data.length){const p=document.createElement('p');p.className='muted';p.textContent='Todavía no se registraron pruebas.';$('history').append(p);}
+  for(const run of r.data){
+   const div=document.createElement('div');div.className='history-item';
+   const head=document.createElement('strong');head.textContent=time(run.started_at)+' · '+(run.status==='finished'?'Cerrada':'En curso');
+   const body=document.createElement('div');body.textContent=summary(run);
+   div.append(head,body);
+   if(run.notes){const notes=document.createElement('p');notes.className='muted';notes.textContent=run.notes;div.append(notes);}
+   if(run.status==='in_progress'&&(!active||active.status!=='in_progress')){
+    const b=document.createElement('button');b.textContent='Retomar esta prueba';b.type='button';
+    b.onclick=async()=>{const row=await db.from('aerosuite_test_runs').select('*').eq('institution_id',testId).eq('id',run.id).single();if(row.error){setText('runStatus','Error: '+row.error.message);return;}active=row.data;renderRun();scrollTo({top:0,behavior:'smooth'});};
+    div.append(b);
+   }
+   $('history').append(div);
+  }
+ }catch(e){setText('runStatus','No se pudo consultar el historial: '+(e.message||e));}
+ finally{$('historyRefresh').disabled=false;}
+}
+try{
+ await window.GDV_AUTH.ready;db=window.GDV_AUTH?.client;
+ if(!db)throw Error('No se pudo iniciar Supabase.');
+ const au=await db.auth.getUser();user=au.data?.user;
+ if(au.error||!user)throw Error('Ingresá a Gente de Vuelo con tu cuenta de Superadministrador.');
+ const p=await db.from('aerosuite_superadmins').select('user_id').eq('user_id',user.id).maybeSingle();
+ if(p.error||!p.data)throw Error('Solo Superadministración puede acceder a estas pruebas.');
+ const org=await db.from('aerosuite_institutions').select('id,name,is_test,status,kind').eq('id',testId).single();
+ if(org.error)throw org.error;
+ if(org.data?.is_test!==true)throw Error('La institución ya no está marcada como prueba; se ha bloqueado el circuito para proteger datos.');
+ setText('institutionTitle',org.data.name);setText('institutionInfo','Institución de prueba existente · '+org.data.kind+' · Estado: '+org.data.status+'. No se generan usuarios ni registros operativos automáticamente.');
+ for(const role of ['administrador','secretaria','instructor','alumno'])$(role==='administrador'?'director':role).href=url(role);
+ $('content').hidden=false;msg('Acceso autorizado. Los resultados se conservan en Supabase y se restringen a la institución de prueba.');
+ $('refresh').onclick=reloadHealth;$('historyRefresh').onclick=reloadHistory;
+ $('save').onclick=()=>save(false);$('finish').onclick=()=>save(true);
+ $('start').onclick=async()=>{
+  $('start').disabled=true;setText('runStatus','Creando sesión de pruebas…');
+  try{
+   await reloadHealth();if(!health.checked_at)throw Error('No se pudo obtener el diagnóstico inicial.');
+   const r=await db.from('aerosuite_test_runs').insert({institution_id:testId,started_by:user.id,baseline:health}).select().single();
+   if(r.error)throw r.error;active=r.data;renderRun();await reloadHistory();
+  }catch(e){setText('runStatus','No se pudo iniciar la prueba: '+(e.message||e));$('start').disabled=false;}
+ };
+ await Promise.all([reloadHealth(),reloadHistory()]);
+}catch(e){msg('Acceso no disponible: '+(e.message||e));}
+})();
+</script></body></html>
