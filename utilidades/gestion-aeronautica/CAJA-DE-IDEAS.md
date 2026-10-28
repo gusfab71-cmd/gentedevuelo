@@ -289,3 +289,14 @@ Este es el registro central de las decisiones, ideas y pendientes tratados para 
 - **Operaciones conectadas:** `aerosuite_delete_institution`, `aerosuite_manage_staff_remove` y `aerosuite_superadmin_manage_registration`. Tras borrar un usuario de prueba también se eliminan sus invitaciones institucionales de ese rol/correo, para volver a enviar una invitación limpia. Las cuentas protegidas permanecen sin cambios de identidad; sí se retira el acceso a la escuela como se solicitó.
 - **Interfaz:** casilla «Institución de prueba (reinicio automático)» en alta/edición. Los avisos de baja y eliminación informan cuántas identidades técnicas se eliminaron y cuántas quedaron protegidas.
 - **Verificación:** se ejecutaron dos pruebas con rollback de SQL sobre Aero Morón, confirmando que los procedimientos de eliminación de escuela y cancelación de invitación habrían borrado Auth, pero el test restauró Auth, invitación e institución. No se efectuó ninguna baja definitiva durante la verificación. Falta prueba de extremo a extremo desde el navegador del director con un instructor/alumno real.
+
+
+### 28/10/2026 — Circuito de prueba repetible con correos fijos
+
+Se estableció la prueba de extremo a extremo: el Superadministrador crea una institución de prueba, invita al director con `gusfab71@gmail.com`, el director completa el acceso y envía la invitación al instructor con `21912214gf@gmail.com`. El padrón central «Registros de AeroSuite» muestra las invitaciones y sus altas, y permite cancelarlas o desvincular integrantes.
+
+**Reinicio en modo pruebas:** si se elimina la institución, la función de Supabase elimina invitaciones, membresías, auditoría institucional y cuentas técnicas exclusivas en Auth y perfiles. Si se elimina o cancela un instructor, desaparecen también su invitación y auditorías operativas del correo; la función interna puede limpiar además su cuenta Auth temporal, perfil AeroSuite y documentos de la prueba. Se preservan administradores de Gente de Vuelo y AeroSuite, miembros de la comunidad y cualquier cuenta con datos o accesos ajenos a la prueba. No se garantiza borrar registros técnicos de servicios externos ni mensajes ya entregados.
+
+**Enlaces:** Edge Function `aerosuite-invitations` versión 6 crea un segundo enlace `magiclink` cuando el primer `generateLink` inicializó una identidad con `signup`. La página `ingreso-escuela.html` acepta el tipo exacto recibido. La política de contraseña de AeroSuite se ajustó a **9 caracteres exactos** (mayúscula, minúscula, dígito, símbolo).
+
+**Pruebas:** verificado con SQL reversible que la eliminación de Aero Morón y la cancelación de invitaciones borran identidades y registros operativos asociados; todos los cambios de prueba fueron revertidos. HTML validado sintácticamente; Vercel desplegado. Falta aún la prueba real de apertura de nuevo enlace, creación de contraseña y rol de instructor desde el navegador.
