@@ -145,14 +145,27 @@ function showHealth(){
   ['Aeronaves disponibles',health.aircraft_available],['Packs registrados',health.packs_total]
  ];
  put($('healthMetrics'),fields.map(x=>makeMetric(x[0],x[1])));
+ const anomalies=[
+  ['Reservas pendientes vencidas',health.stale_pending],
+  ['Vuelos confirmados sin instructor',health.confirmed_without_instructor],
+  ['Vuelos cerrados sin informe aprobado',health.completed_without_approved_report],
+  ['Packs con saldo negativo',health.negative_pack_balance],
+  ['Vuelos cobrados por hora y pack a la vez',health.double_settlement],
+  ['Reservas superpuestas en la institución',health.overlapping_institution_slots],
+  ['Instructores con vuelos simultáneos entre instituciones',health.instructor_cross_institution_overlap]
+ ];
+ const flagged=anomalies.filter(x=>numeric(x[1])>0);
  const checks=[
   notice('Consulta a Supabase: correcta','El servidor respondió al diagnóstico de '+health.institution_name+'.'),
+  notice(flagged.length?'Se encontraron alertas de integridad: '+flagged.length:'Registros examinados: sin anomalías detectadas',
+   flagged.length?'Revisá las alertas siguientes. Ningún registro fue modificado.':'Las siete reglas de integridad consultadas no detectaron incidencias en estos datos.'),
   notice(numeric(health.directors)>0?'Dirección: registrada':'Dirección: sin usuarios','Directores vinculados: '+numeric(health.directors)+'.'),
   notice(numeric(health.instructors)>0?'Instructores: registrados':'Instructores: sin usuarios','Instructores vinculados: '+numeric(health.instructors)+'.'),
   notice(numeric(health.students)>0?'Alumnos: registrados':'Alumnos: sin usuarios','Alumnos vinculados: '+numeric(health.students)+'.'),
   notice('Licencia: '+String(health.access_mode||'sin dato'),'Si la institución está en consulta, las operaciones de escritura no deben estar disponibles.'),
   notice('Prueba transaccional: no ejecutada','Este visor solo lee datos; comprobá el circuito con una cuenta de prueba de cada rol.')
  ];
+ for(const [title,quantity] of flagged)checks.push(notice('Revisar: '+title+' ('+numeric(quantity)+')','Anomalía de datos detectada en esta institución. Se requiere revisión operativa.'));
  put($('healthChecks'),checks);
 }
 function startOfWeekART(offset){
@@ -205,7 +218,7 @@ function showModule(module){
   area.append(node('p',text),makeTurnera());
  }else if(module==='informes'){
   area.append(node('p',selectedRole==='alumno'?'Se muestran únicamente las devoluciones aprobadas del alumno.':selectedRole==='instructor'?'El instructor presenta el informe de vuelos asignados, que luego revisa Administración.':'Dirección/Secretaría valida o devuelve informes y registra horas del vuelo.'));
-  put(node('div'),[]);
+
   const block=node('div',null,'metric-grid');block.append(
    makeMetric('Presentados',health.reports_submitted),
    makeMetric('Devueltos',health.reports_returned),
