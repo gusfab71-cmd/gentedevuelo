@@ -229,7 +229,7 @@ try{
   card.hidden=!card.dataset.visibleRole.split(/\s+/).includes(school.my_role);
  }
  for(const link of document.querySelectorAll('.operational-link[data-module]')){
-   link.href=(link.dataset.module==='flota'?'flota-institucional.html':'operaciones-institucionales.html')+'?institucion='+encodeURIComponent(school.institution_id)+'&rol='+encodeURIComponent(school.my_role)+(link.dataset.module==='flota'?'':'#'+encodeURIComponent(link.dataset.module));
+   link.href=(link.dataset.module==='flota'?'flota-institucional.html':'operaciones-institucionales.html')+'?institucion='+encodeURIComponent(school.institution_id)+'&rol='+encodeURIComponent(school.my_role)+(labLogin?'&prueba=1':'')+(link.dataset.module==='flota'?'':'#'+encodeURIComponent(link.dataset.module));
   }
   el('schoolName').textContent=school.institution_name;
  el('actorLine').textContent='Cuenta: '+(user.email||'verificada en Supabase');
