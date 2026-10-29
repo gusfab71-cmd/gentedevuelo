@@ -160,10 +160,23 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    <div id="moneyArea"><h3>Movimientos de caja y contaduría</h3><p class="hint">Resumen orientativo de los últimos 150 movimientos, separados por moneda. No sustituye la contabilidad fiscal.</p><div class="cards" id="moneySummary"></div><div class="list" id="moneyList"></div></div>
   </section>
   <section class="panel tab-panel" id="recursos">
-   <span class="eyebrow">Siguiente integración</span><h2>Academia Aeronáutica y recursos</h2>
-   <p>Esta área reunirá el material pedagógico de la institución, el Simulador PPA y las utilidades de instrucción, respetando los permisos del Director, Instructor y Alumno.</p>
-   <div class="notice">La biblioteca existente de AeroSuite todavía no está conectada a este nuevo acceso institucional. No habilitaremos carpetas ni archivos entre escuelas hasta verificar sus permisos de lectura y escritura.</div>
-   <p>El módulo de flota y mantenimiento también se incorporará a Administración con controles específicos. La disponibilidad técnica se gestionará manualmente y no se enviarán alertas automáticas por desperfectos.</p>
+   <span class="eyebrow">Academia Aeronáutica institucional</span><h2>Material de instrucción</h2>
+   <p>Apuntes, guías y documentos de esta escuela. Los alumnos pueden consultar y descargar el material publicado por Dirección, Secretaría e Instructores.</p>
+   <form id="academyForm" hidden>
+    <h3>Agregar material para los alumnos</h3>
+    <div class="formgrid">
+     <label>Título del material<input name="title" maxlength="150" minlength="3" required placeholder="Ej.: Circuito de tránsito"></label>
+     <label>Descripción (opcional)<input name="description" maxlength="3000" placeholder="Tema, objetivos o instrucciones de lectura"></label>
+    </div>
+    <label style="margin-top:12px">Apunte o indicaciones (opcional)<textarea name="body" maxlength="12000" placeholder="Podés escribir una explicación o adjuntar un archivo."></textarea></label>
+    <label style="margin-top:12px">Archivo (opcional: PDF, Word, imagen o TXT, máximo 30 MB)
+     <input id="academyFile" name="file" type="file" accept=".pdf,.docx,.txt,.png,.jpg,.jpeg,.webp,application/pdf,image/png,image/jpeg,image/webp,text/plain,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
+    </label>
+    <p class="hint">Compartido exclusivamente con los integrantes de la institución. No subas datos personales innecesarios de alumnos.</p>
+    <button class="primary" id="academySubmit" type="submit" style="margin-top:12px">Publicar en la Academia</button>
+   </form>
+   <p class="hint" id="academyStatus" role="status">Consultando biblioteca institucional…</p>
+   <h3>Material disponible</h3><div class="list" id="academyList"></div>
   </section>
  </div>
 </main>
@@ -217,6 +230,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    $("packsArea").hidden=true;
   }
   if(role==="instructor")$("tabs").querySelector('[data-tab="finanzas"]').hidden=true;
+  $("academyForm").hidden=!(manager||role==="instructor");
   if(!school.can_write){document.querySelectorAll("form input,form select,form textarea,form button").forEach(x=>x.disabled=true);$("financeHelp").textContent="Modo consulta: no se pueden guardar movimientos."; }
   if(manager){
    const r=await db.rpc("aerosuite_director_people",{p_institution_id:inst});
@@ -691,9 +705,147 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     f.reset();stat.textContent="Movimiento registrado en Contaduría y en el historial institucional.";await loadFinance();
    }catch(e){stat.textContent="No se pudo registrar el movimiento: "+safeError(e);}finally{button.disabled=false;}
   });
+
+  const academyBucket="aerosuite-academia-institucional";
+  const academyTypes={
+   pdf:"application/pdf",
+   docx:"application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+   txt:"text/plain",
+   png:"image/png",
+   jpg:"image/jpeg",
+   jpeg:"image/jpeg",
+   webp:"image/webp"
+  };
+  const academyCanUpload=()=>school.can_write&&(manager||role==="instructor");
+  let academyResources=[];
+  async function loadAcademy(){
+   const list=$("academyList"),status=$("academyStatus");
+   list.replaceChildren();
+   const {data,error}=await db.from("aerosuite_academy_resources")
+    .select("id,institution_id,created_by,title,description,body,kind,storage_path,file_name,created_at")
+    .eq("institution_id",inst).order("created_at",{ascending:false}).limit(150);
+   if(error){status.textContent="No se pudo consultar la Academia: "+safeError(error);return;}
+   academyResources=data||[];
+   status.textContent=academyResources.length?
+    academyResources.length+" recurso(s) disponible(s) para esta escuela.":
+    "Todavía no hay materiales publicados para esta escuela.";
+   for(const resource of academyResources){
+    const card=document.createElement("div");card.className="list-item";
+    const top=document.createElement("div");top.className="row between";
+    const title=document.createElement("strong");title.textContent=resource.title;
+    const meta=document.createElement("span");meta.className="hint";
+    meta.textContent=new Date(resource.created_at).toLocaleDateString("es-AR");
+    top.append(title,meta);card.append(top);
+    if(resource.description){
+     const p=document.createElement("p");p.className="hint lesson-text";p.textContent=resource.description;
+     card.append(p);
+    }
+    if(resource.body){
+     const p=document.createElement("p");p.className="lesson-text";p.textContent=resource.body;
+     card.append(p);
+    }
+    const actions=document.createElement("div");actions.className="actions";
+    if(resource.kind==="file"&&resource.storage_path){
+     const open=document.createElement("button");open.type="button";
+     open.textContent="Abrir archivo"+(resource.file_name?" · "+resource.file_name:"");
+     open.onclick=async()=>{
+      const tab=window.open("about:blank","_blank");
+      open.disabled=true;
+      try{
+       const {data,error}=await db.storage.from(academyBucket).createSignedUrl(resource.storage_path,90);
+       if(error||!data?.signedUrl)throw error||Error("No se pudo obtener acceso temporal.");
+       if(tab)tab.location.href=data.signedUrl;
+       else window.location.href=data.signedUrl;
+      }catch(e){
+       if(tab)tab.close();
+       $("academyStatus").textContent="Error al abrir el archivo: "+safeError(e);
+      }finally{open.disabled=false;}
+     };
+     actions.append(open);
+    }
+    if(academyCanUpload()&&(manager||resource.created_by===user.id)){
+     const remove=document.createElement("button");remove.type="button";
+     remove.className="danger";remove.textContent="Eliminar material";
+     remove.onclick=async()=>{
+      if(!confirm("¿Eliminar este material de la Academia de esta escuela?"))return;
+      remove.disabled=true;
+      try{
+       const {error}=await db.from("aerosuite_academy_resources")
+        .delete().eq("id",resource.id).eq("institution_id",inst);
+       if(error)throw error;
+       if(resource.storage_path){
+        const res=await db.storage.from(academyBucket).remove([resource.storage_path]);
+        if(res.error)throw Error("La tarjeta se eliminó, pero falló la limpieza del archivo: "+res.error.message);
+       }
+       $("academyStatus").textContent="Material eliminado.";
+       await loadAcademy();
+      }catch(e){$("academyStatus").textContent="No se completó la eliminación: "+safeError(e);remove.disabled=false;}
+     };
+     actions.append(remove);
+    }
+    if(actions.childElementCount)card.append(actions);
+    list.append(card);
+   }
+  }
+  $("academyForm").addEventListener("submit",async event=>{
+   event.preventDefault();
+   if(!academyCanUpload()){
+    $("academyStatus").textContent="No tenés permisos para publicar recursos.";
+    return;
+   }
+   const form=event.currentTarget,fd=new FormData(form),file=fd.get("file");
+   const upload=file instanceof File&&file.size>0?file:null;
+   const title=String(fd.get("title")||"").trim();
+   const description=String(fd.get("description")||"").trim();
+   const body=String(fd.get("body")||"").trim();
+   const notice=$("academyStatus"),button=$("academySubmit");
+   if(title.length<3||title.length>150||description.length>3000||body.length>12000){
+    notice.textContent="Revisá el título y las longitudes permitidas.";return;
+   }
+   if(!body&&!upload){
+    notice.textContent="Ingresá un apunte o seleccioná un archivo.";return;
+   }
+   let path=null;
+   let mime=null;
+   if(upload){
+    const ext=(upload.name.split(".").pop()||"").toLowerCase();
+    mime=academyTypes[ext];
+    if(!mime||upload.size>31457280||upload.size<=0){
+     notice.textContent="Archivo no permitido. Elegí PDF, Word, TXT o imagen, hasta 30 MB.";return;
+    }
+    const actualMime=upload.type.toLowerCase();
+    if(actualMime&&actualMime!=="application/octet-stream"&&actualMime!==mime){
+     notice.textContent="La extensión y el tipo de archivo no coinciden.";return;
+    }
+    const name=upload.name.replace(/[^a-zA-Z0-9_.-]/g,"_").slice(-105);
+    path=inst+"/"+crypto.randomUUID()+"-"+name;
+   }
+   button.disabled=true;notice.textContent="Guardando material…";
+   try{
+    if(upload){
+     const result=await db.storage.from(academyBucket).upload(path,upload,{contentType:mime,upsert:false,cacheControl:"3600"});
+     if(result.error)throw result.error;
+    }
+    const {error}=await db.from("aerosuite_academy_resources").insert({
+     institution_id:inst,created_by:user.id,title,description,body,
+     kind:upload?"file":"note",
+     storage_path:path,file_name:upload?upload.name.slice(0,180):null,
+     mime_type:upload?mime:null,file_size:upload?upload.size:null
+    });
+    if(error)throw error;
+    form.reset();
+    await loadAcademy();
+    notice.textContent="Material publicado. Los alumnos de esta escuela ya pueden consultarlo.";
+   }catch(e){
+    if(path){
+     try{await db.storage.from(academyBucket).remove([path]);}catch(_){}
+    }
+    notice.textContent="No se pudo publicar el material: "+safeError(e);
+   }finally{button.disabled=false;}
+  });
   async function refresh(){
    stat.textContent="Actualizando datos de la institución…";
-   try{await loadAircraftChoices();await loadWeek();await loadReports();await loadFinance();renderReportFormChoices();stat.textContent="Información institucional actualizada."; }
+   try{await loadAircraftChoices();await loadWeek();await loadReports();await loadFinance();await loadAcademy();renderReportFormChoices();stat.textContent="Información institucional actualizada."; }
    catch(e){stat.textContent="Error al cargar el área: "+safeError(e);}
   }
   $("updateWeek").onclick=refresh;
