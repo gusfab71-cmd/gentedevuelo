@@ -569,7 +569,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    }
    const teaching=inputRow(form,"Práctica realizada, devolución y recomendaciones","textarea",r.teaching_notes,{required:true,maxLength:3000});
    if(!simulation)aircraft=inputRow(form,"Observaciones de la aeronave","textarea",r.aircraft_notes||"",{maxLength:2000});
-   const reason=inputRow(form,"Nota interna sobre la corrección (opcional)","input", "",{maxLength:250});
+   const reason=inputRow(form,"Nota interna sobre la corrección (opcional)","text", "",{maxLength:250});
    reason.placeholder="Ej.: Corregido después de consultar verbalmente al Instructor";
    const checkboxLabel=document.createElement("label");checkboxLabel.className="hint";
    const checkbox=document.createElement("input");checkbox.type="checkbox";
@@ -888,26 +888,41 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
      formatLogbookEntry(r.logbook_entry)+
      '<p class="lesson-text"><strong>Devolución:</strong> '+esc(r.teaching_notes)+'</p><p class="lesson-text"><strong>Novedades:</strong> '+esc(r.aircraft_notes||"Sin novedades registradas")+'</p>'+
      (r.return_reason?'<p class="warn"><strong>Motivo de devolución:</strong> '+esc(r.return_reason)+'</p>':"");
-    if(manager&&r.status==="submitted"){
+    if(r.last_corrected_by&&r.last_corrected_at){
+     const note=document.createElement("p");note.className="hint";
+     note.textContent="Última corrección administrativa: "+(r.corrected_by_email||"Cuenta institucional")+
+      " · "+stamp(r.last_corrected_at)+(r.last_correction_note?" · "+r.last_correction_note:"")+
+      ". La versión anterior se conserva en el historial.";
+     card.append(note);
+    }
+    if(manager&&["submitted","returned","approved"].includes(r.status)){
      const row=document.createElement("div");row.className="actions";
-     for(const [label,action,cls] of [["Validar informe","approve","primary"],["Devolver para corregir","return",""]]){
-      const b=document.createElement("button");b.textContent=label;b.className=cls;
-       const flightCompleted=new Date(r.starts_at).getTime()+90*60000<=Date.now();
-       b.disabled=!school.can_write||(action==="approve"&&!flightCompleted);
-       if(action==="approve"&&!flightCompleted)b.title="No se puede aprobar un vuelo antes de finalizar su turno.";
-       b.onclick=async()=>{
-        if(action==="approve"&&new Date(r.starts_at).getTime()+90*60000>Date.now()){
-         stat.textContent="El vuelo aún no terminó. No se puede aprobar por anticipado.";
-         return;
-        }
-       const reason=action==="return"?prompt("Indicá por qué debe corregirse el informe:"):null;
-       if(action==="return"&&(!reason||!reason.trim()))return;
-       if(action==="approve"&&!confirm("¿Validar este informe y cerrar el vuelo como realizado?"))return;
-       try{b.disabled=true;await rpc("aerosuite_report_action",{p_institution_id:inst,p_booking_id:r.booking_id,p_action:action,p_review_note:reason});
-        stat.textContent="Informe "+(action==="approve"?"validado":"devuelto al instructor")+".";
-        await Promise.all([loadWeek(),loadReports()]);}catch(e){stat.textContent=safeError(e);}finally{b.disabled=false;}
-      };row.append(b);
-     }card.append(row);
+     const edit=document.createElement("button");edit.type="button";
+     edit.textContent="Editar informe";edit.disabled=!school.can_write;
+     edit.onclick=()=>openManagerReportEditor(card,r,false);
+     row.append(edit);
+     if(["submitted","returned"].includes(r.status)){
+      const approve=document.createElement("button");approve.className="primary";approve.type="button";
+      approve.textContent="Aprobar informe";
+      const flightCompleted=new Date(r.starts_at).getTime()+90*60000<=Date.now();
+      approve.disabled=!school.can_write||r.status!=="submitted"||!flightCompleted;
+      if(!flightCompleted)approve.title="No se puede aprobar un vuelo antes de finalizar su turno.";
+      if(r.status==="returned")approve.title="Corregí el informe antes de aprobarlo.";
+      approve.onclick=async()=>{
+       if(!confirm("¿Aprobar el informe revisado y registrar el vuelo como realizado?"))return;
+       try{
+        approve.disabled=true;
+        await rpc("aerosuite_report_action",{
+         p_institution_id:inst,p_booking_id:r.booking_id,p_action:"approve"
+        });
+        stat.textContent="Informe aprobado por Administración.";
+        await Promise.all([loadWeek(),loadReports()]);
+       }catch(e){stat.textContent="No se pudo aprobar: "+safeError(e);}
+       finally{approve.disabled=false;}
+      };
+      row.append(approve);
+     }
+     card.append(row);
     }
     target.append(card);
    }
