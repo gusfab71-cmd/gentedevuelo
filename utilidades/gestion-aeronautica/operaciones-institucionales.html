@@ -482,6 +482,30 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    for(const key of Object.keys(result))result[key]=result[key].trim();
    return result;
   }
+  function formatLogbookEntry(entry){
+   if(!entry||typeof entry!=="object"||!entry.flight_date)return "";
+   const date=String(entry.flight_date).split("-").reverse().join("/");
+   const category=(entry.flight_area==="travesia"?"Travesía":"Sobre aeródromo")+
+    (entry.flight_period==="noche"?" · Noche":" · Día")+
+    (entry.flight_role==="copiloto"?" · Copiloto":" · Piloto");
+   const fields=[
+    ["Fecha del vuelo",date],
+    ["Salida UTC",entry.departure_utc],
+    ["Desde",entry.origin],
+    ["Hasta",entry.destination],
+    ["Llegada UTC",entry.arrival_utc],
+    ["Cantidad de vuelos",entry.flight_count],
+    ["Marca/modelo",entry.aircraft_make],
+    ["Matrícula",entry.aircraft_registration],
+    ["Potencia",entry.aircraft_power],
+    ["Clase",entry.aircraft_class],
+    ["Clasificación del tiempo de vuelo",category]
+   ];
+   return '<div class="card" style="margin:10px 0"><strong>Registro del Libro de Vuelo</strong>'+
+    fields.filter(([_,value])=>value!==null&&value!==undefined&&String(value).trim()!=="")
+    .map(([label,value])=>'<p><strong>'+esc(label)+':</strong> '+esc(value)+'</p>').join("")+
+    '</div>';
+  }
   function renderReports(){
    const target=$("reportsList");target.replaceChildren();
    if(!reports.length){
@@ -495,7 +519,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
      const minutes=Number(r.flight_minutes)||0,hours=Math.floor(minutes/60),remainder=minutes%60;
      const duration=(hours?hours+" h":"")+(remainder?(hours?" ":"")+remainder+" min":"")||"Sin registrar";
      card.innerHTML='<strong>Práctica del '+esc(stamp(r.starts_at))+'</strong>'+
-      '<p><strong>Tiempo de vuelo realizado:</strong> '+esc(duration)+'</p>'+
+      '<p><strong>Tiempo de vuelo realizado:</strong> '+esc(duration)+'</p>'+formatLogbookEntry(r.logbook_entry)+
       (notes.practice?'<p><strong>Práctica realizada:</strong></p><p class="lesson-text">'+esc(notes.practice)+'</p>':"")+
       (notes.feedback?'<p><strong>Devolución del instructor:</strong></p><p class="lesson-text">'+esc(notes.feedback)+'</p>':"")+
       (notes.next?'<p><strong>Para la próxima práctica:</strong></p><p class="lesson-text">'+esc(notes.next)+'</p>':"");
@@ -504,6 +528,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     }
     card.innerHTML='<div class="row between"><strong>'+esc(stamp(r.starts_at))+" · "+esc(r.student_email)+'</strong><span class="chip '+esc(r.status)+'">'+esc(statuses[r.status])+'</span></div>'+
      '<p><strong>Instructor:</strong> '+esc(r.instructor_email)+' · <strong>Vuelo real:</strong> '+esc(r.flight_minutes)+' minutos · <strong>Combustible:</strong> '+esc(r.fuel_liters)+' L · <strong>Aceite:</strong> '+esc(r.oil_liters)+' L · Versión '+esc(r.revision)+'</p>'+
+     formatLogbookEntry(r.logbook_entry)+
      '<p class="lesson-text"><strong>Devolución:</strong> '+esc(r.teaching_notes)+'</p><p class="lesson-text"><strong>Novedades:</strong> '+esc(r.aircraft_notes||"Sin novedades registradas")+'</p>'+
      (r.return_reason?'<p class="warn"><strong>Motivo de devolución:</strong> '+esc(r.return_reason)+'</p>':"");
     if(manager&&r.status==="submitted"){
@@ -538,7 +563,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     await rpc("aerosuite_submit_flight_report_with_logbook",{p_institution_id:inst,p_booking_id:fd.get("booking"),
      p_flight_minutes:Number(fd.get("minutes")),p_fuel_liters:Number(fd.get("fuel")),p_oil_liters:Number(fd.get("oil")),
      p_teaching_notes:teachingNotes.join("\n\n"),p_aircraft_notes:fd.get("aircraft"),p_logbook_entry:logbook});
-    f.reset();stat.textContent="Informe presentado a Administración para su revisión.";await loadReports();
+    f.reset();stat.textContent="Informe y registro de vuelo presentados a Administración para su revisión.";await loadReports();
    }catch(e){stat.textContent="No se pudo enviar el informe: "+safeError(e);}finally{button.disabled=false;}
   });
   function renderFinanceBookingChoices(){
