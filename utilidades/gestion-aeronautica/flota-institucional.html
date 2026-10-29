@@ -27,8 +27,10 @@ button{background:#e9c993;color:#193041;border:1px solid #e9c993;border-radius:9
 </div></main>
 <script>"use strict";(async()=>{
  const $=id=>document.getElementById(id),st=$("status");
- const db=supabase.createClient(GDV_CONFIG.url,GDV_CONFIG.key,{auth:{storageKey:"aerosuite-institucional-v2-auth",persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
- const params=new URLSearchParams(location.search),inst=params.get("institucion");let school;
+ const params=new URLSearchParams(location.search),inst=params.get("institucion");
+ const testRole=params.get("rol")||"";
+ const labLogin=params.get("prueba")==="1"&&["administrador","secretaria","instructor","alumno"].includes(testRole);
+ const db=supabase.createClient(GDV_CONFIG.url,GDV_CONFIG.key,{auth:{storageKey:labLogin?"aerosuite-laboratorio-"+testRole+"-v1-auth":"aerosuite-institucional-v2-auth",persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});let school;
  try{
   if(!inst)throw Error("Ingresá desde el portal de tu institución.");
   const u=await db.auth.getUser();if(!u.data?.user||u.error)throw Error("La sesión de AeroSuite no está activa.");
@@ -36,7 +38,7 @@ button{background:#e9c993;color:#193041;border:1px solid #e9c993;border-radius:9
   school=(access.data||[]).find(x=>x.institution_id===inst&&x.can_access&&["administrador","secretaria","instructor"].includes(x.my_role));
   if(!school)throw Error("No tenés acceso a la flota de esta institución.");
   $("school").textContent=school.institution_name;
-  $("back").href="portal-escuela.html?institucion="+encodeURIComponent(inst)+"&rol="+encodeURIComponent(school.my_role)+"&elegida=1";
+  $("back").href="portal-escuela.html?institucion="+encodeURIComponent(inst)+"&rol="+encodeURIComponent(school.my_role)+"&elegida=1"+(labLogin?"&prueba=1":"");
   const manager=["administrador","secretaria"].includes(school.my_role);
   $("createPanel").hidden=!manager||!school.can_write;$("area").hidden=false;
   async function action(args){const r=await db.rpc("aerosuite_aircraft_action",{p_institution_id:inst,...args});if(r.error)throw r.error;return r.data;}
