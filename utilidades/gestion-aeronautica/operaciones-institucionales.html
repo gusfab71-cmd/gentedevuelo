@@ -209,7 +209,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    if([...selector.options].some(x=>x.value===defaultInstructor))selector.value=defaultInstructor;
    $("reschedulePanel").hidden=false;
    $("rescheduleSource").textContent="Alumno: "+(booking.student_email||"Sin identificar")+" · Turno actual: "+stamp(booking.starts_at)+" (90 minutos).";
-   $("rescheduleFeedback").textContent="Confirmá la autorización, indicá el medio y el motivo. Después seleccioná un nuevo horario libre.";
+   $("rescheduleFeedback").textContent=(selector.value?"Instructor preasignado: "+selector.selectedOptions[0].text+". ":"Sin Instructor preasignado. ")+"Confirmá la autorización, indicá el medio y el motivo. Después seleccioná un nuevo horario libre.";
    renderWeek(weekDates());
    $("reschedulePanel").scrollIntoView({behavior:"smooth",block:"center"});
   }
@@ -233,12 +233,19 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    if(!confirm("¿Reprogramar el turno de "+old.student_email+" del "+stamp(old.starts_at)+" al "+stamp(start.toISOString())+"?"+instructorText+"\n\nSe conservará su reserva y quedará pendiente de confirmar el nuevo horario."))return;
    cell.disabled=true;
    try{
-    await rpc("aerosuite_reschedule_booking_with_instructor",{
+    const result=await rpc("aerosuite_reschedule_booking_with_instructor",{
      p_institution_id:inst,p_booking_id:old.booking_id,p_new_starts_at:start.toISOString(),
      p_student_authorized:true,p_authorization_channel:channel,p_reason:reason,p_instructor_id:instructorId
     });
     stopReschedule();await loadWeek();
-    stat.textContent="Turno reprogramado para "+stamp(start.toISOString())+". "+(instructorId?"Instructor preasignado; falta confirmación.":"Falta asignar y confirmar Instructor.");
+    const saved=bookings.find(x=>x.booking_id===old.booking_id);
+    if(!result?.ok||!saved||new Date(saved.starts_at).getTime()!==start.getTime()){
+     stat.textContent="La reprogramación fue enviada, pero no se pudo comprobar el nuevo turno. Actualizá la turnera antes de volver a intentarlo.";return;
+    }
+    if(instructorId&&saved.instructor_id!==instructorId){
+     stat.textContent="El turno cambió de horario, pero no se verificó el Instructor preasignado. Revisá el detalle y preasignalo antes de confirmar.";return;
+    }
+    stat.textContent="Turno reprogramado para "+stamp(start.toISOString())+". "+(instructorId?"Instructor preasignado correctamente; falta confirmar el turno.":"Falta asignar y confirmar Instructor.");
    }catch(e){
     $("rescheduleFeedback").textContent="No se pudo reprogramar: "+safeError(e);
     $("reschedulePanel").scrollIntoView({behavior:"smooth",block:"center"});
@@ -341,7 +348,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     const card=document.createElement("div");card.className="list-item";card.id="booking-"+(b.booking_id||"");
     const sensitive=role!=="alumno"||b.my_booking;
     card.innerHTML='<div class="row between"><strong>'+esc(stamp(b.starts_at))+' · 90 min</strong><span class="chip '+esc(b.status)+'">'+esc(statuses[b.status]||b.status)+'</span></div>'+
-     (sensitive?'<p>Alumno: '+esc(b.student_email||"Reservado")+' · Instructor: '+esc(b.instructor_email||"Sin asignar")+' · Aeronave: '+esc(b.aircraft||"A definir")+'</p>':'<p>Turno ocupado de otro alumno.</p>');
+     (sensitive?'<p>Alumno: '+esc(b.student_email||"Reservado")+' · Instructor: '+esc(b.instructor_id?(b.instructor_email||"Cuenta no disponible")+(b.status==="pending"?" (preasignado · pendiente de confirmar)":""):"Sin asignar")+' · Aeronave: '+esc(b.aircraft||"A definir")+'</p>':'<p>Turno ocupado de otro alumno.</p>');
     if(manager&&["confirmed","completed"].includes(b.status)){
      const detail=bookingConfirmations.get(b.booking_id);
      const p=document.createElement("p");p.className="hint";
@@ -371,11 +378,11 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
      btn("Confirmar turno",async()=>{
       let instructorId=null,aircraft="";
       if(manager){
-       instructorId=$("bookingInstructor").value;
+       instructorId=b.instructor_id||$("bookingInstructor").value;
        if(!instructorId){stat.textContent="Seleccioná un instructor habilitado antes de confirmar.";return;}
        aircraft=$("bookingAircraft").value.trim();
       }
-      if(!confirm("¿Confirmar este turno"+(role==="instructor"?" a tu cargo":"")+"?"))return;
+      if(!confirm("¿Confirmar este turno"+(role==="instructor"?" a tu cargo":"")+(manager?" con el Instructor "+labelOf(instructorId):"")+"?"))return;
       await takeAction("confirm",b,{p_instructor_id:instructorId,p_aircraft:aircraft});
      },"primary");
     }
