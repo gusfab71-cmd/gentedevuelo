@@ -394,7 +394,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    try{
     const result=await rpc("aerosuite_booking_action",Object.assign({p_institution_id:inst,p_action:action,p_booking_id:b.booking_id},options));
     stat.textContent=action==="cancel"
-     ?(result.report_voided?"Reserva cancelada e informe pendiente anulado. Se conservó el historial.":"Reserva cancelada. Se conservó el historial.")
+     ?"Reserva sin informe cancelada. Se conservó el historial."
      :"Reserva actualizada correctamente.";
     await loadWeek();
     if(action==="cancel"){
@@ -461,24 +461,24 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
       await takeAction("assign_aircraft",b,{p_aircraft:aircraft});
      });
     }
-    if(b.booking_id&&manager&&["pending","confirmed"].includes(b.status)&&new Date(b.starts_at).getTime()>Date.now()){
+    const associatedReport=b.booking_id?reports.find(r=>r.booking_id===b.booking_id):null;
+    const canChangeBooking=!!b.booking_id&&!associatedReport&&new Date(b.starts_at).getTime()>Date.now();
+    if(b.booking_id&&manager&&associatedReport&&["pending","confirmed","completed"].includes(b.status)){
+     const notice=document.createElement("p");notice.className="hint";
+     notice.textContent="Este turno tiene un informe de instrucción ("+(statuses[associatedReport.status]||associatedReport.status)+"). No se puede cancelar ni reprogramar desde la turnera. Revisá el documento desde «Informes de instrucción».";
+     card.append(notice);
+    }
+    if(canChangeBooking&&manager&&["pending","confirmed"].includes(b.status)){
      btn("Reprogramar turno",()=>startReschedule(b));
     }
-    if(b.booking_id&&(manager||role==="alumno"&&b.my_booking&&b.status==="pending")&&["pending","confirmed"].includes(b.status)){
-     const associatedReport=reports.find(r=>r.booking_id===b.booking_id);
-     const reportPending=associatedReport&&["submitted","returned"].includes(associatedReport.status);
-     if(reportPending&&manager){
-      const note=document.createElement("p");
-      note.className="hint";note.textContent="Este turno tiene un informe presentado. Si lo cancelás, el informe quedará anulado y se conservará en el historial.";
-      card.append(note);
-     }
+    if(canChangeBooking&&(manager||(role==="alumno"&&b.my_booking&&b.status==="pending"))&&["pending","confirmed"].includes(b.status)){
      const feedback=document.createElement("p");feedback.className="warn";feedback.setAttribute("role","alert");
      btn("Cancelar reserva",async()=>{
       const reason=prompt("Motivo de cancelación (obligatorio):");
       if(!reason||!reason.trim())return;
-      const question="¿Cancelar la reserva del "+stamp(b.starts_at)+"?"+
-       (reportPending?"\n\nEl informe de instrucción pendiente también quedará ANULADO, conservándose en el historial y sin sumar horas al alumno.":"\n\nSe conservará el historial de la reserva.");
-      if(confirm(question))await takeAction("cancel",b,{p_reason:reason.trim()},feedback);
+      if(confirm("¿Cancelar la reserva del "+stamp(b.starts_at)+"? Se conservará el historial.")){
+       await takeAction("cancel",b,{p_reason:reason.trim()},feedback);
+      }
      },"danger");
      card.append(feedback);
     }
