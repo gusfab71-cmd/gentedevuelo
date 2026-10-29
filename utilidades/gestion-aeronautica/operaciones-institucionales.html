@@ -282,18 +282,39 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   <section class="panel tab-panel" id="finanzas">
    <span class="eyebrow" id="financeEyebrow">Gestión económica institucional</span><h2 id="financeTitle">Contaduría y packs de horas</h2>
    <p id="financeHelp">Los packs descontados son consumo de horas, no un segundo ingreso. Los cobros reales, egresos y caja chica quedan individualizados.</p>
-   <div id="studentFlightHours" hidden aria-live="polite">
+   <div id="studentFlightHours" hidden aria-live="polite"><section class="panel" id="studentPackArea" style="margin:0 0 16px"><span class="eyebrow">Horas prepagas</span><h3>Mis packs de horas</h3><div class="cards" id="studentPackSummary"></div><div class="list" id="studentPackList"></div></section>
     <div class="cards" id="flightHoursCards"></div>
     <p class="hint">Los minutos de cada vuelo validado se suman sin redondeos. Los tiempos se expresan en horas y minutos, conforme al sistema sexagesimal del procedimiento ANAC aprobado por la Resolución 470/2025.</p>
     <div id="labStudentHours" class="list" hidden></div>
     <h3>Mis vuelos realizados</h3>
     <div class="list" id="flightHoursHistory"></div>
    </div>
+
+   <section class="panel" id="packPurchasePanel" hidden>
+    <span class="eyebrow">Primera operación · Contaduría</span><h3>Registrar compra y cobro de pack</h3>
+    <p class="hint">Cuando el alumno paga, Secretaría registra sus horas. El pack queda en su cuenta y el importe entra una sola vez en caja.</p>
+    <form id="packPurchaseForm">
+     <div class="formgrid">
+      <label>Alumno<select id="packPurchaseStudent" name="student" required><option value="">Seleccionar alumno</option></select></label>
+      <label>Horas<input name="hours_whole" type="number" min="0" max="1000" step="1" required value="5"></label>
+      <label>Minutos<input name="minutes_extra" type="number" min="0" max="59" step="1" required value="0"></label>
+      <label>Importe cobrado<input name="amount" type="number" min=".01" step=".01" max="1000000000000" required></label>
+      <label>Moneda<select name="currency"><option value="ARS">Pesos (ARS)</option><option value="USD">Dólares (USD)</option></select></label>
+      <label>Medio de pago<select id="packPurchaseMethod" name="payment_method"><option value="cash">Efectivo recibido</option><option value="bank_transfer">Transferencia acreditada</option></select></label>
+      <label id="packPurchaseBankRow" hidden>Referencia bancaria<input id="packPurchaseBankReference" name="payment_reference" maxlength="120" placeholder="Número de operación"></label>
+      <label>Factura ARCA emitida (opcional)<input name="fiscal_reference" maxlength="120" placeholder="Ej.: Factura B 0001-00001234"></label>
+     </div>
+     <label style="margin-top:12px">Concepto (opcional)<input name="description" maxlength="500" placeholder="Ej.: Pack 10 horas de instrucción"></label>
+     <p class="hint" id="packPurchaseSummary">Horas a acreditar: 5:00</p>
+     <p class="hint">Este registro interno no emite ni valida facturas ante ARCA. La escuela debe emitir el comprobante fiscal correspondiente.</p>
+     <button type="submit" class="primary" id="packPurchaseSubmit">Registrar pack y cobro</button>
+     <p id="packPurchaseStatus" class="hint" role="status" aria-live="polite"></p>
+    </form>
+   </section>
    <form id="financeForm" hidden>
     <div class="formgrid">
      <label>Movimiento<select name="op" id="financeOp">
-      <option value="pack_sale">Venta y cobro de pack</option><option value="pack_use">Descontar horas del pack</option>
-      <option value="hour_payment">Cobro de vuelo por hora</option><option value="expense">Egreso habitual</option>
+      <option value="hour_payment">Cobro de vuelo por hora</option><option value="pack_use">Descontar horas del pack</option><option value="expense">Egreso habitual</option>
       <option value="petty_expense">Gasto de caja chica</option><option value="refund">Devolución de dinero</option>
      </select></label>
      <label>Alumno<select name="student" id="financeStudent"><option value="">Elegí un alumno cuando corresponda</option></select></label>
@@ -363,7 +384,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   $("roleText").textContent="Rol: "+(roleLabel[role]||role)+" · "+user.email+(school.can_write?"":" · Solo consulta");
   $("pageTitle").textContent=manager?"Administración de la escuela":role==="instructor"?"Mi actividad de instrucción":"Mi reserva y formación";
   $("backPortal").href="portal-escuela.html?institucion="+encodeURIComponent(inst)+"&rol="+encodeURIComponent(role)+"&elegida=1"+(labLogin?"&prueba=1":"");
-  $("adminBooking").hidden=!manager;$("reportForm").hidden=role!=="instructor";$("financeForm").hidden=!manager;
+  $("adminBooking").hidden=!manager;$("reportForm").hidden=role!=="instructor";$("financeForm").hidden=!manager;$("packPurchasePanel").hidden=!manager;
   if(role==="alumno"){
    $("reportsEyebrow").textContent="Seguimiento de mi formación";
    $("reportsTitle").textContent="Mis prácticas y devoluciones";
@@ -391,6 +412,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    for(const [id,kind] of [["bookingStudent","alumno"],["financeStudent","alumno"],["bookingInstructor","instructor"]]){
     const s=$(id);people.filter(x=>x.role===kind).forEach(x=>s.add(new Option(x.email,x.person_id)));
    }
+   people.filter(x=>x.role==="alumno").forEach(x=>$("packPurchaseStudent").add(new Option(x.email,x.person_id)));
   }
   $("weekDate").value=mondayOf(artToday());
   $("workArea").hidden=false;
