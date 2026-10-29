@@ -367,7 +367,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
       }catch(e){stat.textContent="No se pudo preasignar: "+safeError(e);}
      });
     }
-    if(b.booking_id&&b.status==="pending"&&(manager||role==="instructor")){
+    if(b.booking_id&&b.status==="pending"&&(manager||(role==="instructor"&&(!b.instructor_id||b.instructor_id===user.id)))){
      btn("Confirmar turno",async()=>{
       let instructorId=null,aircraft="";
       if(manager){
