@@ -141,6 +141,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    <div id="studentFlightHours" hidden aria-live="polite">
     <div class="cards" id="flightHoursCards"></div>
     <p class="hint">Los minutos de cada vuelo validado se suman sin redondeos. Los tiempos se expresan en horas y minutos, conforme al sistema sexagesimal del procedimiento ANAC aprobado por la Resolución 470/2025.</p>
+    <div id="labStudentHours" class="list" hidden></div>
     <h3>Mis vuelos realizados</h3>
     <div class="list" id="flightHoursHistory"></div>
    </div>
@@ -560,6 +561,17 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    $("labReportMessage").textContent=role==="alumno"?
     "Solo verás aquí los informes simulados aprobados; nunca se suman a Mis horas de vuelo.":
     "Los cambios en este panel no afectan la reserva cancelada ni el Libro de Vuelo.";
+   if(role==="alumno"){
+    const separate=$("labStudentHours");separate.replaceChildren();
+    const approved=labReports.filter(r=>r.state==="approved");
+    separate.hidden=!approved.length;
+    for(const report of approved){
+     const box=document.createElement("div");box.className="list-item";
+     box.innerHTML='<strong>SIMULACIÓN: horas de prueba (no computables)</strong>'+
+      '<p>'+esc(flightDuration(Number(report.flight_minutes)))+' · Estas horas NO se sumaron al total real.</p>';
+     separate.append(box);
+    }
+   }
    if(!labReports.length){
     const p=document.createElement("p");
     p.textContent=role==="alumno"?
@@ -577,6 +589,9 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     flight.textContent="Tiempo simulado: "+flightDuration(Number(r.flight_minutes))+
       " · Sin acumulación de horas reales";
     card.append(flight);
+    const details=document.createElement("div");
+    details.innerHTML=formatLogbookEntry(r.logbook_entry);
+    card.append(details);
     if(role==="instructor"&&["draft","returned"].includes(r.state)){
      if(r.return_reason){const reason=document.createElement("p");
       reason.className="warn";reason.textContent="Observación de Secretaría: "+r.return_reason;card.append(reason);}
