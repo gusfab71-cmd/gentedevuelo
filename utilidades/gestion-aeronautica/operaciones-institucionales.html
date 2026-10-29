@@ -100,6 +100,26 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
      <label>Combustible cargado (litros)<input name="fuel" type="number" step=".01" min="0" value="0" required></label>
      <label>Aceite agregado (litros)<input name="oil" type="number" step=".01" min="0" value="0" required></label>
     </div>
+
+    <fieldset class="panel" style="margin:14px 0">
+     <legend style="padding:0 8px;font-weight:750">Datos del vuelo · Libro de Vuelo</legend>
+     <p class="hint">Registrá los datos reales del vuelo que se asentaron en el Libro de Vuelo; horarios en UTC, no los horarios planificados de la turnera.</p>
+     <div class="formgrid">
+      <label>Fecha del vuelo<input name="log_date" type="date" required></label>
+      <label>Hora de salida UTC<input name="log_departure_utc" type="time" required></label>
+      <label>Desde (aeródromo)<input name="log_origin" maxlength="100" required placeholder="Ej.: Morón"></label>
+      <label>Hasta (aeródromo)<input name="log_destination" maxlength="100" required placeholder="Ej.: Morón"></label>
+      <label>Hora de llegada UTC<input name="log_arrival_utc" type="time" required></label>
+      <label>Cantidad de vuelos<input name="log_flight_count" type="number" min="1" max="20" step="1" required value="1"></label>
+      <label>Marca/modelo de la aeronave<input name="log_aircraft_make" maxlength="80" required placeholder="Ej.: Cessna 150"></label>
+      <label>Matrícula<input name="log_aircraft_registration" maxlength="30" required placeholder="Ej.: LV-ABC"></label>
+      <label>Potencia (opcional)<input name="log_aircraft_power" maxlength="40" placeholder="Ej.: 100 HP"></label>
+      <label>Clase de aeronave<input name="log_aircraft_class" maxlength="60" required placeholder="Ej.: monomotor terrestre"></label>
+      <label>Tipo de vuelo<select name="log_flight_area" required><option value="aerodromo">Sobre aeródromo</option><option value="travesia">Travesía</option></select></label>
+      <label>Condición<select name="log_flight_period" required><option value="dia">De día</option><option value="noche">De noche</option></select></label>
+      <label>Función<select name="log_flight_role" required><option value="piloto">Piloto</option><option value="copiloto">Copiloto</option></select></label>
+     </div>
+    </fieldset>
     <label style="margin-top:12px">Práctica realizada<textarea name="practice" minlength="3" maxlength="750" required placeholder="Ej.: despegues, circuitos de tránsito, aproximaciones y aterrizajes."></textarea></label>
     <label style="margin-top:12px">Devolución del instructor<textarea name="feedback" minlength="3" maxlength="1100" required placeholder="Desempeño del alumno y aspectos que logró durante la práctica."></textarea></label>
     <label style="margin-top:12px">Recomendaciones para la próxima práctica (opcional)<textarea name="next" maxlength="850" placeholder="Aspectos para repasar o mejorar antes del próximo vuelo."></textarea></label>
@@ -411,6 +431,27 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     target.append(card);
    }
   }
+
+  const reportLogbookMap={
+   log_date:"flight_date",log_departure_utc:"departure_utc",
+   log_origin:"origin",log_destination:"destination",
+   log_arrival_utc:"arrival_utc",log_flight_count:"flight_count",
+   log_aircraft_make:"aircraft_make",log_aircraft_registration:"aircraft_registration",
+   log_aircraft_power:"aircraft_power",log_aircraft_class:"aircraft_class",
+   log_flight_area:"flight_area",log_flight_period:"flight_period",log_flight_role:"flight_role"
+  };
+  function setReportLogbookDefaults(){
+   const booking=bookings.find(x=>x.booking_id===$("reportBooking").value);
+   const previous=reports.find(x=>x.booking_id===booking?.booking_id)?.logbook_entry||{};
+   const form=$("reportForm");
+   for(const [name,key] of Object.entries(reportLogbookMap)){
+    const field=form.elements.namedItem(name);
+    if(!field)continue;
+    const value=key==="flight_date"?(booking?arDate(booking.starts_at):""):key==="flight_count"?"1":key==="flight_area"?"aerodromo":key==="flight_period"?"dia":key==="flight_role"?"piloto":"";
+    field.value=previous[key]??value;
+   }
+  }
+  $("reportBooking").addEventListener("change",setReportLogbookDefaults);
   function renderReportFormChoices(){
    if(role!=="instructor")return;
    const target=$("reportBooking");target.replaceChildren();
@@ -421,6 +462,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
      b.booking_id));
    }
    $("reportForm").querySelector("button").disabled=!school.can_write||!target.options.length;
+   setReportLogbookDefaults();
   }
   async function loadReports(){
    reports=await rpc("aerosuite_reports_list",{p_institution_id:inst});renderReportFormChoices();renderReports();
@@ -488,9 +530,14 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     const next=String(fd.get("next")||"").trim();
     const teachingNotes=["Práctica realizada:\n"+practice,"Devolución del instructor:\n"+feedback];
     if(next)teachingNotes.push("Para la próxima práctica:\n"+next);
-    await rpc("aerosuite_report_action",{p_institution_id:inst,p_booking_id:fd.get("booking"),p_action:"submit",
+    const logbook={};
+    for(const [input,key] of Object.entries(reportLogbookMap)){
+     const value=String(fd.get(input)||"").trim();
+     logbook[key]=key==="flight_count"?Number(value):value;
+    }
+    await rpc("aerosuite_submit_flight_report_with_logbook",{p_institution_id:inst,p_booking_id:fd.get("booking"),
      p_flight_minutes:Number(fd.get("minutes")),p_fuel_liters:Number(fd.get("fuel")),p_oil_liters:Number(fd.get("oil")),
-     p_teaching_notes:teachingNotes.join("\n\n"),p_aircraft_notes:fd.get("aircraft")});
+     p_teaching_notes:teachingNotes.join("\n\n"),p_aircraft_notes:fd.get("aircraft"),p_logbook_entry:logbook});
     f.reset();stat.textContent="Informe presentado a Administración para su revisión.";await loadReports();
    }catch(e){stat.textContent="No se pudo enviar el informe: "+safeError(e);}finally{button.disabled=false;}
   });
