@@ -142,7 +142,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
  const testRole=params.get("rol")||"";
  const labLogin=params.get("prueba")==="1"&&["administrador","secretaria","instructor","alumno"].includes(testRole);
  const db=supabase.createClient(GDV_CONFIG.url,GDV_CONFIG.key,{auth:{storageKey:labLogin?"aerosuite-laboratorio-"+testRole+"-v1-auth":"aerosuite-institucional-v2-auth",persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
- let user,school,role,manager,bookings=[],people=[],reports=[],finance={packs:[],movements:[]};
+ let user,school,role,manager,bookings=[],people=[],reports=[],finance={packs:[],movements:[]},bookingConfirmations=new Map();
  if(!inst){stat.textContent="Entrá desde el portal de tu institución.";return;}
  try{
   const me=await db.auth.getUser();user=me.data&&me.data.user;
@@ -200,6 +200,15 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   }
   async function loadWeek(){
    const dates=weekDates();bookings=await rpc("aerosuite_booking_schedule",{p_institution_id:inst,p_date_from:dates[0],p_date_to:dates[6]});
+   bookingConfirmations=new Map();
+   if(manager){
+    try{
+     const confirmed=await rpc("aerosuite_booking_confirmation_details",{p_institution_id:inst,p_date_from:dates[0],p_date_to:dates[6]});
+     bookingConfirmations=new Map((confirmed||[]).map(entry=>[entry.booking_id,entry]));
+    }catch(e){
+     stat.textContent="No se pudo consultar quién confirmó las reservas: "+safeError(e);
+    }
+   }
    renderWeek(dates);renderBookings();renderReportFormChoices();renderFinanceBookingChoices();
    const lastSlotStart=new Date(dates[6]+"T"+times[times.length-1]+":00-03:00").getTime();
    $("bookingFutureNotice").textContent=lastSlotStart<=Date.now()?
@@ -268,6 +277,15 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     const sensitive=role!=="alumno"||b.my_booking;
     card.innerHTML='<div class="row between"><strong>'+esc(stamp(b.starts_at))+' · 90 min</strong><span class="chip '+esc(b.status)+'">'+esc(statuses[b.status]||b.status)+'</span></div>'+
      (sensitive?'<p>Alumno: '+esc(b.student_email||"Reservado")+' · Instructor: '+esc(b.instructor_email||"Sin asignar")+' · Aeronave: '+esc(b.aircraft||"A definir")+'</p>':'<p>Turno ocupado de otro alumno.</p>');
+    if(manager&&["confirmed","completed"].includes(b.status)){
+     const detail=bookingConfirmations.get(b.booking_id);
+     const p=document.createElement("p");p.className="hint";
+     const actorRoles={administrador:"Dirección",secretaria:"Secretaría",instructor:"Instructor",cuenta_desvinculada:"Cuenta desvinculada"};
+     p.textContent=detail
+      ? "Confirmado por: "+(actorRoles[detail.confirmed_by_role]||"Rol no disponible")+" · "+(detail.confirmed_by_email||"Cuenta no disponible")+" · "+stamp(detail.confirmed_at)
+      : "Confirmado por: información no disponible";
+     card.append(p);
+    }
     const actions=document.createElement("div");actions.className="actions";
     function btn(text,action,cls){const el=document.createElement("button");el.type="button";el.textContent=text;el.className=cls||"";el.disabled=!school.can_write;el.onclick=action;actions.append(el);}
     if(b.booking_id&&b.status==="pending"&&(manager||role==="instructor")){
