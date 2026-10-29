@@ -149,8 +149,11 @@ input[type=email]{width:100%;background:#122737;border:1px solid #7394aa;border-
 'use strict';
 (async()=>{
 const el=id=>document.getElementById(id),message=el('message');
+const urlParams=new URLSearchParams(location.search);
+const labRole=urlParams.get('rol')||'';
+const labLogin=urlParams.get('prueba')==='1'&&['administrador','secretaria','instructor','alumno'].includes(labRole);
 const client=supabase.createClient(GDV_CONFIG.url,GDV_CONFIG.key,{
- auth:{storageKey:'aerosuite-institucional-v2-auth',persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}
+ auth:{storageKey:labLogin?'aerosuite-laboratorio-'+labRole+'-v1-auth':'aerosuite-institucional-v2-auth',persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}
 });
 let data;
 try{
@@ -169,7 +172,7 @@ try{
  const requestedRole=search.get('rol');
  const accessibleInstitutions=data.filter(x=>x.can_access&&['administrador','secretaria','instructor','alumno'].includes(x.my_role));
  const chosen=search.get('elegida')==='1';
- const institutionURL=entry=>'portal-escuela.html?institucion='+encodeURIComponent(entry.institution_id)+'&rol='+encodeURIComponent(entry.my_role)+'&elegida=1';
+ const institutionURL=entry=>'portal-escuela.html?institucion='+encodeURIComponent(entry.institution_id)+'&rol='+encodeURIComponent(entry.my_role)+'&elegida=1'+(labLogin?'&prueba=1':'');
  // Con varios vínculos, presentar la elección antes de mostrar contenido institucional.
  if(accessibleInstitutions.length>1&&!chosen){
   document.querySelector('h1').textContent='Mis instituciones de AeroSuite';
