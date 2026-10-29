@@ -531,6 +531,141 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    setReportLogbookDefaults();
   }
 
+
+  // La Dirección y Secretaría corrigen directamente, siempre dejando una versión anterior.
+  function openManagerReportEditor(card,r,simulation=false){
+   const existing=card.querySelector(".manager-report-editor");
+   if(existing){existing.remove();return;}
+   const form=document.createElement("form");
+   form.className="panel manager-report-editor";
+   form.style.marginTop="12px";
+   const heading=document.createElement("h4");
+   heading.textContent=simulation?"Corregir informe (SIMULACIÓN)":"Corregir informe de instrucción";
+   form.append(heading);
+   const help=document.createElement("p");
+   help.className="hint";
+   help.textContent="Corregí lo necesario, después de consultarlo con el Instructor. Se guardará la versión anterior, quién modificó y cuándo. Esta edición no aprueba el informe.";
+   form.append(help);
+   const data=document.createElement("div");data.className="formgrid";form.append(data);
+   function inputRow(parent,labelText,type,value,{name,min,max,step,required,maxLength}={}){
+    const label=document.createElement("label");label.textContent=labelText;
+    const input=document.createElement(type==="textarea"?"textarea":"input");
+    if(type!=="textarea")input.type=type;
+    input.value=value??"";
+    input.name=name||"";
+    if(min!==undefined)input.min=min;
+    if(max!==undefined)input.max=max;
+    if(step!==undefined)input.step=step;
+    if(maxLength!==undefined)input.maxLength=maxLength;
+    if(required)input.required=true;
+    if(type==="textarea")input.rows=5;
+    label.append(input);parent.append(label);return input;
+   }
+   const minutes=inputRow(data,"Minutos de vuelo","number",String(r.flight_minutes),{min:1,max:600,step:1,required:true});
+   let fuel=null,oil=null,aircraft=null;
+   if(!simulation){
+    fuel=inputRow(data,"Combustible cargado (litros)","number",String(r.fuel_liters),{min:0,step:"0.01",required:true});
+    oil=inputRow(data,"Aceite agregado (litros)","number",String(r.oil_liters),{min:0,step:"0.01",required:true});
+   }
+   const teaching=inputRow(form,"Práctica realizada, devolución y recomendaciones","textarea",r.teaching_notes,{required:true,maxLength:3000});
+   if(!simulation)aircraft=inputRow(form,"Observaciones de la aeronave","textarea",r.aircraft_notes||"",{maxLength:2000});
+   const reason=inputRow(form,"Nota interna sobre la corrección (opcional)","input", "",{maxLength:250});
+   reason.placeholder="Ej.: Corregido después de consultar verbalmente al Instructor";
+   const checkboxLabel=document.createElement("label");checkboxLabel.className="hint";
+   const checkbox=document.createElement("input");checkbox.type="checkbox";
+   checkbox.style.marginRight="8px";
+   checkboxLabel.append(checkbox,document.createTextNode("Modificar también datos del Libro de Vuelo"));
+   form.append(checkboxLabel);
+   const fieldset=document.createElement("fieldset");fieldset.className="panel";
+   fieldset.disabled=true;fieldset.hidden=true;
+   const legend=document.createElement("legend");legend.textContent="Libro de Vuelo · datos corregidos";
+   fieldset.append(legend);
+   const warning=document.createElement("p");warning.className="hint";
+   warning.textContent="Los datos anteriores se conservan en el historial. Si el registro antiguo decía «cantidad de vuelos», ingresá expresamente la cantidad correcta de aterrizajes: no se convierten automáticamente.";
+   fieldset.append(warning);
+   const bookGrid=document.createElement("div");bookGrid.className="formgrid";
+   fieldset.append(bookGrid);form.append(fieldset);
+   const old=r.logbook_entry||{};
+   const spec=[
+    ["flight_date","Fecha del vuelo","date",true],
+    ["departure_utc","Salida UTC","time",true],
+    ["origin","Desde (aeródromo)","text",true],
+    ["destination","Hasta (aeródromo)","text",true],
+    ["arrival_utc","Llegada UTC","time",true],
+    ["landings_count","Cantidad de aterrizajes","number",true],
+    ["aircraft_make","Marca/modelo","text",true],
+    ["aircraft_registration","Matrícula","text",true],
+    ["aircraft_power","Potencia (opcional)","text",false],
+    ["aircraft_class","Clase de aeronave",["monomotor","multimotor"],true],
+    ["flight_area","Tipo de vuelo",["aerodromo","travesia"],true],
+    ["flight_period","Condición",["dia","noche"],true],
+    ["flight_role","Función",["instructor","piloto"],true]
+   ];
+   const fields={};
+   for(const [key,labelText,kind,required] of spec){
+    const label=document.createElement("label");label.textContent=labelText;
+    let control;
+    if(Array.isArray(kind)){
+     control=document.createElement("select");
+     control.add(new Option("Seleccionar",""));
+     for(const option of kind)control.add(new Option(option.charAt(0).toUpperCase()+option.slice(1),option));
+    }else{
+     control=document.createElement("input");control.type=kind;
+     if(kind==="number"){control.min=1;control.max=99;control.step=1;}
+    }
+    control.value=old[key]??"";
+    if(required)control.required=true;
+    control.name=key;
+    fields[key]=control;
+    label.append(control);bookGrid.append(label);
+   }
+   checkbox.onchange=()=>{
+    fieldset.hidden=!checkbox.checked;
+    fieldset.disabled=!checkbox.checked;
+   };
+   const feedback=document.createElement("p");feedback.className="warn";feedback.setAttribute("role","alert");
+   const actions=document.createElement("div");actions.className="actions";
+   const save=document.createElement("button");save.type="submit";save.className="primary";save.textContent="Guardar corrección";
+   save.disabled=!school.can_write;
+   const close=document.createElement("button");close.type="button";close.textContent="Cerrar sin guardar";close.onclick=()=>form.remove();
+   actions.append(save,close);form.append(actions,feedback);
+   form.addEventListener("submit",async e=>{
+    e.preventDefault();
+    let logbook=null;
+    if(checkbox.checked){
+     logbook={};
+     for(const [key] of spec)logbook[key]=key==="landings_count"?Number(fields[key].value):fields[key].value.trim();
+    }
+    if(!confirm("¿Guardar la corrección "+(simulation?"de PRUEBA":"del informe")+" y conservar la versión anterior?"))return;
+    save.disabled=true;
+    try{
+     let result;
+     if(simulation){
+      result=await rpc("aerosuite_test_manager_correct_report",{
+       p_institution_id:inst,p_scenario_id:r.id,p_expected_revision:Number(r.revision),
+       p_flight_minutes:Number(minutes.value),p_teaching_notes:teaching.value.trim(),
+       p_logbook_entry:logbook,p_correction_note:reason.value.trim()
+      });
+     }else{
+      result=await rpc("aerosuite_manager_correct_report",{
+       p_institution_id:inst,p_report_id:r.id,p_expected_revision:Number(r.revision),
+       p_flight_minutes:Number(minutes.value),p_fuel_liters:Number(fuel.value),
+       p_oil_liters:Number(oil.value),p_teaching_notes:teaching.value.trim(),
+       p_aircraft_notes:aircraft.value,p_logbook_entry:logbook,p_correction_note:reason.value.trim()
+      });
+     }
+     if(!result?.ok)throw Error("No se confirmó el guardado.");
+     if(simulation){
+      await loadLabReports();
+      $("labReportMessage").textContent="Corrección de PRUEBA guardada. Secretaría puede aprobar ahora.";
+     }else{
+      await loadReports();
+      stat.textContent="Corrección guardada con historial de versiones. Ya podés aprobar el informe.";
+     }
+    }catch(err){feedback.textContent="No se pudo guardar: "+safeError(err);save.disabled=false;}
+   });
+   card.append(form);
+  }
   let labReports=[],labEnabled=false;
   const labStates={draft:"Borrador",submitted:"Presentado a Secretaría",returned:"Devuelto para corregir",approved:"Aprobado (solo prueba)"};
   async function loadLabReports(){
@@ -616,17 +751,16 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     }
     if(manager){
      const actions=document.createElement("div");actions.className="actions";
+     if(["submitted","approved"].includes(r.state)){
+      const edit=document.createElement("button");edit.textContent="Editar informe (PRUEBA)";
+      edit.disabled=!school.can_write;edit.onclick=()=>openManagerReportEditor(card,r,true);
+      actions.append(edit);
+     }
      if(r.state==="submitted"){
       const approve=document.createElement("button");approve.className="primary";
       approve.textContent="Aprobar (PRUEBA)";approve.disabled=!school.can_write;
       approve.onclick=()=>{if(confirm("¿Aprobar solo la SIMULACIÓN, sin sumar horas reales?"))actLabReport(r,"approve");};
       actions.append(approve);
-      const reject=document.createElement("button");reject.textContent="Devolver para corregir (PRUEBA)";
-      reject.disabled=!school.can_write;
-      reject.onclick=()=>{const reason=prompt("Motivo de devolución al Instructor:");
-       if(reason&&reason.trim().length>=5)actLabReport(r,"return",{p_review_note:reason.trim()});
-       else if(reason!==null)$("labReportMessage").textContent="Indicá un motivo de al menos cinco caracteres.";
-      };actions.append(reject);
      }
      const reset=document.createElement("button");reset.textContent="Reiniciar prueba";
      reset.disabled=!school.can_write;
