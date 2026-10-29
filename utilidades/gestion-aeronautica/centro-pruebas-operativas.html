@@ -58,25 +58,21 @@ textarea{font:inherit;color:#fff;background:#102738;border:1px solid #63879b;bor
 <div class="tile"><strong>Alumno de AeroSuite</strong><span>Solicitar turnos, revisar devoluciones y saldos de packs.</span><br><a id="alumno" target="_blank" rel="noopener">Abrir Alumno de AeroSuite</a></div>
 </div>
 <div class="notice warn" id="roleReadiness" role="status">Comprobando las cuentas disponibles para el laboratorio...</div>
-<p class="muted">Cada enlace abre el ingreso institucional real, no una vista simulada. Cada rol utiliza una identidad independiente. Los alias +instructor y +alumno identifican cuentas técnicas distintas administradas desde la misma casilla principal; no se envían correos de invitación.</p>
+<p class="muted">Cada enlace abre el ingreso institucional real. Cada rol tiene su identidad técnica, sesión y permisos propios, sin invitación; los cuatro alias llegan a la misma casilla Gmail.</p>
 </section>
 <section class="panel" aria-labelledby="testAccountsTitle">
- <h2 id="testAccountsTitle">Cuentas técnicas permanentes · Sin invitaciones</h2>
- <p>Habilitá una vez los perfiles independientes de Instructor y Alumno desde Superadministración. Elegí una contraseña diferente para cada uno. Los usuarios se crean confirmados directamente en el laboratorio de prueba, sin enviar invitaciones ni correos de activación. Los clientes reales conservan su procedimiento habitual.</p>
- <div class="grid">
-  <div class="tile"><strong>Instructor de AeroSuite</strong><span id="instructorAlias">gentedevuelo+instructor@gmail.com</span><p class="muted" id="instructorInviteState">Consultando...</p>
-    <label for="passwordInstructor" class="muted">Contraseña técnica del Instructor</label><input id="passwordInstructor" type="password" autocomplete="new-password" minlength="9" maxlength="9" placeholder="9 caracteres" style="width:100%;padding:10px;background:#102738;color:#fff;border:1px solid #63879b;border-radius:8px">
-    <label for="repeatInstructor" class="muted">Confirmar contraseña</label><input id="repeatInstructor" type="password" autocomplete="new-password" minlength="9" maxlength="9" style="width:100%;padding:10px;background:#102738;color:#fff;border:1px solid #63879b;border-radius:8px">
-    <button type="button" id="inviteInstructor" class="primary" style="margin-top:12px">Crear Instructor sin correo</button>
-  </div>
-  <div class="tile"><strong>Alumno de AeroSuite</strong><span id="alumnoAlias">gentedevuelo+alumno@gmail.com</span><p class="muted" id="alumnoInviteState">Consultando...</p>
-    <label for="passwordAlumno" class="muted">Contraseña técnica del Alumno</label><input id="passwordAlumno" type="password" autocomplete="new-password" minlength="9" maxlength="9" placeholder="9 caracteres" style="width:100%;padding:10px;background:#102738;color:#fff;border:1px solid #63879b;border-radius:8px">
-    <label for="repeatAlumno" class="muted">Confirmar contraseña</label><input id="repeatAlumno" type="password" autocomplete="new-password" minlength="9" maxlength="9" style="width:100%;padding:10px;background:#102738;color:#fff;border:1px solid #63879b;border-radius:8px">
-    <button type="button" id="inviteAlumno" class="primary" style="margin-top:12px">Crear Alumno sin correo</button>
-  </div>
- </div>
- <div class="notice" role="status" aria-live="polite" id="inviteFeedback" style="margin-top:12px">Las claves deben contener exactamente 9 caracteres con mayúscula, minúscula, número y símbolo. No se guardan en el Centro de Testeo.</div>
- <p class="muted">Para alternar perfiles, cerrá la sesión institucional del rol anterior e ingresá con la cuenta técnica correspondiente. El Director mantiene su cuenta actual; nunca se mezclan permisos de Director, Instructor y Alumno.</p>
+<h2 id="testAccountsTitle">Cuentas técnicas permanentes · Sin invitaciones</h2>
+<p>Creá las cuatro identidades independientes del laboratorio. Todas pueden compartir una contraseña; sus permisos son los del portal real y ninguna reemplaza al Superadministrador.</p>
+<div class="grid"><div class="tile"><strong>Administrador de prueba</strong><span>gentedevuelo+administrador@gmail.com</span><p class="muted" id="administradorAccountState">Consultando…</p><button id="createAdministrador" type="button" class="primary">Crear Administrador sin correo</button></div>
+<div class="tile"><strong>Secretaría de prueba</strong><span>gentedevuelo+secretaria@gmail.com</span><p class="muted" id="secretariaAccountState">Consultando…</p><button id="createSecretaria" type="button" class="primary">Crear Secretaría sin correo</button></div>
+<div class="tile"><strong>Instructor de prueba</strong><span>gentedevuelo+instructor@gmail.com</span><p class="muted" id="instructorAccountState">Consultando…</p><button id="createInstructor" type="button" class="primary">Crear Instructor sin correo</button></div>
+<div class="tile"><strong>Alumno de prueba</strong><span>gentedevuelo+alumno@gmail.com</span><p class="muted" id="alumnoAccountState">Consultando…</p><button id="createAlumno" type="button" class="primary">Crear Alumno sin correo</button></div></div>
+<div class="tile" style="margin-top:14px"><div class="grid">
+<div><label class="muted" for="testPassword">Contraseña común · 9 caracteres</label><input id="testPassword" type="password" autocomplete="new-password" minlength="9" maxlength="9" placeholder="Mayúscula, minúscula, número y símbolo" style="width:100%;padding:10px;background:#102738;color:#fff;border:1px solid #63879b;border-radius:8px"></div>
+<div><label class="muted" for="testPasswordConfirm">Confirmar contraseña</label><input id="testPasswordConfirm" type="password" autocomplete="new-password" minlength="9" maxlength="9" placeholder="Repetir contraseña" style="width:100%;padding:10px;background:#102738;color:#fff;border:1px solid #63879b;border-radius:8px"></div>
+</div><div class="actions" style="margin-top:12px"><label class="muted"><input type="checkbox" id="showTestPassword"> Ver contraseña</label><button id="createAll" type="button" class="primary">Crear todas las cuentas pendientes</button></div></div>
+<div class="notice" id="inviteFeedback" role="status" aria-live="polite" style="margin-top:12px">La contraseña se establece al crear las cuentas, sin guardarla en esta página ni enviarla por correo.</div>
+<p class="muted">Cada rol conserva su propia sesión en este navegador. Tras el primer acceso, mientras la sesión siga vigente, podrás volver a revisar ese portal sin escribir otra vez la clave.</p>
 </section>
 <section class="panel"><div class="actions"><h2 style="flex:1;margin:0">Estado operativo consultado en Supabase</h2><button id="refresh" type="button">Actualizar diagnóstico</button></div>
 <div id="metrics" class="metrics" style="margin-top:15px"></div>
@@ -112,7 +108,7 @@ const names=[
 ];
 const $=id=>document.getElementById(id);const status=$('status');let testId=null;
 let db,user,health={},active=null;
-const LAB_EMAILS=Object.freeze({instructor:'gentedevuelo+instructor@gmail.com',alumno:'gentedevuelo+alumno@gmail.com'});
+const roles=['administrador','secretaria','instructor','alumno'];let labAccounts={};
 function msg(s){status.textContent=s;}
 function setText(id,s){$(id).textContent=s;}
 function url(role){return 'ingreso-escuela.html?institucion='+encodeURIComponent(testId)+'&rol='+encodeURIComponent(role)+'&prueba=1';}
@@ -121,36 +117,64 @@ function outcomes(steps){const vals=names.map(x=>steps?.[x[0]]?.status||'pending
 function summary(t){const o=outcomes(t.steps);return o.ok+' correctos · '+o.failed+' fallidos · '+o.blocked+' bloqueados · '+o.pending+' pendientes';}
 function safeNumber(n){return Number.isFinite(Number(n))?Number(n).toLocaleString('es-AR'):'—';}
 function renderLabAccounts(){
- for(const [role,key] of [['instructor','instructors'],['alumno','students']]){
-  const created=Number(health[key]||0)>0;
-  $(role+'InviteState').textContent=created?'Cuenta técnica habilitada en Supabase · acceso real':'Todavía sin cuenta técnica habilitada';
-  $(role==='instructor'?'inviteInstructor':'inviteAlumno').disabled=created;
-  $(role==='instructor'?'passwordInstructor':'passwordAlumno').disabled=created;
-  $(role==='instructor'?'repeatInstructor':'repeatAlumno').disabled=created;
+ const pending=roles.filter(role=>!labAccounts[role]);
+ for(const role of roles){
+  const button=$('create'+role[0].toUpperCase()+role.slice(1));
+  button.disabled=Boolean(labAccounts[role]);
+  $(role+'AccountState').textContent=labAccounts[role]?'Cuenta técnica habilitada':'Cuenta técnica pendiente';
  }
+ $('createAll').disabled=pending.length===0;
+ $('roleReadiness').classList.toggle('warn',pending.length>0);
+ $('roleReadiness').textContent=pending.length?'Faltan cuentas técnicas: '+pending.join(', ')+'. Crealas sin invitaciones.':
+ 'Las cuatro identidades técnicas están habilitadas. Revisá los accesos y permisos en sus portales reales.';
+}
+async function refreshLabAccounts(){
+ const {data,error}=await db.functions.invoke('aerosuite-test-accounts',{body:{action:'status'}});
+ if(error||!data?.ok)throw Error(data?.error||error?.message||'No se pudo consultar las cuentas técnicas.');
+ labAccounts=data.accounts||{};
+ renderLabAccounts();
+}
+function sharedPassword(){
+ const password=$('testPassword').value;
+ if(password.length!==9||!/[A-Z]/.test(password)||!/[a-z]/.test(password)||!/[0-9]/.test(password)||!/[^a-zA-Z0-9]/.test(password)){
+  $('inviteFeedback').textContent='La contraseña requiere 9 caracteres exactos, incluyendo mayúscula, minúscula, número y símbolo.';return null;
+ }
+ if(password!==$('testPasswordConfirm').value){$('inviteFeedback').textContent='Las contraseñas no coinciden.';return null;}
+ return password;
+}
+async function createTechnicalRole(role,password){
+ const {data,error}=await db.functions.invoke('aerosuite-test-accounts',{body:{role,password}});
+ if(error||!data?.ok||data.mail_sent!==false)throw Error(data?.error||error?.message||'No se pudo confirmar el alta sin correo.');
+ labAccounts[role]=true;
 }
 async function provisionLabRole(role){
- if(!['instructor','alumno'].includes(role))return;
- const type=role==='instructor'?'Instructor':'Alumno';
- const passwordInput=$(role==='instructor'?'passwordInstructor':'passwordAlumno');
- const repeatInput=$(role==='instructor'?'repeatInstructor':'repeatAlumno');
- const password=passwordInput.value;
- if(password.length!==9||!/[A-Z]/.test(password)||!/[a-z]/.test(password)||!/[0-9]/.test(password)||!/[^a-zA-Z0-9]/.test(password)){
-   $('inviteFeedback').textContent='La contraseña requiere exactamente 9 caracteres, mayúscula, minúscula, número y símbolo.';return;
- }
- if(password!==repeatInput.value){$('inviteFeedback').textContent='Las contraseñas no coinciden.';return;}
- if(!confirm('¿Crear la cuenta técnica de '+type+' sin enviar ningún correo de invitación?'))return;
- const button=$(role==='instructor'?'inviteInstructor':'inviteAlumno');
- button.disabled=true;$('inviteFeedback').textContent='Creando identidad técnica de '+type+'…';
+ if(!roles.includes(role)||labAccounts[role])return;
+ const password=sharedPassword();if(!password)return;
+ if(!confirm('¿Crear '+role+' sin correo de invitación?'))return;
+ $('inviteFeedback').textContent='Creando cuenta de '+role+'…';
  try{
-  const {data,error}=await db.functions.invoke('aerosuite-test-accounts',{body:{role,password}});
-  if(error)throw Error(data?.error||error.message||'Error de creación');
-  if(!data?.ok||data?.mail_sent!==false)throw Error(data?.error||'No se confirmó la creación sin correo.');
-  passwordInput.value='';repeatInput.value='';
-  $('inviteFeedback').textContent='Cuenta técnica de '+type+' creada y vinculada al laboratorio, sin enviar invitaciones. Ingresá al portal con su alias y la clave definida.';
-  await reloadHealth();
- }catch(e){$('inviteFeedback').textContent='No se pudo configurar '+type+': '+(e.message||e);}
- finally{button.disabled=false;renderLabAccounts();}
+  await createTechnicalRole(role,password);
+  await Promise.all([refreshLabAccounts(),reloadHealth()]);
+  $('inviteFeedback').textContent='Cuenta '+role+' creada. Ya podés ingresar al portal real.';
+ }catch(e){$('inviteFeedback').textContent='No se pudo crear '+role+': '+(e.message||e);}
+ finally{$('testPassword').value='';$('testPasswordConfirm').value='';renderLabAccounts();}
+}
+async function provisionAllRoles(){
+ const password=sharedPassword();if(!password)return;
+ const pending=roles.filter(role=>!labAccounts[role]);if(!pending.length)return;
+ if(!confirm('¿Crear '+pending.length+' cuentas de prueba pendientes, sin correos y con una misma contraseña?'))return;
+ $('createAll').disabled=true;
+ const created=[],errors=[];
+ try{
+  for(const role of pending){
+   $('inviteFeedback').textContent='Creando '+role+'…';
+   try{await createTechnicalRole(role,password);created.push(role);}
+   catch(e){errors.push(role+': '+(e.message||e));}
+  }
+  try{await Promise.all([refreshLabAccounts(),reloadHealth()]);}
+  catch(e){errors.push('Consulta de estado: '+(e.message||e));}
+  $('inviteFeedback').textContent='Creados: '+(created.join(', ')||'ninguno')+(errors.length?'. Pendientes de revisión: '+errors.join(' / '):'. Sin invitaciones.');
+ }finally{$('testPassword').value='';$('testPasswordConfirm').value='';renderLabAccounts();}
 }
 async function reloadHealth(){
  $('refresh').disabled=true;
@@ -159,10 +183,7 @@ async function reloadHealth(){
   if(r.error)throw r.error;
   if(r.data?.institution_id!==testId)throw Error('Diagnóstico de otra institución');
   health=r.data;
-  renderLabAccounts();
-  const missing=[];if(!Number(health.instructors))missing.push('Instructor de AeroSuite');if(!Number(health.students))missing.push('Alumno de AeroSuite');
-  $('roleReadiness').classList.toggle('warn',missing.length>0);
-  $('roleReadiness').textContent=missing.length?'Faltan cuentas de prueba habilitadas: '+missing.join(' y ')+'. Creá las cuentas técnicas directamente desde esta pantalla, sin invitaciones. Los enlaces usan la autenticación real del rol.':'Director, Instructor y Alumno ya tienen integrantes vinculados al laboratorio; verificá sus credenciales y permisos antes de marcar pruebas como correctas.';
+  await refreshLabAccounts();
   const data=[['Directores',health.directors],['Secretarías',health.secretaries],['Instructores',health.instructors],['Alumnos',health.students],['Aeronaves',health.aircraft_available],['Pendientes',health.bookings_pending],['Confirmados',health.bookings_confirmed],['Realizados',health.bookings_completed],['Informes aprobados',health.reports_approved],['Packs',health.packs_total],['Movimientos de caja',health.money_movements_total]];
   $('metrics').replaceChildren();
   for(const [label,value] of data){const div=document.createElement('div');div.className='metric';const strong=document.createElement('strong');strong.textContent=safeNumber(value);const span=document.createElement('span');span.textContent=label;div.append(strong,span);$('metrics').append(div);}
@@ -245,8 +266,9 @@ try{
  for(const role of ['administrador','secretaria','instructor','alumno'])$(role==='administrador'?'director':role).href=url(role);
  $('content').hidden=false;msg('Acceso autorizado. Los resultados se conservan en Supabase y se restringen a la institución de prueba.');
  $('refresh').onclick=async()=>{await reloadHealth();};$('historyRefresh').onclick=reloadHistory;
- $('inviteInstructor').onclick=()=>provisionLabRole('instructor');
- $('inviteAlumno').onclick=()=>provisionLabRole('alumno');
+ for(const role of roles)$('create'+role[0].toUpperCase()+role.slice(1)).onclick=()=>provisionLabRole(role);
+ $('createAll').onclick=provisionAllRoles;
+ $('showTestPassword').onchange=()=>{const type=$('showTestPassword').checked?'text':'password';$('testPassword').type=type;$('testPasswordConfirm').type=type;};
  $('save').onclick=()=>save(false);$('finish').onclick=()=>save(true);
  $('start').onclick=async()=>{
   $('start').disabled=true;setText('runStatus','Creando sesión de pruebas…');
