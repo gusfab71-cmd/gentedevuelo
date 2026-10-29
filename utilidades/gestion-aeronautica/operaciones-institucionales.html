@@ -79,6 +79,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
       <select id="rescheduleChannel"><option value="">Elegí el medio</option><option value="presencial">En persona</option><option value="telefono">Teléfono</option><option value="whatsapp">WhatsApp</option><option value="correo">Correo electrónico</option><option value="otro">Otro medio</option></select>
      </label>
      <label>Motivo del cambio<input id="rescheduleReason" maxlength="250" placeholder="Ej.: cambio solicitado por el alumno"></label>
+     <label>Instructor preasignado (opcional)<select id="rescheduleInstructor"><option value="">Sin Instructor todavía</option></select></label>
     </div>
     <label style="margin-top:12px"><span><input id="rescheduleAuthorization" type="checkbox" style="width:auto;margin-right:8px">Confirmo que el alumno autorizó previamente esta reprogramación.</span></label>
     <p id="rescheduleFeedback" class="hint" role="status">Completá los datos y seleccioná una casilla «Libre · Reprogramar aquí».</p>
@@ -202,6 +203,10 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   function startReschedule(booking){
    if(!manager||!school.can_write)return;
    rescheduleTarget={booking_id:booking.booking_id,student_email:booking.student_email,starts_at:booking.starts_at};
+   const selector=$("rescheduleInstructor");selector.length=1;
+   for(const p of people.filter(x=>x.role==="instructor"))selector.add(new Option(p.email,p.person_id));
+   const defaultInstructor=booking.instructor_id||$("bookingInstructor").value||"";
+   if([...selector.options].some(x=>x.value===defaultInstructor))selector.value=defaultInstructor;
    $("reschedulePanel").hidden=false;
    $("rescheduleSource").textContent="Alumno: "+(booking.student_email||"Sin identificar")+" · Turno actual: "+stamp(booking.starts_at)+" (90 minutos).";
    $("rescheduleFeedback").textContent="Confirmá la autorización, indicá el medio y el motivo. Después seleccioná un nuevo horario libre.";
@@ -211,27 +216,29 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   function stopReschedule(){
    rescheduleTarget=null;$("reschedulePanel").hidden=true;
    $("rescheduleChannel").value="";$("rescheduleReason").value="";
-   $("rescheduleAuthorization").checked=false;
+   $("rescheduleAuthorization").checked=false;$("rescheduleInstructor").value="";
    renderWeek(weekDates());
   }
   $("stopReschedule").onclick=stopReschedule;
   async function moveBookingTo(start,cell){
    if(!rescheduleTarget||!manager||!school.can_write)return;
    const channel=$("rescheduleChannel").value,reason=$("rescheduleReason").value.trim();
+   const instructorId=$("rescheduleInstructor").value||null;
    if(!$("rescheduleAuthorization").checked||!channel||reason.length<5){
     $("rescheduleFeedback").textContent="Necesitás autorización del alumno, medio de contacto y motivo de al menos cinco caracteres.";
     $("reschedulePanel").scrollIntoView({behavior:"smooth",block:"center"});return;
    }
    const old=rescheduleTarget;
-   if(!confirm("¿Reprogramar el turno de "+old.student_email+" del "+stamp(old.starts_at)+" al "+stamp(start.toISOString())+"?\n\nSe conservará su reserva y quedará pendiente de confirmar el nuevo horario."))return;
+   const instructorText=instructorId?"\nInstructor preasignado: "+($("rescheduleInstructor").selectedOptions[0]?.text||"Seleccionado"):"\nSin Instructor preasignado";
+   if(!confirm("¿Reprogramar el turno de "+old.student_email+" del "+stamp(old.starts_at)+" al "+stamp(start.toISOString())+"?"+instructorText+"\n\nSe conservará su reserva y quedará pendiente de confirmar el nuevo horario."))return;
    cell.disabled=true;
    try{
-    await rpc("aerosuite_reschedule_booking",{
+    await rpc("aerosuite_reschedule_booking_with_instructor",{
      p_institution_id:inst,p_booking_id:old.booking_id,p_new_starts_at:start.toISOString(),
-     p_student_authorized:true,p_authorization_channel:channel,p_reason:reason
+     p_student_authorized:true,p_authorization_channel:channel,p_reason:reason,p_instructor_id:instructorId
     });
     stopReschedule();await loadWeek();
-    stat.textContent="Turno reprogramado para "+stamp(start.toISOString())+". El alumno conserva su reserva, pendiente de confirmar el nuevo horario.";
+    stat.textContent="Turno reprogramado para "+stamp(start.toISOString())+". "+(instructorId?"Instructor preasignado; falta confirmación.":"Falta asignar y confirmar Instructor.");
    }catch(e){
     $("rescheduleFeedback").textContent="No se pudo reprogramar: "+safeError(e);
     $("reschedulePanel").scrollIntoView({behavior:"smooth",block:"center"});
@@ -346,6 +353,20 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     }
     const actions=document.createElement("div");actions.className="actions";
     function btn(text,action,cls){const el=document.createElement("button");el.type="button";el.textContent=text;el.className=cls||"";el.disabled=!school.can_write;el.onclick=action;actions.append(el);}
+    if(b.booking_id&&manager&&b.status==="pending"&&new Date(b.starts_at).getTime()>Date.now()){
+     btn(b.instructor_id?"Cambiar Instructor preasignado":"Preasignar Instructor",async()=>{
+      const instructorId=$("bookingInstructor").value;
+      if(!instructorId){stat.textContent="Seleccioná arriba un Instructor habilitado para preasignarlo.";return;}
+      const name=$("bookingInstructor").selectedOptions[0]?.text||"Instructor seleccionado";
+      if(!confirm("¿Preasignar a "+name+" para este turno? El estado seguirá Pendiente hasta su confirmación."))return;
+      try{
+       await rpc("aerosuite_preassign_pending_instructor",{
+        p_institution_id:inst,p_booking_id:b.booking_id,p_instructor_id:instructorId
+       });
+       await loadWeek();stat.textContent="Instructor preasignado correctamente. El turno sigue pendiente de confirmación.";
+      }catch(e){stat.textContent="No se pudo preasignar: "+safeError(e);}
+     });
+    }
     if(b.booking_id&&b.status==="pending"&&(manager||role==="instructor")){
      btn("Confirmar turno",async()=>{
       let instructorId=null,aircraft="";
