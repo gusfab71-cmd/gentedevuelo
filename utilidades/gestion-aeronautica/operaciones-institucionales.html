@@ -110,14 +110,14 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
       <label>Desde (aeródromo)<input name="log_origin" maxlength="100" required placeholder="Ej.: Morón"></label>
       <label>Hasta (aeródromo)<input name="log_destination" maxlength="100" required placeholder="Ej.: Morón"></label>
       <label>Hora de llegada UTC<input name="log_arrival_utc" type="time" required></label>
-      <label>Cantidad de vuelos<input name="log_flight_count" type="number" min="1" max="20" step="1" required value="1"></label>
+      <label>Cantidad de aterrizajes<input name="log_landings_count" type="number" min="1" max="99" step="1" required value="1"></label>
       <label>Marca/modelo de la aeronave<input name="log_aircraft_make" maxlength="80" required placeholder="Ej.: Cessna 150"></label>
       <label>Matrícula<input name="log_aircraft_registration" maxlength="30" required placeholder="Ej.: LV-ABC"></label>
       <label>Potencia (opcional)<input name="log_aircraft_power" maxlength="40" placeholder="Ej.: 100 HP"></label>
       <label>Clase de aeronave<input name="log_aircraft_class" maxlength="60" required placeholder="Ej.: monomotor terrestre"></label>
       <label>Tipo de vuelo<select name="log_flight_area" required><option value="aerodromo">Sobre aeródromo</option><option value="travesia">Travesía</option></select></label>
       <label>Condición<select name="log_flight_period" required><option value="dia">De día</option><option value="noche">De noche</option></select></label>
-      <label>Función<select name="log_flight_role" required><option value="piloto">Piloto</option><option value="copiloto">Copiloto</option></select></label>
+      <label>Función<select name="log_flight_role" required><option value="instructor">Instructor</option><option value="piloto">Piloto</option></select></label>
      </div>
     </fieldset>
     <label style="margin-top:12px">Práctica realizada<textarea name="practice" minlength="3" maxlength="750" required placeholder="Ej.: despegues, circuitos de tránsito, aproximaciones y aterrizajes."></textarea></label>
@@ -448,7 +448,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   const reportLogbookMap={
    log_date:"flight_date",log_departure_utc:"departure_utc",
    log_origin:"origin",log_destination:"destination",
-   log_arrival_utc:"arrival_utc",log_flight_count:"flight_count",
+   log_arrival_utc:"arrival_utc",log_landings_count:"landings_count",
    log_aircraft_make:"aircraft_make",log_aircraft_registration:"aircraft_registration",
    log_aircraft_power:"aircraft_power",log_aircraft_class:"aircraft_class",
    log_flight_area:"flight_area",log_flight_period:"flight_period",log_flight_role:"flight_role"
@@ -460,7 +460,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    for(const [name,key] of Object.entries(reportLogbookMap)){
     const field=form.elements.namedItem(name);
     if(!field)continue;
-    const value=key==="flight_date"?(booking?arDate(booking.starts_at):""):key==="flight_count"?"1":key==="flight_area"?"aerodromo":key==="flight_period"?"dia":key==="flight_role"?"piloto":"";
+    const value=key==="flight_date"?(booking?arDate(booking.starts_at):""):key==="landings_count"?"1":key==="flight_area"?"aerodromo":key==="flight_period"?"dia":key==="flight_role"?"instructor":"";
     field.value=previous[key]??value;
    }
   }
@@ -500,14 +500,15 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    const date=String(entry.flight_date).split("-").reverse().join("/");
    const category=(entry.flight_area==="travesia"?"Travesía":"Sobre aeródromo")+
     (entry.flight_period==="noche"?" · Noche":" · Día")+
-    (entry.flight_role==="copiloto"?" · Copiloto":" · Piloto");
+    (entry.flight_role==="instructor"?" · Instructor":entry.flight_role==="copiloto"?" · Copiloto":" · Piloto");
    const fields=[
     ["Fecha del vuelo",date],
     ["Salida UTC",entry.departure_utc],
     ["Desde",entry.origin],
     ["Hasta",entry.destination],
     ["Llegada UTC",entry.arrival_utc],
-    ["Cantidad de vuelos",entry.flight_count],
+    ["Cantidad de aterrizajes",entry.landings_count],
+    ["Cantidad de vuelos (registro anterior)",entry.flight_count],
     ["Marca/modelo",entry.aircraft_make],
     ["Matrícula",entry.aircraft_registration],
     ["Potencia",entry.aircraft_power],
@@ -621,7 +622,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     const logbook={};
     for(const [input,key] of Object.entries(reportLogbookMap)){
      const value=String(fd.get(input)||"").trim();
-     logbook[key]=key==="flight_count"?Number(value):value;
+     logbook[key]=key==="landings_count"?Number(value):value;
     }
     await rpc("aerosuite_submit_flight_report_with_logbook",{p_institution_id:inst,p_booking_id:fd.get("booking"),
      p_flight_minutes:Number(fd.get("minutes")),p_fuel_liters:Number(fd.get("fuel")),p_oil_liters:Number(fd.get("oil")),
