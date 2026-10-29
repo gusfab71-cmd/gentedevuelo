@@ -194,7 +194,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
  const arTime=d=>new Date(new Date(d).getTime()-3*3600000).toISOString().slice(11,16);
  const safeError=e=>String(e&&e.message||e||"Error desconocido");
  const roleLabel={administrador:"Administración",secretaria:"Administración · Secretaría",instructor:"Instructor",alumno:"Alumno"};
- const statuses={pending:"Pendiente",confirmed:"Confirmada",completed:"Realizada",cancelled:"Cancelada",submitted:"Presentado",returned:"Devuelto para corregir",approved:"Validado"};
+ const statuses={pending:"Pendiente",confirmed:"Confirmada",completed:"Realizada",cancelled:"Cancelada",submitted:"Presentado",returned:"Devuelto para corregir",approved:"Validado",voided:"Anulado por cancelación"};
  const params=new URLSearchParams(location.search),inst=params.get("institucion");
  const testRole=params.get("rol")||"";
  const labLogin=params.get("prueba")==="1"&&["administrador","secretaria","instructor","alumno"].includes(testRole);
@@ -390,11 +390,24 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     if(scroll&&current)scroll.scrollLeft=Math.max(0,current.offsetLeft-(columns[0]?.offsetLeft||0)-8);
    }
   }
-  async function takeAction(action,b,options={}){
+  async function takeAction(action,b,options={},feedback=null){
    try{
-    await rpc("aerosuite_booking_action",Object.assign({p_institution_id:inst,p_action:action,p_booking_id:b.booking_id},options));
-    stat.textContent="Reserva actualizada correctamente.";await loadWeek();
-   }catch(e){stat.textContent="No se pudo actualizar la reserva: "+safeError(e);}
+    const result=await rpc("aerosuite_booking_action",Object.assign({p_institution_id:inst,p_action:action,p_booking_id:b.booking_id},options));
+    stat.textContent=action==="cancel"
+     ?(result.report_voided?"Reserva cancelada e informe pendiente anulado. Se conservó el historial.":"Reserva cancelada. Se conservó el historial.")
+     :"Reserva actualizada correctamente.";
+    await loadWeek();
+    if(action==="cancel"){
+     await loadReports();
+     renderBookings();
+    }
+    return true;
+   }catch(e){
+    const msg="No se pudo actualizar la reserva: "+safeError(e);
+    stat.textContent=msg;
+    if(feedback)feedback.textContent=msg;
+    return false;
+   }
   }
   function renderBookings(){
    const target=$("bookingList");target.replaceChildren();
@@ -452,8 +465,22 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
      btn("Reprogramar turno",()=>startReschedule(b));
     }
     if(b.booking_id&&(manager||role==="alumno"&&b.my_booking&&b.status==="pending")&&["pending","confirmed"].includes(b.status)){
-     btn("Cancelar reserva",async()=>{const reason=prompt("Motivo de cancelación (obligatorio):");if(!reason||!reason.trim())return;
-      if(confirm("¿Cancelar esta reserva? Se conservará el registro histórico."))await takeAction("cancel",b,{p_reason:reason});},"danger");
+     const associatedReport=reports.find(r=>r.booking_id===b.booking_id);
+     const reportPending=associatedReport&&["submitted","returned"].includes(associatedReport.status);
+     if(reportPending&&manager){
+      const note=document.createElement("p");
+      note.className="hint";note.textContent="Este turno tiene un informe presentado. Si lo cancelás, el informe quedará anulado y se conservará en el historial.";
+      card.append(note);
+     }
+     const feedback=document.createElement("p");feedback.className="warn";feedback.setAttribute("role","alert");
+     btn("Cancelar reserva",async()=>{
+      const reason=prompt("Motivo de cancelación (obligatorio):");
+      if(!reason||!reason.trim())return;
+      const question="¿Cancelar la reserva del "+stamp(b.starts_at)+"?"+
+       (reportPending?"\n\nEl informe de instrucción pendiente también quedará ANULADO, conservándose en el historial y sin sumar horas al alumno.":"\n\nSe conservará el historial de la reserva.");
+      if(confirm(question))await takeAction("cancel",b,{p_reason:reason.trim()},feedback);
+     },"danger");
+     card.append(feedback);
     }
     if(actions.childNodes.length)card.append(actions);
     target.append(card);
@@ -848,7 +875,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   });
   async function refresh(){
    stat.textContent="Actualizando datos de la institución…";
-   try{await loadAircraftChoices();await loadWeek();await loadReports();await loadFinance();await loadAcademy();renderReportFormChoices();stat.textContent="Información institucional actualizada."; }
+   try{await loadAircraftChoices();await loadWeek();await loadReports();renderBookings();await loadFinance();await loadAcademy();renderReportFormChoices();stat.textContent="Información institucional actualizada."; }
    catch(e){stat.textContent="Error al cargar el área: "+safeError(e);}
   }
   $("updateWeek").onclick=refresh;
