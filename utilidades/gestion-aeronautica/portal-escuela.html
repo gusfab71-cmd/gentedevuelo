@@ -105,15 +105,15 @@ input[type=email]{width:100%;background:#122737;border:1px solid #7394aa;border-
    <a class="tile operational-link" data-visible-role="administrador secretaria" data-module="finanzas" href="#"><h3>Contaduría y packs</h3><p>Cobros, packs, egresos y caja chica.</p><span class="pill ready">Operativa</span></a>
    <a class="tile operational-link" data-visible-role="administrador secretaria" href="#directorPeoplePanel"><h3>Alumnos e instructores</h3><p>Invitaciones, integrantes y desvinculaciones.</p><span class="pill ready">Operativa</span></a>
    <a class="tile operational-link" data-visible-role="administrador secretaria" data-module="flota" href="#"><h3>Flota y disponibilidad</h3><p>Registrar aeronaves y administrar su disponibilidad para reservas.</p><span class="pill ready">Operativa</span></a>
-   <section class="tile" data-visible-role="administrador secretaria"><h3>Academia Aeronáutica</h3><p>Biblioteca institucional y recursos didácticos.</p><span class="pill">En integración</span></section>
+   <a class="tile operational-link" data-visible-role="administrador secretaria" data-module="recursos" href="#"><h3>Academia Aeronáutica</h3><p>Publicá apuntes, documentos y guías para los alumnos de tu escuela.</p><span class="pill ready">Operativa</span></a>
    <a class="tile operational-link" data-visible-role="instructor" data-module="turnera" href="#" hidden><h3>Turnera de instrucción</h3><p>Consultá horarios y confirmá solicitudes que puedas atender.</p><span class="pill ready">Operativa</span></a>
    <a class="tile operational-link" data-visible-role="instructor" data-module="informes" href="#" hidden><h3>Mis informes</h3><p>Registrá clases, horas, devoluciones, combustible y aceite.</p><span class="pill ready">Operativa</span></a>
    <a class="tile operational-link" data-visible-role="instructor" data-module="flota" href="#" hidden><h3>Flota de la escuela</h3><p>Consultá qué aeronaves están disponibles o fuera de servicio.</p><span class="pill ready">Consulta</span></a>
-   <section class="tile" data-visible-role="instructor" hidden><h3>Recursos docentes</h3><p>Material autorizado de la Academia Aeronáutica.</p><span class="pill">En integración</span></section>
+   <a class="tile operational-link" data-visible-role="instructor" data-module="recursos" href="#" hidden><h3>Recursos docentes</h3><p>Cargá apuntes, guías y archivos para los alumnos; consultá los materiales de tu escuela.</p><span class="pill ready">Operativa</span></a>
    <a class="tile operational-link" data-visible-role="alumno" data-module="turnera" href="#" hidden><h3>Mi reserva y formación</h3><p>Turnera semanal y estado de mis solicitudes.</p><span class="pill ready">Operativa</span></a>
-   <a class="tile operational-link" data-visible-role="alumno" data-module="finanzas" href="#" hidden><h3>Mis packs de horas</h3><p>Horas adquiridas, usadas y disponibles.</p><span class="pill ready">Operativa</span></a>
+   <a class="tile operational-link" data-visible-role="alumno" data-module="finanzas" href="#" hidden><h3>Mis horas de vuelo</h3><p>Último vuelo, tiempo acumulado e historial validado.</p><span class="pill ready">Operativa</span></a>
    <a class="tile operational-link" data-visible-role="alumno" data-module="informes" href="#" hidden><h3>Mi progreso</h3><p>Devoluciones de instrucción ya validadas.</p><span class="pill ready">Operativa</span></a>
-   <section class="tile" data-visible-role="alumno" hidden><h3>Academia Aeronáutica</h3><p>Fichas y utilidades de la institución.</p><span class="pill">En integración</span></section>
+   <a class="tile operational-link" data-visible-role="alumno" data-module="recursos" href="#" hidden><h3>Academia Aeronáutica</h3><p>Consultá y descargá las guías y apuntes de tu institución.</p><span class="pill ready">Consulta</span></a>
   </div>
   <section class="panel" id="directorInvitePanel" hidden>
    <span class="label">Gestión administrativa de la institución</span>
@@ -239,10 +239,10 @@ try{
  const isManager=isDirector||school.my_role==='secretaria';
  const portalFooter=el('portalFooter');
  portalFooter.textContent=school.my_role==='instructor'
-  ?'La turnera y los informes de instrucción están operativos. La flota ofrece consulta y los recursos docentes están en integración. La gestión de Contaduría corresponde a Dirección y Secretaría.'
+  ?'La turnera, los informes y los recursos docentes están operativos. La flota ofrece consulta; Contaduría corresponde a Dirección y Secretaría.'
   :school.my_role==='alumno'
-   ?'Podés consultar la turnera, tus prácticas y tus horas de vuelo registradas. Los recursos de Academia Aeronáutica siguen en integración.'
-   :'La turnera, los informes de instrucción y Contaduría están operativos. El mantenimiento y los recursos docentes siguen en integración.';
+   ?'Podés consultar turnera, prácticas, horas de vuelo y los recursos de la Academia de tu escuela.'
+   :'La turnera, los informes, Contaduría y la Academia institucional están operativos. El mantenimiento requiere integración específica.';
  el('schoolPlan').hidden=!isManager;
  el('schoolExpiry').hidden=!isManager;
  el('schoolAccessLine').hidden=!isManager;
