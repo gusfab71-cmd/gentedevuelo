@@ -67,7 +67,10 @@ assert.match(admission,/input\.type=isVisible\?'text':'password'/,'Botón altern
 assert.match(admission,/auth\.resetPasswordForEmail/,'Recuperación de clave dentro de AeroSuite');
 assert.match(admission,/emailRedirectTo:activationUrl/,'Verificación redirigida a AeroSuite');
 assert.match(admission,/Cambiar de cuenta/);
-assert.match(admission,/storageKey:'aerosuite-institucional-v2-auth'/,'La autenticación institucional utiliza una sesión distinta a Gente de Vuelo');
+assert.match(admission,/aerosuite-institucional-v2-auth/,'La autenticación de clientes conserva una sesión separada de Gente de Vuelo');
+assert.match(admission,/aerosuite-laboratorio-/,'Cada rol técnico conserva su propia sesión institucional');
+assert.match(admission,/gentedevuelo\+administrador@gmail.com/,'El administrador de pruebas usa una identidad propia');
+assert.match(admission,/gentedevuelo\+secretaria@gmail.com/,'Secretaría de pruebas usa un alias de la casilla principal');
 assert.match(admission,/input\.value=''/,'Los campos de usuario y contraseña deben empezar vacíos');
 assert.match(admission,/autocomplete="off" readonly/,'Los datos del Superadministrador no deben autocompletarse');
 assert.match(admission,/id="welcomePanel" hidden/,'La nueva invitación verificada abre el formulario de contraseña personal');
@@ -100,7 +103,9 @@ assert.match(school,/cuenta técnica exclusiva de prueba/i,'Baja de una cuenta d
 assert.match(school,/data.removed_test_account/,'El director recibe el resultado del reinicio seguro');
 assert.match(school,/institution_id===queryId/,'Consulta coincidencia institución');
 assert.match(school,/if\(isManager&&school\.can_write\)/,'Dirección y Secretaría pueden invitar instructores y alumnos');
-assert.match(school,/storageKey:'aerosuite-institucional-v2-auth'/,'El portal comparte únicamente la sesión institucional');
+assert.match(school,/aerosuite-institucional-v2-auth/,'El portal conserva la sesión institucional de clientes');
+assert.match(school,/aerosuite-laboratorio-/,'El portal separa sesiones de laboratorio por rol');
+assert.match(school,/labLogin\?'&prueba=1'/,'Los accesos reales de prueba conservan el contexto al abrir módulos');
 assert.match(school,/data-visible-role="administrador secretaria"/,'Dirección y Secretaría comparten el portal administrativo');
 assert.match(school,/data-visible-role="instructor"/,'Portal instructor separado');
 assert.match(school,/data-visible-role="alumno"/,'Portal alumno separado');
