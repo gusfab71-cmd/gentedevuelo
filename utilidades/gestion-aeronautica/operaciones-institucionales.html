@@ -70,6 +70,19 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     <p id="bookingStudentNotice" class="hint warn" hidden>Esta institución todavía no tiene alumnos habilitados. Primero invitá uno desde «Alumnos e instructores» en tu portal.</p>
     <div class="formgrid" style="margin-top:12px"><label>Instructor para confirmar el turno<select id="bookingInstructor"><option value="">Elegí un instructor habilitado</option></select></label><label>Aeronave para asignar<select id="bookingAircraft"><option value="">A definir después</option></select></label></div>
    </div>
+   <section id="reschedulePanel" class="notice" hidden aria-label="Reprogramación autorizada de reserva">
+    <div class="row between"><strong>Reprogramar turno con autorización del alumno</strong><button id="stopReschedule" type="button">Salir de reprogramación</button></div>
+    <p id="rescheduleSource" class="hint"></p>
+    <p class="hint">La reserva conserva al mismo alumno y el historial. Elegí un nuevo horario libre, incluso en otra semana. Quedará pendiente de confirmación del Instructor.</p>
+    <div class="formgrid">
+     <label>Autorización recibida por
+      <select id="rescheduleChannel"><option value="">Elegí el medio</option><option value="presencial">En persona</option><option value="telefono">Teléfono</option><option value="whatsapp">WhatsApp</option><option value="correo">Correo electrónico</option><option value="otro">Otro medio</option></select>
+     </label>
+     <label>Motivo del cambio<input id="rescheduleReason" maxlength="250" placeholder="Ej.: cambio solicitado por el alumno"></label>
+    </div>
+    <label style="margin-top:12px"><span><input id="rescheduleAuthorization" type="checkbox" style="width:auto;margin-right:8px">Confirmo que el alumno autorizó previamente esta reprogramación.</span></label>
+    <p id="rescheduleFeedback" class="hint" role="status">Completá los datos y seleccioná una casilla «Libre · Reprogramar aquí».</p>
+   </section>
    <div class="table-scroll"><table aria-label="Turnos de la semana"><thead id="weekHead"></thead><tbody id="weekBody"></tbody></table></div>
    <p class="hint">Horarios de referencia de Buenos Aires (ART). Verde: libre · Amarillo: pendiente · Azul: confirmada · Gris: ocupada · Propias: resaltadas. Los turnos ocupados de otros alumnos no muestran información privada al alumno.</p>
    <h3>Detalle de reservas de esta semana</h3><div id="bookingList" class="list"></div>
@@ -142,7 +155,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
  const testRole=params.get("rol")||"";
  const labLogin=params.get("prueba")==="1"&&["administrador","secretaria","instructor","alumno"].includes(testRole);
  const db=supabase.createClient(GDV_CONFIG.url,GDV_CONFIG.key,{auth:{storageKey:labLogin?"aerosuite-laboratorio-"+testRole+"-v1-auth":"aerosuite-institucional-v2-auth",persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
- let user,school,role,manager,bookings=[],people=[],reports=[],finance={packs:[],movements:[]},bookingConfirmations=new Map();
+ let user,school,role,manager,bookings=[],people=[],reports=[],finance={packs:[],movements:[]},bookingConfirmations=new Map(),rescheduleTarget=null;
  if(!inst){stat.textContent="Entrá desde el portal de tu institución.";return;}
  try{
   const me=await db.auth.getUser();user=me.data&&me.data.user;
@@ -156,6 +169,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   $("pageTitle").textContent=manager?"Administración de la escuela":role==="instructor"?"Mi actividad de instrucción":"Mi reserva y formación";
   $("backPortal").href="portal-escuela.html?institucion="+encodeURIComponent(inst)+"&rol="+encodeURIComponent(role)+"&elegida=1"+(labLogin?"&prueba=1":"");
   $("adminBooking").hidden=!manager;$("reportForm").hidden=role!=="instructor";$("financeForm").hidden=!manager;
+  $("reschedulePanel").hidden=true;
   $("moneyArea").hidden=!manager;
   $("bookingHelp").textContent=role==="alumno"?"Solicitá un turno libre de 90 minutos. Quedará pendiente hasta que lo confirme la escuela.":role==="instructor"?"Consultá la actividad de la escuela y confirmá un turno pendiente cuando puedas asumirlo.":"Controlá y confirmá solicitudes, asigná instructores y cancelá reservas cuando corresponda.";
   $("financeTitle").textContent=role==="alumno"?"Mis packs de horas":"Contaduría y packs de horas";
@@ -185,6 +199,44 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    const r=await db.rpc(name,args);if(r.error)throw r.error;return r.data;
   }
   function labelOf(v){return people.find(x=>x.person_id===v)?.email||v||"Sin asignar";}
+  function startReschedule(booking){
+   if(!manager||!school.can_write)return;
+   rescheduleTarget={booking_id:booking.booking_id,student_email:booking.student_email,starts_at:booking.starts_at};
+   $("reschedulePanel").hidden=false;
+   $("rescheduleSource").textContent="Alumno: "+(booking.student_email||"Sin identificar")+" · Turno actual: "+stamp(booking.starts_at)+" (90 minutos).";
+   $("rescheduleFeedback").textContent="Confirmá la autorización, indicá el medio y el motivo. Después seleccioná un nuevo horario libre.";
+   renderWeek(weekDates());
+   $("reschedulePanel").scrollIntoView({behavior:"smooth",block:"center"});
+  }
+  function stopReschedule(){
+   rescheduleTarget=null;$("reschedulePanel").hidden=true;
+   $("rescheduleChannel").value="";$("rescheduleReason").value="";
+   $("rescheduleAuthorization").checked=false;
+   renderWeek(weekDates());
+  }
+  $("stopReschedule").onclick=stopReschedule;
+  async function moveBookingTo(start,cell){
+   if(!rescheduleTarget||!manager||!school.can_write)return;
+   const channel=$("rescheduleChannel").value,reason=$("rescheduleReason").value.trim();
+   if(!$("rescheduleAuthorization").checked||!channel||reason.length<5){
+    $("rescheduleFeedback").textContent="Necesitás autorización del alumno, medio de contacto y motivo de al menos cinco caracteres.";
+    $("reschedulePanel").scrollIntoView({behavior:"smooth",block:"center"});return;
+   }
+   const old=rescheduleTarget;
+   if(!confirm("¿Reprogramar el turno de "+old.student_email+" del "+stamp(old.starts_at)+" al "+stamp(start.toISOString())+"?\n\nSe conservará su reserva y quedará pendiente de confirmar el nuevo horario."))return;
+   cell.disabled=true;
+   try{
+    await rpc("aerosuite_reschedule_booking",{
+     p_institution_id:inst,p_booking_id:old.booking_id,p_new_starts_at:start.toISOString(),
+     p_student_authorized:true,p_authorization_channel:channel,p_reason:reason
+    });
+    stopReschedule();await loadWeek();
+    stat.textContent="Turno reprogramado para "+stamp(start.toISOString())+". El alumno conserva su reserva, pendiente de confirmar el nuevo horario.";
+   }catch(e){
+    $("rescheduleFeedback").textContent="No se pudo reprogramar: "+safeError(e);
+    $("reschedulePanel").scrollIntoView({behavior:"smooth",block:"center"});
+   }finally{cell.disabled=false;}
+  }
   const weekDates=()=>{
    const monday=mondayOf($("weekDate").value);
    return Array.from({length:7},(_,i)=>addDays(monday,i));
@@ -239,12 +291,13 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
       b.textContent="Libre";
       if(start.getTime()<=Date.now()){
        b.textContent="Pasado";b.classList.add("past");b.disabled=true;
-      }else if(role==="instructor"||!school.can_write||(manager&&!people.some(x=>x.role==="alumno"))){
+      }else if(role==="instructor"||!school.can_write||(manager&&!rescheduleTarget&&!people.some(x=>x.role==="alumno"))){
        b.disabled=true;
       }else{
        b.classList.add("available");
-       b.textContent="Libre · Reservar";
+       b.textContent=rescheduleTarget?"Libre · Reprogramar aquí":"Libre · Reservar";
        b.onclick=async()=>{
+        if(rescheduleTarget){await moveBookingTo(start,b);return;}
         const student=manager?$("bookingStudent").value:user.id;
         if(!student){stat.textContent="Seleccioná el alumno para registrar la solicitud.";return;}
         if(!confirm("¿Solicitar "+date+" a las "+time+" (90 minutos)? Quedará pendiente de confirmación."))return;
@@ -310,6 +363,9 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
       if(!confirm("¿"+(aircraft?"Asignar "+aircraft:"Dejar pendiente la aeronave")+" para este turno?"))return;
       await takeAction("assign_aircraft",b,{p_aircraft:aircraft});
      });
+    }
+    if(b.booking_id&&manager&&["pending","confirmed"].includes(b.status)&&new Date(b.starts_at).getTime()>Date.now()){
+     btn("Reprogramar turno",()=>startReschedule(b));
     }
     if(b.booking_id&&(manager||role==="alumno"&&b.my_booking&&b.status==="pending")&&["pending","confirmed"].includes(b.status)){
      btn("Cancelar reserva",async()=>{const reason=prompt("Motivo de cancelación (obligatorio):");if(!reason||!reason.trim())return;
