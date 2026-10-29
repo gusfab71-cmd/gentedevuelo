@@ -57,7 +57,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   <div class="tabs" role="tablist" aria-label="Áreas de AeroSuite" id="tabs">
    <button data-tab="turnera" class="active" type="button">Turnera semanal</button>
    <button data-tab="informes" type="button">Informes de instrucción</button>
-   <button data-tab="finanzas" type="button">Contaduría y packs</button>
+   <button data-tab="finanzas" type="button" id="financeTab">Contaduría y packs</button>
    <button data-tab="recursos" type="button">Academia y recursos</button>
   </div>
   <section class="panel tab-panel active" id="turnera">
@@ -129,8 +129,14 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    <div class="list" id="reportsList"></div>
   </section>
   <section class="panel tab-panel" id="finanzas">
-   <span class="eyebrow">Gestión económica institucional</span><h2 id="financeTitle">Contaduría y packs de horas</h2>
+   <span class="eyebrow" id="financeEyebrow">Gestión económica institucional</span><h2 id="financeTitle">Contaduría y packs de horas</h2>
    <p id="financeHelp">Los packs descontados son consumo de horas, no un segundo ingreso. Los cobros reales, egresos y caja chica quedan individualizados.</p>
+   <div id="studentFlightHours" hidden aria-live="polite">
+    <div class="cards" id="flightHoursCards"></div>
+    <p class="hint">Las horas se acumulan sumando los minutos reales de vuelos validados en esta institución. El equivalente decimal se redondea a una décima al mostrarlo, sin sumar valores ya redondeados.</p>
+    <h3>Mis vuelos realizados</h3>
+    <div class="list" id="flightHoursHistory"></div>
+   </div>
    <form id="financeForm" hidden>
     <div class="formgrid">
      <label>Movimiento<select name="op" id="financeOp">
@@ -149,7 +155,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     <p class="hint">Para descontar un pack, elegí pack, vuelo realizado y horas; no corresponde ingresar dinero. Para registrar un cobro por hora, elegí alumno, vuelo realizado e importe.</p>
     <button class="primary" type="submit">Registrar movimiento</button>
    </form>
-   <h3>Packs de alumnos</h3><div class="list" id="packsList"></div>
+   <div id="packsArea"><h3>Packs de alumnos</h3><div class="list" id="packsList"></div></div>
    <div id="moneyArea"><h3>Movimientos de caja y contaduría</h3><p class="hint">Resumen orientativo de los últimos 150 movimientos, separados por moneda. No sustituye la contabilidad fiscal.</p><div class="cards" id="moneySummary"></div><div class="list" id="moneyList"></div></div>
   </section>
   <section class="panel tab-panel" id="recursos">
@@ -201,7 +207,14 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   $("reschedulePanel").hidden=true;
   $("moneyArea").hidden=!manager;
   $("bookingHelp").textContent=role==="alumno"?"Solicitá un turno libre de 90 minutos. Quedará pendiente hasta que lo confirme la escuela.":role==="instructor"?"Consultá la actividad de la escuela y confirmá un turno pendiente cuando puedas asumirlo.":"Controlá y confirmá solicitudes, asigná instructores y cancelá reservas cuando corresponda.";
-  $("financeTitle").textContent=role==="alumno"?"Mis packs de horas":"Contaduría y packs de horas";
+  if(role==="alumno"){
+   $("financeTab").textContent="Mis horas de vuelo";
+   $("financeEyebrow").textContent="Mi actividad de vuelo";
+   $("financeTitle").textContent="Mis horas de vuelo";
+   $("financeHelp").textContent="Consultá cuánto volaste en la última práctica y tus horas acumuladas registradas en AeroSuite.";
+   $("studentFlightHours").hidden=false;
+   $("packsArea").hidden=true;
+  }
   if(role==="instructor")$("tabs").querySelector('[data-tab="finanzas"]').hidden=true;
   if(!school.can_write){document.querySelectorAll("form input,form select,form textarea,form button").forEach(x=>x.disabled=true);$("financeHelp").textContent="Modo consulta: no se pueden guardar movimientos."; }
   if(manager){
@@ -465,7 +478,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    setReportLogbookDefaults();
   }
   async function loadReports(){
-   reports=await rpc("aerosuite_reports_list",{p_institution_id:inst});renderReportFormChoices();renderReports();
+   reports=await rpc("aerosuite_reports_list",{p_institution_id:inst});renderReportFormChoices();renderReports();renderStudentFlightHours();
   }
   function parseTeachingNotes(value){
    const raw=String(value||"").trim();
@@ -505,6 +518,56 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     fields.filter(([_,value])=>value!==null&&value!==undefined&&String(value).trim()!=="")
     .map(([label,value])=>'<p><strong>'+esc(label)+':</strong> '+esc(value)+'</p>').join("")+
     '</div>';
+  }
+
+  // Minutos enteros como fuente de verdad; solo se redondea la vista decimal.
+  function validFlightMinutes(value){
+   const n=Number(value);
+   return Number.isInteger(n)&&n>0&&n<=600?n:null;
+  }
+  function flightDuration(minutes){
+   return Math.floor(minutes/60)+" h "+String(minutes%60).padStart(2,"0")+" min";
+  }
+  function decimalFlightHours(minutes){
+   return (Math.round(minutes/6)/10).toLocaleString("es-AR",{minimumFractionDigits:1,maximumFractionDigits:1})+" h";
+  }
+  function renderStudentFlightHours(){
+   if(role!=="alumno")return;
+   const cards=$("flightHoursCards"),history=$("flightHoursHistory");
+   cards.replaceChildren();history.replaceChildren();
+   // El RPC devuelve únicamente informes aprobados del alumno en esta institución.
+   const flights=reports.filter(r=>validFlightMinutes(r.flight_minutes)!==null)
+    .sort((a,b)=>new Date(b.starts_at)-new Date(a.starts_at));
+   if(!flights.length){
+    const last=document.createElement("div"),total=document.createElement("div");
+    last.className=total.className="card";
+    last.innerHTML="<strong>Último vuelo</strong><p>Todavía no tenés vuelos validados en AeroSuite.</p>";
+    total.innerHTML="<strong>Total acumulado</strong><h3>0 h 00 min</h3><p>0,0 h decimales</p>";
+    cards.append(last,total);
+    history.textContent="Los vuelos se mostrarán cuando el instructor entregue el informe y Dirección lo valide.";
+    return;
+   }
+   const latest=flights[0],lastMinutes=validFlightMinutes(latest.flight_minutes);
+   const totalMinutes=flights.reduce((sum,r)=>sum+validFlightMinutes(r.flight_minutes),0);
+   const last=document.createElement("div"),total=document.createElement("div");
+   last.className=total.className="card";
+   last.innerHTML="<strong>Último vuelo · "+esc(stamp(latest.starts_at))+"</strong>"+
+    "<h3>"+esc(flightDuration(lastMinutes))+"</h3><p>"+esc(decimalFlightHours(lastMinutes))+" (decimal)</p>";
+   total.innerHTML="<strong>Total acumulado en AeroSuite</strong>"+
+    "<h3>"+esc(flightDuration(totalMinutes))+"</h3>"+
+    "<p>"+esc(decimalFlightHours(totalMinutes))+" (decimal) · "+flights.length+
+    " "+(flights.length===1?"vuelo":"vuelos")+" validados</p>";
+   cards.append(last,total);
+   for(const r of flights){
+    const item=document.createElement("div");item.className="list-item";
+    const minutes=validFlightMinutes(r.flight_minutes);
+    item.innerHTML='<div class="row between"><strong>'+esc(stamp(r.starts_at))+'</strong>'+
+     '<strong>'+esc(flightDuration(minutes))+'</strong></div>'+
+     '<p class="hint">'+esc(decimalFlightHours(minutes))+' (decimal)</p>'+
+     (r.logbook_entry?.aircraft_registration?
+      '<p class="hint">Aeronave: '+esc(r.logbook_entry.aircraft_registration)+'</p>':"");
+    history.append(item);
+   }
   }
   function renderReports(){
    const target=$("reportsList");target.replaceChildren();
@@ -571,7 +634,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    bookings.filter(x=>x.status==="completed").forEach(b=>target.add(new Option(stamp(b.starts_at)+" · "+(b.student_email||"Alumno"),b.booking_id)));
   }
   async function loadFinance(){
-   if(role==="instructor")return;
+   if(!manager)return;
    finance=await rpc("aerosuite_finance_snapshot",{p_institution_id:inst});renderFinance();
   }
   function renderFinance(){
