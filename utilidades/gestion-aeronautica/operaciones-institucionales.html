@@ -133,7 +133,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    <p id="financeHelp">Los packs descontados son consumo de horas, no un segundo ingreso. Los cobros reales, egresos y caja chica quedan individualizados.</p>
    <div id="studentFlightHours" hidden aria-live="polite">
     <div class="cards" id="flightHoursCards"></div>
-    <p class="hint">Las horas se acumulan sumando los minutos reales de vuelos validados en esta institución. El equivalente decimal se redondea a una décima al mostrarlo, sin sumar valores ya redondeados.</p>
+    <p class="hint">Los minutos de cada vuelo validado se suman sin redondeos. Los tiempos se expresan en horas y minutos, conforme al sistema sexagesimal del procedimiento ANAC aprobado por la Resolución 470/2025.</p>
     <h3>Mis vuelos realizados</h3>
     <div class="list" id="flightHoursHistory"></div>
    </div>
@@ -520,7 +520,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     '</div>';
   }
 
-  // Minutos enteros como fuente de verdad; solo se redondea la vista decimal.
+  // Minutos exactos como fuente de verdad; visualización HH:MM sexagesimal.
   function validFlightMinutes(value){
    const n=Number(value);
    return Number.isInteger(n)&&n>0&&n<=600?n:null;
@@ -528,8 +528,8 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   function flightDuration(minutes){
    return Math.floor(minutes/60)+" h "+String(minutes%60).padStart(2,"0")+" min";
   }
-  function decimalFlightHours(minutes){
-   return (Math.round(minutes/6)/10).toLocaleString("es-AR",{minimumFractionDigits:1,maximumFractionDigits:1})+" h";
+  function flightHoursMinutes(minutes){
+   return String(Math.floor(minutes/60))+":"+String(minutes%60).padStart(2,"0");
   }
   function renderStudentFlightHours(){
    if(role!=="alumno")return;
@@ -542,7 +542,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     const last=document.createElement("div"),total=document.createElement("div");
     last.className=total.className="card";
     last.innerHTML="<strong>Último vuelo</strong><p>Todavía no tenés vuelos validados en AeroSuite.</p>";
-    total.innerHTML="<strong>Total acumulado</strong><h3>0 h 00 min</h3><p>0,0 h decimales</p>";
+    total.innerHTML="<strong>Total acumulado</strong><h3>0 h 00 min</h3><p>Registro HH:MM: 0:00</p>";
     cards.append(last,total);
     history.textContent="Los vuelos se mostrarán cuando el instructor entregue el informe y Dirección lo valide.";
     return;
@@ -552,10 +552,10 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    const last=document.createElement("div"),total=document.createElement("div");
    last.className=total.className="card";
    last.innerHTML="<strong>Último vuelo · "+esc(stamp(latest.starts_at))+"</strong>"+
-    "<h3>"+esc(flightDuration(lastMinutes))+"</h3><p>"+esc(decimalFlightHours(lastMinutes))+" (decimal)</p>";
+    "<h3>"+esc(flightDuration(lastMinutes))+"</h3><p>"+esc(flightHoursMinutes(lastMinutes))+" (HH:MM)</p>";
    total.innerHTML="<strong>Total acumulado en AeroSuite</strong>"+
     "<h3>"+esc(flightDuration(totalMinutes))+"</h3>"+
-    "<p>"+esc(decimalFlightHours(totalMinutes))+" (decimal) · "+flights.length+
+    "<p>"+esc(flightHoursMinutes(totalMinutes))+" (HH:MM) · "+flights.length+
     " "+(flights.length===1?"vuelo":"vuelos")+" validados</p>";
    cards.append(last,total);
    for(const r of flights){
@@ -563,7 +563,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     const minutes=validFlightMinutes(r.flight_minutes);
     item.innerHTML='<div class="row between"><strong>'+esc(stamp(r.starts_at))+'</strong>'+
      '<strong>'+esc(flightDuration(minutes))+'</strong></div>'+
-     '<p class="hint">'+esc(decimalFlightHours(minutes))+' (decimal)</p>'+
+     '<p class="hint">'+esc(flightHoursMinutes(minutes))+' (HH:MM)</p>'+
      (r.logbook_entry?.aircraft_registration?
       '<p class="hint">Aeronave: '+esc(r.logbook_entry.aircraft_registration)+'</p>':"");
     history.append(item);
