@@ -162,14 +162,14 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
  if(!window.supabase||!window.GDV_CONFIG){setStatus('No se pudo cargar el servicio de ingreso.');return}
  // La sesión del Superadministrador/Gente de Vuelo usa otra clave de almacenamiento.
  const db=supabase.createClient(GDV_CONFIG.url,GDV_CONFIG.key,{
-  auth:{storageKey:'aerosuite-institucional-v2-auth',autoRefreshToken:true,
+  auth:{storageKey:labLogin?'aerosuite-laboratorio-'+selectedRole+'-v1-auth':'aerosuite-institucional-v2-auth',autoRefreshToken:true,
    persistSession:true,detectSessionInUrl:true,flowType:'implicit'}
  });
  const activationUrl=location.origin+location.pathname+'?institucion='+encodeURIComponent(schoolId)
-  +(selectedRole?'&rol='+encodeURIComponent(selectedRole):'');
+  +(selectedRole?'&rol='+encodeURIComponent(selectedRole):'')+(labLogin?'&prueba=1':'');
  const recoveryUrl=activationUrl+'&recuperar=1';
  const portalUrl='portal-escuela.html?institucion='+encodeURIComponent(schoolId)
-  +(selectedRole?'&rol='+encodeURIComponent(selectedRole):'');
+  +(selectedRole?'&rol='+encodeURIComponent(selectedRole):'')+(labLogin?'&prueba=1':'');
  const validPassword=value=>value.length===9&&/[A-Z]/.test(value)&&/[a-z]/.test(value)&&/[0-9]/.test(value)&&/[^A-Za-z0-9]/.test(value);
  const humanRole=selectedRole==='administrador'?'administrador':selectedRole==='secretaria'?'secretaría':selectedRole==='instructor'?'instructor':selectedRole==='alumno'?'alumno':'integrante';
  byId('inviteTitle').textContent=labLogin?'Ingreso de pruebas · '+humanRole:'Invitación para crear cuenta como '+humanRole;
@@ -203,7 +203,8 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
  }
  if(labLogin&&selectedRole==='instructor')byId('email').value='gentedevuelo+instructor@gmail.com';
  if(labLogin&&selectedRole==='alumno')byId('email').value='gentedevuelo+alumno@gmail.com';
- if(labLogin&&selectedRole==='administrador')byId('email').value='gentedevuelo@gmail.com';
+ if(labLogin&&selectedRole==='administrador')byId('email').value='gentedevuelo+administrador@gmail.com';
+ if(labLogin&&selectedRole==='secretaria')byId('email').value='gentedevuelo+secretaria@gmail.com';
  window.addEventListener('pageshow',event=>{
   if(event.persisted){for(const id of ['password','signupPassword','signupRepeat'])byId(id).value=''}
  });
@@ -275,7 +276,7 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
     if(registration.error)throw registration.error;
    }
    setStatus('Invitación activada como '+activatedRole+'. Entrando a tu portal…');
-   location.replace('portal-escuela.html?institucion='+encodeURIComponent(schoolId)+'&rol='+encodeURIComponent(activatedRole));
+   location.replace('portal-escuela.html?institucion='+encodeURIComponent(schoolId)+'&rol='+encodeURIComponent(activatedRole)+(labLogin?'&prueba=1':''));
   }catch(error){
    showPanel('verifiedPanel');
    byId('acceptButton').hidden=false;
