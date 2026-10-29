@@ -142,7 +142,7 @@ input[type=email]{width:100%;background:#122737;border:1px solid #7394aa;border-
     <div id="peopleList" class="people-list"></div>
     <div class="actions" style="margin-top:15px"><button id="reloadPeople" type="button">Actualizar integrantes</button></div>
   </section>
-  <div class="status">Turnera, informes de instrucción y Contaduría cuentan con funciones institucionales. El seguimiento técnico de mantenimiento y la Academia Aeronáutica todavía requieren integración específica.</div>
+  <div class="status" id="portalFooter">Turnera, informes de instrucción y Contaduría cuentan con funciones institucionales. El seguimiento técnico de mantenimiento y la Academia Aeronáutica todavía requieren integración específica.</div>
  </div>
 </main>
 <script>
@@ -237,6 +237,12 @@ try{
  el('schoolRole').textContent='Rol: '+school.my_role;
  const isDirector=school.my_role==='administrador';
  const isManager=isDirector||school.my_role==='secretaria';
+ const portalFooter=el('portalFooter');
+ portalFooter.textContent=school.my_role==='instructor'
+  ?'La turnera y los informes de instrucción están operativos. La flota ofrece consulta y los recursos docentes están en integración. La gestión de Contaduría corresponde a Dirección y Secretaría.'
+  :school.my_role==='alumno'
+   ?'Podés consultar la turnera, tus prácticas y tus horas de vuelo registradas. Los recursos de Academia Aeronáutica siguen en integración.'
+   :'La turnera, los informes de instrucción y Contaduría están operativos. El mantenimiento y los recursos docentes siguen en integración.';
  el('schoolPlan').hidden=!isManager;
  el('schoolExpiry').hidden=!isManager;
  el('schoolAccessLine').hidden=!isManager;
