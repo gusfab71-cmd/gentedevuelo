@@ -94,6 +94,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    <p id="reportsIntro">El instructor declara la actividad, el combustible y aceite cargados y su devolución al alumno. Administración valida o devuelve el informe; las versiones anteriores quedan conservadas.</p>
    <form id="reportForm" hidden>
     <h3 id="reportFormTitle">Presentar informe</h3>
+    <p id="reportEligibilityHint" class="hint">El informe se completa después de finalizar el turno de vuelo, nunca por anticipado.</p>
     <div class="formgrid">
      <label>Vuelo asignado<select name="booking" id="reportBooking" required></select></label>
      <label>Minutos reales de vuelo<input name="minutes" type="number" min="1" max="600" required></label>
@@ -468,13 +469,14 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   function renderReportFormChoices(){
    if(role!=="instructor")return;
    const target=$("reportBooking");target.replaceChildren();
-   for(const b of bookings.filter(x=>x.instructor_id===user.id&&["confirmed","completed"].includes(x.status))){
+   for(const b of bookings.filter(x=>x.instructor_id===user.id&&["confirmed","completed"].includes(x.status)&&new Date(x.starts_at).getTime()+90*60000<=Date.now())){
     const report=reports.find(r=>r.booking_id===b.booking_id);
     if(report&&report.status!=="returned")continue;
     target.add(new Option(stamp(b.starts_at)+" · "+(b.student_email||"Alumno")+(report?" · corregir":""),
      b.booking_id));
    }
    $("reportForm").querySelector("button").disabled=!school.can_write||!target.options.length;
+   $("reportEligibilityHint").textContent=target.options.length?"Seleccioná un turno finalizado y registrá los datos reales del vuelo.":"No hay turnos asignados que hayan finalizado y estén listos para presentar informe.";
    setReportLogbookDefaults();
   }
   async function loadReports(){
@@ -598,7 +600,15 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     if(manager&&r.status==="submitted"){
      const row=document.createElement("div");row.className="actions";
      for(const [label,action,cls] of [["Validar informe","approve","primary"],["Devolver para corregir","return",""]]){
-      const b=document.createElement("button");b.textContent=label;b.className=cls;b.disabled=!school.can_write;b.onclick=async()=>{
+      const b=document.createElement("button");b.textContent=label;b.className=cls;
+       const flightCompleted=new Date(r.starts_at).getTime()+90*60000<=Date.now();
+       b.disabled=!school.can_write||(action==="approve"&&!flightCompleted);
+       if(action==="approve"&&!flightCompleted)b.title="No se puede aprobar un vuelo antes de finalizar su turno.";
+       b.onclick=async()=>{
+        if(action==="approve"&&new Date(r.starts_at).getTime()+90*60000>Date.now()){
+         stat.textContent="El vuelo aún no terminó. No se puede aprobar por anticipado.";
+         return;
+        }
        const reason=action==="return"?prompt("Indicá por qué debe corregirse el informe:"):null;
        if(action==="return"&&(!reason||!reason.trim()))return;
        if(action==="approve"&&!confirm("¿Validar este informe y cerrar el vuelo como realizado?"))return;
