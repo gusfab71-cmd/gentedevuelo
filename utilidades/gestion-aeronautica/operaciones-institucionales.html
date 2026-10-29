@@ -150,6 +150,44 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
  .student-flight-sheet .sheet-summary-item:last-child{border-bottom:0}
  .student-flight-sheet .sheet-fields{grid-template-columns:1fr}
 }
+
+/* Archivo de prácticas: una fila por informe reconocido; lectura detallada bajo demanda. */
+.student-report-history-row{
+ display:grid;grid-template-columns:minmax(82px,.82fr) minmax(145px,1.25fr)
+ minmax(150px,1.3fr) minmax(75px,.6fr) auto;align-items:center;
+ gap:9px 16px;padding:12px 15px;background:#f7fafc;color:#203c50;
+ border:1px solid #b8cdd8;border-radius:11px;min-width:0
+}
+.student-report-history-row.is-simulation{border-left:4px solid #c59a58}
+.student-report-history-row .history-cell{
+ min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+ font-size:12px;color:#203d52
+}
+.student-report-history-row .history-date{font-weight:850;font-variant-numeric:tabular-nums}
+.student-report-history-row .history-aircraft{font-weight:800}
+.student-report-history-row .history-duration{font-weight:850;white-space:nowrap;
+ font-variant-numeric:tabular-nums}
+.student-report-history-row .history-tag{font-size:10px;color:#79501d;font-weight:850;margin-left:6px}
+.student-report-history-row button{font-size:12px;padding:8px 12px;white-space:nowrap;background:#214b64;
+ color:#f1f8fd;border-color:#356d8b}
+.student-report-reading{max-width:970px;min-width:0}
+.student-report-reading .student-report-reading-actions{display:flex;gap:10px;
+ align-items:center;flex-wrap:wrap;margin:10px 0 4px}
+.student-report-reading-actions .reading-ack{font-weight:850;background:#e7c18a;
+ color:#152637;border-color:#e7c18a}
+.student-report-reading-actions .reading-close{background:#294d66;color:#fff}
+.student-report-reading .reading-error{color:#ffdfb4;font-size:12px;min-height:0}
+@media(max-width:750px){
+ .student-report-history-row{grid-template-columns:1fr 1fr;gap:7px 12px}
+ .student-report-history-row .history-route{grid-column:1/-1}
+ .student-report-history-row button{justify-self:end}
+}
+@media(max-width:420px){
+ .student-report-history-row{grid-template-columns:1fr auto}
+ .student-report-history-row .history-aircraft{grid-column:1/-1}
+ .student-report-history-row .history-route{grid-column:1/-1}
+ .student-report-history-row button{grid-column:2;grid-row:1 / span 1}
+}
 </style>
 <script src="../../assets/supabase-2.117.2.min.js"></script><script src="../../assets/community-config.js"></script>
 </head><body>
@@ -772,6 +810,8 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    });
    card.append(form);
   }
+  const studentReportReadStates=new Map();
+  const expandedReadStudentReports=new Set();
   let labReports=[],labEnabled=false;
   const labStates={draft:"Borrador",submitted:"Presentado a Secretaría",returned:"Devuelto para corregir",approved:"Aprobado (solo prueba)"};
   async function loadLabReports(){
@@ -796,6 +836,98 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
       return:"Devuelto. Ingresá al Instructor para corregir la devolución.",
       reset:"Escenario reiniciado; se conservó el historial del laboratorio."})[action]||"Simulación actualizada.";
    }catch(e){msg.textContent="Error de la prueba: "+safeError(e);}
+  }
+
+  function studentReportRowKey(r,simulation){
+   return (simulation?"sim:":"real:")+String(r.id||"");
+  }
+  async function loadStudentReportReadStates(){
+   if(role!=="alumno")return;
+   const states=await rpc("aerosuite_student_report_read_states",{p_institution_id:inst});
+   if(!Array.isArray(states))throw Error("No se pudo recuperar el estado de lectura de los informes.");
+   studentReportReadStates.clear();
+   for(const item of states){
+    const id=item.scenario_id?"sim:"+item.scenario_id:item.report_id?"real:"+item.report_id:null;
+    if(id)studentReportReadStates.set(id,Number(item.revision));
+   }
+  }
+  function rerenderStudentReportLists(){
+   renderReports();
+   if(labEnabled)renderLabReports();
+  }
+  function studentReportListItem(target,r,simulation){
+   const key=studentReportRowKey(r,simulation);
+   const revision=Number(r.revision);
+   const acknowledged=studentReportReadStates.get(key)===revision;
+   const open=!acknowledged||expandedReadStudentReports.has(key);
+   if(!open){
+    const e=r.logbook_entry&&typeof r.logbook_entry==="object"?r.logbook_entry:{};
+    const row=document.createElement("div");
+    row.className="student-report-history-row"+(simulation?" is-simulation":"");
+    row.setAttribute("role","group");
+    row.setAttribute("aria-label","Resumen de vuelo leído");
+    const addCell=(value,cls)=>{
+     const span=document.createElement("span");span.className="history-cell "+cls;
+     span.textContent=value;row.append(span);return span;
+    };
+    const d=new Date(r.original_starts_at||r.starts_at);
+    const date=Number.isFinite(d.getTime())
+     ?d.toLocaleDateString("es-AR",{timeZone:"America/Argentina/Buenos_Aires"})
+     :"Fecha sin registrar";
+    const dateEl=addCell(date,"history-date");
+    if(simulation){
+     const tag=document.createElement("span");tag.className="history-tag";tag.textContent="PRUEBA";
+     dateEl.append(tag);
+    }
+    addCell([e.aircraft_make,e.aircraft_registration].filter(Boolean).join(" · ")||"Aeronave no registrada","history-aircraft");
+    const route=[e.origin||"—",e.destination||"—"].join(" → ");
+    addCell(route,"history-route");
+    const mins=validFlightMinutes(r.flight_minutes);
+    addCell(mins===null?"—":flightHoursMinutes(mins)+" h","history-duration");
+    const show=document.createElement("button");show.type="button";
+    show.textContent="Ver informe";show.setAttribute("aria-label","Ver informe completo del "+date);
+    show.onclick=()=>{expandedReadStudentReports.add(key);rerenderStudentReportLists();};
+    row.append(show);target.append(row);
+    return;
+   }
+   const wrapper=document.createElement("div");wrapper.className="student-report-reading";
+   const sheet=document.createElement("article");
+   sheet.className="student-flight-sheet"+(simulation?" is-simulation":"");
+   sheet.setAttribute("aria-label",simulation?"Informe de prueba aprobado":"Informe de instrucción aprobado");
+   sheet.innerHTML=studentReportSheet(r,simulation);
+   wrapper.append(sheet);
+   const actions=document.createElement("div");actions.className="student-report-reading-actions";
+   const button=document.createElement("button");button.type="button";
+   if(!acknowledged){
+    button.className="reading-ack";
+    button.textContent="Tomé conocimiento · Guardar en historial";
+    button.onclick=async()=>{
+     button.disabled=true;
+     try{
+      const reply=await rpc("aerosuite_acknowledge_student_report",{
+       p_institution_id:inst,
+       p_report_id:simulation?null:r.id,
+       p_scenario_id:simulation?r.id:null
+      });
+      if(!reply?.ok)throw Error("No se confirmó la lectura.");
+      studentReportReadStates.set(key,Number(reply.revision));
+      expandedReadStudentReports.delete(key);
+      rerenderStudentReportLists();
+      stat.textContent="Lectura registrada. El informe quedó resumido y podés abrirlo cuando quieras.";
+     }catch(err){
+      button.disabled=false;
+      error.textContent="No se pudo registrar la lectura: "+safeError(err);
+     }
+    };
+   }else{
+    button.className="reading-close";
+    button.textContent="Volver al resumen";
+    button.onclick=()=>{expandedReadStudentReports.delete(key);rerenderStudentReportLists();};
+   }
+   actions.append(button);
+   const error=document.createElement("p");error.className="reading-error";
+   actions.append(error);wrapper.append(actions);
+   target.append(wrapper);
   }
   function renderLabReports(){
    const list=$("labReportList");list.replaceChildren();
@@ -822,10 +954,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    }
    for(const r of labReports){
     if(role==="alumno"){
-     const sheet=document.createElement("article");sheet.className="student-flight-sheet is-simulation";
-     sheet.setAttribute("aria-label","Informe de instrucción aprobado para simulación");
-     sheet.innerHTML=studentReportSheet(r,true);
-     list.append(sheet);
+     studentReportListItem(list,r,true);
      continue;
     }
     const card=document.createElement("div");card.className="list-item";
@@ -1058,11 +1187,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    for(const r of reports){
     const card=document.createElement("div");card.className="list-item";
     if(role==="alumno"){
-     card.className="student-flight-sheet";
-     card.setAttribute("role","article");
-     card.setAttribute("aria-label","Informe de instrucción validado");
-     card.innerHTML=studentReportSheet(r,false);
-     target.append(card);
+     studentReportListItem(target,r,false);
      continue;
     }
     card.innerHTML='<div class="row between"><strong>'+esc(stamp(r.starts_at))+" · "+esc(r.student_email)+'</strong><span class="chip '+esc(r.status)+'">'+esc(statuses[r.status])+'</span></div>'+
@@ -1319,7 +1444,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   });
   async function refresh(){
    stat.textContent="Actualizando datos de la institución…";
-   try{await loadAircraftChoices();await loadWeek();await loadReports();await loadLabReports();renderBookings();await loadFinance();await loadAcademy();renderReportFormChoices();stat.textContent="Información institucional actualizada."; }
+   try{await loadAircraftChoices();await loadWeek();await loadStudentReportReadStates();await loadReports();await loadLabReports();renderBookings();await loadFinance();await loadAcademy();renderReportFormChoices();stat.textContent="Información institucional actualizada."; }
    catch(e){stat.textContent="Error al cargar el área: "+safeError(e);}
   }
   $("updateWeek").onclick=refresh;
