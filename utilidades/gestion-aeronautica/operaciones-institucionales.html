@@ -115,7 +115,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
       <label>Marca/modelo de la aeronave<input name="log_aircraft_make" maxlength="80" required placeholder="Ej.: Cessna 150"></label>
       <label>Matrícula<input name="log_aircraft_registration" maxlength="30" required placeholder="Ej.: LV-ABC"></label>
       <label>Potencia (opcional)<input name="log_aircraft_power" maxlength="40" placeholder="Ej.: 100 HP"></label>
-      <label>Clase de aeronave<input name="log_aircraft_class" maxlength="60" required placeholder="Ej.: monomotor terrestre"></label>
+      <label>Clase de aeronave<select name="log_aircraft_class" required><option value="">Elegí la clase</option><option value="monomotor">Monomotor</option><option value="multimotor">Multimotor</option></select></label>
       <label>Tipo de vuelo<select name="log_flight_area" required><option value="aerodromo">Sobre aeródromo</option><option value="travesia">Travesía</option></select></label>
       <label>Condición<select name="log_flight_period" required><option value="dia">De día</option><option value="noche">De noche</option></select></label>
       <label>Función<select name="log_flight_role" required><option value="instructor">Instructor</option><option value="piloto">Piloto</option></select></label>
@@ -476,7 +476,10 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     const field=form.elements.namedItem(name);
     if(!field)continue;
     const value=key==="flight_date"?(booking?arDate(booking.starts_at):""):key==="landings_count"?"1":key==="flight_area"?"aerodromo":key==="flight_period"?"dia":key==="flight_role"?"instructor":"";
-    field.value=previous[key]??value;
+    if(key==="aircraft_class"){
+     const previousClass=String(previous[key]||"").toLowerCase().trim();
+     field.value=previousClass.includes("multimotor")?"multimotor":previousClass.includes("monomotor")?"monomotor":"";
+    }else field.value=previous[key]??value;
    }
   }
   $("reportBooking").addEventListener("change",setReportLogbookDefaults);
