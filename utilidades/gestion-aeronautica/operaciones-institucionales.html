@@ -127,6 +127,12 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     <label style="margin-top:12px">Novedades observadas de la aeronave<textarea name="aircraft" maxlength="2000" placeholder="Opcional. Las novedades urgentes se comunican directamente al Director."></textarea></label>
     <button class="primary" type="submit" style="margin-top:12px">Presentar informe a Administración</button>
    </form>
+   <div id="labReportBox" class="panel" hidden style="margin:16px 0">
+    <h3>Centro de Testeo · Informe recuperado</h3>
+    <p><strong>SIMULACIÓN, NO ES UN VUELO REAL.</strong> Esta copia permite probar la presentación, devolución y aprobación sin registrar vuelos ni sumar horas.</p>
+    <p id="labReportMessage" class="hint" role="status"></p>
+    <div id="labReportList" class="list"></div>
+   </div>
    <div class="list" id="reportsList"></div>
   </section>
   <section class="panel tab-panel" id="finanzas">
@@ -523,6 +529,98 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    $("reportEligibilityHint").textContent=target.options.length?"Seleccioná un turno finalizado y registrá los datos reales del vuelo.":"No hay turnos asignados que hayan finalizado y estén listos para presentar informe.";
    setReportLogbookDefaults();
   }
+
+  let labReports=[],labEnabled=false;
+  const labStates={draft:"Borrador",submitted:"Presentado a Secretaría",returned:"Devuelto para corregir",approved:"Aprobado (solo prueba)"};
+  async function loadLabReports(){
+   if(!labLogin)return;
+   try{
+    const response=await rpc("aerosuite_test_report_list",{p_institution_id:inst});
+    labEnabled=response?.enabled===true;
+    labReports=response?.reports||[];
+    $("labReportBox").hidden=!labEnabled;
+    if(labEnabled)renderLabReports();
+   }catch(e){labEnabled=false;$("labReportBox").hidden=true;}
+  }
+  async function actLabReport(r,action,args={}){
+   const msg=$("labReportMessage");msg.textContent="Procesando simulación…";
+   try{
+    const result=await rpc("aerosuite_test_report_action",
+     Object.assign({p_institution_id:inst,p_scenario_id:r.id,p_action:action},args));
+    if(!result?.simulation)throw Error("No se confirmó la simulación.");
+    await loadLabReports();
+    msg.textContent=({submit:"Presentado. Ingresá ahora a Secretaría para revisar el informe.",
+      approve:"Aprobado. Ingresá al Alumno para comprobar la devolución simulada.",
+      return:"Devuelto. Ingresá al Instructor para corregir la devolución.",
+      reset:"Escenario reiniciado; se conservó el historial del laboratorio."})[action]||"Simulación actualizada.";
+   }catch(e){msg.textContent="Error de la prueba: "+safeError(e);}
+  }
+  function renderLabReports(){
+   const list=$("labReportList");list.replaceChildren();
+   $("labReportMessage").textContent=role==="alumno"?
+    "Solo verás aquí los informes simulados aprobados; nunca se suman a Mis horas de vuelo.":
+    "Los cambios en este panel no afectan la reserva cancelada ni el Libro de Vuelo.";
+   if(!labReports.length){
+    const p=document.createElement("p");
+    p.textContent=role==="alumno"?
+     "Todavía no hay un informe de prueba aprobado por Secretaría.":
+     "No hay informes recuperados para ensayar en esta institución.";
+    list.append(p);return;
+   }
+   for(const r of labReports){
+    const card=document.createElement("div");card.className="list-item";
+    const top=document.createElement("p");
+    top.innerHTML="<strong>Informe recuperado · "+esc(stamp(r.original_starts_at))+"</strong>"+
+     " · "+esc(labStates[r.state]||r.state);
+    card.append(top);
+    const flight=document.createElement("p");
+    flight.textContent="Tiempo simulado: "+flightDuration(Number(r.flight_minutes))+
+      " · Sin acumulación de horas reales";
+    card.append(flight);
+    if(role==="instructor"&&["draft","returned"].includes(r.state)){
+     if(r.return_reason){const reason=document.createElement("p");
+      reason.className="warn";reason.textContent="Observación de Secretaría: "+r.return_reason;card.append(reason);}
+     const form=document.createElement("form");
+     const label=document.createElement("label");label.textContent="Práctica y devolución (simulación, editable)";
+     const notes=document.createElement("textarea");notes.value=r.teaching_notes;notes.maxLength=3000;notes.required=true;notes.rows=7;
+     label.append(notes);form.append(label);
+     const duration=document.createElement("label");duration.textContent="Minutos simulados";
+     const mins=document.createElement("input");mins.type="number";mins.min=1;mins.max=600;mins.value=String(r.flight_minutes);mins.required=true;
+     duration.append(mins);form.append(duration);
+     const submit=document.createElement("button");submit.type="submit";submit.className="primary";
+     submit.textContent=r.state==="returned"?"Corregir y reenviar a Secretaría":"Presentar informe de prueba a Secretaría";
+     submit.disabled=!school.can_write;form.append(submit);
+     form.addEventListener("submit",e=>{
+      e.preventDefault();
+      if(confirm("¿Presentar el informe de SIMULACIÓN? No se registrará como vuelo realizado."))
+       actLabReport(r,"submit",{p_teaching_notes:notes.value.trim(),p_flight_minutes:Number(mins.value)});
+     });card.append(form);
+    }else{
+     const notes=document.createElement("p");notes.className="lesson-text";
+     notes.textContent=r.teaching_notes;card.append(notes);
+    }
+    if(manager){
+     const actions=document.createElement("div");actions.className="actions";
+     if(r.state==="submitted"){
+      const approve=document.createElement("button");approve.className="primary";
+      approve.textContent="Aprobar (PRUEBA)";approve.disabled=!school.can_write;
+      approve.onclick=()=>{if(confirm("¿Aprobar solo la SIMULACIÓN, sin sumar horas reales?"))actLabReport(r,"approve");};
+      actions.append(approve);
+      const reject=document.createElement("button");reject.textContent="Devolver para corregir (PRUEBA)";
+      reject.disabled=!school.can_write;
+      reject.onclick=()=>{const reason=prompt("Motivo de devolución al Instructor:");
+       if(reason&&reason.trim().length>=5)actLabReport(r,"return",{p_review_note:reason.trim()});
+       else if(reason!==null)$("labReportMessage").textContent="Indicá un motivo de al menos cinco caracteres.";
+      };actions.append(reject);
+     }
+     const reset=document.createElement("button");reset.textContent="Reiniciar prueba";
+     reset.disabled=!school.can_write;
+     reset.onclick=()=>{if(confirm("¿Reiniciar para repetir la simulación?"))actLabReport(r,"reset");};
+     actions.append(reset);card.append(actions);
+    }
+    list.append(card);
+   }
+  }
   async function loadReports(){
    reports=await rpc("aerosuite_reports_list",{p_institution_id:inst});renderReportFormChoices();renderReports();renderStudentFlightHours();
   }
@@ -875,7 +973,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   });
   async function refresh(){
    stat.textContent="Actualizando datos de la institución…";
-   try{await loadAircraftChoices();await loadWeek();await loadReports();renderBookings();await loadFinance();await loadAcademy();renderReportFormChoices();stat.textContent="Información institucional actualizada."; }
+   try{await loadAircraftChoices();await loadWeek();await loadReports();await loadLabReports();renderBookings();await loadFinance();await loadAcademy();renderReportFormChoices();stat.textContent="Información institucional actualizada."; }
    catch(e){stat.textContent="Error al cargar el área: "+safeError(e);}
   }
   $("updateWeek").onclick=refresh;
