@@ -44,6 +44,112 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
 .tab-panel{display:none}.tab-panel.active{display:block}
 .notice{padding:14px;border-left:4px solid #e7c18a;background:#293d4c;border-radius:8px;font-size:13px;line-height:1.5;margin:15px 0}
 @media(max-width:600px){.panel{padding:14px}.tabs button{flex:1 1 43%}.formgrid{grid-template-columns:1fr}header{padding:14px 16px}}
+
+/* Ficha de instrucción: documento de consulta, no formulario editable */
+.student-flight-sheet{
+  color:#1a3548;background:#f9fbfc;border:1px solid #b3c7d1;border-radius:16px;
+  padding:0;overflow:hidden;box-shadow:0 12px 28px rgba(4,15,26,.18);
+  width:100%;max-width:970px
+}
+.student-flight-sheet .sheet-head{
+  display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:20px;
+  padding:27px 28px;background:linear-gradient(115deg,#102c43,#1d4b63);color:#fff
+}
+.student-flight-sheet .sheet-brand{font-size:18px;font-weight:850;letter-spacing:.03em;line-height:1.1;color:#fff}
+.student-flight-sheet .sheet-brand span{color:#f0cb91}
+.student-flight-sheet .sheet-brand small{display:block;margin-top:6px;font-size:9px;font-weight:750;
+  letter-spacing:.17em;color:#bed5e3}
+.student-flight-sheet .sheet-kicker{font-weight:800;letter-spacing:.15em;text-transform:uppercase;
+  font-size:10px;color:#c8dce8;margin:19px 0 6px}
+.student-flight-sheet .sheet-head h3{color:#fff;font-size:clamp(19px,2.6vw,25px);margin:0;font-weight:850}
+.student-flight-sheet .sheet-head p{color:#d9e8ef;margin:6px 0 0;font-size:12px}
+.student-flight-sheet .sheet-status{
+  display:inline-block;border:1px solid #9dd9c1;border-radius:99px;background:#174b43;
+  padding:9px 13px;color:#d9fff0;font-size:11px;font-weight:800;letter-spacing:.02em;
+  white-space:normal;text-align:center
+}
+.student-flight-sheet.is-simulation .sheet-status{background:#5b4729;border-color:#dec28f;color:#fff0d0}
+.student-flight-sheet .sheet-simulation-banner{
+  padding:11px 28px;background:#fff1d7;color:#724716;border-bottom:1px solid #ebd3a3;
+  font-size:12px;font-weight:800;letter-spacing:.025em
+}
+.student-flight-sheet .sheet-summary{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+  background:#eaf1f5;border-bottom:1px solid #cedde5
+}
+.student-flight-sheet .sheet-summary-item{
+  min-width:0;padding:18px 23px;border-right:1px solid #cedde5
+}
+.student-flight-sheet .sheet-summary-item:last-child{border-right:0}
+.student-flight-sheet .sheet-summary-item small{
+  display:block;text-transform:uppercase;font-size:10px;letter-spacing:.1em;
+  font-weight:800;color:#587285;margin-bottom:8px
+}
+.student-flight-sheet .sheet-summary-item strong{
+  display:block;font-size:18px;color:#16364d;overflow-wrap:anywhere;line-height:1.3
+}
+.student-flight-sheet .sheet-section{padding:22px 27px;border-bottom:1px solid #dce6ec}
+.student-flight-sheet .sheet-section:last-of-type{border-bottom:0}
+.student-flight-sheet .sheet-section-heading{
+  display:flex;align-items:center;gap:10px;margin:0 0 16px;
+  color:#173c53;font-size:14px;font-weight:850
+}
+.student-flight-sheet .sheet-section-heading .sheet-section-number{
+  color:#aa7130;border:1px solid #d2b98e;background:#fff6e6;border-radius:7px;
+  padding:5px 7px;font-size:11px;font-variant-numeric:tabular-nums
+}
+.student-flight-sheet .sheet-fields{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px
+}
+.student-flight-sheet .sheet-field{
+  min-width:0;display:flex;flex-direction:column;gap:7px;
+  padding:12px 13px;background:#fff;border:1px solid #d6e1e8;border-radius:9px
+}
+.student-flight-sheet .sheet-field-label{
+  display:block;color:#60788a;font-size:10px;letter-spacing:.065em;
+  text-transform:uppercase;font-weight:800;line-height:1.3
+}
+.student-flight-sheet .sheet-field-value{
+  display:block;color:#1b3b50;font-size:13px;font-weight:700;
+  line-height:1.45;overflow-wrap:anywhere;white-space:pre-wrap
+}
+.student-flight-sheet .sheet-assessment{
+  display:grid;grid-template-columns:1fr 1fr;gap:12px
+}
+.student-flight-sheet .sheet-note{
+  min-width:0;padding:17px 18px;background:#f0f5f8;border:1px solid #cfdee7;
+  border-left:4px solid #54849c;border-radius:9px
+}
+.student-flight-sheet .sheet-note.sheet-note-primary{border-left-color:#c18b47;background:#fff8ed}
+.student-flight-sheet .sheet-note.sheet-note-full{grid-column:1/-1}
+.student-flight-sheet .sheet-note strong{display:block;color:#173e55;font-size:12px;
+  margin-bottom:9px;font-weight:850}
+.student-flight-sheet .sheet-note p{
+  color:#29485b;white-space:pre-wrap;overflow-wrap:anywhere;
+  line-height:1.6;font-size:13px;margin:0
+}
+.student-flight-sheet .sheet-footer{
+  display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px 18px;
+  background:#eaf1f5;padding:16px 27px;color:#526e80;font-size:11px
+}
+.student-flight-sheet .sheet-footer strong{color:#264b60}
+@media(max-width:700px){
+ .student-flight-sheet .sheet-head{padding:20px 17px}
+ .student-flight-sheet .sheet-simulation-banner{padding:11px 17px}
+ .student-flight-sheet .sheet-section{padding:19px 16px}
+ .student-flight-sheet .sheet-summary-item{padding:14px 12px}
+ .student-flight-sheet .sheet-summary-item strong{font-size:15px}
+ .student-flight-sheet .sheet-fields{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .student-flight-sheet .sheet-assessment{grid-template-columns:1fr}
+ .student-flight-sheet .sheet-note.sheet-note-full{grid-column:auto}
+ .student-flight-sheet .sheet-footer{padding:16px}
+}
+@media(max-width:410px){
+ .student-flight-sheet .sheet-summary{grid-template-columns:1fr}
+ .student-flight-sheet .sheet-summary-item{border-right:0;border-bottom:1px solid #cedde5}
+ .student-flight-sheet .sheet-summary-item:last-child{border-bottom:0}
+ .student-flight-sheet .sheet-fields{grid-template-columns:1fr}
+}
 </style>
 <script src="../../assets/supabase-2.117.2.min.js"></script><script src="../../assets/community-config.js"></script>
 </head><body>
@@ -715,6 +821,13 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     list.append(p);return;
    }
    for(const r of labReports){
+    if(role==="alumno"){
+     const sheet=document.createElement("article");sheet.className="student-flight-sheet is-simulation";
+     sheet.setAttribute("aria-label","Informe de instrucción aprobado para simulación");
+     sheet.innerHTML=studentReportSheet(r,true);
+     list.append(sheet);
+     continue;
+    }
     const card=document.createElement("div");card.className="list-item";
     const top=document.createElement("p");
     top.innerHTML="<strong>Informe recuperado · "+esc(stamp(r.original_starts_at))+"</strong>"+
@@ -825,6 +938,79 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   function flightHoursMinutes(minutes){
    return String(Math.floor(minutes/60))+":"+String(minutes%60).padStart(2,"0");
   }
+
+  function studentReportSheet(r,simulation=false){
+   const rawBook=r.logbook_entry&&typeof r.logbook_entry==="object"?r.logbook_entry:{};
+   const notes=parseTeachingNotes(r.teaching_notes);
+   const field=(label,value)=>{
+    const txt=value===undefined||value===null||String(value).trim()===""?"—":String(value);
+    return '<div class="sheet-field"><span class="sheet-field-label">'+esc(label)+
+     '</span><span class="sheet-field-value">'+esc(txt)+'</span></div>';
+   };
+   const simpleDate=(v)=>/^\d{4}-\d{2}-\d{2}$/.test(String(v||""))
+    ?String(v).split("-").reverse().join("/"):v||"—";
+   const classLabel={monomotor:"Monomotor",multimotor:"Multimotor"};
+   const modeLabel={aerodromo:"Sobre aeródromo",travesia:"Travesía"};
+   const timeLabel={dia:"Diurno",noche:"Nocturno"};
+   const roleNames={piloto:"Piloto",instructor:"Instructor",copiloto:"Copiloto (registro anterior)"};
+   const quantity=rawBook.landings_count!==undefined
+    ?field("Cantidad de aterrizajes",rawBook.landings_count)
+    :rawBook.flight_count!==undefined?field("Cantidad de vuelos (registro anterior)",rawBook.flight_count):"";
+   const mins=validFlightMinutes(r.flight_minutes);
+   const duration=mins===null?"Sin registrar":flightHoursMinutes(mins)+" h";
+   const rawDate=rawBook.flight_date?simpleDate(rawBook.flight_date):
+      (r.original_starts_at||r.starts_at?arDate(r.original_starts_at||r.starts_at).split("-").reverse().join("/"):"—");
+   const plane=[rawBook.aircraft_make,rawBook.aircraft_registration].filter(Boolean).join(" · ")||"No informada";
+   const note=(name,body,kind="")=>body?
+    '<div class="sheet-note '+kind+'"><strong>'+esc(name)+'</strong><p>'+esc(body)+'</p></div>':"";
+   const simulationBanner=simulation?
+    '<div class="sheet-simulation-banner">SIMULACIÓN DEL CENTRO DE TESTEO · NO REPRESENTA UN VUELO REAL NI SUMA HORAS</div>':"";
+   const heading=simulation?"Informe de práctica · Prueba":"Informe de práctica de vuelo";
+   const verified=simulation?"APROBADO · PRUEBA":"INFORME VALIDADO";
+   const footer=simulation?"Solo para comprobar el funcionamiento de AeroSuite. Datos no computables.":
+    "Informe institucional disponible para consulta del alumno.";
+   return '<div class="sheet-head">'+
+    '<div><div class="sheet-brand">Aero<span>Suite</span><small>BY GENTE DE VUELO</small></div>'+
+    '<div class="sheet-kicker">Formación aeronáutica / Registro de instrucción</div>'+
+    '<h3>'+esc(heading)+'</h3><p>'+esc(school.institution_name||"Institución aeronáutica")+'</p></div>'+
+    '<span class="sheet-status">'+esc(verified)+'</span></div>'+
+    simulationBanner+
+    '<div class="sheet-summary" aria-label="Resumen de la práctica">'+
+     '<div class="sheet-summary-item"><small>Fecha de práctica</small><strong>'+esc(rawDate)+'</strong></div>'+
+     '<div class="sheet-summary-item"><small>Tiempo de vuelo</small><strong>'+esc(duration)+'</strong></div>'+
+     '<div class="sheet-summary-item"><small>Aeronave</small><strong>'+esc(plane)+'</strong></div>'+
+    '</div>'+
+    '<section class="sheet-section" aria-label="Datos de la operación"><h4 class="sheet-section-heading">'+
+     '<span class="sheet-section-number">01</span> Datos de la operación</h4>'+
+     '<div class="sheet-fields">'+
+      field("Fecha del vuelo",simpleDate(rawBook.flight_date||rawDate))+
+      field("Hora de salida · UTC",rawBook.departure_utc)+
+      field("Hora de llegada · UTC",rawBook.arrival_utc)+
+      field("Aeródromo de origen",rawBook.origin)+
+      field("Aeródromo de destino",rawBook.destination)+
+      quantity+
+     '</div></section>'+
+    '<section class="sheet-section" aria-label="Datos de la aeronave"><h4 class="sheet-section-heading">'+
+     '<span class="sheet-section-number">02</span> Aeronave y clasificación del vuelo</h4>'+
+     '<div class="sheet-fields">'+
+      field("Marca / modelo",rawBook.aircraft_make)+
+      field("Matrícula",rawBook.aircraft_registration)+
+      field("Potencia",rawBook.aircraft_power)+
+      field("Clase de aeronave",classLabel[String(rawBook.aircraft_class||"").toLowerCase()]||rawBook.aircraft_class)+
+      field("Tipo de operación",modeLabel[rawBook.flight_area]||rawBook.flight_area)+
+      field("Condición / función",
+       [timeLabel[rawBook.flight_period]||rawBook.flight_period,
+        roleNames[rawBook.flight_role]||rawBook.flight_role].filter(Boolean).join(" · "))+ 
+     '</div></section>'+
+    '<section class="sheet-section" aria-label="Evaluación de la instrucción"><h4 class="sheet-section-heading">'+
+     '<span class="sheet-section-number">03</span> Evaluación y seguimiento del Instructor</h4>'+
+     '<div class="sheet-assessment">'+
+      (note("Práctica realizada",notes.practice)||note("Actividad registrada","No detallada en el informe."))+
+      (note("Devolución del Instructor",notes.feedback,"sheet-note-primary")||note("Devolución del Instructor","Sin observaciones registradas.","sheet-note-primary"))+
+      note("Recomendaciones para la próxima práctica",notes.next,"sheet-note-full")+
+     '</div></section>'+
+    '<footer class="sheet-footer"><strong>'+esc(verified)+'</strong><span>'+esc(footer)+'</span></footer>';
+  }
   function renderStudentFlightHours(){
    if(role!=="alumno")return;
    const cards=$("flightHoursCards"),history=$("flightHoursHistory");
@@ -872,14 +1058,10 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    for(const r of reports){
     const card=document.createElement("div");card.className="list-item";
     if(role==="alumno"){
-     const notes=parseTeachingNotes(r.teaching_notes);
-     const minutes=Number(r.flight_minutes)||0,hours=Math.floor(minutes/60),remainder=minutes%60;
-     const duration=(hours?hours+" h":"")+(remainder?(hours?" ":"")+remainder+" min":"")||"Sin registrar";
-     card.innerHTML='<strong>Práctica del '+esc(stamp(r.starts_at))+'</strong>'+
-      '<p><strong>Tiempo de vuelo realizado:</strong> '+esc(duration)+'</p>'+formatLogbookEntry(r.logbook_entry)+
-      (notes.practice?'<p><strong>Práctica realizada:</strong></p><p class="lesson-text">'+esc(notes.practice)+'</p>':"")+
-      (notes.feedback?'<p><strong>Devolución del instructor:</strong></p><p class="lesson-text">'+esc(notes.feedback)+'</p>':"")+
-      (notes.next?'<p><strong>Para la próxima práctica:</strong></p><p class="lesson-text">'+esc(notes.next)+'</p>':"");
+     card.className="student-flight-sheet";
+     card.setAttribute("role","article");
+     card.setAttribute("aria-label","Informe de instrucción validado");
+     card.innerHTML=studentReportSheet(r,false);
      target.append(card);
      continue;
     }
