@@ -1330,7 +1330,14 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     totals[m.currency]=(totals[m.currency]||0)+sign*Number(m.amount);
     const item=document.createElement("div");item.className="list-item";
     item.innerHTML='<div class="row between"><strong>'+esc({hour_payment:"Cobro por hora",pack_sale:"Venta de pack",expense:"Egreso",petty_expense:"Caja chica",refund:"Devolución"}[m.movement_type]||m.movement_type)+'</strong><strong>'+esc(m.currency)+' '+(sign*Number(m.amount)).toLocaleString("es-AR")+'</strong></div>'+
-     '<p>'+esc(stamp(m.created_at))+' · '+esc(m.description||"Sin detalle")+'</p>';
+     '<p>'+esc(stamp(m.created_at))+' · '+esc(m.description||"Sin detalle")+'</p>'+
+     (m.movement_type==="pack_sale"?
+       '<p class="hint"><strong>Medio de cobro:</strong> '+
+         esc(m.payment_method==="cash"?"Efectivo":m.payment_method==="bank_transfer"?"Transferencia bancaria":"Sin especificar")+
+         (m.payment_reference?' · Ref.: '+esc(m.payment_reference):"")+
+         '</p><p class="hint"><strong>Comprobante ARCA:</strong> '+
+         (m.fiscal_document_reference?esc(m.fiscal_document_reference)+" (referencia declarada)":"Pendiente de registrar")+'</p>'
+       :"");
     list.append(item);
    }
    const sum=$("moneySummary");sum.replaceChildren();
