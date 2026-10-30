@@ -188,6 +188,38 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
  .student-report-history-row .history-route{grid-column:1/-1}
  .student-report-history-row button{grid-column:2;grid-row:1 / span 1}
 }
+
+/* Contaduría operativa: indicadores y 3 accesos rápidos. */
+.finance-overview{padding:15px;border-radius:12px;background:#132c40;border:1px solid #4b718b;margin:12px 0 17px}
+.finance-overview .finance-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px;margin:12px 0}
+.finance-overview .finance-kpi{background:#edf4f8;color:#213f51;padding:15px;border-radius:11px;min-width:0;border:1px solid #cee0ec}
+.finance-kpi .finance-kpi-label{display:block;color:#5a7483;letter-spacing:.055em;text-transform:uppercase;font-size:10px;font-weight:850}
+.finance-kpi .finance-kpi-value{display:block;color:#183a55;font-size:clamp(18px,2vw,25px);font-weight:900;margin:7px 0;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.finance-kpi .finance-kpi-desc{font-size:11px;color:#486478;line-height:1.4}
+.finance-kpi.alert{background:#fff4de;border-color:#e8d1a5}
+.finance-overview .finance-meta{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:10px}
+.finance-overview .finance-meta > div{border:1px solid #43647b;background:#1c384c;border-radius:8px;padding:11px;font-size:12px;line-height:1.5}
+.finance-overview .finance-meta strong{color:#fff}
+.finance-overview select{max-width:135px;width:auto}
+.finance-workspaces{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px;align-items:start}
+.finance-workspaces>.panel{margin:0;padding:16px;border-radius:12px}
+.finance-workspaces h3{font-size:17px;margin-bottom:6px}
+.finance-workspaces .formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+.finance-workspaces .formgrid label{min-width:0}
+.finance-workspaces label{font-size:12px}
+.finance-workspaces input,.finance-workspaces select{font-size:13px}
+.finance-workspaces .finance-span-2{grid-column:1/-1}
+.finance-workspaces .finance-submit{width:100%;margin-top:13px;font-weight:800}
+.finance-workspaces .finance-hint{padding:10px;background:#244158;border-left:3px solid #e7c18a;border-radius:7px;line-height:1.5}
+.finance-history{margin-top:23px}
+.finance-history h3{margin-bottom:8px}
+.finance-note{color:#d6e7f1;font-size:12px;padding:10px 12px;border-left:3px solid #e7c18a;background:#294359;border-radius:7px}
+.finance-lists{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(250px,1fr);gap:13px;margin-top:15px}
+.finance-lists>#moneyArea,.finance-lists>#packsArea{min-width:0}
+.finance-lists .list-item{font-size:12px}
+.finance-workspaces button:disabled{opacity:.6}
+@media(max-width:1050px){.finance-workspaces{grid-template-columns:repeat(2,minmax(0,1fr))}.finance-workspaces>.panel:last-child{grid-column:1/-1}.finance-overview .finance-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.finance-lists{grid-template-columns:1fr}}
+@media(max-width:630px){.finance-workspaces{grid-template-columns:1fr}.finance-workspaces>.panel:last-child{grid-column:auto}.finance-overview .finance-kpis{grid-template-columns:1fr 1fr}.finance-overview .finance-meta{grid-template-columns:1fr}.finance-workspaces .formgrid{grid-template-columns:1fr}.finance-kpi .finance-kpi-value{font-size:20px}}
 </style>
 <script src="../../assets/supabase-2.117.2.min.js"></script><script src="../../assets/community-config.js"></script>
 </head><body>
@@ -290,6 +322,48 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     <div class="list" id="flightHoursHistory"></div>
    </div>
 
+
+   <div id="financeOverview" class="finance-overview" hidden aria-live="polite">
+    <div class="row between">
+     <div><span class="eyebrow">Tablero económico · Datos registrados</span><h3>Resumen del instituto</h3></div>
+     <label>Moneda<select id="financeCurrency"><option value="ARS">ARS · Pesos</option><option value="USD">USD · Dólares</option></select></label>
+    </div>
+    <p class="hint" id="financePeriod">Consultando movimientos…</p>
+    <div class="finance-kpis">
+     <div class="finance-kpi"><span class="finance-kpi-label">Ingresos cobrados · mes</span><span class="finance-kpi-value" id="financeIncome">—</span><span class="finance-kpi-desc">Vuelos y ventas de packs</span></div>
+     <div class="finance-kpi"><span class="finance-kpi-label">Egresos pagados · mes</span><span class="finance-kpi-value" id="financeExpenses">—</span><span class="finance-kpi-desc">Gastos y caja chica</span></div>
+     <div class="finance-kpi"><span class="finance-kpi-label">Flujo neto registrado · mes</span><span class="finance-kpi-value" id="financeNet">—</span><span class="finance-kpi-desc">No equivale al saldo de banco ni a ganancia</span></div>
+     <div class="finance-kpi alert"><span class="finance-kpi-label">Vuelos aprobados sin liquidar</span><span class="finance-kpi-value" id="financeUnsettled">—</span><span class="finance-kpi-desc">Pendientes de cobro o descuento del pack</span></div>
+    </div>
+    <div class="finance-meta">
+     <div><strong id="financePacksAvailable">—</strong><div class="hint">Horas disponibles de packs · HH:MM</div></div>
+     <div><strong id="financeTransactions">—</strong><div class="hint">Movimientos registrados este mes</div></div>
+     <div><strong id="financePaymentSplit">—</strong><div class="hint">Ingresos por medio de pago del mes</div></div>
+    </div>
+    <p class="hint" id="financeOverviewCaveat">Este panel muestra flujo de caja registrado; no sustituye saldos bancarios conciliados ni contabilidad fiscal.</p>
+   </div>
+   <div class="finance-workspaces" id="financeWorkspaces" hidden>
+    <section class="panel" id="flightSettlementPanel">
+     <span class="eyebrow">01 · Al bajar del avión</span><h3>Cobrar o liquidar vuelo</h3>
+     <p class="hint">Seleccioná un vuelo aprobado. AeroSuite toma los minutos reales y evita cobrar y descontar un pack por el mismo vuelo.</p>
+     <form id="flightSettlementForm">
+      <div class="formgrid">
+       <label class="finance-span-2">Vuelo aprobado sin liquidar<select id="settleBooking" name="booking" required><option value="">Elegí el vuelo</option></select></label>
+       <label class="finance-span-2">Alumno<input id="settleStudent" value="Seleccioná un vuelo" readonly></label>
+       <label>Duración real<input id="settleDuration" value="—" readonly></label>
+       <label>Modalidad<select id="settleMode" name="mode"><option value="cash">Cobro en efectivo</option><option value="bank_transfer">Transferencia acreditada</option><option value="pack">Descontar de un pack</option></select></label>
+       <label id="settlePackRow" class="finance-span-2" hidden>Pack del alumno<select id="settlePack" name="pack"><option value="">Elegí un pack con saldo suficiente</option></select></label>
+       <label id="settleAmountRow">Importe cobrado<input id="settleAmount" name="amount" type="number" min=".01" max="1000000000000" step=".01"></label>
+       <label id="settleCurrencyRow">Moneda<select name="currency"><option value="ARS">Pesos (ARS)</option><option value="USD">Dólares (USD)</option></select></label>
+       <label id="settleBankRow" class="finance-span-2" hidden>Referencia bancaria<input name="bank_reference" id="settleBankReference" maxlength="120" placeholder="Número de transferencia confirmada"></label>
+       <label id="settleFiscalRow" class="finance-span-2">Referencia de factura ARCA (opcional)<input name="fiscal_reference" maxlength="120" placeholder="Número de comprobante emitido"></label>
+       <label class="finance-span-2">Concepto (opcional)<input name="description" maxlength="500" placeholder="Ej.: Práctica de instrucción"></label>
+      </div>
+      <p id="settleHelp" class="hint finance-hint">Seleccioná un vuelo aprobado para comenzar.</p>
+      <button class="primary finance-submit" type="submit" id="settleSubmit">Registrar liquidación del vuelo</button>
+      <p id="settleStatus" class="hint" role="status" aria-live="polite"></p>
+     </form>
+    </section>
    <section class="panel" id="packPurchasePanel" hidden>
     <span class="eyebrow">Primera operación · Contaduría</span><h3>Registrar compra y cobro de pack</h3>
     <p class="hint">Cuando el alumno paga, Secretaría registra sus horas. El pack queda en su cuenta y el importe entra una sola vez en caja.</p>
@@ -311,6 +385,29 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
      <p id="packPurchaseStatus" class="hint" role="status" aria-live="polite"></p>
     </form>
    </section>
+
+    <section class="panel" id="schoolExpensePanel">
+     <span class="eyebrow">03 · Administración</span><h3>Gastos y caja chica</h3>
+     <p class="hint">Registrá gastos menores o habituales. Cada operación conserva fecha, responsable, importe y medio de pago.</p>
+     <form id="schoolExpenseForm">
+      <div class="formgrid">
+       <label class="finance-span-2">Concepto<input name="description" maxlength="500" minlength="3" placeholder="Ej.: Combustible AVGAS, alquiler del hangar" required></label>
+       <label>Tipo<select name="kind"><option value="expense">Gasto habitual</option><option value="petty_expense">Gasto de caja chica</option></select></label>
+       <label>Categoría<select name="category"><option value="Combustible">Combustible</option><option value="Alquiler inmueble">Alquiler inmueble / hangar</option><option value="Alquiler aeronave">Alquiler de aeronave</option><option value="Mantenimiento">Mantenimiento</option><option value="Seguros">Seguros</option><option value="Servicios">Servicios e insumos</option><option value="Instructores">Instructores</option><option value="Impuestos y tasas">Impuestos y tasas</option><option value="Limpieza">Limpieza</option><option value="Otros">Otros gastos</option></select></label>
+       <label>Importe pagado<input name="amount" type="number" min=".01" max="1000000000000" step=".01" required></label>
+       <label>Moneda<select name="currency"><option value="ARS">Pesos (ARS)</option><option value="USD">Dólares (USD)</option></select></label>
+       <label>Medio de pago<select name="method" id="expenseMethod"><option value="cash">Efectivo</option><option value="bank_transfer">Transferencia bancaria</option></select></label>
+       <label id="expenseBankRow" hidden>Referencia bancaria<input name="bank_reference" id="expenseBankReference" maxlength="120"></label>
+       <label class="finance-span-2">Comprobante (referencia opcional)<input name="fiscal_reference" maxlength="120" placeholder="Factura u otro comprobante existente"></label>
+      </div>
+      <p class="hint finance-hint">Caja chica es un gasto diferenciado; transferir fondos hacia caja chica no se registra aquí como gasto.</p>
+      <button class="primary finance-submit" type="submit" id="expenseSubmit">Registrar gasto</button>
+      <p id="expenseStatus" class="hint" role="status" aria-live="polite"></p>
+     </form>
+    </section>
+   </div>
+   <p class="finance-note" id="financeDisclosure" hidden>Resumen operativo con respaldo de movimientos. Los importes registrados no equivalen a caja conciliada, rentabilidad contable ni facturación electrónica ante ARCA.</p>
+   <div class="finance-lists">
    <form id="financeForm" hidden>
     <div class="formgrid">
      <label>Movimiento<select name="op" id="financeOp">
@@ -329,7 +426,8 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     <button class="primary" type="submit">Registrar movimiento</button>
    </form>
    <div id="packsArea"><h3>Packs de alumnos</h3><div class="list" id="packsList"></div></div>
-   <div id="moneyArea"><h3>Movimientos de caja y contaduría</h3><p class="hint">Resumen orientativo de los últimos 150 movimientos, separados por moneda. No sustituye la contabilidad fiscal.</p><div class="cards" id="moneySummary"></div><div class="list" id="moneyList"></div></div>
+   <div id="moneyArea"><h3>Movimientos de caja y contaduría</h3><p class="hint">Últimos 150 movimientos. El resumen mensual superior sí incluye el período completo.</p><div class="cards" id="moneySummary"></div><div class="list" id="moneyList"></div></div>
+   </div>
   </section>
   <section class="panel tab-panel" id="recursos">
    <span class="eyebrow">Academia Aeronáutica institucional</span><h2>Material de instrucción</h2>
@@ -384,7 +482,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   $("roleText").textContent="Rol: "+(roleLabel[role]||role)+" · "+user.email+(school.can_write?"":" · Solo consulta");
   $("pageTitle").textContent=manager?"Administración de la escuela":role==="instructor"?"Mi actividad de instrucción":"Mi reserva y formación";
   $("backPortal").href="portal-escuela.html?institucion="+encodeURIComponent(inst)+"&rol="+encodeURIComponent(role)+"&elegida=1"+(labLogin?"&prueba=1":"");
-  $("adminBooking").hidden=!manager;$("reportForm").hidden=role!=="instructor";$("financeForm").hidden=!manager;$("packPurchasePanel").hidden=!manager;
+  $("adminBooking").hidden=!manager;$("reportForm").hidden=role!=="instructor";$("financeForm").hidden=true;$("packPurchasePanel").hidden=!manager;$("financeOverview").hidden=!manager;$("financeWorkspaces").hidden=!manager;$("financeDisclosure").hidden=!manager;
   if(role==="alumno"){
    $("reportsEyebrow").textContent="Seguimiento de mi formación";
    $("reportsTitle").textContent="Mis prácticas y devoluciones";
