@@ -1600,6 +1600,110 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     message.textContent="No se pudo registrar la compra: "+safeError(err);
    }finally{button.disabled=false;}
   });
+
+  $("financeCurrency").addEventListener("change",renderFinanceOverview);
+  $("settleBooking").addEventListener("change",syncSettleFlight);
+  $("settleMode").addEventListener("change",syncSettleMode);
+  let pendingSettlementRequest=null,pendingSettlementSignature="";
+  $("flightSettlementForm").addEventListener("submit",async event=>{
+   event.preventDefault();
+   if(!manager||!school.can_write)return;
+   const form=event.currentTarget,fd=new FormData(form),booking=String(fd.get("booking")||"");
+   const flight=unsettledFlights.find(x=>x.booking_id===booking);
+   const mode=String(fd.get("mode")||"");
+   const selectedPack=mode==="pack"?String(fd.get("pack")||""):null;
+   const amount=mode==="pack"?null:Number(fd.get("amount"));
+   const bankRef=String(fd.get("bank_reference")||"").trim();
+   const message=$("settleStatus"),button=$("settleSubmit");
+   if(!flight){message.textContent="Elegí un vuelo aprobado que aún no haya sido liquidado.";return;}
+   if(mode==="pack"&&!selectedPack){message.textContent="Seleccioná un pack del alumno con saldo suficiente.";return;}
+   if(mode!=="pack"&&(!Number.isFinite(amount)||amount<=0)){
+    message.textContent="Ingresá el importe efectivamente cobrado.";return;
+   }
+   if(mode==="bank_transfer"&&bankRef.length<4){
+    message.textContent="La transferencia debe estar acreditada y tener referencia bancaria.";return;
+   }
+   const sig=JSON.stringify([...fd.entries()]);
+   if(sig!==pendingSettlementSignature){
+    pendingSettlementSignature=sig;pendingSettlementRequest=crypto.randomUUID();
+   }
+   const wording=mode==="pack"?"descontar "+flightHoursMinutes(Number(flight.flight_minutes))+
+    " h del pack (sin nuevo ingreso)":"registrar cobro de "+currencyAmount(amount,fd.get("currency"))+
+    (mode==="cash"?" en efectivo":" por transferencia");
+   if(!confirm("¿Confirmás "+wording+" para el vuelo de "+flight.student_email+
+    " del "+stamp(flight.starts_at)+"? Esta operación quedará registrada."))return;
+   button.disabled=true;message.textContent="Guardando liquidación…";
+   try{
+    const result=await rpc("aerosuite_settle_approved_flight",{
+     p_institution_id:inst,p_booking_id:booking,p_mode:mode,
+     p_pack_id:selectedPack||null,p_amount:amount,
+     p_currency:String(fd.get("currency")||"ARS"),
+     p_payment_reference:bankRef,p_fiscal_reference:mode==="pack"?"":String(fd.get("fiscal_reference")||"").trim(),
+     p_description:String(fd.get("description")||"").trim(),
+     p_request_id:pendingSettlementRequest
+    });
+    if(!result?.ok)throw Error("No se pudo verificar la operación.");
+    pendingSettlementRequest=null;pendingSettlementSignature="";
+    await loadFinance();
+    form.reset();syncSettleFlight();
+    message.textContent=result.already_registered?
+     "Este vuelo ya estaba liquidado. No se registró dos veces.":
+     mode==="pack"?"Vuelo descontado del pack por "+flightHoursMinutes(Number(flight.flight_minutes))+
+     " h. El saldo del alumno está actualizado. No se creó ingreso en caja.":
+     "Cobro registrado y vinculado al vuelo. Figura en el historial del instituto.";
+   }catch(err){message.textContent="No se pudo liquidar: "+safeError(err);}
+   finally{syncSettleMode();}
+  });
+  const expenseForm=$("schoolExpenseForm");
+  function syncExpenseMethod(){
+   const bank=$("expenseMethod").value==="bank_transfer";
+   $("expenseBankRow").hidden=!bank;
+   $("expenseBankReference").required=bank;
+   if(!bank)$("expenseBankReference").value="";
+  }
+  $("expenseMethod").addEventListener("change",syncExpenseMethod);
+  syncExpenseMethod();
+  let pendingExpenseRequest=null,pendingExpenseSignature="";
+  expenseForm.addEventListener("submit",async event=>{
+   event.preventDefault();
+   if(!manager||!school.can_write)return;
+   const form=event.currentTarget,fd=new FormData(form);
+   const method=String(fd.get("method")||""),amount=Number(fd.get("amount")),
+    description=String(fd.get("description")||"").trim();
+   const reference=String(fd.get("bank_reference")||"").trim();
+   const message=$("expenseStatus"),button=$("expenseSubmit");
+   if(description.length<3||!Number.isFinite(amount)||amount<=0){
+    message.textContent="Ingresá concepto e importe válidos.";return;
+   }
+   if(method==="bank_transfer"&&reference.length<4){
+    message.textContent="Registrá la referencia de la transferencia ya realizada.";return;
+   }
+   const sig=JSON.stringify([...fd.entries()]);
+   if(sig!==pendingExpenseSignature){
+    pendingExpenseSignature=sig;pendingExpenseRequest=crypto.randomUUID();
+   }
+   if(!confirm("¿Registrar gasto de "+currencyAmount(amount,fd.get("currency"))+
+    " por «"+description+"» como "+(fd.get("kind")==="petty_expense"?"caja chica":"gasto habitual")+
+    "? El pago debe haberse realizado."))return;
+   button.disabled=true;message.textContent="Registrando gasto…";
+   try{
+    const result=await rpc("aerosuite_record_school_expense",{
+     p_institution_id:inst,p_kind:String(fd.get("kind")),p_amount:amount,
+     p_currency:String(fd.get("currency")),p_category:String(fd.get("category")),
+     p_description:description,p_method:method,p_payment_reference:reference,
+     p_fiscal_reference:String(fd.get("fiscal_reference")||"").trim(),
+     p_request_id:pendingExpenseRequest
+    });
+    if(!result?.ok)throw Error("No pudo confirmarse el registro.");
+    pendingExpenseRequest=null;pendingExpenseSignature="";
+    await loadFinance();
+    form.reset();syncExpenseMethod();
+    message.textContent=result.already_registered?
+     "Este gasto ya había sido registrado; no se duplicó.":
+     "Gasto registrado en el historial del instituto y en el resumen del mes.";
+   }catch(err){message.textContent="No se pudo guardar el gasto: "+safeError(err);}
+   finally{button.disabled=!school.can_write;}
+  });
   $("financeForm").addEventListener("submit",async e=>{
    e.preventDefault();const f=e.currentTarget,fd=new FormData(f),op=fd.get("op");
    const hours=Number(fd.get("hours")),amount=Number(fd.get("amount")),button=f.querySelector("button");
