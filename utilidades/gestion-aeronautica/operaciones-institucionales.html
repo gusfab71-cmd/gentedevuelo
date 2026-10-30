@@ -1279,9 +1279,34 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    if(!manager)return;const target=$("financeBooking");target.length=1;
    bookings.filter(x=>x.status==="completed").forEach(b=>target.add(new Option(stamp(b.starts_at)+" · "+(b.student_email||"Alumno"),b.booking_id)));
   }
+
+  function renderStudentPacks(){
+   if(role!=="alumno")return;
+   const total=$("studentPackSummary"),list=$("studentPackList");
+   total.replaceChildren();list.replaceChildren();
+   const packs=finance.packs||[];
+   const minutes=packs.reduce((sum,p)=>sum+Math.max(0,Number(p.remaining_minutes)||0),0);
+   const box=document.createElement("div");box.className="card";
+   box.innerHTML='<strong>Horas disponibles en packs</strong><h3>'+esc(flightHoursMinutes(minutes))+' (HH:MM)</h3>'+
+    '<p>'+packs.length+' '+(packs.length===1?"pack comprado":"packs comprados")+'</p>';
+   total.append(box);
+   if(!packs.length){list.textContent="Todavía no tenés packs de horas comprados en esta escuela.";return;}
+   for(const p of packs){
+    const card=document.createElement("div");card.className="list-item";
+    const remaining=Math.max(0,Number(p.remaining_minutes)||0),used=Math.max(0,Number(p.used_minutes)||0);
+    const totalMin=Number(p.total_minutes)||0;
+    card.innerHTML='<div class="row between"><strong>Pack comprado · '+esc(stamp(p.created_at))+'</strong><span class="chip">'+(remaining?"Con saldo":"Agotado")+'</span></div>'+
+     '<p>Comprado: <strong>'+esc(flightHoursMinutes(totalMin))+'</strong> · Consumido: <strong>'+
+     esc(flightHoursMinutes(used))+'</strong> · Disponible: <strong>'+esc(flightHoursMinutes(remaining))+'</strong></p>'+
+     '<p class="hint">Importe pagado: '+esc(p.currency)+' '+esc(Number(p.paid_amount).toLocaleString("es-AR",{minimumFractionDigits:2}))+'</p>';
+    list.append(card);
+   }
+  }
   async function loadFinance(){
-   if(!manager)return;
-   finance=await rpc("aerosuite_finance_snapshot",{p_institution_id:inst});renderFinance();
+   if(!manager&&role!=="alumno")return;
+   finance=await rpc("aerosuite_finance_snapshot",{p_institution_id:inst});
+   if(manager)renderFinance();
+   else renderStudentPacks();
   }
   function renderFinance(){
    const packs=$("packsList");packs.replaceChildren();
@@ -1289,13 +1314,13 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    if(!all.length)packs.textContent="Todavía no hay packs de horas registrados.";
    for(const p of all){
     const box=document.createElement("div");box.className="list-item";
-    box.innerHTML='<strong>'+esc(p.student_email||"Mi pack")+'</strong><p>Compradas: '+(p.total_minutes/60).toFixed(2)+' h · Usadas: '+(p.used_minutes/60).toFixed(2)+' h · <strong>Disponibles: '+(p.remaining_minutes/60).toFixed(2)+' h</strong></p>'+
+    box.innerHTML='<strong>'+esc(p.student_email||"Mi pack")+'</strong><p>Compradas: '+esc(flightHoursMinutes(Number(p.total_minutes)))+' · Usadas: '+esc(flightHoursMinutes(Number(p.used_minutes)))+' · <strong>Disponibles: '+esc(flightHoursMinutes(Number(p.remaining_minutes)))+'</strong></p>'+
      (manager?'<p class="hint">Importe cobrado al comprar: '+esc(p.currency)+' '+Number(p.paid_amount).toLocaleString("es-AR")+'</p>':"");
     packs.append(box);
    }
    if(!manager)return;
    const select=$("financePack");select.length=1;
-   for(const p of all.filter(x=>x.remaining_minutes>0))select.add(new Option((p.student_email||"Alumno")+" · "+(p.remaining_minutes/60).toFixed(2)+" h",p.id));
+   for(const p of all.filter(x=>x.remaining_minutes>0))select.add(new Option((p.student_email||"Alumno")+" · "+flightHoursMinutes(Number(p.remaining_minutes))+" h",p.id));
    const list=$("moneyList");list.replaceChildren();
    const movements=finance.movements||[];
    if(!movements.length)list.textContent="Todavía no se registraron movimientos económicos.";
@@ -1313,6 +1338,80 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     const box=document.createElement("div");box.className="card";box.innerHTML='<strong>Saldo neto de movimientos recientes en '+esc(currency)+'</strong><h3>'+Number(amount).toLocaleString("es-AR",{minimumFractionDigits:2})+'</h3>';sum.append(box);
    }
   }
+
+  const packPurchaseForm=$("packPurchaseForm");
+  const paymentMethod=$("packPurchaseMethod");
+  const bankReference=$("packPurchaseBankReference");
+  const bankRow=$("packPurchaseBankRow");
+  function syncPackPayment(){
+   const bank=paymentMethod.value==="bank_transfer";
+   bankRow.hidden=!bank;
+   bankReference.required=bank;
+   if(!bank)bankReference.value="";
+  }
+  function syncPackSummary(){
+   const h=Number(packPurchaseForm.elements.namedItem("hours_whole").value);
+   const m=Number(packPurchaseForm.elements.namedItem("minutes_extra").value);
+   const val=(Number.isInteger(h)&&Number.isInteger(m)&&h>=0&&m>=0&&m<=59)?
+    60*h+m:0;
+   $("packPurchaseSummary").textContent=val>0?"Horas a acreditar: "+flightHoursMinutes(val)+
+    " (HH:MM). El importe se registra como un único cobro.":"Ingresá una duración válida y mayor a cero.";
+  }
+  paymentMethod.addEventListener("change",syncPackPayment);
+  for(const name of ["hours_whole","minutes_extra"])
+   packPurchaseForm.elements.namedItem(name).addEventListener("input",syncPackSummary);
+  syncPackPayment();syncPackSummary();
+  let pendingPackRequest=null,pendingPackSignature="";
+  packPurchaseForm.addEventListener("submit",async event=>{
+   event.preventDefault();
+   const form=event.currentTarget,fields=new FormData(form);
+   const hours=Number(fields.get("hours_whole")),minutes=Number(fields.get("minutes_extra"));
+   const total=hours*60+minutes;
+   const amount=Number(fields.get("amount")),student=String(fields.get("student")||"");
+   const bank=fields.get("payment_method")==="bank_transfer";
+   const ref=String(fields.get("payment_reference")||"").trim();
+   const message=$("packPurchaseStatus"),button=$("packPurchaseSubmit");
+   if(!Number.isInteger(hours)||!Number.isInteger(minutes)||minutes<0||minutes>59||
+    !Number.isInteger(total)||total<1||total>60000){
+    message.textContent="El pack debe tener entre un minuto y 1000 horas.";return;
+   }
+   if(!student||!Number.isFinite(amount)||amount<=0||bank&&ref.length<4){
+    message.textContent="Completá alumno, importe y, para transferencia, una referencia bancaria de cuatro caracteres como mínimo.";return;
+   }
+   const signature=JSON.stringify([...fields.entries()]);
+   if(signature!==pendingPackSignature){
+    pendingPackSignature=signature;
+    pendingPackRequest=crypto.randomUUID();
+   }
+   const studentLabel=$("packPurchaseStudent").selectedOptions[0]?.textContent||"Alumno";
+   const methodLabel=bank?"transferencia bancaria acreditada":"efectivo";
+   if(!confirm("¿Confirmás que se recibió el pago por "+methodLabel+" y registrar "+
+     flightHoursMinutes(total)+" en el pack de "+studentLabel+
+     "? Se acreditará en su cuenta y se registrará una vez en caja."))return;
+   button.disabled=true;
+   message.textContent="Registrando compra y cobro…";
+   try{
+    const result=await rpc("aerosuite_sell_hour_pack",{
+     p_institution_id:inst,p_student_id:student,p_minutes:total,p_amount:amount,
+     p_currency:fields.get("currency"),p_payment_method:fields.get("payment_method"),
+     p_payment_reference:ref,p_fiscal_reference:String(fields.get("fiscal_reference")||"").trim(),
+     p_description:String(fields.get("description")||"").trim(),
+     p_request_id:pendingPackRequest
+    });
+    if(!result?.ok)throw Error("No se confirmó la operación.");
+    const wasDuplicate=!!result.already_registered;
+    pendingPackRequest=null;pendingPackSignature="";
+    form.reset();syncPackPayment();syncPackSummary();
+    await loadFinance();
+    message.textContent=wasDuplicate?
+      "Esta compra ya estaba registrada. No se duplicó el cobro.":
+      "Pack comprado y pagado: "+flightHoursMinutes(total)+
+      " acreditadas a "+studentLabel+". Cobro registrado en Contaduría. "+
+      (result.fiscal_reference_recorded?"Se guardó la referencia fiscal informada.":"Falta registrar el comprobante de ARCA si aún no fue emitido.");
+   }catch(err){
+    message.textContent="No se pudo registrar la compra: "+safeError(err);
+   }finally{button.disabled=false;}
+  });
   $("financeForm").addEventListener("submit",async e=>{
    e.preventDefault();const f=e.currentTarget,fd=new FormData(f),op=fd.get("op");
    const hours=Number(fd.get("hours")),amount=Number(fd.get("amount")),button=f.querySelector("button");
