@@ -407,6 +407,11 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     </section>
    </div>
    <p class="finance-note" id="financeDisclosure" hidden>Resumen operativo con respaldo de movimientos. Los importes registrados no equivalen a caja conciliada, rentabilidad contable ni facturación electrónica ante ARCA.</p>
+   <div class="row" id="financeExportRow" style="margin-top:16px" hidden>
+    <label>Detalle de otro mes<input id="financeExportMonth" type="month" min="2020-01" max="2099-12"></label>
+    <button type="button" id="financeExportCSV" class="primary">Descargar detalle mensual · CSV</button>
+    <span id="financeExportStatus" class="hint" role="status" aria-live="polite">Informe interno para el contador o Director.</span>
+   </div>
    <div class="finance-lists">
    <form id="financeForm" hidden>
     <div class="formgrid">
@@ -482,7 +487,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   $("roleText").textContent="Rol: "+(roleLabel[role]||role)+" · "+user.email+(school.can_write?"":" · Solo consulta");
   $("pageTitle").textContent=manager?"Administración de la escuela":role==="instructor"?"Mi actividad de instrucción":"Mi reserva y formación";
   $("backPortal").href="portal-escuela.html?institucion="+encodeURIComponent(inst)+"&rol="+encodeURIComponent(role)+"&elegida=1"+(labLogin?"&prueba=1":"");
-  $("adminBooking").hidden=!manager;$("reportForm").hidden=role!=="instructor";$("financeForm").hidden=true;$("packPurchasePanel").hidden=!manager;$("financeOverview").hidden=!manager;$("financeWorkspaces").hidden=!manager;$("financeDisclosure").hidden=!manager;
+  $("adminBooking").hidden=!manager;$("reportForm").hidden=role!=="instructor";$("financeForm").hidden=true;$("packPurchasePanel").hidden=!manager;$("financeOverview").hidden=!manager;$("financeWorkspaces").hidden=!manager;$("financeDisclosure").hidden=!manager;$("financeExportRow").hidden=!manager;
   if(role==="alumno"){
    $("reportsEyebrow").textContent="Seguimiento de mi formación";
    $("reportsTitle").textContent="Mis prácticas y devoluciones";
@@ -1512,13 +1517,15 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     const item=document.createElement("div");item.className="list-item";
     item.innerHTML='<div class="row between"><strong>'+esc({hour_payment:"Cobro por hora",pack_sale:"Venta de pack",expense:"Egreso",petty_expense:"Caja chica",refund:"Devolución"}[m.movement_type]||m.movement_type)+'</strong><strong>'+esc(m.currency)+' '+(sign*Number(m.amount)).toLocaleString("es-AR")+'</strong></div>'+
      '<p>'+esc(stamp(m.created_at))+' · '+esc(m.description||"Sin detalle")+'</p>'+
-     (m.movement_type==="pack_sale"?
-       '<p class="hint"><strong>Medio de cobro:</strong> '+
-         esc(m.payment_method==="cash"?"Efectivo":m.payment_method==="bank_transfer"?"Transferencia bancaria":"Sin especificar")+
-         (m.payment_reference?' · Ref.: '+esc(m.payment_reference):"")+
-         '</p><p class="hint"><strong>Comprobante ARCA:</strong> '+
-         (m.fiscal_document_reference?esc(m.fiscal_document_reference)+" (referencia declarada)":"Pendiente de registrar")+'</p>'
-       :"");
+     '<p class="hint">'+(m.student_email?'Alumno: '+esc(m.student_email)+' · ':"")+
+       (m.expense_category?'Categoría: '+esc(m.expense_category)+' · ':"")+
+       'Registrado por: '+esc(m.created_by_email||"Cuenta institucional")+'</p>'+
+     '<p class="hint"><strong>Medio:</strong> '+
+       esc(m.payment_method==="cash"?"Efectivo":m.payment_method==="bank_transfer"?"Transferencia bancaria":"No identificado")+
+       (m.payment_reference?' · Ref.: '+esc(m.payment_reference):"")+'</p>'+
+     (m.fiscal_document_reference?
+       '<p class="hint">Comprobante declarado: '+esc(m.fiscal_document_reference)+'</p>':
+       '<p class="hint">Sin referencia de comprobante registrada</p>');
     list.append(item);
    }
    const sum=$("moneySummary");sum.replaceChildren();
@@ -1601,6 +1608,52 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    }finally{button.disabled=false;}
   });
 
+
+  $("financeExportMonth").value=artToday().slice(0,7);
+  $("financeExportCSV").addEventListener("click",async()=>{
+   if(!manager)return;
+   const month=$("financeExportMonth").value,button=$("financeExportCSV");
+   const status=$("financeExportStatus");
+   if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(month)){
+    status.textContent="Elegí un mes válido.";return;
+   }
+   button.disabled=true;status.textContent="Recuperando el detalle del mes…";
+   try{
+    const entries=[];let offset=0,hasMore=true;
+    while(hasMore){
+     const result=await rpc("aerosuite_finance_monthly_detail",{
+      p_institution_id:inst,p_month:month,p_offset:offset,p_limit:500
+     });
+     if(result?.month!==month||!Array.isArray(result.rows))throw Error("El detalle del mes no llegó completo.");
+     entries.push(...result.rows);offset=result.next_offset;hasMore=!!result.has_more;
+     if(hasMore&&offset>=100000)throw Error("La exportación supera 100.000 operaciones; no se generará un archivo incompleto.");
+    }
+    const titles=["Fecha y hora ART","Tipo","Alumno","Categoría","Concepto",
+     "Importe","Moneda","Medio","Referencia bancaria","Comprobante declarado","Registrado por","ID movimiento"];
+    const signFor=type=>["expense","petty_expense","refund"].includes(type)?-1:1;
+    const sanitizeCSV=(value)=>{
+     let text=String(value===null||value===undefined?"":value);
+     if(/^[\s]*[=+\-@\t\r]/.test(text))text="'"+text;
+     return '"'+text.replace(/"/g,'""')+'"';
+    };
+    const records=entries.map(m=>[
+     stamp(m.created_at),{pack_sale:"Compra de pack",hour_payment:"Cobro de vuelo",
+     expense:"Gasto",petty_expense:"Caja chica",refund:"Devolución"}[m.movement_type]||m.movement_type,
+     m.student_email||"",m.expense_category||"",m.description||"",
+     (signFor(m.movement_type)*Number(m.amount)).toFixed(2),m.currency||"",
+     m.payment_method==="cash"?"Efectivo":m.payment_method==="bank_transfer"?"Transferencia bancaria":"Sin identificar",
+     m.payment_reference||"",m.fiscal_document_reference||"",m.created_by_email||"",m.id||""
+    ]);
+    const csv="\uFEFF"+[titles,...records].map(row=>row.map(sanitizeCSV).join(";")).join("\r\n");
+    const url=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8;"}));
+    const link=document.createElement("a");link.href=url;link.download="AeroSuite-movimientos-"+month+".csv";
+    document.body.append(link);link.click();link.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),1000);
+    status.textContent="Descargado: "+entries.length+" movimientos de "+month+
+     ". Documento de respaldo interno, no fiscal.";
+   }catch(e){status.textContent="No se pudo exportar: "+safeError(e);}
+   finally{button.disabled=!school.can_write;}
+  });
   $("financeCurrency").addEventListener("change",renderFinanceOverview);
   $("settleBooking").addEventListener("change",syncSettleFlight);
   $("settleMode").addEventListener("change",syncSettleMode);
