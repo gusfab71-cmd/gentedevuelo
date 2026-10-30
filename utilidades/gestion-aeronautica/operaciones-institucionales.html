@@ -1330,6 +1330,15 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
      formatLogbookEntry(r.logbook_entry)+
      '<p class="lesson-text"><strong>Devolución:</strong> '+esc(r.teaching_notes)+'</p><p class="lesson-text"><strong>Novedades:</strong> '+esc(r.aircraft_notes||"Sin novedades registradas")+'</p>'+
      (r.return_reason?'<p class="warn"><strong>Motivo de devolución:</strong> '+esc(r.return_reason)+'</p>':"");
+    if(manager&&r.frontdesk_minutes!==null&&r.frontdesk_minutes!==undefined){
+     const minutesAtCheckout=Number(r.frontdesk_minutes);
+     const matches=minutesAtCheckout===Number(r.flight_minutes);
+     const p=document.createElement("p");p.className=matches?"hint":"warn";
+     p.textContent="Horas informadas a Secretaría: "+flightHoursMinutes(minutesAtCheckout)+
+      " h · Informe del Instructor: "+flightHoursMinutes(Number(r.flight_minutes))+
+      " h. "+(matches?"Coinciden.":"DIFERENCIA: verificar con el Instructor antes de aprobar.");
+     card.append(p);
+    }
     if(r.last_corrected_by&&r.last_corrected_at){
      const note=document.createElement("p");note.className="hint";
      note.textContent="Última corrección administrativa: "+(r.corrected_by_email||"Cuenta institucional")+
@@ -1351,6 +1360,10 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
       if(!flightCompleted)approve.title="No se puede aprobar un vuelo antes de finalizar su turno.";
       if(r.status==="returned")approve.title="Corregí el informe antes de aprobarlo.";
       approve.onclick=async()=>{
+       if(r.frontdesk_minutes!==null&&r.frontdesk_minutes!==undefined&&Number(r.frontdesk_minutes)!==Number(r.flight_minutes)){
+        stat.textContent="Diferencia de minutos entre Libro de Vuelo y el informe. Revisá con el Instructor antes de aprobar.";
+        return;
+       }
        if(!confirm("¿Aprobar el informe revisado y registrar el vuelo como realizado?"))return;
        try{
         approve.disabled=true;
