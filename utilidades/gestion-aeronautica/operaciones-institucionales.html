@@ -217,7 +217,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
 .finance-lists{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(250px,1fr);gap:13px;margin-top:15px}
 .finance-lists>#moneyArea,.finance-lists>#packsArea{min-width:0}
 .finance-lists .list-item{font-size:12px}
-.finance-workspaces button:disabled{opacity:.6}
+.finance-workspaces button:disabled{opacity:.6} #moneySummary{display:none} 
 @media(max-width:1050px){.finance-workspaces{grid-template-columns:repeat(2,minmax(0,1fr))}.finance-workspaces>.panel:last-child{grid-column:1/-1}.finance-overview .finance-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.finance-lists{grid-template-columns:1fr}}
 @media(max-width:630px){.finance-workspaces{grid-template-columns:1fr}.finance-workspaces>.panel:last-child{grid-column:auto}.finance-overview .finance-kpis{grid-template-columns:1fr 1fr}.finance-overview .finance-meta{grid-template-columns:1fr}.finance-workspaces .formgrid{grid-template-columns:1fr}.finance-kpi .finance-kpi-value{font-size:20px}}
 </style>
@@ -365,7 +365,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
      </form>
     </section>
    <section class="panel" id="packPurchasePanel" hidden>
-    <span class="eyebrow">Primera operación · Contaduría</span><h3>Registrar compra y cobro de pack</h3>
+    <span class="eyebrow">02 · Horas prepagas</span><h3>Registrar compra y cobro de pack</h3>
     <p class="hint">Cuando el alumno paga, Secretaría registra sus horas. El pack queda en su cuenta y el importe entra una sola vez en caja.</p>
     <form id="packPurchaseForm">
      <div class="formgrid">
@@ -381,7 +381,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
      <label style="margin-top:12px">Concepto (opcional)<input name="description" maxlength="500" placeholder="Ej.: Pack 10 horas de instrucción"></label>
      <p class="hint" id="packPurchaseSummary">Horas a acreditar: 5:00</p>
      <p class="hint">Este registro interno no emite ni valida facturas ante ARCA. La escuela debe emitir el comprobante fiscal correspondiente.</p>
-     <button type="submit" class="primary" id="packPurchaseSubmit">Registrar pack y cobro</button>
+     <button type="submit" class="primary finance-submit" id="packPurchaseSubmit">Registrar pack y cobro</button>
      <p id="packPurchaseStatus" class="hint" role="status" aria-live="polite"></p>
     </form>
    </section>
