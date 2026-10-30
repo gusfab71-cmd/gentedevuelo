@@ -345,12 +345,12 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    <div class="finance-workspaces" id="financeWorkspaces" hidden>
     <section class="panel" id="flightSettlementPanel">
      <span class="eyebrow">01 · Al bajar del avión</span><h3>Cobrar o liquidar vuelo</h3>
-     <p class="hint">Seleccioná un vuelo aprobado. AeroSuite toma los minutos reales y evita cobrar y descontar un pack por el mismo vuelo.</p>
+     <p class="hint">El Alumno baja del avión y pasa por Secretaría. Se cobran o descuentan las horas firmadas en el Libro de Vuelo, <strong>sin esperar el informe escrito del Instructor</strong>. Administración hará el control al finalizar el día.</p>
      <form id="flightSettlementForm">
       <div class="formgrid">
-       <label class="finance-span-2">Vuelo aprobado sin liquidar<select id="settleBooking" name="booking" required><option value="">Elegí el vuelo</option></select></label>
+       <label class="finance-span-2">Turno confirmado, ya iniciado y sin liquidar<select id="settleBooking" name="booking" required><option value="">Elegí el vuelo</option></select></label>
        <label class="finance-span-2">Alumno<input id="settleStudent" value="Seleccioná un vuelo" readonly></label>
-       <label>Duración real<input id="settleDuration" value="—" readonly></label>
+       <label>Instructor<input id="settleInstructor" value="—" readonly></label><label>Minutos del Libro de Vuelo<input id="settleBookMinutes" type="number" min="1" max="600" step="1" required placeholder="Ej.: 75"></label>
        <label>Modalidad<select id="settleMode" name="mode"><option value="cash">Cobro en efectivo</option><option value="bank_transfer">Transferencia acreditada</option><option value="pack">Descontar de un pack</option></select></label>
        <label id="settlePackRow" class="finance-span-2" hidden>Pack del alumno<select id="settlePack" name="pack"><option value="">Elegí un pack con saldo suficiente</option></select></label>
        <label id="settleAmountRow">Importe cobrado<input id="settleAmount" name="amount" type="number" min=".01" max="1000000000000" step=".01"></label>
@@ -359,8 +359,12 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
        <label id="settleFiscalRow" class="finance-span-2">Referencia de factura ARCA (opcional)<input name="fiscal_reference" maxlength="120" placeholder="Número de comprobante emitido"></label>
        <label class="finance-span-2">Concepto (opcional)<input name="description" maxlength="500" placeholder="Ej.: Práctica de instrucción"></label>
       </div>
-      <p id="settleHelp" class="hint finance-hint">Seleccioná un vuelo aprobado para comenzar.</p>
-      <button class="primary finance-submit" type="submit" id="settleSubmit">Registrar liquidación del vuelo</button>
+      <p id="settleHelp" class="hint finance-hint">Seleccioná el turno y copiá los minutos que constan en el Libro de Vuelo firmado.</p>
+      <label class="finance-hint" style="display:flex;align-items:flex-start;gap:8px;margin:10px 0">
+       <input type="checkbox" name="book_confirmed" id="settleBookConfirmed" style="width:auto;margin-top:4px">
+       Confirmo que el Instructor informó que el vuelo se realizó y que los minutos ingresados corresponden al Libro de Vuelo firmado.
+      </label>
+      <button class="primary finance-submit" type="submit" id="settleSubmit">Cobrar / descontar vuelo</button>
       <p id="settleStatus" class="hint" role="status" aria-live="polite"></p>
      </form>
     </section>
@@ -406,6 +410,12 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
      </form>
     </section>
    </div>
+   <section class="panel" id="frontdeskReviewPanel" hidden style="margin-top:17px">
+     <span class="eyebrow">Control de Secretaría y Dirección · Después de los vuelos</span>
+     <h3>Conciliación del Libro de Vuelo con los informes</h3>
+     <p class="hint">Cada cobro o descuento se registra en el acto. Cuando llega el informe escrito, comprobá que los minutos coincidan. El control no modifica dinero ni horas del pack.</p>
+     <div id="frontdeskReviewList" class="list"></div>
+   </section>
    <p class="finance-note" id="financeDisclosure" hidden>Resumen operativo con respaldo de movimientos. Los importes registrados no equivalen a caja conciliada, rentabilidad contable ni facturación electrónica ante ARCA.</p>
    <div class="row" id="financeExportRow" style="margin-top:16px" hidden>
     <label>Detalle de otro mes<input id="financeExportMonth" type="month" min="2020-01" max="2099-12"></label>
@@ -487,7 +497,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   $("roleText").textContent="Rol: "+(roleLabel[role]||role)+" · "+user.email+(school.can_write?"":" · Solo consulta");
   $("pageTitle").textContent=manager?"Administración de la escuela":role==="instructor"?"Mi actividad de instrucción":"Mi reserva y formación";
   $("backPortal").href="portal-escuela.html?institucion="+encodeURIComponent(inst)+"&rol="+encodeURIComponent(role)+"&elegida=1"+(labLogin?"&prueba=1":"");
-  $("adminBooking").hidden=!manager;$("reportForm").hidden=role!=="instructor";$("financeForm").hidden=true;$("packPurchasePanel").hidden=!manager;$("financeOverview").hidden=!manager;$("financeWorkspaces").hidden=!manager;$("financeDisclosure").hidden=!manager;$("financeExportRow").hidden=!manager;
+  $("adminBooking").hidden=!manager;$("reportForm").hidden=role!=="instructor";$("financeForm").hidden=true;$("packPurchasePanel").hidden=!manager;$("financeOverview").hidden=!manager;$("financeWorkspaces").hidden=!manager;$("financeDisclosure").hidden=!manager;$("financeExportRow").hidden=!manager;$("frontdeskReviewPanel").hidden=!manager;
   if(role==="alumno"){
    $("reportsEyebrow").textContent="Seguimiento de mi formación";
    $("reportsTitle").textContent="Mis prácticas y devoluciones";
