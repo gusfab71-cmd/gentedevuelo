@@ -333,7 +333,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
      <div class="finance-kpi"><span class="finance-kpi-label">Ingresos cobrados · mes</span><span class="finance-kpi-value" id="financeIncome">—</span><span class="finance-kpi-desc">Vuelos y ventas de packs</span></div>
      <div class="finance-kpi"><span class="finance-kpi-label">Egresos pagados · mes</span><span class="finance-kpi-value" id="financeExpenses">—</span><span class="finance-kpi-desc">Gastos y caja chica</span></div>
      <div class="finance-kpi"><span class="finance-kpi-label">Flujo neto registrado · mes</span><span class="finance-kpi-value" id="financeNet">—</span><span class="finance-kpi-desc">No equivale al saldo de banco ni a ganancia</span></div>
-     <div class="finance-kpi alert"><span class="finance-kpi-label">Vuelos aprobados sin liquidar</span><span class="finance-kpi-value" id="financeUnsettled">—</span><span class="finance-kpi-desc">Pendientes de cobro o descuento del pack</span></div>
+     <div class="finance-kpi alert"><span class="finance-kpi-label">Turnos iniciados sin liquidar</span><span class="finance-kpi-value" id="financeUnsettled">—</span><span class="finance-kpi-desc">Requieren confirmar vuelo realmente realizado</span></div>
     </div>
     <div class="finance-meta">
      <div><strong id="financePacksAvailable">—</strong><div class="hint">Horas disponibles de packs · HH:MM</div></div>
@@ -350,7 +350,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
       <div class="formgrid">
        <label class="finance-span-2">Turno confirmado, ya iniciado y sin liquidar<select id="settleBooking" name="booking" required><option value="">Elegí el vuelo</option></select></label>
        <label class="finance-span-2">Alumno<input id="settleStudent" value="Seleccioná un vuelo" readonly></label>
-       <label>Instructor<input id="settleInstructor" value="—" readonly></label><label>Minutos del Libro de Vuelo<input id="settleBookMinutes" type="number" min="1" max="600" step="1" required placeholder="Ej.: 75"></label>
+       <label>Instructor<input id="settleInstructor" value="—" readonly></label><label>Minutos del Libro de Vuelo<input id="settleBookMinutes" name="book_minutes" type="number" min="1" max="600" step="1" required placeholder="Ej.: 75"></label>
        <label>Modalidad<select id="settleMode" name="mode"><option value="cash">Cobro en efectivo</option><option value="bank_transfer">Transferencia acreditada</option><option value="pack">Descontar de un pack</option></select></label>
        <label id="settlePackRow" class="finance-span-2" hidden>Pack del alumno<select id="settlePack" name="pack"><option value="">Elegí un pack con saldo suficiente</option></select></label>
        <label id="settleAmountRow">Importe cobrado<input id="settleAmount" name="amount" type="number" min=".01" max="1000000000000" step=".01"></label>
@@ -1431,7 +1431,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    $("financeIncome").textContent=currencyAmount(m.income,currency);
    $("financeExpenses").textContent=currencyAmount(m.expenses,currency);
    $("financeNet").textContent=currencyAmount(m.net,currency);
-   $("financeUnsettled").textContent=String(v.approved_flights_not_settled||0);
+   $("financeUnsettled").textContent=String(unsettledFlights.length);
    $("financePacksAvailable").textContent=flightHoursMinutes(Number(v.pack_minutes_available)||0)+" h";
    $("financeTransactions").textContent=String(v.total_movements||0);
    $("financePaymentSplit").textContent="Efectivo "+currencyAmount(m.cash_in,currency)+
@@ -1440,19 +1440,29 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    $("financeOverviewCaveat").textContent=v.caveat||
     "Se muestran cobros y gastos registrados, no saldos bancarios conciliados.";
   }
+
+  let deskReviews=[];
+  function deskFlightById(id){return unsettledFlights.find(x=>x.booking_id===id);}
   function syncSettleFlight(){
    if(!manager)return;
-   const selected=unsettledFlights.find(x=>x.booking_id===$("settleBooking").value);
+   const selected=deskFlightById($("settleBooking").value);
    $("settleStudent").value=selected?.student_email||"Seleccioná un vuelo";
-   $("settleDuration").value=selected?flightHoursMinutes(Number(selected.flight_minutes))+" h":"—";
-   const select=$("settlePack");select.length=1;
-   if(selected){
+   $("settleInstructor").value=selected?.instructor_email||"No asignado";
+   syncSettlePack();
+  }
+  function syncSettlePack(){
+   if(!manager)return;
+   const selected=deskFlightById($("settleBooking").value);
+   const minutes=Number($("settleBookMinutes").value);
+   const select=$("settlePack");const last=select.value;select.length=1;
+   if(selected&&Number.isInteger(minutes)&&minutes>0){
     for(const p of (finance.packs||[]).filter(x=>
-      x.student_id===selected.student_id && Number(x.remaining_minutes)>=Number(selected.flight_minutes))){
+      x.student_id===selected.student_id&&Number(x.remaining_minutes)>=minutes)){
      select.add(new Option("Saldo "+flightHoursMinutes(Number(p.remaining_minutes))+
       " h · comprado "+stamp(p.created_at),p.id));
     }
    }
+   if([...select.options].some(x=>x.value===last))select.value=last;
    syncSettleMode();
   }
   function syncSettleMode(){
@@ -1463,28 +1473,85 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    $("settleBankRow").hidden=!bank;$("settleFiscalRow").hidden=pack;
    $("settlePack").required=pack;$("settleAmount").required=!pack;
    $("settleBankReference").required=bank;
-   const current=unsettledFlights.find(x=>x.booking_id===$("settleBooking").value);
+   const current=deskFlightById($("settleBooking").value);
+   const entered=Number($("settleBookMinutes").value);
+   const validMinutes=$("settleBookMinutes").value!==""&&Number.isInteger(entered)&&entered>=1&&entered<=600;
    $("settleHelp").textContent=!current?
-    "No se puede liquidar sin un vuelo completado y aprobado.":
-    pack?$("settlePack").options.length>1?
-     "Se descontarán exactamente "+flightHoursMinutes(Number(current.flight_minutes))+
-     " h del pack seleccionado, sin ingresar un cobro nuevo.":
-     "El alumno no tiene un pack con horas suficientes para esta práctica.":
-    bank?"La transferencia debe figurar acreditada antes de registrarla.":"Registrá solo dinero recibido; se asociará al vuelo aprobado.";
-   $("settleSubmit").disabled=!school.can_write||!current||
-    pack&&$("settlePack").options.length<=1;
+    "Elegí una reserva confirmada cuyo vuelo haya comenzado. Secretaría debe confirmar que efectivamente se realizó.":
+    !validMinutes?
+     "Copiá los minutos del Libro de Vuelo firmado. No hace falta esperar el informe escrito.":
+     pack?$("settlePack").options.length>1?
+      "Se descontarán "+flightHoursMinutes(entered)+
+      " h del pack del Alumno y quedarán pendientes de control contra el informe del Instructor.":
+      "No hay un pack con saldo suficiente para los "+flightHoursMinutes(entered)+" h declarados.":
+     bank?"Confirmá que la transferencia ya se acreditó. Las horas se controlarán al recibir el informe.":
+      "El efectivo se registra ahora; las horas declaradas se contrastarán después con el informe.";
+   $("settleSubmit").disabled=!school.can_write||!current||!validMinutes||
+    !$("settleBookConfirmed").checked||pack&&$("settlePack").options.length<=1;
   }
   function renderSettlementCandidates(){
    if(!manager)return;
-   const select=$("settleBooking");
-   const last=select.value;select.length=1;
+   const select=$("settleBooking");const last=select.value;
+   select.length=1;
    for(const flight of unsettledFlights){
     select.add(new Option(stamp(flight.starts_at)+" · "+(flight.student_email||"Alumno")+
-     " · "+flightHoursMinutes(Number(flight.flight_minutes))+" h"+(flight.aircraft?" · "+flight.aircraft:""),
-     flight.booking_id));
+     (flight.aircraft?" · "+flight.aircraft:""),flight.booking_id));
    }
    if(unsettledFlights.some(x=>x.booking_id===last))select.value=last;
    syncSettleFlight();
+  }
+  function renderDeskReviews(){
+   if(!manager)return;
+   const list=$("frontdeskReviewList");list.replaceChildren();
+   const names={
+    awaiting_report:"Pendiente: informe del Instructor",
+    awaiting_approval:"Informe recibido; pendiente de aprobación",
+    difference:"Diferencia de minutos · requiere revisión",
+    awaiting_review:"Horas coincidentes · confirmar control",
+    reviewed:"Control de horas realizado"
+   };
+   if(!deskReviews.length){
+    list.textContent="Todavía no hay liquidaciones de vuelos para controlar.";return;
+   }
+   for(const item of deskReviews){
+    const box=document.createElement("div");box.className="list-item";
+    const label=document.createElement("div");label.className="row between";
+    const student=document.createElement("strong");
+    student.textContent=item.student_email||"Alumno";
+    const status=document.createElement("span");
+    status.className="chip "+(item.status==="reviewed"?"completed":item.status==="difference"?"returned":"pending");
+    status.textContent=names[item.status]||item.status||"Control pendiente";
+    label.append(student,status);box.append(label);
+    const info=document.createElement("p");info.className="hint";
+    info.textContent="Liquidado: "+stamp(item.recorded_at)+
+     " · Libro de Vuelo: "+flightHoursMinutes(Number(item.book_minutes))+" h"+
+     (item.report_minutes!=null?" · Informe: "+flightHoursMinutes(Number(item.report_minutes))+" h":" · Sin informe escrito")+
+     " · "+({cash:"Efectivo",bank_transfer:"Transferencia",pack:"Pack"}[item.payment_method]||item.payment_method)+
+     " · Registrado por: "+(item.recorded_by_email||"Secretaría");
+    box.append(info);
+    if(item.status==="difference"){
+     const alert=document.createElement("p");alert.className="warn";
+     alert.textContent="La diferencia debe aclararse con el Instructor. No se ajustó automáticamente el dinero ni el saldo del pack.";
+     box.append(alert);
+    }
+    if(item.status==="awaiting_review"){
+     const btn=document.createElement("button");
+     btn.type="button";btn.className="primary";btn.textContent="Confirmar coincidencia de horas";
+     btn.disabled=!school.can_write;
+     btn.onclick=async()=>{
+      if(!confirm("¿Confirmás que las horas del Libro de Vuelo coinciden con las del informe aprobado?"))return;
+      btn.disabled=true;
+      try{
+       await rpc("aerosuite_review_frontdesk_hours",{
+        p_institution_id:inst,p_checkout_id:item.checkout_id,p_report_revision:Number(item.report_revision)});
+       await loadFinance();
+       stat.textContent="Horas del Libro de Vuelo e informe controladas por Administración.";
+      }catch(e){stat.textContent="No se pudo confirmar el control: "+safeError(e);btn.disabled=false;}
+     };
+     box.append(btn);
+    }
+    list.append(box);
+   }
   }
   async function loadFinance(){
    if(!manager&&role!=="alumno")return;
@@ -1492,12 +1559,12 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     const results=await Promise.all([
      rpc("aerosuite_finance_snapshot",{p_institution_id:inst}),
      rpc("aerosuite_finance_overview",{p_institution_id:inst}),
-     rpc("aerosuite_unsettled_flights_for_cashier",{p_institution_id:inst})
+     rpc("aerosuite_frontdesk_flight_list",{p_institution_id:inst})
     ]);
-    finance=results[0];financeOverviewData=results[1];unsettledFlights=results[2]||[];
+    finance=results[0];financeOverviewData=results[1];unsettledFlights=results[2]?.eligible||[];deskReviews=results[2]?.reviews||[];
     renderFinance();
     renderFinanceOverview();
-    renderSettlementCandidates();
+    renderSettlementCandidates();renderDeskReviews();
    }else{
     finance=await rpc("aerosuite_finance_snapshot",{p_institution_id:inst});
     renderStudentPacks();
