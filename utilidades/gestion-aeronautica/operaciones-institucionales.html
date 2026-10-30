@@ -1400,12 +1400,95 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     list.append(card);
    }
   }
+
+  let financeOverviewData=null,unsettledFlights=[];
+  const currencyAmount=(amount,currency)=>Number(amount||0).toLocaleString("es-AR",{
+   style:"currency",currency:currency==="USD"?"USD":"ARS",
+   minimumFractionDigits:2,maximumFractionDigits:2
+  });
+  function renderFinanceOverview(){
+   if(!manager||!financeOverviewData)return;
+   const v=financeOverviewData;
+   const currency=$("financeCurrency").value;
+   const m=v.currencies?.[currency]||{};
+   $("financePeriod").textContent="Período "+String(v.month||"—")+
+    " · Movimientos reales registrados en AeroSuite · Monedas sin conversión";
+   $("financeIncome").textContent=currencyAmount(m.income,currency);
+   $("financeExpenses").textContent=currencyAmount(m.expenses,currency);
+   $("financeNet").textContent=currencyAmount(m.net,currency);
+   $("financeUnsettled").textContent=String(v.approved_flights_not_settled||0);
+   $("financePacksAvailable").textContent=flightHoursMinutes(Number(v.pack_minutes_available)||0)+" h";
+   $("financeTransactions").textContent=String(v.total_movements||0);
+   $("financePaymentSplit").textContent="Efectivo "+currencyAmount(m.cash_in,currency)+
+    " · Banco "+currencyAmount(m.bank_in,currency)+
+    (Number(m.unspecified_in)>0?" · Sin identificar "+currencyAmount(m.unspecified_in,currency):"");
+   $("financeOverviewCaveat").textContent=v.caveat||
+    "Se muestran cobros y gastos registrados, no saldos bancarios conciliados.";
+  }
+  function syncSettleFlight(){
+   if(!manager)return;
+   const selected=unsettledFlights.find(x=>x.booking_id===$("settleBooking").value);
+   $("settleStudent").value=selected?.student_email||"Seleccioná un vuelo";
+   $("settleDuration").value=selected?flightHoursMinutes(Number(selected.flight_minutes))+" h":"—";
+   const select=$("settlePack");select.length=1;
+   if(selected){
+    for(const p of (finance.packs||[]).filter(x=>
+      x.student_id===selected.student_id && Number(x.remaining_minutes)>=Number(selected.flight_minutes))){
+     select.add(new Option("Saldo "+flightHoursMinutes(Number(p.remaining_minutes))+
+      " h · comprado "+stamp(p.created_at),p.id));
+    }
+   }
+   syncSettleMode();
+  }
+  function syncSettleMode(){
+   if(!manager)return;
+   const mode=$("settleMode").value,pack=mode==="pack",bank=mode==="bank_transfer";
+   $("settlePackRow").hidden=!pack;
+   $("settleAmountRow").hidden=pack;$("settleCurrencyRow").hidden=pack;
+   $("settleBankRow").hidden=!bank;$("settleFiscalRow").hidden=pack;
+   $("settlePack").required=pack;$("settleAmount").required=!pack;
+   $("settleBankReference").required=bank;
+   const current=unsettledFlights.find(x=>x.booking_id===$("settleBooking").value);
+   $("settleHelp").textContent=!current?
+    "No se puede liquidar sin un vuelo completado y aprobado.":
+    pack?$("settlePack").options.length>1?
+     "Se descontarán exactamente "+flightHoursMinutes(Number(current.flight_minutes))+
+     " h del pack seleccionado, sin ingresar un cobro nuevo.":
+     "El alumno no tiene un pack con horas suficientes para esta práctica.":
+    bank?"La transferencia debe figurar acreditada antes de registrarla.":"Registrá solo dinero recibido; se asociará al vuelo aprobado.";
+   $("settleSubmit").disabled=!school.can_write||!current||
+    pack&&$("settlePack").options.length<=1;
+  }
+  function renderSettlementCandidates(){
+   if(!manager)return;
+   const select=$("settleBooking");
+   const last=select.value;select.length=1;
+   for(const flight of unsettledFlights){
+    select.add(new Option(stamp(flight.starts_at)+" · "+(flight.student_email||"Alumno")+
+     " · "+flightHoursMinutes(Number(flight.flight_minutes))+" h"+(flight.aircraft?" · "+flight.aircraft:""),
+     flight.booking_id));
+   }
+   if(unsettledFlights.some(x=>x.booking_id===last))select.value=last;
+   syncSettleFlight();
+  }
   async function loadFinance(){
    if(!manager&&role!=="alumno")return;
-   finance=await rpc("aerosuite_finance_snapshot",{p_institution_id:inst});
-   if(manager)renderFinance();
-   else renderStudentPacks();
+   if(manager){
+    const results=await Promise.all([
+     rpc("aerosuite_finance_snapshot",{p_institution_id:inst}),
+     rpc("aerosuite_finance_overview",{p_institution_id:inst}),
+     rpc("aerosuite_unsettled_flights_for_cashier",{p_institution_id:inst})
+    ]);
+    finance=results[0];financeOverviewData=results[1];unsettledFlights=results[2]||[];
+    renderFinance();
+    renderFinanceOverview();
+    renderSettlementCandidates();
+   }else{
+    finance=await rpc("aerosuite_finance_snapshot",{p_institution_id:inst});
+    renderStudentPacks();
+   }
   }
+
   function renderFinance(){
    const packs=$("packsList");packs.replaceChildren();
    const all=finance.packs||[];
@@ -1440,7 +1523,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    }
    const sum=$("moneySummary");sum.replaceChildren();
    for(const [currency,amount] of Object.entries(totals)){
-    const box=document.createElement("div");box.className="card";box.innerHTML='<strong>Saldo neto de movimientos recientes en '+esc(currency)+'</strong><h3>'+Number(amount).toLocaleString("es-AR",{minimumFractionDigits:2})+'</h3>';sum.append(box);
+    const box=document.createElement("div");box.className="card";box.innerHTML='<strong>Diferencia de los últimos 150 movimientos en '+esc(currency)+'</strong><h3>'+Number(amount).toLocaleString("es-AR",{minimumFractionDigits:2})+'</h3>';sum.append(box);
    }
   }
 
