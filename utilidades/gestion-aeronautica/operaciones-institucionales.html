@@ -34,6 +34,10 @@ th{padding:10px 4px;color:#b7d6e7;font-weight:800}td{vertical-align:middle;text-
 th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
 .slot.available{background:#1b5c50;border-color:#6db79a;color:#fff;font-weight:750}
 .slot.busy{background:#35465c;border-color:#60768f}.slot.mine{background:#3d593f;border-color:#b1ca87}.slot.cancelled{background:#263746}
+.slot.settled,.slot.settled.busy,.slot.settled.mine{background:#99500d;border:2px solid #ffb74f;color:#fff;font-weight:850}
+.slot.settled small{color:#fff0da}
+.list-item.settled{border-left:5px solid #ff9a25;background:#362d27}
+.chip.settled{background:#a35110;border-color:#ffb74f;color:#fff;font-weight:850}
 .slot small{display:block;margin-top:4px;color:#d1dee7;overflow-wrap:anywhere;word-break:break-word;line-height:1.25;font-size:10px}.slot:hover:not(:disabled){filter:brightness(1.13)}
 .row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.row.between{justify-content:space-between}
 .list{display:grid;gap:10px;margin-top:12px}.list-item{border:1px solid #4e748d;border-radius:10px;padding:13px 15px;background:#142c3e}
@@ -559,7 +563,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
  const testRole=params.get("rol")||"";
  const labLogin=params.get("prueba")==="1"&&["administrador","secretaria","instructor","alumno"].includes(testRole);
  const db=supabase.createClient(GDV_CONFIG.url,GDV_CONFIG.key,{auth:{storageKey:labLogin?"aerosuite-laboratorio-"+testRole+"-v1-auth":"aerosuite-institucional-v2-auth",persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
- let user,school,role,manager,bookings=[],people=[],reports=[],finance={packs:[],movements:[]},bookingConfirmations=new Map(),rescheduleTarget=null;
+ let user,school,role,manager,bookings=[],people=[],reports=[],finance={packs:[],movements:[]},bookingConfirmations=new Map(),settledWeek=new Map(),rescheduleTarget=null;
  if(!inst){stat.textContent="Entrá desde el portal de tu institución.";return;}
  try{
   const me=await db.auth.getUser();user=me.data&&me.data.user;
@@ -683,8 +687,11 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   }
   async function loadWeek(){
    const dates=weekDates();bookings=await rpc("aerosuite_booking_schedule",{p_institution_id:inst,p_date_from:dates[0],p_date_to:dates[6]});
-   bookingConfirmations=new Map();
+   bookingConfirmations=new Map();settledWeek=new Map();
    if(manager){
+    const checkedOut=await rpc("aerosuite_settled_bookings_week",{
+     p_institution_id:inst,p_date_from:dates[0],p_date_to:dates[6]});
+    settledWeek=new Map((checkedOut||[]).map(x=>[x.booking_id,x.method]));
     try{
      const confirmed=await rpc("aerosuite_booking_confirmation_details",{p_institution_id:inst,p_date_from:dates[0],p_date_to:dates[6]});
      bookingConfirmations=new Map((confirmed||[]).map(entry=>[entry.booking_id,entry]));
@@ -709,11 +716,13 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
      const booking=bookings.find(x=>x.status!=="cancelled"&&new Date(x.starts_at).getTime()===start.getTime());
      b.type="button";b.className="slot"+(booking?" busy":"")+(booking&&booking.my_booking?" mine":"")+(date===today?" today-slot":"");
      if(booking){
-      b.textContent=booking.my_booking?"Mi turno":statuses[booking.status]||"Ocupado";
+      const paid=manager&&!!booking.booking_id&&settledWeek.has(booking.booking_id);
+      if(paid)b.classList.add("settled");
+      b.textContent=paid?"Saldado":booking.my_booking?"Mi turno":statuses[booking.status]||"Ocupado";
       if(["administrador","secretaria","instructor"].includes(role)){
        const student=booking.student_email||"Alumno sin identificar";
        const small=document.createElement("small");small.textContent="Alumno: "+student;b.append(small);
-       b.title=(statuses[booking.status]||"Reservado")+" · Alumno: "+student+(booking.instructor_email?" · Instructor: "+booking.instructor_email:"");
+       b.title=(paid?"Saldado · ":"")+(statuses[booking.status]||"Reservado")+" · Alumno: "+student+(booking.instructor_email?" · Instructor: "+booking.instructor_email:"");
        b.setAttribute("aria-label",b.title);
       }
       b.onclick=()=>document.getElementById("booking-"+(booking.booking_id||"")).scrollIntoView({behavior:"smooth",block:"center"});
