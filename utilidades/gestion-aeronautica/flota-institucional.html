@@ -11,7 +11,7 @@ form{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:1
 button{background:#e9c993;color:#193041;border:1px solid #e9c993;border-radius:9px;padding:11px 14px;font-weight:750;cursor:pointer}button:disabled{opacity:.5}
 .list{display:grid;grid-template-columns:repeat(auto-fit,minmax(255px,1fr));gap:12px}.card{padding:17px;background:#152e42;border:1px solid #507791;border-radius:12px}.card p{font-size:13px}
 .chip{font-size:11px;border:1px solid #86a5b1;border-radius:999px;padding:5px 9px;color:#dfedf4}.chip.ok{background:#2b5144}.chip.no{background:#543b36}
-</style><script src="../../assets/supabase-2.117.2.min.js"></script><script src="../../assets/community-config.js"></script></head>
+</style><script src="../../assets/supabase-2.117.2.min.js"></script><script src="../../assets/community-config.js"></script><script src="../../assets/aerosuite-registration.js"></script></head>
 <body><header><a class="brand" href="index.html">Aero<span>Suite</span></a><nav><a id="back" href="portal-escuela.html">Volver al portal</a></nav></header>
 <main><span class="eyebrow">Área de flota · Control institucional</span><h1>Flota y disponibilidad</h1>
 <div id="status" class="status" role="status" aria-live="polite">Verificando acceso…</div>
@@ -20,7 +20,7 @@ button{background:#e9c993;color:#193041;border:1px solid #e9c993;border-radius:9
 <p>Esta sección administra la disponibilidad para reservas. Si una aeronave necesita reparación, el Director se informa directamente por el procedimiento habitual. <strong>El estado de AeroSuite no certifica aeronavegabilidad ni sustituye registros de mantenimiento.</strong></p>
 </section>
 <section class="panel" id="createPanel" hidden><h2>Registrar aeronave</h2>
-<form id="createForm"><label>Matrícula<input name="registration" required maxlength="18" placeholder="LV-ABC"></label>
+<form id="createForm"><label>Matrícula<input name="registration" data-aerosuite-registration required maxlength="18" placeholder="LV-ERT" autocapitalize="characters" autocomplete="off"></label>
 <label>Modelo<input name="model" maxlength="100" placeholder="Cessna 152"></label>
 <label>Nota inicial<input name="remarks" maxlength="300" placeholder="Opcional"></label><button type="submit">Agregar a la flota</button></form></section>
 <section class="panel"><h2>Aeronaves de la escuela</h2><div id="list" class="list"></div><button type="button" id="reload" style="margin-top:14px">Actualizar flota</button></section>
@@ -139,9 +139,21 @@ button{background:#e9c993;color:#193041;border:1px solid #e9c993;border-radius:9
    }
    st.textContent="Flota de "+school.institution_name+" actualizada.";
   }
-  $("createForm").onsubmit=async ev=>{ev.preventDefault();const f=ev.currentTarget,b=f.querySelector("button"),d=new FormData(f);
-   b.disabled=true;try{await action({p_operation:"create",p_registration:d.get("registration"),p_model:d.get("model"),p_remarks:d.get("remarks")});f.reset();await load();}
-   catch(e){st.textContent="No se pudo registrar: "+(e.message||e);}finally{b.disabled=false;}
+  $("createForm").onsubmit=async ev=>{
+   ev.preventDefault();
+   const form=ev.currentTarget,b=form.querySelector("button"),field=form.elements.namedItem("registration");
+   const registration=AeroSuiteRegistration.normalize(field.value);
+   field.value=registration;
+   if(!AeroSuiteRegistration.isValid(registration)){
+    st.textContent="Matrícula inválida. Escribí por ejemplo lvert: se guardará como LV-ERT.";return;
+   }
+   const d=new FormData(form);
+   b.disabled=true;
+   try{
+    await action({p_operation:"create",p_registration:registration,p_model:d.get("model"),p_remarks:d.get("remarks")});
+    form.reset();await load();
+   }catch(e){st.textContent="No se pudo registrar: "+(e.message||e);}
+   finally{b.disabled=false;}
   };
   $("reload").onclick=()=>load().catch(e=>st.textContent=e.message||String(e));await load();
  }catch(e){st.textContent="No se pudo abrir flota: "+(e.message||e);}
