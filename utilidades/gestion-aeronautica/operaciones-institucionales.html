@@ -1720,6 +1720,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     renderFinance();
     renderFinanceOverview();
     renderSettlementCandidates();renderDeskReviews();updateCheckoutTotal();renderPackComparisonChoices();
+    await Promise.allSettled([loadFixedExpenses(),loadPettyDay()]);
    }else{
     finance=await rpc("aerosuite_finance_snapshot",{p_institution_id:inst});
     renderStudentPacks();
@@ -2023,6 +2024,122 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     message.textContent="No se pudo registrar la liquidación: "+safeError(err);
    }finally{syncSettleMode();}
   });
+
+  // Control de gastos fijos: el alta define una obligación mensual, no crea egresos ficticios.
+  let fixedExpenseData={rules:[]};
+  $("fixedExpenseMonth").value=artToday().slice(0,7);
+  $("pettyReviewDay").value=artToday();
+  $("pettyReviewDay").max=artToday();
+  const showExpenseType=()=>{
+   const petty=$("expenseTypeSelector").value==="petty";
+   $("fixedExpenseArea").hidden=petty;
+   $("pettyExpenseArea").hidden=!petty;
+  };
+  $("expenseTypeSelector").addEventListener("change",showExpenseType);
+  showExpenseType();
+  async function loadFixedExpenses(){
+   if(!manager)return;
+   const month=$("fixedExpenseMonth").value,status=$("fixedExpenseMonthStatus");
+   if(!/^20\d{2}-(0[1-9]|1[0-2])$/.test(month)){status.textContent="Ingresá un mes válido.";return;}
+   try{
+    fixedExpenseData=await rpc("aerosuite_fixed_expense_overview",{p_inst:inst,p_month:month});
+    const list=$("fixedExpenseList");list.replaceChildren();
+    const rules=fixedExpenseData.rules||[];
+    if(!rules.length){list.textContent="Todavía no se configuraron gastos fijos mensuales.";status.textContent="";return;}
+    for(const item of rules){
+     const box=document.createElement("div");box.className="list-item";
+     const name=document.createElement("strong");name.textContent=item.description;
+     const description=document.createElement("p");description.className="hint";
+     description.textContent=item.category+" · "+currencyAmount(Number(item.amount),item.currency)+
+      " cada mes · "+(item.paid?"Pagado en "+month:"Pendiente de pago en "+month);
+     box.append(name,description);
+     const buttons=document.createElement("div");buttons.className="actions";
+     if(!item.paid){
+      const pay=document.createElement("button");pay.type="button";pay.className="primary";
+      pay.textContent="Registrar pago del mes";
+      pay.disabled=!school.can_write||month>artToday().slice(0,7);
+      pay.onclick=async()=>{
+       const method=$("fixedPayMethod").value,ref=$("fixedPayReference").value.trim();
+       const fiscal=$("fixedPayFiscal").value.trim(),requestId=crypto.randomUUID();
+       if(method==="bank_transfer"&&ref.length<4){status.textContent="Indicá la referencia de la transferencia acreditada.";return;}
+       if(!confirm("¿Confirmás que efectivamente se pagó "+currencyAmount(Number(item.amount),item.currency)+
+        " por "+item.description+" en "+month+"? Se registrará una sola vez como egreso."))return;
+       pay.disabled=true;status.textContent="Registrando pago mensual…";
+       try{
+        const result=await rpc("aerosuite_fixed_expense_pay",{p_inst:inst,p_rule:item.id,p_month:month,
+         p_method:method,p_payment_reference:ref,p_fiscal_reference:fiscal,p_request_id:requestId});
+        if(!result?.ok)throw Error("El pago no quedó confirmado.");
+        await loadFinance();
+        status.textContent=result.already_registered?"El mes ya estaba pagado; no se duplicó.":
+         "Pago mensual registrado en Contaduría.";
+       }catch(err){status.textContent="No se pudo registrar: "+safeError(err);pay.disabled=!school.can_write;}
+      };
+      buttons.append(pay);
+     }
+     const deactivate=document.createElement("button");deactivate.type="button";
+     deactivate.textContent="Quitar de los meses siguientes";deactivate.disabled=!school.can_write;
+     deactivate.onclick=async()=>{
+      if(!confirm("¿Desactivar "+item.description+" como gasto recurrente? Los pagos históricos se conservan."))return;
+      deactivate.disabled=true;
+      try{
+       await rpc("aerosuite_fixed_expense_deactivate",{p_inst:inst,p_rule:item.id});
+       await loadFixedExpenses();status.textContent="Gasto fijo desactivado para futuros meses.";
+      }catch(err){status.textContent=safeError(err);deactivate.disabled=!school.can_write;}
+     };
+     buttons.append(deactivate);box.append(buttons);list.append(box);
+    }
+    status.textContent=rules.filter(x=>!x.paid).length+" gasto(s) pendiente(s) en "+month+
+     ". La obligación no se descuenta de caja hasta registrar su pago.";
+   }catch(err){status.textContent="No se pudieron cargar gastos fijos: "+safeError(err);}
+  }
+  $("fixedExpenseMonth").addEventListener("change",loadFixedExpenses);
+  $("fixedExpenseForm").addEventListener("submit",async event=>{
+   event.preventDefault();if(!manager||!school.can_write)return;
+   const form=event.currentTarget,fd=new FormData(form),amount=parseMoney(fd.get("amount"));
+   const status=$("fixedExpenseCreateStatus"),btn=$("fixedExpenseCreateButton");
+   const description=String(fd.get("description")||"").trim();
+   if(description.length<3||amount===null){status.textContent="Completá concepto e importe mensual válido.";return;}
+   if((fixedExpenseData.rules||[]).some(x=>
+    x.description.toLowerCase()===description.toLowerCase()&&Number(x.amount)===amount&&x.currency===fd.get("currency"))){
+    status.textContent="Ya existe un gasto fijo con ese concepto, importe y moneda.";return;
+   }
+   if(!confirm("¿Guardar «"+description+"» por "+currencyAmount(amount,fd.get("currency"))+
+    " como gasto recurrente mensual? Todavía NO se registrará ningún pago."))return;
+   btn.disabled=true;status.textContent="Guardando gasto fijo…";
+   try{
+    const result=await rpc("aerosuite_fixed_expense_create",{p_inst:inst,p_description:description,
+     p_category:String(fd.get("category")),p_amount:amount,p_currency:String(fd.get("currency"))});
+    if(!result?.ok)throw Error("No se confirmó el alta.");
+    form.reset();await loadFixedExpenses();status.textContent="Gasto fijo guardado. Registrá el pago de cada mes cuando corresponda.";
+   }catch(err){status.textContent="No se pudo guardar: "+safeError(err);}
+   finally{btn.disabled=!school.can_write;}
+  });
+  async function loadPettyDay(){
+   if(!manager)return;
+   const day=$("pettyReviewDay").value,summary=$("pettyReviewSummary");
+   if(!/^20\d{2}-\d{2}-\d{2}$/.test(day))return;
+   try{
+    const data=await rpc("aerosuite_petty_day_status",{p_inst:inst,p_day:day});
+    summary.textContent="Fecha "+day+" · "+data.count+" gasto(s) · ARS "+
+     displayMoney(data.ars)+" · USD "+displayMoney(data.usd)+" · "+
+     (data.reviewed?"Verificado":"Pendiente de verificación")+
+     (data.checked_at?" · Última revisión: "+stamp(data.checked_at):"");
+    $("pettyReviewButton").disabled=!school.can_write||day>artToday();
+   }catch(err){summary.textContent="No se pudo consultar caja chica: "+safeError(err);}
+  }
+  $("pettyReviewDay").addEventListener("change",loadPettyDay);
+  $("pettyReviewButton").addEventListener("click",async()=>{
+   if(!manager||!school.can_write)return;
+   const day=$("pettyReviewDay").value,btn=$("pettyReviewButton"),status=$("pettyReviewStatus");
+   if(!confirm("¿Verificaste contra comprobantes los gastos de caja chica del "+day+"?"))return;
+   btn.disabled=true;status.textContent="Registrando cierre diario…";
+   try{
+    await rpc("aerosuite_petty_day_review",{p_inst:inst,p_day:day});
+    await loadPettyDay();status.textContent="Control de caja chica registrado para "+day+".";
+   }catch(err){status.textContent="No se pudo cerrar el día: "+safeError(err);}
+   finally{btn.disabled=!school.can_write;}
+  });
+
   const expenseForm=$("schoolExpenseForm");
   function syncExpenseMethod(){
    const bank=$("expenseMethod").value==="bank_transfer";
