@@ -343,6 +343,7 @@ body[data-aerosuite-area="administracion"] nav button.active{background:#344b63;
 <style>html.auth-pending body{visibility:hidden}</style>
 <script src="../../assets/supabase-2.117.2.min.js"></script>
 <script src="../../assets/community-config.js"></script>
+<script src="../../assets/aerosuite-registration.js"></script>
 <script src="../../assets/auth-guard.js"></script>
 </head><body>
 <header><a class="brand" href="index.html">AEROSUITE<small>BY GENTE DE VUELO</small></a><span>PORTAL DE GESTIÓN AERONÁUTICA · DEMO</span><div class="portal-head-links"><a class="portal-home" href="../../index.html" aria-label="Volver al inicio de Gente de Vuelo">⌂ Inicio Gente de Vuelo</a><a href="index.html">Volver a la presentación</a></div></header>
@@ -1840,7 +1841,7 @@ function wireTraining(){
   const f=flights.find(x=>x.id===e.target.value);
   if(!f)return;
   if($('lessonDate'))$('lessonDate').value=f.date;
-  if($('lessonAircraft'))$('lessonAircraft').value=f.aircraft;
+  if($('lessonAircraft'))$('lessonAircraft').value=AeroSuiteRegistration.normalize(f.aircraft);
   if($('lessonInstructor'))$('lessonInstructor').value=f.instructor;
  });
  const form=$('training-form');
@@ -1851,12 +1852,15 @@ function wireTraining(){
    const draft={
     studentId:editing?.studentId||$('lessonStudent').value,
     instructorId:editing?.instructorId||$('lessonInstructor').value,
-    date:$('lessonDate').value,minutes:$('lessonMinutes').value,aircraft:$('lessonAircraft').value,
+    date:$('lessonDate').value,minutes:$('lessonMinutes').value,aircraft:AeroSuiteRegistration.normalize($('lessonAircraft').value),
     flightId:editing?.flightId||$('lessonFlight').value,
     topics:$('lessonTopics').value,evolution:$('lessonEvolution').value,
     difficulties:$('lessonDifficulties').value,nextGoal:$('lessonGoal').value,
     assessment:$('lessonAssessment').value
    };
+   if(draft.aircraft&&!AeroSuiteRegistration.isValid(draft.aircraft)){
+    notice('Matrícula inválida: escribí por ejemplo lvert y se mostrará LV-ERT.');return;
+   }
    if(editing){
     const revised=reviseLesson(editing,draft,editing.instructorId);
     lessons=lessons.map(l=>l.id===editing.id?revised:l);
