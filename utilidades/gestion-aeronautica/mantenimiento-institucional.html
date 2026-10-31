@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+
+<html lang="es"><head><meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>AeroSuite · Mantenimiento institucional</title>
+<meta name="description" content="Registro institucional de mantenimiento para flota AeroSuite.">
+<meta name="theme-color" content="#101719">
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="../../assets/supabase-2.117.2.min.js"></script>
+<script src="../../assets/community-config.js"></script>
+
+
+<style>
+
+:root{color-scheme:dark}
+
+body{background:radial-gradient(1000px 500px at 0 -10%,#0e749055,transparent),radial-gradient(900px 500px at 100% 0,#f59e0b30,transparent),#070b14;color:#e2e8f0;font-family:system-ui,sans-serif}
+
+.card{background:rgba(17,25,45,.88);border:1px solid rgba(255,255,255,.08);border-radius:1rem}
+
+.fld{background:#0f172a;border:1px solid #334155;border-radius:.5rem;padding:.35rem .5rem;width:100%;font-weight:600}
+
+.btn{border-radius:.6rem;padding:.4rem .8rem;font-weight:700;font-size:.8rem}
+
+.tab{padding:.7rem 1rem;font-size:.85rem;font-weight:600;color:#94a3b8;border-bottom:3px solid transparent;white-space:nowrap}
+
+.tab.on{color:#fbbf24;border-color:#fbbf24;background:#fbbf2414}
+
+th{font-size:10px;text-transform:uppercase;color:#94a3b8;padding:.35rem;text-align:left;white-space:nowrap}td{padding:.35rem;white-space:nowrap;font-size:.8rem}
+
+</style>
+
+<style id="maintenance-operations-style">
+:root{--op-bg:#101719;--op-surface:#1a2426;--op-surface2:#212d2f;--op-line:#46575a;--op-text:#edf0ee;--op-muted:#bac6c5;--op-accent:#ff994b;--op-accent2:#ffbc78;color-scheme:dark}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0!important;background:#101719!important;color:var(--op-text)!important;font:15px/1.55 system-ui,-apple-system,Segoe UI,Roboto,sans-serif!important}
+[hidden]{display:none!important}
+button,input,select,textarea{font:inherit;min-width:0}
+button{cursor:pointer}button:disabled{opacity:.6;cursor:wait}
+button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{outline:2px solid var(--op-accent);outline-offset:3px}
+.maint-header{max-width:100%;border-bottom:1px solid #465556;background:#141d20}
+.maint-topline{max-width:1260px;padding:13px 22px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.maint-identity{display:flex;align-items:center;gap:11px;text-decoration:none;color:var(--op-text);font-weight:850;font-size:13px;letter-spacing:.08em}
+.maint-mark{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;color:#101b1d;background:var(--op-accent);font-size:16px;letter-spacing:-.07em}
+.maint-identity small{display:block;font-weight:520;letter-spacing:.02em;color:#c0cccb;margin-top:1px;font-size:11px}
+.maint-links{display:flex;gap:11px;flex-wrap:wrap;align-items:center}
+.maint-links a{font-size:12px;text-decoration:none;color:#dfe7e5;border:1px solid #586666;border-radius:9px;padding:8px 11px}
+.maint-links a:hover{color:var(--op-accent2);border-color:#d18d54}
+.maint-hero{max-width:1260px;margin:auto;display:grid;grid-template-columns:minmax(0,1.6fr) minmax(275px,.65fr);gap:16px;padding:19px 22px 21px}
+.maint-hero-main{border:1px solid #566163;border-radius:20px;padding:26px 29px;background:radial-gradient(100% 135% at 100% 0%,#584030 0%,#253033 36%,#1a2426 72%);position:relative;overflow:hidden}
+.maint-hero-main:after{content:"";position:absolute;right:-160px;top:-140px;width:330px;height:330px;border:1px solid #f4ad713d;border-radius:50%;box-shadow:0 0 0 40px #ffaa6608,0 0 0 90px #ffaa6605;pointer-events:none}
+.maint-eyebrow{color:var(--op-accent2);text-transform:uppercase;letter-spacing:.18em;font-weight:800;font-size:10px}
+.maint-hero h1{font-size:clamp(27px,3.6vw,43px);font-weight:900;letter-spacing:-.047em;margin:8px 0 6px;color:#f2f2ec;line-height:1.15}
+.maint-hero h1 em{font-style:normal;color:var(--op-accent)}
+.maint-hero p{font-size:13px;line-height:1.6;color:#cdd7d5;max-width:610px;margin:9px 0 0}
+.maint-tag{display:inline-flex;align-items:center;border:1px solid #876648;background:#3a2e25;color:#ffe0bd;border-radius:20px;padding:6px 11px;font-weight:720;font-size:11px;margin-top:15px}
+.maint-hero-side{border-radius:20px;border:1px solid #516062;background:#222d2f;padding:20px 23px;display:flex;align-items:center;gap:20px}
+.maint-dial{width:91px;height:91px;border-radius:50%;border:1px solid #92a1a2;flex:none;background:repeating-radial-gradient(circle,transparent 0,transparent 17px,#ffffff1a 18px,#ffffff1a 19px),linear-gradient(90deg,transparent 49%,#ffffff26 50%,transparent 51%),linear-gradient(transparent 49%,#ffffff26 50%,transparent 51%);display:grid;place-items:center;color:var(--op-accent2);font-weight:900;letter-spacing:.06em;font-size:20px}
+.maint-hero-side strong{display:block;font-size:18px;letter-spacing:-.02em;color:#f8eee5}
+.maint-hero-side span{display:block;font-size:12px;color:#c2cdcc;margin-top:7px;line-height:1.5}
+.maint-toolbar{max-width:1260px;margin:auto;padding:0 22px 18px;display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+.maint-toolbar label{color:#dce5e3;font-size:12px;font-weight:700;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.maint-toolbar select{width:min(300px,100%);min-height:39px}
+.maint-toolbar-actions{display:flex;gap:8px;flex-wrap:wrap}
+.maint-toolbar-actions .btn{border:1px solid #667677!important;background:#283639!important;color:#f0f3f0!important;font-size:12px;padding:9px 13px;border-radius:10px}
+#nav{max-width:1260px;margin:auto;padding:8px 22px 0!important;gap:6px;border-bottom:1px solid #425153;scrollbar-color:#647170 transparent}
+body .tab{color:#c8d1ce!important;border:1px solid transparent!important;border-radius:10px 10px 0 0;font-weight:750!important;font-size:12px!important;padding:11px 14px!important;white-space:nowrap}
+body .tab:hover{color:#fff!important;background:#293337}
+body .tab.on{color:#ffcfaa!important;background:#362e2a!important;border:1px solid #8d6b50!important;border-bottom-color:#362e2a!important}
+.maint-status-wrap{max-width:1260px;margin:auto;padding:14px 22px 2px}
+#sync{color:#c9d9d6;font-size:12px}
+.maint-notice{font-size:12px;color:#c1cbca;background:#1a292c;border-left:3px solid #d99a62;border-radius:3px 10px 10px 3px;padding:11px 14px;margin-top:10px;line-height:1.55}
+.maint-notice a{color:#ffca9f;text-decoration:underline}
+.maint-overview{max-width:1260px;margin:14px auto 3px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;padding:0 22px}
+.maint-metric{border:1px solid #4c5c5e;border-radius:14px;background:#1b282b;padding:13px 15px;min-width:0}
+.maint-metric strong{display:block;font-size:20px;letter-spacing:-.03em;font-variant-numeric:tabular-nums;color:#f5f2eb}
+.maint-metric span{display:block;font-size:11px;color:#c0cecb;margin-top:4px;line-height:1.4}
+.maint-metric.alert{border-color:#aa665b;background:#322627}.maint-metric.alert strong{color:#ffc5a8}
+.maint-metric.caution{border-color:#9d744b;background:#312b25}
+#app{max-width:1260px!important;padding:17px 22px 60px!important}
+body .card{background:var(--op-surface)!important;border:1px solid var(--op-line)!important;border-radius:17px!important;box-shadow:0 8px 25px #060c0e22;min-width:0}
+body .card h2{font-size:16px;letter-spacing:-.025em;color:#ffd0a9!important}
+body .card b{overflow-wrap:anywhere}
+body .fld{background:#131e21!important;border:1px solid #6a7a79!important;border-radius:10px!important;color:#f2f5f2!important;padding:10px 11px!important;font-size:13px!important;min-height:40px;font-weight:600}
+body .fld:hover{border-color:#90a7a3!important}
+body .fld:focus{outline:2px solid #ff995c!important;outline-offset:1px}
+body .btn{padding:10px 14px;border-radius:10px;font-size:12px;font-weight:780;min-height:39px}
+body .btn.bg-amber-600{background:#ff994b!important;color:#22201c!important}
+body .btn.bg-amber-600:hover{background:#ffb174!important}
+body .btn.bg-emerald-600{background:#388c77!important}
+body .btn.bg-sky-700{background:#385a68!important}
+body .btn.bg-rose-800{background:#703e43!important}
+body .btn.bg-slate-700,body .btn.bg-slate-800{background:#344347!important}
+body th{font-size:10px;color:#b9c8c7;letter-spacing:.05em;padding:12px 10px;text-align:left}
+body td{font-size:12px;color:#e0e9e7;padding:12px 10px;white-space:normal;vertical-align:top;overflow-wrap:anywhere}
+body tbody tr{border-top:1px solid #3e4b4b}
+body table{min-width:610px}
+body .overflow-x-auto{scrollbar-color:#697e7d transparent}
+.maint-record-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.maint-record-grid label{display:grid;align-content:start;gap:4px}
+.maint-record-grid .wide{grid-column:1/-1}
+.maint-note{border-left:3px solid #e69c61;border-radius:3px 9px 9px 3px;background:#2c2926;color:#e3d5c9;padding:11px 13px;font-size:12px;line-height:1.55}
+.maint-record-line{font-size:12px;color:#d4e1de;background:#172427;border:1px solid #475859;border-radius:10px;padding:12px}
+.maint-record-line strong{color:#ffd2ac}
+.maint-pill{display:inline-block;padding:3px 8px;border-radius:14px;border:1px solid #748781;color:#f2f5ef;font-weight:750;font-size:10px;white-space:nowrap}
+.maint-pill.warn{border-color:#9e7452;color:#ffd5ad}.maint-pill.danger{border-color:#bb675c;color:#ffbdb4}
+@media(max-width:950px){.maint-hero{grid-template-columns:minmax(0,1fr)}.maint-hero-side{display:none}.maint-overview{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:650px){.maint-topline,.maint-hero,.maint-toolbar,.maint-status-wrap,#nav,.maint-overview{padding-left:13px!important;padding-right:13px!important}.maint-hero-main{padding:22px 19px}.maint-toolbar{align-items:stretch}.maint-toolbar label,.maint-toolbar select,.maint-toolbar-actions{width:100%}.maint-toolbar-actions .btn{flex:1}#app{padding:14px 13px 52px!important}.maint-overview{gap:8px}.maint-metric{padding:11px}.maint-metric strong{font-size:18px}.maint-record-grid{grid-template-columns:1fr}.maint-record-grid .wide{grid-column:auto}body .tab{padding:10px 13px!important}}
+@media(max-width:420px){#app .grid-cols-2{grid-template-columns:1fr!important}#app .grid-cols-3{grid-template-columns:repeat(2,minmax(0,1fr))!important}.maint-overview{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+
+<style id="maintenance-inspections-style">
+.maint-inspection-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.maint-inspection-stats>div{border:1px solid #4c5e60;border-radius:12px;background:#172528;padding:12px 13px;min-width:0}
+.maint-inspection-stats b{display:block;color:#ffe0c2;font-size:15px;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.maint-inspection-stats span{font-size:11px;line-height:1.45;color:#bfccca;display:block;margin-top:4px}
+.maint-guidance{background:#172326;border:1px solid #536365;border-radius:12px;padding:11px 14px;color:#d9e3e0;font-size:12px}
+.maint-guidance summary{font-weight:750;font-size:13px;cursor:pointer;color:#ffcca2;padding:3px 0;list-style-position:inside}
+.maint-guidance[open] summary{border-bottom:1px solid #47595b;padding-bottom:12px;margin-bottom:13px}
+.maint-guidance .maint-record-grid{margin-top:12px}
+.maint-guidance p{line-height:1.65;color:#d0ddda}
+.maint-guidance a{color:#ffcf9f;text-decoration:underline}
+.maint-guidance .maint-note{color:#ecd9ca}
+.maint-guidance input,.maint-guidance select{color:#f3f5f3}
+.maint-pill.warn{background:#49362b}.maint-pill.danger{background:#4a292b}
+.maint-regime{border:1px solid #55686b;background:linear-gradient(110deg,#203135,#202729);border-radius:15px;padding:16px;color:#e5eeea}
+.maint-regime strong{color:#ffd2a8}.maint-regime p{font-size:12px;line-height:1.6;margin:6px 0 0;color:#ced9d7}
+.maint-regime .maint-pill{margin-left:6px}
+.maint-flag{border-left:4px solid #db8861;background:#342823;padding:11px 13px;border-radius:6px 11px 11px 6px;font-size:12px;color:#ffe3cd}
+.maint-flag.danger{border-left-color:#e97573;background:#38282b;color:#ffdcdb}
+@media(max-width:750px){.maint-inspection-stats{grid-template-columns:1fr 1fr}.maint-inspection-stats>div:first-child{grid-column:1/-1}}
+@media(max-width:480px){.maint-inspection-stats{grid-template-columns:1fr}.maint-inspection-stats>div:first-child{grid-column:auto}}
+</style>
+<style id="maintenance-guides-style">
+.maint-guides{background:#172528;border:1px solid #526669;border-radius:15px;padding:15px;color:#e5eeea}
+.maint-guides>div strong{color:#ffdab8}
+.maint-guide-toolbar{margin-top:15px;border-top:1px solid #44565b;padding-top:14px;display:grid;gap:12px}
+.maint-guide-toolbar label{font-size:12px;color:#d1dddb;display:grid;gap:6px}
+.maint-guide-sheet{background:#111d21;border:1px solid #698185;border-radius:12px;padding:16px;margin-top:15px}
+.maint-guide-sheet h3{font-size:17px;font-weight:800;color:#ffdac0;margin:8px 0 12px}
+.maint-guide-list{display:grid;gap:9px;margin-top:12px}
+.maint-guide-item{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:9px 10px;background:#203036;border:1px solid #4c6267;border-radius:9px}
+.maint-guide-item label{display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.45;flex:1;min-width:0}
+.maint-guide-item input{margin-top:3px;width:17px;height:17px;accent-color:#e9a869;flex-shrink:0}
+.maint-guide-item .btn{font-size:11px;padding:7px 10px;flex-shrink:0}
+@media(max-width:620px){.maint-guide-item{align-items:stretch;flex-direction:column}.maint-guide-item .btn{align-self:flex-end}}
+</style>
+</head>
+
+<body class="min-h-screen">
+<header class="maint-header">
+  <div class="maint-topline">
+    <a href="portal-escuela.html" id="maintIdentity" class="maint-identity"><span class="maint-mark">AS</span><span>AEROSUITE<small>Mantenimiento institucional</small></span></a>
+    <div class="maint-links"><a id="backToFleet" href="flota-institucional.html">Flota y disponibilidad</a><a id="backToDirector" href="portal-escuela.html">Portal institucional</a></div>
+  </div>
+  <div class="maint-hero">
+    <div class="maint-hero-main">
+      <div class="maint-eyebrow">AEROSUITE / MANTENIMIENTO INSTITUCIONAL</div>
+      <h1>AIRCRAFT <em>MAINTENANCE</em></h1>
+      <p>Inspecciones, componentes, bitácora, discrepancias, intervenciones y vencimientos relacionados con la flota de la institución.</p>
+      <span class="maint-tag">Registro auxiliar · RAAC 43 y 91</span>
+    </div>
+    <aside class="maint-hero-side" aria-label="Descripción de la herramienta">
+      <div class="maint-dial" aria-hidden="true">MX</div>
+      <div><strong>Flota institucional organizada.</strong><span>Historial técnico auxiliar, trazabilidad documental y vencimientos orientativos.</span></div>
+    </aside>
+  </div>
+  <div class="maint-toolbar">
+    <label for="sel">Aeronave activa <select id="sel" class="fld" onchange="S.sel=this.value;consumableForm='';R()"></select></label>
+    <div class="maint-toolbar-actions">
+      <button class="btn bg-slate-700" onclick="expo()">Descargar respaldo</button>
+      
+    </div>
+  </div>
+</header>
+<nav id="nav" class="flex overflow-x-auto border-b border-white/10 px-3"></nav>
+
+<div class="maint-status-wrap"><p id="sync" role="status">Cargando tu información...</p><p class="maint-notice">Apta para seguimiento de uso privado, instrucción o ambos, con el régimen declarado por el usuario. Es un registro auxiliar institucional: no certifica aeronavegabilidad, no autoriza retorno al servicio ni reemplaza libretas, firmas, programas aprobados ni la documentación exigida por ANAC. <a href="https://www.argentina.gob.ar/anac/resoluciones-disposiciones-y-otras-normas-aeronauticas/raac" target="_blank" rel="noopener noreferrer">Consultar RAAC oficiales</a>.</p></div><section id="maintOverview" class="maint-overview" aria-label="Resumen de mantenimiento"></section>
+<main id="app" class="max-w-7xl mx-auto p-4"></main>
+<script src="../../assets/maintenance-consumables.js?v=20261022inventario1"></script>
+
+
+
+<script>
+
+const $=i=>document.getElementById(i),uid=()=>crypto.randomUUID(),today=()=>{const d=new Date();return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')},v=i=>$(i).value,n=i=>Math.min(1e6,Math.max(0,parseFloat($(i).value)||0));
+
+let S={ac:[],sv:[],ct:[],lg:[],rc:[],mx:[],ad:[],ip:[],ie:[],dx:[],inv:[],mv:[],fuel:[],sel:null,tab:'a',hz:12};
+let consumableForm='';
+let showAircraftForm=false;
+
+
+let db=null,currentUser=null,hangarAircraft='',saveQueue=Promise.resolve();
+const instParams=new URLSearchParams(location.search),institutionId=instParams.get("institucion");
+const testMode=instParams.get("prueba")==="1"&&instParams.get("rol")==="administrador";
+let institutionName="",registeredFleet=[],maintRevision=0,maintWritable=false,maintConflict=false;
+const institutionalHref=path=>path+"?institucion="+encodeURIComponent(institutionId)+
+ "&rol=administrador"+(testMode?"&prueba=1":"");
+function reconcileFleet(){
+ for(const plane of registeredFleet){
+  const registration=String(plane.registration||"").trim().toUpperCase();
+  if(!registration)continue;
+  const existing=S.ac.find(a=>String(a.reg||"").trim().toUpperCase()===registration);
+  if(existing){
+   existing.reg=registration;existing.type=plane.model||existing.type||"Modelo pendiente";
+  }else{
+   const a={id:plane.id,reg:registration,type:plane.model||"Modelo pendiente",h:0,c:0,hpm:0,cpm:0,
+    technical:{source:"Flota AeroSuite"},operation:{use:"unknown",compensation:"unknown",operator:institutionName,program:"",updated:today()}};
+   CP(a);S.ac.push(a);
+  }
+ }
+}
+
+const showStatus=message=>{const x=$('sync');if(x)x.textContent=message};
+const validData=d=>d&&typeof d==='object'&&['ac','sv','ct','lg','rc'].every(k=>Array.isArray(d[k])&&d[k].length<=({ac:50,sv:300,ct:2000,lg:6000,rc:200}[k]))&&
+ ['ac','sv','ct','lg','rc'].every(k=>d[k].every(x=>x&&typeof x==='object'&&typeof x.id==='string'&&/^[a-zA-Z0-9_-]{1,64}$/.test(x.id)))&&
+ d.ac.every(a=>typeof a.reg==='string'&&a.reg.length<=50)&&
+ ['mx','ad','ip','ie','dx','inv','mv','fuel'].every(k=>d[k]===undefined||(Array.isArray(d[k])&&d[k].length<=({mx:3000,ad:1000,ip:250,ie:3000,dx:2000,inv:500,mv:5000,fuel:3000}[k])&&d[k].every(x=>x&&typeof x==='object'&&typeof x.id==='string'&&/^[a-zA-Z0-9_-]{1,64}$/.test(x.id))))&&
+ (d.inv||[]).every(x=>typeof x.ac==='string'&&typeof x.name==='string'&&x.name.length<=140&&['fuel','oil','filter','spark','part','other'].includes(x.category)&&['L','u','kg'].includes(x.unit)&&Number.isFinite(x.minimum)&&x.minimum>=0)&&
+ (d.mv||[]).every(x=>typeof x.ac==='string'&&typeof x.item==='string'&&['in','out'].includes(x.kind)&&Number.isFinite(x.qty)&&x.qty>0&&x.qty<=1e6)&&
+ (d.fuel||[]).every(x=>typeof x.ac==='string'&&Number.isFinite(x.loaded)&&Number.isFinite(x.used)&&x.loaded>=0&&x.used>=0&&x.loaded+x.used>0);
+function save(){
+ if(!currentUser||!db||!maintWritable||maintConflict){
+  showStatus(maintConflict?"Conflicto: hay cambios de otra sesión. Recargá para evitar sobrescribirlos.":"No se pudo guardar, sin acceso de escritura.");return Promise.resolve();
+ }
+ const payload=JSON.parse(JSON.stringify(S));
+ showStatus("Guardando registro institucional…");
+ saveQueue=saveQueue.catch(()=>{}).then(async()=>{
+  if(maintConflict)return;
+  const {data,error}=await db.rpc("aerosuite_institution_maintenance_save",{
+   p_institution_id:institutionId,p_payload:payload,p_expected_revision:maintRevision
+  });
+  if(error||!data?.ok){
+   maintConflict=true;showStatus("Guardado detenido: "+(error?.message||"Sin confirmación")+
+    ". Recargá el módulo antes de continuar para no sobrescribir registros.");return;
+  }
+  maintRevision=Number(data.revision);
+  showStatus("Mantenimiento de "+institutionName+" guardado · revisión "+maintRevision+".");
+ });
+ return saveQueue;
+}
+async function loadApp(){
+ try{
+  if(!institutionId)throw Error("Ingresá desde Flota y disponibilidad.");
+  if(!window.supabase||!window.GDV_CONFIG)throw Error("La conexión institucional no se inicializó.");
+  db=window.supabase.createClient(GDV_CONFIG.url,GDV_CONFIG.key,{
+   auth:{storageKey:testMode?"aerosuite-laboratorio-administrador-v1-auth":"aerosuite-institucional-v2-auth",
+    persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}
+  });
+  const {data:{user},error:authError}=await db.auth.getUser();
+  if(authError||!user)throw Error("Ingresá con tu cuenta institucional.");
+  currentUser=user;
+  const [access,maintenance,fleet]=await Promise.all([
+   db.rpc("aerosuite_my_institution_access_v2",{}),
+   db.rpc("aerosuite_institution_maintenance_get",{p_institution_id:institutionId}),
+   db.rpc("aerosuite_aircraft_list",{p_institution_id:institutionId})
+  ]);
+  if(access.error)throw access.error;
+  if(maintenance.error)throw maintenance.error;
+  if(fleet.error)throw fleet.error;
+  const school=(access.data||[]).find(x=>x.institution_id===institutionId&&
+   ["administrador","secretaria"].includes(x.my_role)&&x.can_access);
+  if(!school)throw Error("Acceso reservado al Director o Secretaría de esta institución.");
+  institutionName=school.institution_name||"Institución";
+  $('backToFleet').href=institutionalHref("flota-institucional.html");
+  $('backToDirector').href=institutionalHref("portal-escuela.html");
+  $('maintIdentity').href=institutionalHref("portal-escuela.html");
+  registeredFleet=Array.isArray(fleet.data)?fleet.data:[];
+  maintRevision=Number(maintenance.data?.revision||0);
+  maintWritable=!!school.can_write&&!!maintenance.data?.can_write;
+  if(maintenance.data?.payload){
+   if(!validData(maintenance.data.payload))throw Error("Formato almacenado de mantenimiento no válido.");
+   S={...S,...maintenance.data.payload};for(const key of ["inv","mv","fuel"])S[key]||=[];
+  }
+  const orphaned=S.ac.filter(x=>!registeredFleet.some(f=>
+   String(f.registration||"").trim().toUpperCase()===String(x.reg||"").trim().toUpperCase()));
+  if(orphaned.length)maintWritable=false;
+  reconcileFleet();
+  if(!S.ac.some(a=>a.id===S.sel))S.sel=S.ac[0]?.id||null;
+  R();
+  if(!S.ac.length)$('app').innerHTML='<div class="card p-6">Primero creá una matrícula en «Flota y disponibilidad».</div>';
+  showStatus(orphaned.length?
+   "Hay "+orphaned.length+" aeronave(s) técnicas ausentes de la Flota; se bloqueó la edición para proteger los registros históricos.":
+   maintWritable?"Registro de mantenimiento de "+institutionName+" vinculado a "+registeredFleet.length+
+    " matrícula(s). No se mezclan datos privados de integrantes.":"Acceso institucional de solo lectura.");
+ }catch(error){
+  maintWritable=false;currentUser=null;
+  showStatus("Error de mantenimiento institucional: "+(error.message||error));
+  $('app').textContent="Volvé a Flota y disponibilidad para comprobar tu acceso.";
+ }
+}
+function fromHangar(){const input=$('a_t');if(input)input.value=hangarAircraft}
+
+
+const A=()=>S.ac.find(a=>a.id==S.sel),esc=t=>String(t??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+const F=(id,l,t='number',val='',x='')=>`<label class="text-[11px] text-slate-400">${l}<input id="${id}" type="${t}" step="any" ${t==='number'?'min="0"':''} value="${val}" class="fld mt-0.5" ${x}></label>`;
+
+const SEL=(id,l,o)=>`<label class="text-[11px] text-slate-400">${l}<select id="${id}" class="fld mt-0.5">${o}</select></label>`;
+
+const fd=t=>isFinite(t)?new Date(t).toLocaleDateString('es-AR'):'—',f1=x=>(+x).toFixed(1);
+
+const TABS=[['a','Aeronaves'],['x','Inspecciones'],['n','Novedades'],['k','Componentes'],['s','Controles'],['b','Bitácora'],['u','Consumibles'],['i','Intervenciones'],['d','Directivas DA'],['r','Recurrentes'],['p','Proyección']];
+const OP_LABELS={unknown:'Régimen por definir',private:'Uso privado',instruction:'Instrucción',mixed:'Privado e instrucción'};
+const OP_OPTIONS='<option value="unknown">Por definir</option><option value="private">Uso privado</option><option value="instruction">Instrucción</option><option value="mixed">Privado e instrucción</option>';
+const COMP_OPTIONS='<option value="unknown">Por confirmar</option><option value="yes">Sí, por compensación y aeronave provista</option><option value="no">No se dan ambas condiciones</option>';
+const opUse=a=>OP_LABELS[a?.operation?.use]?a.operation.use:'unknown';
+const hasInstruction=a=>['instruction','mixed'].includes(opUse(a));
+const flightOptions=a=>opUse(a)==='private'?'<option value="private">Privado</option>':opUse(a)==='instruction'?'<option value="instruction">Instrucción</option>':'<option value="private">Privado</option><option value="instruction">Instrucción</option>';
+function regimeNotice(a){
+ const o=a?.operation||{},use=opUse(a),comp=o.compensation||'unknown';
+ if(use==='unknown')return 'Definí el uso de la aeronave para identificar qué inspecciones corresponde verificar. No se infiere el régimen a partir del modelo.';
+ if(hasInstruction(a)&&comp==='unknown')return 'Hay actividad de instrucción: confirmá si se imparte por compensación en una aeronave provista por quien la brinda; esa condición puede activar la inspección de 100 horas de RAAC 91.409(b).';
+ if(hasInstruction(a)&&comp==='yes')return 'Instrucción por compensación con aeronave provista: verificá inspección de 100 horas conforme a RAAC 91.409(b), o el régimen alternativo expresamente aplicable, además del resto de exigencias.';
+ if(hasInstruction(a))return 'El uso de instrucción por sí solo no demuestra que corresponda la regla de 100 horas de 91.409(b). Confirmá las condiciones de operación y el programa aplicable.';
+ return 'Uso privado: seguí la inspección anual o el programa aplicable, las DA y las limitaciones de aeronavegabilidad. No se presume inspección de 100 horas solo por uso privado.';
+}
+
+const CN={f:'Fuselaje',m:'Motor',p:'Hélice'};
+const SERVICE_BY_COMPONENT={f:'Estructura',m:'Motor',p:'Hélice'};
+function CP(a){
+ if(!a)return null;if(!a.cp||typeof a.cp!=='object')a.cp={};
+ const def={f:{mod:'',ser:''},m:{mod:'',ser:'',h:a.h,c:a.c,tso:a.h,tbo:0,tboY:0,oh:'',tboRef:''},p:{mod:'',ser:'',h:a.h,c:a.c,tso:a.h,tbo:0,tboY:0,oh:'',tboRef:''}};
+ for(const k of ['f','m','p']){if(!a.cp[k]||typeof a.cp[k]!=='object')a.cp[k]=def[k];else for(const [field,val] of Object.entries(def[k]))if(a.cp[k][field]===undefined)a.cp[k][field]=val}
+ return a.cp;
+}
+const cnt=(a,k)=>k==='m'||k==='p'?CP(a)[k]:{h:a.h,c:a.c};
+const compName=t=>t==='mp'?'Motor + Hélice':!t||t==='fmp'?'Todos':CN[t]||'Todos';
+function tbos(a){return ['m','p'].map(k=>{const z=CP(a)[k];return z.tbo>0||(z.tboY>0&&z.oh)?{cp:k,name:'Recorrida general (TBO) '+CN[k],ivH:z.tbo||0,lastH:z.h-z.tso,ivC:0,lastC:0,ivM:(z.tboY||0)*12,lastDate:z.oh||'',basis:z.tboRef||''}:null}).filter(Boolean)}
+const allC=a=>S.sv.filter(s=>s.ac==a.id).flatMap(s=>S.ct.filter(c=>c.sv==s.id).map(c=>({c,s,i:info(c,a)}))).concat(tbos(a).map(c=>({c,s:{name:'TBO'},i:info(c,a)})));
+
+
+
+
+// ---------- LÓGICA ----------
+
+function info(c,a){const t0=Date.now(),D=30.44*864e5,d=[],z=cnt(a,c.cp);
+
+ if(c.id&&(!c.lastRef||!c.lastDate||(c.ivH&&(!Number.isFinite(Number(c.lastH))||c.lastH===null||c.lastH===undefined||c.lastH===''))||(c.ivC&&(!Number.isFinite(Number(c.lastC))||c.lastC===null||c.lastC===undefined||c.lastC===''))))
+  return{remH:null,remC:null,calD:null,due:Infinity,by:'sin constancia',days:Infinity,st:3,missingRecord:true};
+
+ const remH=c.ivH?c.lastH+c.ivH-z.h:null,remC=c.ivC?c.lastC+c.ivC-z.c:null;let calD=null;
+
+ if(c.ivM&&c.lastDate){const dueDate=addMonthsConservative(c.lastDate,c.ivM);if(dueDate){calD=new Date(dueDate+'T00:00:00').getTime();d.push([calD,'calendario'])}}
+
+ if(remH!=null)d.push([remH<=0?t0:a.hpm>0?t0+remH/a.hpm*D:Infinity,'horas']);
+
+ if(remC!=null)d.push([remC<=0?t0:a.cpm>0?t0+remC/a.cpm*D:Infinity,'ciclos']);
+
+ const m=d.length?d.reduce((x,y)=>y[0]<x[0]?y:x):[Infinity,'—'],days=(m[0]-t0)/864e5,over=(remH!=null&&remH<=0)||(remC!=null&&remC<=0)||(calD&&calD<t0);
+
+ return{remH,remC,calD,due:m[0],by:m[1],days,st:over?2:(days<=45||(remH!==null&&remH<=10)||(remC!==null&&remC<=10))?1:0}}
+
+const ST=[['SIN ALERTA','emerald'],['PRÓXIMO','amber'],['REVISAR VENCIMIENTO','rose'],['SIN CONSTANCIA','rose']];
+
+function entry(a,e){const t=e.t||'fmp';CP(a);S.lg.push({id:uid(),ac:a.id,...e,t});if(t.includes('f')){a.h+=e.h;a.c+=e.c}for(const k of ['m','p'])if(t.includes(k)){const z=a.cp[k];z.h+=e.h;z.c+=e.c;z.tso+=e.h}}
+
+const adv=(d,e)=>{const x=new Date(d+'T12:00:00');e=='d'?x.setDate(x.getDate()+1):e=='w'?x.setDate(x.getDate()+7):x.setMonth(x.getMonth()+1);return x.toISOString().slice(0,10)};
+
+function applyRc(){
+ const pending=S.rc.filter(r=>r.next<=today());
+ if(!pending.length){alert('No hay recurrentes pendientes.');return 0}
+ if(!confirm('¿Confirmás que se realizaron realmente las actividades pendientes? Se incorporará un registro por cada actividad al día de hoy.'))return 0;
+ for(const r of pending){const a=S.ac.find(x=>x.id===r.ac);if(!a)continue;
+  entry(a,{kind:r.kind,t:r.t||'fmp',date:today(),h:r.h,c:r.c,from:r.from,to:r.to,pilot:'',note:(r.note||'')+' (registro confirmado)'});
+  r.next=adv(today(),r.every);
+ }
+ save();return pending.length;
+}
+
+
+
+// ---------- ACCIONES ----------
+
+function addAc(){alert("Para agregar una matrícula, primero registrala en «Flota y disponibilidad».");}
+function updateAircraftTechnical(){
+ const a=A();if(!a)return;
+ const type=recordValue('ga_t',100);
+ if(!type)return alert('Indicá el tipo o modelo de aeronave.');
+ const year=recordValue('ga_year',4);
+ if(year&&!/^\d{4}$/.test(year))return alert('El año de fabricación debe tener 4 dígitos.');
+ const fleetItem=registeredFleet.find(x=>String(x.registration||"").trim().toUpperCase()===String(a.reg||"").trim().toUpperCase());
+ if(fleetItem?.model&&type.trim()!==fleetItem.model.trim())return alert("Modificá el modelo en Flota y disponibilidad para mantener una ficha única.");
+ a.type=fleetItem?.model||type;
+ a.technical={
+  ...a.technical,
+  manufacturer:recordValue('ga_make',100),year,
+  serial:recordValue('ga_serial',100),base:recordValue('ga_base',100),
+  source:recordValue('ga_source',250)
+ };
+ // Motor y hélice se editan exclusivamente en Componentes para conservar sus historiales.
+ save();R();
+}
+
+function saveOperation(){const a=A();if(!a)return;
+ const use=v('op_use'),compensation=v('op_comp'),operator=recordValue('op_operator',140),program=recordValue('op_program',250);
+ if(hasInstruction({operation:{use}})&&compensation==='unknown'&&!confirm('Aún no se confirmó si la instrucción es por compensación con aeronave provista. La app mostrará el régimen como pendiente de verificar. ¿Continuar?'))return;
+ if(!confirm('¿Guardar este perfil de operación? La aplicabilidad reglamentaria debe ser corroborada con documentación vigente.'))return;
+ a.operation={use,compensation:hasInstruction({operation:{use}})?compensation:'unknown',operator,program,updated:today()};
+ save();R();
+}
+
+function delAc(id){alert("La baja de matrícula se gestiona desde Flota y disponibilidad. Los históricos técnicos se conservan.");}
+function addManual(){const a=A(),h=n('m_h'),c=n('m_c');if(!h&&!c)return alert('Ingrese horas y/o ciclos.');entry(a,{kind:'m',t:v('m_t'),date:v('m_d')||today(),h,c,from:'',to:'',pilot:'',note:v('m_n')||'Control manual'});save();R()}
+
+function addSv(){const nm=v('s_n').trim();if(!nm)return;S.sv.push({id:uid(),ac:S.sel,name:nm});save();R()}
+
+function delSv(id){if(confirm('¿Borrar el servicio y sus controles?')){S.sv=S.sv.filter(s=>s.id!=id);S.ct=S.ct.filter(c=>c.sv!=id);save();R()}}
+
+function addCt(){
+ const nm=v('c_n').trim(),basis=recordValue('c_basis',250),lastDoc=recordValue('c_lastdoc',250);
+ if(!nm||!v('c_s'))return alert('Elija un servicio e ingrese el nombre del control.');
+ const cp=v('c_k'),ivH=n('c_ih'),ivC=n('c_ic'),ivM=n('c_im');
+ if(!['f','m','p'].includes(cp)||!ivH&&!ivC&&!ivM)return alert('Elegí componente y al menos un intervalo de horas, ciclos o meses.');
+ if(!basis)return alert('Identificá el manual, boletín o programa que fija el intervalo para este componente.');
+ const lastDate=v('c_ld'),hRaw=v('c_lh').trim(),cRaw=v('c_lc').trim();
+ if(/cambio de aceite/i.test(nm)&&(!lastDoc||!lastDate||!hRaw))
+  return alert('Para seguimiento de cambio de aceite indicá fecha, horas de motor y referencia del último cambio documentado.');
+ if(!lastDoc&&(lastDate||hRaw||cRaw))return alert('Si aún no tenés una constancia técnica, dejá vacíos fecha, horas y ciclos del último cumplimiento. El control quedará pendiente de documentar.');
+ if(lastDoc&&(!lastDate||(ivH&&!hRaw)||(ivC&&!cRaw)))return alert('Para calcular el vencimiento completá fecha y los contadores aplicables del último asiento firmado.');
+ if(lastDoc&&((hRaw&&!Number.isFinite(Number(hRaw)))||(cRaw&&!Number.isFinite(Number(cRaw)))))return alert('Las horas y los ciclos del último cumplimiento deben ser valores numéricos válidos.');
+ const z=cnt(A(),cp);
+ if(lastDoc&&(lastDate>today()||(hRaw&&(Number(hRaw)>z.h||Number(hRaw)<0))||(cRaw&&(Number(cRaw)>z.c||Number(cRaw)<0))))return alert('Verificá fecha y contadores: no pueden superar los actuales ni estar en el futuro.');
+ const selected=v('c_s');let service=S.sv.find(s=>s.id===selected&&s.ac===S.sel);
+ if(selected==='new:'+cp){
+  const name=SERVICE_BY_COMPONENT[cp];service=S.sv.find(s=>s.ac===S.sel&&s.name.toLowerCase()===name.toLowerCase());
+  if(!service){service={id:uid(),ac:S.sel,name};S.sv.push(service)}
+ }
+ if(!service)return alert('Seleccioná un servicio perteneciente a esta aeronave y componente.');
+ S.ct.push({id:uid(),sv:service.id,name:nm,cp,ivH,ivC,ivM,lastDate:lastDoc?lastDate:'',lastH:lastDoc&&hRaw?Number(hRaw):null,lastC:lastDoc&&cRaw?Number(cRaw):null,basis,lastRef:lastDoc});save();R();
+}
+
+function prefillOilChange(){
+ const type=v('c_oilkind');if(!['full','screen'].includes(type))return;
+ $('c_n').value=type==='full'?'Cambio de aceite y filtro':'Cambio de aceite y limpieza de malla de presión';
+ $('c_k').value='m';$('c_ih').value=type==='full'?'50':'25';$('c_ic').value='0';$('c_im').value='4';
+ $('c_s').value='new:m';
+ $('c_ld').value='';$('c_lh').value='';$('c_lc').value='';$('c_basis').value='';$('c_lastdoc').value='';
+ alert('Plantilla orientativa Lycoming cargada. Confirmá modelo, excepciones, manual vigente y último asiento firmado antes de guardar.');
+}
+
+function prefillComponentControl(kind){
+ const defaults={structure:{name:'Inspección programada de estructura y mandos',cp:'f'},propeller:{name:'Inspección programada de hélice, palas y buje',cp:'p'}};
+ const item=defaults[kind];if(!item)return;
+ $('c_n').value=item.name;$('c_k').value=item.cp;
+ $('c_s').value='new:'+item.cp;
+ for(const id of ['c_ih','c_ic','c_im'])$(id).value='0';
+ for(const id of ['c_ld','c_lh','c_lc','c_basis','c_lastdoc'])$(id).value='';
+ alert('Plantilla de '+(kind==='structure'?'estructura':'hélice')+' cargada sin intervalos prefijados. Completá los límites por horas, ciclos y/o calendario según manual, DA y programa aplicable.');
+}
+
+function startComponentControl(k){
+ if(!['f','p'].includes(k))return;
+ S.tab='s';R();prefillComponentControl(k==='f'?'structure':'propeller');
+}
+
+function delCt(id){if(!confirm('¿Retirar este control y sus vencimientos del registro privado?'))return;S.ct=S.ct.filter(c=>c.id!=id);save();R()}
+
+function renew(id){
+ const c=S.ct.find(x=>x.id===id),a=A();if(!c||!a)return;
+ const ref=prompt('Referencia del asiento firmado en libreta, orden de trabajo u otra constancia técnica de este control (obligatoria):');
+ if(ref===null)return;
+ if(!ref.trim())return alert('Sin una constancia técnica no se marcará el control como cumplido.');
+ const resp=prompt('Responsable técnico que figura en la constancia (nombre, licencia o registro ANAC):');
+ if(resp===null)return;
+ if(!resp.trim())return alert('Indicá quién figura como responsable en la constancia oficial.');
+ if(!confirm('Se anotará una referencia a un control ya realizado. Esta acción no certifica el trabajo ni aprueba el retorno al servicio. ¿Continuar?'))return;
+ const z=cnt(a,c.cp);c.lastDate=today();c.lastH=z.h;c.lastC=z.c;c.lastRef=ref.trim().slice(0,200);c.lastBy=resp.trim().slice(0,150);
+ save();R();
+}
+
+function addLog(){const a=A(),h=n('l_h'),c=n('l_c');if(!h&&!c)return alert('Ingrese horas de vuelo y/o ciclos.');const use=v('l_use');if(opUse(a)==='private'&&use!=='private'||opUse(a)==='instruction'&&use!=='instruction')return alert('Verificá el uso de la aeronave antes de registrar este vuelo.');entry(a,{kind:'f',date:v('l_d')||today(),h,c,from:v('l_f').toUpperCase(),to:v('l_t').toUpperCase(),pilot:v('l_p'),instructor:recordValue('l_instructor',140),use,note:v('l_n')});save();R()}
+
+function delLog(id){const l=S.lg.find(x=>x.id==id);if(!l)return;if(!confirm('¿Retirar esta anotación privada y recalcular las horas y ciclos?'))return;const a=S.ac.find(x=>x.id==l.ac);if(a){const t=l.t||'fmp';CP(a);if(t.includes('f')){a.h-=l.h;a.c-=l.c}for(const k of ['m','p'])if(t.includes(k)){const z=a.cp[k];z.h-=l.h;z.c-=l.c;z.tso-=l.h}}S.lg=S.lg.filter(x=>x.id!=id);save();R()}
+
+function addRc(){const h=n('r_h'),c=n('r_c');if(!h&&!c)return alert('Ingrese horas y/o ciclos.');S.rc.push({id:uid(),ac:S.sel,kind:v('r_k'),t:v('r_a')||'fmp',every:v('r_e'),next:v('r_s')||today(),h,c,from:v('r_f').toUpperCase(),to:v('r_t').toUpperCase(),note:v('r_n')});save();R();alert('Recurrente programado. No se suman horas sin confirmar su realización.')}
+
+function delRc(id){S.rc=S.rc.filter(r=>r.id!=id);save();R()}
+
+function runRc(){const k=applyRc();R();if(k)alert(k+' registro(s) confirmados.')}
+
+
+function setComp(k){
+ const a=A(),z=CP(a)[k],before=z.ser;
+ if(k!=='f'){
+  const tbo=n(k+'_tbo'),years=n(k+'_y'),ref=recordValue(k+'_tboref',250),last=v(k+'_oh');
+  if((tbo>0||years>0)&&!ref)return alert('Para registrar un TBO identificá el manual, boletín y revisión aplicables al modelo y número de serie.');
+  if(years>0&&!last)return alert('Para controlar el límite calendario del TBO indicá la fecha de la última recorrida documentada.');
+ }
+ z.mod=v(k+'_mod').trim().slice(0,100);z.ser=v(k+'_ser').trim().slice(0,100);
+ if(k==='f'){a.h=n('f_h');a.c=n('f_c')}
+ else{z.h=n(k+'_h');z.c=n(k+'_c');z.tso=n(k+'_tso');z.tbo=n(k+'_tbo');z.tboY=n(k+'_y');z.oh=v(k+'_oh');z.tboRef=recordValue(k+'_tboref',250)}
+ if(before!==z.ser)(a.hist=a.hist||[]).push({d:today(),k,tx:'Serie '+(before||'—')+' → '+(z.ser||'—')});save();R();
+}
+function overhaul(k){
+ if(k!=='m'&&k!=='p')return;
+ const a=A(),z=CP(a)[k];if(!a)return;
+ const ref=prompt('Referencia a la recorrida general documentada (libreta, orden de trabajo / taller):');
+ if(ref===null)return;if(!ref.trim())return alert('No se reiniciará el TSO sin referencia documental.');
+ const resp=prompt('Organización y responsable técnico identificados en el registro:');
+ if(resp===null)return;if(!resp.trim())return alert('Identificá al responsable que consta en el registro.');
+ if(!confirm('¿La recorrida está concluida y documentada? Registrar aquí no equivale a una aprobación de retorno al servicio.'))return;
+ (a.hist=a.hist||[]).push({d:today(),k,tx:'Recorrida documentada a '+f1(z.tso)+' h TSO',ref:ref.trim().slice(0,200),who:resp.trim().slice(0,150)});
+ z.tso=0;z.oh=today();save();R();
+}
+
+function setProj(){const a=A();a.hpm=n('p_h');a.cpm=n('p_c');S.hz=n('p_z')||12;save();R()}
+
+function expo(){const x=document.createElement('a');x.href=URL.createObjectURL(new Blob([JSON.stringify(S,null,1)],{type:'application/json'}));x.download='mantenimiento-respaldo.json';x.click()}
+
+function impo(i){const f=i.files[0];if(!f)return;
+ if(f.size>5000000){alert('El respaldo supera el tamaño permitido.');i.value='';return}
+ const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!validData(d))throw 0;
+ if(!confirm('¿Reemplazar tus registros actuales por este respaldo?'))return;
+ S={ac:d.ac,sv:d.sv,ct:d.ct,lg:d.lg,rc:d.rc,mx:d.mx||[],ad:d.ad||[],ip:d.ip||[],ie:d.ie||[],dx:d.dx||[],inv:d.inv||[],mv:d.mv||[],fuel:d.fuel||[],sel:d.sel||null,tab:'a',hz:d.hz||12};
+ if(!S.ac.some(a=>a.id===S.sel))S.sel=S.ac[0]?.id||null;save();R();
+ }catch(e){alert('Archivo no válido.')}};r.readAsText(f);i.value=''}
+
+
+
+
+function recordValue(id,max){return v(id).trim().slice(0,max)}
+function addIntervention(){
+ if(!A())return;
+ const desc=recordValue('mx_desc',800),ref=recordValue('mx_ref',250),who=recordValue('mx_who',160),lic=recordValue('mx_lic',100),reg=recordValue('mx_reg',80);
+ if(!v('mx_date')||!desc||!ref||!who||!lic||!reg)return alert('Completá fecha, trabajo, referencia documental y datos del responsable que figuran en la constancia.');
+ if(!confirm('Se guardará una TRANSCRIPCIÓN PRIVADA de un trabajo ya documentado. No reemplaza firmas ni aprobaciones. ¿Continuar?'))return;
+ S.mx.push({id:uid(),ac:S.sel,date:v('mx_date'),kind:v('mx_kind'),cp:v('mx_cp'),desc,tech:recordValue('mx_tech',350),ref,who,lic,reg,added:new Date().toISOString()});
+ save();R();
+}
+function removeIntervention(id){
+ if(!confirm('¿Retirar esta copia digital de la intervención? Conservá los registros oficiales originales.'))return;
+ S.mx=S.mx.filter(x=>x.id!==id);save();R();
+}
+function adState(d,a){
+ if(d.applies==='unknown')return {label:'POR EVALUAR',level:'warn'};
+ if(d.applies==='no')return {label:'NO APLICA (DECLARADO)',level:''};
+ if(!d.compDate||!d.doc||!d.method)return {label:'SIN CONSTANCIA',level:'danger'};
+ const h=Number(d.nextH),cur=cnt(a,d.cp).h,hasH=d.nextH!==''&&d.nextH!==null&&d.nextH!==undefined&&Number.isFinite(h);
+ const hasDate=!!d.nextDate;
+ if((hasH&&h<=cur)||(hasDate&&d.nextDate<=today()))return {label:'REVISAR VENCIMIENTO',level:'danger'};
+ const soonDate=hasDate&&(new Date(d.nextDate+'T12:00:00').getTime()-Date.now())/864e5<=45;
+ if((hasH&&h-cur<=10)||soonDate)return {label:'PRÓXIMA REVISIÓN',level:'warn'};
+ return {label:'CON CONSTANCIA DECLARADA',level:''};
+}
+function addAD(){
+ if(!A())return;
+ const number=recordValue('ad_number',90),rev=recordValue('ad_rev',70),method=recordValue('ad_method',350),doc=recordValue('ad_doc',250),notes=recordValue('ad_notes',350);
+ const applies=v('ad_applies'),date=v('ad_date'),nextDate=v('ad_nextdate'),nextH=v('ad_nexth').trim();
+ if(!number)return alert('Ingresá el número de directiva de aeronavegabilidad.');
+ if(applies==='no'&&!notes&&!doc)return alert('Para declarar No aplica, agregá el fundamento o la referencia documental.');
+ if(applies==='yes'&&date&&(!method||!doc))return alert('Para registrar cumplimiento, indicá método y constancia del asiento firmado.');
+ if(nextH&&(!Number.isFinite(Number(nextH))||Number(nextH)<0))return alert('Ingresá una hora futura válida.');
+ S.ad.push({id:uid(),ac:S.sel,number,rev,cp:v('ad_cp'),applies,method,doc,compDate:date,nextDate,nextH,notes,added:new Date().toISOString()});
+ save();R();
+}
+function removeAD(id){
+ if(!confirm('¿Retirar esta anotación auxiliar de directiva de aeronavegabilidad?'))return;
+ S.ad=S.ad.filter(x=>x.id!==id);save();R();
+}
+function addDiscrepancy(){
+ if(!A())return;
+ const desc=recordValue('dx_desc',650),reportedBy=recordValue('dx_who',140),date=v('dx_date');
+ if(!date||date>today()||!desc||!reportedBy)return alert('Registrá fecha válida, descripción y persona que comunicó la novedad.');
+ S.dx.push({id:uid(),ac:S.sel,date,reportedBy,component:v('dx_component'),description:desc,operation:v('dx_use'),status:'open',added:new Date().toISOString()});
+ save();R();
+}
+function closeDiscrepancy(id){
+ const item=S.dx.find(x=>x.id===id&&x.ac===S.sel);if(!item||item.status==='closed')return;
+ const reference=recordValue('dx_ref_'+id,250),responsible=recordValue('dx_tech_'+id,160),date=v('dx_closed_'+id);
+ if(!reference||!responsible||!date||date<item.date||date>today())return alert('Para cerrar el seguimiento, transcribí la fecha, la referencia documental y el responsable de la resolución asentada.');
+ if(!confirm('¿Consta la resolución en un registro técnico firmado? Esta acción solo cierra la novedad digital; no aprueba el retorno al servicio.'))return;
+ Object.assign(item,{status:'closed',closedDate:date,reference,responsible});save();R();
+}
+function renderOverview(){
+ const node=$('maintOverview');if(!node)return;
+ const a=A();if(!currentUser||!a){node.innerHTML='';return;}
+ const cs=allC(a),over=cs.filter(x=>x.i.st===2||x.i.st===3).length,soon=cs.filter(x=>x.i.st===1).length;
+ const ads=(S.ad||[]).filter(x=>x.ac===a.id);
+ const pending=ads.filter(d=>['warn','danger'].includes(adState(d,a).level)).length;
+ const tile=(value,description,level='')=>'<article class="maint-metric '+level+'"><strong>'+esc(value)+'</strong><span>'+description+'</span></article>';
+ const plans=(S.ip||[]).filter(x=>x.ac===a.id&&!x.archived);
+ const inspFlag=plans.filter(x=>['danger','warn'].includes(inspectionState(x,a).level)).length;
+ const openDx=(S.dx||[]).filter(x=>x.ac===a.id&&x.status!=='closed').length;
+ node.innerHTML=tile(f1(a.h)+' h','Fuselaje · tiempo total')+
+ tile(inspFlag?String(inspFlag)+' por revisar':plans.length?String(plans.length)+(plans.length===1?' configurada':' configuradas'):'Sin inspecciones','Seguimiento reglamentario',inspFlag?'caution':'')+
+ tile(over?String(over)+' por revisar':soon?String(soon)+' próximos':cs.length?String(cs.length)+' configurados':'Sin controles cargados','Controles de mantenimiento',over?'alert':soon?'caution':'')+
+ tile(openDx?String(openDx)+' abierta(s)':pending?String(pending)+' DA por revisar':'Sin novedades abiertas','Novedades técnicas / DA',openDx?'alert':pending?'caution':'');
+}
+
+
+
+
+// Guías de preparación originales: no sustituyen las listas oficiales del fabricante.
+const GUIDE_MODELS={
+ generic:{
+  title:'Planilla genérica (otros modelos)',
+  engine:'No se presume el motor o hélice por el modelo: verificar configuración y números de serie realmente instalados.',
+  documents:'Manual de mantenimiento y programa aplicable a esta matrícula y número de serie; documentación vigente del motor, hélice, equipos y DA.',
+  areas:{
+   f:['Confirmar fabricante, modelo, año y número de serie de célula','Identificar materiales de estructura, uniones, corrosión y controles específicos','Verificar comandos de vuelo, tren y sistemas instalados según manual'],
+   m:['Identificar fabricante, modelo, número de serie y tiempo del motor instalado','Verificar lubricación, combustible, encendido, escape, refrigeración y accesorios aplicables','Confirmar intervalos y recorrida desde documentos técnicos de este motor'],
+   p:['Identificar fabricante, modelo, número de serie y tipo de hélice instalada','Verificar estado y sistemas de hélice que correspondan a su tipo','Confirmar inspecciones, vida limitada y TBO propios sin heredarlos del motor']
+  }
+ },
+ c150:{
+  title:'Cessna 150',engine:'Motor habitualmente Continental O-200; verificar placa, configuración y sustituciones.',
+  documents:'Service Manual Cessna 150 correspondiente al año y número de serie; manual y boletines del motor y hélice efectivamente instalados.',
+  areas:{
+   f:['Estructura metálica, fijaciones alares y empenaje','Rieles y anclajes de asientos; verificar DA aplicables','Tren triciclo, frenos y comandos de vuelo'],
+   m:['Identificación del motor Continental instalado y sus accesorios','Sistema de lubricación, admisión, escape y bancada','Encendido y componentes con intervalos propios'],
+   p:['Identificar fabricante, modelo y serie de hélice de paso fijo','Estado y fijación del conjunto hélice/cubo','Control de límites particulares de hélice y bulones']
+  }
+ },
+ c172:{
+  title:'Cessna 172',engine:'Según año y versión: motores Continental o Lycoming; no asumir TBO ni intervalo de aceite.',
+  documents:'Service/Maintenance Manual Cessna 172 de la serie/año correspondiente; documentación del motor y hélice por número de serie.',
+  areas:{
+   f:['Estructura metálica, alas, empenaje y corrosión','Rieles y anclajes de asientos; verificar DA aplicables','Tren triciclo, frenos, comandos y sistemas de cabina'],
+   m:['Confirmar variante instalada: Continental O-300, Lycoming O-320, IO-360 u otra aprobada','Lubricación, escape, admisión y bancada','Accesorios, magnetos y mangueras según limitaciones propias'],
+   p:['Confirmar fabricante y modelo; puede variar con la versión y STC','Palas, cubo, fijaciones y posibles limitaciones de operación','Inspecciones/recorridas según fabricante de hélice']
+  }
+ },
+ pa11:{
+  title:'Piper PA-11',engine:'Frecuentemente motor Continental C-90, sujeto a la placa y modificaciones aprobadas.',
+  documents:'Documentación Piper PA-11 aplicable y formulario de inspección 230-3000 como referencia de consulta; manual del motor y hélice reales.',
+  areas:{
+   f:['Estructura de tubos de acero y corrosión','Entelado, costuras, recubrimiento y fijaciones','Tren convencional, cables, tensores y comandos'],
+   m:['Confirmar motor Continental instalado y sus límites','Lubricación, escape, encendido, carburación y bancada','Mangueras, accesorios y registros históricos de intervenciones'],
+   p:['Identificar hélice por fabricante, modelo y número de serie','Superficies, cubo, fijaciones y condiciones de instalación','Verificar límites por calendario y horas propios de esa hélice']
+  }
+ }
+};
+const GUIDE_PERIODS={
+ p50:{title:'Servicio / controles 50 h',scope:'Intervalo de servicio condicionado por el manual; NO constituye una inspección reglamentaria universal.',items:['Identificar tareas que el manual programa a 50 horas','Verificar la última ejecución y su referencia firmada','Revisar DA, boletines y límites que vencen antes del próximo servicio']},
+ p100:{title:'Inspección 100 h',scope:'Confirmar aplicabilidad según RAAC 91.409, uso declarado y programa autorizado; incluye áreas contempladas en RAAC 43 Apéndice D.',items:['Verificar si corresponde inspección de 100 h para la operación','Relacionar constancia técnica, tiempo en servicio y horas restantes','Revisar cumplimiento de tareas de 50/100 h y especiales del programa']},
+ annual:{title:'Inspección anual',scope:'Inspección de aeronave completa según régimen aplicable. La fecha exacta se verifica en documentación oficial y programa aprobado.',items:['Verificar vigencia de la inspección anual o alternativa aplicable','Verificar correspondencia de la documentación y constancia firmada','Incluir inspecciones especiales, DA y límites vencidos del programa']},
+ overhaul:{title:'Recorrida general / TBO',scope:'No existe TBO universal para el fuselaje. Los límites de motor, hélice y componentes se determinan de forma independiente.',items:['Confirmar modelo, serie, TSN, TSO y fecha de última recorrida','Localizar documento vigente del fabricante y programa aceptado/aprobado','Comparar los límites por horas y calendario: considerar el primero que ocurra']}
+};
+const GUIDE_COMMON={
+ f:['Identificación de la célula y últimas constancias técnicas','Recubrimientos, estructura, alas, empenaje y unión de componentes','Comandos, cabina, asientos, cinturones y equipos','Tren, ruedas, neumáticos y frenos; según corresponda'],
+ m:['Identificación, horas y ciclos efectivos del motor','Lubricación, pérdidas visibles, fijaciones, mangueras y bancada','Encendido, combustible, admisión y escape','Controles internos y ensayos exigibles según alcance autorizado'],
+ p:['Identificación, horas y ciclos de la hélice instalada','Palas, cubo, fijaciones, corrosión y daños visibles','Configuración de paso, controles y lubricación cuando aplique','Directivas, limitaciones y recorridas propias del fabricante']
+};
+const GUIDE_COMPONENTS={f:'Fuselaje',m:'Motor',p:'Hélice'};
+let guideOpen=false,guideShown=false,guideAircraft=null;
+let guidePick={model:'',period:'p50',component:'m'},guideChecked={};
+function detectGuideModel(type){
+ const t=String(type||'').toLowerCase();
+ if(/(?:cessna\s*(?:c\s*-?\s*)?|^c\s*-?\s*)150[a-z]?\b/.test(t))return 'c150';
+ if(/(?:cessna\s*(?:c\s*-?\s*)?|^c\s*-?\s*)172[a-z]{0,3}\b/.test(t))return 'c172';
+ if(/\bpa\s*-?\s*11\b/.test(t))return 'pa11';
+ return '';
+}
+function toggleMaintenanceGuides(){
+ guideOpen=!guideOpen;guideShown=false;guideChecked={};
+ if(guideOpen&&A())guidePick.model=detectGuideModel(A().type)||'generic';
+ R();
+}
+function guideItems(){
+ const model=GUIDE_MODELS[guidePick.model],period=GUIDE_PERIODS[guidePick.period];
+ return model&&period&&GUIDE_COMPONENTS[guidePick.component]?
+  [...period.items,...GUIDE_COMMON[guidePick.component],...model.areas[guidePick.component]]:[];
+}
+function showMaintenanceGuide(){
+ const model=v('guide_model'),period=v('guide_period'),component=v('guide_component');
+ if(!GUIDE_MODELS[model]||!GUIDE_PERIODS[period]||!GUIDE_COMPONENTS[component])return alert('Seleccioná el modelo, el control y el componente.');
+ guidePick={model,period,component};guideShown=true;guideAircraft=S.sel;guideChecked={};R();
+}
+function updateGuideCheck(i,checked){
+ if(checked)guideChecked[i]=true;else delete guideChecked[i];
+ const counter=$('guide_count');if(counter)counter.textContent=Object.keys(guideChecked).length+' / '+guideItems().length+' puntos de consulta marcados (sin valor certificante)';
+}
+function prepareGuideControl(i){
+ if(guideAircraft!==S.sel||!guideShown)return;
+ const task=guideItems()[i];if(!task)return;
+ const component=guidePick.component;
+ S.tab='s';R();
+ $('c_n').value=task;
+ $('c_k').value=component;
+ $('c_s').value='new:'+component;
+ $('c_ih').value='0';$('c_ic').value='0';$('c_im').value='0';
+ $('c_basis').value='';$('c_lastdoc').value='';
+ $('c_n').focus();
+ alert('Borrador de control preparado, SIN GUARDAR. Confirmá el intervalo exacto y transcribí el manual/boletín vigente y la constancia correspondiente antes de crearlo.');
+}
+function renderGuidePanel(a){
+ let out='<section class="maint-guides mb-4"><div class="flex flex-wrap items-center justify-between gap-2"><div><strong>Planillas de consulta por modelo</strong><p class="text-xs text-slate-300 mt-1">Cessna 150 · Cessna 172 · Piper PA-11 · Genérica. Ocultas hasta solicitarlas.</p></div><button type="button" class="btn bg-sky-700" onclick="toggleMaintenanceGuides()" aria-expanded="'+guideOpen+'">'+(guideOpen?'Cerrar planillas':'Consultar planillas')+'</button></div>';
+ if(!guideOpen)return out+'</section>';
+ const options=(dict,current,blank)=>blank+Object.entries(dict).map(([key,item])=>'<option value="'+key+'"'+(key===current?' selected':'')+'>'+esc(item.title||item)+'</option>').join('');
+ out+='<div class="maint-guide-toolbar"><p class="maint-note">Guías originales de preparación. Elegí la planilla; NO equivalen a una checklist oficial, ejecución de mantenimiento ni aprobación de retorno al servicio. Consultá el manual, revisiones, DA y programa aprobados para matrícula, motor y hélice.</p><div class="maint-record-grid">';
+ out+='<label>Modelo de referencia<select id="guide_model" class="fld">'+options(GUIDE_MODELS,guidePick.model,'<option value="">Seleccionar aeronave</option>')+'</select></label>';
+ out+='<label>Tipo de control<select id="guide_period" class="fld">'+options(GUIDE_PERIODS,guidePick.period,'')+'</select></label>';
+ out+='<label>Componente<select id="guide_component" class="fld">'+options(GUIDE_COMPONENTS,guidePick.component,'')+'</select></label>';
+ out+='</div><button type="button" class="btn bg-amber-600" onclick="showMaintenanceGuide()">Mostrar planilla solicitada</button></div>';
+ if(guideShown&&guideAircraft===a.id){
+  const model=GUIDE_MODELS[guidePick.model],period=GUIDE_PERIODS[guidePick.period],items=guideItems();
+  out+='<article class="maint-guide-sheet"><div class="maint-eyebrow">REFERENCIA TÉCNICA / SIN VALOR CERTIFICANTE</div><h3>'+esc(guidePick.model==='generic'?'Planilla genérica · '+a.type:model.title)+' · '+esc(period.title)+' · '+esc(GUIDE_COMPONENTS[guidePick.component])+'</h3>';
+  out+='<p class="maint-note">'+esc(period.scope)+'</p><p class="text-xs text-slate-300 mt-2"><b>Configuración:</b> '+esc(model.engine)+'</p><p class="text-xs text-slate-300 mt-2"><b>Fuente a verificar:</b> '+esc(model.documents)+'</p>';
+  out+='<p class="text-xs text-slate-400 mt-2">Referencia normativa: RAAC 43 (incl. Apéndice D si corresponde), RAAC 91, DA y documentación técnica vigente de los fabricantes. No se precargan TBO ni vencimientos sin identificación y fuente verificadas.</p>';
+  out+='<div id="guide_count" role="status" class="text-xs text-sky-300 mt-3">0 / '+items.length+' puntos de consulta marcados (sin valor certificante)</div>';
+  out+='<div class="maint-guide-list">'+items.map((task,i)=>'<div class="maint-guide-item"><label><input type="checkbox" '+(guideChecked[i]?'checked ':'')+'onchange="updateGuideCheck('+i+',this.checked)" aria-label="Marcar como revisado: '+esc(task)+'"><span>'+esc(task)+'</span></label><button type="button" class="btn bg-slate-700" onclick="prepareGuideControl('+i+')">Preparar control</button></div>').join('')+'</div>';
+  out+='<p class="text-xs text-slate-300 mt-3">Las marcas son temporales, no se guardan como cumplimiento. Al preparar un control se exige posteriormente intervalo y referencia del manual aplicable. El cierre técnico debe registrarse en las libretas por personal autorizado.</p></article>';
+ }
+ return out+'</section>';
+}
+
+const INSPECTION_TEMPLATES={
+ anual:{title:'Inspección anual',ref:'RAAC 91.409 / 43.11 / Apéndice D',m:12,h:0},
+ cien:{title:'Inspección de 100 horas',ref:'RAAC 91.409 / 43.11 / Apéndice D',m:0,h:100},
+ prog:{title:'Inspección progresiva / programa aprobado',ref:'RAAC 91.409 (según programa)',m:0,h:0},
+ alt:{title:'Altímetro y sistema estático (IFR)',ref:'RAAC 91.411 / Apéndice E de Parte 43',m:24,h:0},
+ trans:{title:'Transpondedor ATC',ref:'RAAC 91.413 / Apéndice F de Parte 43',m:24,h:0},
+ manual:{title:'Otra inspección según programa',ref:'Programa / ICA aplicable',m:0,h:0}
+};
+function inspectionTemplateChanged(){
+ const z=INSPECTION_TEMPLATES[v('ip_kind')]||INSPECTION_TEMPLATES.manual;
+ $('ip_title').value=z.title;$('ip_ref').value=z.ref;
+ $('ip_months').value=z.m;$('ip_hours').value=z.h;
+}
+function createInspectionPlan(){
+ if(!A())return;
+ const kind=v('ip_kind'),title=recordValue('ip_title',140),ref=recordValue('ip_ref',250),
+       months=n('ip_months'),hours=n('ip_hours'),applies=v('ip_applies'),note=recordValue('ip_note',350);
+ if(!title||!ref)return alert('Completá el nombre de la inspección y la norma o programa de referencia.');
+ if(!months&&!hours&&!['prog','manual'].includes(kind))return alert('Para esta inspección indicá un intervalo de horas y/o meses según el programa aplicable.');
+ if(kind==='prog'&&!note)return alert('Para un programa progresivo identificá en observaciones el programa aprobado y el alcance.');
+ if(applies==='no'&&!note)return alert('Justificá por qué esta inspección no resulta aplicable.');
+ if(S.ip.some(p=>p.ac===S.sel&&p.kind===kind&&!p.archived&&p.title.toLowerCase()===title.toLowerCase()))
+   return alert('Ya hay una inspección activa con ese nombre. Podés utilizarla para registrar el último cumplimiento.');
+ S.ip.push({id:uid(),ac:S.sel,kind,title,ref,months,hours,applies,note,archived:false});
+ save();R();
+}
+function inspectionRecords(planId){return (S.ie||[]).filter(e=>e.planId===planId).slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))||String(b.added||'').localeCompare(String(a.added||'')));}
+function effectiveInspectionRecord(p,a){
+ const own=inspectionRecords(p.id);
+ if(p.kind!=='cien')return own[0];
+ // RAAC 91.409(b): una anual aprobada también inicia un nuevo período de 100 h.
+ const annual=(S.ip||[]).filter(x=>x.ac===a.id&&!x.archived&&x.applies==='yes'&&x.kind==='anual');
+ const approvedAnnual=annual.flatMap(x=>inspectionRecords(x.id)).filter(e=>e.result==='approved');
+ return own.concat(approvedAnnual).sort((x,y)=>Number(y.h)-Number(x.h)||String(y.date||'').localeCompare(String(x.date||'')))[0];
+}
+function addMonthsConservative(date,months){
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||!months)return '';
+ const [y,m,d]=date.split('-').map(Number);
+ const target=new Date(Date.UTC(y,m-1+Number(months),1,12));
+ if(!Number.isFinite(target.getTime()))return '';
+ const last=new Date(Date.UTC(target.getUTCFullYear(),target.getUTCMonth()+1,0,12)).getUTCDate();
+ target.setUTCDate(Math.min(d,last));return target.toISOString().slice(0,10);
+}
+function inspectionState(p,a){
+ if(p.archived)return {label:'ARCHIVADA',level:'',last:null,nextDate:'',nextH:null};
+ if(p.applies==='no')return {label:'NO APLICA (SEGÚN USUARIO)',level:'',last:null,nextDate:'',nextH:null};
+ if(p.applies!=='yes')return {label:'APLICABILIDAD POR CONFIRMAR',level:'warn',last:null,nextDate:'',nextH:null};
+ const last=effectiveInspectionRecord(p,a);
+ if(!last)return {label:'SIN CONSTANCIA CARGADA',level:'danger',last:null,nextDate:'',nextH:null};
+ if(last.result==='rejected')return {label:'NO APROBADA (SEGÚN CONSTANCIA)',level:'danger',last,nextDate:'',nextH:null};
+ const nextDate=p.months>0?addMonthsConservative(last.date,p.months):'';
+ const nextH=p.hours>0?Number(last.h)+Number(p.hours):null;
+ if(Number(last.h)>Number(a.h)+.01)return {label:'VERIFICAR HORAS DEL FUSELAJE',level:'danger',last,nextDate,nextH};
+ if((nextDate&&nextDate<=today())||(nextH!==null&&Number(a.h)>=nextH))
+   return {label:'REVISAR VENCIMIENTO',level:'danger',last,nextDate,nextH};
+ const soonDate=nextDate&&(new Date(nextDate+'T12:00:00').getTime()-Date.now())/864e5<=45;
+ if(soonDate||(nextH!==null&&nextH-Number(a.h)<=10))
+   return {label:'PRÓXIMA REVISIÓN',level:'warn',last,nextDate,nextH};
+ return {label:!nextDate&&nextH===null?'SIN PLAZO CONFIGURADO':'SIN ALERTAS CALCULADAS',level:!nextDate&&nextH===null?'warn':'',last,nextDate,nextH};
+}
+function addInspectionRecord(planId){
+ const p=S.ip.find(x=>x.id===planId&&x.ac===S.sel),a=A();
+ if(!p||!a)return;
+ const date=recordValue('ir_date_'+planId,20),h=n('ir_h_'+planId),scope=recordValue('ir_scope_'+planId,650),
+  tech=recordValue('ir_tech_'+planId,300),doc=recordValue('ir_doc_'+planId,250),who=recordValue('ir_who_'+planId,150),
+  lic=recordValue('ir_lic_'+planId,110),reg=recordValue('ir_reg_'+planId,90),
+  result=v('ir_result_'+planId),discrepancies=recordValue('ir_discrep_'+planId,650);
+ if(p.applies!=='yes')return alert('Primero indicá que esta inspección aplica a la aeronave, según su régimen de mantenimiento.');
+ if(!date||!scope||!doc||!who||!lic||!reg||!tech)return alert('La constancia debe identificar fecha, alcance, datos técnicos, documento firmado y responsable habilitado.');
+ if(v('ir_h_'+planId).trim()===''||!Number.isFinite(Number(v('ir_h_'+planId)))||Number(v('ir_h_'+planId))<0)return alert('Ingresá las horas reales de fuselaje (TTAF) indicadas en la inspección.');
+ if(date>today())return alert('La fecha de la inspección realizada no puede ser futura.');
+ if(h>Number(a.h)+.01)return alert('Las horas de la inspección no pueden superar el contador actual. Verificá los datos de fuselaje.');
+ if(result==='rejected'&&!discrepancies)return alert('Si no fue aprobada, referenciá las discrepancias registradas.');
+ if(!confirm('¿Transcribir los datos de la inspección que ya consta firmada en la documentación técnica? No estás aprobando aquí el retorno al servicio.'))return;
+ S.ie.push({id:uid(),ac:S.sel,planId,date,h,scope,tech,doc,who,lic,reg,result,discrepancies,added:new Date().toISOString()});
+ save();R();
+}
+function archiveInspection(id){
+ const p=S.ip.find(x=>x.id===id);if(!p)return;
+ const last=inspectionRecords(id)[0];
+ if(last?.result==='rejected')return alert('Hay una inspección no aprobada en el historial reciente. No archives esta configuración hasta revisar su tratamiento documental.');
+ if(!confirm('¿Archivar esta configuración? El historial de inspecciones continuará guardado.'))return;
+ p.archived=true;save();R();
+}
+function restoreInspection(id){
+ const p=S.ip.find(x=>x.id===id);if(!p)return;
+ p.archived=false;save();R();
+}
+
+// ---------- VISTAS ----------
+
+function tabA(){const a=A(),o=a?.operation||{},showForm=!S.ac.length||showAircraftForm;return`<div class="grid lg:grid-cols-2 gap-4">${S.ac.length?`<div class="lg:col-span-2 flex justify-end"><button class="btn bg-slate-700" onclick="showAircraftForm=!showAircraftForm;R()">${showForm?'Cancelar nueva aeronave':'+ Agregar otra aeronave'}</button></div>`:''}${showForm?`<div class="card p-4 space-y-2"><h2 class="font-bold text-amber-300">1 · Crear aeronave</h2>${hangarAircraft?`<div class="text-xs text-slate-300 bg-slate-900/70 p-2 rounded-lg">En Mi Hangar figura: <b>${esc(hangarAircraft)}</b><button class="btn bg-slate-700 ml-2" onclick="fromHangar()">Usar como modelo</button></div>`:''}<div class="grid grid-cols-2 gap-2">${F('a_r','Matrícula','text')}${F('a_t','Tipo / modelo','text')}<div class="col-span-2">${SEL('a_use','Uso previsto',OP_OPTIONS.replace('value="unknown"','value="unknown" selected'))}</div>${F('a_h','Horas totales fuselaje (TTAF)','number',0)}${F('a_c','Ciclos / aterrizajes totales','number',0)}${F('a_hm','Proyección: horas/mes','number',20)}${F('a_cm','Proyección: ciclos/mes','number',20)}</div><details class="maint-guidance"><summary>Ficha técnica ampliada (opcional · abrir si hace falta)</summary>
+<p>Planilla genérica para cualquier marca o modelo, incluso los que no tienen plantilla predefinida. Completá la identificación por etapas, sin asignar TBO ni crear mantenimientos ficticios.</p>
+<div class="maint-record-grid">
+${F('a_make','Fabricante de la aeronave','text','','maxlength="100"')}
+${F('a_year','Año de fabricación','number','','min="1900" max="2100"')}
+${F('a_serial','Número de serie del fuselaje','text','','maxlength="100"')}
+${F('a_base','Base / aeródromo habitual','text','','maxlength="100"')}
+<div class="wide"><b class="text-sm text-amber-200">Motor instalado</b></div>
+${F('a_engine_make','Fabricante del motor','text','','maxlength="100"')}
+${F('a_engine_model','Modelo del motor','text','','maxlength="120"')}
+<div class="wide">${F('a_engine_serial','Número de serie del motor','text','','maxlength="120"')}</div>
+<div class="wide"><b class="text-sm text-amber-200">Hélice instalada</b></div>
+${F('a_prop_make','Fabricante de la hélice','text','','maxlength="100"')}
+${F('a_prop_model','Modelo de hélice','text','','maxlength="120"')}
+<div class="wide">${F('a_prop_serial','Número de serie de hélice','text','','maxlength="120"')}</div>
+<div class="wide">${F('a_source','Referencia a manual y programa de mantenimiento vigente','text','','maxlength="250"')}</div>
+</div>
+<p>Configura las horas, últimos cumplimientos y recorridas reales en Componentes. Los intervalos no se asignan automáticamente.</p>
+</details><p class="text-xs text-slate-400 mt-2">Las horas iniciales de motor y hélice pueden ajustarse por separado en Componentes.</p><button class="btn bg-amber-600 w-full" onclick="addAc()">Crear aeronave</button></div>`:''}
+
+<div class="space-y-3 ${showForm?'':'lg:col-span-2'}">${S.ac.map(x=>`<div class="card p-3 flex items-center gap-3 ${x.id==S.sel?'!border-amber-400':''}"><div class="flex-1"><b class="text-lg">${esc(x.reg)}</b> <span class="text-xs text-slate-400">${esc(x.type)}</span><div class="text-[11px] text-amber-200">${esc(OP_LABELS[opUse(x)])}</div>${x.technical?.manufacturer?'<div class="text-xs text-slate-400">Fabricante: '+esc(x.technical.manufacturer)+'</div>':''}${x.technical?.serial?'<div class="text-xs text-slate-400">Serie fuselaje: '+esc(x.technical.serial)+'</div>':''}<div class="text-sm text-sky-300 font-bold">Fuselaje ${f1(x.h)} h · ${Math.round(x.c)} ciclos</div><div class="text-xs text-slate-400">Motor TSO ${f1(CP(x).m.tso)} h · Hélice TSO ${f1(CP(x).p.tso)} h</div></div><button class="btn bg-sky-700" onclick="S.sel='${x.id}';consumableForm='';save();R()">Seleccionar</button><button class="btn bg-rose-800" aria-label="Eliminar aeronave ${esc(x.reg)}" onclick="delAc('${x.id}')">✕</button></div>`).join('')||'<div class="text-slate-500 text-sm">Aún no hay aeronaves.</div>'}
+
+${a?`<details class="maint-guidance"><summary>Editar ficha genérica — ${esc(a.reg)}</summary>
+<p>Corregí los datos de la célula sin borrar historiales. Para cambiar motor, hélice o contadores usá Componentes y verificá nuevamente sus límites técnicos.</p>
+<div class="maint-record-grid">
+${F('ga_t','Modelo de aeronave','text',esc(a.type||''),'maxlength="100"')}
+${F('ga_make','Fabricante','text',esc(a.technical?.manufacturer||''),'maxlength="100"')}
+${F('ga_year','Año de fabricación','number',esc(a.technical?.year||''))}
+${F('ga_serial','Serie del fuselaje','text',esc(a.technical?.serial||''),'maxlength="100"')}
+${F('ga_base','Base / aeródromo','text',esc(a.technical?.base||''),'maxlength="100"')}
+<div class="wide">${F('ga_source','Referencia de manual y programa','text',esc(a.technical?.source||''),'maxlength="250"')}</div>
+</div><button class="btn bg-amber-600 mt-3" onclick="updateAircraftTechnical()">Guardar ficha</button><p class="text-xs text-slate-400 mt-2">No modifica las horas, inspecciones, DA ni registros anteriores.</p></details>`:''}
+
+${a?`<section class="card p-4 space-y-3"><h2 class="font-bold">2 · Perfil de operación — ${esc(a.reg)}</h2><div class="maint-regime"><strong>${esc(OP_LABELS[opUse(a)])}</strong><p>${esc(regimeNotice(a))}</p></div><div class="maint-record-grid"><div class="wide">${SEL('op_use','Modalidad de uso',OP_OPTIONS.replace('value="'+opUse(a)+'"','value="'+opUse(a)+'" selected'))}</div><div class="wide">${SEL('op_comp','¿Instrucción por compensación en aeronave provista?',COMP_OPTIONS.replace('value="'+(o.compensation||'unknown')+'"','value="'+(o.compensation||'unknown')+'" selected'))}</div><div class="wide">${F('op_operator','Propietario / explotador / escuela (si corresponde)','text',esc(o.operator||''),'maxlength="140"')}</div><div class="wide">${F('op_program','Programa, manual y revisión aplicable','text',esc(o.program||''),'maxlength="250"')}</div></div><p class="text-xs text-slate-400">Si elegís uso mixto, cada vuelo se clasifica en Bitácora, pero las horas y las inspecciones siguen perteneciendo a la misma aeronave.</p><button class="btn bg-amber-600 w-full" onclick="saveOperation()">Guardar régimen</button></section>`:''}
+
+${a?`<div class="card p-4 space-y-2"><h2 class="font-bold text-amber-300">4 · Horas y ciclos de control manual — ${esc(a.reg)}</h2><p class="text-[11px] text-slate-500">Se actualizan los contadores de los componentes elegidos. Esta anotación manual no acredita una intervención de mantenimiento.</p><div class="grid grid-cols-2 gap-2">${F('m_d','Fecha','date',today())}${SEL('m_t','Aplica a','<option value="fmp">Todos</option><option value="f">Fuselaje</option><option value="m">Motor</option><option value="p">Hélice</option><option value="mp">Motor + Hélice</option>')}</div><div class="grid grid-cols-2 gap-2">${F('m_h','Horas')}${F('m_c','Ciclos')}</div>${F('m_n','Motivo / nota','text')}<button class="btn bg-emerald-600 w-full" onclick="addManual()">Agregar</button></div>`:''}</div></div>`}
+
+
+
+
+function tabK(){const a=A(),cp=CP(a);
+ const cards=['f','m','p'].map(k=>{
+ const z=k==='f'?{...cp.f,h:a.h,c:a.c}:cp[k],m=k!=='f';
+ const scheduled=allC(a).filter(x=>x.c.cp===k),pending=scheduled.filter(x=>x.i.st!==0).length;
+ const note={f:'Estructura: inspecciones, corrosión, tren, mandos y partes con vida limitada; seguimiento por TTAF, ciclos y calendario según programa.',m:'Motor: aceite, inspecciones y recorrida según modelo, serie y documentación técnica.',p:'Hélice: inspecciones de palas y buje, partes con vida limitada y recorrida propia, independiente del TBO del motor.'}[k];
+ const bar=(p,label)=>'<p class="text-xs mt-2 text-slate-400">'+label+'</p><div class="h-2 bg-slate-800 rounded overflow-hidden"><div class="h-full '+(p>=95?'bg-rose-500':p>=80?'bg-amber-500':'bg-emerald-500')+'" style="width:'+Math.min(100,Math.max(0,p))+'%"></div></div>';
+ return '<section class="card p-4 space-y-2"><h2 class="text-lg font-bold text-amber-300">'+CN[k]+'</h2><p class="text-xs text-slate-300">'+note+'</p><div class="maint-record-line text-xs">'+scheduled.length+' control(es) configurado(s) · '+(pending?pending+' requiere(n) revisión':'sin alertas pendientes')+'</div><div class="grid grid-cols-2 gap-2">'+
+ F(k+'_mod','Modelo','text',esc(z.mod||''))+F(k+'_ser','N° de serie','text',esc(z.ser||''))+F(k+'_h','Horas totales (TT)','number',z.h)+F(k+'_c','Ciclos totales','number',z.c)+
+ (m?F(k+'_tso','Horas desde recorrida (TSO)','number',z.tso)+F(k+'_tbo','TBO (horas)','number',z.tbo||0)+F(k+'_y','TBO (años)','number',z.tboY||0)+F(k+'_oh','Última recorrida documentada','date',z.oh||''):'')+'</div>'+
+ (m?'<div>'+F(k+'_tboref','Manual / boletín y revisión que fija el TBO','text',esc(z.tboRef||''),'maxlength="250"')+'</div>':'')+
+ (m&&z.tbo>0?bar(100*z.tso/z.tbo,'TBO horas: '+f1(z.tso)+' / '+z.tbo+' (restan '+f1(z.tbo-z.tso)+' h)'):'')+
+ (m&&z.tboY>0&&z.oh?bar(100*(Date.now()-new Date(z.oh+'T12:00:00'))/(365.25*864e5)/z.tboY,'TBO calendario'):'')+
+ '<div class="flex gap-2"><button class="btn bg-amber-600 flex-1" onclick="setComp(\''+k+'\')">Guardar '+CN[k]+'</button>'+
+ (m?'<button class="btn bg-sky-700" onclick="overhaul(\''+k+'\')">Registrar recorrida</button>':'')+'</div>'+
+ (k!=='m'?'<button class="btn bg-slate-700 w-full" onclick="startComponentControl(\''+k+'\')">Programar control de '+CN[k]+'</button>':'')+'</section>';
+ }).join('');
+ return '<div class="maint-regime mb-3"><strong>Mantenimiento de estructura, motor y hélice</strong><p>Los tres componentes requieren seguimiento de inspecciones, directivas, mantenimiento y límites de vida aplicables, pero no comparten necesariamente los mismos intervalos. La estructura no tiene un TBO general universal: sus tareas y límites se programan en Controles por horas, ciclos o calendario. Motor y hélice pueden tener recorridas generales independientes por horas y/o años; se alerta al primer límite. No se asignan intervalos automáticamente. Para motores Lycoming consultá la <a class="underline" target="_blank" rel="noopener noreferrer" href="https://www.lycoming.com/service-instruction-1009-bf">SI 1009BF</a>, y para la hélice su propio manual y boletines.</p></div><p class="text-xs text-slate-400 mb-3">Los valores de fuselaje, motor y hélice se registran independientemente. Completá los límites oficiales según manual, DA y programa aplicable.</p><div class="grid lg:grid-cols-3 gap-4">'+cards+'</div><section class="card p-3 mt-4"><b class="text-amber-300">Historial de componentes</b>'+
+ (a.hist||[]).slice().reverse().map(h=>'<div class="text-xs text-slate-300 mt-2">'+esc(h.d)+' · '+(CN[h.k]||'Componente')+' — '+esc(h.tx)+(h.ref?'<div>Constancia: '+esc(h.ref)+' · '+esc(h.who||'')+'</div>':'')+'</div>').join('')+
+ (!(a.hist||[]).length?'<p class="text-xs text-slate-500">Sin eventos.</p>':'')+'</section>';
+}
+
+function tabS(){const a=A(),sv=S.sv.filter(s=>s.ac==a.id);return`<div class="grid lg:grid-cols-3 gap-4"><div class="space-y-4"><div class="card p-4 space-y-2"><h2 class="font-bold text-amber-300">Servicio de mantenimiento</h2><p class="maint-note">Para inspecciones reglamentarias y su constancia firmada, usá la pestaña <b>Inspecciones</b>.</p>${F('s_n','Nombre (ej. Inspección 100 h, Anual)','text')}<button class="btn bg-amber-600 w-full" onclick="addSv()">Crear servicio</button></div>
+
+<div class="card p-4 space-y-2"><h2 class="font-bold text-amber-300">3 · Crear control</h2>${SEL('c_s','Servicio',sv.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('')+Object.entries(SERVICE_BY_COMPONENT).map(([k,name])=>`<option value="new:${k}">Crear/usar grupo ${name}</option>`).join(''))}<div class="maint-regime"><strong>Controles por componente</strong><p>La estructura y la hélice también se controlan por horas, ciclos o calendario, según el manual y las limitaciones aplicables. Elegí una plantilla para completar los límites reales; no se precargan horas ficticias.</p><div class="grid grid-cols-2 gap-2 mt-2"><button class="btn bg-sky-700" onclick="prefillComponentControl('structure')">Estructura</button><button class="btn bg-sky-700" onclick="prefillComponentControl('propeller')">Hélice</button></div></div><div class="maint-regime"><strong>Referencia rápida · aceite de motor Lycoming</strong><p>Con filtro de flujo total: 50 h. Con malla de presión: 25 h. Referencia de calendario: 4 meses. El intervalo depende del modelo, condiciones y documentación vigente, no de la antigüedad. Existen excepciones (p. ej. TIO-540-AF1A/-AF1B y cambios iniciales). <a href="https://www.lycoming.com/content/oil-and-filter-change-recommendations" target="_blank" rel="noopener noreferrer" class="underline">Consultar fabricante</a>.</p><div class="mt-3">${SEL('c_oilkind','Tipo de sistema (solo si aplica Lycoming)','<option value="">Elegir sistema</option><option value="full">Filtro de flujo total · 50 h</option><option value="screen">Malla de presión · 25 h</option>')}</div><button class="btn bg-sky-700 mt-2 w-full" onclick="prefillOilChange()">Cargar intervalos orientativos</button></div>${F('c_n','Control (ej. Inspección de hélice)','text')}${SEL('c_k','Componente','<option value="f">Fuselaje</option><option value="m">Motor</option><option value="p">Hélice</option>')}<div class="text-[11px] text-slate-500">Intervalo según documentación técnica (dejá 0 cuando no aplique)</div><div class="grid grid-cols-3 gap-2">${F('c_ih','Horas',"number",0)}${F('c_ic','Ciclos','number',0)}${F('c_im','Meses','number',0)}</div><p class="maint-note">Dejá el último cumplimiento en blanco si todavía no tenés un asiento firmado: el control se mostrará como SIN CONSTANCIA, sin inventar un vencimiento. Para aceite se exige un último cambio documentado.</p><div class="grid grid-cols-3 gap-2">${F('c_ld','Fecha del último cumplimiento','date','')}${F('c_lh','Horas en ese cumplimiento','number','')}${F('c_lc','Ciclos en ese cumplimiento','number','')}</div>${F('c_basis','Manual, boletín o programa aplicable (obligatorio)','text','','maxlength="250"')}${F('c_lastdoc','Referencia al último asiento firmado (si existe)','text','','maxlength="250"')}<button class="btn bg-amber-600 w-full" onclick="addCt()">Crear control</button></div></div>
+
+<div class="lg:col-span-2 space-y-3">${sv.map(s=>{const cs=S.ct.filter(c=>c.sv==s.id);return`<div class="card p-3"><div class="flex justify-between"><b class="text-amber-300">${esc(s.name)}</b><button class="text-rose-400 text-xs" onclick="delSv('${s.id}')">Borrar servicio</button></div><div class="overflow-x-auto"><table class="w-full"><thead><tr><th>Control</th><th>Intervalo</th><th>Última</th><th>Resta h</th><th>Resta ciclos</th><th>Vence (proy.)</th><th>Estado</th><th></th></tr></thead><tbody class="divide-y divide-white/5">${cs.map(c=>{const i=info(c,a),[tx,co]=ST[i.st];return`<tr><td class="font-semibold">${CN[c.cp||'f']||'Fuselaje'} · ${esc(c.name)}${c.basis?'<div class="text-[10px] font-normal text-slate-400">Programa: '+esc(c.basis)+'</div>':''}</td><td class="text-slate-400">${[c.ivH&&c.ivH+' h',c.ivC&&c.ivC+' c',c.ivM&&c.ivM+' m'].filter(Boolean).join(' / ')}</td><td class="text-slate-400">${c.lastRef?esc(c.lastDate)+' · '+(c.lastH==null?'—':f1(c.lastH))+' h / '+(c.lastC==null?'—':c.lastC)+' c':'Sin constancia'}${c.lastRef?'<div class="text-[10px] text-slate-400">Ref.: '+esc(c.lastRef)+'</div>':''}</td><td>${i.remH==null?'—':f1(i.remH)}</td><td>${i.remC==null?'—':Math.round(i.remC)}</td><td>${fd(i.due)} <span class="text-[10px] text-slate-500">(${i.by})</span></td><td><span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-${co}-500/20 text-${co}-300">${tx}</span></td><td><button class="text-emerald-400 text-xs" title="Registrar cumplimiento hoy" onclick="renew('${c.id}')"> Registrar con constancia</button> <button class="text-rose-400 px-1" onclick="delCt('${c.id}')">✕</button></td></tr>`}).join('')||'<tr><td colspan="8" class="text-slate-500">Sin controles.</td></tr>'}</tbody></table></div></div>`}).join('')||'<div class="text-slate-500 text-sm">Cree primero un servicio de mantenimiento.</div>'}</div></div>`}
+
+
+
+function tabB(){const a=A(),L=S.lg.filter(l=>l.ac==a.id).sort((x,y)=>y.date.localeCompare(x.date)).slice(0,60);return`<div class="grid lg:grid-cols-3 gap-4"><div class="card p-4 space-y-2 h-fit"><h2 class="font-bold text-amber-300">Hoja de vuelo (bitácora)</h2><div class="grid grid-cols-2 gap-2">${F('l_d','Fecha','date',today())}${F('l_p','Piloto','text')}${F('l_f','Desde','text')}${F('l_t','Hasta','text')}${F('l_h','Horas de vuelo')}${F('l_c','Ciclos / aterrizajes','number',1)}<div class="col-span-2">${SEL('l_use','Uso de este vuelo',flightOptions(a))}</div><div class="col-span-2">${F('l_instructor','Instructor (si corresponde)','text','','maxlength="140"')}</div></div>${F('l_n','Observaciones','text')}<p class="text-xs text-slate-400">Los vuelos privados y de instrucción suman horas al mismo fuselaje, motor y hélice.</p><button class="btn bg-amber-600 w-full" onclick="addLog()">Registrar vuelo</button></div>
+
+<div class="lg:col-span-2 card p-3 overflow-x-auto"><table class="w-full"><thead><tr><th>Fecha</th><th>Tipo de vuelo</th><th>Componente</th><th>Ruta</th><th>Piloto / instructor</th><th>Horas</th><th>Ciclos</th><th>Nota</th><th></th></tr></thead><tbody class="divide-y divide-white/5">${L.map(l=>`<tr><td>${esc(l.date)}</td><td>${l.kind==='m'?'Manual':l.use==='instruction'?'Instrucción':l.use==='private'?'Privado':'Vuelo sin clasificar'}</td><td>${compName(l.t)}</td><td>${esc(l.from)}${l.to?' → '+esc(l.to):''}</td><td>${esc(l.pilot)}${l.instructor?'<div class="text-slate-400">Instructor: '+esc(l.instructor)+'</div>':''}</td><td>${f1(l.h)}</td><td>${l.c}</td><td class="text-slate-400">${esc(l.note)}</td><td><button class="text-rose-400" aria-label="Retirar anotación" onclick="delLog('${l.id}')">✕</button></td></tr>`).join('')||'<tr><td colspan="9" class="text-slate-500">Sin registros.</td></tr>'}</tbody></table></div></div>`}
+
+function tabN(){
+ const a=A(),items=(S.dx||[]).filter(d=>d.ac===a.id).slice().sort((x,y)=>(x.status==='closed')-(y.status==='closed')||String(y.date).localeCompare(String(x.date)));
+ const open=items.filter(x=>x.status!=='closed').length;
+ return `<div class="grid lg:grid-cols-3 gap-4"><section class="card p-4 h-fit space-y-3"><div class="maint-eyebrow">CONTROL DE DISCREPANCIAS</div><h2 class="font-bold">Registrar novedad</h2><p class="maint-note">Para aeronaves privadas y de instrucción. Registrá una observación informada por un piloto, instructor o responsable. No es una autorización de despacho.</p><div class="maint-record-grid">${F('dx_date','Fecha','date',today())}${SEL('dx_component','Sector','<option value="f">Fuselaje / cabina</option><option value="m">Motor</option><option value="p">Hélice</option><option value="other">Otro sistema</option>')}<div class="wide">${SEL('dx_use','Detectada durante','<option value="private">Uso privado</option><option value="instruction">Instrucción</option><option value="ground">En tierra / inspección</option>')}</div><div class="wide">${F('dx_who','Informada por','text','','maxlength="140"')}</div><div class="wide">${F('dx_desc','Descripción de la novedad','text','','maxlength="650"')}</div></div><button class="btn bg-amber-600 w-full" onclick="addDiscrepancy()">Agregar al seguimiento</button></section>
+ <section class="lg:col-span-2 space-y-3"><div class="maint-regime"><strong>${open?open+' novedad(es) abierta(s)':'Sin novedades abiertas'}</strong><p>Una novedad abierta exige evaluación conforme al procedimiento aplicable. El estado mostrado aquí no determina por sí solo la aeronavegabilidad ni habilita vuelos.</p></div>
+ ${items.map(d=>`<article class="card p-4 space-y-2"><div class="flex items-center justify-between flex-wrap gap-2"><strong>${esc(d.date)} · ${esc(d.component==='m'?'Motor':d.component==='p'?'Hélice':d.component==='f'?'Fuselaje / cabina':'Otro sistema')}</strong><span class="maint-pill ${d.status==='closed'?'':'danger'}">${d.status==='closed'?'Cerrada con referencia':'Pendiente de evaluar'}</span></div><p class="text-sm">${esc(d.description)}</p><p class="text-xs text-slate-400">Informó: ${esc(d.reportedBy)} · ${esc({private:'Privado',instruction:'Instrucción',ground:'En tierra'}[d.operation]||'Sin clasificar')}</p>${d.status==='closed'?`<div class="maint-record-line">Resolución documentada: ${esc(d.closedDate)} · ${esc(d.reference)} · ${esc(d.responsible)}</div>`:`<details class="maint-guidance"><summary>Cerrar seguimiento con constancia</summary><p>Solo si la resolución ya consta en un registro técnico firmado. Esto no supone aprobación operativa desde la aplicación.</p><div class="maint-record-grid">${F('dx_closed_'+d.id,'Fecha de resolución','date',today())}${F('dx_tech_'+d.id,'Responsable que figura en constancia','text','','maxlength="160"')}<div class="wide">${F('dx_ref_'+d.id,'Referencia a documento firmado','text','','maxlength="250"')}</div></div><button class="btn bg-amber-600 mt-3" onclick="closeDiscrepancy('${d.id}')">Registrar resolución documentada</button></details>`}</article>`).join('')||'<div class="card p-4 text-sm text-slate-400">Todavía no hay novedades técnicas registradas.</div>'}</section></div>`;
+}
+
+
+
+function tabR(){const a=A(),L=S.rc.filter(r=>r.ac==a.id);return`<div class="grid lg:grid-cols-3 gap-4"><div class="card p-4 space-y-2 h-fit"><h2 class="font-bold text-amber-300">6 · Crear recurrente</h2><p class="text-[11px] text-slate-500">Programa actividades diarias, semanales o mensuales. Las horas y ciclos se incorporan únicamente cuando confirmás que ocurrieron.</p><div class="grid grid-cols-2 gap-2">${SEL('r_k','Tipo','<option value="f">Hoja de vuelo</option><option value="m">Horas/ciclos manual</option>')}${SEL('r_a','Aplica a','<option value="fmp">Todos</option><option value="f">Fuselaje</option><option value="m">Motor</option><option value="p">Hélice</option><option value="mp">Motor + Hélice</option>')}${SEL('r_e','Frecuencia','<option value="d">Diaria</option><option value="w" selected>Semanal</option><option value="m">Mensual</option>')}${F('r_s','Próxima fecha','date',today())}${F('r_h','Horas')}${F('r_c','Ciclos','number',1)}${F('r_f','Desde (opc.)','text')}${F('r_t','Hasta (opc.)','text')}</div>${F('r_n','Nota','text')}<button class="btn bg-amber-600 w-full" onclick="addRc()">Crear recurrente</button></div>
+
+<div class="lg:col-span-2 card p-3 space-y-2"><div class="flex justify-between"><b class="text-amber-300">Recurrentes de ${esc(a.reg)}</b><button class="btn bg-sky-700" onclick="runRc()">Confirmar actividades realizadas</button></div>${L.map(r=>`<div class="flex items-center gap-3 bg-slate-900/60 rounded-lg p-2 text-sm"><div class="flex-1">${r.kind=='f'?' Vuelo':' Manual'} · ${compName(r.t)} · ${{d:'diaria',w:'semanal',m:'mensual'}[r.every]} · <b>${f1(r.h)} h / ${r.c} c</b> ${esc(r.from)}${r.to?'→'+esc(r.to):''}<div class="text-[11px] text-slate-400">Próxima: ${r.next} ${esc(r.note)}</div></div><button class="text-rose-400" onclick="delRc('${r.id}')">✕</button></div>`).join('')||'<div class="text-slate-500 text-sm">Sin recurrentes.</div>'}</div></div>`}
+
+
+
+function tabP(){const a=A(),H=S.hz||12,D=30.44*864e5,t0=Date.now(),controls=allC(a),pending=controls.filter(x=>x.i.missingRecord),all=controls.filter(x=>isFinite(x.i.due)).sort((x,y)=>x.i.due-y.i.due);
+
+ const W=560,Ht=250,L=46,Rr=12,T=22,B=30,ymax=a.h+a.hpm*H||1,ymin=a.h,sx=m=>L+m/H*(W-L-Rr),sy=y=>Ht-B-(y-ymin)/Math.max(ymax-ymin,1)*(Ht-B-T);let s='';
+
+ for(let i=0;i<=H;i+=H>12?6:1)s+=`<line x1="${sx(i)}" x2="${sx(i)}" y1="${T}" y2="${Ht-B}" stroke="#fff1"/><text x="${sx(i)}" y="${Ht-B+13}" fill="#94a3b8" font-size="9" text-anchor="middle">+${i}m</text>`;
+
+ for(let i=0;i<=4;i++){const y=ymin+(ymax-ymin)*i/4;s+=`<line x1="${L}" x2="${W-Rr}" y1="${sy(y)}" y2="${sy(y)}" stroke="#fff1"/><text x="${L-5}" y="${sy(y)+3}" fill="#94a3b8" font-size="9" text-anchor="end">${y.toFixed(0)}</text>`}
+
+ s+=`<line x1="${sx(0)}" y1="${sy(a.h)}" x2="${sx(H)}" y2="${sy(a.h+a.hpm*H)}" stroke="#38bdf8" stroke-width="3"/>`;
+
+ const mk=all.filter(x=>(x.i.due-t0)/D<=H).slice(0,15);
+
+ mk.forEach((x,k)=>{const m=Math.max(0,(x.i.due-t0)/D),co=['#34d399','#fbbf24','#f87171'][x.i.st];s+=`<line x1="${sx(m)}" x2="${sx(m)}" y1="${T}" y2="${Ht-B}" stroke="${co}" stroke-dasharray="3 3"/><circle cx="${sx(m)}" cy="${T-6}" r="8" fill="${co}"/><text x="${sx(m)}" y="${T-3}" fill="#000" font-size="9" font-weight="800" text-anchor="middle">${k+1}</text>`});
+
+ return`<div class="grid lg:grid-cols-3 gap-4"><div class="card p-4 space-y-2 h-fit"><h2 class="font-bold text-amber-300">5 · Proyección de vuelo — ${esc(a.reg)}</h2><div class="text-sm">Actual: <b class="text-sky-300">${f1(a.h)} h · ${Math.round(a.c)} ciclos</b></div>${F('p_h','Horas proyectadas por mes','number',a.hpm)}${F('p_c','Ciclos proyectados por mes','number',a.cpm)}${SEL('p_z','Horizonte','<option value="12">12 meses</option><option value="24">24 meses</option><option value="36">36 meses</option>')}<button class="btn bg-amber-600 w-full" onclick="setProj()">Aplicar proyección</button><div class="text-[11px] text-slate-500">En ${H} meses: ${f1(a.h+a.hpm*H)} h · ${Math.round(a.c+a.cpm*H)} ciclos.</div></div>
+
+<div class="lg:col-span-2 space-y-3">${pending.length?`<div class="maint-flag danger"><b>${pending.length} control(es) sin último cumplimiento documentado.</b> No se calculan vencimientos ficticios. Revisá las constancias de estructura, motor o hélice en Controles: ${pending.slice(0,5).map(x=>esc(CN[x.c.cp]+' · '+x.c.name)).join('; ')}${pending.length>5?'…':''}.</div>`:''}<div class="card p-3"><svg viewBox="0 0 ${W} ${Ht}" class="w-full rounded-xl bg-[#050810]">${s}<text x="${W/2}" y="${Ht-3}" fill="#64748b" font-size="9" text-anchor="middle">Horas totales proyectadas y vencimientos de controles (números = tabla)</text></svg></div>
+
+<div class="card p-3 overflow-x-auto"><b class="text-amber-300 text-sm">Próximos vencimientos</b><table class="w-full mt-1"><thead><tr><th>#</th><th>Control</th><th>Servicio</th><th>Vence</th><th>Por</th><th>Estado</th></tr></thead><tbody class="divide-y divide-white/5">${all.slice(0,40).map((x,k)=>{const[tx,co]=ST[x.i.st];return`<tr><td>${k<15&&(x.i.due-t0)/D<=H?k+1:''}</td><td class="font-semibold">${CN[x.c.cp||'f']||'Fuselaje'} · ${esc(x.c.name)}</td><td class="text-slate-400">${esc(x.s.name)}</td><td>${fd(x.i.due)}</td><td class="text-slate-400">${x.i.by}</td><td><span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-${co}-500/20 text-${co}-300">${tx}</span></td></tr>`}).join('')||'<tr><td colspan="6" class="text-slate-500">Sin vencimientos calculables: cargue intervalos y la proyección.</td></tr>'}</tbody></table></div></div></div>`}
+
+
+
+
+function tabI(){
+ const a=A(),rows=(S.mx||[]).filter(x=>x.ac===a.id).slice().sort((x,y)=>String(y.date||'').localeCompare(String(x.date||'')));
+ return `<div class="grid lg:grid-cols-3 gap-4">
+ <section class="card p-4 space-y-3 h-fit">
+ <h2 class="font-bold">Intervención documentada</h2>
+ <p class="maint-note">RAAC 43.9 y 43.11: registrá los datos del trabajo y la referencia al asiento oficial firmado. Esta carga no es una firma electrónica ni una aprobación de retorno al servicio.</p>
+ <div class="maint-record-grid">
+ ${F('mx_date','Fecha de finalización','date',today())}
+ ${SEL('mx_kind','Tipo de trabajo','<option value="Mantenimiento">Mantenimiento</option><option value="Inspección">Inspección</option><option value="Reparación">Reparación</option><option value="Alteración">Alteración</option><option value="Recorrida general">Recorrida general</option>')}
+ ${SEL('mx_cp','Componente','<option value="f">Fuselaje / aeronave</option><option value="m">Motor</option><option value="p">Hélice</option>')}
+ ${F('mx_tech','Manual / datos técnicos (ref.)','text','','maxlength="350"')}
+ <div class="wide">${F('mx_desc','Descripción del trabajo realizado','text','','maxlength="800"')}</div>
+ <div class="wide">${F('mx_ref','Asiento firmado / orden de trabajo / DA 337','text','','maxlength="250"')}</div>
+ ${F('mx_who','Responsable que figura en la constancia','text','','maxlength="160"')}
+ ${F('mx_lic','Tipo y número de licencia / matrícula','text','','maxlength="100"')}
+ <div class="wide">${F('mx_reg','Registro profesional ANAC','text','','maxlength="80"')}</div>
+ </div>
+ <button class="btn bg-amber-600 w-full" onclick="addIntervention()">Guardar referencia privada</button>
+ </section>
+ <section class="lg:col-span-2 card p-4">
+ <div class="flex items-center justify-between gap-3 flex-wrap"><h2 class="font-bold">Historial técnico referenciado · ${esc(a.reg)}</h2><span class="maint-pill">${rows.length} registros</span></div>
+ <p class="text-xs text-slate-400 mb-3">Copias informativas cargadas por el usuario. Para comprobar la conformidad, consultá el original firmado.</p>
+ <div class="overflow-x-auto"><table class="w-full"><thead><tr><th>Fecha / trabajo</th><th>Componente</th><th>Documentación</th><th>Responsable técnico</th><th></th></tr></thead>
+ <tbody>${rows.map(x=>`<tr>
+ <td><strong>${esc(x.date)}</strong><div class="text-slate-400">${esc(x.kind)}</div><div class="mt-2">${esc(x.desc)}</div></td>
+ <td>${esc(CN[x.cp]||'Aeronave')}</td>
+ <td><strong>${esc(x.ref)}</strong><div class="text-slate-400 mt-1">${esc(x.tech||'Sin dato técnico cargado')}</div></td>
+ <td>${esc(x.who)}<div class="text-slate-400">Lic.: ${esc(x.lic)} / Reg. ANAC: ${esc(x.reg)}</div></td>
+ <td><button class="text-rose-400 text-xs" onclick="removeIntervention('${x.id}')">Retirar</button></td>
+ </tr>`).join('')||'<tr><td colspan="5">Todavía no hay intervenciones documentadas.</td></tr>'}</tbody></table></div>
+ </section></div>`;
+}
+function tabD(){
+ const a=A(),rows=(S.ad||[]).filter(x=>x.ac===a.id).slice().sort((x,y)=>String(x.number).localeCompare(String(y.number)));
+ return `<div class="grid lg:grid-cols-3 gap-4">
+ <section class="card p-4 space-y-3 h-fit">
+ <h2 class="font-bold">Seguimiento de Directivas (DA)</h2>
+ <p class="maint-note">RAAC 39 y 91.417: comprobá primero las directivas aplicables al modelo y número de serie en fuentes ANAC y del Estado de diseño. No se determina la aplicabilidad automáticamente.</p>
+ <div class="maint-record-grid">
+ ${F('ad_number','Número de DA','text','','maxlength="90"')}
+ ${F('ad_rev','Revisión / enmienda','text','','maxlength="70"')}
+ ${SEL('ad_cp','Aplica al componente','<option value="f">Aeronave / fuselaje</option><option value="m">Motor</option><option value="p">Hélice</option>')}
+ ${SEL('ad_applies','Aplicabilidad','<option value="unknown">Pendiente de determinar</option><option value="yes">Aplica</option><option value="no">No aplica (justificar)</option>')}
+ <div class="wide">${F('ad_method','Método de cumplimiento / referencia técnica','text','','maxlength="350"')}</div>
+ ${F('ad_date','Fecha del último cumplimiento','date','')}
+ ${F('ad_nexth','Próxima hora total del componente','number','')}
+ ${F('ad_nextdate','Próxima fecha (si es recurrente)','date','')}
+ <div class="wide">${F('ad_doc','Referencia del asiento oficial / OT','text','','maxlength="250"')}</div>
+ <div class="wide">${F('ad_notes','Observaciones / fundamento de aplicabilidad','text','','maxlength="350"')}</div>
+ </div>
+ <button class="btn bg-amber-600 w-full" onclick="addAD()">Agregar directiva</button>
+ </section>
+ <section class="lg:col-span-2 card p-4">
+ <div class="flex items-center justify-between gap-3 flex-wrap"><h2 class="font-bold">Estado declarado de DA · ${esc(a.reg)}</h2><span class="maint-pill">${rows.length} entradas</span></div>
+ <p class="text-xs text-slate-400 mb-3">Sin carga de una directiva no significa que no exista. Horas y fechas son una ayuda visual, no una determinación reglamentaria.</p>
+ <div class="overflow-x-auto"><table class="w-full"><thead><tr><th>Directiva / revisión</th><th>Aplicabilidad</th><th>Cumplimiento y fuente</th><th>Próxima acción</th><th>Seguimiento</th><th></th></tr></thead>
+ <tbody>${rows.map(x=>{const st=adState(x,a);return `<tr>
+ <td><strong>${esc(x.number)}</strong><div class="text-slate-400">${esc(x.rev||'Sin revisión informada')} · ${esc(CN[x.cp]||'Aeronave')}</div></td>
+ <td>${x.applies==='yes'?'Aplica':x.applies==='no'?'No aplica':'Por determinar'}<div class="text-slate-400">${esc(x.notes||'')}</div></td>
+ <td>${esc(x.method||'—')}<div class="text-slate-400">${esc(x.doc||'Sin referencia')}</div><div>${esc(x.compDate||'Sin fecha')}</div></td>
+ <td>${x.nextDate?'Fecha: '+esc(x.nextDate):''}${x.nextH?' · '+esc(x.nextH)+' h':''}${!x.nextDate&&!x.nextH?'Sin recurrencia cargada':''}</td>
+ <td><span class="maint-pill ${st.level}">${st.label}</span></td>
+ <td><button class="text-rose-400 text-xs" onclick="removeAD('${x.id}')">Retirar</button></td>
+ </tr>`}).join('')||'<tr><td colspan="6">Todavía no se cargaron directivas.</td></tr>'}</tbody></table></div>
+ </section></div>`;
+}
+
+
+function tabX(){
+ const a=A(),plans=(S.ip||[]).filter(x=>x.ac===a.id&&!x.archived);
+ const archived=(S.ip||[]).filter(x=>x.ac===a.id&&x.archived);
+ const needs100h=hasInstruction(a)&&a.operation?.compensation==='yes'&&!plans.some(p=>p.applies==='yes'&&['cien','prog'].includes(p.kind));
+ const needsAnnual=!plans.some(p=>p.applies==='yes'&&['anual','prog'].includes(p.kind));
+ return `<div class="maint-regime mb-4"><strong>Régimen declarado: ${esc(OP_LABELS[opUse(a)])}</strong><p>${esc(regimeNotice(a))}</p>${a.operation?.program?`<p>Programa / manual informado: ${esc(a.operation.program)}</p>`:''}<p><strong>Inspecciones: 12 meses o 100 horas, según lo que venza primero cuando ambos controles correspondan.</strong> La anual y la de 100 horas se configuran por separado: una inspección anual puede satisfacer el requisito de las 100 horas, pero una de 100 horas no reemplaza la anual. Los límites se calculan desde los últimos asientos documentados y deben verificarse contra el régimen aplicable.</p>${needsAnnual?'<div class="maint-flag danger mt-3">No se registró seguimiento de la inspección anual ni programa alternativo aplicable. Confirmá el régimen y las constancias técnicas.</div>':''}${needs100h?'<div class="maint-flag danger mt-3">No se registró seguimiento de 100 horas ni programa alternativo aplicable. Verificá el régimen vigente y su documentación antes de operar.</div>':''}</div>${renderGuidePanel(a)}<div class="grid lg:grid-cols-3 gap-4">
+ <details class="maint-guidance h-fit"><summary>Configurar inspección reglamentaria (abrir cuando se necesite)</summary><section class="space-y-3 mt-3">
+ <div class="maint-eyebrow">SEGUIMIENTO DE AERONAVEGABILIDAD</div>
+ <h2 class="font-bold">Configurar inspección</h2>
+ <p class="maint-note">Seleccioná la plantilla y confirmá su aplicabilidad según matrícula, categoría, operación y programa autorizado. Los intervalos se pueden ajustar; nunca se presuponen exigibles. La inspección de 100 horas de 91.409(b) se vincula, entre otros supuestos, con instrucción por compensación en aeronave provista por quien la imparte.</p>
+ ${SEL('ip_kind','Tipo / referencia','<option value="anual">Inspección anual · RAAC 91.409</option><option value="cien">Inspección de 100 horas · RAAC 91.409</option><option value="prog">Inspección progresiva o programa aprobado</option><option value="alt">Altímetro / sistema estático (IFR) · 91.411</option><option value="trans">Transpondedor ATC · 91.413</option><option value="manual">Otra inspección según programa</option>').replace('<select','<select onchange="inspectionTemplateChanged()"')}
+ <div class="maint-record-grid">
+ <div class="wide">${F('ip_title','Nombre de la inspección','text','Inspección anual','maxlength="140"')}</div>
+ <div class="wide">${F('ip_ref','Norma / programa aplicable','text','RAAC 91.409 / 43.11 / Apéndice D','maxlength="250"')}</div>
+ ${F('ip_months','Intervalo orientativo (meses)','number',12)}
+ ${F('ip_hours','Intervalo orientativo (horas TTAF)','number',0)}
+ <div class="wide">${SEL('ip_applies','¿Aplica a esta aeronave?','<option value="undecided">Por confirmar</option><option value="yes">Sí, según documentación</option><option value="no">No aplica (justificar)</option>')}</div>
+ <div class="wide">${F('ip_note','Programa aprobado / motivo / referencia adicional','text','','maxlength="350"')}</div>
+ </div>
+ <button class="btn bg-amber-600 w-full" onclick="createInspectionPlan()">Incorporar al seguimiento</button>
+ <details class="maint-guidance"><summary>Guía de alcance de inspección</summary>
+ <p>Para inspecciones anual y de 100 horas, el <a target="_blank" rel="noopener noreferrer" href="https://www.argentina.gob.ar/sites/default/files/raac_parte_43.pdf">Apéndice D de RAAC 43</a> aborda, según corresponda: documentación y condición general, célula y mandos, cabina, motor, hélice, tren, alas y equipamiento.</p>
+ <p>El <a href="https://www.argentina.gob.ar/node/361158" target="_blank" rel="noopener noreferrer">material ANAC sobre programas de inspección</a> distingue un programa de inspección del programa de mantenimiento completo. También deben seguirse componentes con vida limitada, DA y limitaciones de aeronavegabilidad.</p>
+ <p>En operaciones de instrucción, verificá además las exigencias del centro o escuela, si corresponde. Esta guía no es una lista de inspección para ejecutar trabajos. La proyección por TTAF debe contrastarse con el tiempo en servicio y el programa oficial de la aeronave.</p>
+ </details>
+ </section></details>
+ <div class="lg:col-span-2 space-y-3">
+ <section class="card p-4"><h2 class="font-bold">Inspecciones de ${esc(a.reg)}</h2>
+ <p class="text-xs text-slate-400">No equivale a certificado de aeronavegabilidad, aprobación de retorno al servicio ni asiento oficial. Las constancias deben estar firmadas por quien corresponda.</p>
+ </section>
+ ${plans.map(p=>{
+  const st=inspectionState(p,a),history=inspectionRecords(p.id);
+  return `<section class="card p-4 space-y-3">
+  <div class="flex items-start justify-between gap-3 flex-wrap">
+    <div><h2 class="font-bold">${esc(p.title)}</h2><span class="text-xs text-slate-400">${esc(p.ref)}</span></div>
+    <span class="maint-pill ${st.level}">${st.label}</span>
+  </div>
+  <div class="maint-inspection-stats">
+   <div><b>${st.last?esc(st.last.date):'No registrada'}</b><span>${st.last&&p.kind==='cien'&&st.last.planId!==p.id?'Última anual aprobada (válida para 100 h)':'Última inspección en constancia'}</span></div>
+   <div><b>${st.nextDate||'—'}</b><span>Próxima fecha orientativa</span></div>
+   <div><b>${st.nextH!==null?f1(st.nextH)+' h':'—'}</b><span>Próxima hora TTAF orientativa</span></div>
+  </div>
+  ${p.note?'<p class="maint-record-line">Programa / aplicabilidad: '+esc(p.note)+'</p>':''}
+  <div class="text-xs text-slate-400">Intervalo cargado: ${p.months?esc(p.months)+' meses':''}${p.months&&p.hours?' / ':''}${p.hours?esc(p.hours)+' horas':''}${!p.months&&!p.hours?'según programa específico':''}. Se toma el primer límite alcanzado.</div>
+  ${p.applies==='yes'?`<details class="maint-guidance">
+     <summary>Registrar inspección ya realizada</summary>
+     <p class="maint-note">Transcribí únicamente una inspección terminada y asentada en la documentación técnica. La firma y aprobación no se realizan dentro de esta aplicación.</p>
+     <div class="maint-record-grid">
+     ${F('ir_date_'+p.id,'Fecha de inspección','date',today())}
+     ${F('ir_h_'+p.id,'Horas TTAF en la inspección','number',a.h)}
+     <div class="wide">${F('ir_scope_'+p.id,'Tipo y alcance verificado','text',esc(p.title),'maxlength="650"')}</div>
+     <div class="wide">${F('ir_tech_'+p.id,'Manual, capítulo o programa aplicable','text','','maxlength="300"')}</div>
+     <div class="wide">${F('ir_doc_'+p.id,'Referencia al asiento original firmado','text','','maxlength="250"')}</div>
+     ${F('ir_who_'+p.id,'Responsable técnico del asiento','text','','maxlength="150"')}
+     ${F('ir_lic_'+p.id,'Tipo y número de licencia / habilitación','text','','maxlength="110"')}
+     <div class="wide">${F('ir_reg_'+p.id,'Número de registro ANAC','text','','maxlength="90"')}</div>
+     <div class="wide">${SEL('ir_result_'+p.id,'Resultado según el asiento firmado','<option value="approved">Aprobada para retorno al servicio según constancia</option><option value="rejected">No aprobada / discrepancias</option>')}</div>
+     <div class="wide">${F('ir_discrep_'+p.id,'Discrepancias y referencia al listado entregado','text','','maxlength="650"')}</div>
+     </div>
+     <button class="btn bg-amber-600 w-full mt-3" onclick="addInspectionRecord('${p.id}')">Guardar transcripción privada</button>
+   </details>`:'<p class="maint-note">La aplicabilidad aún no está confirmada (o se declaró no aplicable). Para cargar una inspección, verificá el régimen y creá una configuración aplicable.</p>'}
+  <details class="maint-guidance"><summary>Historial de inspecciones (${history.length})</summary>
+   <div class="overflow-x-auto"><table class="w-full"><thead><tr><th>Fecha / TTAF</th><th>Resultado y alcance</th><th>Documento</th><th>Responsable</th><th></th></tr></thead><tbody>
+   ${history.map(e=>`<tr>
+   <td><strong>${esc(e.date)}</strong><div>${f1(e.h)} h</div></td>
+   <td><span class="maint-pill ${e.result==='rejected'?'danger':''}">${e.result==='approved'?'Aprobada según constancia':'No aprobada'}</span><div class="mt-2">${esc(e.scope)}</div>${e.discrepancies?'<div class="text-rose-300 mt-1">Discrepancias: '+esc(e.discrepancies)+'</div>':''}</td>
+   <td>${esc(e.doc)}<div class="text-slate-400">${esc(e.tech)}</div></td>
+   <td>${esc(e.who)}<div class="text-slate-400">Lic.: ${esc(e.lic)}<br>Reg. ANAC: ${esc(e.reg)}</div></td><td></td>
+   </tr>`).join('')||'<tr><td colspan="5">No hay constancias transcriptas.</td></tr>'}
+   </tbody></table></div>
+  </details>
+  <div class="text-right"><button class="text-xs text-slate-400 underline" onclick="archiveInspection('${p.id}')">Archivar configuración (conservar historial)</button></div>
+ </section>`}).join('')||'<section class="card p-4"><p class="maint-note">Todavía no configuraste inspecciones. Agregá las aplicables según el programa de esta aeronave y transcribí sus últimas constancias.</p></section>'}
+ ${archived.length?`<details class="maint-guidance"><summary>Configuraciones archivadas (${archived.length})</summary>${archived.map(p=>`<div class="maint-record-line mt-2">${esc(p.title)} · ${inspectionRecords(p.id).length} anotaciones <button class="btn bg-slate-700 ml-2" onclick="restoreInspection('${p.id}')">Restaurar</button></div>`).join('')}</details>`:''}
+ </div></div>`;
+}
+
+function R(){
+
+ $('sel').innerHTML=S.ac.map(a=>`<option value="${a.id}" ${a.id==S.sel?'selected':''}>${esc(a.reg)}</option>`).join('')||'<option>Sin aeronaves</option>';
+
+ $('nav').innerHTML=TABS.map(([k,l])=>`<button class="tab ${S.tab==k?'on':''}" onclick="S.tab='${k}';R()">${l}</button>`).join('');
+
+ if(!S.sel&&S.ac[0])S.sel=S.ac[0].id;
+
+ const f={a:tabA,x:tabX,n:tabN,k:tabK,s:tabS,b:tabB,u:tabU,i:tabI,d:tabD,r:tabR,p:tabP}[S.tab];
+
+ $('app').innerHTML=!currentUser?'<div class="card p-6">Iniciando sesión y recuperando tus datos...</div>':S.tab=='a'||A()?f():'<div class="card p-6 text-center text-slate-400">Primero cree una aeronave en la pestaña “Aeronaves”.</div>';
+
+ if(S.tab=='p'&&$('p_z'))$('p_z').value=S.hz;
+ renderOverview();
+}
+
+R();loadApp();
+
+</script></body></html>
