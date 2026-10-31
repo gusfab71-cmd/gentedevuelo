@@ -103,6 +103,11 @@ input[type=email]{width:100%;background:#122737;border:1px solid #7394aa;border-
    <a class="tile operational-link" data-visible-role="administrador secretaria" data-module="turnera" href="#"><h3>Turnera y reservas</h3><p>Solicitudes pendientes, confirmaciones y cancelaciones.</p><span class="pill ready">Operativa</span></a>
    <a class="tile operational-link" data-visible-role="administrador secretaria" data-module="informes" href="#"><h3>Informes de instrucción</h3><p>Revisar devoluciones, horas, combustible y aceite.</p><span class="pill ready">Operativa</span></a>
    <a class="tile operational-link" data-visible-role="administrador secretaria" data-module="finanzas" href="#"><h3>Contaduría y packs</h3><p>Cobros, packs, egresos y caja chica.</p><span class="pill ready">Operativa</span></a>
+   <a class="tile" data-visible-role="administrador" id="directorDailyCloseLink" href="#" style="text-decoration:none;color:inherit;border-color:#d7b66f">
+    <h3>Cierre diario de Dirección</h3>
+    <p>Ingresos y egresos, horas por aeronave, novedades de flota y reporte PDF listo para imprimir o compartir.</p>
+    <span class="pill ready">Exclusivo Director</span>
+   </a>
    <a class="tile operational-link" data-visible-role="administrador secretaria" href="#directorPeoplePanel"><h3>Alumnos e instructores</h3><p>Invitaciones, integrantes y desvinculaciones.</p><span class="pill ready">Operativa</span></a>
    <a class="tile operational-link" data-visible-role="administrador secretaria" data-module="flota" href="#"><h3>Flota y disponibilidad</h3><p>Registrar aeronaves y administrar su disponibilidad para reservas.</p><span class="pill ready">Operativa</span></a>
    <a class="tile operational-link" data-visible-role="administrador secretaria" data-module="recursos" href="#"><h3>Academia Aeronáutica</h3><p>Publicá apuntes, documentos y guías para los alumnos de tu escuela.</p><span class="pill ready">Operativa</span></a>
@@ -230,6 +235,10 @@ try{
  }
  for(const link of document.querySelectorAll('.operational-link[data-module]')){
    link.href=(link.dataset.module==='flota'?'flota-institucional.html':'operaciones-institucionales.html')+'?institucion='+encodeURIComponent(school.institution_id)+'&rol='+encodeURIComponent(school.my_role)+(labLogin?'&prueba=1':'')+(link.dataset.module==='flota'?'':'#'+encodeURIComponent(link.dataset.module));
+  }
+  if(school.my_role==='administrador'){
+   el('directorDailyCloseLink').href='cierre-diario-director.html?institucion='+
+    encodeURIComponent(school.institution_id)+'&rol=administrador'+(labLogin?'&prueba=1':'');
   }
   el('schoolName').textContent=school.institution_name;
  el('actorLine').textContent='Cuenta: '+(user.email||'verificada en Supabase');
