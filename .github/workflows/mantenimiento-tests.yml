@@ -4,6 +4,10 @@ on:
   pull_request:
     paths:
       - 'utilidades/mantenimiento-aeronaves.html'
+      - 'utilidades/gestion-aeronautica/mantenimiento-institucional.html'
+      - 'utilidades/gestion-aeronautica/flota-institucional.html'
+      - 'utilidades/gestion-aeronautica/cierre-diario-director.html'
+      - 'tests/aerosuite-maintenance-integration.test.cjs'
       - 'assets/maintenance-consumables.js'
       - 'tests/aircraft-maintenance.test.cjs'
       - '.github/workflows/mantenimiento-tests.yml'
@@ -11,6 +15,10 @@ on:
     branches: [main]
     paths:
       - 'utilidades/mantenimiento-aeronaves.html'
+      - 'utilidades/gestion-aeronautica/mantenimiento-institucional.html'
+      - 'utilidades/gestion-aeronautica/flota-institucional.html'
+      - 'utilidades/gestion-aeronautica/cierre-diario-director.html'
+      - 'tests/aerosuite-maintenance-integration.test.cjs'
       - 'assets/maintenance-consumables.js'
       - 'tests/aircraft-maintenance.test.cjs'
       - '.github/workflows/mantenimiento-tests.yml'
@@ -28,3 +36,6 @@ jobs:
           node-version: '22'
       - name: Probar mantenimiento de aeronaves
         run: node tests/aircraft-maintenance.test.cjs
+
+      - name: Verificar integración del mantenimiento institucional
+        run: node tests/aerosuite-maintenance-integration.test.cjs
