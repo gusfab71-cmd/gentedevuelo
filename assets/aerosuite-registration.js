@@ -10,7 +10,8 @@
   'input[name="log_aircraft_registration"]',
   'input[name="registration"]',
   'input[id="lessonAircraft"]',
-  'input[id="new-aircraft"]'
+  'input[id="new-aircraft"]',
+  'input[id="a_r"]'
  ].join(",");
  function normalize(raw){
   const text=String(raw??"").normalize("NFKC").toUpperCase().trim()
