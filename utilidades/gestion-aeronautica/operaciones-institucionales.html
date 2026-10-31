@@ -357,7 +357,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
         <button type="button" id="saveHourlyRate">Guardar tarifa</button>
         <p id="hourlyRateStatus" class="hint finance-span-2" role="status"></p>
         <p id="settleDurationPreview" class="hint finance-span-2" role="status" aria-live="polite">Ingresá horas y minutos declarados por el alumno.</p>
-       <label>Modalidad<select id="settleMode" name="mode"><option value="cash">Cobro en efectivo</option><option value="bank_transfer">Transferencia acreditada</option><option value="pack">Descontar de un pack</option></select></label>
+       <label>Medio de cobro<select id="settleMode" name="mode"><option value="cash">Cobro en efectivo</option><option value="bank_transfer">Transferencia acreditada</option></select></label>
        <label id="settlePackRow" class="finance-span-2" hidden>Pack del alumno<select id="settlePack" name="pack"><option value="">Elegí un pack con saldo suficiente</option></select></label>
        <label id="settleAmountRow">Importe calculado (editable)<input id="settleAmount" name="amount" type="text" inputmode="decimal" maxlength="23" placeholder="Ej.: 150.000"></label>
         <p id="settleCalculatedTotal" class="hint finance-span-2" role="status">Ingresá tiempo y tarifa para calcular el importe.</p>
@@ -375,12 +375,27 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
        <input type="checkbox" id="settleLogbookVerified" style="width:auto;margin-top:4px">
        Verifiqué el Libro de Vuelo firmado (opcional). Si no está disponible, quedará pendiente de cotejo.
       </label>
-      <button class="primary finance-submit" type="submit" id="settleSubmit">Cobrar / descontar vuelo</button>
+      <button class="primary finance-submit" type="submit" id="settleSubmit">Registrar cobro del vuelo</button>
       <p id="settleStatus" class="hint" role="status" aria-live="polite"></p>
      </form>
     </section>
    <section class="panel" id="packPurchasePanel" hidden>
-    <span class="eyebrow">02 · Horas prepagas</span><h3>Registrar compra y cobro de pack</h3>
+    <span class="eyebrow">02 · Horas prepagas</span><h3>Comparar y descontar pack</h3>
+     <p class="hint">Consultá el saldo sin modificarlo y luego confirmá el descuento si el alumno lo solicita.</p>
+     <div class="formgrid">
+       <label class="finance-span-2">Vuelo del alumno<select id="packCompareBooking"><option value="">Elegí el vuelo</option></select></label>
+       <label>Horas a descontar (centesimales)<input id="packCompareHours" type="text" inputmode="decimal" maxlength="7" placeholder="Ej.: 1.5"></label>
+       <label>Pack disponible<select id="packComparePack"><option value="">Elegí el pack</option></select></label>
+     </div>
+     <p id="packCompareResult" class="finance-hint" role="status">Elegí alumno, vuelo y horas para comparar el saldo del pack.</p>
+     <button type="button" id="packCompareButton" class="finance-submit">Comparar pack</button>
+     <label class="hint" style="display:flex;gap:8px;margin-top:9px;align-items:flex-start">
+       <input id="packDiscountConfirmed" type="checkbox" style="width:auto;margin-top:3px">
+       El alumno se presentó y autorizó descontar las horas informadas de su pack.
+     </label>
+     <button type="button" id="packDiscountButton" class="primary finance-submit">Descontar pack</button>
+     <p class="hint" id="packDiscountStatus" role="status"></p>
+     <h3 style="border-top:1px solid #43647b;padding-top:15px;margin-top:17px">Compra de un pack nuevo</h3>
     <p class="hint">Cuando el alumno paga, Secretaría registra sus horas. El pack queda en su cuenta y el importe entra una sola vez en caja.</p>
     <form id="packPurchaseForm">
      <div class="formgrid">
@@ -1674,7 +1689,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     finance=results[0];financeOverviewData=results[1];unsettledFlights=results[2]?.eligible||[];deskReviews=results[2]?.reviews||[];
     renderFinance();
     renderFinanceOverview();
-    renderSettlementCandidates();renderDeskReviews();updateCheckoutTotal();
+    renderSettlementCandidates();renderDeskReviews();updateCheckoutTotal();renderPackComparisonChoices();
    }else{
     finance=await rpc("aerosuite_finance_snapshot",{p_institution_id:inst});
     renderStudentPacks();
@@ -1722,6 +1737,75 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   }
 
   for(const field of document.querySelectorAll(".money-entry"))formatMoneyOnBlur(field);
+
+  // Comparación sin escritura; el descuento real usa la misma RPC transaccional del cobro.
+  function renderPackComparisonChoices(){
+   if(!manager)return;
+   const select=$("packCompareBooking"),prior=select.value;
+   select.length=1;
+   for(const f of unsettledFlights){
+    select.add(new Option(stamp(f.starts_at)+" · "+(f.student_email||"Alumno"),f.booking_id));
+   }
+   if(unsettledFlights.some(f=>f.booking_id===prior))select.value=prior;
+   syncPackComparisonPacks();
+  }
+  function syncPackComparisonPacks(){
+   const flight=deskFlightById($("packCompareBooking").value);
+   const select=$("packComparePack"),prior=select.value;select.length=1;
+   for(const p of (finance.packs||[]).filter(p=>flight&&p.student_id===flight.student_id&&Number(p.remaining_minutes)>0))
+    select.add(new Option("Saldo "+flightHoursCentesimal(Number(p.remaining_minutes))+" h · "+stamp(p.created_at),p.id));
+   if([...select.options].some(x=>x.value===prior))select.value=prior;
+   displayPackComparison();
+  }
+  function packComparison(){
+   const flight=deskFlightById($("packCompareBooking").value),minutes=centiToMinutes($("packCompareHours").value);
+   const pack=(finance.packs||[]).find(p=>flight&&p.student_id===flight.student_id&&p.id===$("packComparePack").value);
+   const valid=!!flight&&minutes!==null&&!!pack&&Number(pack.remaining_minutes)>=minutes;
+   return {flight,minutes,pack,valid};
+  }
+  function displayPackComparison(){
+   const item=packComparison();
+   if(!item.flight||item.minutes===null||!item.pack){
+    $("packCompareResult").textContent="Elegí vuelo, horas centesimales y pack con saldo.";
+   }else{
+    const balance=Number(item.pack.remaining_minutes)-item.minutes;
+    $("packCompareResult").textContent="Saldo actual: "+flightHoursCentesimal(Number(item.pack.remaining_minutes))+
+     " h · Consumo: "+flightHoursCentesimal(item.minutes)+" h · Saldo posterior: "+
+     (item.valid?flightHoursCentesimal(balance)+" h":"insuficiente")+
+     ". "+(item.valid?"Solo comparación: aún no se descontó.":"No se puede descontar con este pack.");
+   }
+   $("packDiscountButton").disabled=!school.can_write||!item.valid||!$("packDiscountConfirmed").checked;
+  }
+  $("packCompareBooking").addEventListener("change",syncPackComparisonPacks);
+  $("packCompareHours").addEventListener("input",displayPackComparison);
+  $("packComparePack").addEventListener("change",displayPackComparison);
+  $("packCompareButton").addEventListener("click",displayPackComparison);
+  $("packDiscountConfirmed").addEventListener("change",displayPackComparison);
+  let packDiscountRequestId=null;
+  $("packDiscountButton").addEventListener("click",async()=>{
+   const {flight,minutes,pack,valid}=packComparison(),btn=$("packDiscountButton"),message=$("packDiscountStatus");
+   if(!valid||!$("packDiscountConfirmed").checked){message.textContent="Verificá el pack y la autorización del alumno.";return;}
+   if(!confirm("¿Descontar "+flightHoursCentesimal(minutes)+" h centesimales de este pack? No se registra otro cobro."))return;
+   btn.disabled=true;message.textContent="Descontando del pack…";
+   if(!packDiscountRequestId)packDiscountRequestId=crypto.randomUUID();
+   try{
+    const result=await rpc("aerosuite_checkout_flight_at_desk",{
+     p_institution_id:inst,p_booking_id:flight.booking_id,p_book_minutes:minutes,p_mode:"pack",
+     p_pack_id:pack.id,p_amount:null,p_currency:"ARS",p_bank_ref:"",p_fiscal_ref:"",
+     p_note:"Descuento de pack por tiempo declarado por el alumno",
+     p_request_id:packDiscountRequestId,p_book_confirmed:false
+    });
+    if(!result?.ok)throw Error("No se confirmó el descuento.");
+    packDiscountRequestId=null;
+    $("packDiscountConfirmed").checked=false;
+    await loadFinance();
+    message.textContent=result.already_registered?
+     "Ya estaba descontado; no se duplicaron horas.":
+     "Descuento registrado. Se controlarán las horas cuando llegue el informe del Instructor.";
+   }catch(err){message.textContent="Error al descontar: "+safeError(err);}
+   finally{displayPackComparison();}
+  });
+
   const packPurchaseForm=$("packPurchaseForm");
   const paymentMethod=$("packPurchaseMethod");
   const bankReference=$("packPurchaseBankReference");
