@@ -226,6 +226,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
 @media(max-width:630px){.finance-workspaces{grid-template-columns:1fr}.finance-workspaces>.panel:last-child{grid-column:auto}.finance-overview .finance-kpis{grid-template-columns:1fr 1fr}.finance-overview .finance-meta{grid-template-columns:1fr}.finance-workspaces .formgrid{grid-template-columns:1fr}.finance-kpi .finance-kpi-value{font-size:20px}}
 </style>
 <script src="../../assets/supabase-2.117.2.min.js"></script><script src="../../assets/community-config.js"></script>
+<script src="../../assets/aerosuite-registration.js"></script>
 </head><body>
 <header><a class="brand" href="index.html">Aero<span>Suite</span><small>BY GENTE DE VUELO</small></a><nav><a id="backPortal" href="portal-escuela.html">Volver a mi portal</a><a href="../../index.html">Gente de Vuelo</a></nav></header>
 <main>
@@ -294,7 +295,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
       <label>Hora de llegada UTC (24 h)<input name="log_arrival_utc" type="time" step="60" required></label>
       <label>Cantidad de aterrizajes<input name="log_landings_count" type="number" min="1" max="99" step="1" required value="1"></label>
       <label>Marca/modelo de la aeronave<input name="log_aircraft_make" maxlength="80" required placeholder="Ej.: Cessna 150"></label>
-      <label>Matrícula<input name="log_aircraft_registration" maxlength="30" required placeholder="Ej.: LV-ABC"></label>
+      <label>Matrícula<input name="log_aircraft_registration" data-aerosuite-registration maxlength="18" required placeholder="Ej.: LV-ERT" autocapitalize="characters" autocomplete="off"></label>
       <label>Potencia (opcional)<input name="log_aircraft_power" maxlength="40" placeholder="Ej.: 100 HP"></label>
       <label>Clase de aeronave<select name="log_aircraft_class" required><option value="">Elegí la clase</option><option value="monomotor">Monomotor</option><option value="multimotor">Multimotor</option></select></label>
       <label>Tipo de vuelo<select name="log_flight_area" required><option value="aerodromo">Sobre aeródromo</option><option value="travesia">Travesía</option></select></label>
@@ -358,7 +359,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
        <label class="finance-span-2">Alumno<input id="settleStudent" value="Seleccioná un vuelo" readonly></label>
        <label>Instructor<input id="settleInstructor" value="—" readonly></label>
        <label class="finance-span-2">Aeronave utilizada · Matrícula
-        <input id="settleAircraft" name="aircraft_registration" type="text" list="settleAircraftOptions" maxlength="18" required autocomplete="off" placeholder="Ej.: LV-ABC">
+        <input id="settleAircraft" name="aircraft_registration" data-aerosuite-registration type="text" list="settleAircraftOptions" maxlength="18" required autocomplete="off" placeholder="Ej.: LV-ERT" autocapitalize="characters">
         <datalist id="settleAircraftOptions"></datalist>
        </label>
         <label>Horas de instrucción (centesimales)<input id="settleBookHours" name="book_hours" type="text" inputmode="decimal" maxlength="6" required placeholder="Ej.: 1.5"></label>
@@ -394,7 +395,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
      <div class="formgrid">
        <label class="finance-span-2">Vuelo del alumno<select id="packCompareBooking"><option value="">Elegí el vuelo</option></select></label>
        <label>Horas a descontar (centesimales)<input id="packCompareHours" type="text" inputmode="decimal" maxlength="7" placeholder="Ej.: 1.5"></label>
-       <label>Aeronave utilizada<input id="packCompareAircraft" type="text" list="settleAircraftOptions" maxlength="18" placeholder="Ej.: LV-ABC"></label>
+       <label>Aeronave utilizada<input id="packCompareAircraft" data-aerosuite-registration type="text" list="settleAircraftOptions" maxlength="18" placeholder="Ej.: LV-ERT" autocapitalize="characters"></label>
        <label>Pack disponible<select id="packComparePack"><option value="">Elegí el pack</option></select></label>
      </div>
      <p id="packCompareResult" class="finance-hint" role="status">Elegí alumno, vuelo y horas para comparar el saldo del pack.</p>
@@ -683,8 +684,8 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   };
   const times=["08:00","09:30","11:00","12:30","14:00","15:30","17:00","18:30"];
   let registeredAircraft=[];
-  const cleanRegistration=raw=>String(raw||"").trim().toUpperCase().replace(/\s+/g," ");
-  const validRegistration=raw=>/^[A-Z0-9][A-Z0-9 -]{2,17}$/.test(cleanRegistration(raw));
+  const cleanRegistration=raw=>AeroSuiteRegistration.normalize(raw);
+  const validRegistration=raw=>AeroSuiteRegistration.isValid(raw);
   async function loadAircraftChoices(){
    if(!manager)return;
    registeredAircraft=await rpc("aerosuite_aircraft_list",{p_institution_id:inst});
@@ -890,6 +891,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
      const previousClass=String(previous[key]||"").toLowerCase().trim();
      field.value=previousClass.includes("multimotor")?"multimotor":previousClass.includes("monomotor")?"monomotor":"";
     }else field.value=previous[key]??value;
+    if(key==="aircraft_registration")AeroSuiteRegistration.formatField(field);
    }
   }
   $("reportBooking").addEventListener("change",setReportLogbookDefaults);
@@ -1011,6 +1013,10 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     if(checkbox.checked){
      logbook={};
      for(const [key] of spec)logbook[key]=key==="landings_count"?Number(fields[key].value):fields[key].value.trim();
+     logbook.aircraft_registration=AeroSuiteRegistration.normalize(logbook.aircraft_registration);
+     if(!AeroSuiteRegistration.isValid(logbook.aircraft_registration)){
+      feedback.textContent="Indicá una matrícula válida (ej.: LV-ERT).";return;
+     }
     }
     if(!confirm("¿Guardar la corrección "+(simulation?"de PRUEBA":"del informe")+" y conservar la versión anterior?"))return;
     save.disabled=true;
@@ -1560,6 +1566,9 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
      const value=String(fd.get(input)||"").trim();
      logbook[key]=key==="landings_count"?Number(value):value;
     }
+    logbook.aircraft_registration=AeroSuiteRegistration.normalize(logbook.aircraft_registration);
+    if(!AeroSuiteRegistration.isValid(logbook.aircraft_registration))
+     throw Error("Matrícula inválida. Usá por ejemplo LV-ERT.");
     await rpc("aerosuite_submit_flight_report_with_logbook",{p_institution_id:inst,p_booking_id:fd.get("booking"),
      p_flight_minutes:durationMinutes,p_fuel_liters:Number(fd.get("fuel")),p_oil_liters:Number(fd.get("oil")),
      p_teaching_notes:teachingNotes.join("\n\n"),p_aircraft_notes:fd.get("aircraft"),p_logbook_entry:logbook});
@@ -1655,7 +1664,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    const selected=deskFlightById($("settleBooking").value);
    $("settleStudent").value=selected?.student_email||"Seleccioná un vuelo";
    $("settleInstructor").value=selected?.instructor_email||"No asignado todavía";
-   $("settleAircraft").value=selected?.aircraft||"";
+   $("settleAircraft").value=cleanRegistration(selected?.aircraft||"");
    syncSettlePack();updateCheckoutTotal();
   }
   function syncSettlePack(){
@@ -1845,7 +1854,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   }
   function syncPackComparisonPacks(){
    const flight=deskFlightById($("packCompareBooking").value);
-   $("packCompareAircraft").value=flight?.aircraft||"";
+   $("packCompareAircraft").value=cleanRegistration(flight?.aircraft||"");
    const select=$("packComparePack"),prior=select.value;select.length=1;
    for(const p of (finance.packs||[]).filter(p=>flight&&p.student_id===flight.student_id&&Number(p.remaining_minutes)>0))
     select.add(new Option("Saldo "+flightHoursCentesimal(Number(p.remaining_minutes))+" h · "+stamp(p.created_at),p.id));
