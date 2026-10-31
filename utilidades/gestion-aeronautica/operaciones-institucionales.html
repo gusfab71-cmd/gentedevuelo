@@ -1264,7 +1264,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     (entry.flight_period==="noche"?" · Noche":" · Día")+
     (entry.flight_role==="instructor"?" · Instructor":entry.flight_role==="copiloto"?" · Copiloto":" · Piloto");
    const fields=[
-    ["Fecha del vuelo",date],
+    ["Fecha del vuelo · UTC",date],
     ["Salida UTC",entry.departure_utc],
     ["Desde",entry.origin],
     ["Hasta",entry.destination],
@@ -1407,7 +1407,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     '<section class="sheet-section" aria-label="Datos de la operación"><h4 class="sheet-section-heading">'+
      '<span class="sheet-section-number">01</span> Datos de la operación</h4>'+
      '<div class="sheet-fields">'+
-      field("Fecha del vuelo",simpleDate(rawBook.flight_date||rawDate))+
+      field("Fecha del vuelo · UTC",simpleDate(rawBook.flight_date||rawDate))+
       field("Hora de salida · UTC",rawBook.departure_utc)+
       field("Hora de llegada · UTC",rawBook.arrival_utc)+
       field("Aeródromo de origen",rawBook.origin)+
