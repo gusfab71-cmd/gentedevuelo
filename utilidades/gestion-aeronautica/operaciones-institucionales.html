@@ -357,6 +357,10 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
        <label class="finance-span-2">Turno iniciado, pendiente o confirmado, sin liquidar<select id="settleBooking" name="booking" required><option value="">Elegí el vuelo</option></select></label>
        <label class="finance-span-2">Alumno<input id="settleStudent" value="Seleccioná un vuelo" readonly></label>
        <label>Instructor<input id="settleInstructor" value="—" readonly></label>
+       <label class="finance-span-2">Aeronave utilizada · Matrícula
+        <input id="settleAircraft" name="aircraft_registration" type="text" list="settleAircraftOptions" maxlength="18" required autocomplete="off" placeholder="Ej.: LV-ABC">
+        <datalist id="settleAircraftOptions"></datalist>
+       </label>
         <label>Horas de instrucción (centesimales)<input id="settleBookHours" name="book_hours" type="text" inputmode="decimal" maxlength="6" required placeholder="Ej.: 1.5"></label>
         <label>Tarifa por hora<input id="settleHourlyRate" type="text" inputmode="decimal" maxlength="23" placeholder="Ej.: 100.000"></label>
         <button type="button" id="saveHourlyRate">Guardar tarifa</button>
@@ -390,6 +394,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
      <div class="formgrid">
        <label class="finance-span-2">Vuelo del alumno<select id="packCompareBooking"><option value="">Elegí el vuelo</option></select></label>
        <label>Horas a descontar (centesimales)<input id="packCompareHours" type="text" inputmode="decimal" maxlength="7" placeholder="Ej.: 1.5"></label>
+       <label>Aeronave utilizada<input id="packCompareAircraft" type="text" list="settleAircraftOptions" maxlength="18" placeholder="Ej.: LV-ABC"></label>
        <label>Pack disponible<select id="packComparePack"><option value="">Elegí el pack</option></select></label>
      </div>
      <p id="packCompareResult" class="finance-hint" role="status">Elegí alumno, vuelo y horas para comparar el saldo del pack.</p>
@@ -677,13 +682,18 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    return Array.from({length:7},(_,i)=>addDays(monday,i));
   };
   const times=["08:00","09:30","11:00","12:30","14:00","15:30","17:00","18:30"];
+  let registeredAircraft=[];
+  const cleanRegistration=raw=>String(raw||"").trim().toUpperCase().replace(/\s+/g," ");
+  const validRegistration=raw=>/^[A-Z0-9][A-Z0-9 -]{2,17}$/.test(cleanRegistration(raw));
   async function loadAircraftChoices(){
    if(!manager)return;
-   const aircraft=await rpc("aerosuite_aircraft_list",{p_institution_id:inst});
-   const picker=$("bookingAircraft");const previous=picker.value;picker.length=1;
-   for(const a of aircraft.filter(x=>x.availability==="available"))
-    picker.add(new Option(a.registration+" · "+(a.model||"Sin modelo"),a.registration));
-   if([...picker.options].some(x=>x.value===previous))picker.value=previous;
+   registeredAircraft=await rpc("aerosuite_aircraft_list",{p_institution_id:inst});
+   const list=$("settleAircraftOptions");list.replaceChildren();
+   for(const aircraft of registeredAircraft){
+    const option=document.createElement("option");option.value=aircraft.registration;
+    option.label=(aircraft.model||"")+" · "+(aircraft.availability==="available"?"En servicio":"Fuera de servicio");
+    list.append(option);
+   }
   }
   async function loadWeek(){
    const dates=weekDates();bookings=await rpc("aerosuite_booking_schedule",{p_institution_id:inst,p_date_from:dates[0],p_date_to:dates[6]});
@@ -1645,6 +1655,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    const selected=deskFlightById($("settleBooking").value);
    $("settleStudent").value=selected?.student_email||"Seleccioná un vuelo";
    $("settleInstructor").value=selected?.instructor_email||"No asignado todavía";
+   $("settleAircraft").value=selected?.aircraft||"";
    syncSettlePack();updateCheckoutTotal();
   }
   function syncSettlePack(){
@@ -1687,7 +1698,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
       "No hay un pack con saldo suficiente para los "+flightHoursMinutes(entered)+" h declarados.":
      bank?"Confirmá que la transferencia ya se acreditó. Las horas se controlarán al recibir el informe.":
       "El efectivo se registra ahora; las horas declaradas se contrastarán después con el informe.");
-   $("settleSubmit").disabled=!school.can_write||!current||!validMinutes||
+   $("settleSubmit").disabled=!school.can_write||!current||!validMinutes||!validRegistration($("settleAircraft").value)||
     !$("settleBookConfirmed").checked||pack&&$("settlePack").options.length<=1;
   }
   function renderSettlementCandidates(){
@@ -1834,6 +1845,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   }
   function syncPackComparisonPacks(){
    const flight=deskFlightById($("packCompareBooking").value);
+   $("packCompareAircraft").value=flight?.aircraft||"";
    const select=$("packComparePack"),prior=select.value;select.length=1;
    for(const p of (finance.packs||[]).filter(p=>flight&&p.student_id===flight.student_id&&Number(p.remaining_minutes)>0))
     select.add(new Option("Saldo "+flightHoursCentesimal(Number(p.remaining_minutes))+" h · "+stamp(p.created_at),p.id));
@@ -1843,7 +1855,8 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   function packComparison(){
    const flight=deskFlightById($("packCompareBooking").value),minutes=centiToMinutes($("packCompareHours").value);
    const pack=(finance.packs||[]).find(p=>flight&&p.student_id===flight.student_id&&p.id===$("packComparePack").value);
-   const valid=!!flight&&minutes!==null&&!!pack&&Number(pack.remaining_minutes)>=minutes;
+   const valid=!!flight&&minutes!==null&&!!pack&&Number(pack.remaining_minutes)>=minutes&&
+    validRegistration($("packCompareAircraft").value);
    return {flight,minutes,pack,valid};
   }
   function displayPackComparison(){
@@ -1862,6 +1875,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   $("packCompareBooking").addEventListener("change",syncPackComparisonPacks);
   $("packCompareHours").addEventListener("input",displayPackComparison);
   $("packComparePack").addEventListener("change",displayPackComparison);
+  $("packCompareAircraft").addEventListener("input",displayPackComparison);
   $("packCompareButton").addEventListener("click",displayPackComparison);
   $("packDiscountConfirmed").addEventListener("change",displayPackComparison);
   let packDiscountRequestId=null;
@@ -1872,9 +1886,9 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    btn.disabled=true;message.textContent="Descontando del pack…";
    if(!packDiscountRequestId)packDiscountRequestId=crypto.randomUUID();
    try{
-    const result=await rpc("aerosuite_checkout_flight_at_desk",{
+    const result=await rpc("aerosuite_checkout_flight_with_aircraft",{
      p_institution_id:inst,p_booking_id:flight.booking_id,p_book_minutes:minutes,p_mode:"pack",
-     p_pack_id:pack.id,p_amount:null,p_currency:"ARS",p_bank_ref:"",p_fiscal_ref:"",
+     p_aircraft_registration:cleanRegistration($("packCompareAircraft").value),p_pack_id:pack.id,p_amount:null,p_currency:"ARS",p_bank_ref:"",p_fiscal_ref:"",
      p_note:"Descuento de pack por tiempo declarado por el alumno",
      p_request_id:packDiscountRequestId,p_book_confirmed:false
     });
@@ -2008,6 +2022,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
 
   $("financeCurrency").addEventListener("change",renderFinanceOverview);
   $("settleBooking").addEventListener("change",syncSettleFlight);
+  $("settleAircraft").addEventListener("input",syncSettleMode);
   $("settleMode").addEventListener("change",syncSettleMode);
   $("settleBookHours").addEventListener("input",()=>{syncSettlePack();updateCheckoutTotal();});
   $("settleBookConfirmed").addEventListener("change",syncSettleMode);
@@ -2021,6 +2036,8 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    const selectedPack=mode==="pack"?String(fd.get("pack")||""):null;
    const amount=mode==="pack"?null:parseMoney(fd.get("amount"));
    const declaredMinutes=centiToMinutes($("settleBookHours").value);
+   const aircraft=cleanRegistration(fd.get("aircraft_registration"));
+   if(!validRegistration(aircraft)){$("settleStatus").textContent="Indicá la matrícula que se utilizó (ej.: LV-ABC).";return;}
    const bankRef=String(fd.get("bank_reference")||"").trim();
    const message=$("settleStatus"),button=$("settleSubmit");
    if(!flight){
@@ -2053,8 +2070,9 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     " El informe del Instructor se controlará después."))return;
    button.disabled=true;message.textContent="Guardando cobro o descuento…";
    try{
-    const result=await rpc("aerosuite_checkout_flight_at_desk",{
-     p_institution_id:inst,p_booking_id:booking,p_book_minutes:declaredMinutes,p_mode:mode,
+    const result=await rpc("aerosuite_checkout_flight_with_aircraft",{
+    p_institution_id:inst,p_booking_id:booking,p_book_minutes:declaredMinutes,p_mode:mode,
+    p_aircraft_registration:aircraft,
      p_pack_id:selectedPack||null,p_amount:amount,
      p_currency:String(fd.get("currency")||"ARS"),
      p_bank_ref:bankRef,p_fiscal_ref:mode==="pack"?"":String(fd.get("fiscal_reference")||"").trim(),
