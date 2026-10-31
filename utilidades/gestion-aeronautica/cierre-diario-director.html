@@ -75,6 +75,7 @@ th{color:#d9e8f2;background:#274358}
  <button type="button" id="loadReport">Generar informe acumulado</button>
  <button class="primary" type="button" id="printReport" disabled>Imprimir / Guardar PDF</button>
  <a id="manageFleet" class="button" href="flota-institucional.html">Gestionar flota</a>
+ <a id="manageMaintenance" class="button" href="mantenimiento-institucional.html">Mantenimiento de Aeronaves</a>
 </div>
 <p class="small no-print">Dejá «Desde» vacío para acumular desde la primera operación registrada. El informe se genera únicamente cuando lo pedís. Para descargarlo, elegí «Guardar como PDF» en la ventana de impresión.</p>
 <div id="reportSections" hidden>
@@ -112,6 +113,22 @@ th{color:#d9e8f2;background:#274358}
  <div id="fleetSummary" class="summary"></div>
  <div id="fleetList" class="fleet-grid"></div>
  <div id="fleetUnknown" class="notice" hidden></div>
+</section>
+<section class="panel">
+ <h2>Seguimiento de mantenimiento institucional</h2>
+ <p class="small">Consulta del registro técnico auxiliar, vinculado por matrícula a Flota y disponibilidad. Los trabajos, inspecciones y discrepancias son transcripciones; no constituyen una aprobación técnica ni prueban aeronavegabilidad.</p>
+ <p id="technicalUpdated" class="small muted"></p>
+ <div id="technicalTotals" class="summary"></div>
+ <div class="table-wrap"><table>
+  <thead><tr><th>Matrícula</th><th>TTAF manual</th><th>Inspecciones configuradas</th><th>Controles registrados</th><th>Discrepancias abiertas</th><th>Intervenciones transcriptas</th></tr></thead>
+  <tbody id="technicalAircraftRows"></tbody>
+ </table></div>
+ <h3 style="margin-top:20px">Novedades técnicas con fecha documental en el período</h3>
+ <p class="small">El detalle se presenta por la fecha declarada en la documentación de mantenimiento. Puede diferir del día en que se cargó el dato en AeroSuite. Los gastos asociados deben registrarse aparte en Contaduría para aparecer en el balance económico.</p>
+ <div class="table-wrap"><table>
+  <thead><tr><th>Fecha</th><th>Matrícula</th><th>Clase de novedad</th><th>Detalle / referencia</th><th>Estado técnico registrado</th></tr></thead>
+  <tbody id="technicalDailyRows"></tbody>
+ </table></div>
 </section>
 </div>
 <p class="muted small">AeroSuite by Gente de Vuelo · Documento interno de control de Dirección. Horas del Libro de Vuelo: UTC; fechas de turnera, cobros y cierres: ART. No sustituye los registros técnicos oficiales.</p>
@@ -291,6 +308,62 @@ th{color:#d9e8f2;background:#274358}
    unmatched.map(x=>(x.registration||"SIN INFORMAR")+" · "+hours(x.approved_minutes)+" validadas / "+
    hours(x.provisional_minutes)+" provisionales").join("; ")+". Incorporalas en «Gestionar flota» para completar el seguimiento.");
  }
+ function renderMaintenance(snapshot,period){
+  const p=snapshot?.payload||{},planes=Array.isArray(p.ac)?p.ac:[],
+   discrepancies=Array.isArray(p.dx)?p.dx:[],plans=Array.isArray(p.ip)?p.ip:[],
+   services=Array.isArray(p.sv)?p.sv:[],controls=Array.isArray(p.ct)?p.ct:[],
+   works=Array.isArray(p.mx)?p.mx:[],inspections=Array.isArray(p.ie)?p.ie:[];
+  const table=$("technicalAircraftRows"),daily=$("technicalDailyRows"),stats=$("technicalTotals");
+  table.replaceChildren();daily.replaceChildren();stats.replaceChildren();
+  const open=discrepancies.filter(d=>d.status!=="closed");
+  stats.append(tile("Matrículas con ficha técnica",String(planes.length),"Se originan desde la Flota institucional"));
+  stats.append(tile("Novedades técnicas abiertas",String(open.length),"Verificar con el responsable técnico autorizado"));
+  stats.append(tile("Intervenciones registradas",String(works.length),"Transcripciones auxiliares, no certificados"));
+  showText("technicalUpdated",snapshot?.updated_at?
+   "Última actualización del módulo: "+stamp(snapshot.updated_at)+
+   " · Registro consultado cuando Dirección generó este informe.":
+   "Aún no hay ficha de mantenimiento guardada. Se mantienen las horas y los estados de flota informados por separado.");
+  for(const a of planes){
+   const serviceIds=new Set(services.filter(x=>x.ac===a.id).map(x=>x.id));
+   const row=document.createElement("tr");
+   cell(row,a.reg||"Sin matrícula");
+   cell(row,Number.isFinite(Number(a.h))?
+    Number(a.h).toLocaleString("es-AR")+" h · registradas manualmente":"No informada");
+   cell(row,plans.filter(x=>x.ac===a.id&&!x.archived).length);
+   cell(row,controls.filter(x=>serviceIds.has(x.sv)).length);
+   cell(row,open.filter(x=>x.ac===a.id).length);
+   cell(row,works.filter(x=>x.ac===a.id).length);
+   table.append(row);
+  }
+  if(!planes.length){
+   const row=document.createElement("tr"),td=document.createElement("td");
+   td.colSpan=6;td.textContent="No se cargaron fichas institucionales de mantenimiento.";
+   row.append(td);table.append(row);
+  }
+  const registrations=new Map(planes.map(x=>[x.id,x.reg||"No informada"]));
+  const items=[
+   ...discrepancies.map(x=>({date:x.date,ac:x.ac,kind:"Novedad informada",detail:x.description||"",
+    ref:x.reference||"",status:x.status==="closed"?"Cerrada según registro":"Abierta"})),
+   ...works.map(x=>({date:x.date,ac:x.ac,kind:"Intervención",
+    detail:x.desc||"",ref:x.ref||"",status:"Transcripción auxiliar"})),
+   ...inspections.map(x=>({date:x.date,ac:x.ac,kind:"Inspección documentada",
+    detail:x.scope||"",ref:x.doc||"",status:x.result==="approved"?
+     "Aprobada según constancia declarada":"No aprobada según constancia"}))
+  ].filter(x=>/^\d{4}-\d{2}-\d{2}$/.test(String(x.date||""))&&
+   x.date>=period.from&&x.date<=period.to)
+   .sort((a,b)=>a.date.localeCompare(b.date)||String(a.kind).localeCompare(String(b.kind)));
+  for(const item of items){
+   const row=document.createElement("tr");
+   cell(row,dateLabel(item.date));cell(row,registrations.get(item.ac)||"Sin matrícula vinculada");
+   cell(row,item.kind);cell(row,item.detail+(item.ref?" · Ref.: "+item.ref:""));cell(row,item.status);
+   daily.append(row);
+  }
+  if(!items.length){
+   const row=document.createElement("tr"),td=document.createElement("td");
+   td.colSpan=5;td.textContent="No hay novedades técnicas con fecha documental dentro del período.";
+   row.append(td);daily.append(row);
+  }
+ }
  async function loadReport(){
   const from=$("periodFrom").value,to=$("periodTo").value;
   if(!validDay(to)||to>todayART()||(from&&(!validDay(from)||from>to))){
@@ -307,15 +380,18 @@ th{color:#d9e8f2;background:#274358}
     throw Error("La consulta no devolvió el período completo.");
    // El detalle individual y la flota consultan el último día; el balance de TODO
    // el período se obtiene directamente de los movimientos originales.
-   const lastDay=await rpc("aerosuite_daily_close_snapshot",{p_institution_id:inst,p_day:to});
+   const [lastDay,maintenance]=await Promise.all([
+    rpc("aerosuite_daily_close_snapshot",{p_institution_id:inst,p_day:to}),
+    rpc("aerosuite_institution_maintenance_get",{p_institution_id:inst})
+   ]);
    if(!lastDay||lastDay.day!==to)throw Error("No se pudo consultar la flota.");
-   report={period,lastDay};
+   report={period,lastDay,maintenance};
    if(!from)$("periodFrom").placeholder="Desde el primer registro";
    showText("reportTitle",school.institution_name+" · "+dateLabel(period.from)+" al "+dateLabel(period.to));
    showText("reportGenerated","Generado a pedido el "+stamp(period.as_of)+
     " · "+period.days.length+" día(s) incluidos (ART), con y sin movimientos");
    renderMoney(period);renderPeriodDays(period);
-   renderMovements(lastDay);renderFleet(lastDay);
+   renderMovements(lastDay);renderFleet(lastDay);renderMaintenance(maintenance,period);
    $("reportSections").hidden=false;$("printReport").disabled=false;
    notice.textContent="Informe acumulado listo: "+dateLabel(period.from)+" al "+dateLabel(period.to)+
     ". Podés imprimirlo o guardarlo como PDF.";
@@ -332,6 +408,8 @@ th{color:#d9e8f2;background:#274358}
   if(!school)throw Error("El cierre diario es exclusivo del Director/Administrador de esta institución.");
   $("goBack").href="portal-escuela.html?institucion="+encodeURIComponent(inst)+"&rol=administrador&elegida=1"+(test?"&prueba=1":"");
   $("manageFleet").href="flota-institucional.html?institucion="+encodeURIComponent(inst)+"&rol=administrador"+(test?"&prueba=1":"");
+  $("manageMaintenance").href="mantenimiento-institucional.html?institucion="+
+   encodeURIComponent(inst)+"&rol=administrador"+(test?"&prueba=1":"");
   $("periodTo").value=todayART();$("periodTo").max=todayART();
   $("periodFrom").max=todayART();
   $("dashboard").hidden=false;
