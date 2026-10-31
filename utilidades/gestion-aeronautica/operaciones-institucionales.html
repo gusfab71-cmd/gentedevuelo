@@ -273,11 +273,13 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     <p id="reportEligibilityHint" class="hint">El informe se completa después de finalizar el turno de vuelo, nunca por anticipado.</p>
     <div class="formgrid">
      <label>Vuelo asignado<select name="booking" id="reportBooking" required></select></label>
-     <label>Minutos reales de vuelo<input name="minutes" type="number" min="1" max="600" required></label>
+     <label>Duración real · horas<input id="reportDurationHours" name="duration_hours" type="number" min="0" max="10" step="1" required placeholder="Ej.: 1"></label>
+     <label>Minutos restantes<input id="reportDurationMinutes" name="duration_minutes" type="number" min="0" max="59" step="1" required value="0" placeholder="Ej.: 40"></label>
      <label>Combustible cargado (litros)<input name="fuel" type="number" step=".01" min="0" value="0" required></label>
      <label>Aceite agregado (litros)<input name="oil" type="number" step=".01" min="0" value="0" required></label>
     </div>
 
+    <p id="reportDurationPreview" class="hint" role="status" aria-live="polite">Ingresá las horas y minutos reales.</p>
     <fieldset class="panel" style="margin:14px 0">
      <legend style="padding:0 8px;font-weight:750">Datos del vuelo · Libro de Vuelo</legend>
      <p class="hint">Registrá los datos reales del vuelo que se asentaron en el Libro de Vuelo; horarios en UTC, no los horarios planificados de la turnera.</p>
@@ -316,7 +318,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    <p id="financeHelp">Los packs descontados son consumo de horas, no un segundo ingreso. Los cobros reales, egresos y caja chica quedan individualizados.</p>
    <div id="studentFlightHours" hidden aria-live="polite"><section class="panel" id="studentPackArea" style="margin:0 0 16px"><span class="eyebrow">Horas prepagas</span><h3>Mis packs de horas</h3><div class="cards" id="studentPackSummary"></div><div class="list" id="studentPackList"></div></section>
     <div class="cards" id="flightHoursCards"></div>
-    <p class="hint">Los minutos de cada vuelo validado se suman sin redondeos. Los tiempos se expresan en horas y minutos, conforme al sistema sexagesimal del procedimiento ANAC aprobado por la Resolución 470/2025.</p>
+    <p class="hint">Los minutos reales se suman sin redondeos. AeroSuite muestra HH:MM y su equivalente en horas centesimales con dos decimales. El total se calcula desde los minutos originales, nunca sumando equivalencias redondeadas.</p>
     <div id="labStudentHours" class="list" hidden></div>
     <h3>Mis vuelos realizados</h3>
     <div class="list" id="flightHoursHistory"></div>
@@ -350,7 +352,10 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
       <div class="formgrid">
        <label class="finance-span-2">Turno confirmado, ya iniciado y sin liquidar<select id="settleBooking" name="booking" required><option value="">Elegí el vuelo</option></select></label>
        <label class="finance-span-2">Alumno<input id="settleStudent" value="Seleccioná un vuelo" readonly></label>
-       <label>Instructor<input id="settleInstructor" value="—" readonly></label><label>Minutos del Libro de Vuelo<input id="settleBookMinutes" name="book_minutes" type="number" min="1" max="600" step="1" required placeholder="Ej.: 75"></label>
+       <label>Instructor<input id="settleInstructor" value="—" readonly></label>
+        <label>Horas del Libro de Vuelo<input id="settleBookHours" name="book_hours" type="number" min="0" max="10" step="1" required placeholder="Ej.: 1"></label>
+        <label>Minutos restantes<input id="settleBookMinutes" name="book_minutes" type="number" min="0" max="59" step="1" required value="0" placeholder="Ej.: 40"></label>
+        <p id="settleDurationPreview" class="hint finance-span-2" role="status" aria-live="polite">Ingresá horas y minutos firmados en el Libro de Vuelo.</p>
        <label>Modalidad<select id="settleMode" name="mode"><option value="cash">Cobro en efectivo</option><option value="bank_transfer">Transferencia acreditada</option><option value="pack">Descontar de un pack</option></select></label>
        <label id="settlePackRow" class="finance-span-2" hidden>Pack del alumno<select id="settlePack" name="pack"><option value="">Elegí un pack con saldo suficiente</option></select></label>
        <label id="settleAmountRow">Importe cobrado<input id="settleAmount" name="amount" type="number" min=".01" max="1000000000000" step=".01"></label>
@@ -1018,7 +1023,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     const route=[e.origin||"—",e.destination||"—"].join(" → ");
     addCell(route,"history-route");
     const mins=validFlightMinutes(r.flight_minutes);
-    addCell(mins===null?"—":flightHoursMinutes(mins)+" h","history-duration");
+    addCell(mins===null?"—":flightHoursMinutes(mins)+" h · "+flightHoursCentesimal(mins)+" cent.","history-duration");
     const show=document.createElement("button");show.type="button";
     show.textContent="Ver informe";show.setAttribute("aria-label","Ver informe completo del "+date);
     show.onclick=()=>{expandedReadStudentReports.add(key);rerenderStudentReportLists();};
@@ -1203,6 +1208,27 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    return String(Math.floor(minutes/60))+":"+String(minutes%60).padStart(2,"0");
   }
 
+  // Los minutos enteros son la fuente de verdad. La conversión centesimal solo se redondea al mostrar.
+  function flightHoursCentesimal(minutes){
+   return (Math.round(minutes*100/60)/100).toLocaleString("es-AR",{minimumFractionDigits:2,maximumFractionDigits:2});
+  }
+  function durationInputMinutes(hElement,mElement){
+   const h=hElement.value.trim(),m=mElement.value.trim();
+   if(h===""||m==="")return null;
+   const hours=Number(h),minutes=Number(m);
+   if(!Number.isInteger(hours)||!Number.isInteger(minutes)||hours<0||hours>10||minutes<0||minutes>59)return null;
+   return validFlightMinutes(60*hours+minutes);
+  }
+  function durationSummary(minutes){
+   return minutes===null?"Ingresá horas y minutos válidos (de 0:01 a 10:00).":
+    "Tiempo exacto: "+flightHoursMinutes(minutes)+" (HH:MM) · Equivalencia: "+flightHoursCentesimal(minutes)+" h centesimales";
+  }
+  function syncReportDuration(){
+   $("reportDurationPreview").textContent=durationSummary(durationInputMinutes($("reportDurationHours"),$("reportDurationMinutes")));
+  }
+  for(const id of ["reportDurationHours","reportDurationMinutes"])$(id).addEventListener("input",syncReportDuration);
+  syncReportDuration();
+
   function studentReportSheet(r,simulation=false){
    const rawBook=r.logbook_entry&&typeof r.logbook_entry==="object"?r.logbook_entry:{};
    const notes=parseTeachingNotes(r.teaching_notes);
@@ -1221,7 +1247,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     ?field("Cantidad de aterrizajes",rawBook.landings_count)
     :rawBook.flight_count!==undefined?field("Cantidad de vuelos (registro anterior)",rawBook.flight_count):"";
    const mins=validFlightMinutes(r.flight_minutes);
-   const duration=mins===null?"Sin registrar":flightHoursMinutes(mins)+" h";
+   const duration=mins===null?"Sin registrar":flightHoursMinutes(mins)+" h ("+flightHoursCentesimal(mins)+" h centesimales)";
    const rawDate=rawBook.flight_date?simpleDate(rawBook.flight_date):
       (r.original_starts_at||r.starts_at?arDate(r.original_starts_at||r.starts_at).split("-").reverse().join("/"):"—");
    const plane=[rawBook.aircraft_make,rawBook.aircraft_registration].filter(Boolean).join(" · ")||"No informada";
@@ -1296,10 +1322,10 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    const last=document.createElement("div"),total=document.createElement("div");
    last.className=total.className="card";
    last.innerHTML="<strong>Último vuelo · "+esc(stamp(latest.starts_at))+"</strong>"+
-    "<h3>"+esc(flightDuration(lastMinutes))+"</h3><p>"+esc(flightHoursMinutes(lastMinutes))+" (HH:MM)</p>";
+    "<h3>"+esc(flightDuration(lastMinutes))+"</h3><p>"+esc(flightHoursMinutes(lastMinutes))+" (HH:MM) · "+esc(flightHoursCentesimal(lastMinutes))+" h centesimales</p>";
    total.innerHTML="<strong>Total acumulado en AeroSuite</strong>"+
     "<h3>"+esc(flightDuration(totalMinutes))+"</h3>"+
-    "<p>"+esc(flightHoursMinutes(totalMinutes))+" (HH:MM) · "+flights.length+
+    "<p>"+esc(flightHoursMinutes(totalMinutes))+" (HH:MM) · "+esc(flightHoursCentesimal(totalMinutes))+" h centesimales · "+flights.length+
     " "+(flights.length===1?"vuelo":"vuelos")+" validados</p>";
    cards.append(last,total);
    for(const r of flights){
@@ -1307,7 +1333,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     const minutes=validFlightMinutes(r.flight_minutes);
     item.innerHTML='<div class="row between"><strong>'+esc(stamp(r.starts_at))+'</strong>'+
      '<strong>'+esc(flightDuration(minutes))+'</strong></div>'+
-     '<p class="hint">'+esc(flightHoursMinutes(minutes))+' (HH:MM)</p>'+
+     '<p class="hint">'+esc(flightHoursMinutes(minutes))+' (HH:MM) · '+esc(flightHoursCentesimal(minutes))+' h centesimales</p>'+
      (r.logbook_entry?.aircraft_registration?
       '<p class="hint">Aeronave: '+esc(r.logbook_entry.aircraft_registration)+'</p>':"");
     history.append(item);
@@ -1385,6 +1411,8 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   $("reportForm").addEventListener("submit",async e=>{
    e.preventDefault();const f=e.currentTarget,fd=new FormData(f),button=f.querySelector("button");button.disabled=true;
    try{
+    const durationMinutes=durationInputMinutes($("reportDurationHours"),$("reportDurationMinutes"));
+    if(durationMinutes===null)throw Error("Ingresá horas y minutos válidos (hasta 10:00).");
     const practice=String(fd.get("practice")||"").trim();
     const feedback=String(fd.get("feedback")||"").trim();
     const next=String(fd.get("next")||"").trim();
@@ -1396,9 +1424,9 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
      logbook[key]=key==="landings_count"?Number(value):value;
     }
     await rpc("aerosuite_submit_flight_report_with_logbook",{p_institution_id:inst,p_booking_id:fd.get("booking"),
-     p_flight_minutes:Number(fd.get("minutes")),p_fuel_liters:Number(fd.get("fuel")),p_oil_liters:Number(fd.get("oil")),
+     p_flight_minutes:durationMinutes,p_fuel_liters:Number(fd.get("fuel")),p_oil_liters:Number(fd.get("oil")),
      p_teaching_notes:teachingNotes.join("\n\n"),p_aircraft_notes:fd.get("aircraft"),p_logbook_entry:logbook});
-    f.reset();stat.textContent="Informe y registro de vuelo presentados a Administración para su revisión.";await loadReports();
+    f.reset();syncReportDuration();stat.textContent="Informe y registro de vuelo presentados a Administración para su revisión.";await loadReports();
    }catch(e){stat.textContent="No se pudo enviar el informe: "+safeError(e);}finally{button.disabled=false;}
   });
   function renderFinanceBookingChoices(){
@@ -1466,9 +1494,9 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   function syncSettlePack(){
    if(!manager)return;
    const selected=deskFlightById($("settleBooking").value);
-   const minutes=Number($("settleBookMinutes").value);
+   const minutes=durationInputMinutes($("settleBookHours"),$("settleBookMinutes"));
    const select=$("settlePack");const last=select.value;select.length=1;
-   if(selected&&Number.isInteger(minutes)&&minutes>0){
+   if(selected&&minutes!==null){
     for(const p of (finance.packs||[]).filter(x=>
       x.student_id===selected.student_id&&Number(x.remaining_minutes)>=minutes)){
      select.add(new Option("Saldo "+flightHoursMinutes(Number(p.remaining_minutes))+
@@ -1487,12 +1515,13 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    $("settlePack").required=pack;$("settleAmount").required=!pack;
    $("settleBankReference").required=bank;
    const current=deskFlightById($("settleBooking").value);
-   const entered=Number($("settleBookMinutes").value);
-   const validMinutes=$("settleBookMinutes").value!==""&&Number.isInteger(entered)&&entered>=1&&entered<=600;
+   const entered=durationInputMinutes($("settleBookHours"),$("settleBookMinutes"));
+   const validMinutes=entered!==null;
+    $("settleDurationPreview").textContent=durationSummary(entered);
    $("settleHelp").textContent=!current?
     "Elegí una reserva confirmada cuyo vuelo haya comenzado. Secretaría debe confirmar que efectivamente se realizó.":
     !validMinutes?
-     "Copiá los minutos del Libro de Vuelo firmado. No hace falta esperar el informe escrito.":
+     "Ingresá las horas y minutos del Libro de Vuelo firmado. No hace falta esperar el informe escrito.":
      pack?$("settlePack").options.length>1?
       "Se descontarán "+flightHoursMinutes(entered)+
       " h del pack del Alumno y quedarán pendientes de control contra el informe del Instructor.":
@@ -1748,7 +1777,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   $("financeCurrency").addEventListener("change",renderFinanceOverview);
   $("settleBooking").addEventListener("change",syncSettleFlight);
   $("settleMode").addEventListener("change",syncSettleMode);
-  $("settleBookMinutes").addEventListener("input",syncSettlePack);
+  for(const id of ["settleBookHours","settleBookMinutes"])$(id).addEventListener("input",syncSettlePack);
   $("settleBookConfirmed").addEventListener("change",syncSettleMode);
   let pendingSettlementRequest=null,pendingSettlementSignature="";
   $("flightSettlementForm").addEventListener("submit",async event=>{
@@ -1759,16 +1788,14 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    const mode=String(fd.get("mode")||"");
    const selectedPack=mode==="pack"?String(fd.get("pack")||""):null;
    const amount=mode==="pack"?null:Number(fd.get("amount"));
-   const rawMinutes=String(fd.get("book_minutes")||"").trim();
-   const declaredMinutes=Number(rawMinutes);
+   const declaredMinutes=durationInputMinutes($("settleBookHours"),$("settleBookMinutes"));
    const bankRef=String(fd.get("bank_reference")||"").trim();
    const message=$("settleStatus"),button=$("settleSubmit");
    if(!flight){
     message.textContent="Elegí un turno confirmado cuyo vuelo ya se realizó.";return;
    }
-   if(!rawMinutes||!Number.isInteger(declaredMinutes)||declaredMinutes<1||declaredMinutes>600||
-      !document.getElementById("settleBookConfirmed").checked){
-    message.textContent="Copiá y confirmá los minutos del Libro de Vuelo firmado.";return;
+   if(declaredMinutes===null||!document.getElementById("settleBookConfirmed").checked){
+    message.textContent="Ingresá y confirmá las horas y minutos del Libro de Vuelo firmado.";return;
    }
    if(mode==="pack"&&!selectedPack){
     message.textContent="Seleccioná el pack del alumno con saldo suficiente.";return;
@@ -1804,7 +1831,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     if(!result?.ok)throw Error("El cobro o descuento no pudo confirmarse.");
     pendingSettlementRequest=null;pendingSettlementSignature="";
     form.reset();
-    $("settleBookMinutes").value="";
+    $("settleBookHours").value="";$("settleBookMinutes").value="";
     $("settleBookConfirmed").checked=false;
     await loadFinance();
     message.textContent=result.already_registered?
