@@ -65,7 +65,7 @@ button{background:#e9c993;color:#193041;border:1px solid #e9c993;border-radius:9
       const today=new Date(Date.now()-3*3600000).toISOString().slice(0,10);
       const date=prompt("Fecha desde la que cambia su estado (AAAA-MM-DD, ART):",today);
       if(date===null)return;
-      if(!/^20\\d{2}-\\d{2}-\\d{2}$/.test(date)||date>today){
+      if(!/^20\d{2}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(date)||date>today||Number.isNaN(Date.parse(date+"T12:00:00Z"))){
        st.textContent="Ingresá una fecha válida hasta hoy (ART).";return;
       }
       const reason=prompt(state==="out_of_service"?"Motivo de salida de servicio (obligatorio):":"Observaciones del regreso a servicio (opcional):",
