@@ -11,6 +11,7 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="../../assets/supabase-2.117.2.min.js"></script>
 <script src="../../assets/community-config.js"></script>
+<script src="../../assets/aerosuite-registration.js"></script>
 
 
 <style>
@@ -204,9 +205,9 @@ const institutionalHref=path=>path+"?institucion="+encodeURIComponent(institutio
  "&rol="+encodeURIComponent(institutionRole||testRole)+(testMode?"&prueba=1":"");
 function reconcileFleet(){
  for(const plane of registeredFleet){
-  const registration=String(plane.registration||"").trim().toUpperCase();
+  const registration=AeroSuiteRegistration.normalize(plane.registration);
   if(!registration)continue;
-  const existing=S.ac.find(a=>String(a.reg||"").trim().toUpperCase()===registration);
+  const existing=S.ac.find(a=>AeroSuiteRegistration.normalize(a.reg)===registration);
   if(existing){
    existing.reg=registration;existing.type=plane.model||existing.type||"Modelo pendiente";
   }else{
@@ -280,7 +281,7 @@ async function loadApp(){
    S={...S,...maintenance.data.payload};for(const key of ["inv","mv","fuel"])S[key]||=[];
   }
   const orphaned=S.ac.filter(x=>!registeredFleet.some(f=>
-   String(f.registration||"").trim().toUpperCase()===String(x.reg||"").trim().toUpperCase()));
+   AeroSuiteRegistration.normalize(f.registration)===AeroSuiteRegistration.normalize(x.reg)));
   if(orphaned.length)maintWritable=false;
   reconcileFleet();
   if(!S.ac.some(a=>a.id===S.sel))S.sel=S.ac[0]?.id||null;
