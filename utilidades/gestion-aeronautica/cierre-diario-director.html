@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="es"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>AeroSuite · Cierre diario de Dirección</title>
+<style>
+:root{font-family:Inter,Arial,system-ui,sans-serif;color:#ecf5fb;background:#102235;color-scheme:dark}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(135deg,#102335,#1e394b);min-height:100vh}
+header{padding:18px max(18px,calc((100vw - 1180px)/2));background:#183044;border-bottom:1px solid #68849c;display:flex;gap:15px;justify-content:space-between;align-items:center}
+a{color:#dcecff}.brand{color:#fff;text-decoration:none;font-size:22px;font-weight:850}.brand span{color:#eaca85}
+main{max-width:1180px;margin:auto;padding:25px 18px 65px}
+h1{font-size:clamp(23px,3vw,33px);margin:5px 0 8px}h2{font-size:20px;margin:6px 0 13px}h3{font-size:15px;margin:7px 0}
+.eyebrow{color:#e5c482;letter-spacing:.12em;text-transform:uppercase;font-size:11px;font-weight:850}
+.panel{background:#1c3347;border:1px solid #6d8da2;border-radius:12px;padding:18px;margin:16px 0}
+.status{background:#2a4557;border:1px solid #809fb5;border-radius:9px;padding:12px;margin:12px 0;font-size:13px}
+p,.muted{color:#c4d7e2;line-height:1.48}.small{font-size:12px}
+.toolbar,.row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}.toolbar{margin:16px 0}
+button,.button{font:inherit;font-size:13px;border:1px solid #83a3b7;background:#284e64;color:#fff;border-radius:8px;padding:11px 15px;cursor:pointer}
+button.primary{background:#e7c48a;border-color:#e7c48a;color:#183042;font-weight:850}
+button:disabled{opacity:.5;cursor:not-allowed}
+label{display:grid;gap:5px;font-size:12px}
+input,select,textarea{font:inherit;color:#fff;background:#142f42;border:1px solid #849cb1;border-radius:7px;padding:9px;width:100%}
+input[type=date]{min-width:160px}
+.summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.metric{background:#19394e;border:1px solid #4d839f;padding:14px;border-radius:10px}
+.metric strong{font-size:21px;display:block;margin:6px 0;color:#ffdc97}.metric small{color:#cde0eb}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th,td{text-align:left;border-bottom:1px solid #4e6b7b;padding:10px 8px;vertical-align:top;overflow-wrap:anywhere}
+th{color:#d9e8f2;background:#274358}
+.table-wrap{overflow-x:auto}.table-wrap table{min-width:660px}
+.notice{border-left:4px solid #eac589;padding:12px;background:#243d4c;font-size:12px;color:#e6eef4}
+.ok{color:#b2eccb}.warn{color:#ffd69b}
+.fleet-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(265px,1fr));gap:13px}
+.aircraft{border:1px solid #688ba2;background:#182f40;border-radius:11px;padding:14px}
+.aircraft.off{border-left:5px solid #e5b36b}
+.aircraft.on{border-left:5px solid #80c49e}
+.aircraft p{font-size:12px;margin:6px 0}
+.aircraft form{display:grid;gap:9px;margin-top:13px}
+.aircraft textarea{min-height:55px;resize:vertical}
+.hidden{display:none!important}
+@media print{
+ @page{size:A4;margin:13mm}
+ :root{color-scheme:light;color:#111;background:#fff}
+ html,body{background:#fff!important;color:#111!important;font-family:Arial,sans-serif}
+ main{max-width:none;padding:0}header,.no-print,.aircraft form,.status{display:none!important}
+ .panel{color:#111;background:#fff;border:1px solid #bbb;break-inside:avoid;padding:12px;margin:10px 0}
+ .metric,.aircraft{background:#fff;color:#111;border:1px solid #bbb;break-inside:avoid}
+ .metric strong{color:#111}p,.muted,.metric small,.aircraft p{color:#222}
+ h1,h2,h3,th,td{color:#111}
+ .table-wrap{overflow:visible}.table-wrap table{min-width:0}
+ table{font-size:10px}th,td{border-color:#aaa;padding:6px}
+ th{background:#eee!important} .summary{grid-template-columns:repeat(3,1fr)}
+ .fleet-grid{grid-template-columns:repeat(2,1fr)}
+ .eyebrow{color:#333} a{color:#111;text-decoration:none}
+}
+</style>
+<script src="../../assets/supabase-2.117.2.min.js"></script>
+<script src="../../assets/community-config.js"></script>
+</head><body>
+<header class="no-print"><a class="brand" href="index.html">Aero<span>Suite</span> · Dirección</a><a id="goBack" href="portal-escuela.html">Volver a mi portal</a></header>
+<main>
+<div class="eyebrow">Solo Dirección / Administrador · Reporte institucional</div>
+<h1>Cierre diario de operaciones</h1>
+<p>Balance de movimientos económicos, actividad volada por aeronave y novedades de disponibilidad.</p>
+<p class="notice">Los cobros y gastos corresponden a movimientos registrados en AeroSuite, no a la ganancia ni al saldo bancario conciliado. Los consumos de packs se muestran aparte: no son un nuevo ingreso de dinero.</p>
+<div id="message" class="status no-print" role="status">Verificando el acceso del Director…</div>
+<div id="dashboard" hidden>
+<div class="toolbar no-print">
+ <label>Fecha de cierre (ART)<input type="date" id="closeDate"></label>
+ <button type="button" id="loadReport">Consultar cierre</button>
+ <button class="primary" type="button" id="printReport" disabled>Imprimir / Guardar PDF</button>
+ <a id="manageFleet" class="button" href="flota-institucional.html">Gestionar flota</a>
+</div>
+<p class="small no-print">Para descargar el PDF, elegí «Guardar como PDF» como destino en la ventana de impresión. También podés imprimirlo directamente o adjuntarlo a un correo.</p>
+<section class="panel">
+ <div class="eyebrow">Resumen institucional</div>
+ <h2 id="reportTitle">—</h2><p id="reportGenerated" class="muted small"></p>
+ <div class="summary" id="financialSummary"></div>
+ <div id="packSummary" class="notice" style="margin-top:13px"></div>
+</section>
+<section class="panel">
+ <h2>Detalle diario de ingresos y egresos</h2>
+ <div class="table-wrap"><table><thead><tr><th>Hora ART</th><th>Tipo</th><th>Alumno / concepto</th><th>Medio</th><th>Ingreso</th><th>Egreso</th></tr></thead><tbody id="movementRows"></tbody></table></div>
+</section>
+<section class="panel">
+ <h2>Flota: horas y situación de servicio</h2>
+ <p class="small">Las horas acumuladas validadas provienen de informes aprobados. Las provisionales corresponden a vuelos saldados sin informe aprobado y se muestran por separado. No se suman dos veces.</p>
+ <p class="small">La disponibilidad corresponde al estado de flota vigente al momento de emitir este informe. Las novedades anotan la fecha desde que la aeronave está fuera de servicio, el motivo y su ubicación.</p>
+ <div id="fleetSummary" class="summary"></div>
+ <div id="fleetList" class="fleet-grid"></div>
+ <div id="fleetUnknown" class="notice" hidden></div>
+</section>
+<p class="muted small">AeroSuite by Gente de Vuelo · Documento interno de control de Dirección. Horas del Libro de Vuelo: UTC; fechas de turnera, cobros y cierres: ART. No sustituye los registros técnicos oficiales.</p>
+</div>
+</main>
+<script>
+"use strict";
+(async()=>{
+ const $=id=>document.getElementById(id),notice=$("message");
+ const escape=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+ const todayART=()=>new Date(Date.now()-3*3600000).toISOString().slice(0,10);
+ const validDay=x=>/^20\d\d-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(x)&&
+  !Number.isNaN(Date.parse(x+"T12:00:00Z"));
+ const dateLabel=x=>String(x||"").split("-").reverse().join("/");
+ const stamp=x=>{
+  const d=new Date(x);
+  return Number.isFinite(d.getTime())?
+   new Intl.DateTimeFormat("es-AR",{timeZone:"America/Argentina/Buenos_Aires",day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).format(d).replace(",","")+" ART":"—";
+ };
+ const money=(v,c)=>String(c||"ARS")+" "+Number(v||0).toLocaleString("es-AR",{minimumFractionDigits:2,maximumFractionDigits:2});
+ const hours=v=>(Math.round(Number(v||0)*100/60)/100).toFixed(2).replace(/\.?0+$/,"")+" h";
+ const showText=(id,val)=>$(id).textContent=String(val??"");
+ const params=new URLSearchParams(location.search),inst=params.get("institucion"),role=params.get("rol");
+ const test=params.get("prueba")==="1"&&role==="administrador";
+ const db=supabase.createClient(GDV_CONFIG.url,GDV_CONFIG.key,{
+  auth:{storageKey:test?"aerosuite-laboratorio-administrador-v1-auth":"aerosuite-institucional-v2-auth",
+  persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}
+ });
+ let school=null,report=null;
+ async function rpc(name,args){
+  const {data,error}=await db.rpc(name,args);
+  if(error)throw error;
+  return data;
+ }
+ function tile(label,body,desc){
+  const element=document.createElement("div");element.className="metric";
+  const small=document.createElement("small");small.textContent=label;
+  const strong=document.createElement("strong");strong.textContent=body;
+  const foot=document.createElement("small");foot.textContent=desc||"";
+  element.append(small,strong,foot);return element;
+ }
+ function cell(tr,value){
+  const td=document.createElement("td");td.textContent=String(value??"");tr.append(td);
+ }
+ function renderMoney(data){
+  const target=$("financialSummary");target.replaceChildren();
+  if(!data.finances?.length)target.append(tile("Movimientos","Sin movimientos","No hay ingresos ni egresos registrados ese día"));
+  for(const item of data.finances){
+   target.append(tile("Ingresos · "+item.currency,money(item.income,item.currency),
+    "Efectivo "+money(item.cash_in,item.currency)+" · Transferencia "+money(item.bank_in,item.currency)));
+   target.append(tile("Egresos · "+item.currency,money(item.expenses,item.currency),
+    "Efectivo "+money(item.cash_out,item.currency)+" · Transferencia "+money(item.bank_out,item.currency)));
+   target.append(tile("Diferencia registrada · "+item.currency,money(item.balance,item.currency),
+    "Ingresos menos egresos, sin incluir packs consumidos"));
+  }
+  const consumption=data.pack_consumptions||{};
+  showText("packSummary","Packs utilizados: "+(consumption.count||0)+" descuento(s) · "+
+   hours(consumption.minutes)+" de horas prepagas consumidas. No se registra nuevo ingreso de dinero al utilizarlos.");
+ }
+ function renderMovements(data){
+  const list=$("movementRows");list.replaceChildren();
+  const types={pack_sale:"Venta de pack",hour_payment:"Cobro de vuelo",expense:"Gasto",
+   petty_expense:"Caja chica",refund:"Devolución"};
+  if(!data.movements?.length){
+   const tr=document.createElement("tr"),td=document.createElement("td");
+   td.colSpan=6;td.textContent="Sin movimientos registrados el día seleccionado.";tr.append(td);list.append(tr);return;
+  }
+  for(const m of data.movements){
+   const isOut=["expense","petty_expense","refund"].includes(m.type);
+   const tr=document.createElement("tr");
+   cell(tr,stamp(m.at));cell(tr,types[m.type]||m.type);
+   cell(tr,(m.student?m.student+" · ":"")+(m.description||m.category||"Sin concepto"));
+   cell(tr,m.method==="bank_transfer"?"Transferencia":m.method==="cash"?"Efectivo":"Sin identificar");
+   cell(tr,isOut?"—":money(m.amount,m.currency));cell(tr,isOut?money(m.amount,m.currency):"—");
+   list.append(tr);
+  }
+ }
+ function renderFleet(data){
+  const target=$("fleetList");target.replaceChildren();
+  const stats=$("fleetSummary");stats.replaceChildren();
+  const fleet=data.fleet||[];
+  stats.append(tile("En servicio",String(fleet.filter(x=>x.availability==="available").length),"Aeronaves registradas"));
+  stats.append(tile("Fuera de servicio",String(fleet.filter(x=>x.availability!=="available").length),"Requieren seguimiento"));
+  stats.append(tile("Horas del día · validadas",hours(fleet.reduce((a,x)=>a+Number(x.approved_day_minutes||0),0)),
+   "Exclusivamente informes aprobados con matrícula registrada"));
+  stats.append(tile("Horas del día · provisionales",hours(fleet.reduce((a,x)=>a+Number(x.provisional_day_minutes||0),0)),
+   "Liquidaciones pendientes de validación"));
+  if(!fleet.length){
+   const p=document.createElement("p");p.textContent="La institución todavía no registró aeronaves en el módulo de flota.";target.append(p);
+  }
+  for(const a of fleet){
+   const box=document.createElement("article");box.className="aircraft "+(a.availability==="available"?"on":"off");
+   const title=document.createElement("h3");title.textContent=a.registration+" · "+(a.model||"Sin modelo");
+   const state=document.createElement("p");state.className=a.availability==="available"?"ok":"warn";
+   state.textContent=a.availability==="available"?"En servicio":"Fuera de servicio";
+   const day=document.createElement("p");
+   day.textContent="Horas del día · validadas "+hours(a.approved_day_minutes)+
+    " · provisionales "+hours(a.provisional_day_minutes);
+   const total=document.createElement("p");
+   total.textContent="Acumuladas · validadas "+hours(a.approved_minutes)+
+    " · provisionales "+hours(a.provisional_minutes);
+   const status=document.createElement("p");
+   status.textContent=a.availability==="available"?
+    "Ubicación: "+(a.service_location||"No informada"):
+    "Fuera de servicio desde: "+(a.out_of_service_since?dateLabel(a.out_of_service_since):"Fecha pendiente")+
+    " · Motivo: "+(a.out_of_service_reason||"No informado")+
+    " · Ubicación: "+(a.service_location||"No informada");
+   box.append(title,state,day,total,status);
+   if(school.can_write){
+    const form=document.createElement("form");form.className="no-print";
+    const label=document.createElement("h3");label.textContent="Registrar novedad de aeronave";
+    const statusLabel=document.createElement("label");statusLabel.textContent="Disponibilidad";
+    const select=document.createElement("select");
+    for(const [value,name] of [["available","En servicio"],["out_of_service","Fuera de servicio"]]){
+     const option=new Option(name,value);option.selected=a.availability===value;select.add(option);
+    }
+    statusLabel.append(select);
+    const dateLabelEl=document.createElement("label");dateLabelEl.textContent="Desde la fecha (ART)";
+    const date=document.createElement("input");date.type="date";date.required=true;date.max=todayART();
+    date.value=a.status_changed_on||a.out_of_service_since||todayART();dateLabelEl.append(date);
+    const whyLabel=document.createElement("label");whyLabel.textContent="Motivo";
+    const why=document.createElement("textarea");why.maxLength=300;
+    why.value=a.out_of_service_reason||a.remarks||"";whyLabel.append(why);
+    const whereLabel=document.createElement("label");whereLabel.textContent="Ubicación actual";
+    const where=document.createElement("input");where.maxLength=180;where.value=a.service_location||"";where.placeholder="Ej.: Hangar principal";
+    whereLabel.append(where);
+    const button=document.createElement("button");button.type="submit";button.textContent="Guardar novedad";
+    form.append(label,statusLabel,dateLabelEl,whyLabel,whereLabel,button);
+    form.onsubmit=async e=>{
+     e.preventDefault();
+     if(select.value==="out_of_service"&&(why.value.trim().length<5||where.value.trim().length<3)){
+      notice.textContent="Para marcar fuera de servicio indicá motivo y ubicación.";return;
+     }
+     if(!confirm("¿Guardar la novedad de "+a.registration+" desde el "+date.value+"? Se conservará el historial."))return;
+     button.disabled=true;notice.textContent="Registrando novedad de aeronave…";
+     try{
+      const result=await rpc("aerosuite_aircraft_service_update",{
+       p_institution_id:inst,p_aircraft_id:a.id,p_availability:select.value,
+       p_from_date:date.value,p_reason:why.value.trim(),p_location:where.value.trim()});
+      if(!result?.ok)throw Error("No se confirmó el cambio.");
+      await loadReport();notice.textContent="Novedad de "+a.registration+" registrada.";
+     }catch(err){notice.textContent="No se pudo guardar la novedad: "+(err.message||err);button.disabled=false;}
+    };
+    box.append(form);
+   }
+   target.append(box);
+  }
+  const unmatched=data.not_registered_aircraft||[];
+  $("fleetUnknown").hidden=!unmatched.length;
+  if(unmatched.length)showText("fleetUnknown","Matrículas con vuelos aún no incorporadas a la flota: "+
+   unmatched.map(x=>(x.registration||"SIN INFORMAR")+" · "+hours(x.approved_minutes)+" validadas / "+
+   hours(x.provisional_minutes)+" provisionales").join("; ")+". Incorporalas en «Gestionar flota» para completar el seguimiento.");
+ }
+ async function loadReport(){
+  const day=$("closeDate").value;
+  if(!validDay(day)||day>todayART()){notice.textContent="Seleccioná una fecha válida hasta hoy (ART).";return;}
+  $("loadReport").disabled=true;$("printReport").disabled=true;notice.textContent="Preparando cierre diario de Dirección…";
+  try{
+   const data=await rpc("aerosuite_daily_close_snapshot",{p_institution_id:inst,p_day:day});
+   if(!data||data.day!==day)throw Error("La consulta no devolvió el día solicitado.");
+   report=data;
+   showText("reportTitle",school.institution_name+" · "+dateLabel(day));
+   showText("reportGenerated","Reporte consultado el "+stamp(data.as_of)+" · fecha de operaciones "+dateLabel(day)+" ART");
+   renderMoney(data);renderMovements(data);renderFleet(data);
+   $("printReport").disabled=false;
+   notice.textContent="Cierre consultado correctamente. Podés imprimirlo o guardarlo como PDF para enviarlo por correo.";
+  }catch(err){
+   report=null;notice.textContent="No se pudo consultar el cierre: "+(err.message||err);
+  }finally{$("loadReport").disabled=false;}
+ }
+ try{
+  if(!inst)throw Error("Ingresá desde el portal de Dirección de una institución.");
+  const me=await db.auth.getUser();
+  if(!me.data?.user||me.error)throw Error("No hay sesión institucional activa.");
+  const access=await rpc("aerosuite_my_institution_access_v2",{});
+  school=(access||[]).find(x=>x.institution_id===inst&&x.my_role==="administrador"&&x.can_access);
+  if(!school)throw Error("El cierre diario es exclusivo del Director/Administrador de esta institución.");
+  $("goBack").href="portal-escuela.html?institucion="+encodeURIComponent(inst)+"&rol=administrador&elegida=1"+(test?"&prueba=1":"");
+  $("manageFleet").href="flota-institucional.html?institucion="+encodeURIComponent(inst)+"&rol=administrador"+(test?"&prueba=1":"");
+  $("closeDate").value=todayART();$("closeDate").max=todayART();
+  $("dashboard").hidden=false;
+  $("loadReport").onclick=loadReport;
+  $("printReport").onclick=()=>{
+   if(!report)return;
+   window.print();
+  };
+  await loadReport();
+ }catch(err){notice.textContent="Acceso no autorizado o error de conexión: "+(err.message||err);}
+})();
+</script></body></html>
