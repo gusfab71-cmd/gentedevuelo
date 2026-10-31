@@ -197,10 +197,11 @@ let showAircraftForm=false;
 
 let db=null,currentUser=null,hangarAircraft='',saveQueue=Promise.resolve();
 const instParams=new URLSearchParams(location.search),institutionId=instParams.get("institucion");
-const testMode=instParams.get("prueba")==="1"&&instParams.get("rol")==="administrador";
-let institutionName="",registeredFleet=[],maintRevision=0,maintWritable=false,maintConflict=false;
+const testRole=instParams.get("rol")||"administrador";
+const testMode=instParams.get("prueba")==="1"&&["administrador","secretaria"].includes(testRole);
+let institutionName="",institutionRole="",registeredFleet=[],maintRevision=0,maintWritable=false,maintConflict=false;
 const institutionalHref=path=>path+"?institucion="+encodeURIComponent(institutionId)+
- "&rol=administrador"+(testMode?"&prueba=1":"");
+ "&rol="+encodeURIComponent(institutionRole||testRole)+(testMode?"&prueba=1":"");
 function reconcileFleet(){
  for(const plane of registeredFleet){
   const registration=String(plane.registration||"").trim().toUpperCase();
@@ -249,7 +250,7 @@ async function loadApp(){
   if(!institutionId)throw Error("Ingresá desde Flota y disponibilidad.");
   if(!window.supabase||!window.GDV_CONFIG)throw Error("La conexión institucional no se inicializó.");
   db=window.supabase.createClient(GDV_CONFIG.url,GDV_CONFIG.key,{
-   auth:{storageKey:testMode?"aerosuite-laboratorio-administrador-v1-auth":"aerosuite-institucional-v2-auth",
+   auth:{storageKey:testMode?"aerosuite-laboratorio-"+testRole+"-v1-auth":"aerosuite-institucional-v2-auth",
     persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}
   });
   const {data:{user},error:authError}=await db.auth.getUser();
@@ -267,6 +268,7 @@ async function loadApp(){
    ["administrador","secretaria"].includes(x.my_role)&&x.can_access);
   if(!school)throw Error("Acceso reservado al Director o Secretaría de esta institución.");
   institutionName=school.institution_name||"Institución";
+  institutionRole=school.my_role;
   $('backToFleet').href=institutionalHref("flota-institucional.html");
   $('backToDirector').href=institutionalHref("portal-escuela.html");
   $('maintIdentity').href=institutionalHref("portal-escuela.html");
