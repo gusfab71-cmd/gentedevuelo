@@ -8,6 +8,11 @@ on:
       - 'utilidades/gestion-aeronautica/flota-institucional.html'
       - 'utilidades/gestion-aeronautica/cierre-diario-director.html'
       - 'tests/aerosuite-maintenance-integration.test.cjs'
+      - 'utilidades/gestion-aeronautica/operaciones-institucionales.html'
+      - 'utilidades/gestion-aeronautica/portal.html'
+      - 'utilidades/gestor-reservas/index.html'
+      - 'assets/aerosuite-registration.js'
+      - 'tests/aerosuite-registration.test.cjs'
       - 'assets/maintenance-consumables.js'
       - 'tests/aircraft-maintenance.test.cjs'
       - '.github/workflows/mantenimiento-tests.yml'
@@ -19,6 +24,11 @@ on:
       - 'utilidades/gestion-aeronautica/flota-institucional.html'
       - 'utilidades/gestion-aeronautica/cierre-diario-director.html'
       - 'tests/aerosuite-maintenance-integration.test.cjs'
+      - 'utilidades/gestion-aeronautica/operaciones-institucionales.html'
+      - 'utilidades/gestion-aeronautica/portal.html'
+      - 'utilidades/gestor-reservas/index.html'
+      - 'assets/aerosuite-registration.js'
+      - 'tests/aerosuite-registration.test.cjs'
       - 'assets/maintenance-consumables.js'
       - 'tests/aircraft-maintenance.test.cjs'
       - '.github/workflows/mantenimiento-tests.yml'
@@ -39,3 +49,6 @@ jobs:
 
       - name: Verificar integración del mantenimiento institucional
         run: node tests/aerosuite-maintenance-integration.test.cjs
+
+      - name: Verificar formato automático de matrículas en AeroSuite
+        run: node tests/aerosuite-registration.test.cjs
