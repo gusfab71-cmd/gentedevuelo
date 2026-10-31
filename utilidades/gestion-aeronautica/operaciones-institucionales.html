@@ -281,13 +281,13 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     <p id="reportDurationPreview" class="hint" role="status" aria-live="polite">Ingresá las horas y minutos reales.</p>
     <fieldset class="panel" style="margin:14px 0">
      <legend style="padding:0 8px;font-weight:750">Datos del vuelo · Libro de Vuelo</legend>
-     <p class="hint">Registrá los datos reales del vuelo que se asentaron en el Libro de Vuelo; horarios en UTC, no los horarios planificados de la turnera.</p>
+     <p class="hint">Libro de Vuelo: fecha y horas reales en UTC, siempre en formato de 24 horas. No copiar la hora local del turno.</p>
      <div class="formgrid">
-      <label>Fecha del vuelo<input name="log_date" type="date" required></label>
-      <label>Hora de salida UTC<input name="log_departure_utc" type="time" required></label>
+      <label>Fecha real del vuelo (UTC)<input name="log_date" type="date" required></label>
+      <label>Hora de salida UTC (24 h)<input name="log_departure_utc" type="time" step="60" required></label>
       <label>Desde (aeródromo)<input name="log_origin" maxlength="100" required placeholder="Ej.: Morón"></label>
       <label>Hasta (aeródromo)<input name="log_destination" maxlength="100" required placeholder="Ej.: Morón"></label>
-      <label>Hora de llegada UTC<input name="log_arrival_utc" type="time" required></label>
+      <label>Hora de llegada UTC (24 h)<input name="log_arrival_utc" type="time" step="60" required></label>
       <label>Cantidad de aterrizajes<input name="log_landings_count" type="number" min="1" max="99" step="1" required value="1"></label>
       <label>Marca/modelo de la aeronave<input name="log_aircraft_make" maxlength="80" required placeholder="Ej.: Cessna 150"></label>
       <label>Matrícula<input name="log_aircraft_registration" maxlength="30" required placeholder="Ej.: LV-ABC"></label>
@@ -299,7 +299,8 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
      </div>
     </fieldset>
     <label style="margin-top:12px">Práctica realizada<textarea name="practice" minlength="3" maxlength="750" required placeholder="Ej.: despegues, circuitos de tránsito, aproximaciones y aterrizajes."></textarea></label>
-    <label style="margin-top:12px">Devolución del instructor<textarea name="feedback" minlength="3" maxlength="1100" required placeholder="Desempeño del alumno y aspectos que logró durante la práctica."></textarea></label>
+    <p class="hint">Las fechas y horas del Libro de Vuelo y de la devolución del Instructor se muestran en UTC (24 h). Las confirmaciones administrativas usan ART.</p>
+     <label style="margin-top:12px">Devolución del instructor<textarea name="feedback" minlength="3" maxlength="1100" required placeholder="Desempeño del alumno y aspectos que logró durante la práctica."></textarea></label>
     <label style="margin-top:12px">Recomendaciones para la próxima práctica (opcional)<textarea name="next" maxlength="850" placeholder="Aspectos para repasar o mejorar antes del próximo vuelo."></textarea></label>
     <label style="margin-top:12px">Novedades observadas de la aeronave<textarea name="aircraft" maxlength="2000" placeholder="Opcional. Las novedades urgentes se comunican directamente al Director."></textarea></label>
     <button class="primary" type="submit" style="margin-top:12px">Presentar informe a Administración</button>
@@ -525,7 +526,26 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
 (async function(){
  const $=id=>document.getElementById(id),stat=$("message");
  const esc=x=>String(x===null||x===undefined?"":x).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
- const stamp=x=>new Date(x).toLocaleString("es-AR",{dateStyle:"short",timeStyle:"short",timeZone:"America/Argentina/Buenos_Aires"});
+ // ART para turnera, confirmaciones y cobros. UTC para el Libro de Vuelo y devolución del Instructor.
+  const timeStamp=(value,zone,label)=>{
+   const d=new Date(value);if(!Number.isFinite(d.getTime()))return "Fecha/hora sin registrar";
+   return new Intl.DateTimeFormat("es-AR",{
+    day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit",hourCycle:"h23",timeZone:zone
+   }).format(d).replace(",","")+" "+label;
+  };
+  const stamp=value=>timeStamp(value,"America/Argentina/Buenos_Aires","ART");
+  const stampUTC=value=>timeStamp(value,"UTC","UTC");
+  const utcDate=value=>{const d=new Date(value);return Number.isFinite(d.getTime())?d.toISOString().slice(0,10):"";};
+  const shortUTCDate=value=>{
+   const d=String(value||"");return /^\d{4}-\d{2}-\d{2}$/.test(d)?d.split("-").reverse().join("/"):"";
+  };
+  const reportFlightStamp=r=>{
+   const log=r?.logbook_entry&&typeof r.logbook_entry==="object"?r.logbook_entry:{};
+   const date=shortUTCDate(log.flight_date);
+   if(date)return date+(log.departure_utc?" "+log.departure_utc:"")+" UTC · Libro de Vuelo";
+   const scheduled=r?.original_starts_at||r?.starts_at;
+   return scheduled?stampUTC(scheduled)+" · turno programado, no hora real":"Fecha UTC sin registrar";
+  };
  // Fecha actual y semanas definidas en ART, independientemente de la zona horaria del dispositivo.
  const artToday=()=>new Date(Date.now()-3*3600000).toISOString().slice(0,10);
  const addDays=(value,days)=>new Date(Date.parse(value+'T12:00:00Z')+days*86400000).toISOString().slice(0,10);
@@ -843,7 +863,8 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    for(const [name,key] of Object.entries(reportLogbookMap)){
     const field=form.elements.namedItem(name);
     if(!field)continue;
-    const value=key==="flight_date"?(booking?arDate(booking.starts_at):""):key==="landings_count"?"1":key==="flight_area"?"aerodromo":key==="flight_period"?"dia":key==="flight_role"?"instructor":"";
+    // Fecha real UTC: no completar automáticamente usando la fecha local de reserva.
+    const value=key==="flight_date"?"":key==="landings_count"?"1":key==="flight_area"?"aerodromo":key==="flight_period"?"dia":key==="flight_role"?"instructor":"";
     if(key==="aircraft_class"){
      const previousClass=String(previous[key]||"").toLowerCase().trim();
      field.value=previousClass.includes("multimotor")?"multimotor":previousClass.includes("monomotor")?"monomotor":"";
@@ -857,7 +878,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    for(const b of bookings.filter(x=>x.instructor_id===user.id&&["confirmed","completed"].includes(x.status)&&new Date(x.starts_at).getTime()+90*60000<=Date.now())){
     const report=reports.find(r=>r.booking_id===b.booking_id);
     if(report&&report.status!=="returned")continue;
-    target.add(new Option(stamp(b.starts_at)+" · "+(b.student_email||"Alumno")+(report?" · corregir":""),
+    target.add(new Option("Turno local · "+stamp(b.starts_at)+" · "+(b.student_email||"Alumno")+(report?" · corregir":""),
      b.booking_id));
    }
    $("reportForm").querySelector("button").disabled=!school.can_write||!target.options.length;
@@ -1149,7 +1170,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     }
     const card=document.createElement("div");card.className="list-item";
     const top=document.createElement("p");
-    top.innerHTML="<strong>Informe recuperado · "+esc(stamp(r.original_starts_at))+"</strong>"+
+    top.innerHTML="<strong>Informe recuperado · "+esc(reportFlightStamp(r))+"</strong>"+
      " · "+esc(labStates[r.state]||r.state);
     card.append(top);
     const flight=document.createElement("p");
@@ -1347,7 +1368,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    const mins=validFlightMinutes(r.flight_minutes);
    const duration=mins===null?"Sin registrar":flightHoursMinutes(mins)+" h ("+flightHoursCentesimal(mins)+" h centesimales)";
    const rawDate=rawBook.flight_date?simpleDate(rawBook.flight_date):
-      (r.original_starts_at||r.starts_at?arDate(r.original_starts_at||r.starts_at).split("-").reverse().join("/"):"—");
+      (r.original_starts_at||r.starts_at?shortUTCDate(utcDate(r.original_starts_at||r.starts_at))+" (turno UTC, no vuelo real)":"—");
    const plane=[rawBook.aircraft_make,rawBook.aircraft_registration].filter(Boolean).join(" · ")||"No informada";
    const note=(name,body,kind="")=>body?
     '<div class="sheet-note '+kind+'"><strong>'+esc(name)+'</strong><p>'+esc(body)+'</p></div>':"";
@@ -1364,7 +1385,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     '<span class="sheet-status">'+esc(verified)+'</span></div>'+
     simulationBanner+
     '<div class="sheet-summary" aria-label="Resumen de la práctica">'+
-     '<div class="sheet-summary-item"><small>Fecha de práctica</small><strong>'+esc(rawDate)+'</strong></div>'+
+     '<div class="sheet-summary-item"><small>Fecha de práctica · UTC</small><strong>'+esc(rawDate)+'</strong></div>'+
      '<div class="sheet-summary-item"><small>Tiempo de vuelo</small><strong>'+esc(duration)+'</strong></div>'+
      '<div class="sheet-summary-item"><small>Aeronave</small><strong>'+esc(plane)+'</strong></div>'+
     '</div>'+
@@ -1419,7 +1440,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    const totalMinutes=flights.reduce((sum,r)=>sum+validFlightMinutes(r.flight_minutes),0);
    const last=document.createElement("div"),total=document.createElement("div");
    last.className=total.className="card";
-   last.innerHTML="<strong>Último vuelo · "+esc(stamp(latest.starts_at))+"</strong>"+
+   last.innerHTML="<strong>Último vuelo · "+esc(reportFlightStamp(latest))+"</strong>"+
     "<h3>"+esc(flightDuration(lastMinutes))+"</h3><p>"+esc(flightHoursMinutes(lastMinutes))+" (HH:MM) · "+esc(flightHoursCentesimal(lastMinutes))+" h centesimales</p>";
    total.innerHTML="<strong>Total acumulado en AeroSuite</strong>"+
     "<h3>"+esc(flightDuration(totalMinutes))+"</h3>"+
@@ -1429,7 +1450,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    for(const r of flights){
     const item=document.createElement("div");item.className="list-item";
     const minutes=validFlightMinutes(r.flight_minutes);
-    item.innerHTML='<div class="row between"><strong>'+esc(stamp(r.starts_at))+'</strong>'+
+    item.innerHTML='<div class="row between"><strong>'+esc(reportFlightStamp(r))+'</strong>'+
      '<strong>'+esc(flightDuration(minutes))+'</strong></div>'+
      '<p class="hint">'+esc(flightHoursMinutes(minutes))+' (HH:MM) · '+esc(flightHoursCentesimal(minutes))+' h centesimales</p>'+
      (r.logbook_entry?.aircraft_registration?
@@ -1449,7 +1470,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
      studentReportListItem(target,r,false);
      continue;
     }
-    card.innerHTML='<div class="row between"><strong>'+esc(stamp(r.starts_at))+" · "+esc(r.student_email)+'</strong><span class="chip '+esc(r.status)+'">'+esc(statuses[r.status])+'</span></div>'+
+    card.innerHTML='<div class="row between"><strong>'+esc(reportFlightStamp(r))+" · "+esc(r.student_email)+'</strong><span class="chip '+esc(r.status)+'">'+esc(statuses[r.status])+'</span></div>'+
      '<p><strong>Instructor:</strong> '+esc(r.instructor_email)+' · <strong>Vuelo real:</strong> '+esc(r.flight_minutes)+' minutos · <strong>Combustible:</strong> '+esc(r.fuel_liters)+' L · <strong>Aceite:</strong> '+esc(r.oil_liters)+' L · Versión '+esc(r.revision)+'</p>'+
      formatLogbookEntry(r.logbook_entry)+
      '<p class="lesson-text"><strong>Devolución:</strong> '+esc(r.teaching_notes)+'</p><p class="lesson-text"><strong>Novedades:</strong> '+esc(r.aircraft_notes||"Sin novedades registradas")+'</p>'+
