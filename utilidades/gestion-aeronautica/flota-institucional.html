@@ -24,6 +24,14 @@ button{background:#e9c993;color:#193041;border:1px solid #e9c993;border-radius:9
 <label>Modelo<input name="model" maxlength="100" placeholder="Cessna 152"></label>
 <label>Nota inicial<input name="remarks" maxlength="300" placeholder="Opcional"></label><button type="submit">Agregar a la flota</button></form></section>
 <section class="panel"><h2>Aeronaves de la escuela</h2><div id="list" class="list"></div><button type="button" id="reload" style="margin-top:14px">Actualizar flota</button></section>
+<section class="panel" id="maintenancePanel">
+ <span class="eyebrow">Módulo aeronáutico integrado</span>
+ <h2>Mantenimiento de Aeronaves</h2>
+ <p>Recuperamos la herramienta que ya se había desarrollado: inspecciones, componentes, controles, novedades, bitácora, consumibles, intervenciones, directivas de aeronavegabilidad y proyecciones. Las fichas comparten las matrículas de esta flota y se guardan en la institución, no en las cuentas privadas.</p>
+ <p>Las horas de mantenimiento transcritas de las libretas se mantienen separadas de las horas de vuelo verificadas por AeroSuite; no se suman automáticamente para evitar duplicaciones.</p>
+ <p id="maintenanceSummary" class="status" role="status">Comprobando seguimiento técnico institucional…</p>
+ <p id="maintenanceManagerActions" hidden><a id="maintenanceLink" href="#" style="display:inline-block;background:#d5b673;color:#192e3c;padding:11px 15px;border-radius:9px;font-weight:800;text-decoration:none">Abrir Mantenimiento de Aeronaves</a></p>
+</section>
 </div></main>
 <script>"use strict";(async()=>{
  const $=id=>document.getElementById(id),st=$("status");
@@ -41,9 +49,29 @@ button{background:#e9c993;color:#193041;border:1px solid #e9c993;border-radius:9
   $("back").href="portal-escuela.html?institucion="+encodeURIComponent(inst)+"&rol="+encodeURIComponent(school.my_role)+"&elegida=1"+(labLogin?"&prueba=1":"");
   const manager=["administrador","secretaria"].includes(school.my_role);
   $("createPanel").hidden=!manager||!school.can_write;$("area").hidden=false;
+  $("maintenanceManagerActions").hidden=!manager;
+  if(manager)$("maintenanceLink").href="mantenimiento-institucional.html?institucion="+
+   encodeURIComponent(inst)+"&rol="+encodeURIComponent(school.my_role)+(labLogin?"&prueba=1":"");
   async function action(args){const r=await db.rpc("aerosuite_aircraft_action",{p_institution_id:inst,...args});if(r.error)throw r.error;return r.data;}
   async function load(){
-   const r=await db.rpc("aerosuite_aircraft_list",{p_institution_id:inst});if(r.error)throw r.error;
+   const [r,mt]=await Promise.all([
+    db.rpc("aerosuite_aircraft_list",{p_institution_id:inst}),
+    db.rpc("aerosuite_institution_maintenance_get",{p_institution_id:inst})
+   ]);
+   if(r.error)throw r.error;
+   const maintenance=mt.error?{}:(mt.data?.payload||{});
+   const planes=Array.isArray(maintenance.ac)?maintenance.ac:[];
+   const problems=Array.isArray(maintenance.dx)?maintenance.dx:[];
+   const inspections=Array.isArray(maintenance.ip)?maintenance.ip:[];
+   const controls=Array.isArray(maintenance.ct)?maintenance.ct:[];
+   const services=Array.isArray(maintenance.sv)?maintenance.sv:[];
+   $("maintenanceSummary").textContent=mt.error?
+    "Los datos de flota están disponibles. No se pudo consultar mantenimiento: "+mt.error.message:
+    "Seguimiento institucional: "+planes.length+" aeronave(s) con ficha técnica · "+
+    problems.filter(x=>x.status!=="closed").length+" novedad(es) abierta(s) · "+
+    inspections.filter(x=>!x.archived).length+" inspección(es) configurada(s)."+
+    (mt.data?.updated_at?" Última modificación: "+new Date(mt.data.updated_at).toLocaleString("es-AR",{
+      timeZone:"America/Argentina/Buenos_Aires",hourCycle:"h23",dateStyle:"short",timeStyle:"short"})+" ART.":"");
    const list=$("list");list.replaceChildren();
    if(!(r.data||[]).length)list.textContent="Todavía no hay aeronaves cargadas en esta institución.";
    for(const a of r.data||[]){
@@ -58,6 +86,23 @@ button{background:#e9c993;color:#193041;border:1px solid #e9c993;border-radius:9
       "En servicio · Ubicación: "+(a.service_location||"No informada")+
       (a.remarks?" · "+a.remarks:"");
     box.append(title,chip,note);
+    const maintenanceAirframe=planes.find(x=>String(x.reg||"").toUpperCase()===String(a.registration||"").toUpperCase());
+    if(maintenanceAirframe){
+     const serviceIds=new Set(services.filter(x=>x.ac===maintenanceAirframe.id).map(x=>x.id));
+     const openDiscrepancies=problems.filter(x=>x.ac===maintenanceAirframe.id&&x.status!=="closed").length;
+     const activePlans=inspections.filter(x=>x.ac===maintenanceAirframe.id&&!x.archived).length;
+     const tracked=controls.filter(x=>serviceIds.has(x.sv)).length;
+     const maintenanceInfo=document.createElement("p");
+     maintenanceInfo.textContent="Mantenimiento: "+activePlans+" inspección(es) configurada(s) · "+
+      tracked+" controles registrados · "+openDiscrepancies+" novedad(es) abiertas."+
+      (Number.isFinite(Number(maintenanceAirframe.h))?
+       " TTAF manual: "+Number(maintenanceAirframe.h).toLocaleString("es-AR")+" h.":"");
+     box.append(maintenanceInfo);
+    }else{
+     const maintenanceInfo=document.createElement("p");
+     maintenanceInfo.textContent="Ficha técnica inicial pendiente de abrir en Mantenimiento de Aeronaves.";
+     box.append(maintenanceInfo);
+    }
     if(manager&&school.can_write){
      const btn=document.createElement("button");btn.textContent=a.availability==="available"?"Marcar fuera de servicio":"Marcar disponible";
      btn.onclick=async()=>{
