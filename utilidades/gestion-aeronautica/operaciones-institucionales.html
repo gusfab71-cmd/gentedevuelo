@@ -416,12 +416,36 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    </section>
 
     <section class="panel" id="schoolExpensePanel">
-     <span class="eyebrow">03 · Administración</span><h3>Gastos y caja chica</h3>
-     <p class="hint">Registrá gastos menores o habituales. Cada operación conserva fecha, responsable, importe y medio de pago.</p>
+     <span class="eyebrow">03 · Administración</span><h3>Gastos institucionales</h3>
+     <p class="hint">Los gastos fijos se controlan mes a mes y los eventuales se verifican en caja chica al final de cada día. Solo los pagos efectivos impactan en caja.</p>
+     <label>Tipo de gasto<select id="expenseTypeSelector"><option value="fixed">Gasto fijo mensual</option><option value="petty">Gasto eventual · Caja chica</option></select></label>
+     <div id="fixedExpenseArea">
+      <h3 style="margin-top:14px">Configurar gasto fijo mensual</h3>
+      <form id="fixedExpenseForm">
+       <div class="formgrid">
+        <label class="finance-span-2">Concepto<input name="description" minlength="3" maxlength="250" required placeholder="Ej.: Alquiler de hangar"></label>
+        <label>Categoría<select name="category"><option value="Alquiler inmueble">Alquiler / hangar</option><option value="Seguros">Seguros</option><option value="Servicios">Servicios</option><option value="Instructores">Honorarios</option><option value="Impuestos y tasas">Impuestos y tasas</option><option value="Otros">Otros gastos</option></select></label>
+        <label>Importe mensual<input class="money-entry" name="amount" type="text" inputmode="decimal" maxlength="23" required placeholder="Ej.: 1.500.000"></label>
+        <label>Moneda<select name="currency"><option value="ARS">Pesos (ARS)</option><option value="USD">Dólares (USD)</option></select></label>
+       </div>
+       <button class="primary finance-submit" type="submit" id="fixedExpenseCreateButton">Guardar gasto fijo</button>
+       <p id="fixedExpenseCreateStatus" class="hint" role="status"></p>
+      </form>
+      <h3 style="margin-top:15px">Control mensual</h3>
+      <label>Mes<input id="fixedExpenseMonth" type="month" min="2020-01" max="2099-12"></label>
+      <p class="hint">Una obligación mensual queda pendiente hasta registrar su pago. Los períodos anteriores no se duplican.</p>
+      <label>Medio de pago<select id="fixedPayMethod"><option value="cash">Efectivo</option><option value="bank_transfer">Transferencia acreditada</option></select></label>
+      <label>Referencia bancaria (si corresponde)<input id="fixedPayReference" maxlength="120" placeholder="Número de operación"></label>
+      <label>Referencia de comprobante (opcional)<input id="fixedPayFiscal" maxlength="120"></label>
+      <div id="fixedExpenseList" class="list"></div>
+      <p id="fixedExpenseMonthStatus" class="hint" role="status"></p>
+     </div>
+     <div id="pettyExpenseArea" hidden>
+      <h3 style="margin-top:14px">Gastos eventuales · Caja chica</h3>
      <form id="schoolExpenseForm">
       <div class="formgrid">
        <label class="finance-span-2">Concepto<input name="description" maxlength="500" minlength="3" placeholder="Ej.: Combustible AVGAS, alquiler del hangar" required></label>
-       <label>Tipo<select name="kind"><option value="expense">Gasto habitual</option><option value="petty_expense">Gasto de caja chica</option></select></label>
+       <input type="hidden" name="kind" value="petty_expense">
        <label>Categoría<select name="category"><option value="Combustible">Combustible</option><option value="Alquiler inmueble">Alquiler inmueble / hangar</option><option value="Alquiler aeronave">Alquiler de aeronave</option><option value="Mantenimiento">Mantenimiento</option><option value="Seguros">Seguros</option><option value="Servicios">Servicios e insumos</option><option value="Instructores">Instructores</option><option value="Impuestos y tasas">Impuestos y tasas</option><option value="Limpieza">Limpieza</option><option value="Otros">Otros gastos</option></select></label>
        <label>Importe pagado<input class="money-entry" name="amount" type="text" inputmode="decimal" maxlength="23" required placeholder="Ej.: 100.000"></label>
        <label>Moneda<select name="currency"><option value="ARS">Pesos (ARS)</option><option value="USD">Dólares (USD)</option></select></label>
@@ -433,6 +457,12 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
       <button class="primary finance-submit" type="submit" id="expenseSubmit">Registrar gasto</button>
       <p id="expenseStatus" class="hint" role="status" aria-live="polite"></p>
      </form>
+      <h3 style="margin-top:15px">Control diario de caja chica</h3>
+      <label>Fecha<input id="pettyReviewDay" type="date"></label>
+      <p id="pettyReviewSummary" class="hint finance-hint">Consultando gastos registrados…</p>
+      <button class="primary finance-submit" id="pettyReviewButton" type="button">Verificar y cerrar día</button>
+      <p id="pettyReviewStatus" class="hint" role="status"></p>
+     </div>
     </section>
    </div>
    <section class="panel" id="frontdeskReviewPanel" hidden style="margin-top:17px">
