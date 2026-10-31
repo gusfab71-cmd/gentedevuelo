@@ -2,7 +2,7 @@
 <html lang="es"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
-<title>AeroSuite · Cierre diario de Dirección</title>
+<title>AeroSuite · Informe acumulado de Dirección</title>
 <style>
 :root{font-family:Inter,Arial,system-ui,sans-serif;color:#ecf5fb;background:#102235;color-scheme:dark}
 *{box-sizing:border-box}body{margin:0;background:linear-gradient(135deg,#102335,#1e394b);min-height:100vh}
@@ -21,6 +21,10 @@ button:disabled{opacity:.5;cursor:not-allowed}
 label{display:grid;gap:5px;font-size:12px}
 input,select,textarea{font:inherit;color:#fff;background:#142f42;border:1px solid #849cb1;border-radius:7px;padding:9px;width:100%}
 input[type=date]{min-width:160px}
+[hidden]{display:none!important}
+.daily-summary-table{min-width:890px!important}
+.daily-summary-table td{font-variant-numeric:tabular-nums}
+.small-table-note{font-size:11px;line-height:1.5}
 .summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
 .metric{background:#19394e;border:1px solid #4d839f;padding:14px;border-radius:10px}
 .metric strong{font-size:21px;display:block;margin:6px 0;color:#ffdc97}.metric small{color:#cde0eb}
@@ -60,36 +64,56 @@ th{color:#d9e8f2;background:#274358}
 <header class="no-print"><a class="brand" href="index.html">Aero<span>Suite</span> · Dirección</a><a id="goBack" href="portal-escuela.html">Volver a mi portal</a></header>
 <main>
 <div class="eyebrow">Solo Dirección / Administrador · Reporte institucional</div>
-<h1>Cierre diario de operaciones</h1>
-<p>Balance de movimientos económicos, actividad volada por aeronave y novedades de disponibilidad.</p>
+<h1>Informe acumulado de operaciones</h1>
+<p>El Director consulta cuando lo necesita: los registros diarios se conservan y el informe reúne el total acumulado con el detalle de cada fecha.</p>
 <p class="notice">Los cobros y gastos corresponden a movimientos registrados en AeroSuite, no a la ganancia ni al saldo bancario conciliado. Los consumos de packs se muestran aparte: no son un nuevo ingreso de dinero.</p>
 <div id="message" class="status no-print" role="status">Verificando el acceso del Director…</div>
 <div id="dashboard" hidden>
 <div class="toolbar no-print">
- <label>Fecha de cierre (ART)<input type="date" id="closeDate"></label>
- <button type="button" id="loadReport">Consultar cierre</button>
+ <label>Desde (ART, opcional)<input type="date" id="periodFrom"></label>
+ <label>Hasta (ART)<input type="date" id="periodTo" required></label>
+ <button type="button" id="loadReport">Generar informe acumulado</button>
  <button class="primary" type="button" id="printReport" disabled>Imprimir / Guardar PDF</button>
  <a id="manageFleet" class="button" href="flota-institucional.html">Gestionar flota</a>
 </div>
-<p class="small no-print">Para descargar el PDF, elegí «Guardar como PDF» como destino en la ventana de impresión. También podés imprimirlo directamente o adjuntarlo a un correo.</p>
+<p class="small no-print">Dejá «Desde» vacío para acumular desde la primera operación registrada. El informe se genera únicamente cuando lo pedís. Para descargarlo, elegí «Guardar como PDF» en la ventana de impresión.</p>
+<div id="reportSections" hidden>
 <section class="panel">
  <div class="eyebrow">Resumen institucional</div>
  <h2 id="reportTitle">—</h2><p id="reportGenerated" class="muted small"></p>
  <div class="summary" id="financialSummary"></div>
+ <div id="periodFlightSummary" class="notice" style="margin-top:13px"></div>
  <div id="packSummary" class="notice" style="margin-top:13px"></div>
 </section>
 <section class="panel">
- <h2>Detalle diario de ingresos y egresos</h2>
+ <h2>Ingresos y egresos, discriminados por día</h2>
+ <p class="small">Cada fecha se muestra por separado, incluso sin movimientos. Los importes se mantienen en su moneda original, sin sumar pesos con dólares.</p>
+ <div class="table-wrap"><table class="daily-summary-table">
+  <thead><tr><th>Fecha ART</th><th>Ingresos</th><th>Egresos</th><th>Diferencia</th><th>Movimientos</th></tr></thead>
+  <tbody id="periodMoneyRows"></tbody>
+ </table></div>
+</section>
+<section class="panel">
+ <h2>Actividad aeronáutica, discriminada por día</h2>
+ <p class="small">Horas validadas de informes aprobados y horas provisionales de vuelos saldados todavía sin aprobación; no se duplican. El día se asigna según la reserva ART. Las horas reales del Libro siguen siendo UTC.</p>
+ <div class="table-wrap"><table class="daily-summary-table">
+  <thead><tr><th>Fecha ART</th><th>Horas validadas</th><th>Horas provisionales</th><th>Pack consumido</th><th>Aeronaves utilizadas</th></tr></thead>
+  <tbody id="periodFlightRows"></tbody>
+ </table></div>
+</section>
+<section class="panel">
+ <h2>Movimientos detallados del último día incluido en el informe</h2>
  <div class="table-wrap"><table><thead><tr><th>Hora ART</th><th>Tipo</th><th>Alumno / concepto</th><th>Medio</th><th>Ingreso</th><th>Egreso</th></tr></thead><tbody id="movementRows"></tbody></table></div>
 </section>
 <section class="panel">
- <h2>Flota: horas y situación de servicio</h2>
+ <h2>Flota: horas históricas y situación actual</h2>
  <p class="small">Las horas acumuladas validadas provienen de informes aprobados. Las provisionales corresponden a vuelos saldados sin informe aprobado y se muestran por separado. No se suman dos veces.</p>
- <p class="small">La disponibilidad corresponde al estado de flota vigente al momento de emitir este informe. Las novedades anotan la fecha desde que la aeronave está fuera de servicio, el motivo y su ubicación.</p>
+ <p class="small">La disponibilidad refleja la situación actual al momento de consultar, no un estado histórico reconstruido. Las novedades incluyen fecha de salida de servicio, motivo y ubicación.</p>
  <div id="fleetSummary" class="summary"></div>
  <div id="fleetList" class="fleet-grid"></div>
  <div id="fleetUnknown" class="notice" hidden></div>
 </section>
+</div>
 <p class="muted small">AeroSuite by Gente de Vuelo · Documento interno de control de Dirección. Horas del Libro de Vuelo: UTC; fechas de turnera, cobros y cierres: ART. No sustituye los registros técnicos oficiales.</p>
 </div>
 </main>
@@ -134,18 +158,44 @@ th{color:#d9e8f2;background:#274358}
  }
  function renderMoney(data){
   const target=$("financialSummary");target.replaceChildren();
-  if(!data.finances?.length)target.append(tile("Movimientos","Sin movimientos","No hay ingresos ni egresos registrados ese día"));
-  for(const item of data.finances){
-   target.append(tile("Ingresos · "+item.currency,money(item.income,item.currency),
-    "Efectivo "+money(item.cash_in,item.currency)+" · Transferencia "+money(item.bank_in,item.currency)));
-   target.append(tile("Egresos · "+item.currency,money(item.expenses,item.currency),
-    "Efectivo "+money(item.cash_out,item.currency)+" · Transferencia "+money(item.bank_out,item.currency)));
-   target.append(tile("Diferencia registrada · "+item.currency,money(item.balance,item.currency),
-    "Ingresos menos egresos, sin incluir packs consumidos"));
+  if(!data.totals?.length)target.append(tile("Ingresos / egresos","Sin movimientos","No se registraron movimientos económicos en el período"));
+  for(const item of data.totals){
+   target.append(tile("Ingresos acumulados · "+item.currency,money(item.income,item.currency),
+    item.movement_count+" movimiento(s) en el período (incluye egresos)"));
+   target.append(tile("Egresos acumulados · "+item.currency,money(item.expenses,item.currency),
+    "Solo operaciones efectivamente registradas"));
+   target.append(tile("Diferencia del período · "+item.currency,money(item.balance,item.currency),
+    "Ingresos menos egresos, no equivale a ganancia"));
   }
-  const consumption=data.pack_consumptions||{};
-  showText("packSummary","Packs utilizados: "+(consumption.count||0)+" descuento(s) · "+
-   hours(consumption.minutes)+" de horas prepagas consumidas. No se registra nuevo ingreso de dinero al utilizarlos.");
+  const packs=data.packs||{},flights=data.flights||{};
+  showText("packSummary","Consumo acumulado de packs: "+(packs.count||0)+" descuento(s) por "+
+    hours(packs.minutes)+" prepagas. No son nuevos ingresos de dinero.");
+  showText("periodFlightSummary","Actividad de vuelos en el período: "+
+    hours(flights.approved_minutes)+" validadas y "+hours(flights.provisional_minutes)+
+    " provisionales, correspondientes a "+(flights.flight_count||0)+" vuelo(s) registrado(s).");
+ }
+ function renderPeriodDays(data){
+  const moneyRows=$("periodMoneyRows"),flightRows=$("periodFlightRows");
+  moneyRows.replaceChildren();flightRows.replaceChildren();
+  for(const day of data.days||[]){
+   const fin=day.finances||[];
+   const formatColumn=key=>fin.length?fin.map(x=>money(x[key],x.currency)).join(" · "):"—";
+   const row=document.createElement("tr");
+   cell(row,dateLabel(day.day));
+   cell(row,formatColumn("income"));cell(row,formatColumn("expenses"));
+   cell(row,formatColumn("balance"));cell(row,day.movement_count||0);
+   moneyRows.append(row);
+   const flightRow=document.createElement("tr");
+   cell(flightRow,dateLabel(day.day));
+   cell(flightRow,hours(day.approved_minutes));
+   cell(flightRow,hours(day.provisional_minutes));
+   cell(flightRow,(day.pack_count||0)+" consumo(s) · "+hours(day.pack_minutes));
+   const planes=(day.aircraft||[]).map(a=>
+    a.registration+": "+hours(a.approved_minutes)+" aprobadas / "+
+     hours(a.provisional_minutes)+" provisionales").join("; ");
+   cell(flightRow,planes||"Sin vuelos registrados");
+   flightRows.append(flightRow);
+  }
  }
  function renderMovements(data){
   const list=$("movementRows");list.replaceChildren();
@@ -242,20 +292,35 @@ th{color:#d9e8f2;background:#274358}
    hours(x.provisional_minutes)+" provisionales").join("; ")+". Incorporalas en «Gestionar flota» para completar el seguimiento.");
  }
  async function loadReport(){
-  const day=$("closeDate").value;
-  if(!validDay(day)||day>todayART()){notice.textContent="Seleccioná una fecha válida hasta hoy (ART).";return;}
-  $("loadReport").disabled=true;$("printReport").disabled=true;notice.textContent="Preparando cierre diario de Dirección…";
+  const from=$("periodFrom").value,to=$("periodTo").value;
+  if(!validDay(to)||to>todayART()||(from&&(!validDay(from)||from>to))){
+   notice.textContent="Elegí una fecha final válida y un inicio no posterior al final.";return;
+  }
+  $("loadReport").disabled=true;$("printReport").disabled=true;
+  $("reportSections").hidden=true;report=null;
+  notice.textContent="Calculando el total acumulado y el detalle de cada día…";
   try{
-   const data=await rpc("aerosuite_daily_close_snapshot",{p_institution_id:inst,p_day:day});
-   if(!data||data.day!==day)throw Error("La consulta no devolvió el día solicitado.");
-   report=data;
-   showText("reportTitle",school.institution_name+" · "+dateLabel(day));
-   showText("reportGenerated","Reporte consultado el "+stamp(data.as_of)+" · fecha de operaciones "+dateLabel(day)+" ART");
-   renderMoney(data);renderMovements(data);renderFleet(data);
-   $("printReport").disabled=false;
-   notice.textContent="Cierre consultado correctamente. Podés imprimirlo o guardarlo como PDF para enviarlo por correo.";
+   const period=await rpc("aerosuite_director_period_summary",{
+    p_institution_id:inst,p_from_date:from||null,p_to_date:to
+   });
+   if(!period||period.to!==to||!Array.isArray(period.days))
+    throw Error("La consulta no devolvió el período completo.");
+   // El detalle individual y la flota consultan el último día; el balance de TODO
+   // el período se obtiene directamente de los movimientos originales.
+   const lastDay=await rpc("aerosuite_daily_close_snapshot",{p_institution_id:inst,p_day:to});
+   if(!lastDay||lastDay.day!==to)throw Error("No se pudo consultar la flota.");
+   report={period,lastDay};
+   if(!from)$("periodFrom").placeholder="Desde el primer registro";
+   showText("reportTitle",school.institution_name+" · "+dateLabel(period.from)+" al "+dateLabel(period.to));
+   showText("reportGenerated","Generado a pedido el "+stamp(period.as_of)+
+    " · "+period.days.length+" día(s) incluidos (ART), con y sin movimientos");
+   renderMoney(period);renderPeriodDays(period);
+   renderMovements(lastDay);renderFleet(lastDay);
+   $("reportSections").hidden=false;$("printReport").disabled=false;
+   notice.textContent="Informe acumulado listo: "+dateLabel(period.from)+" al "+dateLabel(period.to)+
+    ". Podés imprimirlo o guardarlo como PDF.";
   }catch(err){
-   report=null;notice.textContent="No se pudo consultar el cierre: "+(err.message||err);
+   report=null;notice.textContent="No se pudo generar el informe: "+(err.message||err);
   }finally{$("loadReport").disabled=false;}
  }
  try{
@@ -267,14 +332,15 @@ th{color:#d9e8f2;background:#274358}
   if(!school)throw Error("El cierre diario es exclusivo del Director/Administrador de esta institución.");
   $("goBack").href="portal-escuela.html?institucion="+encodeURIComponent(inst)+"&rol=administrador&elegida=1"+(test?"&prueba=1":"");
   $("manageFleet").href="flota-institucional.html?institucion="+encodeURIComponent(inst)+"&rol=administrador"+(test?"&prueba=1":"");
-  $("closeDate").value=todayART();$("closeDate").max=todayART();
+  $("periodTo").value=todayART();$("periodTo").max=todayART();
+  $("periodFrom").max=todayART();
   $("dashboard").hidden=false;
   $("loadReport").onclick=loadReport;
   $("printReport").onclick=()=>{
    if(!report)return;
    window.print();
   };
-  await loadReport();
+  notice.textContent="Acceso a Dirección verificado. Elegí el período y solicitá el informe cuando lo necesites; no se emiten cierres automáticos.";
  }catch(err){notice.textContent="Acceso no autorizado o error de conexión: "+(err.message||err);}
 })();
 </script></body></html>
