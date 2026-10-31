@@ -1301,6 +1301,29 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     amount.toLocaleString("es-AR",{minimumFractionDigits:Number.isInteger(amount)?0:2,maximumFractionDigits:2}):"";
   }
   function formatMoneyOnBlur(el){
+   // Agrupar miles durante la escritura, con coma opcional para centavos.
+   el.addEventListener("input",()=>{
+    const previous=el.value,cursor=el.selectionStart??previous.length;
+    const prefix=previous.slice(0,cursor);
+    const digitsBefore=(prefix.match(/\d/g)||[]).length;
+    const withoutSeparators=previous.replace(/[^\d,]/g,"");
+    const commaAt=withoutSeparators.indexOf(",");
+    const integerRaw=commaAt<0?withoutSeparators:withoutSeparators.slice(0,commaAt);
+    const cents=commaAt<0?null:withoutSeparators.slice(commaAt+1).replace(/,/g,"").slice(0,2);
+    const integer=integerRaw.replace(/^0+(?=\d)/,"")||"0";
+    const grouped=integer.replace(/\B(?=(\d{3})+(?!\d))/g,".");
+    const formatted=grouped+(cents===null?"":","+cents);
+    if(formatted===previous)return;
+    el.value=formatted;
+    let seen=0,next=formatted.length;
+    if(digitsBefore===0)next=0;
+    else for(let i=0;i<formatted.length;i++){
+     if(/\d/.test(formatted[i]))seen++;
+     if(seen===digitsBefore){next=i+1;break;}
+    }
+    if(prefix.includes(",")&&formatted.includes(","))next=Math.max(next,formatted.indexOf(",")+1);
+    el.setSelectionRange(next,next);
+   });
    el.addEventListener("blur",()=>{const n=parseMoney(el.value);if(n!==null)el.value=displayMoney(n);});
   }
 
