@@ -34,10 +34,10 @@ th{padding:10px 4px;color:#b7d6e7;font-weight:800}td{vertical-align:middle;text-
 th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
 .slot.available{background:#1b5c50;border-color:#6db79a;color:#fff;font-weight:750}
 .slot.busy{background:#35465c;border-color:#60768f}.slot.mine{background:#3d593f;border-color:#b1ca87}.slot.cancelled{background:#263746}
-.slot.settled,.slot.settled.busy,.slot.settled.mine{background:#99500d;border:2px solid #ffb74f;color:#fff;font-weight:850}
-.slot.settled small{color:#fff0da}
-.list-item.settled{border-left:5px solid #ff9a25;background:#362d27}
-.chip.settled{background:#a35110;border-color:#ffb74f;color:#fff;font-weight:850}
+.slot.settled,.slot.settled.busy,.slot.settled.mine{background:#8c6e27;border:2px solid #f4d892;color:#fff9e8;font-weight:850}
+.slot.settled small{color:#fff6df}
+.list-item.settled{border-left:5px solid #dfb653;background:#322f23}
+.chip.settled{background:#95762b;border-color:#f4d892;color:#fff9e8;font-weight:850}
 .slot small{display:block;margin-top:4px;color:#d1dee7;overflow-wrap:anywhere;word-break:break-word;line-height:1.25;font-size:10px}.slot:hover:not(:disabled){filter:brightness(1.13)}
 .row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.row.between{justify-content:space-between}
 .list{display:grid;gap:10px;margin-top:12px}.list-item{border:1px solid #4e748d;border-radius:10px;padding:13px 15px;background:#142c3e}
@@ -249,7 +249,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    <div id="adminBooking" class="notice" hidden>Para solicitar un turno en nombre de un alumno, seleccioná su nombre antes de tocar una casilla libre.
     <label style="margin-top:9px">Alumno <select id="bookingStudent"><option value="">Elegí un alumno</option></select></label>
     <p id="bookingStudentNotice" class="hint warn" hidden>Esta institución todavía no tiene alumnos habilitados. Primero invitá uno desde «Alumnos e instructores» en tu portal.</p>
-    <div class="formgrid" style="margin-top:12px"><label>Instructor para confirmar el turno<select id="bookingInstructor"><option value="">Elegí un instructor habilitado</option></select></label><label>Aeronave para asignar<select id="bookingAircraft"><option value="">A definir después</option></select></label></div>
+    <div class="formgrid" style="margin-top:12px"><label>Instructor para confirmar el turno<select id="bookingInstructor"><option value="">Elegí un instructor habilitado</option></select></label></div>
    </div>
    <section id="reschedulePanel" class="notice" hidden aria-label="Reprogramación autorizada de reserva">
     <div class="row between"><strong>Reprogramar turno con autorización del alumno</strong><button id="stopReschedule" type="button">Salir de reprogramación</button></div>
@@ -266,7 +266,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     <p id="rescheduleFeedback" class="hint" role="status">Completá los datos y seleccioná una casilla «Libre · Reprogramar aquí».</p>
    </section>
    <div class="table-scroll"><table aria-label="Turnos de la semana"><thead id="weekHead"></thead><tbody id="weekBody"></tbody></table></div>
-   <p class="hint">Horarios de referencia de Buenos Aires (ART). Verde: libre · Amarillo: pendiente · Azul: confirmada · Gris: ocupada · Propias: resaltadas. Los turnos ocupados de otros alumnos no muestran información privada al alumno.</p>
+   <p class="hint">Horarios de referencia de Buenos Aires (ART). Verde: libre · Amarillo: pendiente · Azul: confirmada · Dorado: saldada · Gris: ocupada · Propias: resaltadas. Los turnos ocupados de otros alumnos no muestran información privada al alumno.</p>
    <h3>Detalle de reservas de esta semana</h3><div id="bookingList" class="list"></div>
   </section>
   <section class="panel tab-panel" id="informes">
@@ -788,7 +788,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     const paid=manager&&!!b.booking_id&&settledWeek.has(b.booking_id);
     if(paid)card.classList.add("settled");
     const sensitive=role!=="alumno"||b.my_booking;
-    card.innerHTML='<div class="row between"><strong>'+esc(stamp(b.starts_at))+' · 90 min</strong><span class="chip '+esc(b.status)+'">'+esc(statuses[b.status]||b.status)+'</span></div>'+
+    card.innerHTML='<div class="row between"><strong>'+esc(stamp(b.starts_at))+' · 90 min</strong>'+(paid?'':'<span class="chip '+esc(b.status)+'">'+esc(statuses[b.status]||b.status)+'</span>')+'</div>'+
      (sensitive?'<p>Alumno: '+esc(b.student_email||"Reservado")+' · Instructor: '+esc(b.instructor_id?(b.instructor_email||"Cuenta no disponible")+(b.status==="pending"?" (preasignado · pendiente de confirmar)":""):"Sin asignar")+' · Aeronave: '+esc(b.aircraft||"A definir")+'</p>':'<p>Turno ocupado de otro alumno.</p>');
     if(paid){
      const method=settledWeek.get(b.booking_id);
@@ -797,7 +797,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
      const badge=document.createElement("span");badge.className="chip settled";badge.textContent="Saldado"+note;
      card.querySelector(".row").append(badge);
     }
-    if(manager&&["confirmed","completed"].includes(b.status)){
+    if(manager&&!paid&&["confirmed","completed"].includes(b.status)){
      const detail=bookingConfirmations.get(b.booking_id);
      const p=document.createElement("p");p.className="hint";
      const actorRoles={administrador:"Dirección",secretaria:"Secretaría",instructor:"Instructor",cuenta_desvinculada:"Cuenta desvinculada"};
@@ -824,21 +824,14 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     }
     if(b.booking_id&&b.status==="pending"&&(manager||(role==="instructor"&&(!b.instructor_id||b.instructor_id===user.id)))){
      btn("Confirmar turno",async()=>{
-      let instructorId=null,aircraft="";
+      let instructorId=null;
       if(manager){
        instructorId=b.instructor_id||$("bookingInstructor").value;
        if(!instructorId){stat.textContent="Seleccioná un instructor habilitado antes de confirmar.";return;}
-       aircraft=$("bookingAircraft").value.trim();
       }
       if(!confirm("¿Confirmar este turno"+(role==="instructor"?" a tu cargo":"")+(manager?" con el Instructor "+labelOf(instructorId):"")+"?"))return;
-      await takeAction("confirm",b,{p_instructor_id:instructorId,p_aircraft:aircraft});
+      await takeAction("confirm",b,{p_instructor_id:instructorId,p_aircraft:""});
      },"primary");
-    }
-    if(b.booking_id&&manager&&b.status==="confirmed"){
-     btn("Asignar aeronave",async()=>{const aircraft=$("bookingAircraft").value;
-      if(!confirm("¿"+(aircraft?"Asignar "+aircraft:"Dejar pendiente la aeronave")+" para este turno?"))return;
-      await takeAction("assign_aircraft",b,{p_aircraft:aircraft});
-     });
     }
     const associatedReport=b.booking_id?reports.find(r=>r.booking_id===b.booking_id):null;
     const canChangeBooking=!!b.booking_id&&!associatedReport&&new Date(b.starts_at).getTime()>Date.now();
