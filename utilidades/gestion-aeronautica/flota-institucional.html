@@ -50,15 +50,45 @@ button{background:#e9c993;color:#193041;border:1px solid #e9c993;border-radius:9
     const box=document.createElement("div");box.className="card";
     const title=document.createElement("h2");title.textContent=a.registration+" · "+(a.model||"Sin modelo");
     const chip=document.createElement("span");chip.className="chip "+(a.availability==="available"?"ok":"no");chip.textContent=a.availability==="available"?"Disponible para asignaciones":"Fuera de servicio";
-    const note=document.createElement("p");note.textContent=a.remarks||"Sin observaciones administrativas.";
+    const note=document.createElement("p");
+     note.textContent=a.availability==="out_of_service"?
+      "Fuera de servicio desde "+(a.out_of_service_since||"Fecha pendiente")+
+      " · Motivo: "+(a.out_of_service_reason||"No informado")+
+      " · Ubicación: "+(a.service_location||"No informada"):
+      "En servicio · Ubicación: "+(a.service_location||"No informada")+
+      (a.remarks?" · "+a.remarks:"");
     box.append(title,chip,note);
     if(manager&&school.can_write){
      const btn=document.createElement("button");btn.textContent=a.availability==="available"?"Marcar fuera de servicio":"Marcar disponible";
-     btn.onclick=async()=>{const status=a.availability==="available"?"out_of_service":"available";
-      if(!confirm("¿Actualizar la disponibilidad administrativa de "+a.registration+"?"))return;
-      const remarks=prompt("Observaciones (opcional):",a.remarks||"");if(remarks===null)return;
-      btn.disabled=true;try{await action({p_operation:"status",p_aircraft_id:a.id,p_availability:status,p_remarks:remarks});st.textContent="Estado actualizado y registrado en el historial de flota.";await load();}
-      catch(e){st.textContent="Error: "+(e.message||e);btn.disabled=false;}
+     btn.onclick=async()=>{
+      const state=a.availability==="available"?"out_of_service":"available";
+      const today=new Date(Date.now()-3*3600000).toISOString().slice(0,10);
+      const date=prompt("Fecha desde la que cambia su estado (AAAA-MM-DD, ART):",today);
+      if(date===null)return;
+      if(!/^20\\d{2}-\\d{2}-\\d{2}$/.test(date)||date>today){
+       st.textContent="Ingresá una fecha válida hasta hoy (ART).";return;
+      }
+      const reason=prompt(state==="out_of_service"?"Motivo de salida de servicio (obligatorio):":"Observaciones del regreso a servicio (opcional):",
+       state==="out_of_service"?a.out_of_service_reason||"":a.remarks||"");
+      if(reason===null)return;
+      const location=prompt("Ubicación de la aeronave (hangar, taller, aeródromo):",a.service_location||"");
+      if(location===null)return;
+      if(state==="out_of_service"&&(reason.trim().length<5||location.trim().length<3)){
+       st.textContent="Completá el motivo y la ubicación de la aeronave fuera de servicio.";return;
+      }
+      if(!confirm("¿Registrar "+a.registration+" "+(state==="out_of_service"?"FUERA DE SERVICIO":"EN SERVICIO")+
+       " desde "+date+"?"))return;
+      btn.disabled=true;
+      try{
+       const response=await db.rpc("aerosuite_aircraft_service_update",{
+        p_institution_id:inst,p_aircraft_id:a.id,p_availability:state,
+        p_from_date:date,p_reason:reason.trim(),p_location:location.trim()
+       });
+       if(response.error)throw response.error;
+       if(!response.data?.ok)throw Error("No se confirmó la actualización.");
+       st.textContent="Novedad registrada para el cierre diario de Dirección.";
+       await load();
+      }catch(e){st.textContent="Error: "+(e.message||e);btn.disabled=false;}
      };box.append(btn);
     }list.append(box);
    }
