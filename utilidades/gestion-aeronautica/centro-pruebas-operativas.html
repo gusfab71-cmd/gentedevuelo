@@ -112,7 +112,7 @@ const roles=['administrador','secretaria','instructor','alumno'];let labAccounts
 function msg(s){status.textContent=s;}
 function setText(id,s){$(id).textContent=s;}
 function url(role){return 'ingreso-escuela.html?institucion='+encodeURIComponent(testId)+'&rol='+encodeURIComponent(role)+'&prueba=1';}
-function time(v){return v?new Date(v).toLocaleString('es-AR',{dateStyle:'short',timeStyle:'short',timeZone:'America/Argentina/Buenos_Aires'}):'—';}
+function time(v){return v?new Date(v).toLocaleString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',hourCycle:'h23',timeZone:'America/Argentina/Buenos_Aires'}).replace(',','')+' ART':'—';}
 function outcomes(steps){const vals=names.map(x=>steps?.[x[0]]?.status||'pending');return {ok:vals.filter(x=>x==='passed').length,failed:vals.filter(x=>x==='failed').length,blocked:vals.filter(x=>x==='blocked').length,pending:vals.filter(x=>x==='pending').length};}
 function summary(t){const o=outcomes(t.steps);return o.ok+' correctos · '+o.failed+' fallidos · '+o.blocked+' bloqueados · '+o.pending+' pendientes';}
 function safeNumber(n){return Number.isFinite(Number(n))?Number(n).toLocaleString('es-AR'):'—';}
