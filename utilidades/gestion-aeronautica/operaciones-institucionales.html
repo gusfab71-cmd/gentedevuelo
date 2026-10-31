@@ -347,15 +347,15 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    <div class="finance-workspaces" id="financeWorkspaces" hidden>
     <section class="panel" id="flightSettlementPanel">
      <span class="eyebrow">01 · Al bajar del avión</span><h3>Cobrar o liquidar vuelo</h3>
-     <p class="hint">El Alumno baja del avión y pasa por Secretaría. Se cobran o descuentan las horas firmadas en el Libro de Vuelo, <strong>sin esperar el informe escrito del Instructor</strong>. Administración hará el control al finalizar el día.</p>
+     <p class="hint">Cuando el alumno se presenta a pagar, Secretaría registra el tiempo que declara haber volado. <strong>No se necesita confirmación previa ni informe del Instructor.</strong> El tiempo registrado para el cobro quedará pendiente de control posterior.</p>
      <form id="flightSettlementForm">
       <div class="formgrid">
-       <label class="finance-span-2">Turno confirmado, ya iniciado y sin liquidar<select id="settleBooking" name="booking" required><option value="">Elegí el vuelo</option></select></label>
+       <label class="finance-span-2">Turno iniciado, pendiente o confirmado, sin liquidar<select id="settleBooking" name="booking" required><option value="">Elegí el vuelo</option></select></label>
        <label class="finance-span-2">Alumno<input id="settleStudent" value="Seleccioná un vuelo" readonly></label>
        <label>Instructor<input id="settleInstructor" value="—" readonly></label>
-        <label>Horas del Libro de Vuelo<input id="settleBookHours" name="book_hours" type="number" min="0" max="10" step="1" required placeholder="Ej.: 1"></label>
+        <label>Horas informadas por el alumno<input id="settleBookHours" name="book_hours" type="number" min="0" max="10" step="1" required placeholder="Ej.: 1"></label>
         <label>Minutos restantes<input id="settleBookMinutes" name="book_minutes" type="number" min="0" max="59" step="1" required value="0" placeholder="Ej.: 40"></label>
-        <p id="settleDurationPreview" class="hint finance-span-2" role="status" aria-live="polite">Ingresá horas y minutos firmados en el Libro de Vuelo.</p>
+        <p id="settleDurationPreview" class="hint finance-span-2" role="status" aria-live="polite">Ingresá horas y minutos declarados por el alumno.</p>
        <label>Modalidad<select id="settleMode" name="mode"><option value="cash">Cobro en efectivo</option><option value="bank_transfer">Transferencia acreditada</option><option value="pack">Descontar de un pack</option></select></label>
        <label id="settlePackRow" class="finance-span-2" hidden>Pack del alumno<select id="settlePack" name="pack"><option value="">Elegí un pack con saldo suficiente</option></select></label>
        <label id="settleAmountRow">Importe cobrado<input id="settleAmount" name="amount" type="number" min=".01" max="1000000000000" step=".01"></label>
@@ -364,10 +364,14 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
        <label id="settleFiscalRow" class="finance-span-2">Referencia de factura ARCA (opcional)<input name="fiscal_reference" maxlength="120" placeholder="Número de comprobante emitido"></label>
        <label class="finance-span-2">Concepto (opcional)<input name="description" maxlength="500" placeholder="Ej.: Práctica de instrucción"></label>
       </div>
-      <p id="settleHelp" class="hint finance-hint">Seleccioná el turno y copiá los minutos que constan en el Libro de Vuelo firmado.</p>
+      <p id="settleHelp" class="hint finance-hint">Seleccioná el turno y el tiempo declarado por el alumno, sin esperar el informe del Instructor.</p>
       <label class="finance-hint" style="display:flex;align-items:flex-start;gap:8px;margin:10px 0">
-       <input type="checkbox" name="book_confirmed" id="settleBookConfirmed" style="width:auto;margin-top:4px">
-       Confirmo que el Instructor informó que el vuelo se realizó y que los minutos ingresados corresponden al Libro de Vuelo firmado.
+       <input type="checkbox" name="student_declared" id="settleBookConfirmed" style="width:auto;margin-top:4px">
+       Confirmo que el alumno se presentó a pagar o descontar de su pack y declaró los minutos volados. El informe del Instructor se revisará después.
+      </label>
+      <label class="finance-hint" style="display:flex;align-items:flex-start;gap:8px;margin:10px 0">
+       <input type="checkbox" id="settleLogbookVerified" style="width:auto;margin-top:4px">
+       Verifiqué el Libro de Vuelo firmado (opcional). Si no está disponible, quedará pendiente de cotejo.
       </label>
       <button class="primary finance-submit" type="submit" id="settleSubmit">Cobrar / descontar vuelo</button>
       <p id="settleStatus" class="hint" role="status" aria-live="polite"></p>
@@ -1488,7 +1492,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    if(!manager)return;
    const selected=deskFlightById($("settleBooking").value);
    $("settleStudent").value=selected?.student_email||"Seleccioná un vuelo";
-   $("settleInstructor").value=selected?.instructor_email||"No asignado";
+   $("settleInstructor").value=selected?.instructor_email||"No asignado todavía";
    syncSettlePack();
   }
   function syncSettlePack(){
@@ -1518,16 +1522,17 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    const entered=durationInputMinutes($("settleBookHours"),$("settleBookMinutes"));
    const validMinutes=entered!==null;
     $("settleDurationPreview").textContent=durationSummary(entered);
-   $("settleHelp").textContent=!current?
-    "Elegí una reserva confirmada cuyo vuelo haya comenzado. Secretaría debe confirmar que efectivamente se realizó.":
+   const pendingNotice=current?.booking_status==="pending"?"Turno aún pendiente: podés liquidarlo, pero luego Dirección deberá confirmarlo y asignar Instructor para el informe. ":"";
+   $("settleHelp").textContent=pendingNotice+(!current?
+    "Elegí el turno del alumno que ya comenzó.":
     !validMinutes?
-     "Ingresá las horas y minutos del Libro de Vuelo firmado. No hace falta esperar el informe escrito.":
+     "Ingresá el tiempo declarado por el alumno, sin esperar el informe escrito.":
      pack?$("settlePack").options.length>1?
       "Se descontarán "+flightHoursMinutes(entered)+
       " h del pack del Alumno y quedarán pendientes de control contra el informe del Instructor.":
       "No hay un pack con saldo suficiente para los "+flightHoursMinutes(entered)+" h declarados.":
      bank?"Confirmá que la transferencia ya se acreditó. Las horas se controlarán al recibir el informe.":
-      "El efectivo se registra ahora; las horas declaradas se contrastarán después con el informe.";
+      "El efectivo se registra ahora; las horas declaradas se contrastarán después con el informe.");
    $("settleSubmit").disabled=!school.can_write||!current||!validMinutes||
     !$("settleBookConfirmed").checked||pack&&$("settlePack").options.length<=1;
   }
@@ -1536,8 +1541,9 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    const select=$("settleBooking");const last=select.value;
    select.length=1;
    for(const flight of unsettledFlights){
+    const pending=flight.booking_status==="pending"?" · Pendiente de confirmar":"";
     select.add(new Option(stamp(flight.starts_at)+" · "+(flight.student_email||"Alumno")+
-     (flight.aircraft?" · "+flight.aircraft:""),flight.booking_id));
+     (flight.aircraft?" · "+flight.aircraft:"")+pending,flight.booking_id));
    }
    if(unsettledFlights.some(x=>x.booking_id===last))select.value=last;
    syncSettleFlight();
@@ -1569,7 +1575,8 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
      " · Libro de Vuelo: "+flightHoursMinutes(Number(item.book_minutes))+" h"+
      (item.report_minutes!=null?" · Informe: "+flightHoursMinutes(Number(item.report_minutes))+" h":" · Sin informe escrito")+
      " · "+({cash:"Efectivo",bank_transfer:"Transferencia",pack:"Pack"}[item.payment_method]||item.payment_method)+
-     " · Registrado por: "+(item.recorded_by_email||"Secretaría");
+     " · Registrado por: "+(item.recorded_by_email||"Secretaría")+
+     " · Fuente del tiempo: "+(item.logbook_confirmed?"Libro de Vuelo verificado":"Declaración del alumno; Libro pendiente");
     box.append(info);
     if(item.status==="difference"){
      const alert=document.createElement("p");alert.className="warn";
@@ -1792,10 +1799,10 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    const bankRef=String(fd.get("bank_reference")||"").trim();
    const message=$("settleStatus"),button=$("settleSubmit");
    if(!flight){
-    message.textContent="Elegí un turno confirmado cuyo vuelo ya se realizó.";return;
+    message.textContent="Elegí el turno del alumno que se presentó a pagar o descontar horas.";return;
    }
    if(declaredMinutes===null||!document.getElementById("settleBookConfirmed").checked){
-    message.textContent="Ingresá y confirmá las horas y minutos del Libro de Vuelo firmado.";return;
+    message.textContent="Ingresá el tiempo declarado y confirmá que el alumno se presentó para liquidar el vuelo.";return;
    }
    if(mode==="pack"&&!selectedPack){
     message.textContent="Seleccioná el pack del alumno con saldo suficiente.";return;
@@ -1816,8 +1823,9 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     "cobrar "+currencyAmount(amount,fd.get("currency"))+
      (mode==="cash"?" en efectivo":" por transferencia acreditada");
    if(!confirm("¿Confirmás "+wording+" por el vuelo de "+(flight.student_email||"este alumno")+
-    " del "+stamp(flight.starts_at)+"? Horas del Libro de Vuelo: "+duration+
-    " h. El control contra el informe escrito quedará pendiente."))return;
+    " del "+stamp(flight.starts_at)+"? Tiempo declarado por el alumno: "+duration+
+    " h. "+($("settleLogbookVerified").checked?"Libro de Vuelo verificado.":"Libro de Vuelo pendiente de cotejo.")+
+    " El informe del Instructor se controlará después."))return;
    button.disabled=true;message.textContent="Guardando cobro o descuento…";
    try{
     const result=await rpc("aerosuite_checkout_flight_at_desk",{
@@ -1826,19 +1834,20 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
      p_currency:String(fd.get("currency")||"ARS"),
      p_bank_ref:bankRef,p_fiscal_ref:mode==="pack"?"":String(fd.get("fiscal_reference")||"").trim(),
      p_note:String(fd.get("description")||"").trim(),
-     p_request_id:pendingSettlementRequest,p_book_confirmed:true
+     p_request_id:pendingSettlementRequest,p_book_confirmed:$("settleLogbookVerified").checked
     });
     if(!result?.ok)throw Error("El cobro o descuento no pudo confirmarse.");
     pendingSettlementRequest=null;pendingSettlementSignature="";
     form.reset();
     $("settleBookHours").value="";$("settleBookMinutes").value="";
     $("settleBookConfirmed").checked=false;
+    $("settleLogbookVerified").checked=false;
     await loadFinance();
     message.textContent=result.already_registered?
      "El vuelo ya había sido liquidado; no se registró ningún importe ni descuento adicional.":
      mode==="pack"?
-      "Se descontaron "+duration+" h del pack del Alumno. Quedó pendiente revisar los minutos cuando llegue el informe.":
-      "Cobro por "+duration+" h registrado. El informe del Instructor podrá completarse después; quedará pendiente cotejar las horas.";
+      "Se descontaron "+duration+" h del pack. El tiempo declarado por el alumno quedó pendiente de control con el Instructor.":
+      "Cobro por "+duration+" h registrado sin esperar al Instructor. Queda pendiente cotejar el tiempo declarado.";
    }catch(err){
     message.textContent="No se pudo registrar la liquidación: "+safeError(err);
    }finally{syncSettleMode();}
