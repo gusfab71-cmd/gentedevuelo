@@ -489,7 +489,7 @@ async function reload(){
  if(!clientHistory.length){const li=document.createElement('li');li.textContent='Sin operaciones registradas.';recent.append(li);return}
  for(const entry of clientHistory){
   const li=document.createElement('li');const institution=records.find(r=>r.id===entry.institution_id);
-  li.textContent=(entry.operation==='INSERT'?'Alta':'Modificación')+' · '+(institution?.name||'Institución')+' · '+new Date(entry.changed_at).toLocaleString('es-AR');recent.append(li);
+  li.textContent=(entry.operation==='INSERT'?'Alta':'Modificación')+' · '+(institution?.name||'Institución')+' · '+new Date(entry.changed_at).toLocaleString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',hourCycle:'h23',timeZone:'America/Argentina/Buenos_Aires'}).replace(',','')+' ART';recent.append(li);
  }
 }
 async function deleteInstitution(row,button){
