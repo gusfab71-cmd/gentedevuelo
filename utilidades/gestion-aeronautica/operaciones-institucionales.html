@@ -785,9 +785,18 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    if(!list.length){target.textContent="No hay reservas visibles para esta semana.";return;}
    for(const b of list){
     const card=document.createElement("div");card.className="list-item";card.id="booking-"+(b.booking_id||"");
+    const paid=manager&&!!b.booking_id&&settledWeek.has(b.booking_id);
+    if(paid)card.classList.add("settled");
     const sensitive=role!=="alumno"||b.my_booking;
     card.innerHTML='<div class="row between"><strong>'+esc(stamp(b.starts_at))+' · 90 min</strong><span class="chip '+esc(b.status)+'">'+esc(statuses[b.status]||b.status)+'</span></div>'+
      (sensitive?'<p>Alumno: '+esc(b.student_email||"Reservado")+' · Instructor: '+esc(b.instructor_id?(b.instructor_email||"Cuenta no disponible")+(b.status==="pending"?" (preasignado · pendiente de confirmar)":""):"Sin asignar")+' · Aeronave: '+esc(b.aircraft||"A definir")+'</p>':'<p>Turno ocupado de otro alumno.</p>');
+    if(paid){
+     const method=settledWeek.get(b.booking_id);
+     const note=method==="pack"?" · Descontado de pack":method==="cash"?" · Efectivo":
+      method==="bank_transfer"?" · Transferencia":" · Pago registrado";
+     const badge=document.createElement("span");badge.className="chip settled";badge.textContent="Saldado"+note;
+     card.querySelector(".row").append(badge);
+    }
     if(manager&&["confirmed","completed"].includes(b.status)){
      const detail=bookingConfirmations.get(b.booking_id);
      const p=document.createElement("p");p.className="hint";
@@ -1883,6 +1892,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     packDiscountRequestId=null;
     $("packDiscountConfirmed").checked=false;
     await loadFinance();
+    await loadWeek();
     message.textContent=result.already_registered?
      "Ya estaba descontado; no se duplicaron horas.":
      "Descuento registrado. Se controlarán las horas cuando llegue el informe del Instructor.";
@@ -2068,6 +2078,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     $("settleBookConfirmed").checked=false;
     $("settleLogbookVerified").checked=false;
     await loadFinance();
+    await loadWeek();
     message.textContent=result.already_registered?
      "El vuelo ya había sido liquidado; no se registró ningún importe ni descuento adicional.":
      mode==="pack"?
