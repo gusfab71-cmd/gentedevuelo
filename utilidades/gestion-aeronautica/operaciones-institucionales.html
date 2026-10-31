@@ -273,8 +273,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     <p id="reportEligibilityHint" class="hint">El informe se completa después de finalizar el turno de vuelo, nunca por anticipado.</p>
     <div class="formgrid">
      <label>Vuelo asignado<select name="booking" id="reportBooking" required></select></label>
-     <label>Duración real · horas<input id="reportDurationHours" name="duration_hours" type="number" min="0" max="10" step="1" required placeholder="Ej.: 1"></label>
-     <label>Minutos restantes<input id="reportDurationMinutes" name="duration_minutes" type="number" min="0" max="59" step="1" required value="0" placeholder="Ej.: 40"></label>
+     <label>Tiempo real en horas centesimales<input id="reportDurationHours" name="duration_hours" type="text" inputmode="decimal" maxlength="6" required placeholder="Ej.: 1.5"></label>
      <label>Combustible cargado (litros)<input name="fuel" type="number" step=".01" min="0" value="0" required></label>
      <label>Aceite agregado (litros)<input name="oil" type="number" step=".01" min="0" value="0" required></label>
     </div>
@@ -386,9 +385,8 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     <form id="packPurchaseForm">
      <div class="formgrid">
       <label>Alumno<select id="packPurchaseStudent" name="student" required><option value="">Seleccionar alumno</option></select></label>
-      <label>Horas<input name="hours_whole" type="number" min="0" max="1000" step="1" required value="5"></label>
-      <label>Minutos<input name="minutes_extra" type="number" min="0" max="59" step="1" required value="0"></label>
-      <label>Importe cobrado<input name="amount" type="number" min=".01" step=".01" max="1000000000000" required></label>
+      <label>Horas del pack (centesimales)<input id="packPurchaseHours" name="pack_hours" type="text" inputmode="decimal" maxlength="7" value="5" required placeholder="Ej.: 10.5"></label>
+      <label>Importe cobrado<input class="money-entry" name="amount" type="text" inputmode="decimal" maxlength="23" required placeholder="Ej.: 1.500.000"></label>
       <label>Moneda<select name="currency"><option value="ARS">Pesos (ARS)</option><option value="USD">Dólares (USD)</option></select></label>
       <label>Medio de pago<select id="packPurchaseMethod" name="payment_method"><option value="cash">Efectivo recibido</option><option value="bank_transfer">Transferencia acreditada</option></select></label>
       <label id="packPurchaseBankRow" hidden>Referencia bancaria<input id="packPurchaseBankReference" name="payment_reference" maxlength="120" placeholder="Número de operación"></label>
@@ -410,7 +408,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
        <label class="finance-span-2">Concepto<input name="description" maxlength="500" minlength="3" placeholder="Ej.: Combustible AVGAS, alquiler del hangar" required></label>
        <label>Tipo<select name="kind"><option value="expense">Gasto habitual</option><option value="petty_expense">Gasto de caja chica</option></select></label>
        <label>Categoría<select name="category"><option value="Combustible">Combustible</option><option value="Alquiler inmueble">Alquiler inmueble / hangar</option><option value="Alquiler aeronave">Alquiler de aeronave</option><option value="Mantenimiento">Mantenimiento</option><option value="Seguros">Seguros</option><option value="Servicios">Servicios e insumos</option><option value="Instructores">Instructores</option><option value="Impuestos y tasas">Impuestos y tasas</option><option value="Limpieza">Limpieza</option><option value="Otros">Otros gastos</option></select></label>
-       <label>Importe pagado<input name="amount" type="number" min=".01" max="1000000000000" step=".01" required></label>
+       <label>Importe pagado<input class="money-entry" name="amount" type="text" inputmode="decimal" maxlength="23" required placeholder="Ej.: 100.000"></label>
        <label>Moneda<select name="currency"><option value="ARS">Pesos (ARS)</option><option value="USD">Dólares (USD)</option></select></label>
        <label>Medio de pago<select name="method" id="expenseMethod"><option value="cash">Efectivo</option><option value="bank_transfer">Transferencia bancaria</option></select></label>
        <label id="expenseBankRow" hidden>Referencia bancaria<input name="bank_reference" id="expenseBankReference" maxlength="120"></label>
@@ -1231,9 +1229,11 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     "Tiempo exacto: "+flightHoursMinutes(minutes)+" (HH:MM) · Equivalencia: "+flightHoursCentesimal(minutes)+" h centesimales";
   }
   function syncReportDuration(){
-   $("reportDurationPreview").textContent=durationSummary(durationInputMinutes($("reportDurationHours"),$("reportDurationMinutes")));
+   const minutes=centiToMinutes($("reportDurationHours").value);
+   $("reportDurationPreview").textContent=minutes===null?"Ingresá horas centesimales (1.5 = 1 h 30 min).":
+    "Tiempo: "+flightHoursCentesimal(minutes)+" h centesimales ("+flightHoursMinutes(minutes)+" HH:MM).";
   }
-  for(const id of ["reportDurationHours","reportDurationMinutes"])$(id).addEventListener("input",syncReportDuration);
+  $("reportDurationHours").addEventListener("input",syncReportDuration);
   syncReportDuration();
 
   // El tiempo se ingresa en horas centesimales pero los cálculos usan minutos enteros.
@@ -1441,7 +1441,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   $("reportForm").addEventListener("submit",async e=>{
    e.preventDefault();const f=e.currentTarget,fd=new FormData(f),button=f.querySelector("button");button.disabled=true;
    try{
-    const durationMinutes=durationInputMinutes($("reportDurationHours"),$("reportDurationMinutes"));
+    const durationMinutes=centiToMinutes($("reportDurationHours").value);
     if(durationMinutes===null)throw Error("Ingresá horas y minutos válidos (hasta 10:00).");
     const practice=String(fd.get("practice")||"").trim();
     const feedback=String(fd.get("feedback")||"").trim();
@@ -1721,6 +1721,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    }
   }
 
+  for(const field of document.querySelectorAll(".money-entry"))formatMoneyOnBlur(field);
   const packPurchaseForm=$("packPurchaseForm");
   const paymentMethod=$("packPurchaseMethod");
   const bankReference=$("packPurchaseBankReference");
@@ -1732,32 +1733,27 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    if(!bank)bankReference.value="";
   }
   function syncPackSummary(){
-   const h=Number(packPurchaseForm.elements.namedItem("hours_whole").value);
-   const m=Number(packPurchaseForm.elements.namedItem("minutes_extra").value);
-   const val=(Number.isInteger(h)&&Number.isInteger(m)&&h>=0&&m>=0&&m<=59)?
-    60*h+m:0;
-   $("packPurchaseSummary").textContent=val>0?"Horas a acreditar: "+flightHoursMinutes(val)+
-    " (HH:MM). El importe se registra como un único cobro.":"Ingresá una duración válida y mayor a cero.";
+   const minutes=centiToMinutes($("packPurchaseHours").value,60000);
+   $("packPurchaseSummary").textContent=minutes===null?
+    "Ingresá una cantidad válida de horas centesimales (ej.: 10.5).":
+    "Horas a acreditar: "+flightHoursCentesimal(minutes)+" h centesimales. El importe se registra como un único cobro.";
   }
   paymentMethod.addEventListener("change",syncPackPayment);
-  for(const name of ["hours_whole","minutes_extra"])
-   packPurchaseForm.elements.namedItem(name).addEventListener("input",syncPackSummary);
+  $("packPurchaseHours").addEventListener("input",syncPackSummary);
   syncPackPayment();syncPackSummary();
   let pendingPackRequest=null,pendingPackSignature="";
   packPurchaseForm.addEventListener("submit",async event=>{
    event.preventDefault();
    const form=event.currentTarget,fields=new FormData(form);
-   const hours=Number(fields.get("hours_whole")),minutes=Number(fields.get("minutes_extra"));
-   const total=hours*60+minutes;
-   const amount=Number(fields.get("amount")),student=String(fields.get("student")||"");
+   const total=centiToMinutes(fields.get("pack_hours"),60000);
+   const amount=parseMoney(fields.get("amount")),student=String(fields.get("student")||"");
    const bank=fields.get("payment_method")==="bank_transfer";
    const ref=String(fields.get("payment_reference")||"").trim();
    const message=$("packPurchaseStatus"),button=$("packPurchaseSubmit");
-   if(!Number.isInteger(hours)||!Number.isInteger(minutes)||minutes<0||minutes>59||
-    !Number.isInteger(total)||total<1||total>60000){
+   if(total===null){
     message.textContent="El pack debe tener entre un minuto y 1000 horas.";return;
    }
-   if(!student||!Number.isFinite(amount)||amount<=0||bank&&ref.length<4){
+   if(!student||amount===null||bank&&ref.length<4){
     message.textContent="Completá alumno, importe y, para transferencia, una referencia bancaria de cuatro caracteres como mínimo.";return;
    }
    const signature=JSON.stringify([...fields.entries()]);
@@ -1927,11 +1923,11 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    event.preventDefault();
    if(!manager||!school.can_write)return;
    const form=event.currentTarget,fd=new FormData(form);
-   const method=String(fd.get("method")||""),amount=Number(fd.get("amount")),
+   const method=String(fd.get("method")||""),amount=parseMoney(fd.get("amount")),
     description=String(fd.get("description")||"").trim();
    const reference=String(fd.get("bank_reference")||"").trim();
    const message=$("expenseStatus"),button=$("expenseSubmit");
-   if(description.length<3||!Number.isFinite(amount)||amount<=0){
+   if(description.length<3||amount===null){
     message.textContent="Ingresá concepto e importe válidos.";return;
    }
    if(method==="bank_transfer"&&reference.length<4){
