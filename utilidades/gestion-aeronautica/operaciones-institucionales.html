@@ -1099,10 +1099,8 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
      const span=document.createElement("span");span.className="history-cell "+cls;
      span.textContent=value;row.append(span);return span;
     };
-    const d=new Date(r.original_starts_at||r.starts_at);
-    const date=Number.isFinite(d.getTime())
-     ?d.toLocaleDateString("es-AR",{timeZone:"America/Argentina/Buenos_Aires"})
-     :"Fecha sin registrar";
+    // El listado de informes registra la fecha real en UTC, no la fecha local del turno.
+    const date=shortUTCDate(e.flight_date)||"Fecha real UTC sin registrar";
     const dateEl=addCell(date,"history-date");
     if(simulation){
      const tag=document.createElement("span");tag.className="history-tag";tag.textContent="PRUEBA";
@@ -1385,8 +1383,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     :rawBook.flight_count!==undefined?field("Cantidad de vuelos (registro anterior)",rawBook.flight_count):"";
    const mins=validFlightMinutes(r.flight_minutes);
    const duration=mins===null?"Sin registrar":flightHoursMinutes(mins)+" h ("+flightHoursCentesimal(mins)+" h centesimales)";
-   const rawDate=rawBook.flight_date?simpleDate(rawBook.flight_date):
-      (r.original_starts_at||r.starts_at?shortUTCDate(utcDate(r.original_starts_at||r.starts_at))+" (turno UTC, no vuelo real)":"—");
+   const rawDate=rawBook.flight_date?simpleDate(rawBook.flight_date):"Fecha real UTC sin registrar";
    const plane=[rawBook.aircraft_make,rawBook.aircraft_registration].filter(Boolean).join(" · ")||"No informada";
    const note=(name,body,kind="")=>body?
     '<div class="sheet-note '+kind+'"><strong>'+esc(name)+'</strong><p>'+esc(body)+'</p></div>':"";
