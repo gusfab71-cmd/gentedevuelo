@@ -353,13 +353,16 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
        <label class="finance-span-2">Turno iniciado, pendiente o confirmado, sin liquidar<select id="settleBooking" name="booking" required><option value="">Elegí el vuelo</option></select></label>
        <label class="finance-span-2">Alumno<input id="settleStudent" value="Seleccioná un vuelo" readonly></label>
        <label>Instructor<input id="settleInstructor" value="—" readonly></label>
-        <label>Horas informadas por el alumno<input id="settleBookHours" name="book_hours" type="number" min="0" max="10" step="1" required placeholder="Ej.: 1"></label>
-        <label>Minutos restantes<input id="settleBookMinutes" name="book_minutes" type="number" min="0" max="59" step="1" required value="0" placeholder="Ej.: 40"></label>
+        <label>Horas de instrucción (centesimales)<input id="settleBookHours" name="book_hours" type="text" inputmode="decimal" maxlength="6" required placeholder="Ej.: 1.5"></label>
+        <label>Tarifa por hora<input id="settleHourlyRate" type="text" inputmode="decimal" maxlength="23" placeholder="Ej.: 100.000"></label>
+        <button type="button" id="saveHourlyRate">Guardar tarifa</button>
+        <p id="hourlyRateStatus" class="hint finance-span-2" role="status"></p>
         <p id="settleDurationPreview" class="hint finance-span-2" role="status" aria-live="polite">Ingresá horas y minutos declarados por el alumno.</p>
        <label>Modalidad<select id="settleMode" name="mode"><option value="cash">Cobro en efectivo</option><option value="bank_transfer">Transferencia acreditada</option><option value="pack">Descontar de un pack</option></select></label>
        <label id="settlePackRow" class="finance-span-2" hidden>Pack del alumno<select id="settlePack" name="pack"><option value="">Elegí un pack con saldo suficiente</option></select></label>
-       <label id="settleAmountRow">Importe cobrado<input id="settleAmount" name="amount" type="number" min=".01" max="1000000000000" step=".01"></label>
-       <label id="settleCurrencyRow">Moneda<select name="currency"><option value="ARS">Pesos (ARS)</option><option value="USD">Dólares (USD)</option></select></label>
+       <label id="settleAmountRow">Importe calculado (editable)<input id="settleAmount" name="amount" type="text" inputmode="decimal" maxlength="23" placeholder="Ej.: 150.000"></label>
+        <p id="settleCalculatedTotal" class="hint finance-span-2" role="status">Ingresá tiempo y tarifa para calcular el importe.</p>
+       <label id="settleCurrencyRow">Moneda<select id="settleCurrency" name="currency"><option value="ARS">Pesos (ARS)</option><option value="USD">Dólares (USD)</option></select></label>
        <label id="settleBankRow" class="finance-span-2" hidden>Referencia bancaria<input name="bank_reference" id="settleBankReference" maxlength="120" placeholder="Número de transferencia confirmada"></label>
        <label id="settleFiscalRow" class="finance-span-2">Referencia de factura ARCA (opcional)<input name="fiscal_reference" maxlength="120" placeholder="Número de comprobante emitido"></label>
        <label class="finance-span-2">Concepto (opcional)<input name="description" maxlength="500" placeholder="Ej.: Práctica de instrucción"></label>
@@ -1233,6 +1236,29 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   for(const id of ["reportDurationHours","reportDurationMinutes"])$(id).addEventListener("input",syncReportDuration);
   syncReportDuration();
 
+  // El tiempo se ingresa en horas centesimales pero los cálculos usan minutos enteros.
+  function centiToMinutes(raw,limit=600){
+   const input=String(raw||"").trim().replace(",",".");
+   if(!/^\d{1,4}(?:\.\d{1,2})?$/.test(input))return null;
+   const h=Number(input),minutes=Math.round(h*60);
+   if(!Number.isFinite(h)||minutes<1||minutes>limit)return null;
+   return Math.round(minutes*100/60)===Math.round(h*100)?minutes:null;
+  }
+  function parseMoney(raw){
+   const value=String(raw??"").trim();
+   if(!/^(?:\d+|\d{1,3}(?:\.\d{3})+)(?:,\d{1,2})?$/.test(value))return null;
+   const n=Number(value.replace(/\./g,"").replace(",","."));
+   return Number.isFinite(n)&&n>0&&n<=1e12?n:null;
+  }
+  function displayMoney(value){
+   const amount=Math.round(Number(value)*100)/100;
+   return Number.isFinite(amount)&&amount>=0?
+    amount.toLocaleString("es-AR",{minimumFractionDigits:Number.isInteger(amount)?0:2,maximumFractionDigits:2}):"";
+  }
+  function formatMoneyOnBlur(el){
+   el.addEventListener("blur",()=>{const n=parseMoney(el.value);if(n!==null)el.value=displayMoney(n);});
+  }
+
   function studentReportSheet(r,simulation=false){
    const rawBook=r.logbook_entry&&typeof r.logbook_entry==="object"?r.logbook_entry:{};
    const notes=parseTeachingNotes(r.teaching_notes);
@@ -1461,7 +1487,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    }
   }
 
-  let financeOverviewData=null,unsettledFlights=[];
+  let financeOverviewData=null,unsettledFlights=[],hourlyTariff={configured:false,amount:null,currency:"ARS"};
   const currencyAmount=(amount,currency)=>Number(amount||0).toLocaleString("es-AR",{
    style:"currency",currency:currency==="USD"?"USD":"ARS",
    minimumFractionDigits:2,maximumFractionDigits:2
@@ -1488,17 +1514,46 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
 
   let deskReviews=[];
   function deskFlightById(id){return unsettledFlights.find(x=>x.booking_id===id);}
+  function updateCheckoutTotal(){
+   const minutes=centiToMinutes($("settleBookHours").value);
+   const rate=parseMoney($("settleHourlyRate").value);
+   if(minutes===null||rate===null){
+    $("settleCalculatedTotal").textContent="Ingresá horas centesimales y tarifa para calcular el importe.";return;
+   }
+   const total=Math.round(rate*minutes/60*100)/100;
+   $("settleAmount").value=displayMoney(total);
+   $("settleCalculatedTotal").textContent=flightHoursCentesimal(minutes)+" h × "+
+    currencyAmount(rate,$("settleCurrency").value)+"/h = "+
+    currencyAmount(total,$("settleCurrency").value);
+  }
+  formatMoneyOnBlur($("settleHourlyRate"));formatMoneyOnBlur($("settleAmount"));
+  $("settleHourlyRate").addEventListener("input",updateCheckoutTotal);
+  $("settleCurrency").addEventListener("change",updateCheckoutTotal);
+  $("saveHourlyRate").addEventListener("click",async()=>{
+   const amount=parseMoney($("settleHourlyRate").value),note=$("hourlyRateStatus"),button=$("saveHourlyRate");
+   if(amount===null){note.textContent="Ingresá una tarifa válida (ej.: 100.000).";return;}
+   if(!school.can_write)return;
+   button.disabled=true;note.textContent="Guardando tarifa…";
+   try{
+    const result=await rpc("aerosuite_hourly_tariff_set",{p_institution_id:inst,p_amount:amount,p_currency:$("settleCurrency").value});
+    if(!result?.ok)throw Error("No se confirmó la tarifa.");
+    hourlyTariff={configured:true,amount,currency:$("settleCurrency").value};
+    $("settleHourlyRate").value=displayMoney(amount);
+    note.textContent="Tarifa guardada para esta institución.";updateCheckoutTotal();
+   }catch(err){note.textContent="No se pudo guardar: "+safeError(err);}
+   finally{button.disabled=!school.can_write;}
+  });
   function syncSettleFlight(){
    if(!manager)return;
    const selected=deskFlightById($("settleBooking").value);
    $("settleStudent").value=selected?.student_email||"Seleccioná un vuelo";
    $("settleInstructor").value=selected?.instructor_email||"No asignado todavía";
-   syncSettlePack();
+   syncSettlePack();updateCheckoutTotal();
   }
   function syncSettlePack(){
    if(!manager)return;
    const selected=deskFlightById($("settleBooking").value);
-   const minutes=durationInputMinutes($("settleBookHours"),$("settleBookMinutes"));
+   const minutes=centiToMinutes($("settleBookHours").value);
    const select=$("settlePack");const last=select.value;select.length=1;
    if(selected&&minutes!==null){
     for(const p of (finance.packs||[]).filter(x=>
@@ -1519,9 +1574,11 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    $("settlePack").required=pack;$("settleAmount").required=!pack;
    $("settleBankReference").required=bank;
    const current=deskFlightById($("settleBooking").value);
-   const entered=durationInputMinutes($("settleBookHours"),$("settleBookMinutes"));
+   const entered=centiToMinutes($("settleBookHours").value);
    const validMinutes=entered!==null;
-    $("settleDurationPreview").textContent=durationSummary(entered);
+    $("settleDurationPreview").textContent=entered===null?
+      "Ingresá horas centesimales. Ej.: 1.5 = 1 h 30 min.":
+      "Tiempo: "+flightHoursCentesimal(entered)+" horas centesimales ("+flightHoursMinutes(entered)+" HH:MM).";
    const pendingNotice=current?.booking_status==="pending"?"Turno aún pendiente: podés liquidarlo, pero luego Dirección deberá confirmarlo y asignar Instructor para el informe. ":"";
    $("settleHelp").textContent=pendingNotice+(!current?
     "Elegí el turno del alumno que ya comenzó.":
@@ -1608,12 +1665,16 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     const results=await Promise.all([
      rpc("aerosuite_finance_snapshot",{p_institution_id:inst}),
      rpc("aerosuite_finance_overview",{p_institution_id:inst}),
-     rpc("aerosuite_frontdesk_flight_list",{p_institution_id:inst})
+     rpc("aerosuite_frontdesk_flight_list",{p_institution_id:inst}),
+     rpc("aerosuite_hourly_tariff_get",{p_institution_id:inst})
     ]);
+    hourlyTariff=results[3]||{configured:false,amount:null,currency:"ARS"};
+    $("settleHourlyRate").value=hourlyTariff.configured?displayMoney(hourlyTariff.amount):"";
+    $("settleCurrency").value=hourlyTariff.currency||"ARS";
     finance=results[0];financeOverviewData=results[1];unsettledFlights=results[2]?.eligible||[];deskReviews=results[2]?.reviews||[];
     renderFinance();
     renderFinanceOverview();
-    renderSettlementCandidates();renderDeskReviews();
+    renderSettlementCandidates();renderDeskReviews();updateCheckoutTotal();
    }else{
     finance=await rpc("aerosuite_finance_snapshot",{p_institution_id:inst});
     renderStudentPacks();
@@ -1784,7 +1845,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   $("financeCurrency").addEventListener("change",renderFinanceOverview);
   $("settleBooking").addEventListener("change",syncSettleFlight);
   $("settleMode").addEventListener("change",syncSettleMode);
-  for(const id of ["settleBookHours","settleBookMinutes"])$(id).addEventListener("input",syncSettlePack);
+  $("settleBookHours").addEventListener("input",()=>{syncSettlePack();updateCheckoutTotal();});
   $("settleBookConfirmed").addEventListener("change",syncSettleMode);
   let pendingSettlementRequest=null,pendingSettlementSignature="";
   $("flightSettlementForm").addEventListener("submit",async event=>{
@@ -1794,8 +1855,8 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    const flight=deskFlightById(booking);
    const mode=String(fd.get("mode")||"");
    const selectedPack=mode==="pack"?String(fd.get("pack")||""):null;
-   const amount=mode==="pack"?null:Number(fd.get("amount"));
-   const declaredMinutes=durationInputMinutes($("settleBookHours"),$("settleBookMinutes"));
+   const amount=mode==="pack"?null:parseMoney(fd.get("amount"));
+   const declaredMinutes=centiToMinutes($("settleBookHours").value);
    const bankRef=String(fd.get("bank_reference")||"").trim();
    const message=$("settleStatus"),button=$("settleSubmit");
    if(!flight){
@@ -1807,7 +1868,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    if(mode==="pack"&&!selectedPack){
     message.textContent="Seleccioná el pack del alumno con saldo suficiente.";return;
    }
-   if(mode!=="pack"&&(!Number.isFinite(amount)||amount<=0)){
+   if(mode!=="pack"&&amount===null){
     message.textContent="Ingresá el importe realmente cobrado.";return;
    }
    if(mode==="bank_transfer"&&bankRef.length<4){
@@ -1839,7 +1900,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     if(!result?.ok)throw Error("El cobro o descuento no pudo confirmarse.");
     pendingSettlementRequest=null;pendingSettlementSignature="";
     form.reset();
-    $("settleBookHours").value="";$("settleBookMinutes").value="";
+    $("settleBookHours").value="";
     $("settleBookConfirmed").checked=false;
     $("settleLogbookVerified").checked=false;
     await loadFinance();
