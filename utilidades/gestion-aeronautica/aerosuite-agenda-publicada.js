@@ -73,7 +73,7 @@ window.AeroSuiteAgenda={
    ".agenda-slot-btn{display:flex;flex-direction:column;gap:3px;width:100%;padding:8px 5px;border-radius:7px;border:1px solid #54826c;background:#234a3e;color:#f2f8f4;text-align:center;font-size:11px;line-height:1.25;white-space:normal;cursor:pointer}",
    ".agenda-slot-btn strong{display:block;font-size:11px;overflow-wrap:anywhere}",
    ".agenda-slot-btn small{font-size:10px;opacity:.9}",
-   ".agenda-slot-btn.pending{background:linear-gradient(140deg,#FAF7F1,#EAE5DB);border-color:#F7F2E8;color:#263B49}",
+   ".agenda-slot-btn.pending{background:linear-gradient(140deg,#FFF4D1,#F5DFA1);border-color:#FCEBBE;color:#263B49}",
    ".agenda-slot-btn.confirmed{background:linear-gradient(140deg,#BFD3DF,#91AABB);border-color:#C5D5DE;color:#193344}",
    ".agenda-slot-btn.settled{background:linear-gradient(140deg,#E1C994,#C9A66E);border-color:#E4CAA1;color:#293541}",
    ".agenda-slot-btn.completed{background:#385b69;border-color:#547989;color:#f1f7fa}",
