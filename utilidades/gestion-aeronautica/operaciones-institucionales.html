@@ -262,6 +262,8 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
 #turnera #bookingList details.booking-mini summary.booking-compact-summary{display:flex;justify-content:space-between;align-items:center;gap:7px;flex-wrap:wrap;cursor:pointer;padding:7px 9px;font-size:12px;line-height:1.4;min-height:34px}
 #turnera #bookingList details.booking-mini summary.booking-compact-summary strong{font-size:12px;min-width:0;overflow-wrap:anywhere}
 #turnera #bookingList details.booking-mini summary.booking-compact-summary .chip{font-size:10px;margin:0;padding:2px 7px;white-space:nowrap}
+#turnera #bookingList details.booking-mini summary.booking-compact-summary::before{content:"▸";font-size:14px;color:#e8c58c;flex-shrink:0}
+#turnera #bookingList details.booking-mini[open] summary.booking-compact-summary::before{content:"▾"}
 #turnera #bookingList details.booking-mini >p{font-size:11px;line-height:1.4;margin:5px 9px}
 #turnera #bookingList details.booking-mini >.actions{padding:4px 9px 10px;gap:6px}
 #turnera #bookingList details.booking-mini:not([open]){min-height:0}
@@ -1031,6 +1033,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
        if(!card)return;
        document.querySelectorAll("#bookingList .list-item.is-target").forEach(x=>x.classList.remove("is-target"));
        card.classList.add("is-target");
+       if(card.tagName==="DETAILS")card.open=true;
        card.scrollIntoView({behavior:"smooth",block:"center"});
       };
       if(!booking.booking_id)b.onclick=()=>stat.textContent="Turno ocupado. Seleccioná uno libre.";
