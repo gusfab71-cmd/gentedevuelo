@@ -451,7 +451,10 @@ window.AeroSuiteAgenda={
        if(privateBooking)oldButton.disabled=true;
        else oldButton.onclick=()=>{
         const detail=document.getElementById("booking-"+old.booking_id);
-        if(detail)detail.scrollIntoView({behavior:"smooth",block:"center"});
+        if(detail){
+         if(detail.tagName==="DETAILS")detail.open=true;
+         detail.scrollIntoView({behavior:"smooth",block:"center"});
+        }
        };
        wrap.append(oldButton);
       }
