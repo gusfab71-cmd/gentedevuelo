@@ -1616,6 +1616,20 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    for(const key of Object.keys(result))result[key]=result[key].trim();
    return result;
   }
+  const reportStyle=document.createElement("style");
+  reportStyle.textContent=
+   ".report-book-compact{margin:10px 0;padding:12px 15px}"+
+   ".report-book-quick{display:flex;gap:7px 16px;flex-wrap:wrap;margin:9px 0;font-size:13px;color:#eff5f7}"+
+   ".report-book-quick span{border-radius:6px;background:#244456;padding:6px 9px}"+
+   ".report-book-full{margin-top:8px;border-top:1px solid #506b7d;padding-top:10px}"+
+   ".report-book-full summary,.report-extra-details summary{cursor:pointer;color:#ead29b;font-weight:700}"+
+   ".report-book-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:9px;margin-top:12px}"+
+   ".report-book-fields>div{background:#163044;border:1px solid #47667a;border-radius:7px;padding:9px}"+
+   ".report-book-fields small{display:block;color:#b9cad5;margin-bottom:5px}"+
+   ".report-extra-details{padding:12px 0;border-top:1px solid #456b81;margin:12px 0}"+
+   ".report-extra-details .formgrid{margin-top:12px}"+
+   ".manager-report-editor{max-width:930px} .manager-report-editor textarea{width:100%}";
+  document.head.append(reportStyle);
   function formatLogbookEntry(entry){
    if(!entry||typeof entry!=="object"||!entry.flight_date)return "";
    const date=String(entry.flight_date).split("-").reverse().join("/");
@@ -1636,10 +1650,21 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     ["Clase",entry.aircraft_class],
     ["Clasificación del tiempo de vuelo",category]
    ];
-   return '<div class="card" style="margin:10px 0"><strong>Registro del Libro de Vuelo</strong>'+
+   const summary=[
+    date,
+    [entry.departure_utc||"—",entry.arrival_utc||"—"].join("–")+" UTC",
+    [entry.origin||"—",entry.destination||"—"].join(" → "),
+    [entry.aircraft_make,entry.aircraft_registration].filter(Boolean).join(" · "),
+    entry.landings_count!==undefined?entry.landings_count+" aterrizajes":""
+   ].filter(Boolean);
+   return '<div class="card report-book-compact">'+
+    '<strong>Libro de Vuelo</strong>'+
+    '<div class="report-book-quick">'+summary.map(value=>'<span>'+esc(value)+'</span>').join("")+'</div>'+
+    '<details class="report-book-full"><summary>Ver todos los datos del Libro de Vuelo</summary>'+
+    '<div class="report-book-fields">'+
     fields.filter(([_,value])=>value!==null&&value!==undefined&&String(value).trim()!=="")
-    .map(([label,value])=>'<p><strong>'+esc(label)+':</strong> '+esc(value)+'</p>').join("")+
-    '</div>';
+    .map(([label,value])=>'<div><small>'+esc(label)+'</small><strong>'+esc(value)+'</strong></div>').join("")+
+    '</div></details></div>';
   }
 
   // Minutos exactos como fuente de verdad; visualización HH:MM sexagesimal.
