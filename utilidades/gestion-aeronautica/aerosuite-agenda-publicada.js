@@ -74,17 +74,19 @@ window.AeroSuiteAgenda={
    if(!grouped.size)list.textContent="Todavía no hay horarios publicados para esta actividad y semana.";
    for(const g of grouped.values()){
     const own=bookings.filter(r=>r.my_booking&&g.slots.some(s=>s.id===r.slot_id));
-    const free=g.capacity-g.used,future=new Date(g.starts_at).getTime()>Date.now();
+    const free=g.slots.reduce((sum,x)=>sum+(x.bookable===false?0:Math.max(0,Number(x.capacity)-Number(x.reserved))),0),
+     blocked=g.slots.every(x=>x.bookable===false),
+     future=new Date(g.starts_at).getTime()>Date.now();
     const card=document.createElement("div");card.className="agenda-card";
     const top=document.createElement("div");top.className="top";
     const label=htmlText(c.formatDate(g.starts_at),"strong");
     const status=htmlText(own.length?(own.some(x=>x.status==="confirmed")?"Confirmado":"Pendiente"):
-     !future?"Finalizado":free>0?"Disponible":"Sin cupos","span");
+     !future?"Finalizado":blocked?"No disponible":free>0?"Disponible":"Sin cupos","span");
     status.className="chip "+(own.length?"confirmed":free>0?"completed":"");
     top.append(label,status);card.append(top);
     card.append(htmlText("Ocupados "+g.used+" de "+g.capacity+" cupos"+(selected==="flight"?" · Secretaría asigna avión e instructor":"")));
     if(c.role==="alumno"&&!own.length&&future&&free>0&&c.school.can_write){
-     const item=g.slots.find(x=>Number(x.reserved)<Number(x.capacity));
+     const item=g.slots.find(x=>x.bookable!==false&&Number(x.reserved)<Number(x.capacity));
      const b=addButton("Reservar",async()=>{
       if(!confirm("¿Solicitar "+names[selected]+" el "+c.formatDate(g.starts_at)+"? Quedará pendiente de confirmación."))return;
       b.disabled=true;
@@ -107,10 +109,10 @@ window.AeroSuiteAgenda={
     top.append(htmlText(names[s.activity]+" · "+c.formatDate(s.starts_at),"strong"),
      htmlText(s.published?"Publicado":"En preparación","span"));
     card.append(top);
-    card.append(htmlText("Recurso: "+s.resource+" · Cupos "+s.reserved+"/"+s.capacity));
+    card.append(htmlText("Recurso: "+s.resource+" · Cupos "+s.reserved+"/"+s.capacity+(s.bookable===false?" · Aeronave fuera de servicio":"")));
     if(c.school.can_write&&new Date(s.starts_at).getTime()>Date.now()){
      const bar=document.createElement("div");bar.className="actions";
-     if(!s.published)bar.append(addButton("Publicar",()=>manage("publish",s.id),"primary"));
+     if(!s.published&&s.bookable!==false)bar.append(addButton("Publicar",()=>manage("publish",s.id),"primary"));
      if(s.published)bar.append(addButton("Retirar",()=>{
       if(confirm("¿Retirar este horario? Debe estar libre de reservas."))manage("hide",s.id);
      }));
@@ -155,7 +157,7 @@ window.AeroSuiteAgenda={
     const data=await c.rpc("aerosuite_availability_week",{
      p_institution_id:c.inst,p_from:date,p_to:until
     });
-    const available=(data?.slots||[]).filter(s=>s.id!==currentSlot.id&&s.activity===currentSlot.activity&&
+    const available=(data?.slots||[]).filter(s=>s.id!==currentSlot.id&&s.bookable!==false&&s.activity===currentSlot.activity&&
      s.published&&Number(s.reserved)<Number(s.capacity)&&new Date(s.starts_at).getTime()>Date.now());
     if(!available.length){msg("No hay cupos publicados para esa actividad en los siguientes 8 días. Secretaría puede preparar y publicar más turnos.");return;}
     const choices=available.slice(0,25);
