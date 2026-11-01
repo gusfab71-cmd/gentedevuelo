@@ -1,5 +1,5 @@
 <!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="robots" content="noindex,nofollow"><title>AeroSuite · Flota institucional</title>
+<meta name="robots" content="noindex,nofollow"><title>AeroSuite · Disponibilidad de flotas y mantenimiento</title>
 <style>
 :root{font-family:Inter,system-ui,Arial,sans-serif;color:#edf7fc;background:#102130;color-scheme:dark}*{box-sizing:border-box}[hidden]{display:none!important}
 body{margin:0;background:linear-gradient(135deg,#0d1d2c,#1b3a4b);min-height:100vh}header{background:#152c41;border-bottom:1px solid #597f98;padding:18px max(18px,calc((100vw - 1120px)/2));display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
@@ -17,7 +17,7 @@ button{background:#e9c993;color:#193041;border:1px solid #e9c993;border-radius:9
 @media(max-width:550px){main{padding:14px 12px 36px}.panel{padding:14px}.action-row button{width:100%}.change-form{grid-template-columns:1fr}}
 </style><script src="../../assets/supabase-2.117.2.min.js"></script><script src="../../assets/community-config.js"></script><script src="../../assets/aerosuite-registration.js"></script></head>
 <body><header><a class="brand" href="index.html">Aero<span>Suite</span></a><nav><a id="back" href="portal-escuela.html">Volver al portal</a></nav></header>
-<main><span class="eyebrow">Área de flota · Control institucional</span><h1>Flota y disponibilidad</h1>
+<main><span class="eyebrow">Área de flota · Control institucional</span><h1>Disponibilidad de flotas y mantenimiento</h1>
 <div id="status" class="status" role="status" aria-live="polite">Verificando acceso…</div>
 <div id="area" hidden>
 <section class="panel"><h2 id="school">Mi escuela</h2>
@@ -26,9 +26,19 @@ button{background:#e9c993;color:#193041;border:1px solid #e9c993;border-radius:9
 <section class="panel" id="createPanel" hidden><h2>Registrar aeronave</h2>
 <form id="createForm"><label>Matrícula<input name="registration" data-aerosuite-registration required maxlength="18" placeholder="LV-ERT" autocapitalize="characters" autocomplete="off"></label>
 <label>Modelo<input name="model" maxlength="100" placeholder="Cessna 152"></label>
-<label>Nota inicial<input name="remarks" maxlength="300" placeholder="Opcional"></label><button type="submit">Agregar a la flota</button></form></section>
+<button type="submit">Agregar aeronave</button></form></section>
 <section class="panel"><h2>Aeronaves de la escuela</h2><p>Dirección y Secretaría pueden registrar una salida de servicio, su motivo y ubicación; reincorporar una aeronave o eliminarla de la flota sin borrar sus antecedentes.</p><div id="list" class="list"></div><button type="button" id="reload" style="margin-top:14px">Actualizar flota</button></section>
-<section class="panel" id="archivedSection" hidden><details id="archivedDetails"><summary>Ver aeronaves eliminadas de la flota</summary><p>Las bajas conservan el historial técnico y operativo. Para volver a utilizarlas, primero deben reincorporarse y después registrarse como disponibles.</p><div id="archivedList" class="list"></div></details></section>
+
+<section class="panel" id="simulatorPanel">
+<h2>Simuladores de vuelo</h2>
+<p>Registrá los simuladores de la escuela. Los disponibles podrán seleccionarse al publicar los turnos semanales de vuelo virtual.</p>
+<form id="simCreateForm" hidden>
+ <label>Nombre o identificador del simulador<input name="name" maxlength="90" required placeholder="Ej.: Simulador LV-ASD"></label>
+ <label>Modelo o tipo<input name="model" maxlength="100" placeholder="Ej.: Cessna 172 · Simulador fijo"></label>
+ <button type="submit">Agregar simulador</button>
+</form>
+<div id="simList" class="list" style="margin-top:18px"></div>
+</section>
 <section class="panel" id="maintenancePanel">
  <span class="eyebrow">Módulo aeronáutico integrado</span>
  <h2>Mantenimiento de Aeronaves</h2>
@@ -54,20 +64,20 @@ button{background:#e9c993;color:#193041;border:1px solid #e9c993;border-radius:9
   $("back").href="portal-escuela.html?institucion="+encodeURIComponent(inst)+"&rol="+encodeURIComponent(school.my_role)+"&elegida=1"+(labLogin?"&prueba=1":"");
   const manager=["administrador","secretaria"].includes(school.my_role);
   $("createPanel").hidden=!manager||!school.can_write;
-  $("archivedSection").hidden=!manager;
+  $("simCreateForm").hidden=!manager||!school.can_write;
   $("area").hidden=false;
   $("maintenanceManagerActions").hidden=!manager;
   if(manager)$("maintenanceLink").href="mantenimiento-institucional.html?institucion="+
    encodeURIComponent(inst)+"&rol="+encodeURIComponent(school.my_role)+(labLogin?"&prueba=1":"");
   async function action(args){const r=await db.rpc("aerosuite_aircraft_action",{p_institution_id:inst,...args});if(r.error)throw r.error;return r.data;}
   async function load(message=""){
-   const [r,mt,archivedResponse]=await Promise.all([
+   const [r,mt,sim]=await Promise.all([
     db.rpc("aerosuite_aircraft_list",{p_institution_id:inst}),
     db.rpc("aerosuite_institution_maintenance_get",{p_institution_id:inst}),
-    manager?db.rpc("aerosuite_aircraft_archived_list",{p_institution_id:inst}):Promise.resolve({data:[]})
+    db.rpc("aerosuite_simulator_list",{p_institution_id:inst})
    ]);
    if(r.error)throw r.error;
-   if(archivedResponse.error)throw archivedResponse.error;
+   if(sim.error)throw sim.error;
    const maintenance=mt.error?{}:(mt.data?.payload||{});
    const planes=Array.isArray(maintenance.ac)?maintenance.ac:[];
    const problems=Array.isArray(maintenance.dx)?maintenance.dx:[];
@@ -204,36 +214,60 @@ button{background:#e9c993;color:#193041;border:1px solid #e9c993;border-radius:9
      box.append(actions,editor,archiveForm);
     }list.append(box);
    }
-   if(manager){
-    const archivedList=$("archivedList");archivedList.replaceChildren();
-    const deleted=archivedResponse.data||[];
-    if(!deleted.length)archivedList.textContent="No hay aeronaves eliminadas.";
-    for(const a of deleted){
-     const card=document.createElement("div");card.className="card archived-card";
-     const heading=document.createElement("h3");heading.textContent=a.registration+" · "+(a.model||"Sin modelo");
-     const info=document.createElement("p");info.textContent="Retirada: "+(a.archived_at?new Date(a.archived_at).toLocaleDateString("es-AR",{timeZone:"America/Argentina/Buenos_Aires"}):"Fecha no informada")+" · Motivo: "+(a.archived_reason||"No informado");
-     card.append(heading,info);
-     if(school.can_write){
-      const restore=document.createElement("button");restore.type="button";restore.textContent="Reincorporar a la flota";
-      restore.onclick=async()=>{
-       if(!confirm("¿Reincorporar "+a.registration+"? Quedará FUERA DE SERVICIO hasta que se registre expresamente su disponibilidad."))return;
-       restore.disabled=true;
-       try{
-        const response=await db.rpc("aerosuite_aircraft_archive",{
-         p_institution_id:inst,p_aircraft_id:a.id,p_reason:"",p_restore:true
-        });
-        if(response.error)throw response.error;
-        if(!response.data?.ok)throw Error("No se confirmó la reincorporación.");
-        await load(a.registration+" reincorporada, aún FUERA DE SERVICIO.");
-       }catch(e){st.textContent="Error: "+(e.message||e);restore.disabled=false;}
-      };
-      card.append(restore);
-     }
-     archivedList.append(card);
+
+   const sims=$("simList");sims.replaceChildren();
+   if(!sim.data?.length)sims.textContent="Todavía no hay simuladores cargados.";
+   for(const item of sim.data||[]){
+    if(item.archived_at)continue;
+    const card=document.createElement("div");card.className="card";
+    const title=document.createElement("h2");title.textContent=item.name+(item.model?" · "+item.model:"");
+    const badge=document.createElement("span");badge.className="chip "+(item.availability==="available"?"ok":"no");
+    badge.textContent=item.availability==="available"?"Disponible para turnera":"Fuera de servicio";
+    const info=document.createElement("p");
+    info.textContent=item.availability==="available"?
+      "Habilitado para publicar turnos de simulador.":"No se pueden ofrecer nuevos turnos mientras esté fuera de servicio. "+(item.out_of_service_reason||"");
+    card.append(title,badge,info);
+    if(manager&&school.can_write){
+     const controls=document.createElement("div");controls.className="action-row";
+     const change=document.createElement("button");change.type="button";
+     const out=item.availability==="available";
+     change.className=out?"button-secondary":"";
+     change.textContent=out?"Suspender uso":"Habilitar simulador";
+     change.onclick=async()=>{
+      const reason=prompt(out?"Motivo de suspensión:":"Motivo de la rehabilitación:");
+      if(!reason||reason.trim().length<5)return;
+      if(!confirm("¿"+(out?"Suspender":"Rehabilitar")+" "+item.name+"?"))return;
+      change.disabled=true;
+      try{
+       const result=await db.rpc("aerosuite_simulator_action",{
+        p_institution_id:inst,p_action:out?"out_of_service":"available",
+        p_simulator_id:item.id,p_name:null,p_model:null,p_reason:reason.trim()
+       });
+       if(result.error)throw result.error;
+       await load("Estado del simulador actualizado. La turnera refleja la disponibilidad.");
+      }catch(e){st.textContent="No se pudo modificar el simulador: "+(e.message||e);change.disabled=false;}
+     };
+     const remove=document.createElement("button");remove.type="button";remove.className="button-danger";
+     remove.textContent="Retirar simulador";
+     remove.onclick=async()=>{
+      const reason=prompt("Motivo de la baja del simulador (mínimo 5 caracteres):");
+      if(!reason||reason.trim().length<5)return;
+      if(!confirm("¿Retirar "+item.name+" del inventario activo? Se conservará la trazabilidad."))return;
+      remove.disabled=true;
+      try{
+       const result=await db.rpc("aerosuite_simulator_action",{
+        p_institution_id:inst,p_action:"archive",p_simulator_id:item.id,
+        p_name:null,p_model:null,p_reason:reason.trim()
+       });
+       if(result.error)throw result.error;
+       await load("Simulador retirado del inventario activo.");
+      }catch(e){st.textContent="No se pudo retirar: "+(e.message||e);remove.disabled=false;}
+     };
+     controls.append(change,remove);card.append(controls);
     }
-    $("archivedDetails").querySelector("summary").textContent="Ver aeronaves eliminadas de la flota ("+deleted.length+")";
+    sims.append(card);
    }
-   st.textContent=message||"Flota de "+school.institution_name+" actualizada.";
+   st.textContent=message||"Flota y simuladores de "+school.institution_name+" actualizados.";
   }
   $("createForm").onsubmit=async ev=>{
    ev.preventDefault();
@@ -246,10 +280,27 @@ button{background:#e9c993;color:#193041;border:1px solid #e9c993;border-radius:9
    const d=new FormData(form);
    b.disabled=true;
    try{
-    await action({p_operation:"create",p_registration:registration,p_model:d.get("model"),p_remarks:d.get("remarks")});
+    await action({p_operation:"create",p_registration:registration,p_model:d.get("model"),p_remarks:""});
     form.reset();await load();
    }catch(e){st.textContent="No se pudo registrar: "+(e.message||e);}
    finally{b.disabled=false;}
+  };
+
+  $("simCreateForm").onsubmit=async ev=>{
+   ev.preventDefault();
+   const form=ev.currentTarget,button=form.querySelector('button[type="submit"]'),d=new FormData(form);
+   const name=String(d.get("name")||"").trim(),model=String(d.get("model")||"").trim();
+   if(name.length<2){st.textContent="Indicá el nombre del simulador.";return;}
+   button.disabled=true;
+   try{
+    const response=await db.rpc("aerosuite_simulator_action",{
+     p_institution_id:inst,p_action:"create",p_simulator_id:null,
+     p_name:name,p_model:model,p_reason:null
+    });
+    if(response.error)throw response.error;
+    form.reset();await load("Simulador "+name+" incorporado y disponible para publicar turnos.");
+   }catch(e){st.textContent="No se pudo agregar el simulador: "+(e.message||e);}
+   finally{button.disabled=false;}
   };
   $("reload").onclick=()=>load().catch(e=>st.textContent=e.message||String(e));await load();
  }catch(e){st.textContent="No se pudo abrir flota: "+(e.message||e);}
