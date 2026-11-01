@@ -169,7 +169,24 @@ window.AeroSuiteAgenda={
    card.append(htmlText(names[slot.activity]+" · "+slot.resource+" · "+c.formatDate(slot.starts_at),"strong"));
    card.append(htmlText("Estado: "+(slot.published?"Publicado":"En preparación")+
     " · Cupos utilizados: "+slot.reserved+" de "+slot.capacity+
-    (slot.bookable===false?" · Aeronave fuera de servicio":"")));
+    (slot.bookable===false?" · Recurso fuera de servicio":"")));
+   if(c.school.can_write&&slot.published&&slot.bookable!==false&&
+     new Date(slot.starts_at).getTime()>Date.now()&&Number(slot.reserved)<Number(slot.capacity)){
+    const reservationButton=addButton("Reservar este horario para un alumno",async()=>{
+     const student=c.selectedStudent?.();
+     if(!student){msg("Elegí primero un alumno en el selector superior para reservar en su nombre.");return;}
+     if(!confirm("¿Reservar "+slot.resource+" el "+c.formatDate(slot.starts_at)+
+       " para el alumno seleccionado? Quedará pendiente de confirmación."))return;
+     reservationButton.disabled=true;
+     try{
+      await c.rpc("aerosuite_availability_reserve",{
+       p_institution_id:c.inst,p_slot_id:slot.id,p_student_id:student
+      });
+      await reloadAfter("Reserva del alumno registrada; queda pendiente de confirmación.");
+     }catch(e){msg("No se pudo reservar para ese alumno: "+e.message);reservationButton.disabled=false;}
+    },"primary");
+    card.append(reservationButton);
+   }
    if(c.school.can_write&&new Date(slot.starts_at).getTime()>Date.now()){
     const bar=document.createElement("div");bar.className="actions";
     if(!slot.published&&slot.bookable!==false)bar.append(addButton("Publicar este turno",()=>manage("publish",slot.id),"primary"));
@@ -221,11 +238,6 @@ window.AeroSuiteAgenda={
      const when=new Date(date+"T"+time+":00-03:00").getTime();
      const candidates=visible.filter(s=>new Date(s.starts_at).getTime()===when)
       .sort((a,b)=>(a.resource||"").localeCompare(b.resource||"","es"));
-     if(!candidates.length){
-      const empty=htmlText("—","span");
-      empty.className="agenda-cell-empty";
-      wrap.append(empty);
-     }
      for(const slot of candidates){
       const own=bookings.filter(r=>r.slot_id===slot.id&&r.my_booking);
       const active=bookings.filter(r=>r.slot_id===slot.id&&r.status!=="cancelled");
@@ -238,6 +250,8 @@ window.AeroSuiteAgenda={
       if(c.manager&&active.length){
        state=active.some(r=>r.status==="confirmed")?"Confirmado":active.some(r=>r.status==="pending")?"Pendiente":state;
       }
+      const legacyMove=!!c.manager&&!!c.isLegacyRescheduling?.()&&
+       slot.activity==="flight"&&slot.published&&slot.bookable!==false&&future&&remaining>0&&active.length===0;
       const b=document.createElement("button");b.type="button";b.className="slot agenda-slot-btn "+
        (state==="Pendiente"?"busy pending":state==="Confirmado"?"busy confirmed":
         state==="Realizado"?"settled":state==="Libre"?"available":
@@ -245,10 +259,12 @@ window.AeroSuiteAgenda={
         state==="Fuera de servicio"?"unavailable":
         ["Ocupado","Sin cupos"].includes(state)?"occupied":"");
       const resourceName=document.createElement("strong");resourceName.textContent=slot.resource||names[slot.activity];
-      const line=htmlText(state+(slot.activity==="theory"?" · "+slot.reserved+"/"+slot.capacity:""),"small");
+      const line=htmlText((legacyMove?"Libre · Reprogramar aquí":state)+
+       (slot.activity==="theory"?" · "+slot.reserved+"/"+slot.capacity:""),"small");
       b.append(resourceName,line);
       b.setAttribute("aria-label",slot.resource+" · "+state+" · "+date+" "+time);
-      if(canBook)b.onclick=()=>reserveSlot(slot,b);
+      if(legacyMove)b.onclick=()=>c.onLegacyReschedule(slot,b);
+      else if(canBook)b.onclick=()=>reserveSlot(slot,b);
       else if(c.manager){
        b.onclick=()=>{
         selectedSlotId=slot.id;renderStaffDetail();
@@ -256,6 +272,33 @@ window.AeroSuiteAgenda={
        };
       }else b.disabled=true;
       wrap.append(b);
+     }
+     // Las reservas históricas sin cupo publicado se muestran en la misma grilla,
+     // sin duplicar las reservas nuevas que ya están vinculadas a una actividad.
+     if(selected==="flight"){
+      for(const old of (c.legacyBookings?.()||[]).filter(item=>
+       item.status!=="cancelled"&&item.booking_id&&
+       !bookings.some(r=>r.booking_id===item.booking_id)&&
+       new Date(item.starts_at).getTime()===when&&
+       (resource==="all"||String(item.aircraft||"").toUpperCase()===resource.toUpperCase()))){
+       const oldButton=document.createElement("button");
+       oldButton.type="button";
+       oldButton.className="slot agenda-slot-btn "+
+        (old.status==="pending"?"busy pending":old.status==="confirmed"?"busy confirmed":"settled");
+       const title=htmlText(old.aircraft||"Vuelo anterior","strong");
+       const description=htmlText((old.status==="pending"?"Pendiente":
+        old.status==="confirmed"?"Confirmado":"Realizado")+
+        (c.manager&&old.student_email?" · "+old.student_email:""),"small");
+       oldButton.append(title,description);
+       oldButton.onclick=()=>{
+        const detail=document.getElementById("booking-"+old.booking_id);
+        if(detail)detail.scrollIntoView({behavior:"smooth",block:"center"});
+       };
+       wrap.append(oldButton);
+      }
+     }
+     if(!wrap.childElementCount){
+      const empty=htmlText("—","span");empty.className="agenda-cell-empty";wrap.append(empty);
      }
      td.append(wrap);row.append(td);
     }
