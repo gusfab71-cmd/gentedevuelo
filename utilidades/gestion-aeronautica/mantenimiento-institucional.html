@@ -198,7 +198,7 @@ body .overflow-x-auto{scrollbar-color:#697e7d transparent}
 
 const $=i=>document.getElementById(i),uid=()=>crypto.randomUUID(),today=()=>{const d=new Date();return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')},v=i=>$(i).value,n=i=>Math.min(1e6,Math.max(0,parseFloat($(i).value)||0));
 
-let S={ac:[],sv:[],ct:[],lg:[],rc:[],mx:[],ad:[],ip:[],ie:[],dx:[],inv:[],mv:[],fuel:[],sel:null,tab:'a',hz:12};
+let S={ac:[],sv:[],ct:[],lg:[],rc:[],mx:[],ad:[],ip:[],ie:[],dx:[],inv:[],mv:[],fuel:[],simLogs:[],sel:null,tab:'a',hz:12};
 let consumableForm='';
 let showAircraftForm=false;
 
@@ -233,7 +233,7 @@ const showStatus=message=>{const x=$('sync');if(x)x.textContent=message};
 const validData=d=>d&&typeof d==='object'&&['ac','sv','ct','lg','rc'].every(k=>Array.isArray(d[k])&&d[k].length<=({ac:50,sv:300,ct:2000,lg:6000,rc:200}[k]))&&
  ['ac','sv','ct','lg','rc'].every(k=>d[k].every(x=>x&&typeof x==='object'&&typeof x.id==='string'&&/^[a-zA-Z0-9_-]{1,64}$/.test(x.id)))&&
  d.ac.every(a=>typeof a.reg==='string'&&a.reg.length<=50)&&
- ['mx','ad','ip','ie','dx','inv','mv','fuel'].every(k=>d[k]===undefined||(Array.isArray(d[k])&&d[k].length<=({mx:3000,ad:1000,ip:250,ie:3000,dx:2000,inv:500,mv:5000,fuel:3000}[k])&&d[k].every(x=>x&&typeof x==='object'&&typeof x.id==='string'&&/^[a-zA-Z0-9_-]{1,64}$/.test(x.id))))&&
+ ['mx','ad','ip','ie','dx','inv','mv','fuel','simLogs'].every(k=>d[k]===undefined||(Array.isArray(d[k])&&d[k].length<=({mx:3000,ad:1000,ip:250,ie:3000,dx:2000,inv:500,mv:5000,fuel:3000,simLogs:1000}[k])&&d[k].every(x=>x&&typeof x==='object'&&typeof x.id==='string'&&/^[a-zA-Z0-9_-]{1,64}$/.test(x.id))))&&
  (d.inv||[]).every(x=>typeof x.ac==='string'&&typeof x.name==='string'&&x.name.length<=140&&['fuel','oil','filter','spark','part','other'].includes(x.category)&&['L','u','kg'].includes(x.unit)&&Number.isFinite(x.minimum)&&x.minimum>=0)&&
  (d.mv||[]).every(x=>typeof x.ac==='string'&&typeof x.item==='string'&&['in','out'].includes(x.kind)&&Number.isFinite(x.qty)&&x.qty>0&&x.qty<=1e6)&&
  (d.fuel||[]).every(x=>typeof x.ac==='string'&&Number.isFinite(x.loaded)&&Number.isFinite(x.used)&&x.loaded>=0&&x.used>=0&&x.loaded+x.used>0);
@@ -327,7 +327,7 @@ async function loadApp(){
   maintWritable=!!school.can_write&&!!maintenance.data?.can_write;
   if(maintenance.data?.payload){
    if(!validData(maintenance.data.payload))throw Error("Formato almacenado de mantenimiento no válido.");
-   S={...S,...maintenance.data.payload};for(const key of ["inv","mv","fuel"])S[key]||=[];
+   S={...S,...maintenance.data.payload};for(const key of ["inv","mv","fuel","simLogs"])S[key]||=[];
   }
   reconcileFleet();
   if(!S.ac.some(a=>a.id===S.sel&&!a.archived))S.sel=S.ac.find(a=>!a.archived)?.id||null;
@@ -498,20 +498,58 @@ async function removeSimulatorInMaintenance(id){
   showStatus('Simulador '+item.name+' retirado del inventario activo.');
  }catch(e){showStatus('No se pudo retirar el simulador: '+(e.message||e));}
 }
+function addSimulatorMaintenanceNote(simId){
+ if(!maintWritable||maintConflict)return alert('El registro está en modo de consulta.');
+ const simulator=registeredSimulators.find(x=>x.id===simId&&!x.archived_at);
+ if(!simulator)return;
+ const date=v('sim_date_'+simId),kind=v('sim_kind_'+simId),
+  description=v('sim_detail_'+simId).trim(),
+  responsible=v('sim_who_'+simId).trim(),
+  reference=v('sim_ref_'+simId).trim();
+ if(!date||date>today()||date<'2000-01-01'||description.length<10||!responsible)
+  return alert('Indicá fecha válida, descripción de al menos 10 caracteres y responsable del trabajo.');
+ if(!confirm('¿Guardar esta novedad técnica del simulador? Es un registro de equipamiento, no una intervención aeronáutica.'))return;
+ S.simLogs=S.simLogs||[];
+ if(S.simLogs.length>=1000)return alert('Se alcanzó el límite del historial de simulador.');
+ S.simLogs.push({id:uid(),simulatorId:simId,date,kind,description,
+  responsible:responsible.slice(0,150),reference:reference.slice(0,180),
+  added:new Date().toISOString()});
+ save();R();
+}
 function simulatorMaintenanceCards(){
  const active=registeredSimulators.filter(x=>!x.archived_at);
- const cards=active.map(x=>'<article class="maint-record-line"><b>'+esc(x.name)+'</b>'+
-  (x.model?' · '+esc(x.model):'')+'<p class="text-xs mt-1">'+
-  (x.availability==='available'?'Disponible para publicación de vuelo virtual':'Fuera de servicio · no puede reservarse')+
-  '</p><p class="text-xs text-slate-400 mt-1">Equipo de simulación: no aplica TTAF, motor ni hélice aeronáuticos. Gestioná su condición operativa en Flota.</p>'+
-  '<button class="btn bg-rose-800 mt-2" onclick="removeSimulatorInMaintenance(\''+x.id+'\')">Retirar simulador</button></article>').join('');
+ const cards=active.map(x=>{
+  const logs=(S.simLogs||[]).filter(l=>l.simulatorId===x.id).slice().sort((a,b)=>b.date.localeCompare(a.date));
+  const id=x.id;
+  return '<article class="maint-record-line"><b>'+esc(x.name)+'</b>'+
+   (x.model?' · '+esc(x.model):'')+
+   '<p class="text-xs mt-1">'+(x.availability==='available'?
+    'Disponible para vuelo virtual':'Fuera de servicio · no se admiten nuevas reservas')+'</p>'+
+   '<p class="text-xs text-slate-400 mt-1">Registro de equipo de simulación, separado del mantenimiento aeronáutico de célula, motor y hélice.</p>'+
+   '<details class="maint-guidance mt-2"><summary>Historial de mantenimiento del simulador ('+logs.length+')</summary>'+
+   (logs.map(l=>'<div class="maint-record-line mt-2"><b>'+esc(l.date)+' · '+esc(l.kind)+'</b>'+
+    '<p>'+esc(l.description)+'</p><p>Responsable: '+esc(l.responsible)+
+    (l.reference?' · Referencia: '+esc(l.reference):'')+'</p></div>').join('')||
+    '<p class="text-xs text-slate-400">Todavía no se registraron intervenciones del simulador.</p>')+
+   '<div class="maint-record-grid mt-3">'+
+    F('sim_date_'+id,'Fecha','date',today())+
+    SEL('sim_kind_'+id,'Tipo de trabajo',
+     '<option value="Mantenimiento preventivo">Mantenimiento preventivo</option>'+
+     '<option value="Reparación">Reparación</option><option value="Actualización software">Actualización de software</option>'+
+     '<option value="Calibración">Calibración / controles</option><option value="Revisión periféricos">Revisión de periféricos</option>')+
+    '<div class="wide">'+F('sim_detail_'+id,'Descripción de la tarea','text','','maxlength="600"')+'</div>'+
+    F('sim_who_'+id,'Responsable','text','','maxlength="150"')+
+    F('sim_ref_'+id,'Referencia / parte de trabajo (opcional)','text','','maxlength="180"')+
+   '</div><button class="btn bg-amber-600 mt-2" onclick="addSimulatorMaintenanceNote(\''+id+'\')">Registrar mantenimiento del simulador</button></details>'+
+   '<button class="btn bg-rose-800 mt-2" onclick="removeSimulatorInMaintenance(\''+id+'\')">Retirar simulador</button></article>';
+ }).join('');
  return '<section class="lg:col-span-2 card p-4 space-y-3"><h2 class="text-lg font-bold text-amber-300">Simuladores de la escuela ('+active.length+')</h2>'+
- '<p class="text-xs text-slate-300">Estos equipos se toman del mismo inventario que utiliza la turnera. El seguimiento aeronáutico de célula, motor y hélice corresponde únicamente a aeronaves reales.</p>'+
- '<div class="maint-sim-list">'+(cards||'<p class="text-xs text-slate-400">No hay simuladores activos.</p>')+'</div>'+
- '<details class="maint-guidance"><summary>Agregar otro simulador</summary><div class="maint-record-grid mt-3">'+
- F('sim_new_name','Nombre / identificador','text','','maxlength="90"')+
- F('sim_new_model','Plataforma o modelo','text','','maxlength="100"')+
- '</div><button class="btn bg-amber-600 mt-3" onclick="addSimulatorInMaintenance()">Agregar simulador a Flota</button></details></section>';
+  '<p class="text-xs text-slate-300">Se sincronizan con Flota y Turnera. El registro de sus intervenciones es operativo e independiente del régimen de aeronavegabilidad.</p>'+
+  '<div class="maint-sim-list">'+(cards||'<p class="text-xs text-slate-400">No hay simuladores activos.</p>')+'</div>'+
+  '<details class="maint-guidance"><summary>Agregar otro simulador</summary><div class="maint-record-grid mt-3">'+
+  F('sim_new_name','Nombre / identificador','text','','maxlength="90"')+
+  F('sim_new_model','Plataforma o modelo','text','','maxlength="100"')+
+  '</div><button class="btn bg-amber-600 mt-3" onclick="addSimulatorInMaintenance()">Agregar simulador a Flota</button></details></section>';
 }
 function updateAircraftTechnical(){
  const a=A();if(!a)return;
@@ -674,7 +712,7 @@ function impo(i){const f=i.files[0];if(!f)return;
  if(f.size>5000000){alert('El respaldo supera el tamaño permitido.');i.value='';return}
  const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!validData(d))throw 0;
  if(!confirm('¿Reemplazar tus registros actuales por este respaldo?'))return;
- S={ac:d.ac,sv:d.sv,ct:d.ct,lg:d.lg,rc:d.rc,mx:d.mx||[],ad:d.ad||[],ip:d.ip||[],ie:d.ie||[],dx:d.dx||[],inv:d.inv||[],mv:d.mv||[],fuel:d.fuel||[],sel:d.sel||null,tab:'a',hz:d.hz||12};
+ S={ac:d.ac,sv:d.sv,ct:d.ct,lg:d.lg,rc:d.rc,mx:d.mx||[],ad:d.ad||[],ip:d.ip||[],ie:d.ie||[],dx:d.dx||[],inv:d.inv||[],mv:d.mv||[],fuel:d.fuel||[],simLogs:d.simLogs||[],sel:d.sel||null,tab:'a',hz:d.hz||12};
  if(!S.ac.some(a=>a.id===S.sel))S.sel=S.ac[0]?.id||null;save();R();
  }catch(e){alert('Archivo no válido.')}};r.readAsText(f);i.value=''}
 
