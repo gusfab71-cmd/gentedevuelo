@@ -8,7 +8,7 @@ window.AeroSuiteAgenda={
   '<span class="eyebrow">Disponibilidad de la escuela · Publicación y reservas</span>',
   '<section id="agendaManager" hidden>',
   '<h3>Publicar turnos para toda la semana</h3>',
-  '<p class="hint">Seleccioná los recursos disponibles. AeroSuite publicará automáticamente los horarios de 08:00 a 20:00, de lunes a domingo, en turnos de 90 minutos. Podrás suspender o agregar horarios durante la semana.</p>',
+  '<p class="hint">Seleccioná los recursos disponibles. AeroSuite publicará automáticamente los horarios de 08:30 a 17:30, de lunes a domingo, en turnos de 90 minutos. Podrás suspender o agregar horarios durante la semana.</p>',
   '<p id="agendaWeekLabel" class="hint"></p>',
   '<form id="agendaBulkForm"><div class="formgrid">',
   '<label>Actividad<select id="agendaBulkType"><option value="flight">Vuelo de instrucción</option><option value="simulator">Vuelo virtual / simulador</option><option value="theory">Teoría</option></select></label>',
@@ -22,7 +22,7 @@ window.AeroSuiteAgenda={
   '<form id="agendaCreate"><div class="formgrid">',
   '<label>Actividad<select id="agendaType"><option value="flight">Vuelo de instrucción</option><option value="simulator">Vuelo virtual</option><option value="theory">Teoría grupal</option></select></label>',
   '<label>Día<input id="agendaDay" type="date" required></label>',
-  '<label>Hora<select id="agendaHour"><option>08:00</option><option>09:30</option><option>11:00</option><option>12:30</option><option>14:00</option><option>15:30</option><option>17:00</option><option>18:30</option></select></label>',
+  '<label>Hora<select id="agendaHour"><option>08:30</option><option>10:00</option><option>11:30</option><option>13:00</option><option>14:30</option><option>16:00</option></select></label>',
   '<label>Recurso / aeronave / aula<input id="agendaResource" list="agendaResourceList" maxlength="90" required placeholder="LV-ABC, Simulador 1 o Aula 1"><datalist id="agendaResourceList"></datalist></label>',
   '<label id="agendaCapacityLabel">Cupos<input id="agendaCapacity" type="number" min="1" max="50" value="1" required></label>',
   '</div><button class="primary" type="submit">Agregar horario en preparación</button></form>',
@@ -32,6 +32,7 @@ window.AeroSuiteAgenda={
   '</section>',
   '<div class="agenda-filters"><label>Actividad<select id="agendaFilter"><option value="flight">Vuelo de instrucción</option><option value="simulator">Vuelo virtual / simulador</option><option value="theory">Teoría</option></select></label>',
   '<label>Elegir aeronave, simulador o clase<select id="agendaResourceFilter"><option value="all">Todos los recursos</option></select></label></div>',
+  '<label class="agenda-instructor-switch" id="agendaStudentFlightMode"><span>Vuelo con instructor a bordo</span><input type="checkbox" id="agendaStudentInstructor" role="switch" checked aria-label="Vuelo con instructor a bordo"><span id="agendaStudentModeText">Con instructor</span></label>',
   '<p class="hint" role="status" aria-live="polite" id="agendaStatus"></p>',
   '<div id="agendaGridHost" class="agenda-grid-host"></div>',
   '<p class="hint" id="agendaGridHelp">Verde: libre · Marfil: pendiente · Azul: confirmado · Gris: ocupado o no disponible. Elegí una casilla para reservar.</p>',
@@ -80,6 +81,12 @@ window.AeroSuiteAgenda={
    ".agenda-slot-btn.occupied,.agenda-slot-btn.past,.agenda-slot-btn.unavailable{background:#3c4a55;border-color:#566977;color:#dce4eb}",
    ".agenda-slot-btn.draft{background:#594c38;border-color:#aa8951;color:#fff0d7}",
    ".agenda-slot-btn:disabled{cursor:default;opacity:.85}",
+   ".agenda-instructor-switch{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:10px 0;padding:10px 12px;background:#1c394d;border:1px solid #587b90;border-radius:9px;font-weight:700}",
+   ".agenda-instructor-switch input[role=switch]{appearance:none;-webkit-appearance:none;width:48px;height:26px;border-radius:30px;background:#637783;border:1px solid #a2b0b7;position:relative;cursor:pointer;flex:none}",
+   ".agenda-instructor-switch input[role=switch]:before{content:'';position:absolute;width:20px;height:20px;background:#fff;border-radius:50%;left:2px;top:2px;transition:transform .15s}",
+   ".agenda-instructor-switch input[role=switch]:checked{background:#337765;border-color:#81b59e}",
+   ".agenda-instructor-switch input[role=switch]:checked:before{transform:translateX(22px)}",
+   ".agenda-instructor-switch input[role=switch]:focus-visible{outline:3px solid #f4d386;outline-offset:2px}",
    ".agenda-slot-btn:focus-visible{outline:3px solid #ebca91;outline-offset:1px}",
    ".agenda-cell-empty{text-align:center;display:block;color:#9db1c3;padding:12px 2px;font-size:11px}",
    "#agendaStaffDetails{margin-top:16px;padding:13px;border:1px solid #567b91;border-radius:10px}",
@@ -150,8 +157,14 @@ window.AeroSuiteAgenda={
    }catch(e){msg("No se pudo actualizar: "+e.message);}
   }
   let selectedSlotId=null,maintenanceChecks=[];
+  function studentFlightMode(){return $("agendaStudentInstructor")?.checked!==false;}
+  function refreshStudentMode(){
+   $("agendaStudentFlightMode").hidden=c.role!=="alumno"||$("agendaFilter").value!=="flight";
+   $("agendaStudentModeText").textContent=studentFlightMode()?"Con instructor":"Sin instructor (sujeto a autorización)";
+  }
+  $("agendaStudentInstructor").onchange=refreshStudentMode;
   const dayLabels=["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"];
-  const timeSlots=["08:00","09:30","11:00","12:30","14:00","15:30","17:00","18:30"];
+  const timeSlots=["08:30","10:00","11:30","13:00","14:30","16:00"];
   const settledLabel=method=>method==="pack"?"Pack descontado":
    method==="cash"?"Saldado · Efectivo":method==="bank_transfer"?"Saldado · Transferencia":"Saldado";
   const endTime90=start=>new Intl.DateTimeFormat("es-AR",{
@@ -166,15 +179,18 @@ window.AeroSuiteAgenda={
    select.add(new Option(activity==="flight"?"Todas las aeronaves":activity==="simulator"?"Todos los simuladores":"Todas las clases","all"));
    for(const item of available)select.add(new Option(item,item));
    select.value=available.includes(current)?current:"all";
+   refreshStudentMode();
   }
   async function reserveSlot(slot,button){
    if(c.role!=="alumno"||!c.school.can_write||c.weekMode()!=="next")return;
    const label=names[slot.activity]+" · "+slot.resource+" · "+c.formatDate(slot.starts_at)+
     " hasta las "+endTime90(slot.starts_at)+" (1 hora y 30 minutos completos)";
-   if(!confirm("¿Reservar "+label+"? La solicitud quedará pendiente de confirmación de la escuela."))return;
+   const chosen=slot.activity==="flight"?studentFlightMode():true;
+   const mode=slot.activity==="flight"?(chosen?"Con instructor.":"Sin instructor: requiere habilitación y autorización de la escuela."):"";
+   if(!confirm("¿Reservar "+label+"? "+mode+" La solicitud quedará pendiente de confirmación de la escuela."))return;
    button.disabled=true;
    try{
-    await c.rpc("aerosuite_availability_reserve",{p_institution_id:c.inst,p_slot_id:slot.id,p_student_id:null});
+    await c.rpc("aerosuite_reserve_with_instructor",{p_institution_id:c.inst,p_slot_id:slot.id,p_student_id:null,p_with_instructor:chosen});
     await reloadAfter("Turno solicitado. Secretaría confirmará la reserva.");
    }catch(e){msg("No se pudo reservar: "+e.message);button.disabled=false;}
   }
@@ -290,6 +306,17 @@ window.AeroSuiteAgenda={
     inlineStatus.setAttribute("role","status");
     if(!students.length)inlineStatus.textContent="No hay alumnos habilitados para reservar. Revisá los integrantes de la escuela.";
     else inlineStatus.textContent="Elegí al alumno y después tocá «Reservar». La solicitud quedará pendiente.";
+    const modalityLabel=document.createElement("label");
+    modalityLabel.className="agenda-instructor-switch";
+    const modalityCheckbox=document.createElement("input");
+    modalityCheckbox.type="checkbox";modalityCheckbox.checked=true;modalityCheckbox.setAttribute("role","switch");
+    modalityCheckbox.setAttribute("aria-label","Vuelo con instructor a bordo");
+    const modalityText=document.createElement("span");
+    const updateModality=()=>{modalityText.textContent=modalityCheckbox.checked?"Con instructor":"Sin instructor · sujeto a autorización";};
+    modalityCheckbox.onchange=updateModality;updateModality();
+    modalityLabel.append(modalityCheckbox,modalityText);
+    modalityLabel.hidden=slot.activity!=="flight";
+    card.append(modalityLabel);
     const reservationButton=addButton("Reservar este horario para el alumno",async()=>{
      const student=studentSelect.value;
      if(!student){
@@ -297,14 +324,15 @@ window.AeroSuiteAgenda={
       studentSelect.focus();return;
      }
      const selectedName=students.find(x=>x.id===student)?.label||"el alumno seleccionado";
+     const chosen=slot.activity==="flight"?modalityCheckbox.checked:true;
      if(!confirm("¿Reservar "+slot.resource+" el "+c.formatDate(slot.starts_at)+
        " hasta las "+endTime90(slot.starts_at)+
-       " (1 h 30 min completos) para "+selectedName+"? Quedará pendiente de confirmación."))return;
+       " (1 h 30 min completos) para "+selectedName+"? Modalidad: "+(chosen?"Con instructor":"Sin instructor (requiere autorización de la escuela)")+". Quedará pendiente de confirmación."))return;
      reservationButton.disabled=true;
      inlineStatus.textContent="Registrando la reserva…";
      try{
-      await c.rpc("aerosuite_availability_reserve",{
-       p_institution_id:c.inst,p_slot_id:slot.id,p_student_id:student
+      await c.rpc("aerosuite_reserve_with_instructor",{
+       p_institution_id:c.inst,p_slot_id:slot.id,p_student_id:student,p_with_instructor:chosen
       });
       c.setSelectedStudent?.(student);
       await reloadAfter("Reserva registrada para "+selectedName+". Pendiente de confirmación.");
@@ -341,7 +369,9 @@ window.AeroSuiteAgenda={
      row.append(addButton("Reprogramar",()=>reprogramReservation(r,slot)));
      row.append(addButton("Cancelar",()=>actReservation("cancel",r),"danger"));
     }
-    if(r.booking_id)row.append(htmlText("Para asignar instructor y confirmar un vuelo, usá el detalle de reservas debajo de la turnera.","small"));
+    if(r.booking_id)row.append(htmlText(r.with_instructor===false?
+     "Vuelo sin instructor solicitado. Secretaría debe verificar y autorizar esta modalidad desde «Modificar reservas».":
+     "Vuelo con instructor solicitado. Asigná instructor desde «Modificar reservas».","small"));
     card.append(row);
    }
    target.append(card);
@@ -581,11 +611,11 @@ window.AeroSuiteAgenda={
    if(!resources.length||resources.length>20||!Number.isInteger(capacity)||capacity<1||capacity>50){
     msg("Elegí al menos un recurso y un cupo válido (máximo 20 recursos).");return;
    }
-   const date=c.weekDates()[0],total=resources.length*56;
+   const date=c.weekDates()[0],total=resources.length*42;
    if(activity==="flight"&&!await confirmMaintenanceWarnings(resources))return;
    if(!confirm("¿Publicar la semana del "+date+" para "+names[activity]+"?"+
     "\nRecursos: "+resources.join(", ")+
-    "\nSe habilitarán hasta "+total+" horarios (8 turnos de 90 minutos por día y recurso, de lunes a domingo)."+
+    "\nSe habilitarán hasta "+total+" horarios (6 turnos de 90 minutos por día y recurso, de lunes a domingo, 08:30 a 17:30)."+
     "\nLas reservas existentes se conservarán."))return;
    const b=$("agendaBulkSubmit");b.disabled=true;
    try{
