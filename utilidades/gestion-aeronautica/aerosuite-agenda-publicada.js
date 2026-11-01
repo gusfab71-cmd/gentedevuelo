@@ -155,7 +155,7 @@ window.AeroSuiteAgenda={
    select.value=available.includes(current)?current:"all";
   }
   async function reserveSlot(slot,button){
-   if(c.role!=="alumno"||!c.school.can_write)return;
+   if(c.role!=="alumno"||!c.school.can_write||c.weekMode()!=="next")return;
    const label=names[slot.activity]+" · "+slot.resource+" · "+c.formatDate(slot.starts_at);
    if(!confirm("¿Reservar "+label+"? La solicitud quedará pendiente de confirmación de la escuela."))return;
    button.disabled=true;
@@ -255,7 +255,7 @@ window.AeroSuiteAgenda={
    card.append(htmlText("Estado: "+(slot.published?"Publicado":"En preparación")+
     " · Cupos utilizados: "+slot.reserved+" de "+slot.capacity+
     (slot.bookable===false?" · Recurso fuera de servicio":"")));
-   if(c.school.can_write&&slot.published&&slot.bookable!==false&&
+   if(c.school.can_write&&c.weekMode()==="next"&&slot.published&&slot.bookable!==false&&
      new Date(slot.starts_at).getTime()>Date.now()&&Number(slot.reserved)<Number(slot.capacity)){
     const students=c.students?.()||[];
     const selectorLabel=document.createElement("label");
@@ -334,6 +334,16 @@ window.AeroSuiteAgenda={
    refreshResources();
    const selected=$("agendaFilter").value,resource=$("agendaResourceFilter").value;
    const days=c.weekDates(),head=$("weekHead"),body=$("weekBody");
+   if(c.manager){
+    const current=c.weekMode()==="current";
+    $("agendaBulkForm").hidden=current;
+    const heading=$("agendaManager").querySelector("h3");
+    const desc=$("agendaManager").querySelector("h3 + p");
+    if(heading)heading.textContent=current?"Gestión de horarios de esta semana":"Publicar turnos para toda la semana";
+    if(desc)desc.textContent=current
+     ?"Revisá y modificá los turnos asignados. Para publicar la semana próxima y recibir nuevas reservas, elegí «Semana siguiente»."
+     :"Seleccioná los recursos disponibles y publicá automáticamente la semana completa en turnos de 90 minutos.";
+   }
    head.replaceChildren();body.replaceChildren();
    const header=document.createElement("tr");
    header.append(htmlText("Horario","th"));
@@ -360,13 +370,14 @@ window.AeroSuiteAgenda={
       const active=bookings.filter(r=>r.slot_id===slot.id&&r.status!=="cancelled");
       const future=when>Date.now(),remaining=Number(slot.capacity)-Number(slot.reserved);
       const canBook=slot.published&&slot.bookable!==false&&future&&remaining>0&&c.role==="alumno"&&
-       !own.length&&c.school.can_write;
+       c.weekMode()==="next"&&!own.length&&c.school.can_write;
       let state=own.length?(own.some(r=>r.status==="confirmed")?"Confirmado":own.some(r=>r.status==="completed")?"Realizado":"Pendiente"):
        !slot.published?"Preparación":!future?"Pasado":slot.bookable===false?"Fuera de servicio":
        remaining<=0?(slot.activity==="theory"?"Sin cupos":"Ocupado"):"Libre";
       if(c.manager&&active.length){
        state=active.some(r=>r.status==="confirmed")?"Confirmado":active.some(r=>r.status==="pending")?"Pendiente":state;
       }
+      if(state==="Libre"&&c.weekMode()==="current")state="Solo consulta";
       const legacyMove=!!c.manager&&!!c.isLegacyRescheduling?.()&&
        slot.activity==="flight"&&slot.published&&slot.bookable!==false&&future&&remaining>0&&active.length===0;
       const b=document.createElement("button");b.type="button";b.className="slot agenda-slot-btn "+
@@ -374,7 +385,7 @@ window.AeroSuiteAgenda={
         state==="Realizado"?"settled":state==="Libre"?"available":
         state==="Preparación"?"draft":state==="Pasado"?"past":
         state==="Fuera de servicio"?"unavailable":
-        ["Ocupado","Sin cupos"].includes(state)?"occupied":"");
+        ["Ocupado","Sin cupos","Solo consulta"].includes(state)?"occupied":"");
       const resourceName=document.createElement("strong");resourceName.textContent=slot.resource||names[slot.activity];
       const line=htmlText((legacyMove?"Libre · Reprogramar aquí":state)+
        (slot.activity==="theory"?" · "+slot.reserved+"/"+slot.capacity:""),"small");
@@ -426,7 +437,9 @@ window.AeroSuiteAgenda={
     body.append(row);
    }
    const published=slots.filter(s=>s.published).length;
-   $("agendaGridHelp").textContent=(c.role==="alumno"?
+   $("agendaGridHelp").textContent=(c.weekMode()==="current"?
+    "Esta semana: revisá los turnos ya asignados y sus modificaciones; las nuevas reservas se realizan en «Semana siguiente». ":
+    c.role==="alumno"?
     "Elegí una casilla «Libre» para reservar; si hay varias aeronaves en el mismo horario, aparecen juntas. ":
     "Seleccioná un horario de la grilla para gestionar disponibilidad y reservas. ")+
     "Turnos de 90 minutos. Horario de Argentina. "+published+" horarios publicados esta semana.";
@@ -522,6 +535,10 @@ window.AeroSuiteAgenda={
   }
   async function publishFullWeek(e){
    e.preventDefault();if(!c.manager||!c.school.can_write)return;
+   if(c.weekMode()!=="next"){
+    msg("Para publicar la disponibilidad de la próxima semana, elegí «Semana siguiente». Esta semana se usa para gestionar reservas existentes.");
+    return;
+   }
    const activity=$("agendaBulkType").value;
    const resources=activity==="flight"?
     [...document.querySelectorAll('#agendaBulkAircraft input[name="agenda-aircraft"]:checked')].map(x=>x.value):
