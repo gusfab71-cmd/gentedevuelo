@@ -220,7 +220,11 @@ window.AeroSuiteAgenda={
      const when=new Date(date+"T"+time+":00-03:00").getTime();
      const candidates=visible.filter(s=>new Date(s.starts_at).getTime()===when)
       .sort((a,b)=>(a.resource||"").localeCompare(b.resource||"","es"));
-     if(!candidates.length)wrap.append(htmlText("—","span")).lastChild.className="agenda-cell-empty";
+     if(!candidates.length){
+      const empty=htmlText("—","span");
+      empty.className="agenda-cell-empty";
+      wrap.append(empty);
+     }
      for(const slot of candidates){
       const own=bookings.filter(r=>r.slot_id===slot.id&&r.my_booking);
       const active=bookings.filter(r=>r.slot_id===slot.id&&r.status!=="cancelled");
