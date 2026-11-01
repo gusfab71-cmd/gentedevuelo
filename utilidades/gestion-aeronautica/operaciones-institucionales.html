@@ -306,7 +306,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
 <script src="../../assets/supabase-2.117.2.min.js"></script><script src="../../assets/community-config.js"></script>
 <script src="../../assets/aerosuite-registration.js"></script>
 </head><body>
-<header><a class="brand" href="index.html">Aero<span>Suite</span><small>BY GENTE DE VUELO</small></a><nav><a id="backPortal" href="portal-escuela.html">Volver a mi portal</a><a href="../../index.html">Gente de Vuelo</a></nav></header>
+<header><a class="brand" href="index.html">Aero<span>Suite</span><small>BY GENTE DE VUELO</small></a><nav><a id="backPortal" href="portal-escuela.html">Volver al portal</a><a href="../../index.html">Gente de Vuelo</a></nav></header>
 <main>
  <span class="eyebrow">Gestión institucional segura · Primera etapa</span>
  <h1 id="pageTitle">Operaciones de la escuela</h1>
@@ -318,7 +318,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    <button data-tab="informes" type="button">Informes de instrucción</button>
    <button data-tab="cobros" type="button" id="cobrosTab" hidden>Cobro de vuelos</button>
    <button data-tab="contaduria" type="button" id="contaduriaTab" hidden>Contaduría</button>
-   <button data-tab="finanzas" type="button" id="financeTab" hidden>Mis horas de vuelo</button>
+   <button data-tab="finanzas" type="button" id="financeTab" hidden>Horas de vuelo</button>
    <button data-tab="recursos" type="button">Academia y recursos</button>
   </div>
   <section class="panel tab-panel active" id="turnera">
@@ -407,11 +407,11 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   <section class="panel tab-panel" id="finanzas">
    <span class="eyebrow" id="financeEyebrow">Gestión económica institucional</span><h2 id="financeTitle">Contaduría y packs de horas</h2>
    <p id="financeHelp">Consultá tus horas de vuelo y devoluciones.</p>
-   <div id="studentFlightHours" hidden aria-live="polite"><section class="panel" id="studentPackArea" style="margin:0 0 16px"><span class="eyebrow">Horas prepagas</span><h3>Mis packs de horas</h3><div class="cards" id="studentPackSummary"></div><div class="list" id="studentPackList"></div></section>
+   <div id="studentFlightHours" hidden aria-live="polite"><section class="panel" id="studentPackArea" style="margin:0 0 16px"><span class="eyebrow">Horas prepagas</span><h3>Packs de horas</h3><div class="cards" id="studentPackSummary"></div><div class="list" id="studentPackList"></div></section>
     <div class="cards" id="flightHoursCards"></div>
     <p class="hint">Los minutos reales se suman sin redondeos. AeroSuite muestra HH:MM y su equivalente en horas centesimales con dos decimales. El total se calcula desde los minutos originales, nunca sumando equivalencias redondeadas.</p>
     <div id="labStudentHours" class="list" hidden></div>
-    <h3>Mis vuelos realizados</h3>
+    <h3>Vuelos realizados</h3>
     <div class="list" id="flightHoursHistory"></div>
    </div>
 
@@ -702,7 +702,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   role=school.my_role; manager=role==="administrador"||role==="secretaria";
   $("schoolTitle").textContent=school.institution_name;
   $("roleText").textContent="Rol: "+(roleLabel[role]||role)+" · "+user.email+(school.can_write?"":" · Solo consulta");
-  $("pageTitle").textContent=manager?"Administración de la escuela":role==="instructor"?"Mi actividad de instrucción":"Mi reserva y formación";
+  $("pageTitle").textContent=manager?"Administración de la escuela":role==="instructor"?"Mi actividad de instrucción":"Reservas y formación";
   $("backPortal").href="portal-escuela.html?institucion="+encodeURIComponent(inst)+"&rol="+encodeURIComponent(role)+"&elegida=1"+(labLogin?"&prueba=1":"");
   $("adminBooking").hidden=!manager;$("reportForm").hidden=role!=="instructor";$("financeForm").hidden=true;$("packPurchasePanel").hidden=!manager;$("financeOverview").hidden=!manager;$("financeWorkspaces").hidden=!manager;$("financeDisclosure").hidden=!manager;$("financeExportRow").hidden=!manager;$("frontdeskReviewPanel").hidden=!manager;
   $("cobrosTab").hidden=!manager;$("contaduriaTab").hidden=!manager;$("financeTab").hidden=role!=="alumno";
@@ -726,8 +726,8 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    $("contaduriaDetailsHost").append($("financeDisclosure"),$("financeExportRow"),document.querySelector(".finance-lists"));
   }
   if(role==="alumno"){
-   $("reportsEyebrow").textContent="Seguimiento de mi formación";
-   $("reportsTitle").textContent="Mis prácticas y devoluciones";
+   $("reportsEyebrow").textContent="Seguimiento de formación";
+   $("reportsTitle").textContent="Prácticas y devoluciones";
    $("reportsIntro").textContent="Consultá qué práctica realizaste, el tiempo de vuelo utilizado, la devolución de tu instructor y sus recomendaciones para el próximo encuentro.";
   }
   $("reschedulePanel").hidden=true;
@@ -741,9 +741,9 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    $("bookingLegendHelp").textContent="Horarios de Buenos Aires (ART). Verde: disponible para reservar · Marfil: pendiente de confirmación · Azul acero: confirmado · Gris oscuro: ocupado o pasado. Tocá tu reserva para ver los detalles.";
   }
   if(role==="alumno"){
-   $("financeTab").textContent="Mis horas de vuelo";
-   $("financeEyebrow").textContent="Mi actividad de vuelo";
-   $("financeTitle").textContent="Mis horas de vuelo";
+   $("financeTab").textContent="Horas de vuelo";
+   $("financeEyebrow").textContent="Actividad de vuelo";
+   $("financeTitle").textContent="Horas de vuelo";
    $("financeHelp").textContent="Consultá cuánto volaste en la última práctica y tus horas acumuladas registradas en AeroSuite.";
    $("studentFlightHours").hidden=false;
    $("packsArea").hidden=true;
@@ -1343,7 +1343,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   function renderLabReports(){
    const list=$("labReportList");list.replaceChildren();
    $("labReportMessage").textContent=role==="alumno"?
-    "Solo verás aquí los informes simulados aprobados; nunca se suman a Mis horas de vuelo.":
+    "Solo verás aquí los informes simulados aprobados; nunca se suman al registro de horas de vuelo.":
     "Los cambios en este panel no afectan la reserva cancelada ni el Libro de Vuelo.";
    if(role==="alumno"){
     const separate=$("labStudentHours");separate.replaceChildren();
@@ -2205,7 +2205,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    if(!all.length)packs.textContent="Todavía no hay packs de horas registrados.";
    for(const p of all){
     const box=document.createElement("div");box.className="list-item";
-    box.innerHTML='<strong>'+esc(p.student_email||"Mi pack")+'</strong><p>Compradas: '+esc(flightHoursMinutes(Number(p.total_minutes)))+' · Usadas: '+esc(flightHoursMinutes(Number(p.used_minutes)))+' · <strong>Disponibles: '+esc(flightHoursMinutes(Number(p.remaining_minutes)))+'</strong></p>'+
+    box.innerHTML='<strong>'+esc(p.student_email||"Pack de horas")+'</strong><p>Compradas: '+esc(flightHoursMinutes(Number(p.total_minutes)))+' · Usadas: '+esc(flightHoursMinutes(Number(p.used_minutes)))+' · <strong>Disponibles: '+esc(flightHoursMinutes(Number(p.remaining_minutes)))+'</strong></p>'+
      (manager?'<p class="hint">Importe cobrado al comprar: '+esc(p.currency)+' '+Number(p.paid_amount).toLocaleString("es-AR")+'</p>':"");
     packs.append(box);
    }
