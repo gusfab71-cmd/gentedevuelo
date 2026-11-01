@@ -1706,6 +1706,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    if(!manager)return;
    let q;try{q=financePeriodQuery();}catch(e){$("financePeriodStatus").textContent=e.message;return;}
    const token=++financePeriodToken;
+   if(q.kind==="month")$("financeExportMonth").value=q.period;
    financePeriodData=null;renderFinanceOverview();
    $("financePeriodStatus").textContent="Consultando historial…";
    try{
