@@ -14,7 +14,8 @@ window.AeroSuiteAgenda={
   '<form id="agendaBulkForm"><div class="formgrid">',
   '<label>Actividad<select id="agendaBulkType"><option value="flight">Vuelo de instrucción</option><option value="simulator">Vuelo virtual / simulador</option><option value="theory">Teoría</option></select></label>',
   '<div class="agenda-resource-pick" id="agendaBulkFlight"><strong>Aeronaves disponibles</strong><div id="agendaBulkAircraft"></div><p class="hint">Se toman de Flota. Las que están fuera de servicio no pueden publicarse.</p></div>',
-  '<label id="agendaBulkNamesLabel" hidden>Recursos disponibles (separados por coma)<input id="agendaBulkNames" maxlength="600" placeholder="Ej.: Simulador LV-ASD"></label>',
+  '<div class="agenda-resource-pick" id="agendaBulkSim" hidden><strong>Simuladores disponibles</strong><div id="agendaBulkSimulators"></div><p class="hint">Se toman de Disponibilidad de flotas y mantenimiento. Los que están fuera de servicio no pueden publicarse.</p></div>',
+  '<label id="agendaBulkNamesLabel" hidden>Clase o materia<input id="agendaBulkNames" maxlength="600" placeholder="Ej.: Teoría"></label>',
   '<label id="agendaBulkCapacityLabel" hidden>Cupos por turno<input id="agendaBulkCapacity" type="number" min="1" max="50" value="12"></label>',
   '</div><button class="primary" type="submit" id="agendaBulkSubmit">Publicar toda la semana</button></form>',
   '<details class="agenda-daily"><summary>Agregar o modificar horarios puntuales</summary>',
@@ -281,11 +282,11 @@ window.AeroSuiteAgenda={
   function syncBulkOptions(){
    const activity=$("agendaBulkType").value;
    $("agendaBulkFlight").hidden=activity!=="flight";
-   $("agendaBulkNamesLabel").hidden=activity==="flight";
+   $("agendaBulkSim").hidden=activity!=="simulator";
+   $("agendaBulkNamesLabel").hidden=activity!=="theory";
    $("agendaBulkCapacityLabel").hidden=activity!=="theory";
    $("agendaBulkCapacity").value=activity==="theory"?"12":"1";
-   if(activity==="theory")$("agendaBulkNames").value="Teoría";
-   else if(activity==="simulator"&&!$("agendaBulkNames").value.trim())$("agendaBulkNames").value="Simulador 1";
+   if(activity==="theory"&&!$("agendaBulkNames").value.trim())$("agendaBulkNames").value="Teoría";
    const list=$("agendaBulkAircraft");list.replaceChildren();
    const available=c.aircraft().filter(a=>a.availability==="available"&&!a.archived_at);
    if(!available.length)list.append(htmlText("No hay aeronaves disponibles cargadas en Flota. Primero registralas desde Administración."));
@@ -298,12 +299,26 @@ window.AeroSuiteAgenda={
     label.append(input,name);area.append(label);
    }
    list.append(area);
+   const simList=$("agendaBulkSimulators");simList.replaceChildren();
+   const simulators=c.simulators().filter(x=>x.availability==="available"&&!x.archived_at);
+   if(!simulators.length)simList.append(htmlText("No hay simuladores disponibles. Primero registralos en Disponibilidad de flotas y mantenimiento."));
+   const simArea=document.createElement("div");simArea.className="agenda-resource-options";
+   for(const sim of simulators){
+    const label=document.createElement("label");label.className="agenda-check";
+    const checkbox=document.createElement("input");checkbox.type="checkbox";
+    checkbox.value=sim.name;checkbox.name="agenda-simulator";
+    label.append(checkbox,htmlText(sim.name+(sim.model?" · "+sim.model:""),"span"));
+    simArea.append(label);
+   }
+   simList.append(simArea);
   }
   async function publishFullWeek(e){
    e.preventDefault();if(!c.manager||!c.school.can_write)return;
    const activity=$("agendaBulkType").value;
    const resources=activity==="flight"?
     [...document.querySelectorAll('#agendaBulkAircraft input[name="agenda-aircraft"]:checked')].map(x=>x.value):
+    activity==="simulator"?
+    [...document.querySelectorAll('#agendaBulkSimulators input[name="agenda-simulator"]:checked')].map(x=>x.value):
     $("agendaBulkNames").value.split(/[,;\n]+/).map(x=>x.trim()).filter(Boolean);
    const capacity=activity==="theory"?Number($("agendaBulkCapacity").value):1;
    if(!resources.length||resources.length>20||!Number.isInteger(capacity)||capacity<1||capacity>50){
@@ -335,8 +350,11 @@ window.AeroSuiteAgenda={
    $("agendaResource").value="";
    $("agendaResource").placeholder=kind==="flight"?"LV-ABC o Cupo vuelo 1":kind==="theory"?"Aula 1":"Simulador 1";
    const list=$("agendaResourceList");list.replaceChildren();
-   if(kind==="flight")for(const a of c.aircraft().filter(a=>a.availability==="available"&&!a.archived_at)){
-    const opt=document.createElement("option");opt.value=a.registration;list.append(opt);
+   const resources=kind==="flight"?
+    c.aircraft().filter(x=>x.availability==="available"&&!x.archived_at).map(x=>x.registration):
+    kind==="simulator"?c.simulators().filter(x=>x.availability==="available"&&!x.archived_at).map(x=>x.name):[];
+   for(const name of resources){
+    const option=document.createElement("option");option.value=name;list.append(option);
    }
   }
   $("agendaFilter").onchange=()=>{$("agendaResourceFilter").value="all";selectedSlotId=null;render();};
