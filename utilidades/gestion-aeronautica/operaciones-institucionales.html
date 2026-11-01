@@ -827,8 +827,12 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    publishedAgenda.refresh();
   }
   $("stopReschedule").onclick=stopReschedule;
-  async function moveBookingTo(start,cell){
+  async function moveBookingTo(start,cell,slotId){
    if(!rescheduleTarget||!manager||!school.can_write)return;
+   if(!slotId){
+    $("rescheduleFeedback").textContent="Elegí un cupo de vuelo publicado en la turnera integrada.";
+    return;
+   }
    const channel=$("rescheduleChannel").value,reason=$("rescheduleReason").value.trim();
    const instructorId=$("rescheduleInstructor").value||null;
    if(!$("rescheduleAuthorization").checked||!channel||reason.length<5){
@@ -840,8 +844,8 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    if(!confirm("¿Reprogramar el turno de "+old.student_email+" del "+stamp(old.starts_at)+" al "+stamp(start.toISOString())+"?"+instructorText+"\n\nSe conservará su reserva y quedará pendiente de confirmar el nuevo horario."))return;
    cell.disabled=true;
    try{
-    const result=await rpc("aerosuite_reschedule_booking_with_instructor",{
-     p_institution_id:inst,p_booking_id:old.booking_id,p_new_starts_at:start.toISOString(),
+    const result=await rpc("aerosuite_legacy_booking_move_to_published",{
+     p_institution_id:inst,p_booking_id:old.booking_id,p_target_slot_id:slotId,
      p_student_authorized:true,p_authorization_channel:channel,p_reason:reason,p_instructor_id:instructorId
     });
     stopReschedule();await loadWeek();
@@ -870,7 +874,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    aircraft:()=>registeredAircraft,simulators:()=>registeredSimulators,
    selectedStudent:()=> $("bookingStudent").value,
    isLegacyRescheduling:()=>!!rescheduleTarget,
-   onLegacyReschedule:async(start,button)=>{await moveBookingTo(start,button);},
+   onLegacyReschedule:async(slot,button)=>{await moveBookingTo(new Date(slot.starts_at),button,slot.id);},
    legacyBookings:()=>bookings,
    rpc,reload:async()=>{await loadWeek();}
   });
