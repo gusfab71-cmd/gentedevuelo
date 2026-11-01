@@ -1054,7 +1054,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
      notice.textContent="Este turno tiene un informe de instrucción ("+(statuses[associatedReport.status]||associatedReport.status)+"). No se puede cancelar ni reprogramar desde la turnera. Revisá el documento desde «Informes de instrucción».";
      card.append(notice);
     }
-    if(canChangeBooking&&manager&&["pending","confirmed"].includes(b.status)){
+    if(canChangeBooking&&manager&&["pending","confirmed"].includes(b.status)&&!publishedAgenda.isPublishedBooking(b.booking_id)){
      btn("Reprogramar turno",()=>startReschedule(b));
     }
     if(canChangeBooking&&manager&&["pending","confirmed"].includes(b.status)){
