@@ -207,7 +207,19 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
 .finance-overview .finance-meta{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:10px}
 .finance-overview .finance-meta > div{border:1px solid #43647b;background:#1c384c;border-radius:8px;padding:11px;font-size:12px;line-height:1.5}
 .finance-overview .finance-meta strong{color:#fff}
-.finance-overview select{max-width:135px;width:auto}
+.finance-overview #financeCurrency{max-width:180px;width:auto}
+.finance-period-controls{display:flex;gap:10px;flex-wrap:wrap;align-items:end;background:#19384b;border:1px solid #54778c;border-radius:9px;padding:13px;margin:12px 0}
+.finance-period-controls label{min-width:145px;flex:1 1 145px}.finance-period-controls label input,.finance-period-controls label select{width:100%;max-width:none}
+.finance-period-controls button{flex:0 1 auto;white-space:nowrap}
+.finance-history-details{border:1px solid #54778c;border-radius:9px;padding:10px;margin-top:14px}
+.finance-history-details summary{cursor:pointer;color:#e9d09d;font-weight:800;padding:6px}
+.finance-history-table{min-width:590px;width:100%;border-spacing:0;font-size:12px}
+.finance-history-table th,.finance-history-table td{padding:8px;text-align:right;border-bottom:1px solid #38546a}
+.finance-history-table th:first-child,.finance-history-table td:first-child{text-align:left}
+.finance-history-table button{padding:6px 8px;background:#29465d;border:1px solid #7192a6}
+.finance-history-table tr[aria-current="true"]{background:#375970}
+@media(max-width:630px){.finance-period-controls button{flex:1 1 140px}}
+
 .finance-workspaces{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px;align-items:start}
 .finance-workspaces>.panel{margin:0;padding:16px;border-radius:12px}
 .finance-workspaces h3{font-size:17px;margin-bottom:6px}
@@ -338,19 +350,36 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
      <div><span class="eyebrow">Tablero económico · Datos registrados</span><h3>Resumen del instituto</h3></div>
      <label>Moneda<select id="financeCurrency"><option value="ARS">ARS · Pesos</option><option value="USD">USD · Dólares</option></select></label>
     </div>
-    <p class="hint" id="financePeriod">Consultando movimientos…</p>
+    <div class="finance-period-controls">
+     <label>Consultar<select id="financePeriodKind"><option value="month">Un mes</option><option value="year">Acumulado anual</option></select></label>
+     <label id="financeMonthLabel">Mes<input id="financeMonthSelector" type="month" min="2020-01" max="2099-12"></label>
+     <label id="financeYearLabel" hidden>Año<input id="financeYearSelector" type="number" min="2020" max="2099" step="1"></label>
+     <button type="button" id="financeCurrentMonth" class="primary">Mes actual</button>
+     <button type="button" id="financePreviousMonth">Mes anterior</button>
+     <button type="button" id="financeCurrentYear" hidden>Año actual</button>
+    </div>
+    <p class="hint" id="financePeriod" role="status" aria-live="polite">Consultando movimientos…</p>
+    <p class="hint" id="financePeriodStatus" role="status" aria-live="polite"></p>
     <div class="finance-kpis">
-     <div class="finance-kpi"><span class="finance-kpi-label">Ingresos cobrados · mes</span><span class="finance-kpi-value" id="financeIncome">—</span><span class="finance-kpi-desc">Vuelos y ventas de packs</span></div>
-     <div class="finance-kpi"><span class="finance-kpi-label">Egresos pagados · mes</span><span class="finance-kpi-value" id="financeExpenses">—</span><span class="finance-kpi-desc">Gastos y caja chica</span></div>
-     <div class="finance-kpi"><span class="finance-kpi-label">Flujo neto registrado · mes</span><span class="finance-kpi-value" id="financeNet">—</span><span class="finance-kpi-desc">No equivale al saldo de banco ni a ganancia</span></div>
+     <div class="finance-kpi"><span class="finance-kpi-label">Ingresos cobrados · período</span><span class="finance-kpi-value" id="financeIncome">—</span><span class="finance-kpi-desc">Vuelos y ventas de packs</span></div>
+     <div class="finance-kpi"><span class="finance-kpi-label">Egresos pagados · período</span><span class="finance-kpi-value" id="financeExpenses">—</span><span class="finance-kpi-desc">Gastos y caja chica</span></div>
+     <div class="finance-kpi"><span class="finance-kpi-label">Flujo neto registrado · período</span><span class="finance-kpi-value" id="financeNet">—</span><span class="finance-kpi-desc">No equivale al saldo de banco ni a ganancia</span></div>
      <div class="finance-kpi alert"><span class="finance-kpi-label">Turnos iniciados sin liquidar</span><span class="finance-kpi-value" id="financeUnsettled">—</span><span class="finance-kpi-desc">Requieren confirmar vuelo realmente realizado</span></div>
     </div>
     <div class="finance-meta">
-     <div><strong id="financePacksAvailable">—</strong><div class="hint">Horas disponibles de packs · HH:MM</div></div>
-     <div><strong id="financeTransactions">—</strong><div class="hint">Movimientos registrados este mes</div></div>
-     <div><strong id="financePaymentSplit">—</strong><div class="hint">Ingresos por medio de pago del mes</div></div>
+     <div><strong id="financePacksAvailable">—</strong><div class="hint">Saldo actual de packs · HH:MM (no histórico)</div></div>
+     <div><strong id="financeTransactions">—</strong><div class="hint">Movimientos del período seleccionado</div></div>
+     <div><strong id="financePaymentSplit">—</strong><div class="hint">Cobros por medio de pago del período seleccionado</div></div>
     </div>
     <p class="hint" id="financeOverviewCaveat">Este panel muestra flujo de caja registrado; no sustituye saldos bancarios conciliados ni contabilidad fiscal.</p>
+    <details id="financeHistoryDetails" class="finance-history-details" open>
+     <summary>Historial mensual de <span id="financeHistoryYear">—</span> · Seleccioná un mes</summary>
+     <p class="hint">Los importes históricos permanecen guardados y se muestran en la moneda elegida, sin conversión.</p>
+     <div class="table-scroll"><table class="finance-history-table" aria-label="Historial económico mensual">
+      <thead><tr><th>Mes</th><th>Ingresos</th><th>Egresos</th><th>Flujo neto</th><th>Movimientos</th></tr></thead>
+      <tbody id="financeHistoryRows"></tbody>
+     </table></div>
+    </details>
    </div>
    <div class="finance-workspaces" id="financeWorkspaces" hidden>
     <section class="panel" id="flightSettlementPanel">
@@ -1607,29 +1636,91 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    }
   }
 
-  let financeOverviewData=null,unsettledFlights=[],hourlyTariff={configured:false,amount:null,currency:"ARS"};
+  let financeOverviewData=null,financePeriodData=null,financePeriodToken=0,
+   unsettledFlights=[],hourlyTariff={configured:false,amount:null,currency:"ARS"};
   const currencyAmount=(amount,currency)=>Number(amount||0).toLocaleString("es-AR",{
    style:"currency",currency:currency==="USD"?"USD":"ARS",
    minimumFractionDigits:2,maximumFractionDigits:2
   });
+  const financeMonthLabel=month=>{
+   if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(month||""))return month||"—";
+   const [year,m]=month.split("-").map(Number);
+   return new Date(Date.UTC(year,m-1,1)).toLocaleDateString("es-AR",{month:"long",year:"numeric",timeZone:"UTC"});
+  };
+  function financePeriodQuery(){
+   const kind=$("financePeriodKind").value;
+   const period=kind==="year"?String($("financeYearSelector").value):$("financeMonthSelector").value;
+   if(kind==="year"&&!/^(20\d{2})$/.test(period)||kind==="month"&&!/^(20\d{2})-(0[1-9]|1[0-2])$/.test(period))
+    throw Error("Elegí un mes o año válido.");
+   if(Number(period.slice(0,4))<2020||Number(period.slice(0,4))>2099)throw Error("El año está fuera de rango.");
+   return {kind,period};
+  }
+  function syncFinancePeriodControls(){
+   const annual=$("financePeriodKind").value==="year";
+   $("financeMonthLabel").hidden=annual;$("financeYearLabel").hidden=!annual;
+   $("financeCurrentMonth").hidden=annual;$("financePreviousMonth").hidden=annual;
+   $("financeCurrentYear").hidden=!annual;
+  }
   function renderFinanceOverview(){
-   if(!manager||!financeOverviewData)return;
-   const v=financeOverviewData;
-   const currency=$("financeCurrency").value;
-   const m=v.currencies?.[currency]||{};
-   $("financePeriod").textContent="Período "+String(v.month||"—")+
-    " · Movimientos reales registrados en AeroSuite · Monedas sin conversión";
-   $("financeIncome").textContent=currencyAmount(m.income,currency);
-   $("financeExpenses").textContent=currencyAmount(m.expenses,currency);
-   $("financeNet").textContent=currencyAmount(m.net,currency);
+   if(!manager)return;
+   const v=financePeriodData,currency=$("financeCurrency").value,m=v?.currencies?.[currency]||{};
    $("financeUnsettled").textContent=String(unsettledFlights.length);
-   $("financePacksAvailable").textContent=flightHoursMinutes(Number(v.pack_minutes_available)||0)+" h";
-   $("financeTransactions").textContent=String(v.total_movements||0);
-   $("financePaymentSplit").textContent="Efectivo "+currencyAmount(m.cash_in,currency)+
-    " · Banco "+currencyAmount(m.bank_in,currency)+
-    (Number(m.unspecified_in)>0?" · Sin identificar "+currencyAmount(m.unspecified_in,currency):"");
-   $("financeOverviewCaveat").textContent=v.caveat||
-    "Se muestran cobros y gastos registrados, no saldos bancarios conciliados.";
+   $("financePacksAvailable").textContent=financeOverviewData?
+    flightHoursMinutes(Number(financeOverviewData.pack_minutes_available)||0)+" h":"—";
+   for(const [id,value] of Object.entries({
+    financeIncome:v?currencyAmount(m.income,currency):"—",
+    financeExpenses:v?currencyAmount(m.expenses,currency):"—",
+    financeNet:v?currencyAmount(m.net,currency):"—",
+    financeTransactions:v?String(v.total_movements||0):"—",
+    financePaymentSplit:v?"Efectivo "+currencyAmount(m.cash_in,currency)+
+     " · Banco "+currencyAmount(m.bank_in,currency)+
+     (Number(m.unspecified_in)>0?" · Sin identificar "+currencyAmount(m.unspecified_in,currency):""):"—"
+   }))$(id).textContent=value;
+   if(!v){$("financeHistoryRows").replaceChildren();return;}
+   $("financePeriod").textContent="Período consultado: "+
+    (v.kind==="year"?"Año "+v.period:financeMonthLabel(v.period))+
+    " · Movimientos registrados · Monedas sin conversión";
+   $("financeOverviewCaveat").textContent=(v.caveat||"Flujo registrado; no saldo bancario.")+
+    " El saldo de packs y los turnos sin liquidar corresponden a la situación actual.";
+   $("financeHistoryYear").textContent=v.year;
+   const body=$("financeHistoryRows");body.replaceChildren();
+   for(const item of v.history||[]){
+    const tr=document.createElement("tr");
+    tr.setAttribute("aria-current",v.kind==="month"&&v.period===item.month?"true":"false");
+    const cell=document.createElement("td"),button=document.createElement("button");
+    button.type="button";button.textContent=financeMonthLabel(item.month);
+    button.onclick=()=>{
+     $("financePeriodKind").value="month";$("financeMonthSelector").value=item.month;
+     syncFinancePeriodControls();loadFinancePeriod();
+    };
+    cell.append(button);tr.append(cell);
+    const totals=item.currencies?.[currency]||{};
+    for(const value of [currencyAmount(totals.income,currency),currencyAmount(totals.expenses,currency),
+      currencyAmount(totals.net,currency),String(item.total_movements||0)]){
+     const td=document.createElement("td");td.textContent=value;tr.append(td);
+    }
+    body.append(tr);
+   }
+  }
+  async function loadFinancePeriod(){
+   if(!manager)return;
+   let q;try{q=financePeriodQuery();}catch(e){$("financePeriodStatus").textContent=e.message;return;}
+   const token=++financePeriodToken;
+   financePeriodData=null;renderFinanceOverview();
+   $("financePeriodStatus").textContent="Consultando historial…";
+   try{
+    const v=await rpc("aerosuite_finance_period_summary",{
+     p_institution_id:inst,p_kind:q.kind,p_period:q.period
+    });
+    if(token!==financePeriodToken)return;
+    if(!v||v.period!==q.period||v.kind!==q.kind||!Array.isArray(v.history))
+     throw Error("La respuesta del historial está incompleta.");
+    financePeriodData=v;renderFinanceOverview();
+    $("financePeriodStatus").textContent="Historial actualizado.";
+   }catch(e){
+    if(token!==financePeriodToken)return;
+    $("financePeriodStatus").textContent="No se pudo recuperar el período: "+safeError(e);
+   }
   }
 
   let deskReviews=[];
@@ -1783,17 +1874,25 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   async function loadFinance(){
    if(!manager&&role!=="alumno")return;
    if(manager){
+    const selectedPeriod=financePeriodQuery(),periodToken=++financePeriodToken;
     const results=await Promise.all([
      rpc("aerosuite_finance_snapshot",{p_institution_id:inst}),
      rpc("aerosuite_finance_overview",{p_institution_id:inst}),
      rpc("aerosuite_frontdesk_flight_list",{p_institution_id:inst}),
-     rpc("aerosuite_hourly_tariff_get",{p_institution_id:inst})
+     rpc("aerosuite_hourly_tariff_get",{p_institution_id:inst}),
+     rpc("aerosuite_finance_period_summary",{
+      p_institution_id:inst,p_kind:selectedPeriod.kind,p_period:selectedPeriod.period
+     })
     ]);
     hourlyTariff=results[3]||{configured:false,amount:null,currency:"ARS"};
     $("settleHourlyRate").value=hourlyTariff.configured?displayMoney(hourlyTariff.amount):"";
     $("settleCurrency").value=hourlyTariff.currency||"ARS";
     finance=results[0];financeOverviewData=results[1];unsettledFlights=results[2]?.eligible||[];deskReviews=results[2]?.reviews||[];
     renderFinance();
+    if(periodToken===financePeriodToken){
+     financePeriodData=results[4];
+     $("financePeriodStatus").textContent="Historial actualizado.";
+    }
     renderFinanceOverview();
     renderSettlementCandidates();renderDeskReviews();updateCheckoutTotal();renderPackComparisonChoices();
     await Promise.allSettled([loadFixedExpenses(),loadPettyDay()]);
@@ -2033,6 +2132,27 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    finally{button.disabled=!school.can_write;}
   });
 
+  $("financeMonthSelector").value=artToday().slice(0,7);
+  $("financeYearSelector").value=artToday().slice(0,4);
+  syncFinancePeriodControls();
+  $("financePeriodKind").addEventListener("change",()=>{syncFinancePeriodControls();loadFinancePeriod();});
+  $("financeMonthSelector").addEventListener("change",loadFinancePeriod);
+  $("financeYearSelector").addEventListener("change",loadFinancePeriod);
+  $("financeCurrentMonth").addEventListener("click",()=>{
+   $("financePeriodKind").value="month";$("financeMonthSelector").value=artToday().slice(0,7);
+   syncFinancePeriodControls();loadFinancePeriod();
+  });
+  $("financePreviousMonth").addEventListener("click",()=>{
+   const [y,m]=artToday().slice(0,7).split("-").map(Number);
+   const d=new Date(Date.UTC(y,m-2,1));
+   $("financePeriodKind").value="month";
+   $("financeMonthSelector").value=d.getUTCFullYear()+"-"+String(d.getUTCMonth()+1).padStart(2,"0");
+   syncFinancePeriodControls();loadFinancePeriod();
+  });
+  $("financeCurrentYear").addEventListener("click",()=>{
+   $("financeYearSelector").value=artToday().slice(0,4);
+   syncFinancePeriodControls();loadFinancePeriod();
+  });
   $("financeCurrency").addEventListener("change",renderFinanceOverview);
   $("settleBooking").addEventListener("change",syncSettleFlight);
   $("settleAircraft").addEventListener("input",syncSettleMode);
