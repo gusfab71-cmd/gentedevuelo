@@ -512,3 +512,14 @@ Se estableció la prueba de extremo a extremo: el Superadministrador crea una in
 - **No destructivo:** los registros históricos no se reescribieron masivamente; los normalizadores actúan cuando se ingresan o cambian matrículas. Los datos personales de Gente de Vuelo no se tocaron.
 - **Pruebas:** comparaciones de valores SQL y JavaScript (incluidas minúsculas, espacios, guiones alternativos, matrículas internacionales y campos incompletos); prueba de entrada simulada con cursor: `lv` → `LV-`, `lvert` → `LV-ERT`. Revisión de carga del módulo en los cinco portales, código JS compilado, migración versionada y test agregado a CI.
 - **Pendiente:** prueba navegada con sesión autenticada de Centro de Testeo Permanente: registrar `lvert` como flota, abrir ficha de mantenimiento y cotejar matrícula en registro de vuelo y cobranza. No se creó matrícula ni cobro ficticio directamente en la institución.
+
+
+## Estrategia institucional — Cámara Argentina de Escuelas de Vuelo (31/10/2026)
+
+**Objetivo futuro:** ofrecer AeroSuite by Gente de Vuelo a escuelas de vuelo mediante una posible alianza con la Cámara Argentina de Escuelas de Vuelo. La Cámara es una entidad representativa y potencial aliada institucional, **no un cliente directo**.
+
+**Secuencia acordada:** (1) completar y estabilizar AeroSuite; (2) auditar la separación y privacidad de datos por institución; (3) probar el circuito completo reserva → vuelo → registro de horas → cobro/pack → informe y seguimiento, junto con disponibilidad de instructores, flota y mantenimiento; (4) validar requisitos documentales ANAC aplicables, diferenciando RAAC 141 y 142; (5) ejecutar un piloto con una escuela real y medir resultados; (6) recién entonces presentar a la Cámara una propuesta de **convenio marco**, aval o difusión, con beneficios preferenciales para escuelas asociadas.
+
+**Propuesta de valor a demostrar:** reducción de trabajo administrativo, trazabilidad de instrucción y horas, controles de inspecciones/vencimientos, integración de caja y gestión, adaptación local y costos accesibles. Mantener Gente de Vuelo como comunidad gratuita y AeroSuite como plataforma comercial separada, con datos operativos, legajos y finanzas privados por institución.
+
+**Estado:** idea comercial estratégica a futuro; sin contacto ni convenio iniciado. No anticipar presentación hasta contar con MVP funcional, pruebas de seguridad y resultados piloto.
