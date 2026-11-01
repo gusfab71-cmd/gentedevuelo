@@ -10,7 +10,11 @@ h1{font-size:32px;margin:8px 0}p{color:#c7d5df;line-height:1.6}h2{font-size:21px
 form{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;align-items:end}label{display:grid;gap:6px;font-size:13px}input{background:#0e2535;border:1px solid #7794a9;border-radius:9px;padding:11px;color:#fff;font:inherit;width:100%}
 button{background:#e9c993;color:#193041;border:1px solid #e9c993;border-radius:9px;padding:11px 14px;font-weight:750;cursor:pointer}button:disabled{opacity:.5}
 .list{display:grid;grid-template-columns:repeat(auto-fit,minmax(255px,1fr));gap:12px}.card{padding:17px;background:#152e42;border:1px solid #507791;border-radius:12px}.card p{font-size:13px}
-.chip{font-size:11px;border:1px solid #86a5b1;border-radius:999px;padding:5px 9px;color:#dfedf4}.chip.ok{background:#2b5144}.chip.no{background:#543b36}
+.chip{display:inline-block;font-size:12px;border:1px solid #86a5b1;border-radius:999px;padding:6px 11px;color:#dfedf4}.chip.ok{background:#2b5144}.chip.no{background:#543b36}
+.action-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}.action-row button{flex:0 1 auto}.button-danger{color:#fff;background:#803b3b;border-color:#a45b5b}.button-secondary{color:#e8f5fb;background:#28465a;border-color:#6991a9}
+.change-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:13px;padding:16px;margin-top:14px;background:#0e2637;border:1px solid #6c94a8;border-radius:10px}.change-form h3,.change-form .full{grid-column:1/-1}.change-form h3{margin:0}.change-form select,.change-form textarea{width:100%;background:#0e2535;border:1px solid #7794a9;border-radius:9px;padding:11px;color:#fff;font:inherit}.change-form textarea{resize:vertical;min-height:78px}.change-form .small-note{font-size:12px;color:#c8dae6;margin:0}.archived-card{border-style:dashed}.archived-card h3{margin:0 0 8px}
+#archivedSection summary{cursor:pointer;font-weight:750;color:#e9c993;padding:6px 0}
+@media(max-width:550px){main{padding:14px 12px 36px}.panel{padding:14px}.action-row button{width:100%}.change-form{grid-template-columns:1fr}}
 </style><script src="../../assets/supabase-2.117.2.min.js"></script><script src="../../assets/community-config.js"></script><script src="../../assets/aerosuite-registration.js"></script></head>
 <body><header><a class="brand" href="index.html">Aero<span>Suite</span></a><nav><a id="back" href="portal-escuela.html">Volver al portal</a></nav></header>
 <main><span class="eyebrow">Área de flota · Control institucional</span><h1>Flota y disponibilidad</h1>
@@ -23,7 +27,8 @@ button{background:#e9c993;color:#193041;border:1px solid #e9c993;border-radius:9
 <form id="createForm"><label>Matrícula<input name="registration" data-aerosuite-registration required maxlength="18" placeholder="LV-ERT" autocapitalize="characters" autocomplete="off"></label>
 <label>Modelo<input name="model" maxlength="100" placeholder="Cessna 152"></label>
 <label>Nota inicial<input name="remarks" maxlength="300" placeholder="Opcional"></label><button type="submit">Agregar a la flota</button></form></section>
-<section class="panel"><h2>Aeronaves de la escuela</h2><div id="list" class="list"></div><button type="button" id="reload" style="margin-top:14px">Actualizar flota</button></section>
+<section class="panel"><h2>Aeronaves de la escuela</h2><p>Dirección y Secretaría pueden registrar una salida de servicio, su motivo y ubicación; reincorporar una aeronave o eliminarla de la flota sin borrar sus antecedentes.</p><div id="list" class="list"></div><button type="button" id="reload" style="margin-top:14px">Actualizar flota</button></section>
+<section class="panel" id="archivedSection" hidden><details id="archivedDetails"><summary>Ver aeronaves eliminadas de la flota</summary><p>Las bajas conservan el historial técnico y operativo. Para volver a utilizarlas, primero deben reincorporarse y después registrarse como disponibles.</p><div id="archivedList" class="list"></div></details></section>
 <section class="panel" id="maintenancePanel">
  <span class="eyebrow">Módulo aeronáutico integrado</span>
  <h2>Mantenimiento de Aeronaves</h2>
@@ -48,17 +53,21 @@ button{background:#e9c993;color:#193041;border:1px solid #e9c993;border-radius:9
   $("school").textContent=school.institution_name;
   $("back").href="portal-escuela.html?institucion="+encodeURIComponent(inst)+"&rol="+encodeURIComponent(school.my_role)+"&elegida=1"+(labLogin?"&prueba=1":"");
   const manager=["administrador","secretaria"].includes(school.my_role);
-  $("createPanel").hidden=!manager||!school.can_write;$("area").hidden=false;
+  $("createPanel").hidden=!manager||!school.can_write;
+  $("archivedSection").hidden=!manager;
+  $("area").hidden=false;
   $("maintenanceManagerActions").hidden=!manager;
   if(manager)$("maintenanceLink").href="mantenimiento-institucional.html?institucion="+
    encodeURIComponent(inst)+"&rol="+encodeURIComponent(school.my_role)+(labLogin?"&prueba=1":"");
   async function action(args){const r=await db.rpc("aerosuite_aircraft_action",{p_institution_id:inst,...args});if(r.error)throw r.error;return r.data;}
-  async function load(){
-   const [r,mt]=await Promise.all([
+  async function load(message=""){
+   const [r,mt,archivedResponse]=await Promise.all([
     db.rpc("aerosuite_aircraft_list",{p_institution_id:inst}),
-    db.rpc("aerosuite_institution_maintenance_get",{p_institution_id:inst})
+    db.rpc("aerosuite_institution_maintenance_get",{p_institution_id:inst}),
+    manager?db.rpc("aerosuite_aircraft_archived_list",{p_institution_id:inst}):Promise.resolve({data:[]})
    ]);
    if(r.error)throw r.error;
+   if(archivedResponse.error)throw archivedResponse.error;
    const maintenance=mt.error?{}:(mt.data?.payload||{});
    const planes=Array.isArray(maintenance.ac)?maintenance.ac:[];
    const problems=Array.isArray(maintenance.dx)?maintenance.dx:[];
@@ -104,40 +113,127 @@ button{background:#e9c993;color:#193041;border:1px solid #e9c993;border-radius:9
      box.append(maintenanceInfo);
     }
     if(manager&&school.can_write){
-     const btn=document.createElement("button");btn.textContent=a.availability==="available"?"Marcar fuera de servicio":"Marcar disponible";
-     btn.onclick=async()=>{
-      const state=a.availability==="available"?"out_of_service":"available";
+     const actions=document.createElement("div");actions.className="action-row";
+     const stateButton=document.createElement("button");
+     stateButton.type="button";
+     const goingOut=a.availability==="available";
+     stateButton.textContent=goingOut?"Dejar fuera de servicio":"Volver a servicio";
+     const archiveButton=document.createElement("button");archiveButton.type="button";
+     archiveButton.textContent="Eliminar de la flota";archiveButton.className="button-danger";
+     const editor=document.createElement("form");editor.hidden=true;editor.className="change-form";
+     editor.innerHTML='<h3 class="full">Registrar cambio de disponibilidad</h3>'+
+      '<label>Fecha del cambio (Argentina)<input type="date" name="date" required></label>'+
+      '<label>Motivo de la salida<select name="category"><option value="">Seleccioná un motivo</option>'+
+      '<option>Mantenimiento programado</option><option>Reparación de avería</option>'+
+      '<option>Inspección o control pendiente</option><option>Documentación o habilitación pendiente</option>'+
+      '<option>Incidente o novedad técnica</option><option>Fuera de base</option><option>Otro motivo</option></select></label>'+
+      '<label>Ubicación actual<input type="text" name="location" maxlength="180" placeholder="Hangar, taller o aeródromo"></label>'+
+      '<label class="full">Detalle del motivo / observaciones<textarea name="detail" maxlength="300" placeholder="Describí qué sucede y las medidas tomadas"></textarea></label>'+
+      '<p class="full small-note">Este cambio es operativo y no certifica aeronavegabilidad ni sustituye documentación técnica.</p>'+
+      '<div class="action-row full"><button type="submit">Guardar cambio</button><button type="button" data-cancel class="button-secondary">Cancelar</button></div>';
+     const dateInput=editor.elements.namedItem("date");
+     dateInput.value=new Date(Date.now()-3*3600000).toISOString().slice(0,10);
+     dateInput.max=dateInput.value;
+     const locationInput=editor.elements.namedItem("location");
+     locationInput.value=a.service_location||"";
+     const category=editor.elements.namedItem("category");
+     const detail=editor.elements.namedItem("detail");
+     const configureEditor=()=>{
+      category.parentElement.hidden=!goingOut;
+      category.required=goingOut;
+      detail.required=!goingOut;
+      detail.minLength=goingOut?0:5;
+      detail.placeholder=goingOut?"Describí la causa (obligatorio si elegís Otro motivo)":"Quién verificó que puede volver a operar; constancia o referencia";
+      if(!goingOut)detail.value="";
+      editor.hidden=false;archiveForm.hidden=true;
+     };
+     stateButton.onclick=()=>{if(!editor.hidden){editor.hidden=true;return;}configureEditor();};
+     editor.querySelector("[data-cancel]").onclick=()=>editor.hidden=true;
+     editor.onsubmit=async ev=>{
+      ev.preventDefault();
       const today=new Date(Date.now()-3*3600000).toISOString().slice(0,10);
-      const date=prompt("Fecha desde la que cambia su estado (AAAA-MM-DD, ART):",today);
-      if(date===null)return;
-      if(!/^20\d{2}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(date)||date>today||Number.isNaN(Date.parse(date+"T12:00:00Z"))){
-       st.textContent="Ingresá una fecha válida hasta hoy (ART).";return;
+      const date=dateInput.value;
+      const locationValue=locationInput.value.trim();
+      const detailValue=detail.value.trim();
+      const reason=goingOut?(category.value==="Otro motivo"?detailValue:category.value+(detailValue?" · "+detailValue:"")):detailValue;
+      if(!date||date>today||date<"2000-01-01"){
+       st.textContent="Verificá la fecha del cambio.";return;
       }
-      const reason=prompt(state==="out_of_service"?"Motivo de salida de servicio (obligatorio):":"Observaciones del regreso a servicio (opcional):",
-       state==="out_of_service"?a.out_of_service_reason||"":a.remarks||"");
-      if(reason===null)return;
-      const location=prompt("Ubicación de la aeronave (hangar, taller, aeródromo):",a.service_location||"");
-      if(location===null)return;
-      if(state==="out_of_service"&&(reason.trim().length<5||location.trim().length<3)){
-       st.textContent="Completá el motivo y la ubicación de la aeronave fuera de servicio.";return;
+      if(goingOut&&(reason.length<5||locationValue.length<3)){
+       st.textContent="Para dejar fuera de servicio completá motivo y ubicación.";return;
       }
-      if(!confirm("¿Registrar "+a.registration+" "+(state==="out_of_service"?"FUERA DE SERVICIO":"EN SERVICIO")+
-       " desde "+date+"?"))return;
-      btn.disabled=true;
+      if(!goingOut&&reason.length<5){
+       st.textContent="Indicá quién verificó el retorno y su fundamento.";return;
+      }
+      if(reason.length>300){st.textContent="El motivo no puede superar 300 caracteres.";return;}
+      if(!confirm("¿Registrar "+a.registration+" como "+(goingOut?"FUERA DE SERVICIO":"DISPONIBLE")+" desde "+date+"?"))return;
+      const save=editor.querySelector('button[type="submit"]');save.disabled=true;
       try{
        const response=await db.rpc("aerosuite_aircraft_service_update",{
-        p_institution_id:inst,p_aircraft_id:a.id,p_availability:state,
-        p_from_date:date,p_reason:reason.trim(),p_location:location.trim()
+        p_institution_id:inst,p_aircraft_id:a.id,p_availability:goingOut?"out_of_service":"available",
+        p_from_date:date,p_reason:reason,p_location:locationValue
        });
        if(response.error)throw response.error;
-       if(!response.data?.ok)throw Error("No se confirmó la actualización.");
-       st.textContent="Novedad registrada para el cierre diario de Dirección.";
-       await load();
-      }catch(e){st.textContent="Error: "+(e.message||e);btn.disabled=false;}
-     };box.append(btn);
+       if(!response.data?.ok)throw Error("El cambio no fue confirmado.");
+       await load("Disponibilidad de "+a.registration+" actualizada y registrada para Dirección.");
+      }catch(e){st.textContent="Error: "+(e.message||e);save.disabled=false;}
+     };
+     const archiveForm=document.createElement("form");archiveForm.hidden=true;archiveForm.className="change-form";
+     archiveForm.innerHTML='<h3 class="full">Eliminar aeronave de la flota</h3>'+
+      '<p class="full small-note">La matrícula dejará de estar disponible para asignaciones. Los vuelos, cambios y registros técnicos históricos no se borran.</p>'+
+      '<label class="full">Motivo de la baja<textarea name="reason" required minlength="5" maxlength="300" placeholder="Ej.: vendida, traslado a otra institución, registro erróneo"></textarea></label>'+
+      '<div class="action-row full"><button type="submit" class="button-danger">Confirmar baja</button><button type="button" data-cancel class="button-secondary">Cancelar</button></div>';
+     archiveButton.onclick=()=>{archiveForm.hidden=!archiveForm.hidden;editor.hidden=true;};
+     archiveForm.querySelector("[data-cancel]").onclick=()=>archiveForm.hidden=true;
+     archiveForm.onsubmit=async ev=>{
+      ev.preventDefault();
+      const reason=archiveForm.elements.namedItem("reason").value.trim();
+      if(reason.length<5){st.textContent="Indicá el motivo de la baja.";return;}
+      if(!confirm("¿Eliminar "+a.registration+" de la flota activa? Se conservará su historial y podrá recuperarse."))return;
+      const save=archiveForm.querySelector('button[type="submit"]');save.disabled=true;
+      try{
+       const response=await db.rpc("aerosuite_aircraft_archive",{
+        p_institution_id:inst,p_aircraft_id:a.id,p_reason:reason,p_restore:false
+       });
+       if(response.error)throw response.error;
+       if(!response.data?.ok)throw Error("La baja no fue confirmada.");
+       await load(a.registration+" eliminada de la flota activa. Historial conservado.");
+      }catch(e){st.textContent="Error: "+(e.message||e);save.disabled=false;}
+     };
+     actions.append(stateButton,archiveButton);
+     box.append(actions,editor,archiveForm);
     }list.append(box);
    }
-   st.textContent="Flota de "+school.institution_name+" actualizada.";
+   if(manager){
+    const archivedList=$("archivedList");archivedList.replaceChildren();
+    const deleted=archivedResponse.data||[];
+    if(!deleted.length)archivedList.textContent="No hay aeronaves eliminadas.";
+    for(const a of deleted){
+     const card=document.createElement("div");card.className="card archived-card";
+     const heading=document.createElement("h3");heading.textContent=a.registration+" · "+(a.model||"Sin modelo");
+     const info=document.createElement("p");info.textContent="Retirada: "+(a.archived_at?new Date(a.archived_at).toLocaleDateString("es-AR",{timeZone:"America/Argentina/Buenos_Aires"}):"Fecha no informada")+" · Motivo: "+(a.archived_reason||"No informado");
+     card.append(heading,info);
+     if(school.can_write){
+      const restore=document.createElement("button");restore.type="button";restore.textContent="Reincorporar a la flota";
+      restore.onclick=async()=>{
+       if(!confirm("¿Reincorporar "+a.registration+"? Quedará FUERA DE SERVICIO hasta que se registre expresamente su disponibilidad."))return;
+       restore.disabled=true;
+       try{
+        const response=await db.rpc("aerosuite_aircraft_archive",{
+         p_institution_id:inst,p_aircraft_id:a.id,p_reason:"",p_restore:true
+        });
+        if(response.error)throw response.error;
+        if(!response.data?.ok)throw Error("No se confirmó la reincorporación.");
+        await load(a.registration+" reincorporada, aún FUERA DE SERVICIO.");
+       }catch(e){st.textContent="Error: "+(e.message||e);restore.disabled=false;}
+      };
+      card.append(restore);
+     }
+     archivedList.append(card);
+    }
+    $("archivedDetails").querySelector("summary").textContent="Ver aeronaves eliminadas de la flota ("+deleted.length+")";
+   }
+   st.textContent=message||"Flota de "+school.institution_name+" actualizada.";
   }
   $("createForm").onsubmit=async ev=>{
    ev.preventDefault();
