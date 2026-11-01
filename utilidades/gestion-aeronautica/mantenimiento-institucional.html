@@ -113,6 +113,12 @@ body .overflow-x-auto{scrollbar-color:#697e7d transparent}
 @media(max-width:650px){.maint-topline,.maint-hero,.maint-toolbar,.maint-status-wrap,#nav,.maint-overview{padding-left:13px!important;padding-right:13px!important}.maint-hero-main{padding:22px 19px}.maint-toolbar{align-items:stretch}.maint-toolbar label,.maint-toolbar select,.maint-toolbar-actions{width:100%}.maint-toolbar-actions .btn{flex:1}#app{padding:14px 13px 52px!important}.maint-overview{gap:8px}.maint-metric{padding:11px}.maint-metric strong{font-size:18px}.maint-record-grid{grid-template-columns:1fr}.maint-record-grid .wide{grid-column:auto}body .tab{padding:10px 13px!important}}
 @media(max-width:420px){#app .grid-cols-2{grid-template-columns:1fr!important}#app .grid-cols-3{grid-template-columns:repeat(2,minmax(0,1fr))!important}.maint-overview{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+.maint-alerts{display:grid;gap:9px;margin:10px 0}
+.maint-alert-card{background:#292b2b;border:1px solid #886b4b;border-left:4px solid #c78f54;border-radius:10px;padding:11px 14px;font-size:12px}
+.maint-alert-card.due{background:#342326;border-left-color:#df7373;border-color:#aa6f6f}
+.maint-alert-card strong{color:#ffdbb0;display:block;margin-bottom:5px}
+.maint-alert-card p{margin:3px 0;color:#eee7dd}
+.maint-sim-list{display:grid;gap:7px}
 </style>
 
 <style id="maintenance-inspections-style">
@@ -157,7 +163,7 @@ body .overflow-x-auto{scrollbar-color:#697e7d transparent}
 <header class="maint-header">
   <div class="maint-topline">
     <a href="portal-escuela.html" id="maintIdentity" class="maint-identity"><span class="maint-mark">AS</span><span>AEROSUITE<small>Mantenimiento institucional</small></span></a>
-    <div class="maint-links"><a id="backToFleet" href="flota-institucional.html">Flota y disponibilidad</a><a id="backToDirector" href="portal-escuela.html">Portal institucional</a></div>
+    <div class="maint-links"><a id="backToFleet" href="flota-institucional.html">Disponibilidad de flotas y mantenimiento</a><a id="backToDirector" href="portal-escuela.html">Portal institucional</a></div>
   </div>
   <div class="maint-hero">
     <div class="maint-hero-main">
@@ -181,7 +187,8 @@ body .overflow-x-auto{scrollbar-color:#697e7d transparent}
 </header>
 <nav id="nav" class="flex overflow-x-auto border-b border-white/10 px-3"></nav>
 
-<div class="maint-status-wrap"><p id="sync" role="status">Cargando tu información...</p><p class="maint-notice">Apta para seguimiento de uso privado, instrucción o ambos, con el régimen declarado por el usuario. Es un registro auxiliar institucional: no certifica aeronavegabilidad, no autoriza retorno al servicio ni reemplaza libretas, firmas, programas aprobados ni la documentación exigida por ANAC. <a href="https://www.argentina.gob.ar/anac/resoluciones-disposiciones-y-otras-normas-aeronauticas/raac" target="_blank" rel="noopener noreferrer">Consultar RAAC oficiales</a>.</p></div><section id="maintOverview" class="maint-overview" aria-label="Resumen de mantenimiento"></section>
+<div class="maint-status-wrap"><p id="sync" role="status">Cargando tu información...</p>
+<section id="maintenanceAlerts" class="maint-alerts" aria-live="polite"></section><p class="maint-notice">Apta para seguimiento de uso privado, instrucción o ambos, con el régimen declarado por el usuario. Es un registro auxiliar institucional: no certifica aeronavegabilidad, no autoriza retorno al servicio ni reemplaza libretas, firmas, programas aprobados ni la documentación exigida por ANAC. <a href="https://www.argentina.gob.ar/anac/resoluciones-disposiciones-y-otras-normas-aeronauticas/raac" target="_blank" rel="noopener noreferrer">Consultar RAAC oficiales</a>.</p></div><section id="maintOverview" class="maint-overview" aria-label="Resumen de mantenimiento"></section>
 <main id="app" class="max-w-7xl mx-auto p-4"></main>
 <script src="../../assets/maintenance-consumables.js?v=20261022inventario1"></script>
 
@@ -200,18 +207,22 @@ let db=null,currentUser=null,hangarAircraft='',saveQueue=Promise.resolve();
 const instParams=new URLSearchParams(location.search),institutionId=instParams.get("institucion");
 const testRole=instParams.get("rol")||"administrador";
 const testMode=instParams.get("prueba")==="1"&&["administrador","secretaria"].includes(testRole);
-let institutionName="",institutionRole="",registeredFleet=[],maintRevision=0,maintWritable=false,maintConflict=false;
+let institutionName="",institutionRole="",registeredFleet=[],registeredSimulators=[],maintenanceAdvisories=[],maintRevision=0,maintWritable=false,maintConflict=false;
 const institutionalHref=path=>path+"?institucion="+encodeURIComponent(institutionId)+
  "&rol="+encodeURIComponent(institutionRole||testRole)+(testMode?"&prueba=1":"");
 function reconcileFleet(){
+ for(const item of S.ac){
+  const active=registeredFleet.some(f=>AeroSuiteRegistration.normalize(f.registration)===AeroSuiteRegistration.normalize(item.reg));
+  item.archived=!active;
+ }
  for(const plane of registeredFleet){
   const registration=AeroSuiteRegistration.normalize(plane.registration);
   if(!registration)continue;
   const existing=S.ac.find(a=>AeroSuiteRegistration.normalize(a.reg)===registration);
   if(existing){
-   existing.reg=registration;existing.type=plane.model||existing.type||"Modelo pendiente";
+   existing.reg=registration;existing.type=plane.model||existing.type||"Modelo pendiente";existing.archived=false;
   }else{
-   const a={id:plane.id,reg:registration,type:plane.model||"Modelo pendiente",h:0,c:0,hpm:0,cpm:0,
+   const a={id:plane.id,reg:registration,type:plane.model||"Modelo pendiente",h:0,c:0,hpm:0,cpm:0,archived:false,needs_initial_hours:true,
     technical:{source:"Flota AeroSuite"},operation:{use:"unknown",compensation:"unknown",operator:institutionName,program:"",updated:today()}};
    CP(a);S.ac.push(a);
   }
@@ -243,8 +254,39 @@ function save(){
   }
   maintRevision=Number(data.revision);
   showStatus("Mantenimiento de "+institutionName+" guardado · revisión "+maintRevision+".");
+  await refreshMaintenanceAlerts();
  });
  return saveQueue;
+}
+async function refreshMaintenanceAlerts(){
+ const target=$('maintenanceAlerts');if(!target||!db||!institutionId)return;
+ try{
+  const {data,error}=await db.rpc('aerosuite_maintenance_alerts',{p_institution_id:institutionId});
+  if(error)throw error;
+  maintenanceAdvisories=Array.isArray(data?.aircraft)?data.aircraft:[];
+  target.replaceChildren();
+  const urgent=maintenanceAdvisories.filter(a=>a.alerts?.some(x=>x.level==='soon'||x.level==='due'));
+  const incomplete=maintenanceAdvisories.filter(a=>!urgent.includes(a)&&a.alerts?.some(x=>x.level==='notice'));
+  for(const aircraft of [...urgent,...incomplete]){
+   const box=document.createElement('div');box.className='maint-alert-card'+
+    (aircraft.alerts.some(x=>x.level==='due')?' due':'');
+   const heading=document.createElement('strong');
+   heading.textContent=aircraft.registration+' · '+(aircraft.alerts.some(x=>x.level==='due')?
+    'REVISAR VENCIMIENTO':aircraft.alerts.some(x=>x.level==='soon')?'PRÓXIMO MANTENIMIENTO':'SEGUIMIENTO PENDIENTE');
+   box.append(heading);
+   for(const item of aircraft.alerts.slice(0,5)){
+    const p=document.createElement('p');p.textContent='• '+item.message;box.append(p);
+   }
+   target.append(box);
+  }
+  if(!urgent.length&&!incomplete.length&&maintenanceAdvisories.length){
+   const info=document.createElement('p');info.className='maint-notice';
+   info.textContent='No hay avisos calculados con los controles cargados. Verificá igualmente programas, libretas y aptitud operativa.';
+   target.append(info);
+  }
+ }catch(e){
+  const target=$('maintenanceAlerts');if(target)target.textContent='No se pudieron consultar las alertas de mantenimiento: '+(e.message||e);
+ }
 }
 async function loadApp(){
  try{
@@ -257,40 +299,43 @@ async function loadApp(){
   const {data:{user},error:authError}=await db.auth.getUser();
   if(authError||!user)throw Error("Ingresá con tu cuenta institucional.");
   currentUser=user;
-  const [access,maintenance,fleet]=await Promise.all([
-   db.rpc("aerosuite_my_institution_access_v2",{}),
-   db.rpc("aerosuite_institution_maintenance_get",{p_institution_id:institutionId}),
-   db.rpc("aerosuite_aircraft_list",{p_institution_id:institutionId})
-  ]);
+  const access=await db.rpc("aerosuite_my_institution_access_v2",{});
   if(access.error)throw access.error;
-  if(maintenance.error)throw maintenance.error;
-  if(fleet.error)throw fleet.error;
   const school=(access.data||[]).find(x=>x.institution_id===institutionId&&
    ["administrador","secretaria"].includes(x.my_role)&&x.can_access);
   if(!school)throw Error("Acceso reservado al Director o Secretaría de esta institución.");
+  if(school.can_write){
+   const sync=await db.rpc("aerosuite_maintenance_sync_fleet",{p_institution_id:institutionId});
+   if(sync.error)throw sync.error;
+  }
+  const [maintenance,fleet,simulators]=await Promise.all([
+   db.rpc("aerosuite_institution_maintenance_get",{p_institution_id:institutionId}),
+   db.rpc("aerosuite_aircraft_list",{p_institution_id:institutionId}),
+   db.rpc("aerosuite_simulator_list",{p_institution_id:institutionId})
+  ]);
+  if(maintenance.error)throw maintenance.error;
+  if(fleet.error)throw fleet.error;
+  if(simulators.error)throw simulators.error;
   institutionName=school.institution_name||"Institución";
   institutionRole=school.my_role;
   $('backToFleet').href=institutionalHref("flota-institucional.html");
   $('backToDirector').href=institutionalHref("portal-escuela.html");
   $('maintIdentity').href=institutionalHref("portal-escuela.html");
   registeredFleet=Array.isArray(fleet.data)?fleet.data:[];
+  registeredSimulators=Array.isArray(simulators.data)?simulators.data:[];
   maintRevision=Number(maintenance.data?.revision||0);
   maintWritable=!!school.can_write&&!!maintenance.data?.can_write;
   if(maintenance.data?.payload){
    if(!validData(maintenance.data.payload))throw Error("Formato almacenado de mantenimiento no válido.");
    S={...S,...maintenance.data.payload};for(const key of ["inv","mv","fuel"])S[key]||=[];
   }
-  const orphaned=S.ac.filter(x=>!registeredFleet.some(f=>
-   AeroSuiteRegistration.normalize(f.registration)===AeroSuiteRegistration.normalize(x.reg)));
-  if(orphaned.length)maintWritable=false;
   reconcileFleet();
-  if(!S.ac.some(a=>a.id===S.sel))S.sel=S.ac[0]?.id||null;
+  if(!S.ac.some(a=>a.id===S.sel&&!a.archived))S.sel=S.ac.find(a=>!a.archived)?.id||null;
   R();
-  if(!S.ac.length)$('app').innerHTML='<div class="card p-6">Primero creá una matrícula en «Flota y disponibilidad».</div>';
-  showStatus(orphaned.length?
-   "Hay "+orphaned.length+" aeronave(s) técnicas ausentes de la Flota; se bloqueó la edición para proteger los registros históricos.":
-   maintWritable?"Registro de mantenimiento de "+institutionName+" vinculado a "+registeredFleet.length+
-    " matrícula(s). No se mezclan datos privados de integrantes.":"Acceso institucional de solo lectura.");
+  showStatus(maintWritable?"Registro de mantenimiento de "+institutionName+" vinculado con "+
+   registeredFleet.length+" aeronave(s) y "+registeredSimulators.filter(x=>!x.archived_at).length+
+   " simulador(es).":"Acceso institucional de solo lectura.");
+  await refreshMaintenanceAlerts();
  }catch(error){
   maintWritable=false;currentUser=null;
   showStatus("Error de mantenimiento institucional: "+(error.message||error));
@@ -300,7 +345,7 @@ async function loadApp(){
 function fromHangar(){const input=$('a_t');if(input)input.value=hangarAircraft}
 
 
-const A=()=>S.ac.find(a=>a.id==S.sel),esc=t=>String(t??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const A=()=>S.ac.find(a=>a.id==S.sel&&!a.archived),esc=t=>String(t??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
 const F=(id,l,t='number',val='',x='')=>`<label class="text-[11px] text-slate-400">${l}<input id="${id}" type="${t}" step="any" ${t==='number'?'min="0"':''} value="${val}" class="fld mt-0.5" ${x}></label>`;
 
@@ -496,7 +541,10 @@ function setComp(k){
   if(years>0&&!last)return alert('Para controlar el límite calendario del TBO indicá la fecha de la última recorrida documentada.');
  }
  z.mod=v(k+'_mod').trim().slice(0,100);z.ser=v(k+'_ser').trim().slice(0,100);
- if(k==='f'){a.h=n('f_h');a.c=n('f_c')}
+ if(k==='f'){
+  if(a.needs_initial_hours&&!confirm("¿Confirmás que las horas TTAF ingresadas corresponden al registro real del fuselaje? Serán la base de los avisos."))return;
+  a.h=n('f_h');a.c=n('f_c');a.needs_initial_hours=false;
+ }
  else{z.h=n(k+'_h');z.c=n(k+'_c');z.tso=n(k+'_tso');z.tbo=n(k+'_tbo');z.tboY=n(k+'_y');z.oh=v(k+'_oh');z.tboRef=recordValue(k+'_tboref',250)}
  if(before!==z.ser)(a.hist=a.hist||[]).push({d:today(),k,tx:'Serie '+(before||'—')+' → '+(z.ser||'—')});save();R();
 }
@@ -804,7 +852,7 @@ function restoreInspection(id){
 
 // ---------- VISTAS ----------
 
-function tabA(){const a=A(),o=a?.operation||{},showForm=!S.ac.length||showAircraftForm;return`<div class="grid lg:grid-cols-2 gap-4">${S.ac.length?`<div class="lg:col-span-2 flex justify-end"><button class="btn bg-slate-700" onclick="showAircraftForm=!showAircraftForm;R()">${showForm?'Cancelar nueva aeronave':'+ Agregar otra aeronave'}</button></div>`:''}${showForm?`<div class="card p-4 space-y-2"><h2 class="font-bold text-amber-300">1 · Crear aeronave</h2>${hangarAircraft?`<div class="text-xs text-slate-300 bg-slate-900/70 p-2 rounded-lg">En Mi Hangar figura: <b>${esc(hangarAircraft)}</b><button class="btn bg-slate-700 ml-2" onclick="fromHangar()">Usar como modelo</button></div>`:''}<div class="grid grid-cols-2 gap-2">${F('a_r','Matrícula','text')}${F('a_t','Tipo / modelo','text')}<div class="col-span-2">${SEL('a_use','Uso previsto',OP_OPTIONS.replace('value="unknown"','value="unknown" selected'))}</div>${F('a_h','Horas totales fuselaje (TTAF)','number',0)}${F('a_c','Ciclos / aterrizajes totales','number',0)}${F('a_hm','Proyección: horas/mes','number',20)}${F('a_cm','Proyección: ciclos/mes','number',20)}</div><details class="maint-guidance"><summary>Ficha técnica ampliada (opcional · abrir si hace falta)</summary>
+function tabA(){const a=A(),o=a?.operation||{},active=S.ac.filter(x=>!x.archived),showForm=!active.length||showAircraftForm;return`<div class="grid lg:grid-cols-2 gap-4">${active.length?`<div class="lg:col-span-2 flex justify-end"><button class="btn bg-slate-700" onclick="showAircraftForm=!showAircraftForm;R()">${showForm?'Cancelar nueva aeronave':'+ Agregar otra aeronave'}</button></div>`:''}${showForm?`<div class="card p-4 space-y-2"><h2 class="font-bold text-amber-300">1 · Crear aeronave</h2>${hangarAircraft?`<div class="text-xs text-slate-300 bg-slate-900/70 p-2 rounded-lg">En Mi Hangar figura: <b>${esc(hangarAircraft)}</b><button class="btn bg-slate-700 ml-2" onclick="fromHangar()">Usar como modelo</button></div>`:''}<div class="grid grid-cols-2 gap-2">${F('a_r','Matrícula','text')}${F('a_t','Tipo / modelo','text')}<div class="col-span-2">${SEL('a_use','Uso previsto',OP_OPTIONS.replace('value="unknown"','value="unknown" selected'))}</div>${F('a_h','Horas totales fuselaje (TTAF)','number',0)}${F('a_c','Ciclos / aterrizajes totales','number',0)}${F('a_hm','Proyección: horas/mes','number',20)}${F('a_cm','Proyección: ciclos/mes','number',20)}</div><details class="maint-guidance"><summary>Ficha técnica ampliada (opcional · abrir si hace falta)</summary>
 <p>Planilla genérica para cualquier marca o modelo, incluso los que no tienen plantilla predefinida. Completá la identificación por etapas, sin asignar TBO ni crear mantenimientos ficticios.</p>
 <div class="maint-record-grid">
 ${F('a_make','Fabricante de la aeronave','text','','maxlength="100"')}
@@ -824,7 +872,7 @@ ${F('a_prop_model','Modelo de hélice','text','','maxlength="120"')}
 <p>Configura las horas, últimos cumplimientos y recorridas reales en Componentes. Los intervalos no se asignan automáticamente.</p>
 </details><p class="text-xs text-slate-400 mt-2">Las horas iniciales de motor y hélice pueden ajustarse por separado en Componentes.</p><button class="btn bg-amber-600 w-full" onclick="addAc()">Crear aeronave</button></div>`:''}
 
-<div class="space-y-3 ${showForm?'':'lg:col-span-2'}">${S.ac.map(x=>`<div class="card p-3 flex items-center gap-3 ${x.id==S.sel?'!border-amber-400':''}"><div class="flex-1"><b class="text-lg">${esc(x.reg)}</b> <span class="text-xs text-slate-400">${esc(x.type)}</span><div class="text-[11px] text-amber-200">${esc(OP_LABELS[opUse(x)])}</div>${x.technical?.manufacturer?'<div class="text-xs text-slate-400">Fabricante: '+esc(x.technical.manufacturer)+'</div>':''}${x.technical?.serial?'<div class="text-xs text-slate-400">Serie fuselaje: '+esc(x.technical.serial)+'</div>':''}<div class="text-sm text-sky-300 font-bold">Fuselaje ${f1(x.h)} h · ${Math.round(x.c)} ciclos</div><div class="text-xs text-slate-400">Motor TSO ${f1(CP(x).m.tso)} h · Hélice TSO ${f1(CP(x).p.tso)} h</div></div><button class="btn bg-sky-700" onclick="S.sel='${x.id}';consumableForm='';save();R()">Seleccionar</button><button class="btn bg-rose-800" aria-label="Eliminar aeronave ${esc(x.reg)}" onclick="delAc('${x.id}')">✕</button></div>`).join('')||'<div class="text-slate-500 text-sm">Aún no hay aeronaves.</div>'}
+<div class="space-y-3 ${showForm?'':'lg:col-span-2'}">${active.map(x=>`<div class="card p-3 flex items-center gap-3 ${x.id==S.sel?'!border-amber-400':''}"><div class="flex-1"><b class="text-lg">${esc(x.reg)}</b> <span class="text-xs text-slate-400">${esc(x.type)}</span><div class="text-[11px] text-amber-200">${esc(OP_LABELS[opUse(x)])}</div>${x.technical?.manufacturer?'<div class="text-xs text-slate-400">Fabricante: '+esc(x.technical.manufacturer)+'</div>':''}${x.technical?.serial?'<div class="text-xs text-slate-400">Serie fuselaje: '+esc(x.technical.serial)+'</div>':''}<div class="text-sm text-sky-300 font-bold">Fuselaje ${f1(x.h)} h · ${Math.round(x.c)} ciclos</div><div class="text-xs text-slate-400">Motor TSO ${f1(CP(x).m.tso)} h · Hélice TSO ${f1(CP(x).p.tso)} h</div></div><button class="btn bg-sky-700" onclick="S.sel='${x.id}';consumableForm='';save();R()">Seleccionar</button><button class="btn bg-rose-800" aria-label="Eliminar aeronave ${esc(x.reg)}" onclick="delAc('${x.id}')">✕</button></div>`).join('')||'<div class="text-slate-500 text-sm">Aún no hay aeronaves.</div>'}
 
 ${a?`<details class="maint-guidance"><summary>Editar ficha genérica — ${esc(a.reg)}</summary>
 <p>Corregí los datos de la célula sin borrar historiales. Para cambiar motor, hélice o contadores usá Componentes y verificá nuevamente sus límites técnicos.</p>
@@ -1063,11 +1111,11 @@ function tabX(){
 
 function R(){
 
- $('sel').innerHTML=S.ac.map(a=>`<option value="${a.id}" ${a.id==S.sel?'selected':''}>${esc(a.reg)}</option>`).join('')||'<option>Sin aeronaves</option>';
+ $('sel').innerHTML=S.ac.filter(a=>!a.archived).map(a=>`<option value="${a.id}" ${a.id==S.sel?'selected':''}>${esc(a.reg)}</option>`).join('')||'<option>Sin aeronaves</option>';
 
  $('nav').innerHTML=TABS.map(([k,l])=>`<button class="tab ${S.tab==k?'on':''}" onclick="S.tab='${k}';R()">${l}</button>`).join('');
 
- if(!S.sel&&S.ac[0])S.sel=S.ac[0].id;
+ if(!A())S.sel=S.ac.find(a=>!a.archived)?.id||null;
 
  const f={a:tabA,x:tabX,n:tabN,k:tabK,s:tabS,b:tabB,u:tabU,i:tabI,d:tabD,r:tabR,p:tabP}[S.tab];
 
