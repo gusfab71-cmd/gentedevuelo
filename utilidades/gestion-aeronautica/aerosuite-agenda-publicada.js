@@ -257,7 +257,7 @@ window.AeroSuiteAgenda={
   function renderStaffDetail(){
    const wrapper=$("agendaStaffDetails"),target=$("agendaStaffCards");
    target.replaceChildren();
-   if(!c.manager){wrapper.hidden=true;return;}
+   if(!c.manager||c.isLegacyRescheduling?.()){wrapper.hidden=true;return;}
    wrapper.hidden=false;
    const slot=slots.find(s=>s.id===selectedSlotId);
    if(!slot){target.textContent="Seleccioná un horario de la grilla para administrar sus recursos o reservas.";return;}
