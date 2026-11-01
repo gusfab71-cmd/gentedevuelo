@@ -330,7 +330,8 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   <section class="panel tab-panel active" id="turnera">
    <span class="eyebrow" id="bookingEyebrow">Agenda de 90 minutos</span>
    <h2 id="bookingTitle">Turnera semanal y reprogramaciones</h2>
-   <div id="weekControls" class="row" aria-label="Navegación de la semana"><label>Semana del <input type="date" id="weekDate"></label><button id="updateWeek" type="button">Ver semana</button><button id="thisWeek" type="button">Esta semana</button><button id="nextWeek" type="button">Semana siguiente</button></div>
+   <div id="weekControls" class="row" aria-label="Navegación de la semana"><button id="thisWeek" type="button" aria-pressed="true">Esta semana</button><button id="nextWeek" type="button" aria-pressed="false">Semana siguiente</button></div>
+   <p class="hint" id="weekModeDescription" role="status">Esta semana: revisar y modificar las reservas asignadas.</p>
    <p id="bookingHelp" hidden></p>
    <p id="bookingFutureNotice" class="hint" role="status" hidden></p>
    <div id="adminBooking" hidden>
@@ -787,10 +788,21 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    }
    people.filter(x=>x.role==="alumno").forEach(x=>$("packPurchaseStudent").add(new Option(x.email,x.person_id)));
   }
-  // Los domingos se prioriza la próxima semana, sin impedir consultar la semana actual.
-  const todayART=artToday();
-  $("weekDate").value=new Date(todayART+"T12:00:00-03:00").getDay()===0
-   ?addDays(mondayOf(todayART),7):mondayOf(todayART);
+  // La semana actual se destina a gestión de reservas; la siguiente, a nuevas reservas.
+  // En el portal del alumno se abre la próxima semana para facilitar la reserva.
+  let selectedWeekStart=role==="alumno"?addDays(mondayOf(artToday()),7):mondayOf(artToday());
+  const weekMode=()=>selectedWeekStart===mondayOf(artToday())?"current":"next";
+  function updateWeekNavigation(){
+   const current=weekMode()==="current";
+   $("thisWeek").setAttribute("aria-pressed",String(current));
+   $("nextWeek").setAttribute("aria-pressed",String(!current));
+   $("thisWeek").classList.toggle("primary",current);
+   $("nextWeek").classList.toggle("primary",!current);
+   $("weekModeDescription").textContent=current
+    ?"Esta semana · Consultá y modificá los turnos ya asignados. Para nuevas reservas, elegí «Semana siguiente»."
+    :"Semana siguiente · Publicá disponibilidad y reservá turnos para la próxima semana (lunes a domingo).";
+  }
+  updateWeekNavigation();
   $("workArea").hidden=false;
   for(const b of $("tabs").querySelectorAll("button")){
    b.addEventListener("click",()=>showTab(b.dataset.tab));
@@ -869,15 +881,12 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     $("reschedulePanel").scrollIntoView({behavior:"smooth",block:"center"});
    }finally{cell.disabled=false;}
   }
-  const weekDates=()=>{
-   const monday=mondayOf($("weekDate").value);
-   return Array.from({length:7},(_,i)=>addDays(monday,i));
-  };
+  const weekDates=()=>Array.from({length:7},(_,i)=>addDays(selectedWeekStart,i));
   const times=["08:00","09:30","11:00","12:30","14:00","15:30","17:00","18:30"];
   let registeredAircraft=[];
   let registeredSimulators=[];
   const publishedAgenda=window.AeroSuiteAgenda.init({
-   inst,manager,role,school,weekDates,formatDate:stamp,today:artToday,
+   inst,manager,role,school,weekDates,weekMode,formatDate:stamp,today:artToday,
    aircraft:()=>registeredAircraft,simulators:()=>registeredSimulators,
    selectedStudent:()=> $("bookingStudent").value,
    students:()=>people.filter(x=>x.role==="alumno").map(x=>({id:x.person_id,label:x.email})),
@@ -3012,9 +3021,14 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    try{await loadAircraftChoices();await loadWeek();await loadStudentReportReadStates();await loadReports();await loadLabReports();renderBookings();await loadFinance();await loadAcademy();renderReportFormChoices();stat.textContent="Información institucional actualizada."; }
    catch(e){stat.textContent="Error al cargar el área: "+safeError(e);}
   }
-  $("updateWeek").onclick=refresh;
-  $("thisWeek").onclick=async()=>{$("weekDate").value=mondayOf(artToday());await refresh();};
-  $("nextWeek").onclick=async()=>{$("weekDate").value=addDays(mondayOf($("weekDate").value),7);await refresh();};
+  $("thisWeek").onclick=async()=>{
+   selectedWeekStart=mondayOf(artToday());
+   updateWeekNavigation();await refresh();
+  };
+  $("nextWeek").onclick=async()=>{
+   selectedWeekStart=addDays(mondayOf(artToday()),7);
+   updateWeekNavigation();await refresh();
+  };
   $("reloadAll").onclick=refresh;
   await refresh();
   const initial=(location.hash||"#turnera").slice(1);
