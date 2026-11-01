@@ -937,7 +937,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    }finally{cell.disabled=false;}
   }
   const weekDates=()=>Array.from({length:7},(_,i)=>addDays(selectedWeekStart,i));
-  const times=["08:00","09:30","11:00","12:30","14:00","15:30","17:00","18:30"];
+  const times=["08:30","10:00","11:30","13:00","14:30","16:00"];
   let registeredAircraft=[];
   let registeredSimulators=[];
   const publishedAgenda=window.AeroSuiteAgenda.init({
@@ -1105,13 +1105,17 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    for(const b of list){
     const card=document.createElement("details");card.className="list-item booking-mini";card.id="booking-"+(b.booking_id||"");
     const paid=manager&&!!b.booking_id&&settledWeek.has(b.booking_id);
+    const reservationMeta=b.booking_id?publishedAgenda.getReservationForBooking(b.booking_id):null;
+    const withoutInstructor=reservationMeta?.with_instructor===false;
     if(paid)card.classList.add("settled");
     else if(b.status==="pending"||b.status==="confirmed")card.classList.add(b.status);
     const sensitive=role!=="alumno"||b.my_booking;
     card.innerHTML='<summary class="row between booking-compact-summary"><strong>'+esc(stamp(b.starts_at))+
-     ' · 90 min · '+(sensitive?esc(b.student_email||"Alumno"):"Ocupado")+'</strong>'+
+     ' · 90 min · '+(sensitive?esc(b.student_email||"Alumno"):"Ocupado")+
+     (sensitive&&withoutInstructor?" · SIN INSTRUCTOR":"")+'</strong>'+
      (paid?'':'<span class="chip '+esc(b.status)+'">'+esc(statuses[b.status]||b.status)+'</span>')+'</summary>'+
-     (sensitive?'<p>Instructor: '+esc(b.instructor_id?(b.instructor_email||"Cuenta no disponible")+
+     (sensitive?'<p>Instructor: '+esc(withoutInstructor?"Sin instructor a bordo (sujeto a autorización)":
+     b.instructor_id?(b.instructor_email||"Cuenta no disponible")+
      (b.status==="pending"?" (preasignado · pendiente de confirmar)":""):"Sin asignar")+
      ' · Aeronave: '+esc(b.aircraft||"A definir")+'</p>':'<p>Turno ocupado de otro alumno.</p>');
     if(paid){
@@ -1132,16 +1136,33 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     }
     const actions=document.createElement("div");actions.className="actions";
     function btn(text,action,cls){const el=document.createElement("button");el.type="button";el.textContent=text;el.className=cls||"";el.disabled=!school.can_write;el.onclick=action;actions.append(el);}
-    if(b.booking_id&&b.status==="pending"&&(manager||(role==="instructor"&&(!b.instructor_id||b.instructor_id===user.id)))){
-     btn("Confirmar turno",async()=>{
-      let instructorId=null;
-      if(manager){
-       instructorId=b.instructor_id||$("bookingInstructor").value;
-       if(!instructorId){stat.textContent="Seleccioná un instructor habilitado antes de confirmar.";return;}
-      }
-      if(!confirm("¿Confirmar este turno"+(role==="instructor"?" a tu cargo":"")+(manager?" con el Instructor "+labelOf(instructorId):"")+"?"))return;
-      await takeAction("confirm",b,{p_instructor_id:instructorId,p_aircraft:""});
-     },"primary");
+    if(b.booking_id&&b.status==="pending"&&(manager||(role==="instructor"&&!withoutInstructor&&
+      (!b.instructor_id||b.instructor_id===user.id)))){
+     if(withoutInstructor&&manager){
+      btn("Autorizar vuelo sin instructor",async()=>{
+       const ref=prompt("Referencia de la autorización: verificá previamente la habilitación y documentación del piloto (8 a 250 caracteres).","");
+       if(ref===null)return;
+       if(ref.trim().length<8){stat.textContent="Indicá una referencia de autorización de al menos 8 caracteres.";return;}
+       if(!confirm("¿Confirmar este vuelo SIN instructor a bordo? Solo procede si la escuela verificó la documentación y autorización correspondientes."))return;
+       try{
+        await rpc("aerosuite_confirm_without_instructor",{
+         p_institution_id:inst,p_booking_id:b.booking_id,p_authorization_reference:ref.trim()
+        });
+        stat.textContent="Vuelo sin instructor autorizado y confirmado con referencia auditada.";
+        await loadWeek();
+       }catch(e){stat.textContent="No se pudo autorizar el vuelo: "+safeError(e);}
+      },"primary");
+     }else if(!withoutInstructor){
+      btn("Confirmar turno",async()=>{
+       let instructorId=null;
+       if(manager){
+        instructorId=b.instructor_id||$("bookingInstructor").value;
+        if(!instructorId){stat.textContent="Seleccioná un instructor habilitado antes de confirmar.";return;}
+       }
+       if(!confirm("¿Confirmar este turno"+(role==="instructor"?" a tu cargo":"")+(manager?" con el Instructor "+labelOf(instructorId):"")+"?"))return;
+       await takeAction("confirm",b,{p_instructor_id:instructorId,p_aircraft:""});
+      },"primary");
+     }
     }
     const associatedReport=b.booking_id?reports.find(r=>r.booking_id===b.booking_id):null;
     const canChangeBooking=!!b.booking_id&&!associatedReport&&!paid&&new Date(b.starts_at).getTime()>Date.now();
@@ -1158,7 +1179,9 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
       editor.style.marginTop="12px";editor.style.padding="14px";
       const title=document.createElement("strong");title.textContent="Modificar reserva · "+(statuses[b.status]||b.status);
       const description=document.createElement("p");description.className="hint";
-      description.textContent="Podés cambiar el instructor conservando el estado actual. Para cambiar día, hora o aeronave, elegí otro turno publicado y registrá la autorización del alumno; la reserva pasará a pendiente.";
+      description.textContent=withoutInstructor?
+       "Esta reserva es sin instructor a bordo. Podés cambiar día, horario o aeronave; la autorización deberá revisarse nuevamente.":
+       "Podés cambiar el instructor conservando el estado actual. Para cambiar día, hora o aeronave, elegí otro turno publicado y registrá la autorización del alumno; la reserva pasará a pendiente.";
       const grid=document.createElement("div");grid.className="formgrid";
       const instLabel=document.createElement("label");instLabel.textContent="Instructor asignado";
       const instructor=document.createElement("select");
@@ -1192,6 +1215,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
       move.onclick=()=>startReschedule(b);
       const close=document.createElement("button");close.type="button";close.textContent="Cerrar";
       close.onclick=()=>editor.remove();
+      if(withoutInstructor){save.disabled=true;instLabel.hidden=true;reasonLabel.hidden=true;}
       buttons.append(save,move,close);
       editor.append(title,description,grid,feedback,buttons);
       card.append(editor);
