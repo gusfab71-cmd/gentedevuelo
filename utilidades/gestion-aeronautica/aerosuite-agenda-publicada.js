@@ -42,7 +42,10 @@ window.AeroSuiteAgenda={
   legend.parentNode.insertBefore(root,legend);
   const weekControls=$("weekControls");
   if(weekControls)root.insertBefore(weekControls,$("agendaManager"));
-  const gridHost=$("agendaGridHost");gridHost.append(legend,table);
+  const gridHost=$("agendaGridHost");
+  const reschedulePanel=$("reschedulePanel");
+  if(reschedulePanel)gridHost.append(reschedulePanel);
+  gridHost.append(legend,table);
   table.classList.add("agenda-grid-scroll");
   $("weekHead").closest("table").classList.add("agenda-week-grid");
   $("agendaManager").hidden=!c.manager;
@@ -84,6 +87,10 @@ window.AeroSuiteAgenda={
    ".agenda-booked{border-top:1px solid #607f90;padding:9px 0;display:flex;gap:7px;align-items:center;flex-wrap:wrap;font-size:12px}",
    ".agenda-booked button{font-size:11px;padding:6px 9px}",
    ".agenda-grid-host .booking-legend{margin:12px 0}.agenda-grid-host .table-scroll{margin:0 0 9px}",
+   ".agenda-grid-host #reschedulePanel{border:2px solid #d8aa61;background:#1e384a;margin:12px 0 16px;padding:14px;border-radius:10px}",
+   ".agenda-grid-host #rescheduleDestination{border:1px solid #78aa92;padding:9px;background:#193f37;color:#fff9e9;border-radius:8px;font-weight:700}",
+   ".agenda-slot-btn.move-target{outline:2px dashed #e7c18a;outline-offset:-2px;box-shadow:0 0 0 1px #ffdda7;background:#225246;color:white;cursor:pointer}",
+   ".agenda-slot-btn.move-selected{outline:3px solid #f4d386;outline-offset:-2px;background:#75602b;color:white;font-weight:750}",
    "@media(max-width:650px){#agendaManager .formgrid,.agenda-filters,.agenda-edit-form .formgrid{grid-template-columns:1fr}.agenda-week-grid{min-width:760px}}"
   ].join("");
   document.head.append(style);
@@ -378,21 +385,26 @@ window.AeroSuiteAgenda={
        state=active.some(r=>r.status==="confirmed")?"Confirmado":active.some(r=>r.status==="pending")?"Pendiente":state;
       }
       if(state==="Libre"&&c.weekMode()==="current")state="Solo consulta";
-      const legacyMove=!!c.manager&&!!c.isLegacyRescheduling?.()&&
-       slot.activity==="flight"&&slot.published&&slot.bookable!==false&&future&&remaining>0&&active.length===0;
+      const reprogramming=!!c.manager&&!!c.isLegacyRescheduling?.();
+      const legacyMove=reprogramming&&slot.activity==="flight"&&slot.published&&
+       slot.bookable!==false&&future&&remaining>0&&active.length===0;
+      const selectedMove=legacyMove&&c.selectedRescheduleSlot?.()===slot.id;
       const b=document.createElement("button");b.type="button";b.className="slot agenda-slot-btn "+
-       (state==="Pendiente"?"busy pending":state==="Confirmado"?"busy confirmed":
+       (selectedMove?"move-selected":legacyMove?"move-target":
+        state==="Pendiente"?"busy pending":state==="Confirmado"?"busy confirmed":
         state==="Realizado"?"settled":state==="Libre"?"available":
         state==="Preparación"?"draft":state==="Pasado"?"past":
         state==="Fuera de servicio"?"unavailable":
         ["Ocupado","Sin cupos","Solo consulta"].includes(state)?"occupied":"");
       const resourceName=document.createElement("strong");resourceName.textContent=slot.resource||names[slot.activity];
-      const line=htmlText((legacyMove?"Libre · Reprogramar aquí":state)+
+      const line=htmlText((selectedMove?"Seleccionado · 1 h 30":
+       legacyMove?"Elegir · 1 h 30":state)+
        (slot.activity==="theory"?" · "+slot.reserved+"/"+slot.capacity:""),"small");
       b.append(resourceName,line);
       b.setAttribute("aria-label",slot.resource+" · "+state+" · "+date+" "+time);
       if(legacyMove)b.onclick=()=>c.onLegacyReschedule(slot,b);
       else if(canBook)b.onclick=()=>reserveSlot(slot,b);
+      else if(reprogramming)b.onclick=()=>c.onLegacyInvalidTarget?.(slot);
       else if(c.manager){
        b.onclick=()=>{
         selectedSlotId=slot.id;renderStaffDetail();
@@ -437,7 +449,9 @@ window.AeroSuiteAgenda={
     body.append(row);
    }
    const published=slots.filter(s=>s.published).length;
-   $("agendaGridHelp").textContent=(c.weekMode()==="current"?
+   $("agendaGridHelp").textContent=(c.manager&&c.isLegacyRescheduling?.()?
+    "REPROGRAMACIÓN ACTIVA: elegí la casilla verde con «Elegir · 1 h 30»; ese clic selecciona los 90 minutos completos. Confirmá el cambio en el recuadro anterior. ":
+    c.weekMode()==="current"?
     "Esta semana: revisá los turnos ya asignados y sus modificaciones; las nuevas reservas se realizan en «Semana siguiente». ":
     c.role==="alumno"?
     "Elegí una casilla «Libre» para reservar; si hay varias aeronaves en el mismo horario, aparecen juntas. ":
@@ -638,6 +652,11 @@ window.AeroSuiteAgenda={
    },
    isPublishedBooking(id){return bookings.some(r=>r.booking_id===id);},
    getReservationForBooking(id){return bookings.find(r=>r.booking_id===id)||null;},
+   hasFreeFutureFlightSlot(){
+    return slots.some(s=>s.activity==="flight"&&s.published&&s.bookable!==false&&
+     new Date(s.starts_at).getTime()>Date.now()&&Number(s.reserved)<Number(s.capacity));
+   },
+   focusFlight(){$("agendaFilter").value="flight";$("agendaResourceFilter").value="all";render();},
    refresh(){render();},
    showReschedule(){render();},
    hideReschedule(){render();}
