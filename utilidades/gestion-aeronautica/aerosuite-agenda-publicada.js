@@ -40,6 +40,8 @@ window.AeroSuiteAgenda={
   const legend=document.querySelector("#turnera .booking-legend"),table=$("weekHead").closest(".table-scroll");
   if(!legend||!table)throw Error("No se encontró la grilla institucional.");
   legend.parentNode.insertBefore(root,legend);
+  const weekControls=$("weekControls");
+  if(weekControls)root.insertBefore(weekControls,$("agendaManager"));
   const gridHost=$("agendaGridHost");gridHost.append(legend,table);
   table.classList.add("agenda-grid-scroll");
   $("weekHead").closest("table").classList.add("agenda-week-grid");
