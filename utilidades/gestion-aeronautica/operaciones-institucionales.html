@@ -1574,13 +1574,13 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
        actLabReport(r,"submit",{p_teaching_notes:notes.value.trim(),p_flight_minutes:Number(mins.value)});
      });card.append(form);
     }else{
-     const notes=document.createElement("p");notes.className="lesson-text";
-     notes.textContent=r.teaching_notes;card.append(notes);
+     const notes=document.createElement("div");
+     notes.innerHTML=reportFeedbackSummary(r.teaching_notes);card.append(notes);
     }
     if(manager){
      const actions=document.createElement("div");actions.className="actions";
      if(["submitted","approved"].includes(r.state)){
-      const edit=document.createElement("button");edit.textContent="Editar informe (PRUEBA)";
+      const edit=document.createElement("button");edit.textContent="Editar formulario de devolución (PRUEBA)";
       edit.disabled=!school.can_write;edit.onclick=()=>openManagerReportEditor(card,r,true);
       actions.append(edit);
      }
@@ -1628,8 +1628,24 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    ".report-book-fields small{display:block;color:#b9cad5;margin-bottom:5px}"+
    ".report-extra-details{padding:12px 0;border-top:1px solid #456b81;margin:12px 0}"+
    ".report-extra-details .formgrid{margin-top:12px}"+
-   ".manager-report-editor{max-width:930px} .manager-report-editor textarea{width:100%}";
+   ".manager-report-editor{max-width:930px} .manager-report-editor textarea{width:100%}"+
+   ".report-feedback-summary{border:1px solid #47677a;background:#153044;border-radius:9px;padding:12px 15px;margin:12px 0}"+
+   ".report-feedback-summary>div+div{border-top:1px solid #3f5c6f;padding-top:9px;margin-top:9px}"+
+   ".report-feedback-summary strong{color:#ebd2a2}.report-feedback-summary p{margin:5px 0;white-space:pre-wrap}";
   document.head.append(reportStyle);
+  function reportFeedbackSummary(notes){
+   const sections=parseTeachingNotes(notes);
+   const entries=[
+    ["Práctica realizada",sections.practice],
+    ["Devolución del instructor",sections.feedback],
+    ["Para la próxima práctica",sections.next]
+   ].filter(([,value])=>String(value||"").trim().length);
+   return '<section class="report-feedback-summary" aria-label="Devolución del instructor">'+
+    (entries.length?entries.map(([title,value])=>
+     '<div><strong>'+esc(title)+'</strong><p class="lesson-text">'+esc(value)+'</p></div>').join(""):
+     '<p class="hint">Todavía no se registró una devolución.</p>')+
+   '</section>';
+  }
   function formatLogbookEntry(entry){
    if(!entry||typeof entry!=="object"||!entry.flight_date)return "";
    const date=String(entry.flight_date).split("-").reverse().join("/");
@@ -1872,7 +1888,8 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     card.innerHTML='<div class="row between"><strong>'+esc(reportFlightStamp(r))+" · "+esc(r.student_email)+'</strong><span class="chip '+esc(r.status)+'">'+esc(statuses[r.status])+'</span></div>'+
      '<p><strong>Instructor:</strong> '+esc(r.instructor_email)+' · <strong>Vuelo real:</strong> '+esc(r.flight_minutes)+' minutos · <strong>Combustible:</strong> '+esc(r.fuel_liters)+' L · <strong>Aceite:</strong> '+esc(r.oil_liters)+' L · Versión '+esc(r.revision)+'</p>'+
      formatLogbookEntry(r.logbook_entry)+
-     '<p class="lesson-text"><strong>Devolución:</strong> '+esc(r.teaching_notes)+'</p><p class="lesson-text"><strong>Novedades:</strong> '+esc(r.aircraft_notes||"Sin novedades registradas")+'</p>'+
+     reportFeedbackSummary(r.teaching_notes)+
+     '<details><summary>Observaciones de aeronave</summary><p class="lesson-text">'+esc(r.aircraft_notes||"Sin novedades registradas")+'</p></details>'+
      (r.return_reason?'<p class="warn"><strong>Motivo de devolución:</strong> '+esc(r.return_reason)+'</p>':"");
     if(manager&&r.frontdesk_minutes!==null&&r.frontdesk_minutes!==undefined){
      const minutesAtCheckout=Number(r.frontdesk_minutes);
@@ -1893,7 +1910,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     if(manager&&["submitted","returned","approved"].includes(r.status)){
      const row=document.createElement("div");row.className="actions";
      const edit=document.createElement("button");edit.type="button";
-     edit.textContent="Editar informe";edit.disabled=!school.can_write;
+     edit.textContent="Editar formulario del informe";edit.disabled=!school.can_write;
      edit.onclick=()=>openManagerReportEditor(card,r,false);
      row.append(edit);
      if(["submitted","returned"].includes(r.status)){
