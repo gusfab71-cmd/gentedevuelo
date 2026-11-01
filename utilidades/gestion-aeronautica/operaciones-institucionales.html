@@ -342,7 +342,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    <section id="reschedulePanel" class="notice" hidden aria-label="Reprogramación autorizada de reserva">
     <div class="row between"><strong>Reprogramar turno con autorización del alumno</strong><button id="stopReschedule" type="button">Salir de reprogramación</button></div>
     <p id="rescheduleSource" class="hint"></p>
-    <p class="hint">La reserva conserva al mismo alumno y el historial. Elegí un nuevo horario libre, incluso en otra semana. Quedará pendiente de confirmación del Instructor.</p>
+    <p class="hint">Elegí directamente en la grilla una casilla libre de 1 h 30 min. Podés cambiar de aeronave o de semana. Se conserva el alumno y el historial; el nuevo turno quedará pendiente de confirmación.</p>
     <div class="formgrid">
      <label>Autorización recibida por
       <select id="rescheduleChannel"><option value="">Elegí el medio</option><option value="presencial">En persona</option><option value="telefono">Teléfono</option><option value="whatsapp">WhatsApp</option><option value="correo">Correo electrónico</option><option value="otro">Otro medio</option></select>
@@ -351,7 +351,9 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
      <label>Instructor preasignado (opcional)<select id="rescheduleInstructor"><option value="">Sin Instructor todavía</option></select></label>
     </div>
     <label style="margin-top:12px"><span><input id="rescheduleAuthorization" type="checkbox" style="width:auto;margin-right:8px">Confirmo que el alumno autorizó previamente esta reprogramación.</span></label>
-    <p id="rescheduleFeedback" class="hint" role="status">Completá los datos y seleccioná una casilla «Libre · Reprogramar aquí».</p>
+    <p id="rescheduleDestination" class="notice" role="status">Nuevo turno: todavía sin seleccionar. Hacé clic en un horario libre de la grilla (90 minutos completos).</p>
+    <div class="actions"><button id="confirmReschedule" type="button" class="primary" disabled>Confirmar reprogramación de 1 h 30 min</button></div>
+    <p id="rescheduleFeedback" class="hint" role="status">Primero elegí el nuevo turno en la grilla. Después completá la autorización y confirmá la reprogramación.</p>
    </section>
    <div class="booking-legend" aria-label="Estados por color">
     <span class="free"><i aria-hidden="true"></i>Libre</span>
@@ -715,7 +717,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
  const testRole=params.get("rol")||"";
  const labLogin=params.get("prueba")==="1"&&["administrador","secretaria","instructor","alumno"].includes(testRole);
  const db=supabase.createClient(GDV_CONFIG.url,GDV_CONFIG.key,{auth:{storageKey:labLogin?"aerosuite-laboratorio-"+testRole+"-v1-auth":"aerosuite-institucional-v2-auth",persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
- let user,school,role,manager,bookings=[],people=[],reports=[],finance={packs:[],movements:[]},bookingConfirmations=new Map(),settledWeek=new Map(),rescheduleTarget=null;
+ let user,school,role,manager,bookings=[],people=[],reports=[],finance={packs:[],movements:[]},bookingConfirmations=new Map(),settledWeek=new Map(),rescheduleTarget=null,selectedRescheduleSlot=null;
  if(!inst){stat.textContent="Entrá desde el portal de tu institución.";return;}
  try{
   const me=await db.auth.getUser();user=me.data&&me.data.user;
@@ -818,8 +820,11 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    const r=await db.rpc(name,args);if(r.error)throw r.error;return r.data;
   }
   function labelOf(v){return people.find(x=>x.person_id===v)?.email||v||"Sin asignar";}
-  function startReschedule(booking){
+  async function startReschedule(booking){
    if(!manager||!school.can_write)return;
+   selectedRescheduleSlot=null;
+   $("confirmReschedule").disabled=true;
+   $("rescheduleDestination").textContent="Nuevo turno: sin seleccionar. Elegí una casilla libre de 1 h 30 min en la grilla.";
    const linkedReservation=publishedAgenda.getReservationForBooking(booking.booking_id);
    rescheduleTarget={booking_id:booking.booking_id,student_email:booking.student_email,
     starts_at:booking.starts_at,activity_reservation_id:linkedReservation?.id||null};
@@ -830,18 +835,54 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    $("reschedulePanel").hidden=false;
    publishedAgenda.showReschedule();
    $("rescheduleSource").textContent="Alumno: "+(booking.student_email||"Sin identificar")+" · Turno actual: "+stamp(booking.starts_at)+" (90 minutos).";
-   $("rescheduleFeedback").textContent=(selector.value?"Instructor preasignado: "+selector.selectedOptions[0].text+". ":"Sin Instructor preasignado. ")+"Confirmá la autorización, indicá el medio y el motivo. Después seleccioná un nuevo horario libre.";
+   $("rescheduleFeedback").textContent="1. Elegí directamente la casilla del nuevo turno de 90 minutos. 2. Indicá la autorización y el motivo. 3. Tocá «Confirmar reprogramación».";
+   publishedAgenda.focusFlight();
+   // Cuando esta semana ya no dispone de bloques futuros completos, ofrecer directamente la próxima.
+   if(weekMode()==="current"&&!publishedAgenda.hasFreeFutureFlightSlot()){
+    selectedWeekStart=addDays(mondayOf(artToday()),7);
+    updateWeekNavigation();
+    try{await loadWeek();}catch(e){
+     $("rescheduleFeedback").textContent="No se pudo abrir la próxima semana: "+safeError(e);
+    }
+   }
    publishedAgenda.refresh();
-   $("reschedulePanel").scrollIntoView({behavior:"smooth",block:"center"});
+   $("reschedulePanel").scrollIntoView({behavior:"smooth",block:"start"});
   }
   function stopReschedule(){
-   rescheduleTarget=null;$("reschedulePanel").hidden=true;
+   rescheduleTarget=null;selectedRescheduleSlot=null;
+   $("confirmReschedule").disabled=true;
+   $("rescheduleDestination").textContent="Nuevo turno: sin seleccionar.";
+   $("reschedulePanel").hidden=true;
    publishedAgenda.hideReschedule();
    $("rescheduleChannel").value="";$("rescheduleReason").value="";
    $("rescheduleAuthorization").checked=false;$("rescheduleInstructor").value="";
    publishedAgenda.refresh();
   }
   $("stopReschedule").onclick=stopReschedule;
+  function chooseRescheduleSlot(slot){
+   if(!rescheduleTarget||!manager)return;
+   if(!slot.published||slot.bookable===false||new Date(slot.starts_at).getTime()<=Date.now()){
+    $("rescheduleFeedback").textContent="Ese horario no está disponible para reprogramar.";
+    return;
+   }
+   selectedRescheduleSlot={id:slot.id,starts_at:slot.starts_at,resource:slot.resource};
+   const start=new Date(slot.starts_at),end=new Date(start.getTime()+90*60000);
+   const time=new Intl.DateTimeFormat("es-AR",{day:"2-digit",month:"2-digit",year:"numeric",
+    hour:"2-digit",minute:"2-digit",hourCycle:"h23",timeZone:"America/Argentina/Buenos_Aires"});
+   const endTime=new Intl.DateTimeFormat("es-AR",{hour:"2-digit",minute:"2-digit",
+    hourCycle:"h23",timeZone:"America/Argentina/Buenos_Aires"}).format(end);
+   $("rescheduleDestination").textContent="Nuevo turno elegido: "+slot.resource+" · "+time.format(start)+
+     " a "+endTime+" · 1 h 30 min completos.";
+   $("confirmReschedule").disabled=false;
+   $("rescheduleFeedback").textContent="Casilla seleccionada. Completá la autorización y el motivo, y confirmá el cambio. No se modificará nada hasta que lo confirmes.";
+   publishedAgenda.refresh();
+   $("reschedulePanel").scrollIntoView({behavior:"smooth",block:"nearest"});
+  }
+  $("confirmReschedule").onclick=async()=>{
+   const chosen=selectedRescheduleSlot;
+   if(!chosen){$("rescheduleFeedback").textContent="Seleccioná primero un turno libre de 90 minutos.";return;}
+   await moveBookingTo(new Date(chosen.starts_at),$("confirmReschedule"),chosen.id);
+  };
   async function moveBookingTo(start,cell,slotId){
    if(!rescheduleTarget||!manager||!school.can_write)return;
    if(!slotId){
@@ -896,7 +937,9 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    students:()=>people.filter(x=>x.role==="alumno").map(x=>({id:x.person_id,label:x.email})),
    setSelectedStudent:id=>{$("bookingStudent").value=id;},
    isLegacyRescheduling:()=>!!rescheduleTarget,
-   onLegacyReschedule:async(slot,button)=>{await moveBookingTo(new Date(slot.starts_at),button,slot.id);},
+   onLegacyReschedule:(slot,button)=>{chooseRescheduleSlot(slot);},
+   onLegacyInvalidTarget:()=>{$("rescheduleFeedback").textContent="Elegí una casilla libre y publicada de 90 minutos. Si no hay lugar, seleccioná «Semana siguiente».";},
+   selectedRescheduleSlot:()=>selectedRescheduleSlot?.id||null,
    legacyBookings:()=>bookings,
    rpc,reload:async()=>{await loadWeek();}
   });
