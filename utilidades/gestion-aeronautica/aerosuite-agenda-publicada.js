@@ -76,6 +76,7 @@ window.AeroSuiteAgenda={
    ".agenda-slot-btn.pending{background:linear-gradient(140deg,#FAF7F1,#EAE5DB);border-color:#F7F2E8;color:#263B49}",
    ".agenda-slot-btn.confirmed{background:linear-gradient(140deg,#BFD3DF,#91AABB);border-color:#C5D5DE;color:#193344}",
    ".agenda-slot-btn.settled{background:linear-gradient(140deg,#E1C994,#C9A66E);border-color:#E4CAA1;color:#293541}",
+   ".agenda-slot-btn.completed{background:#385b69;border-color:#547989;color:#f1f7fa}",
    ".agenda-slot-btn.occupied,.agenda-slot-btn.past,.agenda-slot-btn.unavailable{background:#3c4a55;border-color:#566977;color:#dce4eb}",
    ".agenda-slot-btn.draft{background:#594c38;border-color:#aa8951;color:#fff0d7}",
    ".agenda-slot-btn:disabled{cursor:default;opacity:.85}",
@@ -151,6 +152,8 @@ window.AeroSuiteAgenda={
   let selectedSlotId=null,maintenanceChecks=[];
   const dayLabels=["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"];
   const timeSlots=["08:00","09:30","11:00","12:30","14:00","15:30","17:00","18:30"];
+  const settledLabel=method=>method==="pack"?"Pack descontado":
+   method==="cash"?"Saldado · Efectivo":method==="bank_transfer"?"Saldado · Transferencia":"Saldado";
   const endTime90=start=>new Intl.DateTimeFormat("es-AR",{
    hour:"2-digit",minute:"2-digit",hourCycle:"h23",timeZone:"America/Argentina/Buenos_Aires"
   }).format(new Date(new Date(start).getTime()+90*60000));
@@ -387,8 +390,13 @@ window.AeroSuiteAgenda={
       let state=own.length?(own.some(r=>r.status==="confirmed")?"Confirmado":own.some(r=>r.status==="completed")?"Realizado":"Pendiente"):
        !slot.published?"Preparación":!future?"Pasado":slot.bookable===false?"Fuera de servicio":
        remaining<=0?(slot.activity==="theory"?"Sin cupos":"Ocupado"):"Libre";
+      const settledMethod=c.manager&&slot.activity==="flight"?
+       active.map(r=>r.booking_id?c.settlementForBooking?.(r.booking_id):null).find(Boolean):null;
       if(c.manager&&active.length){
-       state=active.some(r=>r.status==="confirmed")?"Confirmado":active.some(r=>r.status==="pending")?"Pendiente":state;
+       state=settledMethod?settledLabel(settledMethod):
+        active.some(r=>r.status==="confirmed")?"Confirmado":
+        active.some(r=>r.status==="pending")?"Pendiente":
+        active.some(r=>r.status==="completed")?"Realizado":state;
       }
       if(state==="Libre"&&c.weekMode()==="current")state="Solo consulta";
       const reprogramming=!!c.manager&&!!c.isLegacyRescheduling?.();
@@ -398,7 +406,7 @@ window.AeroSuiteAgenda={
       const b=document.createElement("button");b.type="button";b.className="slot agenda-slot-btn "+
        (selectedMove?"move-selected":legacyMove?"move-target":
         state==="Pendiente"?"busy pending":state==="Confirmado"?"busy confirmed":
-        state==="Realizado"?"settled":state==="Libre"?"available":
+        settledMethod?"settled":state==="Realizado"?"completed":state==="Libre"?"available":
         state==="Preparación"?"draft":state==="Pasado"?"past":
         state==="Fuera de servicio"?"unavailable":
         ["Ocupado","Sin cupos","Solo consulta"].includes(state)?"occupied":"");
@@ -430,12 +438,13 @@ window.AeroSuiteAgenda={
        const oldButton=document.createElement("button");
        oldButton.type="button";
        const privateBooking=c.role==="alumno"&&!old.my_booking;
+       const oldPayment=c.manager?c.settlementForBooking?.(old.booking_id):null;
        oldButton.className="slot agenda-slot-btn "+
-        (privateBooking?"occupied":old.status==="pending"?"busy pending":
-         old.status==="confirmed"?"busy confirmed":"settled");
+        (privateBooking?"occupied":oldPayment?"settled":old.status==="pending"?"busy pending":
+         old.status==="confirmed"?"busy confirmed":"completed");
        const title=htmlText(privateBooking?"Reservado":old.aircraft||"Vuelo anterior","strong");
        const description=htmlText(privateBooking?"Ocupado":
-        (old.status==="pending"?"Pendiente":
+        (oldPayment?settledLabel(oldPayment):old.status==="pending"?"Pendiente":
          old.status==="confirmed"?"Confirmado":"Realizado")+
         (c.manager&&old.student_email?" · "+old.student_email:""),"small");
        oldButton.append(title,description);
