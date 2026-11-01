@@ -82,7 +82,7 @@ window.AeroSuiteAgenda={
    ".agenda-booked{border-top:1px solid #607f90;padding:9px 0;display:flex;gap:7px;align-items:center;flex-wrap:wrap;font-size:12px}",
    ".agenda-booked button{font-size:11px;padding:6px 9px}",
    ".agenda-grid-host .booking-legend{margin:12px 0}.agenda-grid-host .table-scroll{margin:0 0 9px}",
-   "@media(max-width:650px){#agendaManager .formgrid,.agenda-filters{grid-template-columns:1fr}.agenda-week-grid{min-width:760px}}"
+   "@media(max-width:650px){#agendaManager .formgrid,.agenda-filters,.agenda-edit-form .formgrid{grid-template-columns:1fr}.agenda-week-grid{min-width:760px}}"
   ].join("");
   document.head.append(style);
   const msg=value=>$("agendaStatus").textContent=value;
@@ -93,7 +93,10 @@ window.AeroSuiteAgenda={
   function htmlText(label,tag="p"){
    const el=document.createElement(tag);el.textContent=label;return el;
   }
-  function reloadAfter(message){msg(message);return c.reload();}
+  async function reloadAfter(message){
+   try{await c.reload();msg(message);}
+   catch(error){msg(message+" La operación se guardó, pero no se pudo actualizar la grilla: "+error.message+". Actualizá la página.");}
+  }
   async function getMaintenanceChecks(registrations){
    if(!c.manager||!registrations?.length)return [];
    const data=await c.rpc("aerosuite_maintenance_alerts",{p_institution_id:c.inst});
