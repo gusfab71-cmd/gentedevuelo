@@ -266,6 +266,23 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
 #turnera #bookingList .list-item.settled .chip.settled{background:var(--turno-saldado);border-color:var(--turno-saldado-borde);color:#293541}
 #turnera #bookingList .list-item.is-target{outline:2px solid #DCE9F2;outline-offset:2px;box-shadow:0 0 0 4px rgba(210,229,240,.1)}
 @media(max-width:600px){#turnera .booking-legend{gap:6px}#turnera .booking-legend span{font-size:11px;padding:6px 9px}}
+
+/* Separación de cobros y contaduría, conservando formularios y funciones institucionales. */
+#cobros #financeWorkspaces{display:grid;grid-template-columns:minmax(0,1fr);max-width:820px;gap:14px}
+#cobros #flightSettlementPanel{margin:0;padding:19px}
+#cobros #flightSettlementPanel .formgrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+#cobros #flightSettlementPanel .finance-span-2{grid-column:1/-1}
+#cobros .pack-comparison-disclosure{max-width:820px;border:1px solid #53758d;border-radius:11px;background:#193548;padding:13px}
+#cobros .pack-comparison-disclosure summary{cursor:pointer;font-size:13px;font-weight:800;color:#EAD09B}
+#cobros .pack-comparison-disclosure #packPurchasePanel{margin:14px 0 0}
+#cobros #settleSubmit{font-size:15px}
+#contaduria #financeOverview{margin:17px 0}
+#contaduria .contaduria-pack-sale,#contaduria #schoolExpensePanel,#contaduria #frontdeskReviewPanel{margin:17px 0}
+#contaduria .contaduria-pack-sale .formgrid,#contaduria #schoolExpensePanel .formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+#contaduria .contaduria-pack-sale .finance-span-2,#contaduria #schoolExpensePanel .finance-span-2{grid-column:1/-1}
+#contaduria .contaduria-pack-sale .finance-submit,#contaduria #schoolExpensePanel .finance-submit{width:100%;font-weight:800;margin-top:12px}
+#contaduria .finance-lists{margin-top:16px}
+@media(max-width:630px){#cobros #flightSettlementPanel .formgrid,#contaduria .contaduria-pack-sale .formgrid,#contaduria #schoolExpensePanel .formgrid{grid-template-columns:1fr}#cobros #flightSettlementPanel{padding:14px}}
 </style>
 <script src="../../assets/supabase-2.117.2.min.js"></script><script src="../../assets/community-config.js"></script>
 <script src="../../assets/aerosuite-registration.js"></script>
@@ -280,7 +297,9 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   <div class="tabs" role="tablist" aria-label="Áreas de AeroSuite" id="tabs">
    <button data-tab="turnera" class="active" type="button">Turnera semanal</button>
    <button data-tab="informes" type="button">Informes de instrucción</button>
-   <button data-tab="finanzas" type="button" id="financeTab">Contaduría y packs</button>
+   <button data-tab="cobros" type="button" id="cobrosTab" hidden>Cobro de vuelos</button>
+   <button data-tab="contaduria" type="button" id="contaduriaTab" hidden>Contaduría</button>
+   <button data-tab="finanzas" type="button" id="financeTab" hidden>Mis horas de vuelo</button>
    <button data-tab="recursos" type="button">Academia y recursos</button>
   </div>
   <section class="panel tab-panel active" id="turnera">
@@ -368,7 +387,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   </section>
   <section class="panel tab-panel" id="finanzas">
    <span class="eyebrow" id="financeEyebrow">Gestión económica institucional</span><h2 id="financeTitle">Contaduría y packs de horas</h2>
-   <p id="financeHelp">Los packs descontados son consumo de horas, no un segundo ingreso. Los cobros reales, egresos y caja chica quedan individualizados.</p>
+   <p id="financeHelp">Consultá tus horas de vuelo y devoluciones.</p>
    <div id="studentFlightHours" hidden aria-live="polite"><section class="panel" id="studentPackArea" style="margin:0 0 16px"><span class="eyebrow">Horas prepagas</span><h3>Mis packs de horas</h3><div class="cards" id="studentPackSummary"></div><div class="list" id="studentPackList"></div></section>
     <div class="cards" id="flightHoursCards"></div>
     <p class="hint">Los minutos reales se suman sin redondeos. AeroSuite muestra HH:MM y su equivalente en horas centesimales con dos decimales. El total se calcula desde los minutos originales, nunca sumando equivalencias redondeadas.</p>
@@ -432,7 +451,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
         <button type="button" id="saveHourlyRate">Guardar tarifa</button>
         <p id="hourlyRateStatus" class="hint finance-span-2" role="status"></p>
         <p id="settleDurationPreview" class="hint finance-span-2" role="status" aria-live="polite">Ingresá horas y minutos declarados por el alumno.</p>
-       <label>Medio de cobro<select id="settleMode" name="mode"><option value="cash">Cobro en efectivo</option><option value="bank_transfer">Transferencia acreditada</option></select></label>
+       <label>Forma de liquidar el vuelo<select id="settleMode" name="mode" required><option value="cash">Cobro en efectivo</option><option value="pack">Descuento del pack de horas</option></select></label>
        <label id="settlePackRow" class="finance-span-2" hidden>Pack del alumno<select id="settlePack" name="pack"><option value="">Elegí un pack con saldo suficiente</option></select></label>
        <label id="settleAmountRow">Importe calculado (editable)<input id="settleAmount" name="amount" type="text" inputmode="decimal" maxlength="23" placeholder="Ej.: 150.000"></label>
         <p id="settleCalculatedTotal" class="hint finance-span-2" role="status">Ingresá tiempo y tarifa para calcular el importe.</p>
@@ -575,6 +594,17 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    <div id="moneyArea"><h3>Movimientos de caja y contaduría</h3><p class="hint">Últimos 150 movimientos. El resumen mensual superior sí incluye el período completo.</p><div class="cards" id="moneySummary"></div><div class="list" id="moneyList"></div></div>
    </div>
   </section>
+  <section class="panel tab-panel" id="cobros" aria-labelledby="cobrosTitle">
+   <span class="eyebrow">Secretaría · Atención inmediata</span><h2 id="cobrosTitle">Cobro de vuelos</h2>
+   <p id="cobrosHelp">Al terminar el vuelo, registrá el tiempo declarado y la matrícula utilizada. Elegí <strong>efectivo</strong> o <strong>descuento de pack</strong>. El informe del Instructor se controla después desde Contaduría.</p>
+   <div id="cobrosHost"></div><div id="cobrosExtra" style="margin-top:14px"></div>
+  </section>
+  <section class="panel tab-panel" id="contaduria" aria-labelledby="contaduriaTitle">
+   <span class="eyebrow">Supervisión institucional</span><h2 id="contaduriaTitle">Contaduría</h2>
+   <p>Ingresos, egresos, venta de packs, conciliación e historial económico mensual y anual. Sin duplicar cobros ni sustituir la contabilidad fiscal.</p>
+   <div id="contaduriaOverviewHost"></div><div id="contaduriaPacksHost"></div>
+   <div id="contaduriaExpensesHost"></div><div id="contaduriaReviewHost"></div><div id="contaduriaDetailsHost"></div>
+  </section>
   <section class="panel tab-panel" id="recursos">
    <span class="eyebrow">Academia Aeronáutica institucional</span><h2>Material de instrucción</h2>
    <p>Apuntes, guías y documentos de esta escuela. Los alumnos pueden consultar y descargar el material publicado por Dirección, Secretaría e Instructores.</p>
@@ -648,6 +678,23 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   $("pageTitle").textContent=manager?"Administración de la escuela":role==="instructor"?"Mi actividad de instrucción":"Mi reserva y formación";
   $("backPortal").href="portal-escuela.html?institucion="+encodeURIComponent(inst)+"&rol="+encodeURIComponent(role)+"&elegida=1"+(labLogin?"&prueba=1":"");
   $("adminBooking").hidden=!manager;$("reportForm").hidden=role!=="instructor";$("financeForm").hidden=true;$("packPurchasePanel").hidden=!manager;$("financeOverview").hidden=!manager;$("financeWorkspaces").hidden=!manager;$("financeDisclosure").hidden=!manager;$("financeExportRow").hidden=!manager;$("frontdeskReviewPanel").hidden=!manager;
+  $("cobrosTab").hidden=!manager;$("contaduriaTab").hidden=!manager;$("financeTab").hidden=role!=="alumno";
+  if(manager){
+   // Reutilizar los formularios originales en pantallas separadas, sin duplicar sus acciones.
+   $("cobrosHost").append($("financeWorkspaces"));
+   const extra=document.createElement("details");extra.className="pack-comparison-disclosure";
+   const heading=document.createElement("summary");heading.textContent="Opcional · Comparar saldo del pack";
+   extra.append(heading,$("packPurchasePanel"));$("cobrosExtra").append(extra);
+   $("contaduriaOverviewHost").append($("financeOverview"));
+   const purchaseForm=$("packPurchaseForm"),purchaseNote=purchaseForm.previousElementSibling;
+   const purchaseHeading=purchaseNote?.previousElementSibling;
+   if(purchaseHeading?.tagName!=="H3"||purchaseNote?.tagName!=="P")throw Error("No se pudo ubicar la venta de packs.");
+   const sales=document.createElement("section");sales.className="panel contaduria-pack-sale";
+   sales.append(purchaseHeading,purchaseNote,purchaseForm);$("contaduriaPacksHost").append(sales);
+   $("contaduriaExpensesHost").append($("schoolExpensePanel"));
+   $("contaduriaReviewHost").append($("frontdeskReviewPanel"));
+   $("contaduriaDetailsHost").append($("financeDisclosure"),$("financeExportRow"),document.querySelector(".finance-lists"));
+  }
   if(role==="alumno"){
    $("reportsEyebrow").textContent="Seguimiento de mi formación";
    $("reportsTitle").textContent="Mis prácticas y devoluciones";
@@ -664,9 +711,9 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    $("studentFlightHours").hidden=false;
    $("packsArea").hidden=true;
   }
-  if(role==="instructor")$("tabs").querySelector('[data-tab="finanzas"]').hidden=true;
+  // Instructor sin accesos económicos, alumno solo a su historial de horas.
   $("academyForm").hidden=!(manager||role==="instructor");
-  if(!school.can_write){document.querySelectorAll("form input,form select,form textarea,form button").forEach(x=>x.disabled=true);$("financeHelp").textContent="Modo consulta: no se pueden guardar movimientos."; }
+  if(!school.can_write){document.querySelectorAll("form input,form select,form textarea,form button").forEach(x=>x.disabled=true);$("financeHelp").textContent="Modo consulta: no se pueden guardar movimientos.";if(manager)$("cobrosHelp").textContent="Modo consulta: no se pueden registrar cobros ni descuentos."; }
   if(manager){
    const r=await db.rpc("aerosuite_director_people",{p_institution_id:inst});
    if(!r.error)people=(r.data||[]).filter(x=>x.kind==="integrante");
@@ -683,7 +730,8 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    b.addEventListener("click",()=>showTab(b.dataset.tab));
   }
   function showTab(which){
-   if(which==="finanzas"&&role==="instructor")return;
+   if(which==="finanzas"&&role!=="alumno")which=manager?"contaduria":"turnera";
+   if((which==="cobros"||which==="contaduria")&&!manager)which="turnera";
    for(const b of $("tabs").querySelectorAll("button"))b.classList.toggle("active",b.dataset.tab===which);
    for(const s of document.querySelectorAll(".tab-panel"))s.classList.toggle("active",s.id===which);
    location.hash=which;
@@ -1820,7 +1868,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   }
   function syncSettleMode(){
    if(!manager)return;
-   const mode=$("settleMode").value,pack=mode==="pack",bank=mode==="bank_transfer";
+   const mode=$("settleMode").value,pack=mode==="pack",bank=false;
    $("settlePackRow").hidden=!pack;
    $("settleAmountRow").hidden=pack;$("settleCurrencyRow").hidden=pack;
    $("settleBankRow").hidden=!bank;$("settleFiscalRow").hidden=pack;
@@ -2207,6 +2255,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    const form=event.currentTarget,fd=new FormData(form),booking=String(fd.get("booking")||"");
    const flight=deskFlightById(booking);
    const mode=String(fd.get("mode")||"");
+   if(!["cash","pack"].includes(mode)){$("settleStatus").textContent="Elegí efectivo o descuento de pack.";return;}
    const selectedPack=mode==="pack"?String(fd.get("pack")||""):null;
    const amount=mode==="pack"?null:parseMoney(fd.get("amount"));
    const declaredMinutes=centiToMinutes($("settleBookHours").value);
@@ -2236,8 +2285,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    const duration=flightHoursMinutes(declaredMinutes);
    const wording=mode==="pack"?
     "descontar "+duration+" h del pack, sin ingresar dinero":
-    "cobrar "+currencyAmount(amount,fd.get("currency"))+
-     (mode==="cash"?" en efectivo":" por transferencia acreditada");
+    "cobrar "+currencyAmount(amount,fd.get("currency"))+" en efectivo";
    if(!confirm("¿Confirmás "+wording+" por el vuelo de "+(flight.student_email||"este alumno")+
     " del "+stamp(flight.starts_at)+"? Tiempo declarado por el alumno: "+duration+
     " h. "+($("settleLogbookVerified").checked?"Libro de Vuelo verificado.":"Libro de Vuelo pendiente de cotejo.")+
@@ -2598,7 +2646,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   $("reloadAll").onclick=refresh;
   await refresh();
   const initial=(location.hash||"#turnera").slice(1);
-  if(["turnera","informes","finanzas","recursos"].includes(initial))showTab(initial);
+  if(["turnera","informes","finanzas","cobros","contaduria","recursos"].includes(initial))showTab(initial);
  }catch(e){stat.textContent="No se pudo abrir la gestión institucional: "+safeError(e);}
 })();
 </script>
