@@ -125,6 +125,7 @@ window.AeroSuiteAgenda={
      if(c.school.can_write&&new Date(s.starts_at).getTime()>Date.now()){
       if(!r.booking_id&&r.status==="pending")
        row.append(addButton("Confirmar",()=>actReservation("confirm",r)));
+      row.append(addButton("Reprogramar",()=>reprogramReservation(r,s)));
       row.append(addButton("Cancelar",()=>actReservation("cancel",r),"danger"));
      }
      if(r.booking_id)row.append(htmlText("Asignar Instructor desde el detalle de reservas.","small"));
@@ -132,6 +133,44 @@ window.AeroSuiteAgenda={
     }
     manager.append(card);
    }
+  }
+  async function reprogramReservation(reservation,currentSlot){
+   if(!c.manager||!c.school.can_write)return;
+   const date=prompt("¿Para qué fecha querés reprogramar? Ingresá AAAA-MM-DD:",c.today());
+   if(!date)return;
+   if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||!Number.isFinite(Date.parse(date+"T12:00:00Z"))){
+    msg("Ingresá una fecha válida con formato AAAA-MM-DD.");return;
+   }
+   const d=new Date(date+"T12:00:00Z");
+   const until=new Date(d.getTime()+7*86400000).toISOString().slice(0,10);
+   const channel=prompt("¿Cómo autorizó el alumno? presencial / telefono / whatsapp / correo / otro","whatsapp");
+   if(!channel)return;
+   const validChannel=channel.trim().toLowerCase();
+   if(!["presencial","telefono","whatsapp","correo","otro"].includes(validChannel)){
+    msg("Indicá un canal de autorización válido.");return;
+   }
+   const reason=prompt("Motivo del cambio (5 caracteres como mínimo):");
+   if(!reason||reason.trim().length<5)return;
+   try{
+    const data=await c.rpc("aerosuite_availability_week",{
+     p_institution_id:c.inst,p_from:date,p_to:until
+    });
+    const available=(data?.slots||[]).filter(s=>s.id!==currentSlot.id&&s.activity===currentSlot.activity&&
+     s.published&&Number(s.reserved)<Number(s.capacity)&&new Date(s.starts_at).getTime()>Date.now());
+    if(!available.length){msg("No hay cupos publicados para esa actividad en los siguientes 8 días. Secretaría puede preparar y publicar más turnos.");return;}
+    const choices=available.slice(0,25);
+    const selection=prompt("Elegí el número de un nuevo turno publicado:\n"+
+     choices.map((s,i)=>(i+1)+". "+c.formatDate(s.starts_at)+" · "+s.resource+" ("+(s.capacity-s.reserved)+" cupos)").join("\n"));
+    if(!selection)return;
+    const index=Number(selection)-1;
+    if(!Number.isInteger(index)||index<0||index>=choices.length){msg("El número seleccionado no es válido.");return;}
+    if(!confirm("¿Confirmás que el alumno autorizó reprogramar a "+c.formatDate(choices[index].starts_at)+"? Se conservará su reserva y pasará a pendiente."))return;
+    await c.rpc("aerosuite_availability_reprogram",{
+     p_institution_id:c.inst,p_reservation_id:reservation.id,p_target_slot_id:choices[index].id,
+     p_student_authorized:true,p_channel:validChannel,p_reason:reason.trim()
+    });
+    await reloadAfter("Turno reprogramado. Se conservó el historial; falta la confirmación de Secretaría o Instructor.");
+   }catch(e){msg("No se pudo reprogramar: "+e.message);}
   }
   async function actReservation(action,r){
    if(!c.manager||!c.school.can_write)return;
@@ -198,6 +237,7 @@ window.AeroSuiteAgenda={
      msg(slots.filter(s=>s.published).length+" horarios publicados en la semana.");render();
     }catch(e){slots=[];bookings=[];msg("Error al consultar turnos: "+e.message);render();}
    },
+   isPublishedBooking(id){return bookings.some(r=>r.booking_id===id);},
    showReschedule(){if(!legacy.hidden)legacy.open=true;},
    hideReschedule(){legacy.open=false;}
   };
