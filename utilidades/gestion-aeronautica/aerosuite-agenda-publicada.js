@@ -13,7 +13,7 @@ window.AeroSuiteAgenda={
   '<p id="agendaWeekLabel" class="hint"></p>',
   '<form id="agendaBulkForm"><div class="formgrid">',
   '<label>Actividad<select id="agendaBulkType"><option value="flight">Vuelo de instrucción</option><option value="simulator">Vuelo virtual / simulador</option><option value="theory">Teoría</option></select></label>',
-  '<div class="agenda-resource-pick" id="agendaBulkFlight"><strong>Aeronaves disponibles</strong><div id="agendaBulkAircraft"></div><p class="hint">Se toman de Flota. Las que están fuera de servicio no pueden publicarse.</p></div>',
+  '<div class="agenda-resource-pick" id="agendaBulkFlight"><strong>Aeronaves disponibles</strong><div id="agendaBulkAircraft"></div><p class="hint">Se toman de Flota. Las que están fuera de servicio no pueden publicarse. Antes de publicar se muestran los avisos de Mantenimiento.</p></div>',
   '<div class="agenda-resource-pick" id="agendaBulkSim" hidden><strong>Simuladores disponibles</strong><div id="agendaBulkSimulators"></div><p class="hint">Se toman de Disponibilidad de flotas y mantenimiento. Los que están fuera de servicio no pueden publicarse.</p></div>',
   '<label id="agendaBulkNamesLabel" hidden>Clase o materia<input id="agendaBulkNames" maxlength="600" placeholder="Ej.: Teoría"></label>',
   '<label id="agendaBulkCapacityLabel" hidden>Cupos por turno<input id="agendaBulkCapacity" type="number" min="1" max="50" value="12"></label>',
@@ -92,8 +92,41 @@ window.AeroSuiteAgenda={
    const el=document.createElement(tag);el.textContent=label;return el;
   }
   function reloadAfter(message){msg(message);return c.reload();}
+  async function getMaintenanceChecks(registrations){
+   if(!c.manager||!registrations?.length)return [];
+   const data=await c.rpc("aerosuite_maintenance_alerts",{p_institution_id:c.inst});
+   maintenanceChecks=Array.isArray(data?.aircraft)?data.aircraft:[];
+   return maintenanceChecks.filter(x=>registrations.some(reg=>String(reg).toUpperCase()===String(x.registration).toUpperCase()));
+  }
+  async function confirmMaintenanceWarnings(registrations){
+   if(!registrations?.length)return true;
+   let entries;
+   try{entries=await getMaintenanceChecks(registrations)}
+   catch(e){msg("No se pudieron consultar los avisos de Mantenimiento. Verificá la ficha antes de publicar: "+e.message);return false;}
+   if(entries.length!==registrations.length){
+    msg("Hay aeronaves sin seguimiento vinculado. Verificá Flota antes de publicar.");
+    return false;
+   }
+   const warnings=entries.flatMap(a=>(a.alerts||[]).map(w=>({registration:a.registration,...w})));
+   const lines=warnings.slice(0,12).map(w=>
+    (w.level==="due"?"VENCIDO / REVISAR":w.level==="soon"?"PRÓXIMO":"DATOS PENDIENTES")+
+    " · "+w.registration+": "+w.message);
+   const intro=warnings.length?
+    "AVISOS DE MANTENIMIENTO antes de publicar:\n\n"+lines.join("\n")+
+    (warnings.length>12?"\n...otros avisos en Mantenimiento.\n":"")+"\n\n":
+    "No se detectan alertas calculables con los controles registrados. Esto NO equivale a aptitud de vuelo.\n\n";
+   return confirm(intro+
+    "La escuela debe verificar constancias, horas reales, DA, vencimientos y estado de aeronavegabilidad.\n"+
+    "¿Continuar con la publicación de horarios para estas aeronaves?");
+  }
   async function manage(action,id,week){
    try{
+    if(action==="publish"||action==="publish_week"){
+     const affected=action==="publish"?
+      slots.filter(s=>s.id===id&&s.activity==="flight").map(s=>s.resource):
+      slots.filter(s=>!s.published&&s.activity==="flight").map(s=>s.resource);
+     if(affected.length&&!await confirmMaintenanceWarnings([...new Set(affected)]))return;
+    }
     const result=await c.rpc("aerosuite_availability_manage",{
      p_institution_id:c.inst,p_action:action,p_slot_id:id||null,
      p_activity:null,p_starts_at:null,p_resource:null,p_capacity:1,p_duration_minutes:90,p_week_start:week||null
@@ -101,7 +134,7 @@ window.AeroSuiteAgenda={
     await reloadAfter(action==="publish_week"?"Publicados: "+result.published+" horarios.":"Disponibilidad actualizada.");
    }catch(e){msg("No se pudo actualizar: "+e.message);}
   }
-  let selectedSlotId=null;
+  let selectedSlotId=null,maintenanceChecks=[];
   const dayLabels=["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"];
   const timeSlots=["08:00","09:30","11:00","12:30","14:00","15:30","17:00","18:30"];
   function refreshResources(){
@@ -295,7 +328,11 @@ window.AeroSuiteAgenda={
     const label=document.createElement("label");label.className="agenda-check";
     const input=document.createElement("input");input.type="checkbox";input.value=a.registration;
     input.name="agenda-aircraft";
-    const name=htmlText(a.registration+(a.model?" · "+a.model:""),"span");
+    const prev=maintenanceChecks.find(x=>x.registration===a.registration);
+    const severity=prev?.alerts?.some(x=>x.level==="due")?" · REVISAR VENCIMIENTO":
+     prev?.alerts?.some(x=>x.level==="soon")?" · PRÓXIMO CONTROL":
+     prev?.alerts?.length?" · Seguimiento pendiente":"";
+    const name=htmlText(a.registration+(a.model?" · "+a.model:"")+severity,"span");
     label.append(input,name);area.append(label);
    }
    list.append(area);
@@ -325,6 +362,7 @@ window.AeroSuiteAgenda={
     msg("Elegí al menos un recurso y un cupo válido (máximo 20 recursos).");return;
    }
    const date=c.weekDates()[0],total=resources.length*56;
+   if(activity==="flight"&&!await confirmMaintenanceWarnings(resources))return;
    if(!confirm("¿Publicar la semana del "+date+" para "+names[activity]+"?"+
     "\nRecursos: "+resources.join(", ")+
     "\nSe habilitarán hasta "+total+" horarios (8 turnos de 90 minutos por día y recurso, de lunes a domingo)."+
@@ -400,6 +438,13 @@ window.AeroSuiteAgenda={
     try{
      const days=c.weekDates(),x=await c.rpc("aerosuite_availability_week",{p_institution_id:c.inst,p_from:days[0],p_to:days[6]});
      slots=Array.isArray(x?.slots)?x.slots:[];bookings=Array.isArray(x?.reservations)?x.reservations:[];
+     if(c.manager){
+      try{
+       const alerts=await c.rpc("aerosuite_maintenance_alerts",{p_institution_id:c.inst});
+       maintenanceChecks=Array.isArray(alerts?.aircraft)?alerts.aircraft:[];
+       syncBulkOptions();
+      }catch(e){msg("No se pudieron consultar avisos de mantenimiento: "+e.message);}
+     }
      msg(slots.filter(s=>s.published).length+" horarios publicados en la semana.");render();
     }catch(e){slots=[];bookings=[];msg("Error al consultar turnos: "+e.message);render();}
    },
