@@ -5,21 +5,37 @@ window.AeroSuiteAgenda={
   let slots=[],bookings=[];
   const root=document.createElement("section");root.className="panel agenda-panel";
   root.innerHTML=[
-  '<span class="eyebrow">Disponibilidad administrada por la escuela</span><h3>Turnos publicados</h3>',
-  '<p class="hint">Secretaría organiza aeronaves, simuladores y aulas. Solo los horarios publicados se pueden reservar. El Instructor y la aeronave definitivos los asigna la escuela.</p>',
-  '<label>Actividad<select id="agendaFilter"><option value="flight">Vuelo práctico</option><option value="simulator">Vuelo virtual</option><option value="theory">Teoría</option></select></label>',
-  '<p class="hint" role="status" id="agendaStatus"></p><div class="agenda-cards" id="agendaStudentCards"></div>',
-  '<section id="agendaManager" hidden><h3>Preparar horarios semanales</h3>',
-  '<p class="hint">Los horarios nuevos quedan en preparación, ocultos para los alumnos hasta publicarlos.</p>',
+  '<span class="eyebrow">Turnera institucional</span><h3>Turnera semanal · turnos de 1 h 30 min</h3>',
+  '<p class="hint">Elegí la actividad y, si corresponde, la aeronave o simulador. Todas las reservas se realizan desde una única grilla semanal.</p>',
+  '<section id="agendaManager" hidden>',
+  '<h3>Publicar turnos para toda la semana</h3>',
+  '<p class="hint">Seleccioná los recursos disponibles. AeroSuite publicará automáticamente los horarios de 08:00 a 20:00, de lunes a domingo, en turnos de 90 minutos. Podrás suspender o agregar horarios durante la semana.</p>',
+  '<p id="agendaWeekLabel" class="hint"></p>',
+  '<form id="agendaBulkForm"><div class="formgrid">',
+  '<label>Actividad<select id="agendaBulkType"><option value="flight">Vuelo de instrucción</option><option value="simulator">Vuelo virtual / simulador</option><option value="theory">Teoría</option></select></label>',
+  '<div class="agenda-resource-pick" id="agendaBulkFlight"><strong>Aeronaves disponibles</strong><div id="agendaBulkAircraft"></div><p class="hint">Se toman de Flota. Las que están fuera de servicio no pueden publicarse.</p></div>',
+  '<label id="agendaBulkNamesLabel" hidden>Recursos disponibles (separados por coma)<input id="agendaBulkNames" maxlength="600" placeholder="Ej.: Simulador LV-ASD"></label>',
+  '<label id="agendaBulkCapacityLabel" hidden>Cupos por turno<input id="agendaBulkCapacity" type="number" min="1" max="50" value="12"></label>',
+  '</div><button class="primary" type="submit" id="agendaBulkSubmit">Publicar toda la semana</button></form>',
+  '<details class="agenda-daily"><summary>Agregar o modificar horarios puntuales</summary>',
+  '<p class="hint">Para imprevistos podés agregar un horario individual; para suspender, seleccioná la casilla en la grilla.</p>',
   '<form id="agendaCreate"><div class="formgrid">',
-  '<label>Actividad<select id="agendaType"><option value="flight">Vuelo práctico</option><option value="simulator">Vuelo virtual</option><option value="theory">Teoría grupal</option></select></label>',
+  '<label>Actividad<select id="agendaType"><option value="flight">Vuelo de instrucción</option><option value="simulator">Vuelo virtual</option><option value="theory">Teoría grupal</option></select></label>',
   '<label>Día<input id="agendaDay" type="date" required></label>',
   '<label>Hora<select id="agendaHour"><option>08:00</option><option>09:30</option><option>11:00</option><option>12:30</option><option>14:00</option><option>15:30</option><option>17:00</option><option>18:30</option></select></label>',
   '<label>Recurso / aeronave / aula<input id="agendaResource" list="agendaResourceList" maxlength="90" required placeholder="LV-ABC, Simulador 1 o Aula 1"><datalist id="agendaResourceList"></datalist></label>',
   '<label id="agendaCapacityLabel">Cupos<input id="agendaCapacity" type="number" min="1" max="50" value="1" required></label>',
   '</div><button class="primary" type="submit">Agregar horario en preparación</button></form>',
-  '<div class="actions"><button type="button" id="agendaPublish" class="primary">Publicar turnos de esta semana</button><button type="button" id="agendaWhatsApp">Copiar aviso para WhatsApp</button></div>',
-  '<h3>Organización de recursos y reservas</h3><div class="agenda-cards" id="agendaStaffCards"></div></section>'
+  '<div class="actions"><button type="button" id="agendaPublish" class="primary">Publicar los horarios preparados</button></div>',
+  '</details>',
+  '<div class="actions"><button type="button" id="agendaWhatsApp">Copiar aviso de turnos para WhatsApp</button></div>',
+  '</section>',
+  '<div class="agenda-filters"><label>Actividad<select id="agendaFilter"><option value="flight">Vuelo de instrucción</option><option value="simulator">Vuelo virtual / simulador</option><option value="theory">Teoría</option></select></label>',
+  '<label>Elegir aeronave, simulador o clase<select id="agendaResourceFilter"><option value="all">Todos los recursos</option></select></label></div>',
+  '<p class="hint" role="status" aria-live="polite" id="agendaStatus"></p>',
+  '<div class="table-scroll agenda-grid-scroll"><table class="agenda-week-grid" aria-label="Turnera semanal compartida"><thead id="agendaWeekHead"></thead><tbody id="agendaWeekBody"></tbody></table></div>',
+  '<p class="hint" id="agendaGridHelp">Verde: libre · Marfil: pendiente · Azul: confirmado · Gris: ocupado o no disponible. Elegí una casilla para reservar.</p>',
+  '<section id="agendaStaffDetails" hidden><h3>Gestión del turno seleccionado</h3><div id="agendaStaffCards" class="agenda-cards"></div></section>'
   ].join("");
   const legend=document.querySelector("#turnera .booking-legend"),table=$("weekHead").closest(".table-scroll");
   legend.parentNode.insertBefore(root,legend);
@@ -29,19 +45,41 @@ window.AeroSuiteAgenda={
   legacy.hidden=c.role==="alumno";$("agendaManager").hidden=!c.manager;
   const style=document.createElement("style");
   style.textContent=[
-   ".agenda-panel{border-color:#52798f;background:#17354a;margin:15px 0}.agenda-panel [hidden]{display:none!important}",
-   ".agenda-panel>label{max-width:330px;display:block;margin:13px 0}.agenda-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin:12px 0}",
-   ".agenda-card{padding:13px;background:#214154;border:1px solid #607f90;border-radius:10px;min-width:0}",
-   ".agenda-card p{margin:7px 0;font-size:12px;line-height:1.5}",
-   ".agenda-card .top{display:flex;justify-content:space-between;align-items:center;gap:9px;flex-wrap:wrap}",
-   "#agendaManager{border-top:1px solid #52798f;margin-top:18px;padding-top:15px}",
-   "#agendaManager .agenda-cards{grid-template-columns:repeat(2,minmax(0,1fr))}",
-   "#agendaManager .formgrid{grid-template-columns:repeat(2,minmax(0,1fr))}",
+   ".agenda-panel{border:1px solid #52798f;background:#17354a;margin:15px 0}.agenda-panel [hidden]{display:none!important}",
+   ".agenda-panel h3{margin:10px 0}.agenda-panel .hint{line-height:1.55}",
+   "#agendaManager{padding:15px;margin:14px 0 19px;border:1px solid #567a90;background:#203c51;border-radius:12px}",
+   "#agendaManager .formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}",
+   ".agenda-resource-pick{padding:10px;border:1px solid #5f7f92;border-radius:8px}",
+   ".agenda-resource-options{max-height:145px;overflow:auto;margin-top:8px}",
+   ".agenda-check{display:flex!important;gap:8px;align-items:center;padding:5px 0;font-size:13px}",
+   ".agenda-check input{width:auto;min-width:auto;margin:0}",
+   ".agenda-daily{margin:16px 0;padding:12px;border:1px solid #567a90;border-radius:9px}",
+   ".agenda-daily summary,.agenda-legacy summary{cursor:pointer;font-weight:700;color:#DCECF4}",
+   ".agenda-filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:12px 0}",
+   ".agenda-filters label{display:block}.agenda-grid-scroll{overflow-x:auto;margin-top:12px}",
+   ".agenda-week-grid{border-collapse:separate;border-spacing:3px;min-width:810px;width:100%;table-layout:fixed}",
+   ".agenda-week-grid th{padding:8px 5px;text-align:center;background:#244358;color:#eaf0f4;font-size:12px}",
+   ".agenda-week-grid th:first-child{width:95px;position:sticky;left:0;z-index:2}",
+   ".agenda-week-grid td{padding:3px;vertical-align:top;min-width:90px;background:#1a3448;border:1px solid #3c6078;border-radius:7px}",
+   ".agenda-week-grid .agenda-time{font-size:12px;text-align:center;font-weight:700;position:sticky;left:0;z-index:1;background:#244358;padding:12px 3px}",
+   ".agenda-cell{min-height:48px;display:flex;flex-direction:column;gap:5px}",
+   ".agenda-slot-btn{display:flex;flex-direction:column;gap:3px;width:100%;padding:8px 5px;border-radius:7px;border:1px solid #54826c;background:#234a3e;color:#f2f8f4;text-align:center;font-size:11px;line-height:1.25;white-space:normal;cursor:pointer}",
+   ".agenda-slot-btn strong{display:block;font-size:11px;overflow-wrap:anywhere}",
+   ".agenda-slot-btn small{font-size:10px;opacity:.9}",
+   ".agenda-slot-btn.pending{background:#655946;border-color:#baa678;color:#fff6de}",
+   ".agenda-slot-btn.confirmed{background:#264f75;border-color:#6b9fc8;color:#eaf6ff}",
+   ".agenda-slot-btn.occupied,.agenda-slot-btn.past,.agenda-slot-btn.unavailable{background:#3c4a55;border-color:#566977;color:#dce4eb}",
+   ".agenda-slot-btn.draft{background:#594c38;border-color:#aa8951;color:#fff0d7}",
+   ".agenda-slot-btn:disabled{cursor:default;opacity:.85}",
+   ".agenda-slot-btn:focus-visible{outline:3px solid #ebca91;outline-offset:1px}",
+   ".agenda-cell-empty{text-align:center;display:block;color:#9db1c3;padding:12px 2px;font-size:11px}",
+   "#agendaStaffDetails{margin-top:16px;padding:13px;border:1px solid #567b91;border-radius:10px}",
+   ".agenda-cards{display:grid;gap:10px}.agenda-card{padding:14px;background:#214154;border:1px solid #607f90;border-radius:10px}",
+   ".agenda-card p{margin:7px 0;font-size:12px}",
    ".agenda-booked{border-top:1px solid #607f90;padding:9px 0;display:flex;gap:7px;align-items:center;flex-wrap:wrap;font-size:12px}",
    ".agenda-booked button{font-size:11px;padding:6px 9px}",
    ".agenda-legacy{border:1px solid #456b80;padding:12px;border-radius:10px;margin:12px 0}",
-   ".agenda-legacy summary{cursor:pointer;font-weight:750;color:#dceefa}",
-   "@media(max-width:650px){#agendaManager .agenda-cards,#agendaManager .formgrid{grid-template-columns:1fr}}"
+   "@media(max-width:650px){#agendaManager .formgrid,.agenda-filters{grid-template-columns:1fr}.agenda-week-grid{min-width:760px}}"
   ].join("");
   document.head.append(style);
   const msg=value=>$("agendaStatus").textContent=value;
@@ -62,79 +100,134 @@ window.AeroSuiteAgenda={
     await reloadAfter(action==="publish_week"?"Publicados: "+result.published+" horarios.":"Disponibilidad actualizada.");
    }catch(e){msg("No se pudo actualizar: "+e.message);}
   }
+  let selectedSlotId=null;
+  const dayLabels=["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"];
+  const timeSlots=["08:00","09:30","11:00","12:30","14:00","15:30","17:00","18:30"];
+  function refreshResources(){
+   const current=$("agendaResourceFilter").value;
+   const activity=$("agendaFilter").value,select=$("agendaResourceFilter");
+   const available=[...new Set(slots.filter(s=>s.activity===activity&&(s.published||c.manager))
+    .map(s=>s.resource).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"es"));
+   select.replaceChildren();
+   select.add(new Option(activity==="flight"?"Todas las aeronaves":activity==="simulator"?"Todos los simuladores":"Todas las clases","all"));
+   for(const item of available)select.add(new Option(item,item));
+   select.value=available.includes(current)?current:"all";
+  }
+  async function reserveSlot(slot,button){
+   if(c.role!=="alumno"||!c.school.can_write)return;
+   const label=names[slot.activity]+" · "+slot.resource+" · "+c.formatDate(slot.starts_at);
+   if(!confirm("¿Reservar "+label+"? La solicitud quedará pendiente de confirmación de la escuela."))return;
+   button.disabled=true;
+   try{
+    await c.rpc("aerosuite_availability_reserve",{p_institution_id:c.inst,p_slot_id:slot.id,p_student_id:null});
+    await reloadAfter("Turno solicitado. Secretaría confirmará la reserva.");
+   }catch(e){msg("No se pudo reservar: "+e.message);button.disabled=false;}
+  }
+  function renderStaffDetail(){
+   const wrapper=$("agendaStaffDetails"),target=$("agendaStaffCards");
+   target.replaceChildren();
+   if(!c.manager){wrapper.hidden=true;return;}
+   wrapper.hidden=false;
+   const slot=slots.find(s=>s.id===selectedSlotId);
+   if(!slot){target.textContent="Seleccioná un horario de la grilla para administrar sus recursos o reservas.";return;}
+   const card=document.createElement("div");card.className="agenda-card";
+   card.append(htmlText(names[slot.activity]+" · "+slot.resource+" · "+c.formatDate(slot.starts_at),"strong"));
+   card.append(htmlText("Estado: "+(slot.published?"Publicado":"En preparación")+
+    " · Cupos utilizados: "+slot.reserved+" de "+slot.capacity+
+    (slot.bookable===false?" · Aeronave fuera de servicio":"")));
+   if(c.school.can_write&&new Date(slot.starts_at).getTime()>Date.now()){
+    const bar=document.createElement("div");bar.className="actions";
+    if(!slot.published&&slot.bookable!==false)bar.append(addButton("Publicar este turno",()=>manage("publish",slot.id),"primary"));
+    if(slot.published)bar.append(addButton("Suspender este horario",()=>{
+     if(confirm("Solo se puede suspender si no tiene reservas activas. ¿Continuar?"))manage("hide",slot.id);
+    }));
+    if(!slot.published)bar.append(addButton("Descartar borrador",()=>{
+     if(confirm("¿Descartar este horario en preparación?"))manage("discard",slot.id);
+    },"danger"));
+    if(bar.childNodes.length)card.append(bar);
+   }
+   const related=bookings.filter(r=>r.slot_id===slot.id&&r.status!=="cancelled");
+   if(!related.length)card.append(htmlText("No hay alumnos reservados para este horario."));
+   for(const r of related){
+    const row=document.createElement("div");row.className="agenda-booked";
+    row.append(htmlText((r.student_email||"Alumno")+" · "+(r.status==="confirmed"?"Confirmado":r.status==="completed"?"Realizado":"Pendiente"),"span"));
+    if(c.school.can_write&&new Date(slot.starts_at).getTime()>Date.now()&&["pending","confirmed"].includes(r.status)){
+     if(!r.booking_id&&r.status==="pending")row.append(addButton("Confirmar",()=>actReservation("confirm",r)));
+     row.append(addButton("Reprogramar",()=>reprogramReservation(r,slot)));
+     row.append(addButton("Cancelar",()=>actReservation("cancel",r),"danger"));
+    }
+    if(r.booking_id)row.append(htmlText("Para asignar instructor y confirmar un vuelo, usá el detalle de reservas debajo de la turnera.","small"));
+    card.append(row);
+   }
+   target.append(card);
+  }
   function render(){
-   const selected=$("agendaFilter").value,list=$("agendaStudentCards");list.replaceChildren();
-   const grouped=new Map();
-   for(const s of slots){
-    if(!s.published||s.activity!==selected)continue;
-    const key=s.activity+"|"+s.starts_at;
-    if(!grouped.has(key))grouped.set(key,{starts_at:s.starts_at,slots:[],capacity:0,used:0});
-    const g=grouped.get(key);g.slots.push(s);g.capacity+=Number(s.capacity);g.used+=Number(s.reserved);
+   refreshResources();
+   const selected=$("agendaFilter").value,resource=$("agendaResourceFilter").value;
+   const days=c.weekDates(),head=$("agendaWeekHead"),body=$("agendaWeekBody");
+   head.replaceChildren();body.replaceChildren();
+   const header=document.createElement("tr");
+   header.append(htmlText("Horario","th"));
+   for(let i=0;i<days.length;i++){
+    const th=document.createElement("th");th.textContent=dayLabels[i]+" "+days[i].slice(8,10)+"/"+days[i].slice(5,7);
+    header.append(th);
    }
-   if(!grouped.size)list.textContent="Todavía no hay horarios publicados para esta actividad y semana.";
-   for(const g of grouped.values()){
-    const own=bookings.filter(r=>r.my_booking&&g.slots.some(s=>s.id===r.slot_id));
-    const free=g.slots.reduce((sum,x)=>sum+(x.bookable===false?0:Math.max(0,Number(x.capacity)-Number(x.reserved))),0),
-     blocked=g.slots.every(x=>x.bookable===false),
-     future=new Date(g.starts_at).getTime()>Date.now();
-    const card=document.createElement("div");card.className="agenda-card";
-    const top=document.createElement("div");top.className="top";
-    const label=htmlText(c.formatDate(g.starts_at),"strong");
-    const status=htmlText(own.length?(own.some(x=>x.status==="confirmed")?"Confirmado":"Pendiente"):
-     !future?"Finalizado":blocked?"No disponible":free>0?"Disponible":"Sin cupos","span");
-    status.className="chip "+(own.length?"confirmed":free>0?"completed":"");
-    top.append(label,status);card.append(top);
-    card.append(htmlText("Ocupados "+g.used+" de "+g.capacity+" cupos"+(selected==="flight"?" · Secretaría asigna avión e instructor":"")));
-    if(c.role==="alumno"&&!own.length&&future&&free>0&&c.school.can_write){
-     const item=g.slots.find(x=>x.bookable!==false&&Number(x.reserved)<Number(x.capacity));
-     const b=addButton("Reservar",async()=>{
-      if(!confirm("¿Solicitar "+names[selected]+" el "+c.formatDate(g.starts_at)+"? Quedará pendiente de confirmación."))return;
-      b.disabled=true;
-      try{
-       await c.rpc("aerosuite_availability_reserve",{p_institution_id:c.inst,p_slot_id:item.id,p_student_id:null});
-       await reloadAfter("Solicitud registrada. Secretaría confirmará el turno.");
-      }catch(e){msg("No se pudo reservar: "+e.message);b.disabled=false;}
-     },"primary");card.append(b);
-    }else if(c.role==="alumno"&&own.length){
-     card.append(htmlText("Para modificar o cancelar, comunicate con Secretaría."));
-    }
-    list.append(card);
-   }
-   if(!c.manager)return;
-   const manager=$("agendaStaffCards");manager.replaceChildren();
-   if(!slots.length)manager.textContent="Aún no hay horarios preparados en esta semana.";
-   for(const s of slots){
-    const card=document.createElement("div");card.className="agenda-card";
-    const top=document.createElement("div");top.className="top";
-    top.append(htmlText(names[s.activity]+" · "+c.formatDate(s.starts_at),"strong"),
-     htmlText(s.published?"Publicado":"En preparación","span"));
-    card.append(top);
-    card.append(htmlText("Recurso: "+s.resource+" · Cupos "+s.reserved+"/"+s.capacity+(s.bookable===false?" · Aeronave fuera de servicio":"")));
-    if(c.school.can_write&&new Date(s.starts_at).getTime()>Date.now()){
-     const bar=document.createElement("div");bar.className="actions";
-     if(!s.published&&s.bookable!==false)bar.append(addButton("Publicar",()=>manage("publish",s.id),"primary"));
-     if(s.published)bar.append(addButton("Retirar",()=>{
-      if(confirm("¿Retirar este horario? Debe estar libre de reservas."))manage("hide",s.id);
-     }));
-     else bar.append(addButton("Descartar",()=>{
-      if(confirm("¿Descartar este horario preparado?"))manage("discard",s.id);
-     },"danger"));
-     card.append(bar);
-    }
-    for(const r of bookings.filter(x=>x.slot_id===s.id&&x.status!=="cancelled")){
-     const row=document.createElement("div");row.className="agenda-booked";
-     row.append(htmlText((r.student_email||"Alumno")+" · "+(r.status==="confirmed"?"Confirmado":"Pendiente"),"span"));
-     if(c.school.can_write&&new Date(s.starts_at).getTime()>Date.now()){
-      if(!r.booking_id&&r.status==="pending")
-       row.append(addButton("Confirmar",()=>actReservation("confirm",r)));
-      row.append(addButton("Reprogramar",()=>reprogramReservation(r,s)));
-      row.append(addButton("Cancelar",()=>actReservation("cancel",r),"danger"));
+   head.append(header);
+   const visible=slots.filter(s=>s.activity===selected&&(s.published||c.manager)&&
+    (resource==="all"||s.resource===resource));
+   for(const time of timeSlots){
+    const row=document.createElement("tr");
+    const endMinutes=(Number(time.slice(0,2))*60+Number(time.slice(3))+90);
+    const label=htmlText(time+"–"+String(Math.floor(endMinutes/60)).padStart(2,"0")+":"+
+      String(endMinutes%60).padStart(2,"0"),"th");
+    label.className="agenda-time";row.append(label);
+    for(const date of days){
+     const td=document.createElement("td"),wrap=document.createElement("div");wrap.className="agenda-cell";
+     const when=new Date(date+"T"+time+":00-03:00").getTime();
+     const candidates=visible.filter(s=>new Date(s.starts_at).getTime()===when)
+      .sort((a,b)=>(a.resource||"").localeCompare(b.resource||"","es"));
+     if(!candidates.length)wrap.append(htmlText("—","span")).lastChild.className="agenda-cell-empty";
+     for(const slot of candidates){
+      const own=bookings.filter(r=>r.slot_id===slot.id&&r.my_booking);
+      const active=bookings.filter(r=>r.slot_id===slot.id&&r.status!=="cancelled");
+      const future=when>Date.now(),remaining=Number(slot.capacity)-Number(slot.reserved);
+      const canBook=slot.published&&slot.bookable!==false&&future&&remaining>0&&c.role==="alumno"&&
+       !own.length&&c.school.can_write;
+      let state=own.length?(own.some(r=>r.status==="confirmed")?"Confirmado":own.some(r=>r.status==="completed")?"Realizado":"Pendiente"):
+       !slot.published?"Preparación":!future?"Pasado":slot.bookable===false?"Fuera de servicio":
+       remaining<=0?(slot.activity==="theory"?"Sin cupos":"Ocupado"):"Libre";
+      if(c.manager&&active.length){
+       state=active.some(r=>r.status==="confirmed")?"Confirmado":active.some(r=>r.status==="pending")?"Pendiente":state;
+      }
+      const b=document.createElement("button");b.type="button";b.className="agenda-slot-btn "+
+       (state==="Pendiente"?"pending":state==="Confirmado"?"confirmed":state==="Preparación"?"draft":
+        state==="Pasado"?"past":state==="Fuera de servicio"?"unavailable":
+        ["Ocupado","Sin cupos","Realizado"].includes(state)?"occupied":"");
+      const resourceName=document.createElement("strong");resourceName.textContent=slot.resource||names[slot.activity];
+      const line=htmlText(state+(slot.activity==="theory"?" · "+slot.reserved+"/"+slot.capacity:""),"small");
+      b.append(resourceName,line);
+      b.setAttribute("aria-label",slot.resource+" · "+state+" · "+date+" "+time);
+      if(canBook)b.onclick=()=>reserveSlot(slot,b);
+      else if(c.manager){
+       b.onclick=()=>{
+        selectedSlotId=slot.id;renderStaffDetail();
+        $("agendaStaffDetails").scrollIntoView({behavior:"smooth",block:"nearest"});
+       };
+      }else b.disabled=true;
+      wrap.append(b);
      }
-     if(r.booking_id)row.append(htmlText("Asignar Instructor desde el detalle de reservas.","small"));
-     card.append(row);
+     td.append(wrap);row.append(td);
     }
-    manager.append(card);
+    body.append(row);
    }
+   const published=slots.filter(s=>s.published).length;
+   $("agendaGridHelp").textContent=(c.role==="alumno"?
+    "Elegí una casilla «Libre» para reservar; si hay varias aeronaves en el mismo horario, aparecen juntas. ":
+    "Seleccioná un horario de la grilla para gestionar disponibilidad y reservas. ")+
+    "Turnos de 90 minutos. Horario de Argentina. "+published+" horarios publicados esta semana.";
+   $("agendaWeekLabel").textContent="Semana del "+days[0].split("-").reverse().join("/")+
+    " al "+days[6].split("-").reverse().join("/");
+   renderStaffDetail();
   }
   async function reprogramReservation(reservation,currentSlot){
    if(!c.manager||!c.school.can_write)return;
@@ -185,6 +278,56 @@ window.AeroSuiteAgenda={
     });await reloadAfter("Reserva actualizada.");
    }catch(e){msg("No se pudo modificar: "+e.message);}
   }
+  function syncBulkOptions(){
+   const activity=$("agendaBulkType").value;
+   $("agendaBulkFlight").hidden=activity!=="flight";
+   $("agendaBulkNamesLabel").hidden=activity==="flight";
+   $("agendaBulkCapacityLabel").hidden=activity!=="theory";
+   $("agendaBulkCapacity").value=activity==="theory"?"12":"1";
+   if(activity==="theory")$("agendaBulkNames").value="Teoría";
+   else if(activity==="simulator"&&!$("agendaBulkNames").value.trim())$("agendaBulkNames").value="Simulador 1";
+   const list=$("agendaBulkAircraft");list.replaceChildren();
+   const available=c.aircraft().filter(a=>a.availability==="available"&&!a.archived_at);
+   if(!available.length)list.append(htmlText("No hay aeronaves disponibles cargadas en Flota. Primero registralas desde Administración."));
+   const area=document.createElement("div");area.className="agenda-resource-options";
+   for(const a of available){
+    const label=document.createElement("label");label.className="agenda-check";
+    const input=document.createElement("input");input.type="checkbox";input.value=a.registration;
+    input.name="agenda-aircraft";
+    const name=htmlText(a.registration+(a.model?" · "+a.model:""),"span");
+    label.append(input,name);area.append(label);
+   }
+   list.append(area);
+  }
+  async function publishFullWeek(e){
+   e.preventDefault();if(!c.manager||!c.school.can_write)return;
+   const activity=$("agendaBulkType").value;
+   const resources=activity==="flight"?
+    [...document.querySelectorAll('#agendaBulkAircraft input[name="agenda-aircraft"]:checked')].map(x=>x.value):
+    $("agendaBulkNames").value.split(/[,;\n]+/).map(x=>x.trim()).filter(Boolean);
+   const capacity=activity==="theory"?Number($("agendaBulkCapacity").value):1;
+   if(!resources.length||resources.length>20||!Number.isInteger(capacity)||capacity<1||capacity>50){
+    msg("Elegí al menos un recurso y un cupo válido (máximo 20 recursos).");return;
+   }
+   const date=c.weekDates()[0],total=resources.length*56;
+   if(!confirm("¿Publicar la semana del "+date+" para "+names[activity]+"?"+
+    "\nRecursos: "+resources.join(", ")+
+    "\nSe habilitarán hasta "+total+" horarios (8 turnos de 90 minutos por día y recurso, de lunes a domingo)."+
+    "\nLas reservas existentes se conservarán."))return;
+   const b=$("agendaBulkSubmit");b.disabled=true;
+   try{
+    const answer=await c.rpc("aerosuite_availability_publish_full_week",{
+     p_institution_id:c.inst,p_week_start:date,p_activity:activity,
+     p_resources:resources,p_capacity:capacity
+    });
+    $("agendaFilter").value=activity;$("agendaResourceFilter").value="all";
+    await c.reload();
+    msg("Semana publicada: "+answer.newly_published+" horarios nuevos. "+
+     answer.already_published+" ya estaban publicados; "+
+     answer.skipped+" vencidos o incompatibles. Los alumnos pueden reservar.");
+   }catch(err){msg("No se pudo publicar la semana: "+err.message);}
+   finally{b.disabled=!c.school.can_write;}
+  }
   function syncResource(){
    const kind=$("agendaType").value;
    $("agendaCapacityLabel").hidden=kind==="flight";
@@ -196,8 +339,11 @@ window.AeroSuiteAgenda={
     const opt=document.createElement("option");opt.value=a.registration;list.append(opt);
    }
   }
-  $("agendaFilter").onchange=render;
+  $("agendaFilter").onchange=()=>{$("agendaResourceFilter").value="all";selectedSlotId=null;render();};
+  $("agendaResourceFilter").onchange=()=>{selectedSlotId=null;render();};
   if(c.manager){
+   $("agendaBulkType").onchange=syncBulkOptions;
+   $("agendaBulkForm").onsubmit=publishFullWeek;
    $("agendaType").onchange=syncResource;
    $("agendaDay").value=c.today();$("agendaDay").min=c.today();
    $("agendaCreate").onsubmit=async e=>{
@@ -229,7 +375,7 @@ window.AeroSuiteAgenda={
     try{await navigator.clipboard.writeText(text);msg("Aviso copiado para compartir en WhatsApp.");}
     catch(e){prompt("Copiá el aviso:",text);}
    };
-   syncResource();
+   syncResource();syncBulkOptions();
   }
   return {
    async load(){
