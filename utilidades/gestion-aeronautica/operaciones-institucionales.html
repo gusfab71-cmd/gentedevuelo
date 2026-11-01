@@ -34,7 +34,7 @@ th{padding:10px 4px;color:#b7d6e7;font-weight:800}td{vertical-align:middle;text-
 th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
 .slot.available{background:#1b5c50;border-color:#6db79a;color:#fff;font-weight:750}
 .slot.busy{background:#35465c;border-color:#60768f}.slot.mine{background:#3d593f;border-color:#b1ca87}.slot.cancelled{background:#263746}
-.slot.busy.pending:not(.settled){background:linear-gradient(135deg,#fffdfa,#e7e2da);border:2px solid #fffef9;color:#233546;font-weight:800}
+.slot.busy.pending:not(.settled){background:linear-gradient(135deg,#FFF4D1,#F5DFA1);border:2px solid #FCEBBE;color:#233546;font-weight:800}
 .slot.busy.confirmed:not(.settled){background:linear-gradient(135deg,#e1e6ec,#aeb8c4);border:2px solid #d7dee6;color:#192d3e;font-weight:800}
 .slot.busy.pending:not(.settled) small,.slot.busy.confirmed:not(.settled) small{color:#263b4d}
 .slot.settled,.slot.settled.busy,.slot.settled.mine{background:#8c6e27;border:2px solid #f4d892;color:#fff9e8;font-weight:850}
@@ -47,7 +47,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
 .lesson-text{white-space:pre-wrap;overflow-wrap:anywhere}
 .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:11px}
 .chip{padding:4px 8px;border-radius:999px;font-size:11px;background:#3b4d60;border:1px solid #74869a;display:inline-block}
-.chip.pending{background:linear-gradient(135deg,#fffdfa,#e7e2da);border-color:#fffef9;color:#233546;font-weight:800}.chip.confirmed{background:linear-gradient(135deg,#e1e6ec,#aeb8c4);border-color:#d7dee6;color:#192d3e;font-weight:800}.chip.completed{background:#235343;border-color:#60a68a}.chip.returned{background:#58392e;border-color:#ba865b}
+.chip.pending{background:linear-gradient(135deg,#FFF4D1,#F5DFA1);border-color:#FCEBBE;color:#233546;font-weight:800}.chip.confirmed{background:linear-gradient(135deg,#e1e6ec,#aeb8c4);border-color:#d7dee6;color:#192d3e;font-weight:800}.chip.completed{background:#235343;border-color:#60a68a}.chip.returned{background:#58392e;border-color:#ba865b}
 .tab-panel{display:none}.tab-panel.active{display:block}
 .notice{padding:14px;border-left:4px solid #e7c18a;background:#293d4c;border-radius:8px;font-size:13px;line-height:1.5;margin:15px 0}
 @media(max-width:600px){.panel{padding:14px}.tabs button{flex:1 1 43%}.formgrid{grid-template-columns:1fr}header{padding:14px 16px}}
@@ -241,10 +241,10 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
 @media(max-width:630px){.finance-workspaces{grid-template-columns:1fr}.finance-workspaces>.panel:last-child{grid-column:auto}.finance-overview .finance-kpis{grid-template-columns:1fr 1fr}.finance-overview .finance-meta{grid-template-columns:1fr}.finance-workspaces .formgrid{grid-template-columns:1fr}.finance-kpi .finance-kpi-value{font-size:20px}}
 
 /* Paleta de turnera AeroSuite: tonos sobrios y consistentes con el detalle. */
-#turnera{--turno-libre:#326A5B;--turno-libre-borde:#7AB29B;--turno-pendiente:#EAE5DB;--turno-pendiente-borde:#F7F2E8;--turno-confirmado:#91AABB;--turno-confirmado-borde:#C5D5DE;--turno-saldado:#C9A66E;--turno-saldado-borde:#E4CAA1}
+#turnera{--turno-libre:#326A5B;--turno-libre-borde:#7AB29B;--turno-pendiente:#F5DFA1;--turno-pendiente-borde:#FCEBBE;--turno-confirmado:#91AABB;--turno-confirmado-borde:#C5D5DE;--turno-saldado:#C9A66E;--turno-saldado-borde:#E4CAA1}
 #turnera .slot{border-radius:9px;transition:filter .15s ease,box-shadow .15s ease;line-height:1.35}
 #turnera .slot.available{background:linear-gradient(140deg,#3D7967,var(--turno-libre));border:1.5px solid var(--turno-libre-borde);color:#F5FFF8;font-weight:800}
-#turnera .slot.busy.pending:not(.settled){background:linear-gradient(140deg,#FAF7F1,var(--turno-pendiente));border:1.5px solid var(--turno-pendiente-borde);color:#263B49;font-weight:800}
+#turnera .slot.busy.pending:not(.settled){background:linear-gradient(140deg,#FFF4D1,var(--turno-pendiente));border:1.5px solid var(--turno-pendiente-borde);color:#263B49;font-weight:800}
 #turnera .slot.busy.confirmed:not(.settled){background:linear-gradient(140deg,#BFD3DF,var(--turno-confirmado));border:1.5px solid var(--turno-confirmado-borde);color:#193344;font-weight:800}
 #turnera .slot.settled,#turnera .slot.settled.busy,#turnera .slot.settled.mine{background:linear-gradient(140deg,#E1C994,var(--turno-saldado));border:1.5px solid var(--turno-saldado-borde);color:#2A343B;font-weight:850}
 #turnera .slot.busy.pending:not(.settled) small,#turnera .slot.busy.confirmed:not(.settled) small,#turnera .slot.settled small{color:#2B4050}
