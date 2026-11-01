@@ -283,14 +283,18 @@ window.AeroSuiteAgenda={
        (resource==="all"||String(item.aircraft||"").toUpperCase()===resource.toUpperCase()))){
        const oldButton=document.createElement("button");
        oldButton.type="button";
+       const privateBooking=c.role==="alumno"&&!old.my_booking;
        oldButton.className="slot agenda-slot-btn "+
-        (old.status==="pending"?"busy pending":old.status==="confirmed"?"busy confirmed":"settled");
-       const title=htmlText(old.aircraft||"Vuelo anterior","strong");
-       const description=htmlText((old.status==="pending"?"Pendiente":
-        old.status==="confirmed"?"Confirmado":"Realizado")+
+        (privateBooking?"occupied":old.status==="pending"?"busy pending":
+         old.status==="confirmed"?"busy confirmed":"settled");
+       const title=htmlText(privateBooking?"Reservado":old.aircraft||"Vuelo anterior","strong");
+       const description=htmlText(privateBooking?"Ocupado":
+        (old.status==="pending"?"Pendiente":
+         old.status==="confirmed"?"Confirmado":"Realizado")+
         (c.manager&&old.student_email?" · "+old.student_email:""),"small");
        oldButton.append(title,description);
-       oldButton.onclick=()=>{
+       if(privateBooking)oldButton.disabled=true;
+       else oldButton.onclick=()=>{
         const detail=document.getElementById("booking-"+old.booking_id);
         if(detail)detail.scrollIntoView({behavior:"smooth",block:"center"});
        };
