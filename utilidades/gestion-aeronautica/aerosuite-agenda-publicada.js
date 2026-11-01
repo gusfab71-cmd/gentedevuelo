@@ -35,7 +35,8 @@ window.AeroSuiteAgenda={
   '<label class="agenda-instructor-switch" id="agendaStudentFlightMode"><span>Vuelo con instructor a bordo</span><input type="checkbox" id="agendaStudentInstructor" role="switch" checked aria-label="Vuelo con instructor a bordo"><span id="agendaStudentModeText">Con instructor</span></label>',
   '<p class="hint" role="status" aria-live="polite" id="agendaStatus"></p>',
   '<div id="agendaGridHost" class="agenda-grid-host"></div>',
-  '<p class="hint" id="agendaGridHelp">Verde: libre · Marfil: pendiente · Azul: confirmado · Gris: ocupado o no disponible. Elegí una casilla para reservar.</p>',
+  '<p class="hint" id="agendaGridHelp">Verde: libre · Amarillo: pendiente · Azul: confirmado · Gris: ocupado o no disponible. Elegí una casilla para reservar.</p>',
+  '<section id="agendaOldReservations" class="agenda-legacy-reserved" hidden aria-label="Reservas anteriores fuera de la nueva franja horaria"><strong>Turnos anteriores conservados</strong><p class="hint">Estas reservas ya existían. Se conservan para su gestión, pero no se admiten nuevas reservas fuera de 08:30 a 17:30.</p><div id="agendaOldReservationList"></div></section>',
   '<section id="agendaStaffDetails" hidden><h3>Gestión del turno seleccionado</h3><div id="agendaStaffCards" class="agenda-cards"></div></section>'
   ].join("");
   const legend=document.querySelector("#turnera .booking-legend"),table=$("weekHead").closest(".table-scroll");
@@ -95,6 +96,8 @@ window.AeroSuiteAgenda={
    ".agenda-booked{border-top:1px solid #607f90;padding:9px 0;display:flex;gap:7px;align-items:center;flex-wrap:wrap;font-size:12px}",
    ".agenda-booked button{font-size:11px;padding:6px 9px}",
    ".agenda-grid-host .booking-legend{margin:12px 0}.agenda-grid-host .table-scroll{margin:0 0 9px}",
+   ".agenda-legacy-reserved{margin:10px 0;padding:12px;background:#25394b;border:1px solid #936f53;border-radius:8px}",
+   ".agenda-legacy-reserved button{margin:5px;padding:7px 10px;border-radius:6px;border:1px solid #9a8c75;background:#2d4557;color:white;cursor:pointer}",
    ".agenda-grid-host #reschedulePanel{border:2px solid #d8aa61;background:#1e384a;margin:12px 0 16px;padding:14px;border-radius:10px}",
    ".agenda-grid-host #rescheduleDestination{border:1px solid #78aa92;padding:9px;background:#193f37;color:#fff9e9;border-radius:8px;font-weight:700}",
    ".agenda-slot-btn.move-target{outline:2px dashed #e7c18a;outline-offset:-2px;box-shadow:0 0 0 1px #ffdda7;background:#225246;color:white;cursor:pointer}",
@@ -495,6 +498,27 @@ window.AeroSuiteAgenda={
      td.append(wrap);row.append(td);
     }
     body.append(row);
+   }
+   const oldList=$("agendaOldReservationList"),oldSection=$("agendaOldReservations");
+   oldList.replaceChildren();
+   const outside=slots.filter(slot=>{
+    const t=new Intl.DateTimeFormat("en-GB",{hour:"2-digit",minute:"2-digit",hourCycle:"h23",timeZone:"America/Argentina/Buenos_Aires"}).format(new Date(slot.starts_at));
+    return !timeSlots.includes(t)&&bookings.some(r=>r.slot_id===slot.id&&r.status!=="cancelled"&&(c.manager||r.my_booking));
+   });
+   oldSection.hidden=!outside.length;
+   for(const slot of outside){
+    const item=document.createElement("button");item.type="button";
+    const related=bookings.filter(r=>r.slot_id===slot.id&&r.status!=="cancelled"&&(c.manager||r.my_booking));
+    const status=related.some(r=>r.status==="confirmed")?"Confirmado":
+     related.some(r=>r.status==="completed")?"Realizado":"Pendiente";
+    item.textContent=c.formatDate(slot.starts_at)+" a "+endTime90(slot.starts_at)+" · "+slot.resource+
+     " · "+status+" · reserva anterior";
+    if(c.manager)item.onclick=()=>{
+     selectedSlotId=slot.id;renderStaffDetail();
+     $("agendaStaffDetails").scrollIntoView({behavior:"smooth",block:"nearest"});
+    };
+    else item.disabled=true;
+    oldList.append(item);
    }
    const published=slots.filter(s=>s.published).length;
    $("agendaGridHelp").textContent=(c.manager&&c.isLegacyRescheduling?.()?
