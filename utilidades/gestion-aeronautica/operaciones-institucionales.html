@@ -283,6 +283,25 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
 #contaduria .contaduria-pack-sale .finance-submit,#contaduria #schoolExpensePanel .finance-submit{width:100%;font-weight:800;margin-top:12px}
 #contaduria .finance-lists{margin-top:16px}
 @media(max-width:630px){#cobros #flightSettlementPanel .formgrid,#contaduria .contaduria-pack-sale .formgrid,#contaduria #schoolExpensePanel .formgrid{grid-template-columns:1fr}#cobros #flightSettlementPanel{padding:14px}}
+
+/* Cobro de vuelos: identificación institucional y vista previa de horas, sin descontar hasta confirmar. */
+#cobros [hidden]{display:none!important}
+#cobros .cashier-pack-info{padding:13px;border:1px solid #64849b;border-radius:10px;background:#0D2939;color:#E7F1F6;font-size:13px;line-height:1.6}
+#cobros .cashier-pack-info strong{color:#F0D29A}
+#cobros .cashier-pack-info .pack-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:10px}
+#cobros .cashier-pack-info .pack-metrics>div{background:#1F4558;border:1px solid #507B92;border-radius:8px;padding:9px}
+#cobros .cashier-pack-info .pack-metrics b{display:block;margin:4px 0 0;font-size:18px;color:#fff;font-variant-numeric:tabular-nums}
+#cobros .cashier-pack-info .hint{margin-top:8px}
+#finanzas .student-pack-total{background:#1D4256;border-color:#567E95}
+#finanzas .student-pack-total.highlight{background:#264D43;border-color:#78A994}
+#finanzas .student-pack-total h3{font-size:25px;margin:6px 0 0}
+#finanzas .student-pack-state{font-size:13px;padding:10px 12px;border-left:3px solid #DCBD7E;background:#243E4E;border-radius:7px}
+#finanzas .student-pack-breakdown{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:12px 0;font-size:12px}
+#finanzas .student-pack-breakdown span{border-radius:7px;background:#243F53;padding:10px}
+#finanzas .student-pack-breakdown b{display:block;margin-top:5px;font-size:16px;font-variant-numeric:tabular-nums}
+#finanzas .student-pack-meter{height:8px;background:#4B6373;border-radius:999px;overflow:hidden}
+#finanzas .student-pack-meter span{display:block;height:100%;background:#B5D0AB;border-radius:999px}
+@media(max-width:630px){#cobros .cashier-pack-info .pack-metrics,#finanzas .student-pack-breakdown{grid-template-columns:1fr 1fr}}
 </style>
 <script src="../../assets/supabase-2.117.2.min.js"></script><script src="../../assets/community-config.js"></script>
 <script src="../../assets/aerosuite-registration.js"></script>
@@ -439,15 +458,23 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
      <p class="hint">Cuando el alumno se presenta a pagar, Secretaría registra el tiempo que declara haber volado. <strong>No se necesita confirmación previa ni informe del Instructor.</strong> El tiempo registrado para el cobro quedará pendiente de control posterior.</p>
      <form id="flightSettlementForm">
       <div class="formgrid">
-       <label class="finance-span-2">Turno iniciado, pendiente o confirmado, sin liquidar<select id="settleBooking" name="booking" required><option value="">Elegí el vuelo</option></select></label>
+       <label class="finance-span-2">Buscar alumno por nombre, DNI o legajo
+         <input type="search" id="settleStudentSearch" placeholder="Ej.: apellido, DNI o AL-000001" autocomplete="off" maxlength="90" aria-describedby="settleSearchStatus">
+        </label>
+        <label id="settleSearchResultsRow" class="finance-span-2" hidden>Alumnos encontrados
+         <select id="settleSearchResults"><option value="">Seleccioná el alumno correcto</option></select>
+        </label>
+        <p class="finance-span-2 hint" id="settleSearchStatus" role="status" aria-live="polite">Buscá por nombre, DNI registrado o legajo. Los descuentos siempre se vinculan al alumno de la institución.</p>
+        <label class="finance-span-2">Vuelo del alumno pendiente de liquidación<select id="settleBooking" name="booking" required><option value="">Elegí el vuelo</option></select></label>
        <label class="finance-span-2">Alumno<input id="settleStudent" value="Seleccioná un vuelo" readonly></label>
+        <div class="finance-span-2 cashier-pack-info" id="settlePackSummary" role="status" aria-live="polite">Identificá al alumno para consultar si tiene horas de pack disponibles.</div>
        <label>Instructor<input id="settleInstructor" value="—" readonly></label>
        <label class="finance-span-2">Aeronave utilizada · Matrícula
         <input id="settleAircraft" name="aircraft_registration" data-aerosuite-registration type="text" list="settleAircraftOptions" maxlength="18" required autocomplete="off" placeholder="Ej.: LV-ERT" autocapitalize="characters">
         <datalist id="settleAircraftOptions"></datalist>
        </label>
         <label>Horas de instrucción (centesimales)<input id="settleBookHours" name="book_hours" type="text" inputmode="decimal" maxlength="6" required placeholder="Ej.: 1.5"></label>
-        <label>Tarifa por hora<input id="settleHourlyRate" type="text" inputmode="decimal" maxlength="23" placeholder="Ej.: 100.000"></label>
+        <label id="settleRateRow">Tarifa por hora<input id="settleHourlyRate" type="text" inputmode="decimal" maxlength="23" placeholder="Ej.: 100.000"></label>
         <button type="button" id="saveHourlyRate">Guardar tarifa</button>
         <p id="hourlyRateStatus" class="hint finance-span-2" role="status"></p>
         <p id="settleDurationPreview" class="hint finance-span-2" role="status" aria-live="polite">Ingresá horas y minutos declarados por el alumno.</p>
@@ -1706,27 +1733,47 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
 
   function renderStudentPacks(){
    if(role!=="alumno")return;
-   const total=$("studentPackSummary"),list=$("studentPackList");
-   total.replaceChildren();list.replaceChildren();
+   const summary=$("studentPackSummary"),list=$("studentPackList");
+   summary.replaceChildren();list.replaceChildren();
    const packs=finance.packs||[];
-   const minutes=packs.reduce((sum,p)=>sum+Math.max(0,Number(p.remaining_minutes)||0),0);
-   const box=document.createElement("div");box.className="card";
-   box.innerHTML='<strong>Horas disponibles en packs</strong><h3>'+esc(flightHoursMinutes(minutes))+' (HH:MM)</h3>'+
-    '<p>'+packs.length+' '+(packs.length===1?"pack comprado":"packs comprados")+'</p>';
-   total.append(box);
-   if(!packs.length){list.textContent="Todavía no tenés packs de horas comprados en esta escuela.";return;}
+   const purchased=packs.reduce((v,p)=>v+Math.max(0,Number(p.total_minutes)||0),0);
+   const used=packs.reduce((v,p)=>v+Math.max(0,Number(p.used_minutes)||0),0);
+   const available=packs.reduce((v,p)=>v+Math.max(0,Number(p.remaining_minutes)||0),0);
+   const active=packs.filter(p=>Number(p.remaining_minutes)>0);
+   for(const [label,minutes] of [
+    ["Horas compradas",purchased],["Horas utilizadas",used],["Horas disponibles",available]
+   ]){
+    const card=document.createElement("div");
+    card.className="card student-pack-total"+(label==="Horas disponibles"?" highlight":"");
+    const title=document.createElement("strong");title.textContent=label;
+    const h=document.createElement("h3");h.textContent=flightHoursMinutes(minutes)+" h";
+    card.append(title,h);summary.append(card);
+   }
+   const status=document.createElement("p");status.className="student-pack-state";
+   status.textContent=active.length?
+    "Pack activo · "+active.length+(active.length===1?" pack con saldo.":" packs con saldo.")+
+    " Los consumos se actualizan cuando Secretaría descuenta horas de un vuelo.":
+    "Sin pack activo · Cuando adquieras un pack, aparecerán acá tus horas disponibles.";
+   summary.after(status);
+   const older=$("studentPackArea").querySelectorAll(".student-pack-state");
+   for(const el of older){if(el!==status)el.remove();}
+   if(!packs.length){list.textContent="No hay packs registrados en esta escuela.";return;}
    for(const p of packs){
-    const card=document.createElement("div");card.className="list-item";
-    const remaining=Math.max(0,Number(p.remaining_minutes)||0),used=Math.max(0,Number(p.used_minutes)||0);
-    const totalMin=Number(p.total_minutes)||0;
-    card.innerHTML='<div class="row between"><strong>Pack comprado · '+esc(stamp(p.created_at))+'</strong><span class="chip">'+(remaining?"Con saldo":"Agotado")+'</span></div>'+
-     '<p>Comprado: <strong>'+esc(flightHoursMinutes(totalMin))+'</strong> · Consumido: <strong>'+
-     esc(flightHoursMinutes(used))+'</strong> · Disponible: <strong>'+esc(flightHoursMinutes(remaining))+'</strong></p>'+
-     '<p class="hint">Importe pagado: '+esc(p.currency)+' '+esc(Number(p.paid_amount).toLocaleString("es-AR",{minimumFractionDigits:2}))+'</p>';
+    const card=document.createElement("div");card.className="list-item student-pack-entry";
+    const remaining=Math.max(0,Number(p.remaining_minutes)||0);
+    const spent=Math.max(0,Number(p.used_minutes)||0);
+    const total=Math.max(0,Number(p.total_minutes)||0);
+    const pct=total>0?Math.min(100,Math.round(spent*100/total)):0;
+    card.innerHTML='<div class="row between"><strong>Pack adquirido · '+esc(stamp(p.created_at))+
+     '</strong><span class="chip '+(remaining?"completed":"")+'">'+(remaining?"Activo":"Agotado")+'</span></div>'+
+     '<div class="student-pack-breakdown"><span>Compradas <b>'+esc(flightHoursMinutes(total))+' h</b></span>'+
+     '<span>Utilizadas <b>'+esc(flightHoursMinutes(spent))+' h</b></span>'+
+     '<span>Restantes <b>'+esc(flightHoursMinutes(remaining))+' h</b></span></div>'+
+     '<div class="student-pack-meter" role="progressbar" aria-label="Horas consumidas del pack" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+pct+'"><span style="width:'+pct+'%"></span></div>';
     list.append(card);
    }
   }
-
+  
   let financeOverviewData=null,financePeriodData=null,financePeriodToken=0,
    unsettledFlights=[],hourlyTariff={configured:false,amount:null,currency:"ARS"};
   const currencyAmount=(amount,currency)=>Number(amount||0).toLocaleString("es-AR",{
