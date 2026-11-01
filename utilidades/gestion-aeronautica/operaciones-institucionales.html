@@ -3068,12 +3068,21 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    try{await loadAircraftChoices();await loadWeek();await loadStudentReportReadStates();await loadReports();await loadLabReports();renderBookings();await loadFinance();await loadAcademy();renderReportFormChoices();stat.textContent="Información institucional actualizada."; }
    catch(e){stat.textContent="Error al cargar el área: "+safeError(e);}
   }
+  function clearMoveSelectionOnWeekChange(){
+   if(!rescheduleTarget)return;
+   selectedRescheduleSlot=null;
+   $("confirmReschedule").disabled=true;
+   $("rescheduleDestination").textContent="Nuevo turno: sin seleccionar. Elegí una casilla libre de 90 minutos de esta semana.";
+   $("rescheduleFeedback").textContent="Seleccioná el nuevo bloque de 1 h 30 min en la grilla y después confirmá el cambio.";
+  }
   $("thisWeek").onclick=async()=>{
    selectedWeekStart=mondayOf(artToday());
+   clearMoveSelectionOnWeekChange();
    updateWeekNavigation();await refresh();
   };
   $("nextWeek").onclick=async()=>{
    selectedWeekStart=addDays(mondayOf(artToday()),7);
+   clearMoveSelectionOnWeekChange();
    updateWeekNavigation();await refresh();
   };
   $("reloadAll").onclick=refresh;
