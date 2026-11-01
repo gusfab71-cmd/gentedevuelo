@@ -1,0 +1,5 @@
+-- La migración de agenda publicada fue aplicada mediante Supabase el 01/11/2026.
+-- El esquema activo incluye aerosuite_availability_slots, aerosuite_activity_reservations,
+-- aerosuite_activity_audit y las funciones de publicación, consulta, reserva y cancelación.
+-- Para actualizar entornos adicionales, regenerar a partir de pg_get_functiondef y tablas de producción,
+-- no ejecutar este archivo como migración de creación.
