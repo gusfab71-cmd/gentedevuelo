@@ -784,7 +784,10 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    }
    people.filter(x=>x.role==="alumno").forEach(x=>$("packPurchaseStudent").add(new Option(x.email,x.person_id)));
   }
-  $("weekDate").value=mondayOf(artToday());
+  // Los domingos se prioriza la próxima semana, sin impedir consultar la semana actual.
+  const todayART=artToday();
+  $("weekDate").value=new Date(todayART+"T12:00:00-03:00").getDay()===0
+   ?addDays(mondayOf(todayART),7):mondayOf(todayART);
   $("workArea").hidden=false;
   for(const b of $("tabs").querySelectorAll("button")){
    b.addEventListener("click",()=>showTab(b.dataset.tab));
