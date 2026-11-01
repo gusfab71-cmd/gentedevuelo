@@ -55,7 +55,8 @@ window.AeroSuiteAgenda={
    ".agenda-check{display:flex!important;gap:8px;align-items:center;padding:5px 0;font-size:13px}",
    ".agenda-check input{width:auto;min-width:auto;margin:0}",
    ".agenda-daily{margin:16px 0;padding:12px;border:1px solid #567a90;border-radius:9px}",
-   ".agenda-daily summary,.agenda-legacy summary{cursor:pointer;font-weight:700;color:#DCECF4}",
+   ".agenda-daily summary{cursor:pointer;font-weight:700;color:#DCECF4}",
+   ".agenda-inline-student{display:block;margin:11px 0 6px;font-weight:700}.agenda-inline-student select{display:block;width:100%;margin-top:6px}.agenda-inline-feedback{margin:8px 0 12px}.agenda-edit-form{margin-top:12px;padding:14px;border:1px solid #7390a6;border-radius:9px;background:#18374b}.agenda-edit-form .formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.agenda-edit-form .actions{margin-top:12px}",
    ".agenda-filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:12px 0}",
    ".agenda-filters label{display:block}.agenda-grid-scroll{overflow-x:auto;margin-top:12px}",
    ".agenda-week-grid{border-collapse:separate;border-spacing:3px;min-width:810px;width:100%;table-layout:fixed}",
@@ -158,6 +159,85 @@ window.AeroSuiteAgenda={
     await reloadAfter("Turno solicitado. Secretaría confirmará la reserva.");
    }catch(e){msg("No se pudo reservar: "+e.message);button.disabled=false;}
   }
+  function openSlotEdit(slot,card){
+   const existing=card.querySelector(".agenda-edit-form");
+   if(existing){existing.remove();return;}
+   if(!c.manager||!c.school.can_write)return;
+   const form=document.createElement("form");form.className="agenda-edit-form";
+   const title=htmlText("Modificar horario sin reservas","strong");
+   const help=htmlText("Podés cambiar día, horario, recurso o cupos. Si hay alumnos anotados, primero gestioná sus reservas.","p");
+   help.className="hint";
+   const fields=document.createElement("div");fields.className="formgrid";
+   function labeled(name,field){
+    const label=document.createElement("label");label.textContent=name;label.append(field);fields.append(label);return field;
+   }
+   const local=new Date(new Date(slot.starts_at).getTime()-3*3600000).toISOString();
+   const date=labeled("Día",document.createElement("input"));
+   date.type="date";date.value=local.slice(0,10);date.min=c.today();date.required=true;
+   const hour=labeled("Hora (turnos de 90 minutos)",document.createElement("select"));
+   for(const time of timeSlots)hour.add(new Option(time,time));
+   hour.value=local.slice(11,16);
+   const resources=slot.activity==="flight"?
+    c.aircraft().filter(x=>x.availability==="available"&&!x.archived_at).map(x=>x.registration):
+    slot.activity==="simulator"?
+    c.simulators().filter(x=>x.availability==="available"&&!x.archived_at).map(x=>x.name):[];
+   let resource;
+   if(slot.activity==="theory"){
+    resource=document.createElement("input");resource.type="text";resource.maxLength=90;
+    resource.value=slot.resource;resource.required=true;
+   }else{
+    resource=document.createElement("select");
+    for(const name of resources)resource.add(new Option(name,name));
+    if(resources.includes(slot.resource))resource.value=slot.resource;
+    else{
+     resource.add(new Option(slot.resource+" (fuera de servicio)",slot.resource));
+     resource.value=slot.resource;
+    }
+   }
+   labeled(slot.activity==="flight"?"Aeronave":slot.activity==="simulator"?"Simulador":"Clase o materia",resource);
+   const capacity=document.createElement("input");capacity.type="number";capacity.min="1";capacity.max="50";
+   capacity.value=String(slot.capacity);capacity.required=true;
+   capacity.disabled=slot.activity!=="theory";
+   labeled("Cupos por horario",capacity);
+   const actions=document.createElement("div");actions.className="actions";
+   const save=addButton("Guardar modificación",()=>{form.requestSubmit();},"primary");
+   const close=addButton("Cerrar",()=>form.remove());
+   actions.append(save,close);
+   const feedback=htmlText("El cambio se aplicará a la turnera sin afectar otros horarios.");
+   feedback.className="hint";feedback.setAttribute("role","status");
+   form.append(title,help,fields,actions,feedback);
+   form.onsubmit=async e=>{
+    e.preventDefault();
+    const nextResource=resource.value.trim(),nextCapacity=slot.activity==="theory"?Number(capacity.value):1;
+    const nextStart=new Date(date.value+"T"+hour.value+":00-03:00");
+    if(!date.value||!Number.isFinite(nextStart.getTime())||!nextResource||!Number.isInteger(nextCapacity)||nextCapacity<1||nextCapacity>50){
+     feedback.textContent="Completá una fecha, horario, recurso y cupos válidos.";return;
+    }
+    if(nextStart.getTime()<=Date.now()){
+     feedback.textContent="El horario modificado debe ser futuro.";return;
+    }
+    if(new Date(slot.starts_at).getTime()===nextStart.getTime()&&slot.resource===nextResource&&Number(slot.capacity)===nextCapacity){
+     feedback.textContent="No hay cambios para guardar.";return;
+    }
+    if(!confirm("¿Modificar el horario de "+slot.resource+"? La grilla y los alumnos verán el nuevo dato."))return;
+    save.disabled=true;feedback.textContent="Guardando modificación…";
+    try{
+     if(slot.activity==="flight"&&!await confirmMaintenanceWarnings([nextResource])){
+      feedback.textContent="Revisá los avisos de Mantenimiento antes de cambiar la aeronave.";return;
+     }
+     await c.rpc("aerosuite_availability_edit",{
+      p_institution_id:c.inst,p_slot_id:slot.id,p_starts_at:nextStart.toISOString(),
+      p_resource:nextResource,p_capacity:nextCapacity
+     });
+     await reloadAfter("Horario modificado. Se conservó la publicación y su historial.");
+    }catch(err){
+     feedback.textContent="No se pudo modificar: "+err.message;
+     msg("No se pudo modificar el horario: "+err.message);
+    }finally{save.disabled=false;}
+   };
+   card.append(form);
+   date.focus();
+  }
   function renderStaffDetail(){
    const wrapper=$("agendaStaffDetails"),target=$("agendaStaffCards");
    target.replaceChildren();
@@ -172,24 +252,56 @@ window.AeroSuiteAgenda={
     (slot.bookable===false?" · Recurso fuera de servicio":"")));
    if(c.school.can_write&&slot.published&&slot.bookable!==false&&
      new Date(slot.starts_at).getTime()>Date.now()&&Number(slot.reserved)<Number(slot.capacity)){
-    const reservationButton=addButton("Reservar este horario para un alumno",async()=>{
-     const student=c.selectedStudent?.();
-     if(!student){msg("Elegí primero un alumno en el selector superior para reservar en su nombre.");return;}
+    const students=c.students?.()||[];
+    const selectorLabel=document.createElement("label");
+    selectorLabel.className="agenda-inline-student";
+    selectorLabel.textContent="Alumno que realizará la actividad";
+    const studentSelect=document.createElement("select");
+    studentSelect.id="agendaStudentForSlot";
+    studentSelect.setAttribute("aria-label","Seleccioná el alumno para esta reserva");
+    studentSelect.add(new Option("Seleccioná un alumno",""));
+    for(const student of students)studentSelect.add(new Option(student.label,student.id));
+    const preselected=c.selectedStudent?.();
+    if(students.some(x=>x.id===preselected))studentSelect.value=preselected;
+    studentSelect.onchange=()=>c.setSelectedStudent?.(studentSelect.value);
+    selectorLabel.append(studentSelect);
+    const inlineStatus=document.createElement("p");
+    inlineStatus.className="hint agenda-inline-feedback";
+    inlineStatus.setAttribute("role","status");
+    if(!students.length)inlineStatus.textContent="No hay alumnos habilitados para reservar. Revisá los integrantes de la escuela.";
+    else inlineStatus.textContent="Elegí al alumno y después tocá «Reservar». La solicitud quedará pendiente.";
+    const reservationButton=addButton("Reservar este horario para el alumno",async()=>{
+     const student=studentSelect.value;
+     if(!student){
+      inlineStatus.textContent="Antes de reservar, seleccioná un alumno en este recuadro.";
+      studentSelect.focus();return;
+     }
+     const selectedName=students.find(x=>x.id===student)?.label||"el alumno seleccionado";
      if(!confirm("¿Reservar "+slot.resource+" el "+c.formatDate(slot.starts_at)+
-       " para el alumno seleccionado? Quedará pendiente de confirmación."))return;
+       " para "+selectedName+"? Quedará pendiente de confirmación."))return;
      reservationButton.disabled=true;
+     inlineStatus.textContent="Registrando la reserva…";
      try{
       await c.rpc("aerosuite_availability_reserve",{
        p_institution_id:c.inst,p_slot_id:slot.id,p_student_id:student
       });
-      await reloadAfter("Reserva del alumno registrada; queda pendiente de confirmación.");
-     }catch(e){msg("No se pudo reservar para ese alumno: "+e.message);reservationButton.disabled=false;}
+      c.setSelectedStudent?.(student);
+      await reloadAfter("Reserva registrada para "+selectedName+". Pendiente de confirmación.");
+     }catch(e){
+      inlineStatus.textContent="No se pudo reservar: "+e.message;
+      msg("No se pudo reservar para ese alumno: "+e.message);
+      reservationButton.disabled=false;
+     }
     },"primary");
-    card.append(reservationButton);
+    reservationButton.disabled=!students.length;
+    card.append(selectorLabel,reservationButton,inlineStatus);
    }
    if(c.school.can_write&&new Date(slot.starts_at).getTime()>Date.now()){
     const bar=document.createElement("div");bar.className="actions";
     if(!slot.published&&slot.bookable!==false)bar.append(addButton("Publicar este turno",()=>manage("publish",slot.id),"primary"));
+    if(!bookings.some(r=>r.slot_id===slot.id&&r.status!=="cancelled")){
+     bar.append(addButton("Modificar horario",()=>openSlotEdit(slot,card)));
+    }
     if(slot.published)bar.append(addButton("Suspender este horario",()=>{
      if(confirm("Solo se puede suspender si no tiene reservas activas. ¿Continuar?"))manage("hide",slot.id);
     }));
