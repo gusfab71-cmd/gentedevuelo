@@ -330,13 +330,13 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   <section class="panel tab-panel active" id="turnera">
    <span class="eyebrow" id="bookingEyebrow">Agenda de 90 minutos</span>
    <h2 id="bookingTitle">Turnera semanal y reprogramaciones</h2>
-   <p id="bookingHelp">Los turnos solicitados quedan pendientes hasta su confirmación por Administración o un instructor.</p>
-   <div class="row"><label>Semana del <input type="date" id="weekDate"></label><button id="updateWeek" type="button">Ver semana</button><button id="thisWeek" type="button">Esta semana</button><button id="nextWeek" type="button">Semana siguiente</button></div>
-   <p id="bookingFutureNotice" class="hint" role="status">Los horarios anteriores aparecen como «Pasado». Para reservar, buscá una casilla «Libre · Reservar» en los próximos días o avanzá una semana.</p>
-   <div id="adminBooking" class="notice" hidden>Para solicitar un turno en nombre de un alumno, seleccioná su nombre antes de tocar una casilla libre.
-    <label style="margin-top:9px">Alumno <select id="bookingStudent"><option value="">Elegí un alumno</option></select></label>
-    <p id="bookingStudentNotice" class="hint warn" hidden>Esta institución todavía no tiene alumnos habilitados. Primero invitá uno desde «Alumnos e instructores» en tu portal.</p>
-    <div class="formgrid" style="margin-top:12px"><label>Instructor para confirmar el turno<select id="bookingInstructor"><option value="">Elegí un instructor habilitado</option></select></label></div>
+   <div id="weekControls" class="row" aria-label="Navegación de la semana"><label>Semana del <input type="date" id="weekDate"></label><button id="updateWeek" type="button">Ver semana</button><button id="thisWeek" type="button">Esta semana</button><button id="nextWeek" type="button">Semana siguiente</button></div>
+   <p id="bookingHelp" hidden></p>
+   <p id="bookingFutureNotice" class="hint" role="status" hidden></p>
+   <div id="adminBooking" hidden>
+    <select id="bookingStudent" aria-label="Alumno para reservar"><option value="">Elegí un alumno</option></select>
+    <p id="bookingStudentNotice" hidden></p>
+    <select id="bookingInstructor" aria-label="Instructor habilitado"><option value="">Elegí un instructor habilitado</option></select>
    </div>
    <section id="reschedulePanel" class="notice" hidden aria-label="Reprogramación autorizada de reserva">
     <div class="row between"><strong>Reprogramar turno con autorización del alumno</strong><button id="stopReschedule" type="button">Salir de reprogramación</button></div>
@@ -727,7 +727,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   $("roleText").textContent="Rol: "+(roleLabel[role]||role)+" · "+user.email+(school.can_write?"":" · Solo consulta");
   $("pageTitle").textContent=manager?"Administración de la escuela":role==="instructor"?"Mi actividad de instrucción":"Reservas y formación";
   $("backPortal").href="portal-escuela.html?institucion="+encodeURIComponent(inst)+"&rol="+encodeURIComponent(role)+"&elegida=1"+(labLogin?"&prueba=1":"");
-  $("adminBooking").hidden=!manager;$("reportForm").hidden=role!=="instructor";$("financeForm").hidden=true;$("packPurchasePanel").hidden=!manager;$("financeOverview").hidden=!manager;$("financeWorkspaces").hidden=!manager;$("financeDisclosure").hidden=!manager;$("financeExportRow").hidden=!manager;$("frontdeskReviewPanel").hidden=!manager;
+  $("adminBooking").hidden=true;$("reportForm").hidden=role!=="instructor";$("financeForm").hidden=true;$("packPurchasePanel").hidden=!manager;$("financeOverview").hidden=!manager;$("financeWorkspaces").hidden=!manager;$("financeDisclosure").hidden=!manager;$("financeExportRow").hidden=!manager;$("frontdeskReviewPanel").hidden=!manager;
   $("cobrosTab").hidden=!manager;$("contaduriaTab").hidden=!manager;$("financeTab").hidden=role!=="alumno";
   if(manager){
    // Reutilizar los formularios originales en pantallas separadas, sin duplicar sus acciones.
@@ -1016,9 +1016,17 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    }
   }
   function renderBookings(){
-   const target=$("bookingList");target.replaceChildren();
+   const target=$("bookingList");
+   const instructorSelect=$("bookingInstructor");
+   if(instructorSelect&&instructorSelect.parentElement!==$("adminBooking"))$("adminBooking").append(instructorSelect);
+   target.replaceChildren();
    const list=bookings.filter(x=>x.status!=="cancelled"&&(manager||role==="instructor"||x.my_booking));
    if(!list.length){target.textContent="No hay reservas visibles para esta semana.";return;}
+   if(manager&&list.some(x=>x.status==="pending"&&x.booking_id&&new Date(x.starts_at).getTime()>Date.now())){
+    const row=document.createElement("div");row.className="notice";row.style.marginBottom="12px";
+    const label=document.createElement("label");label.textContent="Instructor para confirmar o preasignar una reserva";
+    label.append(instructorSelect);row.append(label);target.append(row);
+   }
    for(const b of list){
     const card=document.createElement("div");card.className="list-item";card.id="booking-"+(b.booking_id||"");
     const paid=manager&&!!b.booking_id&&settledWeek.has(b.booking_id);
