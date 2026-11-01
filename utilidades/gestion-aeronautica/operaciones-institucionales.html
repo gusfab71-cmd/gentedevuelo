@@ -372,7 +372,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     <span class="settled"><i aria-hidden="true"></i>Saldada</span>
    </div>
    <div class="table-scroll"><table aria-label="Turnos de la semana"><thead id="weekHead"></thead><tbody id="weekBody"></tbody></table></div>
-   <p class="hint" id="bookingLegendHelp">Horarios de referencia de Buenos Aires (ART). Verde salvia: libre · Marfil: pendiente · Azul acero: confirmada · Oro champán: saldada · Gris oscuro: pasado u ocupado. Los detalles inferiores usan la misma identificación. Los turnos ocupados de otros alumnos no muestran información privada al alumno.</p>
+   <p class="hint" id="bookingLegendHelp">Horarios de referencia de Buenos Aires (ART). Verde salvia: libre · Amarillo suave: pendiente · Azul acero: confirmada · Oro champán: saldada · Gris oscuro: pasado u ocupado. Los detalles inferiores usan la misma identificación. Los turnos ocupados de otros alumnos no muestran información privada al alumno.</p>
    <h3 id="bookingChangesTitle">Modificar reservas</h3><div id="bookingList" class="list"></div>
   </section>
   <section class="panel tab-panel" id="informes">
@@ -777,7 +777,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    legend.querySelector(".free").lastChild.textContent="Reservar";
    legend.querySelector(".confirmed").lastChild.textContent="Confirmado";
    legend.querySelector(".settled").hidden=true;
-   $("bookingLegendHelp").textContent="Horarios de Buenos Aires (ART). Verde: disponible para reservar · Marfil: pendiente de confirmación · Azul acero: confirmado · Gris oscuro: ocupado o pasado. Tocá tu reserva para ver los detalles.";
+   $("bookingLegendHelp").textContent="Horarios de Buenos Aires (ART). Verde: disponible para reservar · Amarillo suave: pendiente de confirmación · Azul acero: confirmado · Gris oscuro: ocupado o pasado. Tocá tu reserva para ver los detalles.";
   }
   if(role==="alumno"){
    $("financeTab").textContent="Horas de vuelo";
