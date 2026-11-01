@@ -3,10 +3,9 @@ window.AeroSuiteAgenda={
  init(c){
   const $=id=>document.getElementById(id),names={flight:"Vuelo práctico",simulator:"Vuelo virtual",theory:"Teoría grupal"};
   let slots=[],bookings=[];
-  const root=document.createElement("section");root.className="panel agenda-panel";
+  const root=document.createElement("div");root.className="agenda-panel agenda-integrated";
   root.innerHTML=[
-  '<span class="eyebrow">Turnera institucional</span><h3>Turnera semanal · turnos de 1 h 30 min</h3>',
-  '<p class="hint">Elegí la actividad y, si corresponde, la aeronave o simulador. Todas las reservas se realizan desde una única grilla semanal.</p>',
+  '<span class="eyebrow">Disponibilidad de la escuela · Publicación y reservas</span>',
   '<section id="agendaManager" hidden>',
   '<h3>Publicar turnos para toda la semana</h3>',
   '<p class="hint">Seleccioná los recursos disponibles. AeroSuite publicará automáticamente los horarios de 08:00 a 20:00, de lunes a domingo, en turnos de 90 minutos. Podrás suspender o agregar horarios durante la semana.</p>',
@@ -34,19 +33,20 @@ window.AeroSuiteAgenda={
   '<div class="agenda-filters"><label>Actividad<select id="agendaFilter"><option value="flight">Vuelo de instrucción</option><option value="simulator">Vuelo virtual / simulador</option><option value="theory">Teoría</option></select></label>',
   '<label>Elegir aeronave, simulador o clase<select id="agendaResourceFilter"><option value="all">Todos los recursos</option></select></label></div>',
   '<p class="hint" role="status" aria-live="polite" id="agendaStatus"></p>',
-  '<div class="table-scroll agenda-grid-scroll"><table class="agenda-week-grid" aria-label="Turnera semanal compartida"><thead id="agendaWeekHead"></thead><tbody id="agendaWeekBody"></tbody></table></div>',
+  '<div id="agendaGridHost" class="agenda-grid-host"></div>',
   '<p class="hint" id="agendaGridHelp">Verde: libre · Marfil: pendiente · Azul: confirmado · Gris: ocupado o no disponible. Elegí una casilla para reservar.</p>',
   '<section id="agendaStaffDetails" hidden><h3>Gestión del turno seleccionado</h3><div id="agendaStaffCards" class="agenda-cards"></div></section>'
   ].join("");
   const legend=document.querySelector("#turnera .booking-legend"),table=$("weekHead").closest(".table-scroll");
+  if(!legend||!table)throw Error("No se encontró la grilla institucional.");
   legend.parentNode.insertBefore(root,legend);
-  const legacy=document.createElement("details");legacy.className="agenda-legacy";
-  legacy.innerHTML="<summary>Ver turnera clásica y reprogramaciones</summary>";
-  legend.parentNode.insertBefore(legacy,legend);legacy.append(legend,table);
-  legacy.hidden=c.role==="alumno";$("agendaManager").hidden=!c.manager;
+  const gridHost=$("agendaGridHost");gridHost.append(legend,table);
+  table.classList.add("agenda-grid-scroll");
+  $("weekHead").closest("table").classList.add("agenda-week-grid");
+  $("agendaManager").hidden=!c.manager;
   const style=document.createElement("style");
   style.textContent=[
-   ".agenda-panel{border:1px solid #52798f;background:#17354a;margin:15px 0}.agenda-panel [hidden]{display:none!important}",
+   ".agenda-panel{margin:13px 0 16px}.agenda-panel [hidden]{display:none!important}",
    ".agenda-panel h3{margin:10px 0}.agenda-panel .hint{line-height:1.55}",
    "#agendaManager{padding:15px;margin:14px 0 19px;border:1px solid #567a90;background:#203c51;border-radius:12px}",
    "#agendaManager .formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}",
@@ -67,8 +67,9 @@ window.AeroSuiteAgenda={
    ".agenda-slot-btn{display:flex;flex-direction:column;gap:3px;width:100%;padding:8px 5px;border-radius:7px;border:1px solid #54826c;background:#234a3e;color:#f2f8f4;text-align:center;font-size:11px;line-height:1.25;white-space:normal;cursor:pointer}",
    ".agenda-slot-btn strong{display:block;font-size:11px;overflow-wrap:anywhere}",
    ".agenda-slot-btn small{font-size:10px;opacity:.9}",
-   ".agenda-slot-btn.pending{background:#655946;border-color:#baa678;color:#fff6de}",
-   ".agenda-slot-btn.confirmed{background:#264f75;border-color:#6b9fc8;color:#eaf6ff}",
+   ".agenda-slot-btn.pending{background:linear-gradient(140deg,#FAF7F1,#EAE5DB);border-color:#F7F2E8;color:#263B49}",
+   ".agenda-slot-btn.confirmed{background:linear-gradient(140deg,#BFD3DF,#91AABB);border-color:#C5D5DE;color:#193344}",
+   ".agenda-slot-btn.settled{background:linear-gradient(140deg,#E1C994,#C9A66E);border-color:#E4CAA1;color:#293541}",
    ".agenda-slot-btn.occupied,.agenda-slot-btn.past,.agenda-slot-btn.unavailable{background:#3c4a55;border-color:#566977;color:#dce4eb}",
    ".agenda-slot-btn.draft{background:#594c38;border-color:#aa8951;color:#fff0d7}",
    ".agenda-slot-btn:disabled{cursor:default;opacity:.85}",
@@ -79,7 +80,7 @@ window.AeroSuiteAgenda={
    ".agenda-card p{margin:7px 0;font-size:12px}",
    ".agenda-booked{border-top:1px solid #607f90;padding:9px 0;display:flex;gap:7px;align-items:center;flex-wrap:wrap;font-size:12px}",
    ".agenda-booked button{font-size:11px;padding:6px 9px}",
-   ".agenda-legacy{border:1px solid #456b80;padding:12px;border-radius:10px;margin:12px 0}",
+   ".agenda-grid-host .booking-legend{margin:12px 0}.agenda-grid-host .table-scroll{margin:0 0 9px}",
    "@media(max-width:650px){#agendaManager .formgrid,.agenda-filters{grid-template-columns:1fr}.agenda-week-grid{min-width:760px}}"
   ].join("");
   document.head.append(style);
@@ -198,7 +199,7 @@ window.AeroSuiteAgenda={
   function render(){
    refreshResources();
    const selected=$("agendaFilter").value,resource=$("agendaResourceFilter").value;
-   const days=c.weekDates(),head=$("agendaWeekHead"),body=$("agendaWeekBody");
+   const days=c.weekDates(),head=$("weekHead"),body=$("weekBody");
    head.replaceChildren();body.replaceChildren();
    const header=document.createElement("tr");
    header.append(htmlText("Horario","th"));
@@ -237,10 +238,12 @@ window.AeroSuiteAgenda={
       if(c.manager&&active.length){
        state=active.some(r=>r.status==="confirmed")?"Confirmado":active.some(r=>r.status==="pending")?"Pendiente":state;
       }
-      const b=document.createElement("button");b.type="button";b.className="agenda-slot-btn "+
-       (state==="Pendiente"?"pending":state==="Confirmado"?"confirmed":state==="Preparación"?"draft":
-        state==="Pasado"?"past":state==="Fuera de servicio"?"unavailable":
-        ["Ocupado","Sin cupos","Realizado"].includes(state)?"occupied":"");
+      const b=document.createElement("button");b.type="button";b.className="slot agenda-slot-btn "+
+       (state==="Pendiente"?"busy pending":state==="Confirmado"?"busy confirmed":
+        state==="Realizado"?"settled":state==="Libre"?"available":
+        state==="Preparación"?"draft":state==="Pasado"?"past":
+        state==="Fuera de servicio"?"unavailable":
+        ["Ocupado","Sin cupos"].includes(state)?"occupied":"");
       const resourceName=document.createElement("strong");resourceName.textContent=slot.resource||names[slot.activity];
       const line=htmlText(state+(slot.activity==="theory"?" · "+slot.reserved+"/"+slot.capacity:""),"small");
       b.append(resourceName,line);
@@ -453,8 +456,9 @@ window.AeroSuiteAgenda={
     }catch(e){slots=[];bookings=[];msg("Error al consultar turnos: "+e.message);render();}
    },
    isPublishedBooking(id){return bookings.some(r=>r.booking_id===id);},
-   showReschedule(){if(!legacy.hidden)legacy.open=true;},
-   hideReschedule(){legacy.open=false;}
+   refresh(){render();},
+   showReschedule(){render();},
+   hideReschedule(){render();}
   };
  }
 };
