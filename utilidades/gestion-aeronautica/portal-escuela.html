@@ -115,9 +115,9 @@ input[type=email]{width:100%;background:#122737;border:1px solid #7394aa;border-
    <a class="tile operational-link" data-visible-role="instructor" data-module="informes" href="#" hidden><h3>Mis informes</h3><p>Registrá clases, horas, devoluciones, combustible y aceite.</p><span class="pill ready">Operativa</span></a>
    <a class="tile operational-link" data-visible-role="instructor" data-module="flota" href="#" hidden><h3>Flota de la escuela</h3><p>Consultá qué aeronaves están disponibles o fuera de servicio.</p><span class="pill ready">Consulta</span></a>
    <a class="tile operational-link" data-visible-role="instructor" data-module="recursos" href="#" hidden><h3>Recursos docentes</h3><p>Cargá apuntes, guías y archivos para los alumnos; consultá los materiales de tu escuela.</p><span class="pill ready">Operativa</span></a>
-   <a class="tile operational-link" data-visible-role="alumno" data-module="turnera" href="#" hidden><h3>Mi reserva y formación</h3><p>Turnera semanal y estado de mis solicitudes.</p><span class="pill ready">Operativa</span></a>
-   <a class="tile operational-link" data-visible-role="alumno" data-module="finanzas" href="#" hidden><h3>Mis horas de vuelo</h3><p>Último vuelo, tiempo acumulado e historial validado.</p><span class="pill ready">Operativa</span></a>
-   <a class="tile operational-link" data-visible-role="alumno" data-module="informes" href="#" hidden><h3>Mi progreso</h3><p>Devoluciones de instrucción ya validadas.</p><span class="pill ready">Operativa</span></a>
+   <a class="tile operational-link" data-visible-role="alumno" data-module="turnera" href="#" hidden><h3>Turnera y reservas</h3><p>Elegí un horario y consultá el estado de las reservas.</p><span class="pill ready">Operativa</span></a>
+   <a class="tile operational-link" data-visible-role="alumno" data-module="finanzas" href="#" hidden><h3>Horas de vuelo</h3><p>Consultá las horas voladas y los packs comprados, usados y disponibles.</p><span class="pill ready">Operativa</span></a>
+   <a class="tile operational-link" data-visible-role="alumno" data-module="informes" href="#" hidden><h3>Prácticas y devoluciones</h3><p>Actividades realizadas, informes aprobados y recomendaciones del instructor.</p><span class="pill ready">Operativa</span></a>
    <a class="tile operational-link" data-visible-role="alumno" data-module="recursos" href="#" hidden><h3>Academia Aeronáutica</h3><p>Consultá y descargá las guías y apuntes de tu institución.</p><span class="pill ready">Consulta</span></a>
   </div>
   <section class="panel" id="directorInvitePanel" hidden>
@@ -180,7 +180,7 @@ try{
  const institutionURL=entry=>'portal-escuela.html?institucion='+encodeURIComponent(entry.institution_id)+'&rol='+encodeURIComponent(entry.my_role)+'&elegida=1'+(labLogin?'&prueba=1':'');
  // Con varios vínculos, presentar la elección antes de mostrar contenido institucional.
  if(accessibleInstitutions.length>1&&!chosen){
-  document.querySelector('h1').textContent='Mis instituciones de AeroSuite';
+  document.querySelector('h1').textContent='Instituciones disponibles';
   el('chooseInstitution').hidden=false;
   const list=el('chooseInstitutionList');
   const names={escuela:'Escuela de vuelo',aerodromo:'Aeródromo',aeroclub:'Aeroclub'};
