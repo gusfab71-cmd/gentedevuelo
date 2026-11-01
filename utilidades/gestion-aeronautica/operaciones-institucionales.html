@@ -820,7 +820,9 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   function labelOf(v){return people.find(x=>x.person_id===v)?.email||v||"Sin asignar";}
   function startReschedule(booking){
    if(!manager||!school.can_write)return;
-   rescheduleTarget={booking_id:booking.booking_id,student_email:booking.student_email,starts_at:booking.starts_at};
+   const linkedReservation=publishedAgenda.getReservationForBooking(booking.booking_id);
+   rescheduleTarget={booking_id:booking.booking_id,student_email:booking.student_email,
+    starts_at:booking.starts_at,activity_reservation_id:linkedReservation?.id||null};
    const selector=$("rescheduleInstructor");selector.length=1;
    for(const p of people.filter(x=>x.role==="instructor"))selector.add(new Option(p.email,p.person_id));
    const defaultInstructor=booking.instructor_id||$("bookingInstructor").value||"";
@@ -857,10 +859,12 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    if(!confirm("¿Reprogramar el turno de "+old.student_email+" del "+stamp(old.starts_at)+" al "+stamp(start.toISOString())+"?"+instructorText+"\n\nSe conservará su reserva y quedará pendiente de confirmar el nuevo horario."))return;
    cell.disabled=true;
    try{
-    const linked=publishedAgenda.getReservationForBooking(old.booking_id);
-    const result=linked
+    // La reserva original puede quedar en otra semana tras cambiar de vista.
+    // Conservar su ID evita tratar erróneamente como "legado" un turno publicado.
+    const linkedId=old.activity_reservation_id||publishedAgenda.getReservationForBooking(old.booking_id)?.id;
+    const result=linkedId
      ?await rpc("aerosuite_published_reprogram_with_instructor",{
-       p_institution_id:inst,p_reservation_id:linked.id,p_target_slot_id:slotId,
+       p_institution_id:inst,p_reservation_id:linkedId,p_target_slot_id:slotId,
        p_student_authorized:true,p_channel:channel,p_reason:reason,p_instructor_id:instructorId
       })
      :await rpc("aerosuite_legacy_booking_move_to_published",{
