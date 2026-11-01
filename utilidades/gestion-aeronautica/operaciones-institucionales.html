@@ -1246,11 +1246,11 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    form.className="panel manager-report-editor";
    form.style.marginTop="12px";
    const heading=document.createElement("h4");
-   heading.textContent=simulation?"Corregir informe (SIMULACIÓN)":"Corregir informe de instrucción";
+   heading.textContent=simulation?"Formulario de devolución · PRUEBA":"Formulario de revisión y devolución";
    form.append(heading);
    const help=document.createElement("p");
    help.className="hint";
-   help.textContent="Corregí lo necesario, después de consultarlo con el Instructor. Se guardará la versión anterior, quién modificó y cuándo. Esta edición no aprueba el informe.";
+   help.textContent="Revisá la duración y la devolución. Podés corregir datos técnicos si hace falta. Cada corrección conserva la versión anterior, la fecha y quién la realizó.";
    form.append(help);
    const data=document.createElement("div");data.className="formgrid";form.append(data);
    function inputRow(parent,labelText,type,value,{name,min,max,step,required,maxLength}={}){
@@ -1267,27 +1267,38 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     if(type==="textarea")input.rows=5;
     label.append(input);parent.append(label);return input;
    }
-   const minutes=inputRow(data,"Minutos de vuelo","number",String(r.flight_minutes),{min:1,max:600,step:1,required:true});
+   const minutes=inputRow(data,"Duración real (minutos)","number",String(r.flight_minutes),{min:1,max:600,step:1,required:true});
    let fuel=null,oil=null,aircraft=null;
+   const notes=parseTeachingNotes(r.teaching_notes);
+   const teaching=inputRow(form,"Práctica realizada","textarea",notes.practice,{maxLength:3000});
+   teaching.rows=3;teaching.placeholder="Ej.: circuitos, aproximaciones y aterrizajes";
+   const feedbackText=inputRow(form,"Devolución del instructor al alumno","textarea",notes.feedback,{maxLength:3000});
+   feedbackText.rows=4;feedbackText.placeholder="Ej.: desempeño y aspectos a mejorar";
+   const nextPractice=inputRow(form,"Recomendaciones para la próxima práctica","textarea",notes.next,{maxLength:3000});
+   nextPractice.rows=3;nextPractice.placeholder="Ej.: repetir maniobras o repasar procedimientos";
    if(!simulation){
-    fuel=inputRow(data,"Combustible cargado (litros)","number",String(r.fuel_liters),{min:0,step:"0.01",required:true});
-    oil=inputRow(data,"Aceite agregado (litros)","number",String(r.oil_liters),{min:0,step:"0.01",required:true});
+    const extra=document.createElement("details");extra.className="report-extra-details";
+    const title=document.createElement("summary");title.textContent="Combustible, aceite y observaciones de aeronave";
+    extra.append(title);
+    const extraFields=document.createElement("div");extraFields.className="formgrid";
+    fuel=inputRow(extraFields,"Combustible cargado (litros)","number",String(r.fuel_liters),{min:0,step:"0.01",required:true});
+    oil=inputRow(extraFields,"Aceite agregado (litros)","number",String(r.oil_liters),{min:0,step:"0.01",required:true});
+    aircraft=inputRow(extraFields,"Observaciones de aeronave","textarea",r.aircraft_notes||"",{maxLength:2000});
+    extra.append(extraFields);form.append(extra);
    }
-   const teaching=inputRow(form,"Práctica realizada, devolución y recomendaciones","textarea",r.teaching_notes,{required:true,maxLength:3000});
-   if(!simulation)aircraft=inputRow(form,"Observaciones de la aeronave","textarea",r.aircraft_notes||"",{maxLength:2000});
-   const reason=inputRow(form,"Nota interna sobre la corrección (opcional)","text", "",{maxLength:250});
+   const reason=inputRow(form,"Motivo de la corrección (registro interno)","text","",{maxLength:250});
    reason.placeholder="Ej.: Corregido después de consultar verbalmente al Instructor";
    const checkboxLabel=document.createElement("label");checkboxLabel.className="hint";
    const checkbox=document.createElement("input");checkbox.type="checkbox";
    checkbox.style.marginRight="8px";
-   checkboxLabel.append(checkbox,document.createTextNode("Modificar también datos del Libro de Vuelo"));
+   checkboxLabel.append(checkbox,document.createTextNode("Modificar datos del Libro de Vuelo (fecha, horarios, ruta, aeronave, aterrizajes)"));
    form.append(checkboxLabel);
    const fieldset=document.createElement("fieldset");fieldset.className="panel";
    fieldset.disabled=true;fieldset.hidden=true;
    const legend=document.createElement("legend");legend.textContent="Libro de Vuelo · datos corregidos";
    fieldset.append(legend);
    const warning=document.createElement("p");warning.className="hint";
-   warning.textContent="Los datos anteriores se conservan en el historial. Si el registro antiguo decía «cantidad de vuelos», ingresá expresamente la cantidad correcta de aterrizajes: no se convierten automáticamente.";
+   warning.textContent="Los datos deben coincidir con el registro real. El sistema conserva la versión anterior y no reemplaza la documentación firmada.";
    fieldset.append(warning);
    const bookGrid=document.createElement("div");bookGrid.className="formgrid";
    fieldset.append(bookGrid);form.append(fieldset);
@@ -1331,7 +1342,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    };
    const feedback=document.createElement("p");feedback.className="warn";feedback.setAttribute("role","alert");
    const actions=document.createElement("div");actions.className="actions";
-   const save=document.createElement("button");save.type="submit";save.className="primary";save.textContent="Guardar corrección";
+   const save=document.createElement("button");save.type="submit";save.className="primary";save.textContent="Guardar cambios del informe";
    save.disabled=!school.can_write;
    const close=document.createElement("button");close.type="button";close.textContent="Cerrar sin guardar";close.onclick=()=>form.remove();
    actions.append(save,close);form.append(actions,feedback);
@@ -1346,6 +1357,17 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
       feedback.textContent="Indicá una matrícula válida (ej.: LV-ERT).";return;
      }
     }
+    const teachingNotes=[
+     "Práctica realizada:\n"+teaching.value.trim(),
+     "Devolución del instructor:\n"+feedbackText.value.trim(),
+     "Para la próxima práctica:\n"+nextPractice.value.trim()
+    ].join("\n\n");
+    if(teachingNotes.length>3000){
+     feedback.textContent="La devolución completa supera los 3.000 caracteres.";return;
+    }
+    if(![teaching.value,feedbackText.value,nextPractice.value].some(v=>v.trim().length>=3)){
+     feedback.textContent="Completá al menos la práctica o la devolución.";return;
+    }
     if(!confirm("¿Guardar la corrección "+(simulation?"de PRUEBA":"del informe")+" y conservar la versión anterior?"))return;
     save.disabled=true;
     try{
@@ -1353,14 +1375,14 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
      if(simulation){
       result=await rpc("aerosuite_test_manager_correct_report",{
        p_institution_id:inst,p_scenario_id:r.id,p_expected_revision:Number(r.revision),
-       p_flight_minutes:Number(minutes.value),p_teaching_notes:teaching.value.trim(),
+       p_flight_minutes:Number(minutes.value),p_teaching_notes:teachingNotes,
        p_logbook_entry:logbook,p_correction_note:reason.value.trim()
       });
      }else{
       result=await rpc("aerosuite_manager_correct_report",{
        p_institution_id:inst,p_report_id:r.id,p_expected_revision:Number(r.revision),
        p_flight_minutes:Number(minutes.value),p_fuel_liters:Number(fuel.value),
-       p_oil_liters:Number(oil.value),p_teaching_notes:teaching.value.trim(),
+       p_oil_liters:Number(oil.value),p_teaching_notes:teachingNotes,
        p_aircraft_notes:aircraft.value,p_logbook_entry:logbook,p_correction_note:reason.value.trim()
       });
      }
@@ -1370,7 +1392,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
       $("labReportMessage").textContent="Corrección de PRUEBA guardada. Secretaría puede aprobar ahora.";
      }else{
       await loadReports();
-      stat.textContent="Corrección guardada con historial de versiones. Ya podés aprobar el informe.";
+      stat.textContent=r.status==="approved"?"Corrección guardada y visible para el alumno como nueva versión aprobada. Se conserva el historial.":"Corrección guardada con historial de versiones. Ya podés aprobar el informe.";
      }
     }catch(err){feedback.textContent="No se pudo guardar: "+safeError(err);save.disabled=false;}
    });
