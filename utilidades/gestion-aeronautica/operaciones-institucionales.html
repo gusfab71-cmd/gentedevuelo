@@ -1893,27 +1893,156 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    }catch(err){note.textContent="No se pudo guardar: "+safeError(err);}
    finally{button.disabled=!school.can_write;}
   });
+  // Buscar por nombre, DNI o legajo. La identidad operativa sigue siendo el UUID del alumno
+  // dentro de la institución; nunca la matrícula de la aeronave ni el DNI.
+  let cashierStudent=null,cashierSearchOptions=[],cashierSearchToken=0,cashierSearchTimer=null,
+   previousSettleBookingId=null;
+  const cashierPacksFor=studentId=>(finance.packs||[]).filter(p=>studentId&&p.student_id===studentId);
+  function cashierStudentId(){
+   const booking=deskFlightById($("settleBooking").value);
+   return booking?.student_id||cashierStudent?.student_id||null;
+  }
+  function renderCashierPackPreview(){
+   if(!manager)return;
+   const area=$("settlePackSummary"),studentId=cashierStudentId();
+   if(!studentId){
+    area.textContent="Identificá al alumno para ver automáticamente el estado de su pack de horas.";
+    return;
+   }
+   const flight=deskFlightById($("settleBooking").value);
+   const packs=cashierPacksFor(studentId);
+   const purchased=packs.reduce((t,p)=>t+Math.max(0,Number(p.total_minutes)||0),0);
+   const used=packs.reduce((t,p)=>t+Math.max(0,Number(p.used_minutes)||0),0);
+   const remaining=packs.reduce((t,p)=>t+Math.max(0,Number(p.remaining_minutes)||0),0);
+   const active=packs.filter(p=>Number(p.remaining_minutes)>0);
+   const entered=centiToMinutes($("settleBookHours").value);
+   const selectedPack=packs.find(p=>p.id===$("settlePack").value);
+   const name=cashierStudent?.student_id===studentId?
+    cashierStudent.full_name:flight?.student_email||"Alumno identificado";
+   const legajo=cashierStudent?.student_id===studentId?cashierStudent.legajo:"";
+   const title=active.length?
+    "Pack activo · "+active.length+(active.length===1?" pack con saldo":" packs con saldo"):
+    "Sin pack de horas activo";
+   const next=selectedPack&&entered!==null?
+    Number(selectedPack.remaining_minutes)-entered:null;
+   area.innerHTML='<strong>'+esc(name)+'</strong>'+
+    (legajo?' · Legajo '+esc(legajo):"")+
+    '<div class="hint">'+esc(title)+'</div>'+
+    '<div class="pack-metrics">'+
+    '<div>Compradas <b>'+esc(flightHoursMinutes(purchased))+' h</b></div>'+
+    '<div>Utilizadas <b>'+esc(flightHoursMinutes(used))+' h</b></div>'+
+    '<div>Restantes <b>'+esc(flightHoursMinutes(remaining))+' h</b></div></div>'+
+    '<p class="hint">'+(
+     !active.length?"No tiene horas prepagas disponibles: seleccioná cobro en efectivo.":
+     entered===null?"Ingresá el tiempo real volado para calcular el descuento.":
+     next!==null&&next>=0?"Descuento propuesto: "+esc(flightHoursMinutes(entered))+
+      " h · Saldo posterior de este pack: "+esc(flightHoursMinutes(next))+" h. Todavía no se descontó.":
+     "El pack no alcanza para las horas declaradas. Podés cobrar en efectivo."
+    )+'</p>';
+  }
+  function chooseCashierStudent(record){
+   if(!manager||!record?.student_id)return;
+   cashierStudent=record;
+   $("settleSearchResultsRow").hidden=false;
+   $("settleSearchResults").value=record.student_id;
+   $("settleSearchStatus").textContent="Alumno identificado: "+record.full_name+
+    " · "+record.legajo+". Seleccioná su vuelo para liquidarlo.";
+   previousSettleBookingId=null;
+   renderSettlementCandidates();
+   const matching=unsettledFlights.filter(x=>x.student_id===record.student_id);
+   if(!matching.length)$("settleSearchStatus").textContent=
+    "Alumno encontrado, pero no tiene vuelos iniciados pendientes de liquidación. No se puede registrar un cobro sin vuelo.";
+   renderCashierPackPreview();
+  }
+  async function findCashierStudent(term,requestToken){
+   try{
+    const found=await rpc("aerosuite_cashier_student_search",{
+     p_institution_id:inst,p_search:term
+    });
+    if(requestToken!==cashierSearchToken)return;
+    cashierSearchOptions=Array.isArray(found)?found:[];
+    const select=$("settleSearchResults");select.length=1;
+    for(const record of cashierSearchOptions){
+     select.add(new Option(record.full_name+" · "+record.legajo+
+      (record.email?" · "+record.email:""),record.student_id));
+    }
+    $("settleSearchResultsRow").hidden=!cashierSearchOptions.length;
+    if(!cashierSearchOptions.length){
+     $("settleSearchStatus").textContent="No se encontró ese alumno en esta escuela. Si buscaste por DNI, verificá que esté registrado en su legajo.";
+     return;
+    }
+    $("settleSearchStatus").textContent=cashierSearchOptions.length===1?
+     "Encontré un alumno. Seleccionalo o completá su nombre, DNI o legajo.":
+     "Encontré "+cashierSearchOptions.length+" alumnos. Seleccioná el correcto.";
+    if(cashierSearchOptions.length===1){
+     const hit=cashierSearchOptions[0];
+     const exact=term.toLowerCase()===hit.full_name.toLowerCase()||
+      term.toLowerCase()===hit.email.toLowerCase()||
+      term.toLowerCase()===hit.legajo.toLowerCase()||
+      /^\d{7,12}$/.test(term.replace(/[^0-9]/g,""))&&/^\d[\d.-]*$/.test(term);
+     if(exact)chooseCashierStudent(hit);
+    }
+   }catch(e){
+    if(requestToken!==cashierSearchToken)return;
+    $("settleSearchStatus").textContent="No se pudo buscar al alumno: "+safeError(e);
+   }
+  }
+  $("settleStudentSearch").addEventListener("input",()=>{
+   const term=$("settleStudentSearch").value.trim();
+   clearTimeout(cashierSearchTimer);
+   const token=++cashierSearchToken;
+   cashierStudent=null;cashierSearchOptions=[];
+   $("settleSearchResultsRow").hidden=true;
+   $("settleSearchResults").length=1;
+   previousSettleBookingId=null;
+   renderSettlementCandidates();
+   if(term.length<2){
+    $("settleSearchStatus").textContent="Ingresá al menos 2 caracteres del nombre, DNI o legajo.";
+    return;
+   }
+   $("settleSearchStatus").textContent="Buscando alumno…";
+   cashierSearchTimer=setTimeout(()=>findCashierStudent(term,token),300);
+  });
+  $("settleSearchResults").addEventListener("change",()=>{
+   const record=cashierSearchOptions.find(x=>x.student_id===$("settleSearchResults").value);
+   if(record)chooseCashierStudent(record);
+  });
   function syncSettleFlight(){
    if(!manager)return;
    const selected=deskFlightById($("settleBooking").value);
-   $("settleStudent").value=selected?.student_email||"Seleccioná un vuelo";
+   const selectedId=selected?.booking_id||null;
+   if(selectedId!==previousSettleBookingId){
+    previousSettleBookingId=selectedId;
+    const id=selected?.student_id||cashierStudent?.student_id;
+    if(id){
+     const hasActive=cashierPacksFor(id).some(x=>Number(x.remaining_minutes)>0);
+     $("settleMode").value=hasActive?"pack":"cash";
+    }else $("settleMode").value="cash";
+   }
+   $("settleStudent").value=selected?.student_email||
+    (cashierStudent?cashierStudent.full_name+" · falta elegir vuelo":"Seleccioná un vuelo");
    $("settleInstructor").value=selected?.instructor_email||"No asignado todavía";
    $("settleAircraft").value=cleanRegistration(selected?.aircraft||"");
    syncSettlePack();updateCheckoutTotal();
   }
   function syncSettlePack(){
    if(!manager)return;
-   const selected=deskFlightById($("settleBooking").value);
    const minutes=centiToMinutes($("settleBookHours").value);
-   const select=$("settlePack");const last=select.value;select.length=1;
-   if(selected&&minutes!==null){
-    for(const p of (finance.packs||[]).filter(x=>
-      x.student_id===selected.student_id&&Number(x.remaining_minutes)>=minutes)){
-     select.add(new Option("Saldo "+flightHoursMinutes(Number(p.remaining_minutes))+
-      " h · comprado "+stamp(p.created_at),p.id));
-    }
+   const id=cashierStudentId();
+   const packs=cashierPacksFor(id).filter(p=>Number(p.remaining_minutes)>0);
+   const valid=packs.filter(p=>minutes===null||Number(p.remaining_minutes)>=minutes);
+   const select=$("settlePack"),previous=select.value;
+   select.length=1;
+   for(const p of valid){
+    select.add(new Option("Disponible "+flightHoursMinutes(Number(p.remaining_minutes))+
+     " h · comprado "+stamp(p.created_at),p.id));
    }
-   if([...select.options].some(x=>x.value===last))select.value=last;
+   if(valid.some(p=>p.id===previous))select.value=previous;
+   else if(valid.length)select.value=valid[0].id;
+   if(id&&$("settleMode").value==="pack"&&minutes!==null&&!valid.length){
+    $("settleMode").value="cash";
+    $("settleSearchStatus").textContent="El saldo del pack es insuficiente para este vuelo. Elegí efectivo o corregí las horas.";
+   }
    syncSettleMode();
   }
   function syncSettleMode(){
@@ -1922,38 +2051,43 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    $("settlePackRow").hidden=!pack;
    $("settleAmountRow").hidden=pack;$("settleCurrencyRow").hidden=pack;
    $("settleBankRow").hidden=!bank;$("settleFiscalRow").hidden=pack;
+   $("settleRateRow").hidden=pack;$("saveHourlyRate").hidden=pack;
+   $("hourlyRateStatus").hidden=pack;$("settleCalculatedTotal").hidden=pack;
    $("settlePack").required=pack;$("settleAmount").required=!pack;
    $("settleBankReference").required=bank;
+   $("settleSubmit").textContent=pack?"Confirmar descuento del pack":"Registrar cobro en efectivo";
    const current=deskFlightById($("settleBooking").value);
    const entered=centiToMinutes($("settleBookHours").value);
    const validMinutes=entered!==null;
-    $("settleDurationPreview").textContent=entered===null?
-      "Ingresá horas centesimales. Ej.: 1.5 = 1 h 30 min.":
-      "Tiempo: "+flightHoursCentesimal(entered)+" horas centesimales ("+flightHoursMinutes(entered)+" HH:MM).";
-   const pendingNotice=current?.booking_status==="pending"?"Turno aún pendiente: podés liquidarlo, pero luego Dirección deberá confirmarlo y asignar Instructor para el informe. ":"";
+   $("settleDurationPreview").textContent=entered===null?
+    "Ingresá horas centesimales. Ej.: 1.5 = 1 h 30 min.":
+    "Tiempo: "+flightHoursCentesimal(entered)+" horas centesimales ("+flightHoursMinutes(entered)+" HH:MM).";
+   const pendingNotice=current?.booking_status==="pending"?
+    "Turno aún pendiente: Dirección deberá confirmarlo y asignar Instructor para el informe. ":"";
    $("settleHelp").textContent=pendingNotice+(!current?
-    "Elegí el turno del alumno que ya comenzó.":
-    !validMinutes?
-     "Ingresá el tiempo declarado por el alumno, sin esperar el informe escrito.":
-     pack?$("settlePack").options.length>1?
-      "Se descontarán "+flightHoursMinutes(entered)+
-      " h del pack del Alumno y quedarán pendientes de control contra el informe del Instructor.":
-      "No hay un pack con saldo suficiente para los "+flightHoursMinutes(entered)+" h declarados.":
-     bank?"Confirmá que la transferencia ya se acreditó. Las horas se controlarán al recibir el informe.":
-      "El efectivo se registra ahora; las horas declaradas se contrastarán después con el informe.");
-   $("settleSubmit").disabled=!school.can_write||!current||!validMinutes||!validRegistration($("settleAircraft").value)||
-    !$("settleBookConfirmed").checked||pack&&$("settlePack").options.length<=1;
+    "Elegí un vuelo iniciado de este alumno; sin vuelo no se puede cobrar ni descontar horas.":
+    !validMinutes?"Ingresá el tiempo declarado por el alumno, sin esperar el informe escrito.":
+    pack?"Se descontarán "+flightHoursMinutes(entered)+" h del pack. Quedará pendiente cotejar con el informe del Instructor.":
+    "Se registrará el efectivo recibido; las horas se controlarán después.");
+   $("settleSubmit").disabled=!school.can_write||!current||!validMinutes||
+    !validRegistration($("settleAircraft").value)||!$("settleBookConfirmed").checked||
+    pack&&!$("settlePack").value;
+   renderCashierPackPreview();
   }
   function renderSettlementCandidates(){
    if(!manager)return;
-   const select=$("settleBooking");const last=select.value;
+   const select=$("settleBooking"),old=select.value;
    select.length=1;
-   for(const flight of unsettledFlights){
+   const candidates=cashierStudent?
+    unsettledFlights.filter(f=>f.student_id===cashierStudent.student_id):
+    unsettledFlights;
+   for(const flight of candidates){
     const pending=flight.booking_status==="pending"?" · Pendiente de confirmar":"";
     select.add(new Option(stamp(flight.starts_at)+" · "+(flight.student_email||"Alumno")+
      (flight.aircraft?" · "+flight.aircraft:"")+pending,flight.booking_id));
    }
-   if(unsettledFlights.some(x=>x.booking_id===last))select.value=last;
+   if(candidates.some(f=>f.booking_id===old))select.value=old;
+   else if(cashierStudent&&candidates.length===1)select.value=candidates[0].booking_id;
    syncSettleFlight();
   }
   function renderDeskReviews(){
@@ -2294,6 +2428,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   });
   $("financeCurrency").addEventListener("change",renderFinanceOverview);
   $("settleBooking").addEventListener("change",syncSettleFlight);
+  $("settlePack").addEventListener("change",syncSettleMode);
   $("settleAircraft").addEventListener("input",syncSettleMode);
   $("settleMode").addEventListener("change",syncSettleMode);
   $("settleBookHours").addEventListener("input",()=>{syncSettlePack();updateCheckoutTotal();});
@@ -2354,6 +2489,11 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     if(!result?.ok)throw Error("El cobro o descuento no pudo confirmarse.");
     pendingSettlementRequest=null;pendingSettlementSignature="";
     form.reset();
+    clearTimeout(cashierSearchTimer);cashierSearchToken++;
+    cashierStudent=null;cashierSearchOptions=[];previousSettleBookingId=null;
+    $("settleSearchResults").length=1;$("settleSearchResultsRow").hidden=true;
+    $("settleStudentSearch").value="";
+    $("settleSearchStatus").textContent="Cobro registrado. Buscá al siguiente alumno para continuar.";
     $("settleBookHours").value="";
     $("settleBookConfirmed").checked=false;
     $("settleLogbookVerified").checked=false;
