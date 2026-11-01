@@ -239,6 +239,33 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
 .finance-workspaces button:disabled{opacity:.6} #moneySummary{display:none} 
 @media(max-width:1050px){.finance-workspaces{grid-template-columns:repeat(2,minmax(0,1fr))}.finance-workspaces>.panel:last-child{grid-column:1/-1}.finance-overview .finance-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.finance-lists{grid-template-columns:1fr}}
 @media(max-width:630px){.finance-workspaces{grid-template-columns:1fr}.finance-workspaces>.panel:last-child{grid-column:auto}.finance-overview .finance-kpis{grid-template-columns:1fr 1fr}.finance-overview .finance-meta{grid-template-columns:1fr}.finance-workspaces .formgrid{grid-template-columns:1fr}.finance-kpi .finance-kpi-value{font-size:20px}}
+
+/* Paleta de turnera AeroSuite: tonos sobrios y consistentes con el detalle. */
+#turnera{--turno-libre:#326A5B;--turno-libre-borde:#7AB29B;--turno-pendiente:#EAE5DB;--turno-pendiente-borde:#F7F2E8;--turno-confirmado:#91AABB;--turno-confirmado-borde:#C5D5DE;--turno-saldado:#C9A66E;--turno-saldado-borde:#E4CAA1}
+#turnera .slot{border-radius:9px;transition:filter .15s ease,box-shadow .15s ease;line-height:1.35}
+#turnera .slot.available{background:linear-gradient(140deg,#3D7967,var(--turno-libre));border:1.5px solid var(--turno-libre-borde);color:#F5FFF8;font-weight:800}
+#turnera .slot.busy.pending:not(.settled){background:linear-gradient(140deg,#FAF7F1,var(--turno-pendiente));border:1.5px solid var(--turno-pendiente-borde);color:#263B49;font-weight:800}
+#turnera .slot.busy.confirmed:not(.settled){background:linear-gradient(140deg,#BFD3DF,var(--turno-confirmado));border:1.5px solid var(--turno-confirmado-borde);color:#193344;font-weight:800}
+#turnera .slot.settled,#turnera .slot.settled.busy,#turnera .slot.settled.mine{background:linear-gradient(140deg,#E1C994,var(--turno-saldado));border:1.5px solid var(--turno-saldado-borde);color:#2A343B;font-weight:850}
+#turnera .slot.busy.pending:not(.settled) small,#turnera .slot.busy.confirmed:not(.settled) small,#turnera .slot.settled small{color:#2B4050}
+#turnera .slot.mine{box-shadow:inset 0 0 0 1px #FFF}
+#turnera .slot.available:disabled{opacity:.8}
+#turnera .booking-legend{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
+#turnera .booking-legend span{display:inline-flex;align-items:center;gap:8px;padding:7px 11px;border:1px solid #4B7087;border-radius:999px;background:#1B384B;color:#EAF4F9;font-size:12px;font-weight:800}
+#turnera .booking-legend i{display:inline-block;width:15px;height:15px;border-radius:5px;flex-shrink:0}
+#turnera .booking-legend .free i{background:var(--turno-libre);border:1px solid var(--turno-libre-borde)}
+#turnera .booking-legend .pending i{background:var(--turno-pendiente);border:1px solid var(--turno-pendiente-borde)}
+#turnera .booking-legend .confirmed i{background:var(--turno-confirmado);border:1px solid var(--turno-confirmado-borde)}
+#turnera .booking-legend .settled i{background:var(--turno-saldado);border:1px solid var(--turno-saldado-borde)}
+#turnera #bookingList .list-item{border-left-width:5px;transition:box-shadow .15s ease}
+#turnera #bookingList .list-item.pending{border-left-color:var(--turno-pendiente);background:linear-gradient(100deg,#303A42,#142C3E 70%)}
+#turnera #bookingList .list-item.confirmed{border-left-color:var(--turno-confirmado);background:linear-gradient(100deg,#2A4252,#142C3E 70%)}
+#turnera #bookingList .list-item.settled{border-left-color:var(--turno-saldado);background:linear-gradient(100deg,#40392F,#142C3E 70%)}
+#turnera #bookingList .list-item.pending .chip.pending{background:var(--turno-pendiente);border-color:var(--turno-pendiente-borde);color:#263B49}
+#turnera #bookingList .list-item.confirmed .chip.confirmed{background:var(--turno-confirmado);border-color:var(--turno-confirmado-borde);color:#193344}
+#turnera #bookingList .list-item.settled .chip.settled{background:var(--turno-saldado);border-color:var(--turno-saldado-borde);color:#293541}
+#turnera #bookingList .list-item.is-target{outline:2px solid #DCE9F2;outline-offset:2px;box-shadow:0 0 0 4px rgba(210,229,240,.1)}
+@media(max-width:600px){#turnera .booking-legend{gap:6px}#turnera .booking-legend span{font-size:11px;padding:6px 9px}}
 </style>
 <script src="../../assets/supabase-2.117.2.min.js"></script><script src="../../assets/community-config.js"></script>
 <script src="../../assets/aerosuite-registration.js"></script>
@@ -281,8 +308,14 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     <label style="margin-top:12px"><span><input id="rescheduleAuthorization" type="checkbox" style="width:auto;margin-right:8px">Confirmo que el alumno autorizó previamente esta reprogramación.</span></label>
     <p id="rescheduleFeedback" class="hint" role="status">Completá los datos y seleccioná una casilla «Libre · Reprogramar aquí».</p>
    </section>
+   <div class="booking-legend" aria-label="Estados por color">
+    <span class="free"><i aria-hidden="true"></i>Libre</span>
+    <span class="pending"><i aria-hidden="true"></i>Pendiente</span>
+    <span class="confirmed"><i aria-hidden="true"></i>Confirmada</span>
+    <span class="settled"><i aria-hidden="true"></i>Saldada</span>
+   </div>
    <div class="table-scroll"><table aria-label="Turnos de la semana"><thead id="weekHead"></thead><tbody id="weekBody"></tbody></table></div>
-   <p class="hint">Horarios de referencia de Buenos Aires (ART). Verde: libre · Blanco perlado: pendiente · Plata: confirmada · Dorado: saldada · Gris: ocupada · Propias: resaltadas. Los turnos ocupados de otros alumnos no muestran información privada al alumno.</p>
+   <p class="hint">Horarios de referencia de Buenos Aires (ART). Verde salvia: libre · Marfil: pendiente · Azul acero: confirmada · Oro champán: saldada · Gris oscuro: pasado u ocupado. Los detalles inferiores usan la misma identificación. Los turnos ocupados de otros alumnos no muestran información privada al alumno.</p>
    <h3>Detalle de reservas de esta semana</h3><div id="bookingList" class="list"></div>
   </section>
   <section class="panel tab-panel" id="informes">
@@ -762,14 +795,20 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
       const paid=manager&&!!booking.booking_id&&settledWeek.has(booking.booking_id);
       if(paid)b.classList.add("settled");
       else if(booking.status==="pending"||booking.status==="confirmed")b.classList.add(booking.status);
-      b.textContent=paid?"Saldado":booking.my_booking?"Mi turno":statuses[booking.status]||"Ocupado";
+      b.textContent=paid?"Saldado":booking.my_booking?"Mi turno · "+(statuses[booking.status]||"Reservado"):statuses[booking.status]||"Ocupado";
       if(["administrador","secretaria","instructor"].includes(role)){
        const student=booking.student_email||"Alumno sin identificar";
        const small=document.createElement("small");small.textContent="Alumno: "+student;b.append(small);
        b.title=(paid?"Saldado · ":"")+(statuses[booking.status]||"Reservado")+" · Alumno: "+student+(booking.instructor_email?" · Instructor: "+booking.instructor_email:"");
        b.setAttribute("aria-label",b.title);
       }
-      b.onclick=()=>document.getElementById("booking-"+(booking.booking_id||"")).scrollIntoView({behavior:"smooth",block:"center"});
+      b.onclick=()=>{
+       const card=document.getElementById("booking-"+(booking.booking_id||""));
+       if(!card)return;
+       document.querySelectorAll("#bookingList .list-item.is-target").forEach(x=>x.classList.remove("is-target"));
+       card.classList.add("is-target");
+       card.scrollIntoView({behavior:"smooth",block:"center"});
+      };
       if(!booking.booking_id)b.onclick=()=>stat.textContent="Turno ocupado. Seleccioná uno libre.";
      }else{
       b.textContent="Libre";
@@ -831,6 +870,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     const card=document.createElement("div");card.className="list-item";card.id="booking-"+(b.booking_id||"");
     const paid=manager&&!!b.booking_id&&settledWeek.has(b.booking_id);
     if(paid)card.classList.add("settled");
+    else if(b.status==="pending"||b.status==="confirmed")card.classList.add(b.status);
     const sensitive=role!=="alumno"||b.my_booking;
     card.innerHTML='<div class="row between"><strong>'+esc(stamp(b.starts_at))+' · 90 min</strong>'+(paid?'':'<span class="chip '+esc(b.status)+'">'+esc(statuses[b.status]||b.status)+'</span>')+'</div>'+
      (sensitive?'<p>Alumno: '+esc(b.student_email||"Reservado")+' · Instructor: '+esc(b.instructor_id?(b.instructor_email||"Cuenta no disponible")+(b.status==="pending"?" (preasignado · pendiente de confirmar)":""):"Sin asignar")+' · Aeronave: '+esc(b.aircraft||"A definir")+'</p>':'<p>Turno ocupado de otro alumno.</p>');
