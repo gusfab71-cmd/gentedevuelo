@@ -320,7 +320,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
  <div id="workArea" hidden>
   <div class="row between"><div><h2 id="schoolTitle">—</h2><div class="muted" id="roleText"></div></div><button id="reloadAll" type="button">Actualizar información</button></div>
   <div class="tabs" role="tablist" aria-label="Áreas de AeroSuite" id="tabs">
-   <button data-tab="turnera" class="active" type="button">Turnera semanal</button>
+   <button data-tab="turnera" class="active" type="button">Turnera semanal y reprogramaciones</button>
    <button data-tab="informes" type="button">Informes de instrucción</button>
    <button data-tab="cobros" type="button" id="cobrosTab" hidden>Cobro de vuelos</button>
    <button data-tab="contaduria" type="button" id="contaduriaTab" hidden>Contaduría</button>
@@ -329,7 +329,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   </div>
   <section class="panel tab-panel active" id="turnera">
    <span class="eyebrow" id="bookingEyebrow">Agenda de 90 minutos</span>
-   <h2 id="bookingTitle">Turnera semanal compartida</h2>
+   <h2 id="bookingTitle">Turnera semanal y reprogramaciones</h2>
    <p id="bookingHelp">Los turnos solicitados quedan pendientes hasta su confirmación por Administración o un instructor.</p>
    <div class="row"><label>Semana del <input type="date" id="weekDate"></label><button id="updateWeek" type="button">Ver semana</button><button id="thisWeek" type="button">Esta semana</button><button id="nextWeek" type="button">Semana siguiente</button></div>
    <p id="bookingFutureNotice" class="hint" role="status">Los horarios anteriores aparecen como «Pasado». Para reservar, buscá una casilla «Libre · Reservar» en los próximos días o avanzá una semana.</p>
@@ -754,6 +754,8 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    $("reportsIntro").textContent="Consultá qué práctica realizaste, el tiempo de vuelo utilizado, la devolución de tu instructor y sus recomendaciones para el próximo encuentro.";
   }
   $("reschedulePanel").hidden=true;
+  $("bookingTitle").textContent=manager?"Turnera semanal y reprogramaciones":"Turnera semanal";
+  $("tabs").querySelector('[data-tab="turnera"]').textContent=manager?"Turnera semanal y reprogramaciones":"Turnera semanal";
   $("moneyArea").hidden=!manager;
   $("bookingHelp").textContent=role==="alumno"?"Elegí un horario y tocá «Reservar». Primero quedará «Pendiente» y, cuando la escuela lo apruebe, aparecerá «Confirmado».":role==="instructor"?"Consultá la actividad de la escuela y confirmá un turno pendiente cuando puedas asumirlo.":"Controlá y confirmá solicitudes, asigná instructores y cancelá reservas cuando corresponda.";
   if(role==="alumno"){
@@ -814,7 +816,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    publishedAgenda.showReschedule();
    $("rescheduleSource").textContent="Alumno: "+(booking.student_email||"Sin identificar")+" · Turno actual: "+stamp(booking.starts_at)+" (90 minutos).";
    $("rescheduleFeedback").textContent=(selector.value?"Instructor preasignado: "+selector.selectedOptions[0].text+". ":"Sin Instructor preasignado. ")+"Confirmá la autorización, indicá el medio y el motivo. Después seleccioná un nuevo horario libre.";
-   renderWeek(weekDates());
+   publishedAgenda.refresh();
    $("reschedulePanel").scrollIntoView({behavior:"smooth",block:"center"});
   }
   function stopReschedule(){
@@ -822,7 +824,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    publishedAgenda.hideReschedule();
    $("rescheduleChannel").value="";$("rescheduleReason").value="";
    $("rescheduleAuthorization").checked=false;$("rescheduleInstructor").value="";
-   renderWeek(weekDates());
+   publishedAgenda.refresh();
   }
   $("stopReschedule").onclick=stopReschedule;
   async function moveBookingTo(start,cell){
@@ -863,7 +865,15 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   const times=["08:00","09:30","11:00","12:30","14:00","15:30","17:00","18:30"];
   let registeredAircraft=[];
   let registeredSimulators=[];
-  const publishedAgenda=window.AeroSuiteAgenda.init({inst,manager,role,school,weekDates,formatDate:stamp,today:artToday,aircraft:()=>registeredAircraft,simulators:()=>registeredSimulators,rpc,reload:async()=>{await loadWeek();}});
+  const publishedAgenda=window.AeroSuiteAgenda.init({
+   inst,manager,role,school,weekDates,formatDate:stamp,today:artToday,
+   aircraft:()=>registeredAircraft,simulators:()=>registeredSimulators,
+   selectedStudent:()=> $("bookingStudent").value,
+   isLegacyRescheduling:()=>!!rescheduleTarget,
+   onLegacyReschedule:async(start,button)=>{await moveBookingTo(start,button);},
+   legacyBookings:()=>bookings,
+   rpc,reload:async()=>{await loadWeek();}
+  });
   const cleanRegistration=raw=>AeroSuiteRegistration.normalize(raw);
   const validRegistration=raw=>AeroSuiteRegistration.isValid(raw);
   async function loadAircraftChoices(){
@@ -894,11 +904,11 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     }
    }
    await publishedAgenda.load();
-   renderWeek(dates);renderBookings();renderReportFormChoices();renderFinanceBookingChoices();
+   renderBookings();renderReportFormChoices();renderFinanceBookingChoices();
    const lastSlotStart=new Date(dates[6]+"T"+times[times.length-1]+":00-03:00").getTime();
    $("bookingFutureNotice").textContent=lastSlotStart<=Date.now()?
-    "Esta semana ya no tiene horarios futuros. Pulsá «Semana siguiente» para encontrar turnos.":
-    "Los turnos «Pasado» ya comenzaron y no se pueden reservar. Elegí «"+(role==="alumno"?"Reservar":"Libre · Reservar")+"» en un horario futuro. Hoy es "+artToday().split("-").reverse().join("/")+" (Argentina).";
+    "Esta semana ya no tiene turnos futuros. Elegí «Semana siguiente» para ver disponibilidad publicada.":
+    "Una sola turnera para publicar, reservar y reprogramar. Se pueden reservar únicamente horarios habilitados por la escuela.";
   }
   function renderWeek(dates){
    const today=artToday();
