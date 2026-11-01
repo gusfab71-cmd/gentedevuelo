@@ -302,6 +302,12 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
 #finanzas .student-pack-meter{height:8px;background:#4B6373;border-radius:999px;overflow:hidden}
 #finanzas .student-pack-meter span{display:block;height:100%;background:#B5D0AB;border-radius:999px}
 @media(max-width:630px){#cobros .cashier-pack-info .pack-metrics,#finanzas .student-pack-breakdown{grid-template-columns:1fr 1fr}}
+
+#packVoidPanel{border:1px solid #8F6D59;background:#23394A;max-width:860px}
+#packVoidPanel summary{cursor:pointer;font-size:15px;font-weight:800;color:#EFD19E}
+#packVoidPanel label{display:block;margin:12px 0}
+#packVoidPanel .danger{background:#753E3B;color:#FFF;border:1px solid #B48078}
+#packVoidPanel [hidden]{display:none!important}
 </style>
 <script src="../../assets/supabase-2.117.2.min.js"></script><script src="../../assets/community-config.js"></script>
 <script src="../../assets/aerosuite-registration.js"></script><script src="aerosuite-agenda-publicada.js"></script>
@@ -617,7 +623,24 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     <p class="hint">Para descontar un pack, elegí pack, vuelo realizado y horas; no corresponde ingresar dinero. Para registrar un cobro por hora, elegí alumno, vuelo realizado e importe.</p>
     <button class="primary" type="submit">Registrar movimiento</button>
    </form>
-   <div id="packsArea"><h3>Packs de alumnos</h3><div class="list" id="packsList"></div></div>
+   <div id="packsArea"><h3>Packs de alumnos</h3><div class="list" id="packsList"></div>
+   <details id="packVoidPanel" class="panel" style="margin-top:16px">
+    <summary>Anular pack cargado por error</summary>
+    <p class="hint">La anulación mantiene el historial y solo está disponible si aún no se utilizaron horas.</p>
+    <form id="packVoidForm">
+     <label>Pack<select id="packVoidId" required><option value="">Elegí un pack sin horas utilizadas</option></select></label>
+     <label>Motivo<textarea id="packVoidReason" rows="2" minlength="5" maxlength="300" required placeholder="Ej.: Pack duplicado por error de carga"></textarea></label>
+     <label>Tratamiento económico<select id="packVoidKind"><option value="correction">Corregir ingreso cargado por error (sin devolución)</option><option value="refund">Dinero efectivamente devuelto al alumno</option></select></label>
+     <div id="packVoidRefundFields" hidden>
+      <label>Medio de devolución<select id="packVoidRefundMethod"><option value="cash">Efectivo devuelto</option><option value="bank_transfer">Transferencia de devolución</option></select></label>
+      <label id="packVoidRefundReferenceRow" hidden>Referencia bancaria<input id="packVoidRefundReference" maxlength="120"></label>
+     </div>
+     <label class="hint"><input id="packVoidConfirm" type="checkbox" style="width:auto"> Confirmo que revisé el pack y el dinero registrado.</label>
+     <button type="submit" id="packVoidButton" class="danger">Anular pack y registrar ajuste</button>
+     <p id="packVoidStatus" class="hint" role="status"></p>
+    </form>
+    <h3>Historial de anulaciones</h3><div id="packVoidedHistory" class="list"></div>
+   </details></div>
    <div id="moneyArea"><h3>Movimientos de caja y contaduría</h3><p class="hint">Últimos 150 movimientos. El resumen mensual superior sí incluye el período completo.</p><div class="cards" id="moneySummary"></div><div class="list" id="moneyList"></div></div>
    </div>
   </section>
@@ -2197,7 +2220,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     }
     renderFinanceOverview();
     renderSettlementCandidates();renderDeskReviews();updateCheckoutTotal();renderPackComparisonChoices();
-    await Promise.allSettled([loadFixedExpenses(),loadPettyDay()]);
+    await Promise.allSettled([loadFixedExpenses(),loadPettyDay(),loadVoidedPacks()]);
    }else{
     finance=await rpc("aerosuite_finance_snapshot",{p_institution_id:inst});
     renderStudentPacks();
@@ -2208,6 +2231,13 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    const packs=$("packsList");packs.replaceChildren();
    const all=finance.packs||[];
    if(!all.length)packs.textContent="Todavía no hay packs de horas registrados.";
+   const voidSelect=$("packVoidId"),oldVoid=voidSelect.value;voidSelect.length=1;
+   for(const p of all){
+    const option=new Option((p.student_email||"Alumno")+" · "+flightHoursMinutes(Number(p.total_minutes))+" h"+(Number(p.used_minutes)>0?" · Horas ya utilizadas":""),p.id);
+    option.disabled=Number(p.used_minutes)>0;
+    voidSelect.add(option);
+   }
+   if([...voidSelect.options].some(x=>x.value===oldVoid&&!x.disabled))voidSelect.value=oldVoid;
    for(const p of all){
     const box=document.createElement("div");box.className="list-item";
     box.innerHTML='<strong>'+esc(p.student_email||"Pack de horas")+'</strong><p>Compradas: '+esc(flightHoursMinutes(Number(p.total_minutes)))+' · Usadas: '+esc(flightHoursMinutes(Number(p.used_minutes)))+' · <strong>Disponibles: '+esc(flightHoursMinutes(Number(p.remaining_minutes)))+'</strong></p>'+
@@ -2222,10 +2252,10 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    if(!movements.length)list.textContent="Todavía no se registraron movimientos económicos.";
    const totals={};
    for(const m of movements){
-    const sign=["expense","petty_expense","refund"].includes(m.movement_type)?-1:1;
+    const sign=["expense","petty_expense","refund","pack_reversal"].includes(m.movement_type)?-1:1;
     totals[m.currency]=(totals[m.currency]||0)+sign*Number(m.amount);
     const item=document.createElement("div");item.className="list-item";
-    item.innerHTML='<div class="row between"><strong>'+esc({hour_payment:"Cobro por hora",pack_sale:"Venta de pack",expense:"Egreso",petty_expense:"Caja chica",refund:"Devolución"}[m.movement_type]||m.movement_type)+'</strong><strong>'+esc(m.currency)+' '+(sign*Number(m.amount)).toLocaleString("es-AR")+'</strong></div>'+
+    item.innerHTML='<div class="row between"><strong>'+esc({hour_payment:"Cobro por hora",pack_sale:"Venta de pack",pack_reversal:"Corrección de pack",expense:"Egreso",petty_expense:"Caja chica",refund:"Devolución"}[m.movement_type]||m.movement_type)+'</strong><strong>'+esc(m.currency)+' '+(sign*Number(m.amount)).toLocaleString("es-AR")+'</strong></div>'+
      '<p>'+esc(stamp(m.created_at))+' · '+esc(m.description||"Sin detalle")+'</p>'+
      '<p class="hint">'+(m.student_email?'Alumno: '+esc(m.student_email)+' · ':"")+
        (m.expense_category?'Categoría: '+esc(m.expense_category)+' · ':"")+
@@ -2244,6 +2274,60 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    }
   }
 
+
+  async function loadVoidedPacks(){
+   if(!manager)return;
+   const list=$("packVoidedHistory");list.replaceChildren();
+   try{
+    const records=await rpc("aerosuite_voided_hour_packs_list",{p_institution_id:inst});
+    if(!records?.length){list.textContent="Todavía no hay anulaciones.";return;}
+    for(const p of records){
+     const card=document.createElement("div");card.className="list-item";
+     const title=document.createElement("strong");
+     title.textContent=(p.student_email||"Alumno")+" · "+stamp(p.voided_at);
+     const more=document.createElement("p");more.className="hint";
+     more.textContent=flightHoursMinutes(p.minutes)+" h · "+currencyAmount(p.amount,p.currency)+
+      " · "+(p.kind==="refund"?"Devolución efectiva":"Corrección de carga")+" · "+p.reason;
+     card.append(title,more);list.append(card);
+    }
+   }catch(e){list.textContent="No se pudo consultar el historial: "+safeError(e);}
+  }
+  function syncPackVoidFields(){
+   const refund=$("packVoidKind").value==="refund";
+   $("packVoidRefundFields").hidden=!refund;
+   $("packVoidRefundReferenceRow").hidden=!refund||$("packVoidRefundMethod").value!=="bank_transfer";
+   $("packVoidRefundReference").required=refund&&$("packVoidRefundMethod").value==="bank_transfer";
+  }
+  $("packVoidKind").addEventListener("change",syncPackVoidFields);
+  $("packVoidRefundMethod").addEventListener("change",syncPackVoidFields);
+  $("packVoidForm").addEventListener("submit",async e=>{
+   e.preventDefault();if(!manager||!school.can_write)return;
+   const id=$("packVoidId").value,reason=$("packVoidReason").value.trim(),
+    kind=$("packVoidKind").value,method=kind==="refund"?$("packVoidRefundMethod").value:null,
+    reference=kind==="refund"?$("packVoidRefundReference").value.trim():null;
+   const status=$("packVoidStatus"),button=$("packVoidButton");
+   if(!id||reason.length<5||!$("packVoidConfirm").checked){
+    status.textContent="Elegí un pack sin horas usadas, indicá el motivo y confirmá la revisión.";return;
+   }
+   if(kind==="refund"&&method==="bank_transfer"&&reference.length<4){
+    status.textContent="Falta la referencia bancaria de la devolución efectuada.";return;
+   }
+   const label=$("packVoidId").selectedOptions[0]?.textContent||"el pack";
+   if(!confirm(kind==="refund"?
+     "¿Confirmás que se devolvió el dinero y querés anular "+label+"?":
+     "¿Confirmás que este cobro fue registrado por error y no se entregará dinero? Se anulará "+label+"."))return;
+   button.disabled=true;status.textContent="Anulando pack…";
+   try{
+    await rpc("aerosuite_void_hour_pack",{
+     p_institution_id:inst,p_pack_id:id,p_reason:reason,p_kind:kind,
+     p_refund_method:method,p_refund_reference:reference
+    });
+    $("packVoidForm").reset();syncPackVoidFields();await loadFinance();
+    status.textContent="Pack anulado. Se conservaron el motivo, la auditoría y el ajuste económico.";
+   }catch(e){status.textContent="No se pudo anular: "+safeError(e);}
+   finally{button.disabled=!school.can_write;}
+  });
+  syncPackVoidFields();
   for(const field of document.querySelectorAll(".money-entry"))formatMoneyOnBlur(field);
 
   // Comparación sin escritura; el descuento real usa la misma RPC transaccional del cobro.
@@ -2409,14 +2493,14 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     }
     const titles=["Fecha y hora ART","Tipo","Alumno","Categoría","Concepto",
      "Importe","Moneda","Medio","Referencia bancaria","Comprobante declarado","Registrado por","ID movimiento"];
-    const signFor=type=>["expense","petty_expense","refund"].includes(type)?-1:1;
+    const signFor=type=>["expense","petty_expense","refund","pack_reversal"].includes(type)?-1:1;
     const sanitizeCSV=(value)=>{
      let text=String(value===null||value===undefined?"":value);
      if(/^[\s]*[=+\-@\t\r]/.test(text))text="'"+text;
      return '"'+text.replace(/"/g,'""')+'"';
     };
     const records=entries.map(m=>[
-     stamp(m.created_at),{pack_sale:"Compra de pack",hour_payment:"Cobro de vuelo",
+     stamp(m.created_at),{pack_sale:"Compra de pack",pack_reversal:"Corrección de pack",hour_payment:"Cobro de vuelo",
      expense:"Gasto",petty_expense:"Caja chica",refund:"Devolución"}[m.movement_type]||m.movement_type,
      m.student_email||"",m.expense_category||"",m.description||"",
      (signFor(m.movement_type)*Number(m.amount)).toFixed(2),m.currency||"",
