@@ -859,12 +859,16 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   };
   const times=["08:00","09:30","11:00","12:30","14:00","15:30","17:00","18:30"];
   let registeredAircraft=[];
-  const publishedAgenda=window.AeroSuiteAgenda.init({inst,manager,role,school,weekDates,formatDate:stamp,today:artToday,aircraft:()=>registeredAircraft,rpc,reload:async()=>{await loadWeek();}});
+  let registeredSimulators=[];
+  const publishedAgenda=window.AeroSuiteAgenda.init({inst,manager,role,school,weekDates,formatDate:stamp,today:artToday,aircraft:()=>registeredAircraft,simulators:()=>registeredSimulators,rpc,reload:async()=>{await loadWeek();}});
   const cleanRegistration=raw=>AeroSuiteRegistration.normalize(raw);
   const validRegistration=raw=>AeroSuiteRegistration.isValid(raw);
   async function loadAircraftChoices(){
    if(!manager)return;
-   registeredAircraft=await rpc("aerosuite_aircraft_list",{p_institution_id:inst});
+   [registeredAircraft,registeredSimulators]=await Promise.all([
+    rpc("aerosuite_aircraft_list",{p_institution_id:inst}),
+    rpc("aerosuite_simulator_list",{p_institution_id:inst})
+   ]);
    const list=$("settleAircraftOptions");list.replaceChildren();
    for(const aircraft of registeredAircraft){
     const option=document.createElement("option");option.value=aircraft.registration;
