@@ -620,6 +620,7 @@ window.AeroSuiteAgenda={
     }catch(e){slots=[];bookings=[];msg("Error al consultar turnos: "+e.message);render();}
    },
    isPublishedBooking(id){return bookings.some(r=>r.booking_id===id);},
+   getReservationForBooking(id){return bookings.find(r=>r.booking_id===id)||null;},
    refresh(){render();},
    showReschedule(){render();},
    hideReschedule(){render();}
