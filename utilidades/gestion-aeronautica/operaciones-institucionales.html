@@ -304,7 +304,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
 @media(max-width:630px){#cobros .cashier-pack-info .pack-metrics,#finanzas .student-pack-breakdown{grid-template-columns:1fr 1fr}}
 </style>
 <script src="../../assets/supabase-2.117.2.min.js"></script><script src="../../assets/community-config.js"></script>
-<script src="../../assets/aerosuite-registration.js"></script>
+<script src="../../assets/aerosuite-registration.js"></script><script src="aerosuite-agenda-publicada.js"></script>
 </head><body>
 <header><a class="brand" href="index.html">Aero<span>Suite</span><small>BY GENTE DE VUELO</small></a><nav><a id="backPortal" href="portal-escuela.html">Volver al portal</a><a href="../../index.html">Gente de Vuelo</a></nav></header>
 <main>
@@ -785,6 +785,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    const defaultInstructor=booking.instructor_id||$("bookingInstructor").value||"";
    if([...selector.options].some(x=>x.value===defaultInstructor))selector.value=defaultInstructor;
    $("reschedulePanel").hidden=false;
+   publishedAgenda.showReschedule();
    $("rescheduleSource").textContent="Alumno: "+(booking.student_email||"Sin identificar")+" · Turno actual: "+stamp(booking.starts_at)+" (90 minutos).";
    $("rescheduleFeedback").textContent=(selector.value?"Instructor preasignado: "+selector.selectedOptions[0].text+". ":"Sin Instructor preasignado. ")+"Confirmá la autorización, indicá el medio y el motivo. Después seleccioná un nuevo horario libre.";
    renderWeek(weekDates());
@@ -792,6 +793,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   }
   function stopReschedule(){
    rescheduleTarget=null;$("reschedulePanel").hidden=true;
+   publishedAgenda.hideReschedule();
    $("rescheduleChannel").value="";$("rescheduleReason").value="";
    $("rescheduleAuthorization").checked=false;$("rescheduleInstructor").value="";
    renderWeek(weekDates());
@@ -834,6 +836,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   };
   const times=["08:00","09:30","11:00","12:30","14:00","15:30","17:00","18:30"];
   let registeredAircraft=[];
+  const publishedAgenda=window.AeroSuiteAgenda.init({inst,manager,role,school,weekDates,formatDate:stamp,today:artToday,aircraft:()=>registeredAircraft,rpc,reload:async()=>{await loadWeek();}});
   const cleanRegistration=raw=>AeroSuiteRegistration.normalize(raw);
   const validRegistration=raw=>AeroSuiteRegistration.isValid(raw);
   async function loadAircraftChoices(){
@@ -860,6 +863,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
      stat.textContent="No se pudo consultar quién confirmó las reservas: "+safeError(e);
     }
    }
+   await publishedAgenda.load();
    renderWeek(dates);renderBookings();renderReportFormChoices();renderFinanceBookingChoices();
    const lastSlotStart=new Date(dates[6]+"T"+times[times.length-1]+":00-03:00").getTime();
    $("bookingFutureNotice").textContent=lastSlotStart<=Date.now()?
@@ -916,8 +920,9 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
       b.textContent="Libre";
       if(start.getTime()<=Date.now()){
        b.textContent="Pasado";b.classList.add("past");b.disabled=true;
-      }else if(role==="instructor"||!school.can_write||(manager&&!rescheduleTarget&&!people.some(x=>x.role==="alumno"))){
+      }else if(role==="alumno"||role==="instructor"||!school.can_write||(manager&&!rescheduleTarget)){
        b.disabled=true;
+       b.textContent="Consultar agenda publicada";
       }else{
        b.classList.add("available");
        b.textContent=rescheduleTarget?"Libre · Reprogramar aquí":role==="alumno"?"Reservar":"Libre · Reservar";
@@ -1029,7 +1034,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     if(canChangeBooking&&manager&&["pending","confirmed"].includes(b.status)){
      btn("Reprogramar turno",()=>startReschedule(b));
     }
-    if(canChangeBooking&&(manager||(role==="alumno"&&b.my_booking&&b.status==="pending"))&&["pending","confirmed"].includes(b.status)){
+    if(canChangeBooking&&manager&&["pending","confirmed"].includes(b.status)){
      const feedback=document.createElement("p");feedback.className="warn";feedback.setAttribute("role","alert");
      btn("Cancelar reserva",async()=>{
       const reason=prompt("Motivo de cancelación (obligatorio):");
