@@ -151,6 +151,9 @@ window.AeroSuiteAgenda={
   let selectedSlotId=null,maintenanceChecks=[];
   const dayLabels=["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"];
   const timeSlots=["08:00","09:30","11:00","12:30","14:00","15:30","17:00","18:30"];
+  const endTime90=start=>new Intl.DateTimeFormat("es-AR",{
+   hour:"2-digit",minute:"2-digit",hourCycle:"h23",timeZone:"America/Argentina/Buenos_Aires"
+  }).format(new Date(new Date(start).getTime()+90*60000));
   function refreshResources(){
    const current=$("agendaResourceFilter").value;
    const activity=$("agendaFilter").value,select=$("agendaResourceFilter");
@@ -163,7 +166,8 @@ window.AeroSuiteAgenda={
   }
   async function reserveSlot(slot,button){
    if(c.role!=="alumno"||!c.school.can_write||c.weekMode()!=="next")return;
-   const label=names[slot.activity]+" · "+slot.resource+" · "+c.formatDate(slot.starts_at);
+   const label=names[slot.activity]+" · "+slot.resource+" · "+c.formatDate(slot.starts_at)+
+    " hasta las "+endTime90(slot.starts_at)+" (1 hora y 30 minutos completos)";
    if(!confirm("¿Reservar "+label+"? La solicitud quedará pendiente de confirmación de la escuela."))return;
    button.disabled=true;
    try{
@@ -258,7 +262,8 @@ window.AeroSuiteAgenda={
    const slot=slots.find(s=>s.id===selectedSlotId);
    if(!slot){target.textContent="Seleccioná un horario de la grilla para administrar sus recursos o reservas.";return;}
    const card=document.createElement("div");card.className="agenda-card";
-   card.append(htmlText(names[slot.activity]+" · "+slot.resource+" · "+c.formatDate(slot.starts_at),"strong"));
+   card.append(htmlText(names[slot.activity]+" · "+slot.resource+" · "+c.formatDate(slot.starts_at)+
+    " hasta las "+endTime90(slot.starts_at)+" · 90 minutos completos","strong"));
    card.append(htmlText("Estado: "+(slot.published?"Publicado":"En preparación")+
     " · Cupos utilizados: "+slot.reserved+" de "+slot.capacity+
     (slot.bookable===false?" · Recurso fuera de servicio":"")));
@@ -290,7 +295,8 @@ window.AeroSuiteAgenda={
      }
      const selectedName=students.find(x=>x.id===student)?.label||"el alumno seleccionado";
      if(!confirm("¿Reservar "+slot.resource+" el "+c.formatDate(slot.starts_at)+
-       " para "+selectedName+"? Quedará pendiente de confirmación."))return;
+       " hasta las "+endTime90(slot.starts_at)+
+       " (1 h 30 min completos) para "+selectedName+"? Quedará pendiente de confirmación."))return;
      reservationButton.disabled=true;
      inlineStatus.textContent="Registrando la reserva…";
      try{
@@ -398,7 +404,7 @@ window.AeroSuiteAgenda={
         ["Ocupado","Sin cupos","Solo consulta"].includes(state)?"occupied":"");
       const resourceName=document.createElement("strong");resourceName.textContent=slot.resource||names[slot.activity];
       const line=htmlText((selectedMove?"Seleccionado · 1 h 30":
-       legacyMove?"Elegir · 1 h 30":state)+
+       legacyMove?"Elegir · 1 h 30":state==="Libre"?"Libre · 1 h 30":state)+
        (slot.activity==="theory"?" · "+slot.reserved+"/"+slot.capacity:""),"small");
       b.append(resourceName,line);
       b.setAttribute("aria-label",slot.resource+" · "+state+" · "+date+" "+time);
