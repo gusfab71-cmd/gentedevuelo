@@ -682,9 +682,12 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   if(manager){
    // Reutilizar los formularios originales en pantallas separadas, sin duplicar sus acciones.
    $("cobrosHost").append($("financeWorkspaces"));
-   const extra=document.createElement("details");extra.className="pack-comparison-disclosure";
-   const heading=document.createElement("summary");heading.textContent="Opcional · Comparar saldo del pack";
-   extra.append(heading,$("packPurchasePanel"));$("cobrosExtra").append(extra);
+   // El descuento se realiza únicamente en el formulario de Cobro de vuelos.
+   // Conservar temporalmente estos controles ocultos para compatibilidad con la lógica existente.
+   // La compra de pack se mueve abajo a Contaduría, donde permanece accesible.
+   $("cobrosExtra").hidden=true;
+   $("cobrosExtra").append($("packPurchasePanel"));
+   $("packPurchasePanel").hidden=true;
    $("contaduriaOverviewHost").append($("financeOverview"));
    const purchaseForm=$("packPurchaseForm"),purchaseNote=purchaseForm.previousElementSibling;
    const purchaseHeading=purchaseNote?.previousElementSibling;
