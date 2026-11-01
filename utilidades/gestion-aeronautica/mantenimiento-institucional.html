@@ -463,6 +463,7 @@ async function addAc(){
   if(Number(values.c)>0&&Number.isFinite(Number(values.c)))a.c=Number(values.c);
   showAircraftForm=false;
   await save();R();
+  if(maintConflict)throw Error('La aeronave se registró en Flota, pero su ficha técnica requiere recarga antes de continuar.');
   showStatus('Aeronave '+registration+' incorporada. Configurá motor, hélice, inspecciones y controles según documentación.');
  }catch(e){showStatus('No se pudo completar la incorporación: '+(e.message||e));}
 }
