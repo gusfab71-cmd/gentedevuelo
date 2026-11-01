@@ -873,6 +873,8 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    inst,manager,role,school,weekDates,formatDate:stamp,today:artToday,
    aircraft:()=>registeredAircraft,simulators:()=>registeredSimulators,
    selectedStudent:()=> $("bookingStudent").value,
+   students:()=>people.filter(x=>x.role==="alumno").map(x=>({id:x.person_id,label:x.email})),
+   setSelectedStudent:id=>{$("bookingStudent").value=id;},
    isLegacyRescheduling:()=>!!rescheduleTarget,
    onLegacyReschedule:async(slot,button)=>{await moveBookingTo(new Date(slot.starts_at),button,slot.id);},
    legacyBookings:()=>bookings,
