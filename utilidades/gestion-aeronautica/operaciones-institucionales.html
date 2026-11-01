@@ -353,7 +353,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     <span class="settled"><i aria-hidden="true"></i>Saldada</span>
    </div>
    <div class="table-scroll"><table aria-label="Turnos de la semana"><thead id="weekHead"></thead><tbody id="weekBody"></tbody></table></div>
-   <p class="hint">Horarios de referencia de Buenos Aires (ART). Verde salvia: libre · Marfil: pendiente · Azul acero: confirmada · Oro champán: saldada · Gris oscuro: pasado u ocupado. Los detalles inferiores usan la misma identificación. Los turnos ocupados de otros alumnos no muestran información privada al alumno.</p>
+   <p class="hint" id="bookingLegendHelp">Horarios de referencia de Buenos Aires (ART). Verde salvia: libre · Marfil: pendiente · Azul acero: confirmada · Oro champán: saldada · Gris oscuro: pasado u ocupado. Los detalles inferiores usan la misma identificación. Los turnos ocupados de otros alumnos no muestran información privada al alumno.</p>
    <h3>Detalle de reservas de esta semana</h3><div id="bookingList" class="list"></div>
   </section>
   <section class="panel tab-panel" id="informes">
@@ -732,7 +732,14 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   }
   $("reschedulePanel").hidden=true;
   $("moneyArea").hidden=!manager;
-  $("bookingHelp").textContent=role==="alumno"?"Solicitá un turno libre de 90 minutos. Quedará pendiente hasta que lo confirme la escuela.":role==="instructor"?"Consultá la actividad de la escuela y confirmá un turno pendiente cuando puedas asumirlo.":"Controlá y confirmá solicitudes, asigná instructores y cancelá reservas cuando corresponda.";
+  $("bookingHelp").textContent=role==="alumno"?"Elegí un horario y tocá «Reservar». Primero quedará «Pendiente» y, cuando la escuela lo apruebe, aparecerá «Confirmado».":role==="instructor"?"Consultá la actividad de la escuela y confirmá un turno pendiente cuando puedas asumirlo.":"Controlá y confirmá solicitudes, asigná instructores y cancelá reservas cuando corresponda.";
+  if(role==="alumno"){
+   const legend=$("turnera").querySelector(".booking-legend");
+   legend.querySelector(".free").lastChild.textContent="Reservar";
+   legend.querySelector(".confirmed").lastChild.textContent="Confirmado";
+   legend.querySelector(".settled").hidden=true;
+   $("bookingLegendHelp").textContent="Horarios de Buenos Aires (ART). Verde: disponible para reservar · Marfil: pendiente de confirmación · Azul acero: confirmado · Gris oscuro: ocupado o pasado. Tocá tu reserva para ver los detalles.";
+  }
   if(role==="alumno"){
    $("financeTab").textContent="Mis horas de vuelo";
    $("financeEyebrow").textContent="Mi actividad de vuelo";
@@ -857,7 +864,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    const lastSlotStart=new Date(dates[6]+"T"+times[times.length-1]+":00-03:00").getTime();
    $("bookingFutureNotice").textContent=lastSlotStart<=Date.now()?
     "Esta semana ya no tiene horarios futuros. Pulsá «Semana siguiente» para encontrar turnos.":
-    "Los turnos «Pasado» ya comenzaron y no se pueden reservar. Elegí «Libre · Reservar» en un horario futuro de la grilla. Hoy es "+artToday().split("-").reverse().join("/")+" (Argentina).";
+    "Los turnos «Pasado» ya comenzaron y no se pueden reservar. Elegí «"+(role==="alumno"?"Reservar":"Libre · Reservar")+"» en un horario futuro. Hoy es "+artToday().split("-").reverse().join("/")+" (Argentina).";
   }
   function renderWeek(dates){
    const today=artToday();
@@ -872,8 +879,25 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
      if(booking){
       const paid=manager&&!!booking.booking_id&&settledWeek.has(booking.booking_id);
       if(paid)b.classList.add("settled");
-      else if(booking.status==="pending"||booking.status==="confirmed")b.classList.add(booking.status);
-      b.textContent=paid?"Saldado":booking.my_booking?"Mi turno · "+(statuses[booking.status]||"Reservado"):statuses[booking.status]||"Ocupado";
+      else if((role!=="alumno"||booking.my_booking)&&["pending","confirmed"].includes(booking.status))b.classList.add(booking.status);
+      // El alumno ve su estado directamente. Las reservas ajenas permanecen neutras y sin detalles.
+      b.textContent=paid?"Saldado":role==="alumno"?
+       (booking.my_booking?
+        (booking.status==="pending"?"Pendiente":
+         booking.status==="confirmed"?"Confirmado":
+         booking.status==="completed"?"Realizado":statuses[booking.status]||"Reservado"):
+        "Ocupado"):
+       statuses[booking.status]||"Ocupado";
+      if(role==="alumno"){
+       if(booking.my_booking){
+        const label=booking.status==="pending"?"Reserva pendiente de confirmación":
+         booking.status==="confirmed"?"Reserva confirmada":"Reserva "+(statuses[booking.status]||"registrada");
+        b.title=label;b.setAttribute("aria-label",label+" · "+stamp(booking.starts_at));
+       }else{
+        b.title="Turno ocupado";b.setAttribute("aria-label","Turno ocupado");
+        b.disabled=true;
+       }
+      }
       if(["administrador","secretaria","instructor"].includes(role)){
        const student=booking.student_email||"Alumno sin identificar";
        const small=document.createElement("small");small.textContent="Alumno: "+student;b.append(small);
@@ -896,7 +920,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
        b.disabled=true;
       }else{
        b.classList.add("available");
-       b.textContent=rescheduleTarget?"Libre · Reprogramar aquí":"Libre · Reservar";
+       b.textContent=rescheduleTarget?"Libre · Reprogramar aquí":role==="alumno"?"Reservar":"Libre · Reservar";
        b.onclick=async()=>{
         if(rescheduleTarget){await moveBookingTo(start,b);return;}
         const student=manager?$("bookingStudent").value:user.id;
