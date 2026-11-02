@@ -154,7 +154,7 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
  const schoolId=query.get('institucion');
  const selectedRole=query.get('rol')||'';
  const labLogin=query.get('prueba')==='1'&&(selectedRole==='instructor'||selectedRole==='alumno'||selectedRole==='administrador'||selectedRole==='secretaria');
- const roles={administrador:'administrador',secretaria:'secretaria',instructor:'instructor',alumno:'alumno'};
+ const roles={administrador:'administrador',secretaria:'secretaria',instructor:'instructor',alumno:'alumno',piloto:'piloto'};
  if(!schoolId||!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(schoolId)){
   setStatus('Este enlace no identifica una institución válida. Pedí una nueva invitación a AeroSuite.');return;
  }
@@ -171,7 +171,7 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
  const portalUrl='portal-escuela.html?institucion='+encodeURIComponent(schoolId)
   +(selectedRole?'&rol='+encodeURIComponent(selectedRole):'')+(labLogin?'&prueba=1':'');
  const validPassword=value=>value.length===9&&/[A-Z]/.test(value)&&/[a-z]/.test(value)&&/[0-9]/.test(value)&&/[^A-Za-z0-9]/.test(value);
- const humanRole=selectedRole==='administrador'?'administrador':selectedRole==='secretaria'?'secretaría':selectedRole==='instructor'?'instructor':selectedRole==='alumno'?'alumno':'integrante';
+ const humanRole=selectedRole==='administrador'?'administrador':selectedRole==='secretaria'?'secretaría':selectedRole==='instructor'?'instructor':selectedRole==='alumno'?'alumno':selectedRole==='piloto'?'piloto PPA o comercial':'integrante';
  byId('inviteTitle').textContent=labLogin?'Ingreso de pruebas · '+humanRole:'Invitación para crear cuenta como '+humanRole;
  byId('roleHeading').textContent=labLogin?'AeroSuite · laboratorio permanente · '+humanRole:'AeroSuite · acceso de '+humanRole;
  if(labLogin){
