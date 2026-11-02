@@ -725,7 +725,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
  const statuses={pending:"Pendiente",confirmed:"Confirmada",completed:"Realizada",cancelled:"Cancelada",submitted:"Presentado",returned:"Devuelto para corregir",approved:"Validado",voided:"Anulado por cancelación"};
  const params=new URLSearchParams(location.search),inst=params.get("institucion");
  const testRole=params.get("rol")||"";
- const labLogin=params.get("prueba")==="1"&&["administrador","secretaria","instructor","alumno"].includes(testRole);
+ const labLogin=params.get("prueba")==="1"&&["administrador","secretaria","instructor","alumno","piloto"].includes(testRole);
  const db=supabase.createClient(GDV_CONFIG.url,GDV_CONFIG.key,{auth:{storageKey:labLogin?"aerosuite-laboratorio-"+testRole+"-v1-auth":"aerosuite-institucional-v2-auth",persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
  let user,school,role,manager,isParticipant=false,pilotVerified=false,pilotHours=null,bookings=[],people=[],reports=[],finance={packs:[],movements:[]},bookingConfirmations=new Map(),settledWeek=new Map(),rescheduleTarget=null,selectedRescheduleSlot=null;
  if(!inst){stat.textContent="Entrá desde el portal de tu institución.";return;}
@@ -779,7 +779,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   $("bookingChangesTitle").textContent=manager?"Modificar reservas":"Detalle de reservas de esta semana";
   $("tabs").querySelector('[data-tab="turnera"]').textContent=manager?"Turnera semanal y reprogramaciones":"Turnera semanal";
   $("moneyArea").hidden=!manager;
-  $("bookingHelp").textContent=role==="piloto"?"Licencia PPA o comercial verificada: reservá vuelos particulares de 90 minutos, sujetos a confirmación de la escuela.":role==="alumno"?"Elegí un horario y tocá «Reservar». Primero quedará «Pendiente» y, cuando la escuela lo apruebe, aparecerá «Confirmado».":role==="instructor"?"Consultá la actividad de la escuela y confirmá un turno pendiente cuando puedas asumirlo.":"Controlá y confirmá solicitudes, asigná instructores y cancelá reservas cuando corresponda.";
+  $("bookingHelp").textContent=role==="piloto"?"Elegí si necesitás instructor en la turnera. Sin instructor, la escuela debe verificar la habilitación y autorizar el vuelo. El turno queda pendiente de confirmación.":role==="alumno"?"Elegí un horario y tocá «Reservar». Primero quedará «Pendiente» y, cuando la escuela lo apruebe, aparecerá «Confirmado».":role==="instructor"?"Consultá la actividad de la escuela y confirmá un turno pendiente cuando puedas asumirlo.":"Controlá y confirmá solicitudes, asigná instructores y cancelá reservas cuando corresponda.";
   if(role==="alumno"){
    const legend=$("turnera").querySelector(".booking-legend");
    legend.querySelector(".free").lastChild.textContent="Reservar";
