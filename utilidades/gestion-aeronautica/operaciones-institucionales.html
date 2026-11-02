@@ -407,9 +407,11 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
       <label>Hasta (aeródromo)<input name="log_destination" maxlength="100" required placeholder="Ej.: Morón"></label>
       <label>Hora de llegada UTC (24 h)<input name="log_arrival_utc" type="time" step="60" required></label>
       <label>Cantidad de aterrizajes<input name="log_landings_count" type="number" min="1" max="99" step="1" required value="1"></label>
-      <label>Marca/modelo de la aeronave<input name="log_aircraft_make" maxlength="80" required placeholder="Ej.: Cessna 150"></label>
-      <label>Matrícula<input name="log_aircraft_registration" data-aerosuite-registration maxlength="18" required placeholder="Ej.: LV-ERT" autocapitalize="characters" autocomplete="off"></label>
-      <label>Potencia (opcional)<input name="log_aircraft_power" maxlength="40" placeholder="Ej.: 100 HP"></label>
+      <label>Aeronave utilizada (Flota)<select id="reportAircraftChoice" required aria-label="Seleccioná la aeronave que se utilizó"><option value="">Elegí una aeronave</option></select></label>
+      <label>Marca/modelo de la aeronave<input name="log_aircraft_make" maxlength="80" required readonly placeholder="Se completa desde Flota"></label>
+      <label>Matrícula<input name="log_aircraft_registration" data-aerosuite-registration maxlength="18" required readonly placeholder="Se completa desde Flota" autocapitalize="characters" autocomplete="off"></label>
+      <label>Potencia (HP)<input name="log_aircraft_power" maxlength="40" readonly placeholder="Se completa desde Flota"></label>
+      <p id="reportAircraftPowerNotice" class="hint" role="status" aria-live="polite">Seleccioná la aeronave utilizada para completar sus datos.</p>
       <label>Clase de aeronave<select name="log_aircraft_class" required><option value="">Elegí la clase</option><option value="monomotor">Monomotor</option><option value="multimotor">Multimotor</option></select></label>
       <label>Tipo de vuelo<select name="log_flight_area" required><option value="aerodromo">Sobre aeródromo</option><option value="travesia">Travesía</option></select></label>
       <label>Condición<select name="log_flight_period" required><option value="dia">De día</option><option value="noche">De noche</option></select></label>
@@ -982,11 +984,10 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   const cleanRegistration=raw=>AeroSuiteRegistration.normalize(raw);
   const validRegistration=raw=>AeroSuiteRegistration.isValid(raw);
   async function loadAircraftChoices(){
+   if(!manager&&role!=="instructor")return;
+   registeredAircraft=await rpc("aerosuite_aircraft_list",{p_institution_id:inst});
    if(!manager)return;
-   [registeredAircraft,registeredSimulators]=await Promise.all([
-    rpc("aerosuite_aircraft_list",{p_institution_id:inst}),
-    rpc("aerosuite_simulator_list",{p_institution_id:inst})
-   ]);
+   registeredSimulators=await rpc("aerosuite_simulator_list",{p_institution_id:inst});
    const list=$("settleAircraftOptions");list.replaceChildren();
    for(const aircraft of registeredAircraft){
     const option=document.createElement("option");option.value=aircraft.registration;
@@ -1337,7 +1338,39 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     }else field.value=previous[key]??value;
     if(key==="aircraft_registration")AeroSuiteRegistration.formatField(field);
    }
+   renderReportAircraftChoices();
   }
+  function populateReportAircraftFromFleet(){
+   const reg=$("reportAircraftChoice").value;
+   const selected=registeredAircraft.find(a=>a.registration===reg);
+   const f=$("reportForm");
+   f.elements.namedItem("log_aircraft_registration").value=selected?.registration||"";
+   f.elements.namedItem("log_aircraft_make").value=selected?.model||"";
+   f.elements.namedItem("log_aircraft_power").value=selected?.engine_power_hp!=null?
+    String(selected.engine_power_hp)+" HP":"";
+   $("reportAircraftPowerNotice").textContent=!selected?
+    "Seleccioná la aeronave que se utilizó realmente.":
+    !selected.model?"Falta completar el modelo en Flota.":
+    selected.engine_power_hp==null?
+     "Matrícula y modelo recuperados. Potencia pendiente: Dirección o Secretaría debe cargar los HP según la ficha técnica en Flota.":
+     "Datos recuperados de Flota: "+selected.registration+" · "+selected.model+" · "+selected.engine_power_hp+" HP.";
+  }
+  function renderReportAircraftChoices(){
+   const choice=$("reportAircraftChoice");
+   const booking=bookings.find(x=>x.booking_id===$("reportBooking").value);
+   const prior=reports.find(x=>x.booking_id===booking?.booking_id)?.logbook_entry||{};
+   const slot=booking?.booking_id?publishedAgenda.getSlotForBooking(booking.booking_id):null;
+   const preferred=AeroSuiteRegistration.normalize(prior.aircraft_registration||booking?.aircraft||slot?.resource||"");
+   choice.replaceChildren();
+   choice.add(new Option("Elegí la aeronave utilizada",""));
+   for(const a of registeredAircraft){
+    choice.add(new Option(a.registration+" · "+(a.model||"Modelo pendiente")+
+     (a.availability==="out_of_service"?" · Actualmente fuera de servicio":""),a.registration));
+   }
+   choice.value=registeredAircraft.some(a=>a.registration===preferred)?preferred:"";
+   populateReportAircraftFromFleet();
+  }
+  $("reportAircraftChoice").addEventListener("change",populateReportAircraftFromFleet);
   $("reportBooking").addEventListener("change",setReportLogbookDefaults);
   function renderReportFormChoices(){
    if(role!=="instructor")return;
@@ -1469,6 +1502,9 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
      logbook={};
      for(const [key] of spec)logbook[key]=key==="landings_count"?Number(fields[key].value):fields[key].value.trim();
      logbook.aircraft_registration=AeroSuiteRegistration.normalize(logbook.aircraft_registration);
+     const aircraft=registeredAircraft.find(a=>a.registration===logbook.aircraft_registration);
+     if(!aircraft||aircraft.model!==logbook.aircraft_make)
+      throw Error("Seleccioná una aeronave de la flota y verificá sus datos antes de presentar el informe.");
      if(!AeroSuiteRegistration.isValid(logbook.aircraft_registration)){
       feedback.textContent="Indicá una matrícula válida (ej.: LV-ERT).";return;
      }
