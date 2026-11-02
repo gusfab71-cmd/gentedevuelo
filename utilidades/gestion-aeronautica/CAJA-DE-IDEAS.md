@@ -551,3 +551,14 @@ Se estableció la prueba de extremo a extremo: el Superadministrador crea una in
 **RETOMAR 02/11/2026:** 1) resolver límite de despliegue y verificar publicación efectiva del último commit; 2) probar acceso del Piloto PPA/PCA a la turnera y su selector con/sin instructor, controles de habilitación y confirmaciones; 3) probar fichas separadas Alumno/Instructor/Piloto, datos compartidos y persistencia sin alteraciones entre roles; 4) implementar/probar tarifa diferenciada por modalidad y aeronave en cobro y Contaduría, con horas exactas, saldo de packs y auditoría; 5) repetir circuito integral de punta a punta en el laboratorio antes de considerarlo operativo.
 
 **Control de calidad obligatorio:** realizar verificación funcional y de permisos para cada rol, incluyendo pruebas de regresión; no declarar IMPLEMENTADO EN PRODUCCIÓN sin despliegue confirmado y comprobación visual/operativa.
+
+
+## 02/11/2026 — REGLA OBLIGATORIA DE DESARROLLO INTEGRAL (instrucción del responsable)
+
+**APROBADO — Criterio obligatorio para todas las modificaciones posteriores.** No implementar una función como cambio aislado. Antes de modificar, identificar su origen, las referencias maestras, los módulos consumidores y el efecto en todos los roles. Aplicar cada intervención como parte del circuito completo y verificar regresiones. No introducir campos o copias paralelas de personas, matrícula, vuelo, tiempo o importe cuando existe un dato maestro.
+
+**Flujo transversal obligatorio:** incorporación/invitación → identidad y ficha por rol → habilitaciones → reserva y disponibilidad real de aeronave/instructor → modalidad (con/sin instructor) → vuelo realizado y tiempo fuente en minutos → cobro o pack → Contaduría → Libro de Vuelo/RAV según proceda → historial, horas y seguimiento técnico de célula, motor y hélice según su fuente documental; preservar los vínculos y la auditoría. Mantenimiento debe comunicar alertas configurables en la turnera y reflejar las aeronaves en servicio o fuera de servicio. No convertir automáticamente minutos de cobro en horas técnicas sin validación específica.
+
+**Definición de terminado:** (1) cambios coherentes de datos/backend y pantallas de todos los roles afectados, (2) historial conservado y sin duplicaciones, (3) permisos correctos, (4) pruebas de integración y regresión de punta a punta, (5) publicación exitosa en Vercel y comprobación del comportamiento real. Distinguir IMPLEMENTADO EN CÓDIGO, ACTIVO EN SUPABASE, DESPLEGADO y PROBADO.
+
+**Estado en este momento:** la conexión operativa de conciliación por matrícula y la tarifa diferenciada por aeronave/modalidad requieren completar y probar el circuito de cobro. Los umbrales por control de mantenimiento y sus advertencias en la turnera se han incorporado al código/función, pero no se deben presentar como operación verificada en producción. Continuar las tareas pendientes de manera integral, no como modificaciones inconexas.
