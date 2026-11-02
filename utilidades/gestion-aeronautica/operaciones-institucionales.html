@@ -413,9 +413,9 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
       <label>Potencia (HP)<input name="log_aircraft_power" maxlength="40" readonly placeholder="Se completa desde Flota"></label>
       <p id="reportAircraftPowerNotice" class="hint" role="status" aria-live="polite">Seleccioná la aeronave utilizada para completar sus datos.</p>
       <label>Clase de aeronave<select name="log_aircraft_class" required><option value="">Elegí la clase</option><option value="monomotor">Monomotor</option><option value="multimotor">Multimotor</option></select></label>
-      <label>Tipo de vuelo<select name="log_flight_area" required><option value="aerodromo">Sobre aeródromo</option><option value="travesia">Travesía</option></select></label>
+      <label>Tipo de vuelo<select name="log_flight_area" required><option value="local">Vuelo local</option><option value="travesia">Travesía</option></select></label>
       <label>Condición<select name="log_flight_period" required><option value="dia">De día</option><option value="noche">De noche</option></select></label>
-      <label>Función<select name="log_flight_role" required><option value="instructor">Instructor</option><option value="piloto">Piloto</option></select></label>
+      <label>Función<input value="Instructor" readonly aria-label="Función: Instructor"></label><input type="hidden" name="log_flight_role" value="instructor">
      </div>
     </fieldset>
     <label style="margin-top:12px">Práctica realizada<textarea name="practice" minlength="3" maxlength="750" required placeholder="Ej.: despegues, circuitos de tránsito, aproximaciones y aterrizajes."></textarea></label>
@@ -1331,11 +1331,13 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     const field=form.elements.namedItem(name);
     if(!field)continue;
     // Fecha real UTC: no completar automáticamente usando la fecha local de reserva.
-    const value=key==="flight_date"?"":key==="landings_count"?"1":key==="flight_area"?"aerodromo":key==="flight_period"?"dia":key==="flight_role"?"instructor":"";
+    const value=key==="flight_date"?"":key==="landings_count"?"1":key==="flight_area"?"local":key==="flight_period"?"dia":key==="flight_role"?"instructor":"";
     if(key==="aircraft_class"){
      const previousClass=String(previous[key]||"").toLowerCase().trim();
      field.value=previousClass.includes("multimotor")?"multimotor":previousClass.includes("monomotor")?"monomotor":"";
-    }else field.value=previous[key]??value;
+    }else if(key==="flight_role")field.value="instructor";
+    else if(key==="flight_area")field.value=previous[key]==="aerodromo"?"local":previous[key]??value;
+    else field.value=previous[key]??value;
     if(key==="aircraft_registration")AeroSuiteRegistration.formatField(field);
    }
    renderReportAircraftChoices();
@@ -1502,6 +1504,10 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
      logbook={};
      for(const [key] of spec)logbook[key]=key==="landings_count"?Number(fields[key].value):fields[key].value.trim();
      logbook.aircraft_registration=AeroSuiteRegistration.normalize(logbook.aircraft_registration);
+     if(logbook.flight_role!=="instructor")
+      throw Error("En informes de instrucción la función debe ser Instructor.");
+     if(!["local","travesia"].includes(logbook.flight_area))
+      throw Error("Elegí Vuelo local o Travesía.");
      const aircraft=registeredAircraft.find(a=>a.registration===logbook.aircraft_registration);
      if(!aircraft||aircraft.model!==logbook.aircraft_make)
       throw Error("Seleccioná una aeronave de la flota y verificá sus datos antes de presentar el informe.");
