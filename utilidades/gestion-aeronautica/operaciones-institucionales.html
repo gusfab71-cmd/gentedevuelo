@@ -262,6 +262,10 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
 #turnera #bookingList details.booking-mini summary.booking-compact-summary{display:flex;justify-content:space-between;align-items:center;gap:7px;flex-wrap:wrap;cursor:pointer;padding:7px 9px;font-size:12px;line-height:1.4;min-height:34px}
 #turnera #bookingList details.booking-mini summary.booking-compact-summary strong{font-size:12px;min-width:0;overflow-wrap:anywhere}
 #turnera #bookingList details.booking-mini summary.booking-compact-summary .chip{font-size:10px;margin:0;padding:2px 7px;white-space:nowrap}
+#turnera #bookingList .booking-status-actions{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap;margin-left:auto}
+#turnera #bookingList .booking-cancel-pending{background:#a23340;border:1px solid #e38b95;border-radius:6px;color:#fff;font-weight:800;font-size:11px;padding:5px 11px;cursor:pointer;white-space:nowrap}
+#turnera #bookingList .booking-cancel-pending:hover{background:#bc3e4c}
+#turnera #bookingList .booking-cancel-pending:disabled{opacity:.55;cursor:wait}
 #turnera #bookingList details.booking-mini summary.booking-compact-summary::before{content:"▸";font-size:14px;color:#e8c58c;flex-shrink:0}
 #turnera #bookingList details.booking-mini[open] summary.booking-compact-summary::before{content:"▾"}
 #turnera #bookingList details.booking-mini >p{font-size:11px;line-height:1.4;margin:5px 9px}
@@ -1135,6 +1139,40 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
      b.instructor_id?(b.instructor_email||"Cuenta no disponible")+
      (b.status==="pending"?" (preasignado · pendiente de confirmar)":""):"Sin asignar")+
      ' · Aeronave: '+esc(b.aircraft||"A definir")+'</p>':'<p>Turno ocupado de otro alumno.</p>');
+    // Acción visible en Mis reservas: junto a «Pendiente», sin tener que volver a la grilla.
+    if(isParticipant&&b.my_booking&&b.status==="pending"&&!paid&&
+      reservationMeta?.id&&school.can_write&&new Date(b.starts_at).getTime()>Date.now()){
+     const summary=card.querySelector(".booking-compact-summary");
+     const statusChip=summary.querySelector(".chip.pending");
+     if(statusChip){
+      const controls=document.createElement("span");
+      controls.className="booking-status-actions";
+      statusChip.replaceWith(controls);
+      controls.append(statusChip);
+      const cancel=document.createElement("button");
+      cancel.type="button";cancel.className="booking-cancel-pending";
+      cancel.textContent="Cancelar";cancel.title="Cancelar esta reserva pendiente";
+      cancel.setAttribute("aria-label","Cancelar reserva pendiente del "+stamp(b.starts_at));
+      cancel.onclick=async event=>{
+       event.preventDefault();event.stopPropagation();
+       if(!confirm("¿Cancelar tu reserva PENDIENTE del "+stamp(b.starts_at)+
+        "?\\nSe liberará el cupo y el cambio quedará registrado.\\nUna reserva confirmada solo puede modificarse desde Secretaría."))return;
+       cancel.disabled=true;
+       try{
+        const result=await rpc("aerosuite_student_cancel_pending",{
+         p_institution_id:inst,p_reservation_id:reservationMeta.id
+        });
+        if(!result?.ok)throw Error("No se pudo verificar la cancelación.");
+        await loadWeek();
+        stat.textContent="Reserva pendiente cancelada. El cupo se liberó y se conservó el historial.";
+       }catch(error){
+        stat.textContent="No se pudo cancelar: "+safeError(error);
+        cancel.disabled=false;
+       }
+      };
+      controls.append(cancel);
+     }
+    }
     if(paid){
      const method=settledWeek.get(b.booking_id);
      const note=method==="pack"?" · Descontado de pack":method==="cash"?" · Efectivo":
