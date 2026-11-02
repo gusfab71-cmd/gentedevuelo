@@ -1156,7 +1156,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
       cancel.onclick=async event=>{
        event.preventDefault();event.stopPropagation();
        if(!confirm("¿Cancelar tu reserva PENDIENTE del "+stamp(b.starts_at)+
-        "?\\nSe liberará el cupo y el cambio quedará registrado.\\nUna reserva confirmada solo puede modificarse desde Secretaría."))return;
+        "?\nSe liberará el cupo y el cambio quedará registrado.\nUna reserva confirmada solo puede modificarse desde Secretaría."))return;
        cancel.disabled=true;
        try{
         const result=await rpc("aerosuite_student_cancel_pending",{
