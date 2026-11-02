@@ -412,7 +412,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
       <label>Matrícula<input name="log_aircraft_registration" data-aerosuite-registration maxlength="18" required readonly placeholder="Se completa desde Flota" autocapitalize="characters" autocomplete="off"></label>
       <label>Potencia (HP)<input name="log_aircraft_power" maxlength="40" readonly placeholder="Se completa desde Flota"></label>
       <p id="reportAircraftPowerNotice" class="hint" role="status" aria-live="polite">Seleccioná la aeronave utilizada para completar sus datos.</p>
-      <label>Clase de aeronave<select name="log_aircraft_class" required><option value="">Elegí la clase</option><option value="monomotor">Monomotor</option><option value="multimotor">Multimotor</option></select></label>
+      <label>Tipo de aeronave<input name="log_aircraft_class" maxlength="20" required readonly placeholder="Se completa desde Flota"></label>
       <label>Tipo de vuelo<select name="log_flight_area" required><option value="local">Vuelo local</option><option value="travesia">Travesía</option></select></label>
       <label>Condición<select name="log_flight_period" required><option value="dia">De día</option><option value="noche">De noche</option></select></label>
       <label>Función<input value="Instructor" readonly aria-label="Función: Instructor"></label><input type="hidden" name="log_flight_role" value="instructor">
@@ -1348,14 +1348,20 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    const f=$("reportForm");
    f.elements.namedItem("log_aircraft_registration").value=selected?.registration||"";
    f.elements.namedItem("log_aircraft_make").value=selected?.model||"";
+   f.elements.namedItem("log_aircraft_class").value=
+    selected?.aircraft_class==="monomotor"?"monomotor":
+    selected?.aircraft_class==="multimotor"?"multimotor":"";
    f.elements.namedItem("log_aircraft_power").value=selected?.engine_power_hp!=null?
     String(selected.engine_power_hp)+" HP":"";
    $("reportAircraftPowerNotice").textContent=!selected?
     "Seleccioná la aeronave que se utilizó realmente.":
     !selected.model?"Falta completar el modelo en Flota.":
+    !["monomotor","multimotor"].includes(selected.aircraft_class)?
+     "Tipo de aeronave pendiente: Dirección o Secretaría debe completar Monomotor/Multimotor en Flota.":
     selected.engine_power_hp==null?
-     "Matrícula y modelo recuperados. Potencia pendiente: Dirección o Secretaría debe cargar los HP según la ficha técnica en Flota.":
-     "Datos recuperados de Flota: "+selected.registration+" · "+selected.model+" · "+selected.engine_power_hp+" HP.";
+     "Matrícula, modelo y tipo completados. Potencia pendiente: Dirección o Secretaría debe cargar los HP según la ficha técnica en Flota.":
+     "Datos recuperados de Flota: "+selected.registration+" · "+selected.model+" · "+
+      selected.aircraft_class+" · "+selected.engine_power_hp+" HP.";
   }
   function renderReportAircraftChoices(){
    const choice=$("reportAircraftChoice");
@@ -2144,6 +2150,13 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
      logbook[key]=key==="landings_count"?Number(value):value;
     }
     logbook.aircraft_registration=AeroSuiteRegistration.normalize(logbook.aircraft_registration);
+    const selectedAircraft=registeredAircraft.find(a=>a.registration===logbook.aircraft_registration);
+    if(!selectedAircraft||selectedAircraft.model!==logbook.aircraft_make)
+     throw Error("Seleccioná una aeronave registrada en Flota, con su modelo completo.");
+    if(!selectedAircraft.aircraft_class||selectedAircraft.aircraft_class!==logbook.aircraft_class)
+     throw Error("Falta configurar el tipo Monomotor/Multimotor en la ficha de Flota.");
+    if(selectedAircraft.engine_power_hp!=null&&logbook.aircraft_power!==String(selectedAircraft.engine_power_hp)+" HP")
+     throw Error("La potencia debe coincidir con la ficha de Flota.");
     if(!AeroSuiteRegistration.isValid(logbook.aircraft_registration))
      throw Error("Matrícula inválida. Usá por ejemplo LV-ERT.");
     await rpc("aerosuite_submit_flight_report_with_logbook",{p_institution_id:inst,p_booking_id:fd.get("booking"),
