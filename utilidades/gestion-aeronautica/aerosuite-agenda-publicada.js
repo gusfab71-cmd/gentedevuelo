@@ -425,7 +425,9 @@ window.AeroSuiteAgenda={
    if(!related.length)card.append(htmlText("No hay alumnos reservados para este horario."));
    for(const r of related){
     const row=document.createElement("div");row.className="agenda-booked";
-    row.append(htmlText((r.student_email||"Alumno")+" · "+(r.status==="confirmed"?"Confirmado":r.status==="completed"?"Realizado":"Pendiente"),"span"));
+    const studentName=String(r.student_name||"").trim();
+    const studentLabel=studentName||(r.student_email?"Nombre pendiente en el perfil · "+r.student_email:"Alumno sin identificar");
+    row.append(htmlText(studentLabel+" · "+(r.status==="confirmed"?"Confirmado":r.status==="completed"?"Realizado":"Pendiente"),"span"));
     if(c.school.can_write&&new Date(slot.starts_at).getTime()>Date.now()&&["pending","confirmed"].includes(r.status)){
      if(!r.booking_id&&r.status==="pending")row.append(addButton("Confirmar",()=>actReservation("confirm",r)));
      row.append(addButton("Reprogramar",()=>reprogramReservation(r,slot)));
