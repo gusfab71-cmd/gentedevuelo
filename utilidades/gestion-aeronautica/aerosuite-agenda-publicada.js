@@ -736,6 +736,7 @@ window.AeroSuiteAgenda={
     if(!resource||!Number.isFinite(starts.getTime())||!Number.isInteger(capacity)||capacity<1||capacity>50){
      msg("Completá fecha, recurso y cupos válidos.");return;
     }
+    if(kind==="flight"&&!await confirmMaintenanceWarnings([resource]))return;
     try{
      await c.rpc("aerosuite_availability_manage",{
       p_institution_id:c.inst,p_action:"create",p_slot_id:null,p_activity:kind,
