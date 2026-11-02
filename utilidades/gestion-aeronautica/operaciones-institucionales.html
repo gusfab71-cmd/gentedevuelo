@@ -2182,7 +2182,11 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    const minutes=centiToMinutes($("settleBookHours").value);
    const rate=parseMoney($("settleHourlyRate").value);
    if(minutes===null||rate===null){
-    $("settleCalculatedTotal").textContent="Ingresá horas centesimales y tarifa para calcular el importe.";return;
+    if(cashierStudent?.role==="piloto")$("settleAmount").value="";
+    $("settleCalculatedTotal").textContent=cashierStudent?.role==="piloto"?
+     "Piloto PPA / Comercial: ingresá la tarifa horaria particular indicada por la escuela; la tarifa institucional de instrucción no se aplica automáticamente.":
+     "Ingresá horas centesimales y tarifa para calcular el importe.";
+    return;
    }
    const total=Math.round(rate*minutes/60*100)/100;
    $("settleAmount").value=displayMoney(total);
@@ -2257,9 +2261,16 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   function chooseCashierStudent(record){
    if(!manager||!record?.student_id)return;
    cashierStudent=record;
+   const pilotRate=record.role==="piloto";
+   $("saveHourlyRate").disabled=pilotRate||!school.can_write;
+   $("settleHourlyRate").value=pilotRate?"":(hourlyTariff?.configured?displayMoney(hourlyTariff.amount):"");
+   $("hourlyRateStatus").textContent=pilotRate?
+    "Tarifa particular PPA / Comercial: ingresá el precio horario que la escuela tenga autorizado. No guardes ese valor como tarifa general de instrucción.":
+    "Tarifa institucional de referencia; la escuela puede actualizarla.";
+   updateCheckoutTotal();
    $("settleSearchResultsRow").hidden=false;
    $("settleSearchResults").value=record.student_id;
-   $("settleSearchStatus").textContent="Alumno identificado: "+record.full_name+
+   $("settleSearchStatus").textContent=(pilotRate?"Piloto identificado: ":"Alumno identificado: ")+record.full_name+
     " · "+record.legajo+". Seleccioná su vuelo para liquidarlo.";
    previousSettleBookingId=null;
    renderSettlementCandidates();
