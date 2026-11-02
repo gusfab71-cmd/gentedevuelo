@@ -236,8 +236,8 @@ window.AeroSuiteAgenda={
    feedback.scrollIntoView({behavior:"smooth",block:"nearest"});
   }
   async function reserveSlot(slot,button){
-   if(!["alumno","piloto"].includes(c.role)||!c.school.can_write||c.weekMode()!=="next"){
-    showStudentBookingFeedback("Reservá desde «Semana siguiente» con una sesión de alumno habilitada.","error");
+   if(!["alumno","piloto"].includes(c.role)||!c.school.can_write){
+    showStudentBookingFeedback("Ingresá con una cuenta habilitada de Alumno o Piloto para reservar.","error");
     return;
    }
    if(myScheduleOverlaps(slot)){
@@ -260,7 +260,7 @@ window.AeroSuiteAgenda={
    }
   }
   async function changePendingAircraft(slot,source,button){
-   if(!source||source.status!=="pending"||!c.school.can_write||c.weekMode()!=="next")return;
+   if(!source||source.status!=="pending"||!c.school.can_write)return;
    const previous=slots.find(s=>s.id===source.slot_id);
    if(!previous||previous.activity!=="flight"||
     new Date(previous.starts_at).getTime()!==new Date(slot.starts_at).getTime())return;
@@ -546,11 +546,11 @@ window.AeroSuiteAgenda={
       const pendingToSwitch=sameTimeOwnFlight.length===1&&sameTimeOwnFlight[0].status==="pending"?
        sameTimeOwnFlight[0]:null;
       const canChangeAircraft=!!pendingToSwitch&&future&&slot.published&&
-       slot.bookable!==false&&remaining>0&&c.weekMode()==="next"&&c.school.can_write&&
+       slot.bookable!==false&&remaining>0&&c.school.can_write&&
        (c.role!=="piloto"||c.pilotVerified);
       const canBook=slot.published&&slot.bookable!==false&&future&&remaining>0&&["alumno","piloto"].includes(c.role)&&
        (c.role!=="piloto"||(slot.activity==="flight"&&c.pilotVerified))&&
-       c.weekMode()==="next"&&!own.length&&!conflict&&c.school.can_write;
+       !own.length&&!conflict&&c.school.can_write;
       let state=own.length?(own.some(r=>r.status==="confirmed")?"Confirmado":own.some(r=>r.status==="completed")?"Realizado":"Pendiente"):
        !slot.published?"Preparación":!future?"Pasado":slot.bookable===false?"Fuera de servicio":
        remaining<=0?(slot.activity==="theory"?"Sin cupos":"Ocupado"):conflict?(canChangeAircraft?"Cambiar aeronave":"No disponible"):"Libre";
@@ -563,7 +563,7 @@ window.AeroSuiteAgenda={
         active.some(r=>r.status==="completed")?"Realizado":state;
       }
       if(assignedToInstructor)state="Vuelo asignado";
-       if(state==="Libre"&&c.weekMode()==="current")state="Solo consulta";
+       // Los horarios futuros publicados son reservables esta semana y la siguiente.
       const reprogramming=!!c.manager&&!!c.isLegacyRescheduling?.();
       const legacyMove=reprogramming&&slot.activity==="flight"&&slot.published&&
        slot.bookable!==false&&future&&remaining>0&&active.length===0;
@@ -667,10 +667,8 @@ window.AeroSuiteAgenda={
    const published=slots.filter(s=>s.published).length;
    $("agendaGridHelp").textContent=(c.manager&&c.isLegacyRescheduling?.()?
     "REPROGRAMACIÓN ACTIVA: elegí la casilla verde con «Elegir · 1 h 30»; ese clic selecciona los 90 minutos completos. Confirmá el cambio en el recuadro anterior. ":
-    c.weekMode()==="current"?
-    "Esta semana: revisá los turnos ya asignados y sus modificaciones; las nuevas reservas se realizan en «Semana siguiente». ":
     ["alumno","piloto"].includes(c.role)?
-    "Elegí una casilla «Libre» para reservar; si hay varias aeronaves en el mismo horario, aparecen juntas. ":
+    "Podés reservar turnos publicados que todavía no comenzaron, tanto esta semana como la siguiente. Elegí una casilla «Libre». ":
     "Seleccioná un horario de la grilla para gestionar disponibilidad y reservas. ")+
     "Turnos de 90 minutos. Horario de Argentina. "+published+" horarios publicados esta semana.";
    $("agendaWeekLabel").textContent="Semana del "+days[0].split("-").reverse().join("/")+
