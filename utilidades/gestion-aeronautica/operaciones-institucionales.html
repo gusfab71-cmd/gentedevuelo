@@ -426,13 +426,13 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     <button class="primary" type="submit" style="margin-top:12px">Presentar informe a Administración</button>
     <p id="reportSubmitStatus" role="status" aria-live="polite" tabindex="-1" hidden style="margin:12px 0;font-weight:750"></p>
    </form>
-   <div id="labReportBox" class="panel" hidden style="margin:16px 0">
-    <h3>Centro de Testeo · Informe recuperado</h3>
+   <details id="labReportBox" class="panel" hidden style="margin:16px 0">
+    <summary class="report-lab-summary">Centro de Testeo · Informes simulados · Ver/ocultar pruebas</summary>
     <p><strong>SIMULACIÓN, NO ES UN VUELO REAL.</strong> Esta copia permite probar la presentación, devolución y aprobación sin registrar vuelos ni sumar horas.</p>
     <p id="labReportMessage" class="hint" role="status"></p>
     <div id="labReportList" class="list"></div>
-   </div>
-   <div class="list" id="reportsList"></div>
+   </details>
+   <div id="reportsList"></div>
   </section>
   <section class="panel tab-panel" id="finanzas">
    <span class="eyebrow" id="financeEyebrow">Gestión económica institucional</span><h2 id="financeTitle">Contaduría y packs de horas</h2>
@@ -1803,7 +1803,21 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    ".manager-report-editor{max-width:930px} .manager-report-editor textarea{width:100%}"+
    ".report-feedback-summary{border:1px solid #47677a;background:#153044;border-radius:9px;padding:12px 15px;margin:12px 0}"+
    ".report-feedback-summary>div+div{border-top:1px solid #3f5c6f;padding-top:9px;margin-top:9px}"+
-   ".report-feedback-summary strong{color:#ebd2a2}.report-feedback-summary p{margin:5px 0;white-space:pre-wrap}";
+   ".report-feedback-summary strong{color:#ebd2a2}.report-feedback-summary p{margin:5px 0;white-space:pre-wrap}"+
+   ".report-lab-summary{cursor:pointer;font-weight:850;color:#f2d397;font-size:15px;padding:5px 0}"+
+   ".report-manager-section{margin-top:17px}"+
+   ".report-manager-section>h3{margin:12px 0;color:#f1d9a4;font-size:16px}"+
+   ".report-manager-list{display:grid;gap:10px}"+
+   ".report-management-item{padding:0!important;overflow:hidden;border:1px solid #607d91;border-radius:10px}"+
+   ".report-management-item[open]{border-color:#deb976}"+
+   ".report-compact-summary{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;padding:15px 16px;cursor:pointer;list-style:none}"+
+   ".report-compact-summary::-webkit-details-marker{display:none}"+
+   ".report-compact-title{flex:1;min-width:220px}"+
+   ".report-compact-title strong{display:block}"+
+   ".report-compact-title small{display:block;margin-top:4px;color:#bfd1dc}"+
+   ".report-compact-expand{display:inline-block;border:1px solid #deb976;background:#294b60;color:#f6d898;border-radius:7px;padding:9px 11px;font-weight:850;font-size:12px;white-space:nowrap}"+
+   ".report-management-body{padding:4px 16px 16px;border-top:1px solid #506b7d}"+
+   ".report-manager-empty{padding:12px;color:#c2d3dd}";
   document.head.append(reportStyle);
   function reportFeedbackSummary(notes){
    const sections=parseTeachingNotes(notes);
@@ -2078,13 +2092,54 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     target.textContent=role==="alumno"?"La devolución de tu instructor aparecerá después de cada práctica finalizada.":"Todavía no hay informes de instrucción para consultar.";
     return;
    }
+   let pendingList=null,historyList=null;
+   if(manager){
+    const createGroup=(title,count)=>{
+     const section=document.createElement("section");section.className="report-manager-section";
+     const heading=document.createElement("h3");heading.textContent=title+" ("+count+")";
+     const list=document.createElement("div");list.className="report-manager-list";
+     section.append(heading,list);target.append(section);
+     return list;
+    };
+    const pendingCount=reports.filter(r=>r.status==="submitted").length;
+    pendingList=createGroup("Esperando aprobación",pendingCount);
+    if(!pendingCount){
+     const empty=document.createElement("p");
+     empty.className="report-manager-empty";
+     empty.textContent="No hay informes esperando aprobación. Los demás registros están minimizados abajo.";
+     pendingList.append(empty);
+    }
+    historyList=createGroup("Otros informes · minimizados",reports.length-pendingCount);
+   }
    for(const r of reports){
-    const card=document.createElement("div");card.className="list-item";
     if(role==="alumno"){
      studentReportListItem(target,r,false);
      continue;
     }
-    card.innerHTML='<div class="row between"><strong>'+esc(reportFlightStamp(r))+" · "+esc(r.student_email)+'</strong><span class="chip '+esc(r.status)+'">'+esc(statuses[r.status])+'</span></div>'+
+    const card=document.createElement(manager?"details":"div");
+    card.className="list-item"+(manager?" report-management-item":"");
+    let content=card;
+    if(manager){
+     card.open=r.status==="submitted";
+     const summary=document.createElement("summary");summary.className="report-compact-summary";
+     const title=document.createElement("span");title.className="report-compact-title";
+     const name=document.createElement("strong");
+     name.textContent=reportFlightStamp(r)+" · "+(r.student_email||"Alumno");
+     const meta=document.createElement("small");
+     meta.textContent="Instructor: "+(r.instructor_email||"No informado")+" · "+r.flight_minutes+" minutos"+
+      (r.logbook_entry?.aircraft_registration?" · "+r.logbook_entry.aircraft_registration:"");
+     title.append(name,meta);
+     const status=document.createElement("span");
+     status.className="chip "+r.status;status.textContent=statuses[r.status]||r.status;
+     const expand=document.createElement("span");expand.className="report-compact-expand";
+     const updateLabel=()=>{expand.textContent=card.open?"Ocultar informe ▲":"Ver informe ▼";};
+     summary.append(title,status,expand);card.append(summary);
+     const body=document.createElement("div");body.className="report-management-body";
+     card.append(body);content=body;
+     card.addEventListener("toggle",updateLabel);updateLabel();
+    }
+    content.innerHTML=(manager?"":
+     '<div class="row between"><strong>'+esc(reportFlightStamp(r))+" · "+esc(r.student_email)+'</strong><span class="chip '+esc(r.status)+'">'+esc(statuses[r.status])+'</span></div>')+
      '<p><strong>Instructor:</strong> '+esc(r.instructor_email)+' · <strong>Vuelo real:</strong> '+esc(r.flight_minutes)+' minutos · <strong>Combustible:</strong> '+esc(r.fuel_liters)+' L · <strong>Aceite:</strong> '+esc(r.oil_liters)+' L · Versión '+esc(r.revision)+'</p>'+
      formatLogbookEntry(r.logbook_entry)+
      reportFeedbackSummary(r.teaching_notes)+
@@ -2097,20 +2152,20 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
      p.textContent="Horas informadas a Secretaría: "+flightHoursMinutes(minutesAtCheckout)+
       " h · Informe del Instructor: "+flightHoursMinutes(Number(r.flight_minutes))+
       " h. "+(matches?"Coinciden.":"DIFERENCIA: verificar con el Instructor antes de aprobar.");
-     card.append(p);
+     content.append(p);
     }
     if(r.last_corrected_by&&r.last_corrected_at){
      const note=document.createElement("p");note.className="hint";
      note.textContent="Última corrección administrativa: "+(r.corrected_by_email||"Cuenta institucional")+
       " · "+stamp(r.last_corrected_at)+(r.last_correction_note?" · "+r.last_correction_note:"")+
       ". La versión anterior se conserva en el historial.";
-     card.append(note);
+     content.append(note);
     }
     if(manager&&["submitted","returned","approved"].includes(r.status)){
      const row=document.createElement("div");row.className="actions";
      const edit=document.createElement("button");edit.type="button";
      edit.textContent="Editar formulario del informe";edit.disabled=!school.can_write;
-     edit.onclick=()=>openManagerReportEditor(card,r,false);
+     edit.onclick=()=>openManagerReportEditor(content,r,false);
      row.append(edit);
      if(["submitted","returned"].includes(r.status)){
       const approve=document.createElement("button");approve.className="primary";approve.type="button";
@@ -2137,9 +2192,9 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
       };
       row.append(approve);
      }
-     card.append(row);
+     content.append(row);
     }
-    target.append(card);
+    (manager?(r.status==="submitted"?pendingList:historyList):target).append(card);
    }
   }
   function showReportSubmitStatus(message,scroll=true){
