@@ -23,7 +23,7 @@ window.AeroSuiteAgenda={
   '<label>Actividad<select id="agendaType"><option value="flight">Vuelo de instrucción</option><option value="simulator">Vuelo virtual</option><option value="theory">Teoría grupal</option></select></label>',
   '<label>Día<input id="agendaDay" type="date" required></label>',
   '<label>Hora<select id="agendaHour"><option>08:30</option><option>10:00</option><option>11:30</option><option>13:00</option><option>14:30</option><option>16:00</option></select></label>',
-  '<label>Recurso / aeronave / aula<input id="agendaResource" list="agendaResourceList" maxlength="90" required placeholder="LV-ABC, Simulador 1 o Aula 1"><datalist id="agendaResourceList"></datalist></label>',
+  '<label>Recurso / aeronave / aula<input id="agendaResource" list="agendaResourceList" maxlength="90" required placeholder="LV-ERT, Simulador 1 o Aula 1" autocomplete="off" autocapitalize="characters"><datalist id="agendaResourceList"></datalist><span class="hint">Las matrículas LV/LQ se escriben automáticamente en mayúsculas y con guion.</span></label>',
   '<label id="agendaCapacityLabel">Cupos<input id="agendaCapacity" type="number" min="1" max="50" value="1" required></label>',
   '</div><button class="primary" type="submit">Agregar horario en preparación</button></form>',
   '<div class="actions"><button type="button" id="agendaPublish" class="primary">Publicar los horarios preparados</button></div>',
@@ -706,6 +706,14 @@ window.AeroSuiteAgenda={
    }catch(err){msg("No se pudo publicar la semana: "+err.message);}
    finally{b.disabled=!c.school.can_write;}
   }
+  function formatAgendaFlightRegistration(){
+   const field=$("agendaResource");
+   if($("agendaType").value!=="flight"||!window.AeroSuiteRegistration)return field.value.trim();
+   const compact=field.value.normalize("NFKC").toUpperCase().replace(/[\\s\\-_\\u2010-\\u2015\\u2212]/g,"");
+   // Solo matrículas argentinas: no modificar nombres de aulas, simuladores ni cupos.
+   if(/^(LV|LQ)[A-Z0-9]*$/.test(compact))window.AeroSuiteRegistration.formatField(field);
+   return field.value.trim();
+  }
   function syncResource(){
    const kind=$("agendaType").value;
    $("agendaCapacityLabel").hidden=kind==="flight";
@@ -726,11 +734,17 @@ window.AeroSuiteAgenda={
    $("agendaBulkType").onchange=syncBulkOptions;
    $("agendaBulkForm").onsubmit=publishFullWeek;
    $("agendaType").onchange=syncResource;
+   $("agendaResource").addEventListener("input",formatAgendaFlightRegistration);
+   $("agendaResource").addEventListener("change",formatAgendaFlightRegistration);
    $("agendaDay").value=c.today();$("agendaDay").min=c.today();
    $("agendaCreate").onsubmit=async e=>{
     e.preventDefault();if(!c.school.can_write)return;
     const date=$("agendaDay").value,hour=$("agendaHour").value;
-    const resource=$("agendaResource").value.trim(),kind=$("agendaType").value;
+    const kind=$("agendaType").value,resource=formatAgendaFlightRegistration();
+    if(kind==="flight"&&/^(LV|LQ)[-A-Z0-9]*$/.test(resource)&&
+       !window.AeroSuiteRegistration?.isValid(resource)){
+     msg("Matrícula incompleta: ingresá por ejemplo LV-ERT.");return;
+    }
     const capacity=kind==="flight"?1:Number($("agendaCapacity").value);
     const starts=new Date(date+"T"+hour+":00-03:00");
     if(!resource||!Number.isFinite(starts.getTime())||!Number.isInteger(capacity)||capacity<1||capacity>50){
