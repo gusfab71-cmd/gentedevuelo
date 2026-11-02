@@ -153,7 +153,7 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
  const recoveryFlow=query.get('recuperar')==='1'||oneTimeType==='recovery';
  const schoolId=query.get('institucion');
  const selectedRole=query.get('rol')||'';
- const labLogin=query.get('prueba')==='1'&&(selectedRole==='instructor'||selectedRole==='alumno'||selectedRole==='administrador'||selectedRole==='secretaria');
+ const labLogin=query.get('prueba')==='1'&&(selectedRole==='instructor'||selectedRole==='alumno'||selectedRole==='administrador'||selectedRole==='secretaria'||selectedRole==='piloto');
  const roles={administrador:'administrador',secretaria:'secretaria',instructor:'instructor',alumno:'alumno',piloto:'piloto'};
  if(!schoolId||!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(schoolId)){
   setStatus('Este enlace no identifica una institución válida. Pedí una nueva invitación a AeroSuite.');return;
@@ -205,6 +205,7 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
  if(labLogin&&selectedRole==='alumno')byId('email').value='gentedevuelo+alumno@gmail.com';
  if(labLogin&&selectedRole==='administrador')byId('email').value='gentedevuelo+administrador@gmail.com';
  if(labLogin&&selectedRole==='secretaria')byId('email').value='gentedevuelo+secretaria@gmail.com';
+ if(labLogin&&selectedRole==='piloto')byId('email').value='gentedevuelo+piloto@gmail.com';
  window.addEventListener('pageshow',event=>{
   if(event.persisted){for(const id of ['password','signupPassword','signupRepeat'])byId(id).value=''}
  });
