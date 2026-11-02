@@ -523,3 +523,14 @@ Se estableció la prueba de extremo a extremo: el Superadministrador crea una in
 **Propuesta de valor a demostrar:** reducción de trabajo administrativo, trazabilidad de instrucción y horas, controles de inspecciones/vencimientos, integración de caja y gestión, adaptación local y costos accesibles. Mantener Gente de Vuelo como comunidad gratuita y AeroSuite como plataforma comercial separada, con datos operativos, legajos y finanzas privados por institución.
 
 **Estado:** idea comercial estratégica a futuro; sin contacto ni convenio iniciado. No anticipar presentación hasta contar con MVP funcional, pruebas de seguridad y resultados piloto.
+
+
+## 01/11/2026 — Piloto PPA, reserva sin instructor y tarifa diferenciada
+
+**Decisión operativa:** cuando una reserva indique «Sin instructor», NO corresponde categorizarla como vuelo de un Alumno. Es una operación solicitada por un **Piloto con licencia PPA** (u otra habilitación aplicable). La institución verifica licencia, habilitaciones, aptitud médica y autorización de la aeronave antes de confirmar la reserva. La selección visual no certifica automáticamente la habilitación para volar.
+
+**Modelo de personas:** agregar categoría/perfil **Piloto PPA** independiente de **Alumno**, con su propia identificación/legajo y documentación verificable. Mantener la misma turnera para elegir la aeronave y el bloque de 90 minutos; «Con instructor» es instrucción, «Sin instructor» es vuelo de piloto habilitado. Secretaría y Dirección controlan la autorización operativa.
+
+**Cobranza:** tarifa de vuelo **sin instructor** distinta y, normalmente, inferior a la tarifa de instrucción; la **institución la configura manualmente**, sin importar automáticamente importes ni asumir un descuento fijo. En lo posible, parametrizar por aeronave para contemplar diferencias de explotación. La modalidad elegida debe propagarse reserva → confirmación → registro de vuelo → caja → contaduría/informes; el cajero debe ver el precio horario correcto y los minutos realmente volados. No aplicar la tarifa de instrucción por defecto a una operación de Piloto PPA sin instructor. Preservar auditoría y los movimientos ya liquidados.
+
+**Estado actual y pendiente:** en noviembre 2026 la base de datos conserva `with_instructor`, pero `aerosuite_institution_members` distingue administrador/secretaria/instructor/alumno, y `aerosuite_hourly_tariffs` contiene una sola tarifa general por institución. La distinción completa **Piloto PPA vs. Alumno** y su tarifa de cobro diferencial **todavía requieren implementación y pruebas**; no afirmar que están operativas. El formulario previo de «Sin instructor» necesita integrarse con elegibilidad documentada de Piloto PPA antes de considerarlo definitivo.
