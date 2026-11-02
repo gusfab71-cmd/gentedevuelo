@@ -257,7 +257,38 @@ window.AeroSuiteAgenda={
     button.disabled=false;
    }
   }
-  function openSlotEdit(slot,card){
+  async function openOwnBooking(slot,own,button){
+    const current=own.find(r=>r.status==="confirmed")||
+     own.find(r=>r.status==="pending")||own[0];
+    if(!current)return;
+    const label=slot.resource+" · "+c.formatDate(slot.starts_at)+" hasta las "+endTime90(slot.starts_at);
+    if(current.status==="confirmed"){
+     alert("Ya tenés este turno CONFIRMADO.\n"+label+
+      "\nPara cambiar de aeronave, día u horario, comunicate con Secretaría.");
+     return;
+    }
+    if(current.status!=="pending"){
+     alert("Este turno ya figura como REALIZADO.\n"+label+
+      "\nSi necesitás realizar una consulta, comunicate con Secretaría.");
+     return;
+    }
+    if(new Date(slot.starts_at).getTime()<=Date.now()||!c.school.can_write){
+     alert("Tenés una reserva pendiente en este horario. Para modificarla o cancelarla, comunicate con Secretaría.");
+     return;
+    }
+    if(!confirm("Ya tenés este turno reservado y PENDIENTE de confirmación.\n"+label+
+      "\n\n¿Querés CANCELAR esta reserva pendiente? El cupo quedará disponible.\nSi preferís cambiar de aeronave o reprogramar, comunicate con Secretaría."))return;
+    button.disabled=true;
+    try{
+     await c.rpc("aerosuite_student_cancel_pending",{p_institution_id:c.inst,p_reservation_id:current.id});
+     await reloadAfter("Reserva cancelada por el alumno. El turno vuelve a estar libre.");
+     showStudentBookingFeedback("Cancelaste tu reserva pendiente. El cupo se liberó y quedó registrado el cambio.","success");
+    }catch(e){
+     showStudentBookingFeedback("No se pudo cancelar la reserva: "+e.message,"error");
+     button.disabled=false;
+    }
+   }
+   function openSlotEdit(slot,card){
    const existing=card.querySelector(".agenda-edit-form");
    if(existing){existing.remove();return;}
    if(!c.manager||!c.school.can_write)return;
@@ -486,7 +517,7 @@ window.AeroSuiteAgenda={
        c.weekMode()==="next"&&!own.length&&!conflict&&c.school.can_write;
       let state=own.length?(own.some(r=>r.status==="confirmed")?"Confirmado":own.some(r=>r.status==="completed")?"Realizado":"Pendiente"):
        !slot.published?"Preparación":!future?"Pasado":slot.bookable===false?"Fuera de servicio":
-       remaining<=0?(slot.activity==="theory"?"Sin cupos":"Ocupado"):conflict?"Ya tenés otro turno":"Libre";
+       remaining<=0?(slot.activity==="theory"?"Sin cupos":"Ocupado"):conflict?"No disponible":"Libre";
       const settledMethod=c.manager&&slot.activity==="flight"?
        active.map(r=>r.booking_id?c.settlementForBooking?.(r.booking_id):null).find(Boolean):null;
       if(c.manager&&active.length){
@@ -506,24 +537,22 @@ window.AeroSuiteAgenda={
         settledMethod?"settled":state==="Realizado"?"completed":state==="Libre"?"available":
         state==="Preparación"?"draft":state==="Pasado"?"past":
         state==="Fuera de servicio"?"unavailable":
-        state==="Ya tenés otro turno"?"conflict":
+        state==="No disponible"?"conflict":
         ["Ocupado","Sin cupos","Solo consulta"].includes(state)?"occupied":"");
       const resourceName=document.createElement("strong");resourceName.textContent=slot.resource||names[slot.activity];
       const line=htmlText((selectedMove?"Seleccionado · 1 h 30":
        legacyMove?"Elegir · 1 h 30":state==="Libre"?"Libre · 1 h 30":state)+
        (slot.activity==="theory"?" · "+slot.reserved+"/"+slot.capacity:""),"small");
       b.append(resourceName,line);
-      if(state==="Ya tenés otro turno"){
-       const instruction=htmlText("Cambio de aeronave: solicitá a Secretaría","small");
-       instruction.className="agenda-conflict-instruction";
-       b.append(instruction);
-       b.title="Ya tenés una reserva en este horario. Para cambiar de aeronave, contactá a Secretaría.";
-      }
-      b.setAttribute("aria-label",slot.resource+" · "+state+
-       (state==="Ya tenés otro turno"?" · Cambio de aeronave: solicitá a Secretaría":"")+" · "+date+" "+time);
+      if(conflict&&state==="No disponible")b.title="Ya tenés una reserva que coincide con este horario. Hacé clic para más información.";
+      b.setAttribute("aria-label",slot.resource+" · "+state+" · "+date+" "+time);
       if(legacyMove)b.onclick=()=>c.onLegacyReschedule(slot,b);
       else if(canBook)b.onclick=()=>reserveSlot(slot,b);
       else if(reprogramming)b.onclick=()=>c.onLegacyInvalidTarget?.(slot);
+      else if(!c.manager&&own.length)b.onclick=()=>openOwnBooking(slot,own,b);
+      else if(!c.manager&&conflict&&state==="No disponible"){
+       b.onclick=()=>alert("Ya tenés otro turno reservado en ese horario.\nNo se permiten reservas superpuestas. Para cambiar de aeronave o de horario, comunicate con Secretaría.");
+      }
       else if(c.manager){
        b.onclick=()=>{
         selectedSlotId=slot.id;renderStaffDetail();
