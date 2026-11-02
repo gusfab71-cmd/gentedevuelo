@@ -106,7 +106,7 @@ button:disabled{cursor:wait;opacity:.56}
       <label class="field">Aeródromo base (opcional)<input name="instructor_airfield" maxlength="120"></label>
     </div></div>
     <div id="pilotExtra" class="aerosuite-role-details" hidden><div class="field-grid">
-      <label class="field">Licencia de piloto (declarada) <span class="required">*</span><input name="pilot_license_type" maxlength="100"></label>
+      <label class="field">Licencia de piloto (declarada) <span class="required">*</span><input name="pilot_license_type" list="pilotLicenseTypes" maxlength="100" placeholder="Ej.: Piloto Privado de Avión (PPA)" autocomplete="off"><datalist id="pilotLicenseTypes"><option value="Piloto Privado de Avión (PPA)"></option><option value="Piloto Comercial de Avión (PCA)"></option></datalist></label>
       <label class="field">Número de licencia <span class="required">*</span><input name="pilot_license_number" maxlength="65"></label>
       <label class="field">Aeródromo base (opcional)<input name="pilot_airfield" maxlength="120"></label>
       <label class="field">Horas de vuelo (opcional)<input name="pilot_hours" type="number" min="0" max="200000" step="0.1"></label>
@@ -189,6 +189,17 @@ button:disabled{cursor:wait;opacity:.56}
  'use strict';
  const $=id=>document.getElementById(id);
  const {client,ready}=window.GDV_AUTH||{};
+ const institutionalParams=new URLSearchParams(location.search);
+ const institutionalId=institutionalParams.get('institucion');
+ const institutionalRole=institutionalParams.get('rol')||'';
+ if(institutionalId){
+  const back=document.querySelector('header nav a');
+  if(back){back.href='portal-escuela.html?institucion='+encodeURIComponent(institutionalId)+'&rol='+encodeURIComponent(institutionalRole||'alumno')+'&elegida=1'+(institutionalParams.get('prueba')==='1'?'&prueba=1':'');back.textContent='Volver al portal institucional';}
+  const intro=document.querySelector('.hero p');
+  if(intro)intro.textContent=institutionalRole==='piloto'?
+   'Completá tu ficha como Piloto PPA o Comercial. Estos datos personales se comparten con los demás módulos AeroSuite. Secretaría deberá verificar tu licencia y documentación antes de habilitar vuelos sin instructor.':
+   'Completá tus datos y documentos en una sola ficha. La escuela utilizará la misma información en tus turnos y registros institucionales.';
+ }
  let user=null,profile=null,documentIds=[],portraitBlobUrl='',newPortrait=null,busy=false;
  const fields=['given_names','family_names','birth_country','birth_date','residence_country','residence_province','residence_city','residence_address','postal_code','mobile_phone','landline_phone','other_phone'];
  const status=(text,error=false)=>{$('studentStatus').textContent=text;$('studentStatus').className='status '+(error?'error':'ok')};
@@ -224,6 +235,8 @@ button:disabled{cursor:wait;opacity:.56}
   for(const def of roleDefs){
    get(def.flag).checked=Boolean(data?.some(x=>x.role===def.key));
   }
+  if(institutionalRole==='piloto'&&!data?.some(x=>x.role==='pilot'))get('role_pilot').checked=true;
+  if(institutionalRole==='alumno'&&!data?.some(x=>x.role==='student'))get('role_student').checked=true;
   syncRoleFields();
   for(const row of data||[]){
    if(row.role==='student'){
@@ -473,7 +486,7 @@ button:disabled{cursor:wait;opacity:.56}
   if(!client||!ready)throw Error('No se pudo iniciar la verificación de sesión.');
   await ready;
   const {data,error}=await client.auth.getUser();
-  if(error||!data?.user)throw Error('Iniciá sesión en Gente de Vuelo para usar la ficha.');
+  if(error||!data?.user)throw Error('Necesitás una sesión válida para consultar tu ficha aeronáutica.');
   user=data.user;$('accountEmail').value=user.email||'';
   $('loading').hidden=true;$('workspace').hidden=false;
   await refresh();
