@@ -484,7 +484,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
      <summary>Historial mensual de <span id="financeHistoryYear">—</span> · Seleccioná un mes</summary>
      <p class="hint">Los importes históricos permanecen guardados y se muestran en la moneda elegida, sin conversión.</p>
      <div class="table-scroll"><table class="finance-history-table" aria-label="Historial económico mensual">
-      <thead><tr><th>Mes</th><th>Ingresos</th><th>Egresos</th><th>Flujo neto</th></tr></thead>
+      <thead><tr><th>Mes</th><th>Cobros netos</th><th>Gastos fijos</th><th>Caja chica</th><th>Resultado neto</th></tr></thead>
       <tbody id="financeHistoryRows"></tbody>
      </table></div>
     </details>
@@ -2402,14 +2402,18 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     const tr=document.createElement("tr");
     tr.setAttribute("aria-current",v.kind==="month"&&v.period===item.month?"true":"false");
     const cell=document.createElement("td"),button=document.createElement("button");
-    button.type="button";button.textContent=financeMonthLabel(item.month);
+    button.type="button";
+    const [historyYear,historyMonth]=item.month.split("-").map(Number);
+    button.textContent=new Date(Date.UTC(historyYear,historyMonth-1,1)).toLocaleDateString("es-AR",{month:"long",timeZone:"UTC"});
     button.onclick=()=>{
      $("financePeriodKind").value="month";$("financeMonthSelector").value=item.month;
      syncFinancePeriodControls();loadFinancePeriod();
     };
     cell.append(button);tr.append(cell);
     const totals=item.currencies?.[currency]||{};
-    for(const value of [currencyAmount(totals.income,currency),currencyAmount(totals.expenses,currency),
+    for(const value of [currencyAmount(totals.collections,currency),
+      currencyAmount(totals.fixed_expenses,currency),
+      currencyAmount(totals.petty_cash,currency),
       currencyAmount(totals.net,currency)]){
      const td=document.createElement("td");td.textContent=value;tr.append(td);
     }
