@@ -787,11 +787,11 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    legend.querySelector(".settled").hidden=true;
    $("bookingLegendHelp").textContent="Horarios de Buenos Aires (ART). Verde: disponible para reservar · Amarillo suave: pendiente de confirmación · Azul acero: confirmado · Gris oscuro: ocupado o pasado. Tocá tu reserva para ver los detalles.";
   }
-  if(role==="alumno"){
+  if(isParticipant){
    $("financeTab").textContent="Horas de vuelo";
    $("financeEyebrow").textContent="Actividad de vuelo";
    $("financeTitle").textContent="Horas de vuelo";
-   $("financeHelp").textContent="Consultá cuánto volaste en la última práctica y tus horas acumuladas registradas en AeroSuite.";
+   $("financeHelp").textContent=role==="piloto"?"Vuelos particulares registrados al cobrar en esta institución; este resumen no sustituye tu Libro de Vuelo.":"Consultá cuánto volaste en la última práctica y tus horas acumuladas registradas en AeroSuite.";
    $("studentFlightHours").hidden=false;
    $("packsArea").hidden=true;
   }
@@ -950,7 +950,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   let registeredAircraft=[];
   let registeredSimulators=[];
   const publishedAgenda=window.AeroSuiteAgenda.init({
-   inst,manager,role,school,weekDates,weekMode,formatDate:stamp,today:artToday,
+   inst,manager,role,school,pilotVerified,weekDates,weekMode,formatDate:stamp,today:artToday,
    aircraft:()=>registeredAircraft,simulators:()=>registeredSimulators,
    selectedStudent:()=> $("bookingStudent").value,
    students:()=>people.filter(x=>x.role==="alumno").map(x=>({id:x.person_id,label:x.email})),
@@ -1884,6 +1884,30 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
      '</div></section>'+
     '<footer class="sheet-footer"><strong>'+esc(verified)+'</strong><span>'+esc(footer)+'</span></footer>';
   }
+  function renderPilotFlightHours(){
+   if(role!=="piloto")return;
+   const cards=$("flightHoursCards"),history=$("flightHoursHistory");
+   cards.replaceChildren();history.replaceChildren();
+   const count=Number(pilotHours?.flight_count||0),total=Number(pilotHours?.total_minutes||0);
+   const fmt=value=>{
+    const minutes=Math.max(0,Math.floor(Number(value)||0));
+    return Math.floor(minutes/60)+" h "+String(minutes%60).padStart(2,"0")+" min · "+
+     (minutes/60).toLocaleString("es-AR",{minimumFractionDigits:2,maximumFractionDigits:2})+" h centesimales";
+   };
+   for(const [label,value] of [["Vuelos liquidados",String(count)],["Horas registradas al cobrar",fmt(total)]]){
+    const card=document.createElement("div");card.className="card";
+    const title=document.createElement("strong");title.textContent=label;
+    const detail=document.createElement("p");detail.textContent=value;
+    card.append(title,detail);cards.append(card);
+   }
+   if(!count){history.textContent="Todavía no hay vuelos particulares liquidados en esta institución.";return;}
+   for(const item of pilotHours.history||[]){
+    const row=document.createElement("div");row.className="list-item";
+    const heading=document.createElement("strong");heading.textContent=stamp(item.date)+" · "+(item.aircraft||"Matrícula sin registrar");
+    const detail=document.createElement("p");detail.textContent=fmt(item.minutes)+" · Registro de Secretaría";
+    row.append(heading,detail);history.append(row);
+   }
+  }
   function renderStudentFlightHours(){
    if(role!=="alumno")return;
    const cards=$("flightHoursCards"),history=$("flightHoursHistory");
@@ -2022,7 +2046,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   }
 
   function renderStudentPacks(){
-   if(role!=="alumno")return;
+   if(!isParticipant)return;
    const summary=$("studentPackSummary"),list=$("studentPackList");
    summary.replaceChildren();list.replaceChildren();
    const packs=finance.packs||[];
@@ -2435,7 +2459,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    }
   }
   async function loadFinance(){
-   if(!manager&&role!=="alumno")return;
+   if(!manager&&!isParticipant)return;
    if(manager){
     const selectedPeriod=financePeriodQuery(),periodToken=++financePeriodToken;
     const results=await Promise.all([
@@ -2462,6 +2486,10 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    }else{
     finance=await rpc("aerosuite_finance_snapshot",{p_institution_id:inst});
     renderStudentPacks();
+    if(role==="piloto"){
+     pilotHours=await rpc("aerosuite_pilot_hours_summary",{p_institution_id:inst});
+     renderPilotFlightHours();
+    }
    }
   }
 
@@ -3178,8 +3206,13 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   });
   async function refresh(){
    stat.textContent="Actualizando datos de la institución…";
-   try{await loadAircraftChoices();await loadWeek();await loadStudentReportReadStates();await loadReports();await loadLabReports();renderBookings();await loadFinance();await loadAcademy();renderReportFormChoices();stat.textContent="Información institucional actualizada."; }
-   catch(e){stat.textContent="Error al cargar el área: "+safeError(e);}
+   try{
+    await loadAircraftChoices();await loadWeek();
+    if(role!=="piloto"){await loadStudentReportReadStates();await loadReports();await loadLabReports();}
+    renderBookings();await loadFinance();
+    if(role!=="piloto"){await loadAcademy();renderReportFormChoices();}
+    stat.textContent="Información institucional actualizada.";
+   }catch(e){stat.textContent="Error al cargar el área: "+safeError(e);}
   }
   function clearMoveSelectionOnWeekChange(){
    if(!rescheduleTarget)return;
