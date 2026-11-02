@@ -308,6 +308,12 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
 #contaduria .contaduria-mini-page{margin-top:14px}
 #contaduria #contaduriaPacksHost>#packsArea{margin-top:16px}
 #contaduria #contaduriaDetailsHost>#moneyArea{margin-top:17px}
+#contaduria .money-mini-menu{display:flex;flex-wrap:wrap;gap:8px;margin:15px 0;padding:10px;background:#132e43;border:1px solid #527188;border-radius:10px}
+#contaduria .money-mini-menu button{border:1px solid #5b7d92;border-radius:8px;background:#254b63;color:#f0f6f8;padding:9px 12px;font-size:12px;font-weight:700;cursor:pointer}
+#contaduria .money-mini-menu button.active,#contaduria .money-mini-menu button[aria-pressed="true"]{background:#e1b969;color:#213244;border-color:#f3d594}
+#contaduria .money-mini-menu button:focus-visible{outline:3px solid white;outline-offset:2px}
+#contaduria #moneyMovementsPanel[hidden],#contaduria #moneyReportsPanel[hidden]{display:none!important}
+#contaduria #moneyReportsPanel{margin:15px 0;padding:14px;border:1px solid #547791;border-radius:10px}
 @media(max-width:630px){#cobros #flightSettlementPanel .formgrid,#contaduria .contaduria-pack-sale .formgrid,#contaduria #schoolExpensePanel .formgrid{grid-template-columns:1fr}#cobros #flightSettlementPanel{padding:14px}}
 
 /* Cobro de vuelos: identificación institucional y vista previa de horas, sin descontar hasta confirmar. */
@@ -680,7 +686,29 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     </form>
     <h3>Historial de anulaciones</h3><div id="packVoidedHistory" class="list"></div>
    </details></div>
-   <div id="moneyArea"><h3>Movimientos de caja y contaduría</h3><p class="hint">Últimos 150 movimientos. El resumen mensual superior sí incluye el período completo.</p><div class="cards" id="moneySummary"></div><div class="list" id="moneyList"></div></div>
+   <div id="moneyArea">
+    <h3>Movimientos y reportes</h3>
+    <p class="hint">Seleccioná el tipo de registro que querés consultar. La lista muestra hasta los últimos 150 movimientos; el reporte CSV permite consultar un mes completo.</p>
+    <nav id="moneyMiniMenu" class="money-mini-menu" aria-label="Filtrar movimientos y reportes">
+     <button type="button" data-money-view="hours" aria-pressed="true" class="active">Cobros por hora</button>
+     <button type="button" data-money-view="packs" aria-pressed="false">Venta de packs</button>
+     <button type="button" data-money-view="adjustments" aria-pressed="false">Correcciones / devoluciones</button>
+     <button type="button" data-money-view="petty" aria-pressed="false">Caja chica</button>
+     <button type="button" data-money-view="expenses" aria-pressed="false">Gastos institucionales</button>
+     <button type="button" data-money-view="all" aria-pressed="false">Todos</button>
+     <button type="button" data-money-view="reports" aria-pressed="false">Reportes / CSV</button>
+    </nav>
+    <div id="moneyMovementsPanel">
+     <p class="hint" id="moneyFilterStatus" role="status" aria-live="polite"></p>
+     <div class="cards" id="moneySummary"></div>
+     <div class="list" id="moneyList"></div>
+    </div>
+    <div id="moneyReportsPanel" hidden>
+     <h4>Exportar movimientos del mes</h4>
+     <p class="hint">El CSV contiene todos los registros del mes elegido, sin limitarse a los últimos 150 ni alterar los datos de caja.</p>
+     <div id="moneyExportHost"></div>
+    </div>
+   </div>
    </div>
   </section>
   <section class="panel tab-panel" id="cobros" aria-labelledby="cobrosTitle">
@@ -841,7 +869,8 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    $("contaduriaExpensesHost").append($("schoolExpensePanel"));
    $("contaduriaReviewHost").append($("frontdeskReviewPanel"));
    $("contaduriaPacksHost").append($("packsArea"));
-   $("contaduriaDetailsHost").append($("financeDisclosure"),$("financeExportRow"),$("moneyArea"));
+   $("contaduriaDetailsHost").append($("financeDisclosure"),$("moneyArea"));
+   $("moneyExportHost").append($("financeExportRow"));
    // El formulario económico original permanece oculto, pero sus selectores
    // siguen siendo usados por el circuito integral de cobros, packs y reportes.
    // No eliminarlo del DOM al separar las pantallas.
@@ -3205,6 +3234,89 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    }
   }
 
+  const moneyFilterNames={
+   hours:"Cobros por hora",packs:"Venta de packs",
+   adjustments:"Correcciones y devoluciones",petty:"Caja chica",
+   expenses:"Gastos institucionales",all:"Todos los movimientos",reports:"Reportes y CSV"
+  };
+  let moneyMovementFilter="hours";
+  function matchesMoneyFilter(item,filter){
+   const type=item.movement_type;
+   if(filter==="all")return true;
+   if(filter==="hours")return type==="hour_payment";
+   if(filter==="packs")return type==="pack_sale";
+   if(filter==="adjustments")return type==="pack_reversal"||type==="refund";
+   if(filter==="petty")return type==="petty_expense";
+   if(filter==="expenses")return type==="expense";
+   return false;
+  }
+  function renderMoneyMovements(){
+   if(!manager)return;
+   const list=$("moneyList"),summary=$("moneySummary");
+   list.replaceChildren();summary.replaceChildren();
+   if(moneyMovementFilter==="reports")return;
+   const history=finance.movements||[];
+   const filtered=history.filter(m=>matchesMoneyFilter(m,moneyMovementFilter));
+   $("moneyFilterStatus").textContent=moneyFilterNames[moneyMovementFilter]+": "+
+    filtered.length+" registro(s) de los últimos "+history.length+
+    " movimientos recibidos. Para meses completos, consultá «Reportes / CSV».";
+   if(!filtered.length){
+    const empty=document.createElement("p");empty.className="hint";
+    empty.textContent="No hay registros de esta categoría entre los últimos movimientos.";
+    list.append(empty);return;
+   }
+   const sums={};
+   for(const movement of filtered){
+    const sign=["expense","petty_expense","refund","pack_reversal"].includes(movement.movement_type)?-1:1;
+    if(["ARS","USD"].includes(movement.currency)){
+     sums[movement.currency]=(sums[movement.currency]||0)+sign*Number(movement.amount);
+    }
+    const item=document.createElement("div");item.className="list-item";
+    const types={hour_payment:"Cobro de vuelo / deuda",pack_sale:"Venta de pack",
+     pack_reversal:"Corrección de pack",expense:"Gasto institucional",
+     petty_expense:"Caja chica",refund:"Devolución de dinero"};
+    const signedAmount=sign*Number(movement.amount);
+    item.innerHTML='<div class="row between"><strong>'+esc(types[movement.movement_type]||movement.movement_type)+
+     '</strong><strong>'+esc(movement.currency)+" "+signedAmount.toLocaleString("es-AR",{minimumFractionDigits:2,maximumFractionDigits:2})+'</strong></div>'+
+     '<p>'+esc(stamp(movement.created_at))+' · '+esc(movement.description||"Sin detalle")+'</p>'+
+     '<p class="hint">'+(movement.student_email?"Alumno/piloto: "+esc(movement.student_email)+" · ":"")+
+       (movement.expense_category?"Categoría: "+esc(movement.expense_category)+" · ":"")+
+       "Registrado por: "+esc(movement.created_by_email||"Cuenta institucional")+"</p>"+
+     '<p class="hint"><strong>Medio:</strong> '+
+       esc(movement.payment_method==="cash"?"Efectivo":movement.payment_method==="bank_transfer"?"Transferencia bancaria":"No identificado")+
+       (movement.payment_reference?" · Ref.: "+esc(movement.payment_reference):"")+"</p>"+
+     (movement.fiscal_document_reference?
+       '<p class="hint">Comprobante declarado: '+esc(movement.fiscal_document_reference)+'</p>':
+       '<p class="hint">Sin referencia de comprobante registrada</p>');
+    list.append(item);
+   }
+   for(const [currency,amount] of Object.entries(sums)){
+    const card=document.createElement("div");card.className="card";
+    const label=document.createElement("strong");
+    label.textContent="Neto de los movimientos filtrados · "+currency;
+    const value=document.createElement("h3");
+    value.textContent=currencyAmount(amount,currency);
+    card.append(label,value);summary.append(card);
+   }
+  }
+  function showMoneyMovementFilter(view){
+   if(!Object.hasOwn(moneyFilterNames,view))return;
+   moneyMovementFilter=view;
+   const reports=view==="reports";
+   $("moneyMovementsPanel").hidden=reports;
+   $("moneyReportsPanel").hidden=!reports;
+   $("moneyMiniMenu").querySelectorAll("button[data-money-view]").forEach(button=>{
+    const selected=button.dataset.moneyView===view;
+    button.classList.toggle("active",selected);
+    button.setAttribute("aria-pressed",String(selected));
+   });
+   if(!reports)renderMoneyMovements();
+  }
+  $("moneyMiniMenu").querySelectorAll("button[data-money-view]").forEach(button=>{
+   button.addEventListener("click",()=>showMoneyMovementFilter(button.dataset.moneyView));
+  });
+  showMoneyMovementFilter("hours");
+
   function renderFinance(){
    const packs=$("packsList");packs.replaceChildren();
    const all=finance.packs||[];
@@ -3225,31 +3337,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    if(!manager)return;
    const select=$("financePack");select.length=1;
    for(const p of all.filter(x=>x.remaining_minutes>0))select.add(new Option((p.student_email||"Alumno")+" · "+flightHoursMinutes(Number(p.remaining_minutes))+" h",p.id));
-   const list=$("moneyList");list.replaceChildren();
-   const movements=finance.movements||[];
-   if(!movements.length)list.textContent="Todavía no se registraron movimientos económicos.";
-   const totals={};
-   for(const m of movements){
-    const sign=["expense","petty_expense","refund","pack_reversal"].includes(m.movement_type)?-1:1;
-    totals[m.currency]=(totals[m.currency]||0)+sign*Number(m.amount);
-    const item=document.createElement("div");item.className="list-item";
-    item.innerHTML='<div class="row between"><strong>'+esc({hour_payment:"Cobro por hora",pack_sale:"Venta de pack",pack_reversal:"Corrección de pack",expense:"Egreso",petty_expense:"Caja chica",refund:"Devolución"}[m.movement_type]||m.movement_type)+'</strong><strong>'+esc(m.currency)+' '+(sign*Number(m.amount)).toLocaleString("es-AR")+'</strong></div>'+
-     '<p>'+esc(stamp(m.created_at))+' · '+esc(m.description||"Sin detalle")+'</p>'+
-     '<p class="hint">'+(m.student_email?'Alumno: '+esc(m.student_email)+' · ':"")+
-       (m.expense_category?'Categoría: '+esc(m.expense_category)+' · ':"")+
-       'Registrado por: '+esc(m.created_by_email||"Cuenta institucional")+'</p>'+
-     '<p class="hint"><strong>Medio:</strong> '+
-       esc(m.payment_method==="cash"?"Efectivo":m.payment_method==="bank_transfer"?"Transferencia bancaria":"No identificado")+
-       (m.payment_reference?' · Ref.: '+esc(m.payment_reference):"")+'</p>'+
-     (m.fiscal_document_reference?
-       '<p class="hint">Comprobante declarado: '+esc(m.fiscal_document_reference)+'</p>':
-       '<p class="hint">Sin referencia de comprobante registrada</p>');
-    list.append(item);
-   }
-   const sum=$("moneySummary");sum.replaceChildren();
-   for(const [currency,amount] of Object.entries(totals)){
-    const box=document.createElement("div");box.className="card";box.innerHTML='<strong>Diferencia de los últimos 150 movimientos en '+esc(currency)+'</strong><h3>'+Number(amount).toLocaleString("es-AR",{minimumFractionDigits:2})+'</h3>';sum.append(box);
-   }
+   renderMoneyMovements();
   }
 
 
