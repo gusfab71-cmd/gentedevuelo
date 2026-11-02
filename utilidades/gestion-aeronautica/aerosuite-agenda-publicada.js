@@ -17,7 +17,7 @@ window.AeroSuiteAgenda={
   '<label id="agendaBulkNamesLabel" hidden>Clase o materia<input id="agendaBulkNames" maxlength="600" placeholder="Ej.: Teoría"></label>',
   '<label id="agendaBulkCapacityLabel" hidden>Cupos por turno<input id="agendaBulkCapacity" type="number" min="1" max="50" value="12"></label>',
   '</div><button class="primary" type="submit" id="agendaBulkSubmit">Publicar toda la semana</button></form>',
-  '<details class="agenda-daily"><summary>Agregar o modificar horarios puntuales</summary>',
+  '<details class="agenda-daily"><summary>Agregar o modificar horarios</summary>',
   '<p class="hint">Para imprevistos podés agregar un horario individual; para suspender, seleccioná la casilla en la grilla.</p>',
   '<form id="agendaCreate"><div class="formgrid">',
   '<label>Actividad<select id="agendaType"><option value="flight">Vuelo de instrucción</option><option value="simulator">Vuelo virtual</option><option value="theory">Teoría grupal</option></select></label>',
