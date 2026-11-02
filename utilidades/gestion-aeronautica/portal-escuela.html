@@ -109,21 +109,28 @@ input[type=email]{width:100%;background:#122737;border:1px solid #7394aa;border-
     <p>Ingresos y egresos, horas por aeronave, novedades de flota y reporte PDF listo para imprimir o compartir.</p>
     <span class="pill ready">Exclusivo Director</span>
    </a>
-   <a class="tile operational-link" data-visible-role="administrador secretaria" href="#directorPeoplePanel"><h3>Alumnos e instructores</h3><p>Invitaciones, integrantes y desvinculaciones.</p><span class="pill ready">Operativa</span></a>
+   <a class="tile operational-link" data-visible-role="administrador secretaria" href="#directorPeoplePanel"><h3>Personas de la escuela</h3><p>Invitaciones, alumnos, instructores y bajas.</p><span class="pill ready">Operativa</span></a>
    <a class="tile operational-link" data-visible-role="administrador secretaria" data-module="flota" href="#"><h3>Disponibilidad de flotas y mantenimiento</h3><p>Registrá aeronaves y simuladores, administrá su disponibilidad y consultá el seguimiento técnico de las aeronaves.</p><span class="pill ready">Operativa</span></a>
    <a class="tile operational-link" data-visible-role="administrador secretaria" data-module="recursos" href="#"><h3>Academia Aeronáutica</h3><p>Publicá apuntes, documentos y guías para los alumnos de tu escuela.</p><span class="pill ready">Operativa</span></a>
+   <a class="tile operational-link" data-visible-role="administrador secretaria" href="#pilotPeoplePanel"><h3>Pilotos PPA / Comerciales</h3><p>Altas y verificación de licencias.</p><span class="pill ready">Gestión</span></a>
    <a class="tile operational-link" data-visible-role="instructor" data-module="turnera" href="#" hidden><h3>Turnera de instrucción</h3><p>Consultá horarios y confirmá solicitudes que puedas atender.</p><span class="pill ready">Operativa</span></a>
    <a class="tile operational-link" data-visible-role="instructor" data-module="informes" href="#" hidden><h3>Mis informes</h3><p>Registrá clases, horas, devoluciones, combustible y aceite.</p><span class="pill ready">Operativa</span></a>
    <a class="tile operational-link" data-visible-role="instructor" data-module="flota" href="#" hidden><h3>Flota de la escuela</h3><p>Consultá qué aeronaves están disponibles o fuera de servicio.</p><span class="pill ready">Consulta</span></a>
    <a class="tile operational-link" data-visible-role="instructor" data-module="recursos" href="#" hidden><h3>Recursos docentes</h3><p>Cargá apuntes, guías y archivos para los alumnos; consultá los materiales de tu escuela.</p><span class="pill ready">Operativa</span></a>
+   <a class="tile" data-visible-role="alumno" id="studentProfileLink" href="mi-ficha-alumno.html" hidden><h3>Perfil personal</h3><p>Completá tus datos y documentos una sola vez.</p><span class="pill ready">Mi ficha</span></a>
    <a class="tile operational-link" data-visible-role="alumno" data-module="turnera" href="#" hidden><h3>Turnera y reservas</h3><p>Elegí un horario y consultá el estado de las reservas.</p><span class="pill ready">Operativa</span></a>
    <a class="tile operational-link" data-visible-role="alumno" data-module="finanzas" href="#" hidden><h3>Horas de vuelo</h3><p>Consultá las horas voladas y los packs comprados, usados y disponibles.</p><span class="pill ready">Operativa</span></a>
    <a class="tile operational-link" data-visible-role="alumno" data-module="informes" href="#" hidden><h3>Prácticas y devoluciones</h3><p>Actividades realizadas, informes aprobados y recomendaciones del instructor.</p><span class="pill ready">Operativa</span></a>
    <a class="tile operational-link" data-visible-role="alumno" data-module="recursos" href="#" hidden><h3>Academia Aeronáutica</h3><p>Consultá y descargá las guías y apuntes de tu institución.</p><span class="pill ready">Consulta</span></a>
+<a class="tile" data-visible-role="piloto" id="pilotProfileLink" href="mi-ficha-alumno.html" hidden><h3>Ficha del piloto</h3><p>Datos personales, licencia PPA o comercial y documentación compartida.</p><span class="pill ready">Mi ficha</span></a>
+<a class="tile operational-link" data-visible-role="piloto" data-module="turnera" href="#" hidden><h3>Turnera y reservas</h3><p>Reservas de vuelo sujetas a verificación institucional.</p><span class="pill ready">Operativa</span></a>
+<a class="tile operational-link" data-visible-role="piloto" data-module="finanzas" href="#" hidden><h3>Horas de vuelo</h3><p>Consultá tu actividad y horas registradas.</p><span class="pill ready">Consulta</span></a>
+<a class="tile" data-visible-role="piloto" href="../pistas-no-oficiales.html" target="_blank" rel="noopener noreferrer" hidden><h3>AeroLocator</h3><p>Mapa de aeródromos, pistas y helipuntos.</p><span class="pill ready">Abrir</span></a>
+<a class="tile" data-visible-role="piloto" href="../meteorologia-aeronautica.html" target="_blank" rel="noopener noreferrer" hidden><h3>Flight Operations</h3><p>Planificación VFR, meteorología, navegación y combustible.</p><span class="pill ready">Abrir</span></a>
   </div>
   <section class="panel" id="directorInvitePanel" hidden>
    <span class="label">Gestión administrativa de la institución</span>
-   <h2 id="inviteHeading">Invitar instructores y alumnos</h2>
+   <h2 id="inviteHeading">Invitar instructores, alumnos y pilotos</h2>
    <p>Seleccioná el permiso correspondiente a cada persona. Recibirá un correo oficial con un enlace para ingresar directamente a AeroSuite y activar su cuenta. La contraseña la elige el destinatario; no se utiliza el DNI.</p>
    <form id="instituteInviteForm">
     <label>Correo del destinatario
@@ -131,7 +138,7 @@ input[type=email]{width:100%;background:#122737;border:1px solid #7394aa;border-
     </label>
     <div class="role-options">
      <label><input name="role" type="radio" value="instructor" checked><span><strong>Instructor</strong><small>Personal autorizado a instruir</small></span></label>
-     <label><input name="role" type="radio" value="alumno"><span><strong>Alumno</strong><small>Cuenta personal de formación</small></span></label>
+     <label><input name="role" type="radio" value="alumno"><span><strong>Alumno</strong><small>Cuenta personal de formación</small></span></label><label><input name="role" type="radio" value="piloto"><span><strong>Piloto PPA o Comercial</strong><small>Portal propio. La escuela verifica su licencia.</small></span></label>
      <label id="secretaryInviteOption" hidden><input name="role" type="radio" value="secretaria"><span><strong>Secretaría (opcional)</strong><small>Mismos permisos administrativos que Dirección</small></span></label>
     </div>
     <button class="primary" type="submit" id="sendInviteButton">Enviar invitación por correo</button>
@@ -148,6 +155,12 @@ input[type=email]{width:100%;background:#122737;border:1px solid #7394aa;border-
     <div id="peopleList" class="people-list"></div>
     <div class="actions" style="margin-top:15px"><button id="reloadPeople" type="button">Actualizar integrantes</button></div>
   </section>
+<section class="panel" id="pilotPeoplePanel" hidden>
+<span class="label">Verificación institucional</span><h2>Pilotos PPA / Comerciales</h2>
+<p>El piloto completa su ficha. Secretaría verifica la licencia, las habilitaciones y los documentos antes de autorizar vuelos sin instructor.</p>
+<div id="pilotPeopleStatus" class="people-feedback" role="status"></div>
+<div id="pilotPeopleList" class="people-list"></div>
+<div class="actions"><button type="button" id="refreshPilots">Actualizar pilotos</button></div></section>
   <div class="status" id="portalFooter">Turnera, informes de instrucción y Contaduría cuentan con funciones institucionales. El seguimiento técnico de mantenimiento y la Academia Aeronáutica todavía requieren integración específica.</div>
  </div>
 </main>
@@ -176,7 +189,7 @@ try{
  const search=new URLSearchParams(location.search);
  const queryId=search.get('institucion');
  const requestedRole=search.get('rol');
- const accessibleInstitutions=data.filter(x=>x.can_access&&['administrador','secretaria','instructor','alumno'].includes(x.my_role));
+ const accessibleInstitutions=data.filter(x=>x.can_access&&['administrador','secretaria','instructor','alumno','piloto'].includes(x.my_role));
  const chosen=search.get('elegida')==='1';
  const institutionURL=entry=>'portal-escuela.html?institucion='+encodeURIComponent(entry.institution_id)+'&rol='+encodeURIComponent(entry.my_role)+'&elegida=1'+(labLogin?'&prueba=1':'');
  // Con varios vínculos, presentar la elección antes de mostrar contenido institucional.
@@ -185,7 +198,7 @@ try{
   el('chooseInstitution').hidden=false;
   const list=el('chooseInstitutionList');
   const names={escuela:'Escuela de vuelo',aerodromo:'Aeródromo',aeroclub:'Aeroclub'};
-  const roles={administrador:'Dirección',secretaria:'Secretaría',instructor:'Instructor',alumno:'Alumno'};
+  const roles={administrador:'Dirección',secretaria:'Secretaría',instructor:'Instructor',alumno:'Alumno',piloto:'Piloto PPA / Comercial'};
   for(const entry of accessibleInstitutions){
    const card=document.createElement('button');card.type='button';card.className='choose-card';
    const title=document.createElement('strong');title.textContent=entry.institution_name;
@@ -204,7 +217,7 @@ try{
  if(chosen&&!queryId){message.textContent='Elegí primero una institución autorizada.';return;}
  const school=queryId?
    data.find(x=>x.institution_id===queryId&&(!requestedRole||x.my_role===requestedRole)):
-   data.find(x=>x.can_access&&['administrador','secretaria','instructor','alumno'].includes(x.my_role));
+   data.find(x=>x.can_access&&['administrador','secretaria','instructor','alumno','piloto'].includes(x.my_role));
  if(!school){
   message.textContent='Tu cuenta no está asociada a esta escuela con el rol indicado. Ingresá desde tu invitación personal y verificá el correo; las cuentas de otra institución no tienen acceso.';
   return;
@@ -217,7 +230,7 @@ try{
  if(accessibleInstitutions.length>1){
   const switcher=el('institutionSwitcher'),selector=el('institutionSelect');
   accessibleInstitutions.forEach((entry,index)=>{
-   const opt=new Option(entry.institution_name+' · '+({administrador:'Dirección',secretaria:'Secretaría',instructor:'Instructor',alumno:'Alumno'}[entry.my_role]||entry.my_role),String(index));
+   const opt=new Option(entry.institution_name+' · '+({administrador:'Dirección',secretaria:'Secretaría',instructor:'Instructor',alumno:'Alumno',piloto:'Piloto PPA / Comercial'}[entry.my_role]||entry.my_role),String(index));
    opt.selected=entry.institution_id===school.institution_id&&entry.my_role===school.my_role;
    selector.add(opt);
   });
@@ -229,7 +242,7 @@ try{
   el('changeInstitution').addEventListener('click',()=>location.assign('portal-escuela.html'));
   switcher.hidden=false;
  }
- const roleNames={administrador:'director / administrador',secretaria:'administración / secretaría',instructor:'instructor',alumno:'alumno'};
+ const roleNames={administrador:'director / administrador',secretaria:'administración / secretaría',instructor:'instructor',alumno:'alumno',piloto:'piloto PPA o comercial'};
  document.querySelector('h1').textContent='Portal del '+(roleNames[school.my_role]||'integrante');
  for(const card of document.querySelectorAll('[data-visible-role]')){
   card.hidden=!card.dataset.visibleRole.split(/\s+/).includes(school.my_role);
@@ -245,9 +258,20 @@ try{
  el('actorLine').textContent='Cuenta: '+(user.email||'verificada en Supabase');
  el('schoolKind').textContent='Tipo: '+({escuela:'Escuela de vuelo',aeroclub:'Aeroclub',aerodromo:'Aeródromo'}[school.institution_kind]||school.institution_kind);
  el('schoolRole').textContent='Rol: '+school.my_role;
- const isDirector=school.my_role==='administrador';
+ const profileHref='mi-ficha-alumno.html?institucion='+encodeURIComponent(school.institution_id)+'&rol='+encodeURIComponent(school.my_role)+(labLogin?'&prueba=1':'');
+  for(const id of ['studentProfileLink','pilotProfileLink'])if(el(id))el(id).href=profileHref;
+  const isDirector=school.my_role==='administrador';
  const isManager=isDirector||school.my_role==='secretaria';
  const portalFooter=el('portalFooter');
+  if(school.my_role==='piloto'){
+   const result=await client.rpc('aerosuite_pilot_profile',{p_institution_id:school.institution_id});
+   if(result.error)throw result.error;
+   el('schoolRole').textContent='Rol: Piloto PPA / Comercial';
+   const v=document.createElement('div');v.className='status';
+   v.textContent=result.data?.pilot_verified?'Licencia verificada. Podés solicitar vuelos sin instructor sujetos a autorización operativa.':
+    'Completá la ficha del piloto y solicitá a Secretaría verificar la licencia y documentación antes de reservar sin instructor.';
+   const tileArea=el('schoolArea').querySelector('.tiles');if(tileArea)tileArea.before(v);
+  }
  portalFooter.textContent=school.my_role==='instructor'
   ?'La turnera, los informes y los recursos docentes están operativos. La flota ofrece consulta; Contaduría corresponde a Dirección y Secretaría.'
   :school.my_role==='alumno'
@@ -285,9 +309,9 @@ try{
  if(isManager){
    el('directorPeoplePanel').hidden=false;
    const list=el('peopleList'),listFeedback=el('peopleFeedback');
-   const roles={secretaria:'Secretaría',instructor:'Instructor',alumno:'Alumno'};
+   const roles={secretaria:'Secretaría',instructor:'Instructor',alumno:'Alumno',piloto:'Piloto PPA / Comercial'};
    el('secretaryInviteOption').hidden=!isDirector;
-   el('inviteHeading').textContent=isDirector?'Invitar Secretaría, instructores y alumnos':'Invitar instructores y alumnos';
+   el('inviteHeading').textContent=isDirector?'Invitar Secretaría, instructores, alumnos y pilotos':'Invitar instructores, alumnos y pilotos';
    async function loadPeople(){
      listFeedback.textContent='Consultando integrantes de tu institución…';
      list.replaceChildren();
@@ -297,7 +321,7 @@ try{
        const entries=people||[];
        if(!entries.length){
          const empty=document.createElement('p');empty.className='caption';
-         empty.textContent='Todavía no hay instructores, alumnos ni invitaciones pendientes.';
+         empty.textContent='Todavía no hay integrantes ni invitaciones pendientes.';
          list.append(empty);
        }
        for(const person of entries){
@@ -352,7 +376,7 @@ try{
      const f=ev.currentTarget,button=el('sendInviteButton'),feedback=el('inviteFeedback');
      const email=String(new FormData(f).get('recipient')||'').trim().toLowerCase();
      const role=String(new FormData(f).get('role')||'');
-     if(!(isDirector?['secretaria','instructor','alumno']:['instructor','alumno']).includes(role)||!email){feedback.textContent='Completá el correo y elegí un rol válido.';return}
+     if(!(isDirector?['secretaria','instructor','alumno','piloto']:['instructor','alumno','piloto']).includes(role)||!email){feedback.textContent='Completá el correo y elegí un rol válido.';return}
      if(!confirm('¿Enviar una invitación real a '+email+' como '+role+' de '+school.institution_name+'?'))return;
      button.disabled=true;feedback.textContent='Enviando invitación…';
      try{
