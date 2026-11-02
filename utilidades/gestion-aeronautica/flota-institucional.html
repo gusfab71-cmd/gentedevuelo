@@ -26,6 +26,7 @@ button{background:#e9c993;color:#193041;border:1px solid #e9c993;border-radius:9
 <section class="panel" id="createPanel" hidden><h2>Registrar aeronave</h2>
 <form id="createForm"><label>Matrícula<input name="registration" data-aerosuite-registration required maxlength="18" placeholder="LV-ERT" autocapitalize="characters" autocomplete="off"></label>
 <label>Modelo<input name="model" maxlength="100" placeholder="Cessna 152"></label>
+<label>Potencia del motor (HP)<input name="engine_power_hp" type="number" min="1" max="2000" step="1" placeholder="Según ficha técnica"></label>
 <button type="submit">Agregar aeronave</button></form></section>
 <section class="panel"><h2>Aeronaves de la escuela</h2><p>Dirección y Secretaría pueden registrar una salida de servicio, su motivo y ubicación; reincorporar una aeronave o eliminarla de la flota sin borrar sus antecedentes.</p><div id="list" class="list"></div><button type="button" id="reload" style="margin-top:14px">Actualizar flota</button></section>
 
@@ -105,6 +106,10 @@ button{background:#e9c993;color:#193041;border:1px solid #e9c993;border-radius:9
       "En servicio · Ubicación: "+(a.service_location||"No informada")+
       (a.remarks?" · "+a.remarks:"");
     box.append(title,chip,note);
+    const powerReadout=document.createElement("p");
+    powerReadout.textContent=a.engine_power_hp!=null?"Potencia: "+a.engine_power_hp+" HP":
+     "Potencia: falta registrar según ficha técnica";
+    box.append(powerReadout);
     const maintenanceAirframe=planes.find(x=>String(x.reg||"").toUpperCase()===String(a.registration||"").toUpperCase());
     if(maintenanceAirframe){
      const serviceIds=new Set(services.filter(x=>x.ac===maintenanceAirframe.id).map(x=>x.id));
@@ -130,6 +135,30 @@ button{background:#e9c993;color:#193041;border:1px solid #e9c993;border-radius:9
      stateButton.textContent=goingOut?"Dejar fuera de servicio":"Volver a servicio";
      const archiveButton=document.createElement("button");archiveButton.type="button";
      archiveButton.textContent="Eliminar de la flota";archiveButton.className="button-danger";
+     const powerButton=document.createElement("button");powerButton.type="button";
+     powerButton.textContent="Editar potencia (HP)";powerButton.className="button-secondary";
+     const powerForm=document.createElement("form");powerForm.hidden=true;powerForm.className="change-form";
+     powerForm.innerHTML='<h3 class="full">Potencia documentada del motor</h3>'+
+      '<p class="full small-note">Ingresá los HP de esta matrícula según documentación técnica, no por el modelo comercial.</p>'+
+      '<label>Potencia (HP)<input type="number" name="power" min="1" max="2000" step="1" required placeholder="Ej.: 100"></label>'+
+      '<div class="action-row full"><button type="submit">Guardar potencia</button><button type="button" data-cancel class="button-secondary">Cancelar</button></div>';
+     powerForm.elements.namedItem("power").value=a.engine_power_hp??"";
+     powerButton.onclick=()=>{powerForm.hidden=!powerForm.hidden;};
+     powerForm.querySelector("[data-cancel]").onclick=()=>powerForm.hidden=true;
+     powerForm.onsubmit=async ev=>{
+      ev.preventDefault();
+      const hp=Number(powerForm.elements.namedItem("power").value);
+      if(!Number.isInteger(hp)||hp<1||hp>2000){st.textContent="Ingresá HP enteros entre 1 y 2000.";return;}
+      const saveButton=powerForm.querySelector('button[type="submit"]');saveButton.disabled=true;
+      try{
+       const result=await db.rpc("aerosuite_aircraft_specs_update",{
+        p_institution_id:inst,p_aircraft_id:a.id,p_engine_power_hp:hp
+       });
+       if(result.error)throw result.error;
+       if(!result.data?.ok)throw Error("El servidor no confirmó el guardado.");
+       await load("Potencia de "+a.registration+" registrada: "+hp+" HP.");
+      }catch(e){st.textContent="No se pudo guardar: "+(e.message||e);saveButton.disabled=false;}
+     };
      const editor=document.createElement("form");editor.hidden=true;editor.className="change-form";
      editor.innerHTML='<h3 class="full">Registrar cambio de disponibilidad</h3>'+
       '<label>Fecha del cambio (Argentina)<input type="date" name="date" required></label>'+
@@ -210,8 +239,8 @@ button{background:#e9c993;color:#193041;border:1px solid #e9c993;border-radius:9
        await load(a.registration+" eliminada de la flota activa. Historial conservado.");
       }catch(e){st.textContent="Error: "+(e.message||e);save.disabled=false;}
      };
-     actions.append(stateButton,archiveButton);
-     box.append(actions,editor,archiveForm);
+     actions.append(stateButton,powerButton,archiveButton);
+     box.append(actions,editor,powerForm,archiveForm);
     }list.append(box);
    }
 
@@ -280,7 +309,16 @@ button{background:#e9c993;color:#193041;border:1px solid #e9c993;border-radius:9
    const d=new FormData(form);
    b.disabled=true;
    try{
-    await action({p_operation:"create",p_registration:registration,p_model:d.get("model"),p_remarks:""});
+    const powerRaw=String(d.get("engine_power_hp")||"").trim();
+    const power=powerRaw?Number(powerRaw):null;
+    if(power!==null&&(!Number.isInteger(power)||power<1||power>2000))
+     throw Error("La potencia debe ser un número entero de HP (1 a 2000).");
+    const response=await db.rpc("aerosuite_aircraft_register_with_specs",{
+     p_institution_id:inst,p_registration:registration,p_model:String(d.get("model")||""),
+     p_engine_power_hp:power
+    });
+    if(response.error)throw response.error;
+    if(!response.data?.ok)throw Error("No se confirmó el registro de aeronave.");
     form.reset();await load();
    }catch(e){st.textContent="No se pudo registrar: "+(e.message||e);}
    finally{b.disabled=false;}
