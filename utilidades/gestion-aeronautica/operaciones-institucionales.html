@@ -591,7 +591,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     <section class="panel" id="schoolExpensePanel">
      <span class="eyebrow">03 · Administración</span><h3>Gastos institucionales</h3>
      <p class="hint">Los gastos fijos se controlan mes a mes y los eventuales se verifican en caja chica al final de cada día. Solo los pagos efectivos impactan en caja.</p>
-     <label>Tipo de gasto<select id="expenseTypeSelector"><option value="fixed">Gasto fijo mensual</option><option value="petty">Gasto eventual · Caja chica</option></select></label>
+     <label>Tipo de gasto<select id="expenseTypeSelector"><option value="fixed">Gasto fijo mensual</option><option value="petty">Gasto eventual · Caja chica</option><option value="instructors">Pagos de instructores</option></select></label>
      <div id="fixedExpenseArea">
       <h3 style="margin-top:14px">Configurar gasto fijo mensual</h3>
       <form id="fixedExpenseForm">
@@ -722,7 +722,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    <nav id="contaduriaMiniMenu" class="contaduria-mini-menu" aria-label="Áreas de Contaduría">
     <button type="button" data-contaduria-view="resumen" class="active" aria-pressed="true">Resumen y balance</button>
     <button type="button" data-contaduria-view="deudas" aria-pressed="false">Deudas de alumnos y pilotos</button>
-    <button type="button" data-contaduria-view="honorarios" aria-pressed="false">Honorarios</button>
+    <button type="button" data-contaduria-view="honorarios" aria-pressed="false">Horas de instructores</button>
     <button type="button" data-contaduria-view="packs" aria-pressed="false">Packs de horas</button>
     <button type="button" data-contaduria-view="gastos" aria-pressed="false">Gastos institucionales</button>
     <button type="button" data-contaduria-view="control" aria-pressed="false">Control de Secretaría y Dirección</button>
@@ -756,12 +756,20 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
      <div id="studentDebtPotentialList" class="list"></div>
     </details>
    </section>
-   <section class="panel contaduria-mini-page" id="instructorFeesPanel" style="margin-top:18px" hidden>
-    <span class="eyebrow">Honorarios · Seguimiento por instructor</span>
-    <h3>Horas de instrucción y honorarios</h3>
-    <p class="hint">El 10 % es una referencia; Dirección debe guardar el porcentaje acordado para cada instructor. Los honorarios se calculan sobre el vuelo cobrado o sobre el valor proporcional del pack utilizado. No se pagan automáticamente.</p>
+   <section class="panel contaduria-mini-page" id="instructorHoursPanel" style="margin-top:18px" hidden>
+    <span class="eyebrow">Control operativo · Instrucción</span>
+    <h3>Horas de vuelo por instructor</h3>
+    <p class="hint">Cantidad de vuelos y horas aprobadas de cada instructor, por mes y acumuladas. Los pagos se gestionan exclusivamente desde Gastos institucionales.</p>
+    <label>Mes de los vuelos (Argentina)<input type="month" id="instructorHoursMonth" min="2020-01" max="2099-12"></label>
+    <p id="instructorHoursStatus" class="hint" role="status" aria-live="polite">Consultando vuelos aprobados…</p>
+    <div id="instructorHoursList" class="list"></div>
+   </section>
+   <section class="panel" id="instructorFeesPanel" style="margin-top:18px" hidden>
+    <span class="eyebrow">Gastos institucionales · Pago a instructores</span>
+    <h3>Liquidación y pagos a instructores</h3>
+    <p class="hint">Dirección registra el porcentaje acordado y Secretaría o Dirección registra los pagos realizados. Cada pago se contabiliza una sola vez como egreso institucional. El 10 % es solo una referencia.</p>
     <label>Período de vuelos (Argentina)<input type="month" id="instructorFeeMonth" min="2020-01" max="2099-12"></label>
-    <p id="instructorFeeStatus" class="hint" role="status" aria-live="polite">Cargando horas de instrucción…</p>
+    <p id="instructorFeeStatus" class="hint" role="status" aria-live="polite">Cargando pagos de instructores…</p>
     <div id="instructorFeeList" class="list"></div>
    </section>
    <div id="contaduriaPacksHost" class="contaduria-mini-page" hidden></div>
@@ -867,6 +875,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    const sales=document.createElement("section");sales.className="panel contaduria-pack-sale";
    sales.append(purchaseHeading,purchaseNote,purchaseForm);$("contaduriaPacksHost").append(sales);
    $("contaduriaExpensesHost").append($("schoolExpensePanel"));
+   $("schoolExpensePanel").append($("instructorFeesPanel"));
    $("contaduriaReviewHost").append($("frontdeskReviewPanel"));
    $("contaduriaPacksHost").append($("packsArea"));
    $("contaduriaDetailsHost").append($("financeDisclosure"),$("moneyArea"));
@@ -879,7 +888,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    const contaduriaViews={
     resumen:"contaduriaOverviewHost",
     deudas:"studentDebtsPanel",
-    honorarios:"instructorFeesPanel",
+    honorarios:"instructorHoursPanel",
     packs:"contaduriaPacksHost",
     gastos:"contaduriaExpensesHost",
     control:"contaduriaReviewHost",
@@ -3071,6 +3080,57 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     year:"numeric",month:"2-digit"}).formatToParts(new Date(iso));
    return p.find(x=>x.type==="year")?.value+"-"+p.find(x=>x.type==="month")?.value;
   }
+  function renderInstructorHours(){
+   if(!manager)return;
+   const list=$("instructorHoursList"),status=$("instructorHoursStatus");
+   list.replaceChildren();
+   if(!instructorFeeData){
+    status.textContent="No se pudo consultar el historial de vuelos de los instructores.";return;
+   }
+   const month=$("instructorHoursMonth").value;
+   const all=instructorFeeData.flights||[];
+   const selected=all.filter(f=>feeMonth(f.starts_at)===month);
+   const peopleMap=new Map((instructorFeeData.instructors||[]).map(i=>[i.instructor_id,i]));
+   for(const f of all)if(!peopleMap.has(f.instructor_id))
+    peopleMap.set(f.instructor_id,{instructor_id:f.instructor_id,email:f.instructor_email});
+   const sum=items=>items.reduce((acc,f)=>acc+Number(f.flight_minutes||0),0);
+   status.textContent=financeMonthLabel(month)+": "+selected.length+" vuelo(s) aprobado(s), "+
+    flightHoursMinutes(sum(selected))+" h · Acumulado histórico registrado: "+
+    flightHoursMinutes(sum(all))+" h. No incluye informes pendientes o devueltos.";
+   if(!peopleMap.size){
+    list.textContent="Todavía no hay instructores registrados.";return;
+   }
+   for(const instructor of [...peopleMap.values()].sort((a,b)=>
+    String(a.email||"").localeCompare(String(b.email||""),"es"))){
+    const own=selected.filter(f=>f.instructor_id===instructor.instructor_id);
+    const history=all.filter(f=>f.instructor_id===instructor.instructor_id);
+    const card=document.createElement("section");card.className="instructor-fee-card";
+    const title=document.createElement("h4");title.textContent=instructor.email||"Instructor";
+    const summary=document.createElement("p");summary.className="hint";
+    summary.textContent="Mes: "+own.length+" vuelo(s) · "+
+     flightHoursMinutes(sum(own))+" h / "+flightHoursCentesimal(sum(own))+" h centesimales · "+
+     "Acumulado: "+history.length+" vuelo(s) · "+flightHoursMinutes(sum(history))+" h";
+    card.append(title,summary);
+    const details=document.createElement("details");details.className="instructor-fee-payment";
+    const head=document.createElement("summary");head.textContent="Ver vuelos del mes ("+own.length+")";
+    details.append(head);
+    if(!own.length){
+     const p=document.createElement("p");p.className="hint";
+     p.textContent="Sin vuelos aprobados en el mes seleccionado.";details.append(p);
+    }
+    for(const f of own){
+     const div=document.createElement("div");div.className="instructor-fee-row";
+     const line=document.createElement("strong");
+     line.textContent=stamp(f.starts_at)+" · "+(f.aircraft_registration||"Matrícula por confirmar")+
+      " · "+(f.student_email||"Alumno");
+     const duration=document.createElement("p");duration.className="hint";
+     duration.textContent="Horas aprobadas: "+flightHoursMinutes(Number(f.flight_minutes))+" h"+
+      " · "+flightHoursCentesimal(Number(f.flight_minutes))+" h centesimales";
+     div.append(line,duration);details.append(div);
+    }
+    card.append(details);list.append(card);
+   }
+  }
   function renderInstructorFees(){
    if(!manager)return;
    const root=$("instructorFeeList"),status=$("instructorFeeStatus");
@@ -3191,12 +3251,17 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    try{
     instructorFeeData=await rpc("aerosuite_instructor_fee_overview",{p_institution_id:inst});
     renderInstructorFees();
+    renderInstructorHours();
    }catch(e){
     instructorFeeData=null;
     $("instructorFeeList").replaceChildren();
     $("instructorFeeStatus").textContent="No se pudieron consultar honorarios: "+safeError(e);
+    $("instructorHoursList").replaceChildren();
+    $("instructorHoursStatus").textContent="No se pudieron consultar las horas: "+safeError(e);
    }
   }
+  $("instructorHoursMonth").value=artToday().slice(0,7);
+  $("instructorHoursMonth").addEventListener("change",renderInstructorHours);
   $("instructorFeeMonth").value=artToday().slice(0,7);
   $("instructorFeeMonth").addEventListener("change",renderInstructorFees);
   async function loadFinance(){
@@ -3694,9 +3759,10 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   $("pettyReviewDay").value=artToday();
   $("pettyReviewDay").max=artToday();
   const showExpenseType=()=>{
-   const petty=$("expenseTypeSelector").value==="petty";
-   $("fixedExpenseArea").hidden=petty;
-   $("pettyExpenseArea").hidden=!petty;
+   const kind=$("expenseTypeSelector").value;
+   $("fixedExpenseArea").hidden=kind!=="fixed";
+   $("pettyExpenseArea").hidden=kind!=="petty";
+   $("instructorFeesPanel").hidden=kind!=="instructors";
   };
   $("expenseTypeSelector").addEventListener("change",showExpenseType);
   showExpenseType();
