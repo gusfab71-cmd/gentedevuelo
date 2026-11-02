@@ -23,7 +23,7 @@
   if(onInstitutionalProfile){
     const role=institutionalParams.get('rol')||'';
     const lab=institutionalParams.get('prueba')==='1'&&
-      ['alumno','instructor','administrador','secretaria'].includes(role);
+      ['alumno','instructor','administrador','secretaria','piloto'].includes(role);
     const institutionalClient=supabase.createClient(GDV_CONFIG.url,GDV_CONFIG.key,{
       auth:{storageKey:lab?'aerosuite-laboratorio-'+role+'-v1-auth':'aerosuite-institucional-v2-auth',
         persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}
