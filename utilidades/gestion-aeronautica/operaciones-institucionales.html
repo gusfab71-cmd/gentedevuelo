@@ -266,9 +266,9 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
 #turnera #bookingList .booking-cancel-pending{background:#a23340;border:1px solid #e38b95;border-radius:6px;color:#fff;font-weight:800;font-size:11px;padding:5px 11px;cursor:pointer;white-space:nowrap}
 #turnera #bookingList .booking-cancel-pending:hover{background:#bc3e4c}
 #turnera #bookingList .booking-cancel-pending:disabled{opacity:.55;cursor:wait}
-#turnera #bookingList details.booking-mini summary.booking-compact-summary::before{content:"▸";font-size:14px;color:#e8c58c;flex-shrink:0}
+#turnera #bookingList details.booking-mini summary.booking-compact-summary::before{content:"▸";font-size:26px;font-weight:900;color:#ffe0a0;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;min-width:29px;line-height:1.1;text-shadow:0 0 6px rgba(239,190,105,.32)}
 #turnera #bookingList details.booking-mini[open] summary.booking-compact-summary::before{content:"▾"}
-#turnera #bookingList .booking-management-toggle{display:inline-flex;align-items:center;justify-content:center;padding:6px 10px;border:1px solid #dfb97a;border-radius:7px;background:#294b60;color:#fff0cf;font-size:11px;font-weight:850;white-space:nowrap;margin-left:6px}
+#turnera #bookingList .booking-management-toggle{display:inline-flex;align-items:center;justify-content:center;padding:7px 12px;border:1px solid #dfb97a;border-radius:7px;background:#294b60;color:#fff0cf;font-size:12px;font-weight:850;white-space:nowrap;margin-left:6px}
 #turnera #bookingList details.booking-mini summary.booking-compact-summary:hover .booking-management-toggle{background:#385e75}
 #turnera #bookingList details.booking-mini.pending[open]{border-color:#d7b274;box-shadow:inset 0 0 0 1px #a78346}
 #turnera #bookingList details.booking-mini summary.booking-compact-summary:focus-visible{outline:2px solid #f4d386;outline-offset:2px}
@@ -966,7 +966,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   let registeredAircraft=[];
   let registeredSimulators=[];
   const publishedAgenda=window.AeroSuiteAgenda.init({
-   inst,manager,role,school,pilotVerified,weekDates,weekMode,formatDate:stamp,today:artToday,
+   inst,manager,role,actorId:user.id,school,pilotVerified,weekDates,weekMode,formatDate:stamp,today:artToday,
    aircraft:()=>registeredAircraft,simulators:()=>registeredSimulators,
    selectedStudent:()=> $("bookingStudent").value,
    students:()=>people.filter(x=>["alumno","piloto"].includes(x.role)).map(x=>({id:x.person_id,label:(x.role==="piloto"?"Piloto · ":"")+x.email})),
@@ -1120,7 +1120,9 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    const instructorSelect=$("bookingInstructor");
    if(instructorSelect&&instructorSelect.parentElement!==$("adminBooking"))$("adminBooking").append(instructorSelect);
    target.replaceChildren();
-   const list=bookings.filter(x=>x.status!=="cancelled"&&(manager||role==="instructor"||x.my_booking));
+   const list=bookings.filter(x=>x.status!=="cancelled"&&(manager||
+    (role==="instructor"&&(x.instructor_id===user.id||x.status==="pending"&&!x.instructor_id))||
+    x.my_booking));
    if(!list.length){target.textContent="No hay reservas visibles para esta semana.";return;}
    if(manager&&list.some(x=>x.status==="pending"&&x.booking_id&&new Date(x.starts_at).getTime()>Date.now())){
     const row=document.createElement("div");row.className="notice";row.style.marginBottom="12px";
@@ -1133,22 +1135,27 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     card.open=manager&&b.status==="pending";
     const paid=manager&&!!b.booking_id&&settledWeek.has(b.booking_id);
     const reservationMeta=b.booking_id?publishedAgenda.getReservationForBooking(b.booking_id):null;
+    const reservationSlot=b.booking_id?publishedAgenda.getSlotForBooking(b.booking_id):null;
+    const studentLabel=String(reservationMeta?.student_name||"").trim()||b.student_email||"Alumno sin identificar";
+    const aircraftLabel=reservationSlot?.resource||b.aircraft||"A definir";
     const withoutInstructor=reservationMeta?.with_instructor===false;
     if(paid)card.classList.add("settled");
     else if(b.status==="pending"||b.status==="confirmed")card.classList.add(b.status);
     const sensitive=!isParticipant||b.my_booking;
     card.innerHTML='<summary class="row between booking-compact-summary"><strong>'+esc(stamp(b.starts_at))+
-     ' · 90 min · '+(sensitive?esc(b.student_email||"Alumno"):"Ocupado")+
+     ' · 90 min · '+(sensitive?esc(studentLabel):"Ocupado")+
      (sensitive&&withoutInstructor?" · SIN INSTRUCTOR":"")+'</strong>'+
      (paid?'':'<span class="chip '+esc(b.status)+'">'+esc(statuses[b.status]||b.status)+'</span>')+'</summary>'+
      (sensitive?'<p>Instructor: '+esc(withoutInstructor?"Sin instructor a bordo (sujeto a autorización)":
      b.instructor_id?(b.instructor_email||"Cuenta no disponible")+
      (b.status==="pending"?" (preasignado · pendiente de confirmar)":""):"Sin asignar")+
-     ' · Aeronave: '+esc(b.aircraft||"A definir")+'</p>':'<p>Turno ocupado de otro alumno.</p>');
-    if(manager){
+     ' · Aeronave: '+esc(aircraftLabel)+'</p>':'<p>Turno ocupado de otro alumno.</p>');
+    if(manager||role==="instructor"){
      const summary=card.querySelector(".booking-compact-summary");
      const hint=document.createElement("span");hint.className="booking-management-toggle";
-     const setLabel=()=>{hint.textContent=card.open?"Ocultar gestión ▲":"Ver gestión ▼";};
+     const setLabel=()=>{hint.textContent=card.open?
+      (manager?"Ocultar gestión ▲":"Ocultar detalle ▲"):
+      (manager?"Ver gestión ▼":"Ver detalle ▼");};
      summary.append(hint);
      card.addEventListener("toggle",setLabel);
      setLabel();
