@@ -93,6 +93,7 @@ window.AeroSuiteAgenda={
    ".agenda-slot-btn.completed{background:#385b69;border-color:#547989;color:#f1f7fa}",
    ".agenda-slot-btn.occupied,.agenda-slot-btn.past,.agenda-slot-btn.unavailable{background:#3c4a55;border-color:#566977;color:#dce4eb}",
    ".agenda-slot-btn.conflict{background:#405467;border-color:#7896a7;color:#fff4d3}",
+   ".agenda-slot-btn .agenda-conflict-instruction{font-size:10px;font-weight:750;line-height:1.35;color:#ffe0a2}",
    ".agenda-booking-feedback{margin:10px 0;padding:10px 12px;border:1px solid;border-radius:8px;font-weight:700}",
    ".agenda-booking-feedback.error{background:#563b37;border-color:#d6a184;color:#fff2dd}",
    ".agenda-booking-feedback.success{background:#234e40;border-color:#8ec3a3;color:#f0fff4}",
@@ -238,7 +239,7 @@ window.AeroSuiteAgenda={
     return;
    }
    if(myScheduleOverlaps(slot)){
-    showStudentBookingFeedback("Ya tenés otra actividad que se superpone con este turno de 90 minutos. Elegí otro horario.","error");
+    showStudentBookingFeedback("Ya tenés un turno reservado en ese horario. Para cambiar de aeronave o reprogramarlo, solicitá el cambio a Secretaría. No hagas una segunda reserva.","error");
     return;
    }
    const label=names[slot.activity]+" · "+slot.resource+" · "+c.formatDate(slot.starts_at)+
@@ -512,7 +513,14 @@ window.AeroSuiteAgenda={
        legacyMove?"Elegir · 1 h 30":state==="Libre"?"Libre · 1 h 30":state)+
        (slot.activity==="theory"?" · "+slot.reserved+"/"+slot.capacity:""),"small");
       b.append(resourceName,line);
-      b.setAttribute("aria-label",slot.resource+" · "+state+" · "+date+" "+time);
+      if(state==="Ya tenés otro turno"){
+       const instruction=htmlText("Cambio de aeronave: solicitá a Secretaría","small");
+       instruction.className="agenda-conflict-instruction";
+       b.append(instruction);
+       b.title="Ya tenés una reserva en este horario. Para cambiar de aeronave, contactá a Secretaría.";
+      }
+      b.setAttribute("aria-label",slot.resource+" · "+state+
+       (state==="Ya tenés otro turno"?" · Cambio de aeronave: solicitá a Secretaría":"")+" · "+date+" "+time);
       if(legacyMove)b.onclick=()=>c.onLegacyReschedule(slot,b);
       else if(canBook)b.onclick=()=>reserveSlot(slot,b);
       else if(reprogramming)b.onclick=()=>c.onLegacyInvalidTarget?.(slot);
