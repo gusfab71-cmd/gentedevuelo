@@ -387,17 +387,18 @@ window.AeroSuiteAgenda={
   function renderStaffDetail(){
    const wrapper=$("agendaStaffDetails"),target=$("agendaStaffCards");
    target.replaceChildren();
-   if(!c.manager||c.isLegacyRescheduling?.()){wrapper.hidden=true;return;}
+   if(!(c.manager||c.role==="instructor")||c.isLegacyRescheduling?.()){wrapper.hidden=true;return;}
    wrapper.hidden=false;
+   wrapper.querySelector("h3").textContent=c.role==="instructor"?"Detalle del vuelo seleccionado":"Gestión del turno seleccionado";
    const slot=slots.find(s=>s.id===selectedSlotId);
-   if(!slot){target.textContent="Seleccioná un horario de la grilla para administrar sus recursos o reservas.";return;}
+   if(!slot){target.textContent="Seleccioná un turno de la grilla para ver quién lo reservó y sus detalles.";return;}
    const card=document.createElement("div");card.className="agenda-card";
    card.append(htmlText(names[slot.activity]+" · "+slot.resource+" · "+c.formatDate(slot.starts_at)+
     " hasta las "+endTime90(slot.starts_at)+" · 90 minutos completos","strong"));
    card.append(htmlText("Estado: "+(slot.published?"Publicado":"En preparación")+
     " · Cupos utilizados: "+slot.reserved+" de "+slot.capacity+
     (slot.bookable===false?" · Recurso fuera de servicio":"")));
-   if(c.school.can_write&&c.weekMode()==="next"&&slot.published&&slot.bookable!==false&&
+   if(c.manager&&c.school.can_write&&c.weekMode()==="next"&&slot.published&&slot.bookable!==false&&
      new Date(slot.starts_at).getTime()>Date.now()&&Number(slot.reserved)<Number(slot.capacity)){
     const students=c.students?.()||[];
     const selectorLabel=document.createElement("label");
@@ -456,7 +457,7 @@ window.AeroSuiteAgenda={
     reservationButton.disabled=!students.length;
     card.append(selectorLabel,reservationButton,inlineStatus);
    }
-   if(c.school.can_write&&new Date(slot.starts_at).getTime()>Date.now()){
+   if(c.manager&&c.school.can_write&&new Date(slot.starts_at).getTime()>Date.now()){
     const bar=document.createElement("div");bar.className="actions";
     if(!slot.published&&slot.bookable!==false)bar.append(addButton("Publicar este turno",()=>manage("publish",slot.id),"primary"));
     if(!bookings.some(r=>r.slot_id===slot.id&&r.status!=="cancelled")){
@@ -471,20 +472,27 @@ window.AeroSuiteAgenda={
     if(bar.childNodes.length)card.append(bar);
    }
    const related=bookings.filter(r=>r.slot_id===slot.id&&r.status!=="cancelled");
-   if(!related.length)card.append(htmlText("No hay alumnos reservados para este horario."));
+   if(!related.length)card.append(htmlText(c.role==="instructor"?"No tenés un vuelo asignado en este horario.":"No hay alumnos reservados para este horario."));
    for(const r of related){
     const row=document.createElement("div");row.className="agenda-booked";
     const studentName=String(r.student_name||"").trim();
     const studentLabel=studentName||(r.student_email?"Nombre pendiente en el perfil · "+r.student_email:"Alumno sin identificar");
-    row.append(htmlText(studentLabel+" · "+(r.status==="confirmed"?"Confirmado":r.status==="completed"?"Realizado":"Pendiente"),"span"));
-    if(c.school.can_write&&new Date(slot.starts_at).getTime()>Date.now()&&["pending","confirmed"].includes(r.status)){
+    row.append(htmlText("Alumno: "+studentLabel+" · "+(r.status==="confirmed"?"Confirmado":r.status==="completed"?"Realizado":"Pendiente"),"span"));
+    if(c.manager&&c.school.can_write&&new Date(slot.starts_at).getTime()>Date.now()&&["pending","confirmed"].includes(r.status)){
      if(!r.booking_id&&r.status==="pending")row.append(addButton("Confirmar",()=>actReservation("confirm",r)));
      row.append(addButton("Reprogramar",()=>reprogramReservation(r,slot)));
      row.append(addButton("Cancelar",()=>actReservation("cancel",r),"danger"));
     }
-    if(r.booking_id)row.append(htmlText(r.with_instructor===false?
-     "Vuelo sin instructor solicitado. Secretaría debe verificar y autorizar esta modalidad desde «Modificar reservas».":
-     "Vuelo con instructor solicitado. Asigná instructor desde «Modificar reservas».","small"));
+    if(r.booking_id){
+     row.append(htmlText(c.role==="instructor"?"Vuelo asignado a tu cuenta de instructor.":
+      r.with_instructor===false?"Vuelo sin instructor solicitado. Secretaría debe verificar la habilitación.":
+      "Asigná o modificá el instructor desde «Modificar reservas».","small"));
+     row.append(addButton("Ver ficha completa",()=>{
+      const detail=document.getElementById("booking-"+r.booking_id);
+      if(detail){detail.open=true;detail.scrollIntoView({behavior:"smooth",block:"center"});}
+      else msg("No se encontró la ficha. Actualizá la turnera.");
+     }));
+    }
     card.append(row);
    }
    target.append(card);
@@ -527,6 +535,8 @@ window.AeroSuiteAgenda={
      for(const slot of candidates){
       const own=bookings.filter(r=>r.slot_id===slot.id&&r.my_booking);
       const active=bookings.filter(r=>r.slot_id===slot.id&&r.status!=="cancelled");
+       const assignedToInstructor=c.role==="instructor"&&slot.activity==="flight"?
+        active.find(r=>r.booking_id&&["pending","confirmed","completed"].includes(r.status)):null;
       const future=when>Date.now(),remaining=Number(slot.capacity)-Number(slot.reserved);
       const conflict=["alumno","piloto"].includes(c.role)&&!own.length&&myScheduleOverlaps(slot);
       const sameTimeOwnFlight=["alumno","piloto"].includes(c.role)&&slot.activity==="flight"?
@@ -552,13 +562,15 @@ window.AeroSuiteAgenda={
         active.some(r=>r.status==="pending")?"Pendiente":
         active.some(r=>r.status==="completed")?"Realizado":state;
       }
-      if(state==="Libre"&&c.weekMode()==="current")state="Solo consulta";
+      if(assignedToInstructor)state="Vuelo asignado";
+       if(state==="Libre"&&c.weekMode()==="current")state="Solo consulta";
       const reprogramming=!!c.manager&&!!c.isLegacyRescheduling?.();
       const legacyMove=reprogramming&&slot.activity==="flight"&&slot.published&&
        slot.bookable!==false&&future&&remaining>0&&active.length===0;
       const selectedMove=legacyMove&&c.selectedRescheduleSlot?.()===slot.id;
       const b=document.createElement("button");b.type="button";b.className="slot agenda-slot-btn "+
        (selectedMove?"move-selected":legacyMove?"move-target":
+        state==="Vuelo asignado"?(assignedToInstructor.status==="pending"?"busy pending":"busy confirmed"):
         state==="Pendiente"?"busy pending":state==="Confirmado"?"busy confirmed":
         settledMethod?"settled":state==="Realizado"?"completed":state==="Libre"?"available":
         state==="Preparación"?"draft":state==="Pasado"?"past":
@@ -567,7 +579,7 @@ window.AeroSuiteAgenda={
         ["Ocupado","Sin cupos","Solo consulta"].includes(state)?"occupied":"");
       const resourceName=document.createElement("strong");resourceName.textContent=slot.resource||names[slot.activity];
       const line=htmlText((selectedMove?"Seleccionado · 1 h 30":
-       legacyMove?"Elegir · 1 h 30":state==="Libre"?"Libre · 1 h 30":state)+
+       legacyMove?"Elegir · 1 h 30":state==="Libre"?"Libre · 1 h 30":state==="Vuelo asignado"?"Vuelo asignado":state)+
        (slot.activity==="theory"?" · "+slot.reserved+"/"+slot.capacity:""),"small");
       b.append(resourceName,line);
       if(state==="Cambiar aeronave")b.title="Tenés una reserva pendiente: clic para cambiar de aeronave manteniendo el horario.";
@@ -583,7 +595,7 @@ window.AeroSuiteAgenda={
         "Ya tenés un turno CONFIRMADO en este horario.\nPara cambiar de aeronave, comunicate con Secretaría.":
         "Ya tenés otra reserva superpuesta con este horario.\nPara modificarla o reprogramarla, comunicate con Secretaría.");
       }
-      else if(c.manager){
+      else if(c.manager||c.role==="instructor"){
        b.onclick=()=>{
         selectedSlotId=slot.id;renderStaffDetail();
         $("agendaStaffDetails").scrollIntoView({behavior:"smooth",block:"nearest"});
@@ -596,6 +608,7 @@ window.AeroSuiteAgenda={
      if(selected==="flight"){
       for(const old of (c.legacyBookings?.()||[]).filter(item=>
        item.status!=="cancelled"&&item.booking_id&&
+       (c.role!=="instructor"||item.instructor_id===c.actorId)&&
        !bookings.some(r=>r.booking_id===item.booking_id)&&
        new Date(item.starts_at).getTime()===when&&
        (resource==="all"||String(item.aircraft||"").toUpperCase()===resource.toUpperCase()))){
@@ -606,7 +619,7 @@ window.AeroSuiteAgenda={
        oldButton.className="slot agenda-slot-btn "+
         (privateBooking?"occupied":oldPayment?"settled":old.status==="pending"?"busy pending":
          old.status==="confirmed"?"busy confirmed":"completed");
-       const title=htmlText(privateBooking?"Reservado":old.aircraft||"Vuelo anterior","strong");
+       const title=htmlText(privateBooking?"Reservado":c.role==="instructor"?"Vuelo asignado":old.aircraft||"Vuelo anterior","strong");
        const description=htmlText(privateBooking?"Ocupado":
         (oldPayment?settledLabel(oldPayment):old.status==="pending"?"Pendiente":
          old.status==="confirmed"?"Confirmado":"Realizado")+
@@ -887,6 +900,7 @@ window.AeroSuiteAgenda={
    },
    isPublishedBooking(id){return bookings.some(r=>r.booking_id===id);},
    getReservationForBooking(id){return bookings.find(r=>r.booking_id===id)||null;},
+   getSlotForBooking(id){const r=bookings.find(x=>x.booking_id===id);return r?slots.find(x=>x.id===r.slot_id)||null:null;},
    hasFreeFutureFlightSlot(){
     return slots.some(s=>s.activity==="flight"&&s.published&&s.bookable!==false&&
      new Date(s.starts_at).getTime()>Date.now()&&Number(s.reserved)<Number(s.capacity));
