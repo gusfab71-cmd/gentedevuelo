@@ -271,7 +271,7 @@ button:disabled{cursor:wait;opacity:.56}
   }
  }
  function rolePayload(def){
-  const payload={user_id:user.id,role:def.key,verification_state:'unverified',updated_at:new Date().toISOString()};
+  const payload={user_id:user.id,role:def.key,updated_at:new Date().toISOString()};
   if(def.key==='student')payload.training_goal=get('student_training_goal').value.trim();
   if(def.key==='instructor'){
    payload.license_type=get('instructor_license_type').value.trim();
