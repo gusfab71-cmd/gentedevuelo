@@ -734,6 +734,16 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     <h3>Deudas de alumnos y pilotos</h3>
     <p class="hint">Registrá importes realmente adeudados. Un vuelo aprobado sin liquidar no constituye por sí solo una deuda con importe confirmado. Los pagos parciales descuentan saldo y solo los cobros efectivos impactan en caja.</p>
     <p class="hint" id="studentDebtSummary" role="status" aria-live="polite">Consultando cuentas corrientes…</p>
+    <section id="studentDebtPotentialPanel" class="panel" style="margin:14px 0">
+     <h4 id="studentDebtPotentialTitle">Vuelos realizados pendientes de cobro</h4>
+     <p class="hint">Se muestran los vuelos registrados como realizados con respaldo de instrucción aprobada. No se asigna deuda monetaria automáticamente hasta confirmar el importe, ni se incluyen vuelos pagados o descontados de packs.</p>
+     <div id="studentDebtPotentialList" class="list"></div>
+    </section>
+    <details id="studentDebtUnverifiedPanel" class="finance-history-details" style="margin-top:14px">
+     <summary>Reservas pasadas sin verificar · Consultar</summary>
+     <p class="hint">Son reservas anteriores sin cobro o pack. No está confirmado que el vuelo se haya realizado; Secretaría debe comprobarlo antes de considerarlo deuda.</p>
+     <div id="studentDebtUnverifiedList" class="list"></div>
+    </details>
     <details class="finance-history-details" id="studentDebtCreatePanel">
      <summary>Registrar una nueva deuda</summary>
      <form id="studentDebtForm" style="margin:13px 0">
@@ -748,13 +758,8 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
      </form>
      <p class="hint" id="studentDebtCreateStatus" role="status" aria-live="polite"></p>
     </details>
-    <h4 style="margin:17px 0 8px">Saldos registrados</h4>
+    <h4 style="margin:17px 0 8px">Deudas con importe registrado</h4>
     <div id="studentDebtList" class="list"></div>
-    <details id="studentDebtPotentialPanel" class="finance-history-details" style="margin-top:14px">
-     <summary>Vuelos aprobados todavía sin liquidar · Ver casos</summary>
-     <p class="hint">No son deudas monetarias confirmadas hasta que Secretaría registre el importe correspondiente.</p>
-     <div id="studentDebtPotentialList" class="list"></div>
-    </details>
    </section>
    <section class="panel contaduria-mini-page" id="instructorHoursPanel" style="margin-top:18px" hidden>
     <span class="eyebrow">Control operativo · Instrucción</span>
@@ -2901,14 +2906,17 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     $("studentDebtSummary").textContent="No se pudo recuperar la cuenta corriente.";
     return;
    }
-   const debts=studentDebtData.debts||[],possible=studentDebtData.potential_flights||[];
+   const debts=studentDebtData.debts||[],possible=studentDebtData.potential_flights||[],
+    unverified=studentDebtData.unverified_flights||[];
    const active=debts.filter(x=>!x.cancelled_at&&Number(x.remaining)>0);
    const sums={};
    for(const d of active)sums[d.currency]=(sums[d.currency]||0)+Number(d.remaining);
-   $("studentDebtSummary").textContent="Cuentas con saldo pendiente: "+
-    active.length+" · Total por moneda: "+
-    (Object.entries(sums).map(([currency,amount])=>currencyAmount(amount,currency)).join(" + ")||"Sin deuda registrada")+
-    ". Los importes pendientes no se suman a ingresos hasta cobrarlos.";
+   $("studentDebtSummary").textContent="Vuelos realizados sin liquidar: "+possible.length+
+    " · Reservas pasadas por verificar: "+unverified.length+
+    " · Deudas registradas pendientes: "+active.length+
+    " · Total exigible registrado: "+
+    (Object.entries(sums).map(([currency,amount])=>currencyAmount(amount,currency)).join(" + ")||"Sin importe confirmado")+
+    ". Los saldos pendientes no cuentan como ingreso hasta cobrarlos.";
    const person=$("studentDebtPerson"),previousPerson=person.value;
    person.length=1;
    const registered=people.filter(x=>["alumno","piloto"].includes(x.role));
@@ -3004,13 +3012,14 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     }
     list.append(group);
    }
-   $("studentDebtPotentialPanel").querySelector("summary").textContent=
-    "Vuelos aprobados sin liquidar ("+possible.length+") · Ver casos";
-   if(!possible.length)potential.textContent="No hay vuelos aprobados sin liquidación.";
+   $("studentDebtPotentialTitle").textContent=
+    "Vuelos realizados pendientes de cobro o pack ("+possible.length+")";
+   if(!possible.length)potential.textContent="No hay vuelos realizados y aprobados pendientes de cobro o descuento de pack.";
    for(const f of possible){
     const card=document.createElement("div");card.className="list-item";
     const head=document.createElement("strong");
-    head.textContent=(f.profile==="piloto"?"Piloto":"Alumno")+" · "+f.email;
+    head.textContent=(f.profile==="piloto"?"Piloto":"Alumno")+" · "+f.email+
+     " · Vuelo realizado · Pendiente de liquidación";
     const data=document.createElement("p");data.className="hint";
     data.textContent=stamp(f.starts_at)+" · "+(f.aircraft||"Aeronave sin identificar")+
      " · "+flightHoursMinutes(Number(f.minutes))+" h · Importe aún no confirmado";
@@ -3033,6 +3042,31 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
      card.append(add);
     }
     potential.append(card);
+   }
+   const unverifiedRoot=$("studentDebtUnverifiedList");
+   unverifiedRoot.replaceChildren();
+   const confirmedUnpaid=unverified.filter(f=>f.status==="confirmed").length;
+   const pendingUnpaid=unverified.filter(f=>f.status==="pending").length;
+   $("studentDebtUnverifiedPanel").querySelector("summary").textContent=
+    "Reservas pasadas sin verificar ("+unverified.length+") · "+
+    confirmedUnpaid+" confirmadas y "+pendingUnpaid+" pendientes";
+   if(!unverified.length){
+    unverifiedRoot.textContent="No hay reservas pasadas pendientes de verificación.";
+   }
+   for(const f of unverified){
+    const card=document.createElement("div");card.className="list-item";
+    const heading=document.createElement("strong");
+    heading.textContent=(f.profile==="piloto"?"Piloto":"Alumno")+" · "+
+     (f.email||"Sin identificar");
+    const details=document.createElement("p");details.className="hint";
+    details.textContent="Turno: "+stamp(f.starts_at)+" · "+(statuses[f.status]||f.status)+
+     " · "+(f.aircraft||"Aeronave por determinar")+
+     " · Instructor: "+(f.instructor_email||"Sin asignar")+
+     " · SIN INFORME NI LIQUIDACIÓN";
+    const warning=document.createElement("p");warning.className="hint";
+    warning.textContent="Verificar si realmente voló. No se considera deuda hasta comprobar el vuelo y su importe.";
+    card.append(heading,details,warning);
+    unverifiedRoot.append(card);
    }
   }
   async function loadStudentDebts(){
