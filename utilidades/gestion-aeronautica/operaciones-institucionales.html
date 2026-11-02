@@ -484,7 +484,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
      <summary>Historial mensual de <span id="financeHistoryYear">—</span> · Seleccioná un mes</summary>
      <p class="hint">Los importes históricos permanecen guardados y se muestran en la moneda elegida, sin conversión.</p>
      <div class="table-scroll"><table class="finance-history-table" aria-label="Historial económico mensual">
-      <thead><tr><th>Mes</th><th>Ingresos</th><th>Egresos</th><th>Flujo neto</th><th>Movimientos</th></tr></thead>
+      <thead><tr><th>Mes</th><th>Ingresos</th><th>Egresos</th><th>Flujo neto</th></tr></thead>
       <tbody id="financeHistoryRows"></tbody>
      </table></div>
     </details>
@@ -2410,7 +2410,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     cell.append(button);tr.append(cell);
     const totals=item.currencies?.[currency]||{};
     for(const value of [currencyAmount(totals.income,currency),currencyAmount(totals.expenses,currency),
-      currencyAmount(totals.net,currency),String(item.total_movements||0)]){
+      currencyAmount(totals.net,currency)]){
      const td=document.createElement("td");td.textContent=value;tr.append(td);
     }
     body.append(tr);
