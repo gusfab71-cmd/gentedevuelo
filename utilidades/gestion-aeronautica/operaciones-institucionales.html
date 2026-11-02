@@ -634,8 +634,8 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    </div>
    <section class="panel" id="frontdeskReviewPanel" hidden style="margin-top:17px">
      <span class="eyebrow">Control de Secretaría y Dirección · Después de los vuelos</span>
-     <h3>Conciliación del Libro de Vuelo con los informes</h3>
-     <p class="hint">Cada cobro o descuento se registra en el acto. Cuando llega el informe escrito, comprobá que los minutos coincidan. El control no modifica dinero ni horas del pack.</p>
+     <h3>Control posterior de vuelos liquidados</h3>
+     <p class="hint">Los casos pendientes requieren comprobar la realización del vuelo, recibir el informe o conciliar las horas. No se alteran cobros ni packs desde esta pantalla. Los controles completados quedan minimizados.</p>
      <div id="frontdeskReviewList" class="list"></div>
    </section>
    <p class="finance-note" id="financeDisclosure" hidden>Resumen operativo con respaldo de movimientos. Los importes registrados no equivalen a caja conciliada, rentabilidad contable ni facturación electrónica ante ARCA.</p>
@@ -2761,56 +2761,98 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   }
   function renderDeskReviews(){
    if(!manager)return;
-   const list=$("frontdeskReviewList");list.replaceChildren();
+   const root=$("frontdeskReviewList");root.replaceChildren();
    const names={
-    awaiting_report:"Pendiente: informe del Instructor",
-    awaiting_approval:"Informe recibido; pendiente de aprobación",
-    difference:"Diferencia de minutos · requiere revisión",
-    awaiting_review:"Horas coincidentes · confirmar control",
-    reviewed:"Control de horas realizado"
+    awaiting_report:"Falta informe del instructor",
+    awaiting_approval:"Informe pendiente de aprobación",
+    difference:"Diferencia de horas",
+    awaiting_review:"Horas coinciden · verificar",
+    reviewed:"Control finalizado"
    };
-   if(!deskReviews.length){
-    list.textContent="Todavía no hay liquidaciones de vuelos para controlar.";return;
+   const open=deskReviews.filter(x=>x.status!=="reviewed");
+   const done=deskReviews.filter(x=>x.status==="reviewed");
+   const counter=document.createElement("p");counter.className="hint";
+   counter.textContent="Requieren atención: "+open.length+" · Controlados: "+done.length+
+    ". Seleccioná un vuelo para consultar los detalles.";
+   root.append(counter);
+   const title=document.createElement("h4");title.textContent="Pendientes de conciliación ("+open.length+")";root.append(title);
+   const pendingList=document.createElement("div");pendingList.className="list";root.append(pendingList);
+   if(!open.length){
+    const empty=document.createElement("p");empty.className="hint";
+    empty.textContent="No hay vuelos liquidados que requieran conciliación.";
+    pendingList.append(empty);
    }
+   const completed=document.createElement("details");completed.className="finance-history-details";
+   const completedHead=document.createElement("summary");
+   completedHead.textContent="Historial de controles finalizados ("+done.length+") · Ver/ocultar";
+   const completedList=document.createElement("div");completedList.className="list";
+   completed.append(completedHead,completedList);
+   if(done.length)root.append(completed);
    for(const item of deskReviews){
-    const box=document.createElement("div");box.className="list-item";
-    const label=document.createElement("div");label.className="row between";
-    const student=document.createElement("strong");
-    student.textContent=item.student_email||"Alumno";
-    const status=document.createElement("span");
-    status.className="chip "+(item.status==="reviewed"?"completed":item.status==="difference"?"returned":"pending");
-    status.textContent=names[item.status]||item.status||"Control pendiente";
-    label.append(student,status);box.append(label);
+    const isDone=item.status==="reviewed";
+    const card=document.createElement("details");card.className="list-item";
+    card.style.cssText="padding:0;overflow:hidden";
+    const head=document.createElement("summary");
+    head.style.cssText="padding:12px 15px;cursor:pointer";
+    const title=document.createElement("strong");
+    title.textContent=(item.starts_at?stamp(item.starts_at):"Fecha pendiente")+
+     " · "+(item.aircraft_registration||"Matrícula por verificar");
+    const state=document.createElement("span");
+    state.className="chip "+(isDone?"completed":item.status==="difference"?"returned":"pending");
+    state.style.marginLeft="10px";state.textContent=names[item.status]||"Verificar";
+    const subtitle=document.createElement("p");subtitle.className="hint";
+    subtitle.style.margin="6px 0 0";
+    subtitle.textContent=(item.student_email||"Alumno no identificado")+" · "+
+     flightHoursMinutes(Number(item.book_minutes))+" h · "+
+     ({cash:"Efectivo",bank_transfer:"Transferencia",pack:"Pack"}[item.payment_method]||item.payment_method);
+    head.append(title,state,subtitle);card.append(head);
+    const content=document.createElement("div");
+    content.style.cssText="padding:11px 15px 15px;border-top:1px solid #486c81";
     const info=document.createElement("p");info.className="hint";
-    info.textContent="Liquidado: "+stamp(item.recorded_at)+
-     " · Libro de Vuelo: "+flightHoursMinutes(Number(item.book_minutes))+" h"+
+    info.textContent="Instructor: "+(item.instructor_email||"Sin asignar")+
+     " · Reserva: "+(statuses[item.booking_status]||"Sin estado")+
+     " · Liquidado el "+stamp(item.recorded_at)+
+     " · Libro: "+flightHoursMinutes(Number(item.book_minutes))+" h"+
      (item.report_minutes!=null?" · Informe: "+flightHoursMinutes(Number(item.report_minutes))+" h":" · Sin informe escrito")+
-     " · "+({cash:"Efectivo",bank_transfer:"Transferencia",pack:"Pack"}[item.payment_method]||item.payment_method)+
-     " · Registrado por: "+(item.recorded_by_email||"Secretaría")+
-     " · Fuente del tiempo: "+(item.logbook_confirmed?"Libro de Vuelo verificado":"Declaración del alumno; Libro pendiente");
-    box.append(info);
-    if(item.status==="difference"){
-     const alert=document.createElement("p");alert.className="warn";
-     alert.textContent="La diferencia debe aclararse con el Instructor. No se ajustó automáticamente el dinero ni el saldo del pack.";
-     box.append(alert);
-    }
+     " · Secretaría: "+(item.recorded_by_email||"Cuenta institucional");
+    content.append(info);
+    const origin=document.createElement("p");origin.className="hint";
+    origin.textContent="Fuente del tiempo: "+(item.logbook_confirmed?"Libro de Vuelo verificado":"Declaración del alumno; Libro sin verificar");
+    content.append(origin);
+    const message=document.createElement("p");
+    message.className=item.status==="awaiting_report"||item.status==="difference"?"warn":"hint";
+    if(item.status==="awaiting_report")
+     message.textContent=item.instructor_email?
+      "Acción: solicitar al instructor su informe y verificar que el vuelo se realizó. No volver a cobrar.":
+      "Acción: revisar la asignación del instructor y confirmar el vuelo antes de solicitar su informe.";
+    else if(item.status==="difference")
+     message.textContent="Acción: revisar la diferencia de horas con el instructor y Secretaría. No ajustar dinero ni packs automáticamente.";
+    else if(item.status==="awaiting_approval")
+     message.textContent=item.report_status==="returned"?
+      "Acción: esperar la corrección del instructor y volver a evaluar el informe.":
+      "Acción: revisar y aprobar el informe desde Informes de instrucción.";
+    else if(item.status==="awaiting_review")
+     message.textContent="Acción: las horas coinciden y el informe está aprobado; confirmar el cotejo.";
+    else message.textContent="Horas conciliadas; no requiere acción.";
+    content.append(message);
     if(item.status==="awaiting_review"){
-     const btn=document.createElement("button");
-     btn.type="button";btn.className="primary";btn.textContent="Confirmar coincidencia de horas";
-     btn.disabled=!school.can_write;
+     const btn=document.createElement("button");btn.type="button";btn.className="primary";
+     btn.textContent="Confirmar coincidencia de horas";btn.disabled=!school.can_write;
      btn.onclick=async()=>{
       if(!confirm("¿Confirmás que las horas del Libro de Vuelo coinciden con las del informe aprobado?"))return;
       btn.disabled=true;
       try{
-       await rpc("aerosuite_review_frontdesk_hours",{
-        p_institution_id:inst,p_checkout_id:item.checkout_id,p_report_revision:Number(item.report_revision)});
-       await loadFinance();
-       stat.textContent="Horas del Libro de Vuelo e informe controladas por Administración.";
-      }catch(e){stat.textContent="No se pudo confirmar el control: "+safeError(e);btn.disabled=false;}
-     };
-     box.append(btn);
+       await rpc("aerosuite_review_frontdesk_hours",{p_institution_id:inst,
+        p_checkout_id:item.checkout_id,p_report_revision:Number(item.report_revision)});
+       await loadFinance();stat.textContent="Control de horas finalizado.";
+      }catch(e){stat.textContent="No se pudo confirmar: "+safeError(e);btn.disabled=false;}
+     };content.append(btn);
+    }else if(item.status==="awaiting_approval"||item.status==="difference"){
+     const btn=document.createElement("button");btn.type="button";btn.textContent="Ir a Informes";
+     btn.onclick=()=>showTab("informes");content.append(btn);
     }
-    list.append(box);
+    card.append(content);
+    (isDone?completedList:pendingList).append(card);
    }
   }
   function renderStudentDebts(){
