@@ -432,6 +432,13 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     <div id="labStudentHours" class="list" hidden></div>
     <h3>Vuelos realizados</h3>
     <div class="list" id="flightHoursHistory"></div>
+    <section id="pilotRavPanel" class="panel" hidden style="margin-top:16px">
+      <span class="eyebrow">Documentación aeronáutica · Piloto PPA / PCA</span>
+      <h3>Antecedentes para RAV</h3>
+      <p class="hint">El historial de arriba utiliza los vuelos realmente registrados en esta institución, sin ingresar nuevamente las horas. Es un respaldo auxiliar, no un RAV certificado ni sustituye al Libro de Vuelo.</p>
+      <p class="hint">Para emitir un RAV institucional válido, Dirección deberá revisar los vuelos de origen, matrícula, función, tiempos y documentación correspondiente, y completar la firma/autorización exigible. La emisión y firma institucional están pendientes de integración.</p>
+      <p id="pilotRavStatus" class="notice" role="status">Sin consultar.</p>
+    </section>
    </div>
 
 
@@ -788,11 +795,12 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    $("bookingLegendHelp").textContent="Horarios de Buenos Aires (ART). Verde: disponible para reservar · Amarillo suave: pendiente de confirmación · Azul acero: confirmado · Gris oscuro: ocupado o pasado. Tocá tu reserva para ver los detalles.";
   }
   if(isParticipant){
-   $("financeTab").textContent="Horas de vuelo";
+   $("financeTab").textContent=role==="piloto"?"Actividad y RAV":"Horas de vuelo";
    $("financeEyebrow").textContent="Actividad de vuelo";
-   $("financeTitle").textContent="Horas de vuelo";
+   $("financeTitle").textContent=role==="piloto"?"Mi actividad de vuelo y RAV":"Horas de vuelo";
    $("financeHelp").textContent=role==="piloto"?"Vuelos particulares registrados al cobrar en esta institución; este resumen no sustituye tu Libro de Vuelo.":"Consultá cuánto volaste en la última práctica y tus horas acumuladas registradas en AeroSuite.";
    $("studentFlightHours").hidden=false;
+   $("pilotRavPanel").hidden=role!=="piloto";
    $("packsArea").hidden=true;
   }
   // Instructor sin accesos económicos, alumno solo a su historial de horas.
@@ -1900,6 +1908,9 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     const detail=document.createElement("p");detail.textContent=value;
     card.append(title,detail);cards.append(card);
    }
+   $("pilotRavStatus").textContent=count?
+    "Existen "+count+" vuelo(s) liquidados y "+fmt(total)+" como antecedentes internos. Dirección debe verificar los registros antes de cualquier emisión de RAV; no hay certificación automática.":
+    "No hay vuelos liquidados para preparar antecedentes. Las reservas pendientes o confirmadas no suman horas ni generan RAV.";
    if(!count){history.textContent="Todavía no hay vuelos particulares liquidados en esta institución.";return;}
    for(const item of pilotHours.history||[]){
     const row=document.createElement("div");row.className="list-item";
