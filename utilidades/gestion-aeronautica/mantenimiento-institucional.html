@@ -119,6 +119,15 @@ body .overflow-x-auto{scrollbar-color:#697e7d transparent}
 .maint-alert-card strong{color:#ffdbb0;display:block;margin-bottom:5px}
 .maint-alert-card p{margin:3px 0;color:#eee7dd}
 .maint-sim-list{display:grid;gap:7px}
+/* Pestañas exclusivas: los avisos generales permanecen en Aeronaves. */
+body.maint-focus-mode .maint-hero,
+body.maint-focus-mode #maintenanceAlerts,
+body.maint-focus-mode #flightMaintenanceReconciliation,
+body.maint-focus-mode #maintenanceUsageNotice,
+body.maint-focus-mode #maintOverview{display:none!important}
+.maint-section-title{max-width:1260px;margin:12px auto 0;padding:0 22px;font-size:17px;font-weight:800;color:#ffd0a9}
+body:not(.maint-focus-mode) .maint-section-title{display:none}
+@media(max-width:650px){.maint-section-title{padding:0 13px}}
 </style>
 
 <style id="maintenance-inspections-style">
@@ -188,7 +197,8 @@ body .overflow-x-auto{scrollbar-color:#697e7d transparent}
 <nav id="nav" class="flex overflow-x-auto border-b border-white/10 px-3"></nav>
 
 <div class="maint-status-wrap"><p id="sync" role="status">Cargando tu información...</p>
-<section id="maintenanceAlerts" class="maint-alerts" aria-live="polite"></section><section id="flightMaintenanceReconciliation" class="maint-alerts" aria-label="Vuelos, flota y mantenimiento" aria-live="polite"></section><p class="maint-notice">Apta para seguimiento de uso privado, instrucción o ambos, con el régimen declarado por el usuario. Es un registro auxiliar institucional: no certifica aeronavegabilidad, no autoriza retorno al servicio ni reemplaza libretas, firmas, programas aprobados ni la documentación exigida por ANAC. <a href="https://www.argentina.gob.ar/anac/resoluciones-disposiciones-y-otras-normas-aeronauticas/raac" target="_blank" rel="noopener noreferrer">Consultar RAAC oficiales</a>.</p></div><section id="maintOverview" class="maint-overview" aria-label="Resumen de mantenimiento"></section>
+<section id="maintenanceAlerts" class="maint-alerts" aria-live="polite"></section><section id="flightMaintenanceReconciliation" class="maint-alerts" aria-label="Vuelos, flota y mantenimiento" aria-live="polite"></section><p id="maintenanceUsageNotice" class="maint-notice">Apta para seguimiento de uso privado, instrucción o ambos, con el régimen declarado por el usuario. Es un registro auxiliar institucional: no certifica aeronavegabilidad, no autoriza retorno al servicio ni reemplaza libretas, firmas, programas aprobados ni la documentación exigida por ANAC. <a href="https://www.argentina.gob.ar/anac/resoluciones-disposiciones-y-otras-normas-aeronauticas/raac" target="_blank" rel="noopener noreferrer">Consultar RAAC oficiales</a>.</p></div><section id="maintOverview" class="maint-overview" aria-label="Resumen de mantenimiento"></section>
+<h2 id="activeSectionLabel" class="maint-section-title"></h2>
 <main id="app" class="max-w-7xl mx-auto p-4"></main>
 <script src="../../assets/maintenance-consumables.js?v=20261022inventario1"></script>
 
@@ -698,7 +708,7 @@ function prefillComponentControl(kind){
 
 function startComponentControl(k){
  if(!['f','p'].includes(k))return;
- S.tab='s';R();prefillComponentControl(k==='f'?'structure':'propeller');
+ openMaintenanceTab('s');prefillComponentControl(k==='f'?'structure':'propeller');
 }
 
 function delCt(id){if(!confirm('¿Retirar este control y sus vencimientos del registro privado?'))return;S.ct=S.ct.filter(c=>c.id!=id);save();R()}
@@ -925,7 +935,7 @@ function prepareGuideControl(i){
  if(guideAircraft!==S.sel||!guideShown)return;
  const task=guideItems()[i];if(!task)return;
  const component=guidePick.component;
- S.tab='s';R();
+ openMaintenanceTab('s');
  $('c_n').value=task;
  $('c_k').value=component;
  $('c_s').value='new:'+component;
@@ -1304,11 +1314,21 @@ function tabX(){
  </div></div>`;
 }
 
+function openMaintenanceTab(tab){
+ if(!TABS.some(([key])=>key===tab))return;
+ S.tab=tab;
+ R();
+ requestAnimationFrame(()=>$('nav').scrollIntoView({block:'start',behavior:'auto'}));
+}
+
 function R(){
+ document.body.classList.toggle('maint-focus-mode',S.tab!=='a');
+ $('activeSectionLabel').textContent='Sección: '+(TABS.find(([key])=>key===S.tab)?.[1]||'Mantenimiento')+
+  (A()?' · '+A().reg:'');
 
  $('sel').innerHTML=S.ac.filter(a=>!a.archived).map(a=>`<option value="${a.id}" ${a.id==S.sel?'selected':''}>${esc(a.reg)}</option>`).join('')||'<option>Sin aeronaves</option>';
 
- $('nav').innerHTML=TABS.map(([k,l])=>`<button class="tab ${S.tab==k?'on':''}" onclick="S.tab='${k}';R()">${l}</button>`).join('');
+ $('nav').innerHTML=TABS.map(([k,l])=>`<button type="button" class="tab ${S.tab==k?'on':''}" aria-pressed="${S.tab===k}" onclick="openMaintenanceTab('${k}')">${l}</button>`).join('');
 
  if(!A())S.sel=S.ac.find(a=>!a.archived)?.id||null;
 
