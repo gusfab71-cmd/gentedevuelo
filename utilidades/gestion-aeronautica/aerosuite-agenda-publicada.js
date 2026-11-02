@@ -23,7 +23,7 @@ window.AeroSuiteAgenda={
   '<label>Actividad<select id="agendaType"><option value="flight">Vuelo de instrucción</option><option value="simulator">Vuelo virtual</option><option value="theory">Teoría grupal</option></select></label>',
   '<label>Día<input id="agendaDay" type="date" required></label>',
   '<label>Hora<select id="agendaHour"><option>08:30</option><option>10:00</option><option>11:30</option><option>13:00</option><option>14:30</option><option>16:00</option></select></label>',
-  '<label id="agendaAircraftLabel">Aeronave de la flota<select id="agendaAircraft" required><option value="">Seleccioná una aeronave</option></select><span class="hint">Solo se pueden seleccionar aeronaves disponibles. Las que están fuera de servicio aparecen deshabilitadas.</span></label>',
+  '<div id="agendaAircraftLabel" class="agenda-aircraft-field"><span id="agendaAircraftName">Aeronave de la flota</span><input id="agendaAircraft" type="hidden" value=""><details class="agenda-aircraft-picker" id="agendaAircraftPicker" aria-labelledby="agendaAircraftName"><summary id="agendaAircraftSummary">Seleccioná una aeronave</summary><div id="agendaAircraftOptions" class="agenda-aircraft-list"></div></details><span class="hint">Las aeronaves fuera de servicio se muestran en rojo y no pueden seleccionarse.</span></div>',
   '<label id="agendaResourceLabel" hidden>Simulador o aula<input id="agendaResource" list="agendaResourceList" maxlength="90" placeholder="Simulador 1 o Aula 1" autocomplete="off"><datalist id="agendaResourceList"></datalist></label>',
   '<label id="agendaCapacityLabel">Cupos<input id="agendaCapacity" type="number" min="1" max="50" value="1" required></label>',
   '</div><button class="primary" type="submit">Agregar horario en preparación</button></form>',
@@ -65,6 +65,16 @@ window.AeroSuiteAgenda={
    ".agenda-check input{width:auto;min-width:auto;margin:0}",
    ".agenda-daily{margin:16px 0;padding:12px;border:1px solid #567a90;border-radius:9px}",
    ".agenda-daily summary{cursor:pointer;font-weight:700;color:#DCECF4}",
+   ".agenda-aircraft-field{display:grid;gap:6px;font-size:13px;min-width:0}",
+   ".agenda-aircraft-picker{position:relative;min-width:0}",
+   ".agenda-aircraft-picker>summary{list-style:none;min-height:40px;border:1px solid #7696ac;border-radius:8px;background:#102839;color:#fff;padding:10px 35px 10px 11px;font-size:14px;font-weight:600;position:relative}",
+   ".agenda-aircraft-picker>summary::-webkit-details-marker{display:none}",
+   ".agenda-aircraft-picker>summary:after{content:'⌄';position:absolute;right:13px;top:6px;font-size:22px}",
+   ".agenda-aircraft-list{position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:100;background:#102839;border:1px solid #7696ac;border-radius:8px;padding:5px;max-height:250px;overflow-y:auto;box-shadow:0 12px 24px #07131fcc}",
+   ".agenda-aircraft-option{display:block;width:100%;text-align:left;border-radius:6px;margin:3px 0;padding:12px 10px;font-size:13px;font-weight:750;white-space:normal;line-height:1.4}",
+   ".agenda-aircraft-option.available{background:#245747;border:1px solid #63a78d;color:#f2fff9}",
+   ".agenda-aircraft-option.out-of-service,.agenda-aircraft-option.out-of-service:disabled{background:#982b3c!important;border:1px solid #e17f8b!important;color:#fff!important;opacity:1!important;cursor:not-allowed}",
+   ".agenda-aircraft-option.available:hover{background:#30745b}",
    ".agenda-inline-student{display:block;margin:11px 0 6px;font-weight:700}.agenda-inline-student select{display:block;width:100%;margin-top:6px}.agenda-inline-feedback{margin:8px 0 12px}.agenda-edit-form{margin-top:12px;padding:14px;border:1px solid #7390a6;border-radius:9px;background:#18374b}.agenda-edit-form .formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.agenda-edit-form .actions{margin-top:12px}",
    ".agenda-filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:12px 0}",
    ".agenda-filters label{display:block}.agenda-grid-scroll{overflow-x:auto;margin-top:12px}",
@@ -711,24 +721,33 @@ window.AeroSuiteAgenda={
    const kind=$("agendaType").value,flight=kind==="flight";
    $("agendaAircraftLabel").hidden=!flight;
    $("agendaResourceLabel").hidden=flight;
-   $("agendaAircraft").required=flight;
    $("agendaResource").required=!flight;
    $("agendaCapacityLabel").hidden=flight;
    $("agendaCapacity").value=flight?"1":kind==="theory"?"12":"1";
    $("agendaResource").value="";
    $("agendaResource").placeholder=kind==="theory"?"Aula 1":"Simulador 1";
-   const selector=$("agendaAircraft");selector.replaceChildren();
-   const available=c.aircraft().filter(a=>!a.archived_at);
-   const first=document.createElement("option");
-   first.value="";first.textContent=available.length?"Seleccioná una aeronave":"No hay aeronaves registradas";
-   first.disabled=true;first.selected=true;selector.append(first);
-   for(const a of available.sort((a,b)=>a.registration.localeCompare(b.registration))){
-    const option=document.createElement("option");
-    option.value=a.registration;
-    option.disabled=a.availability!=="available";
-    option.textContent=a.registration+(a.model?" · "+a.model:"")+
-     (option.disabled?" · Fuera de servicio":" · Disponible");
-    selector.append(option);
+   $("agendaAircraft").value="";
+   $("agendaAircraftSummary").textContent="Seleccioná una aeronave";
+   $("agendaAircraftPicker").open=false;
+   const options=$("agendaAircraftOptions");options.replaceChildren();
+   const aircraft=c.aircraft().filter(a=>!a.archived_at).sort((a,b)=>a.registration.localeCompare(b.registration));
+   if(!aircraft.length){
+    const empty=document.createElement("p");empty.className="hint";
+    empty.textContent="No hay aeronaves registradas en la flota.";options.append(empty);
+   }
+   for(const a of aircraft){
+    const unavailable=a.availability!=="available";
+    const choice=document.createElement("button");choice.type="button";
+    choice.className="agenda-aircraft-option "+(unavailable?"out-of-service":"available");
+    choice.disabled=unavailable;
+    choice.textContent=a.registration+(a.model?" · "+a.model:"")+
+     (unavailable?" · FUERA DE SERVICIO":" · Disponible");
+    if(!unavailable)choice.addEventListener("click",()=>{
+     $("agendaAircraft").value=a.registration;
+     $("agendaAircraftSummary").textContent=a.registration+(a.model?" · "+a.model:"");
+     $("agendaAircraftPicker").open=false;
+    });
+    options.append(choice);
    }
    const list=$("agendaResourceList");list.replaceChildren();
    if(kind==="simulator"){
