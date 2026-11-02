@@ -302,17 +302,8 @@ window.AeroSuiteAgenda={
      alert("Tenés una reserva pendiente en este horario. Para modificarla o cancelarla, comunicate con Secretaría.");
      return;
     }
-    if(!confirm("Ya tenés este turno reservado y PENDIENTE de confirmación.\n"+label+
-      "\n\n¿Querés CANCELAR esta reserva pendiente? El cupo quedará disponible.\nSi preferís cambiar de aeronave o reprogramar, comunicate con Secretaría."))return;
-    button.disabled=true;
-    try{
-     await c.rpc("aerosuite_student_cancel_pending",{p_institution_id:c.inst,p_reservation_id:current.id});
-     await reloadAfter("Reserva cancelada por el alumno. El turno vuelve a estar libre.");
-     showStudentBookingFeedback("Cancelaste tu reserva pendiente. El cupo se liberó y quedó registrado el cambio.","success");
-    }catch(e){
-     showStudentBookingFeedback("No se pudo cancelar la reserva: "+e.message,"error");
-     button.disabled=false;
-    }
+    alert("Ya tenés este turno PENDIENTE de confirmación.\n"+label+
+     "\nPara cancelarlo, usá el botón «Cancelar» junto a «Pendiente» en el detalle de Mis reservas.\nPara cambiar día u horario, comunicate con Secretaría.");
    }
    function openSlotEdit(slot,card){
    const existing=card.querySelector(".agenda-edit-form");
