@@ -721,13 +721,13 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
  const arDate=d=>new Date(new Date(d).getTime()-3*3600000).toISOString().slice(0,10);
  const arTime=d=>new Date(new Date(d).getTime()-3*3600000).toISOString().slice(11,16);
  const safeError=e=>String(e&&e.message||e||"Error desconocido");
- const roleLabel={administrador:"Administración",secretaria:"Administración · Secretaría",instructor:"Instructor",alumno:"Alumno"};
+ const roleLabel={administrador:"Administración",secretaria:"Administración · Secretaría",instructor:"Instructor",alumno:"Alumno",piloto:"Piloto PPA / Comercial"};
  const statuses={pending:"Pendiente",confirmed:"Confirmada",completed:"Realizada",cancelled:"Cancelada",submitted:"Presentado",returned:"Devuelto para corregir",approved:"Validado",voided:"Anulado por cancelación"};
  const params=new URLSearchParams(location.search),inst=params.get("institucion");
  const testRole=params.get("rol")||"";
  const labLogin=params.get("prueba")==="1"&&["administrador","secretaria","instructor","alumno"].includes(testRole);
  const db=supabase.createClient(GDV_CONFIG.url,GDV_CONFIG.key,{auth:{storageKey:labLogin?"aerosuite-laboratorio-"+testRole+"-v1-auth":"aerosuite-institucional-v2-auth",persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
- let user,school,role,manager,bookings=[],people=[],reports=[],finance={packs:[],movements:[]},bookingConfirmations=new Map(),settledWeek=new Map(),rescheduleTarget=null,selectedRescheduleSlot=null;
+ let user,school,role,manager,isParticipant=false,pilotVerified=false,pilotHours=null,bookings=[],people=[],reports=[],finance={packs:[],movements:[]},bookingConfirmations=new Map(),settledWeek=new Map(),rescheduleTarget=null,selectedRescheduleSlot=null;
  if(!inst){stat.textContent="Entrá desde el portal de tu institución.";return;}
  try{
   const me=await db.auth.getUser();user=me.data&&me.data.user;
@@ -736,12 +736,20 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   school=(a.data||[]).find(x=>x.institution_id===inst&&x.can_access&&(!params.get("rol")||x.my_role===params.get("rol")));
   if(!school)throw Error("No tenés acceso a esta escuela con el rol solicitado.");
   role=school.my_role; manager=role==="administrador"||role==="secretaria";
+  isParticipant=["alumno","piloto"].includes(role);
+  if(role==="piloto"){
+   const pr=await db.rpc("aerosuite_pilot_profile",{p_institution_id:inst});
+   if(pr.error)throw pr.error;
+   pilotVerified=pr.data?.pilot_verified===true;
+  }
   $("schoolTitle").textContent=school.institution_name;
   $("roleText").textContent="Rol: "+(roleLabel[role]||role)+" · "+user.email+(school.can_write?"":" · Solo consulta");
-  $("pageTitle").textContent=manager?"Administración de la escuela":role==="instructor"?"Mi actividad de instrucción":"Reservas y formación";
+  $("pageTitle").textContent=manager?"Administración de la escuela":role==="instructor"?"Mi actividad de instrucción":role==="piloto"?"Actividad del piloto":"Reservas y formación";
   $("backPortal").href="portal-escuela.html?institucion="+encodeURIComponent(inst)+"&rol="+encodeURIComponent(role)+"&elegida=1"+(labLogin?"&prueba=1":"");
   $("adminBooking").hidden=true;$("reportForm").hidden=role!=="instructor";$("financeForm").hidden=true;$("packPurchasePanel").hidden=!manager;$("financeOverview").hidden=!manager;$("financeWorkspaces").hidden=!manager;$("financeDisclosure").hidden=!manager;$("financeExportRow").hidden=!manager;$("frontdeskReviewPanel").hidden=!manager;
-  $("cobrosTab").hidden=!manager;$("contaduriaTab").hidden=!manager;$("financeTab").hidden=role!=="alumno";
+  $("cobrosTab").hidden=!manager;$("contaduriaTab").hidden=!manager;$("financeTab").hidden=!isParticipant;
+  $("tabs").querySelector('[data-tab="informes"]').hidden=role==="piloto";
+  $("tabs").querySelector('[data-tab="recursos"]').hidden=role==="piloto";
   if(manager){
    // Reutilizar los formularios originales en pantallas separadas, sin duplicar sus acciones.
    $("cobrosHost").append($("financeWorkspaces"));
@@ -771,7 +779,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   $("bookingChangesTitle").textContent=manager?"Modificar reservas":"Detalle de reservas de esta semana";
   $("tabs").querySelector('[data-tab="turnera"]').textContent=manager?"Turnera semanal y reprogramaciones":"Turnera semanal";
   $("moneyArea").hidden=!manager;
-  $("bookingHelp").textContent=role==="alumno"?"Elegí un horario y tocá «Reservar». Primero quedará «Pendiente» y, cuando la escuela lo apruebe, aparecerá «Confirmado».":role==="instructor"?"Consultá la actividad de la escuela y confirmá un turno pendiente cuando puedas asumirlo.":"Controlá y confirmá solicitudes, asigná instructores y cancelá reservas cuando corresponda.";
+  $("bookingHelp").textContent=role==="piloto"?"Licencia PPA o comercial verificada: reservá vuelos particulares de 90 minutos, sujetos a confirmación de la escuela.":role==="alumno"?"Elegí un horario y tocá «Reservar». Primero quedará «Pendiente» y, cuando la escuela lo apruebe, aparecerá «Confirmado».":role==="instructor"?"Consultá la actividad de la escuela y confirmá un turno pendiente cuando puedas asumirlo.":"Controlá y confirmá solicitudes, asigná instructores y cancelá reservas cuando corresponda.";
   if(role==="alumno"){
    const legend=$("turnera").querySelector(".booking-legend");
    legend.querySelector(".free").lastChild.textContent="Reservar";
@@ -802,7 +810,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   }
   // La semana actual se destina a gestión de reservas; la siguiente, a nuevas reservas.
   // En el portal del alumno se abre la próxima semana para facilitar la reserva.
-  let selectedWeekStart=role==="alumno"?addDays(mondayOf(artToday()),7):mondayOf(artToday());
+  let selectedWeekStart=isParticipant?addDays(mondayOf(artToday()),7):mondayOf(artToday());
   const weekMode=()=>selectedWeekStart===mondayOf(artToday())?"current":"next";
   function updateWeekNavigation(){
    const current=weekMode()==="current";
@@ -820,8 +828,9 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    b.addEventListener("click",()=>showTab(b.dataset.tab));
   }
   function showTab(which){
-   if(which==="finanzas"&&role!=="alumno")which=manager?"contaduria":"turnera";
+   if(which==="finanzas"&&!isParticipant)which=manager?"contaduria":"turnera";
    if((which==="cobros"||which==="contaduria")&&!manager)which="turnera";
+   if(role==="piloto"&&["informes","recursos"].includes(which))which="turnera";
    for(const b of $("tabs").querySelectorAll("button"))b.classList.toggle("active",b.dataset.tab===which);
    for(const s of document.querySelectorAll(".tab-panel"))s.classList.toggle("active",s.id===which);
    location.hash=which;
@@ -1003,16 +1012,16 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
      if(booking){
       const paid=manager&&!!booking.booking_id&&settledWeek.has(booking.booking_id);
       if(paid)b.classList.add("settled");
-      else if((role!=="alumno"||booking.my_booking)&&["pending","confirmed"].includes(booking.status))b.classList.add(booking.status);
+      else if((!isParticipant||booking.my_booking)&&["pending","confirmed"].includes(booking.status))b.classList.add(booking.status);
       // El alumno ve su estado directamente. Las reservas ajenas permanecen neutras y sin detalles.
-      b.textContent=paid?"Saldado":role==="alumno"?
+      b.textContent=paid?"Saldado":isParticipant?
        (booking.my_booking?
         (booking.status==="pending"?"Pendiente":
          booking.status==="confirmed"?"Confirmado":
          booking.status==="completed"?"Realizado":statuses[booking.status]||"Reservado"):
         "Ocupado"):
        statuses[booking.status]||"Ocupado";
-      if(role==="alumno"){
+      if(isParticipant){
        if(booking.my_booking){
         const label=booking.status==="pending"?"Reserva pendiente de confirmación":
          booking.status==="confirmed"?"Reserva confirmada":"Reserva "+(statuses[booking.status]||"registrada");
@@ -1041,7 +1050,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
       b.textContent="Libre";
       if(start.getTime()<=Date.now()){
        b.textContent="Pasado";b.classList.add("past");b.disabled=true;
-      }else if(role==="alumno"||role==="instructor"||!school.can_write||(manager&&!rescheduleTarget)){
+      }else if(isParticipant||role==="instructor"||!school.can_write||(manager&&!rescheduleTarget)){
        b.disabled=true;
        b.textContent="Consultar agenda publicada";
       }else{
@@ -1109,7 +1118,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     const withoutInstructor=reservationMeta?.with_instructor===false;
     if(paid)card.classList.add("settled");
     else if(b.status==="pending"||b.status==="confirmed")card.classList.add(b.status);
-    const sensitive=role!=="alumno"||b.my_booking;
+    const sensitive=!isParticipant||b.my_booking;
     card.innerHTML='<summary class="row between booking-compact-summary"><strong>'+esc(stamp(b.starts_at))+
      ' · 90 min · '+(sensitive?esc(b.student_email||"Alumno"):"Ocupado")+
      (sensitive&&withoutInstructor?" · SIN INSTRUCTOR":"")+'</strong>'+
