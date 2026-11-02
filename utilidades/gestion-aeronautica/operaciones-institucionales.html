@@ -364,6 +364,26 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
 #packVoidPanel label{display:block;margin:12px 0}
 #packVoidPanel .danger{background:#753E3B;color:#FFF;border:1px solid #B48078}
 #packVoidPanel [hidden]{display:none!important}
+
+#legajos .legajo-search{display:flex;align-items:end;gap:9px;flex-wrap:wrap;margin:15px 0;padding:12px;border:1px solid #4d7189;background:#18364b;border-radius:10px}
+#legajos .legajo-search label{width:100%;font-weight:750;color:#efd4a0}
+#legajos .legajo-search input{flex:1;min-width:210px}
+#legajos .legajo-layout{display:grid;grid-template-columns:minmax(230px,.9fr) minmax(0,1.6fr);gap:12px}
+#legajos .legajo-results{display:grid;align-content:start;gap:8px;max-height:640px;overflow:auto}
+#legajos .legajo-result{display:block;width:100%;text-align:left;background:#19384c;border:1px solid #54758b;color:#eaf3f8;border-radius:9px;padding:12px;cursor:pointer}
+#legajos .legajo-result strong{display:block;color:#f0d29c}
+#legajos .legajo-result small{display:block;margin-top:4px;overflow-wrap:anywhere;color:#bed3e0}
+#legajos .legajo-result.selected{outline:2px solid #e4bd7c;background:#2c4c60}
+#legajos .legajo-history{border:1px solid #54768a;background:#173348;border-radius:10px;padding:16px;min-width:0}
+#legajos .legajo-history h3{color:#f0d29c;margin:0 0 9px}
+#legajos .legajo-stats{display:flex;gap:9px;flex-wrap:wrap;margin:12px 0}
+#legajos .legajo-stat{border:1px solid #587a8d;border-radius:9px;padding:10px 12px;background:#214356}
+#legajos .legajo-stat b{font-size:18px;display:block}
+#legajos .legajo-history details{border:1px solid #51758b;border-radius:9px;padding:10px 13px;margin-top:10px}
+#legajos .legajo-history summary{cursor:pointer;color:#efd19a;font-weight:800}
+#legajos .legajo-entry{padding:10px 0;border-bottom:1px solid #44667a;overflow-wrap:anywhere}
+#legajos .legajo-entry:last-child{border-bottom:none}
+@media(max-width:710px){#legajos .legajo-layout{grid-template-columns:1fr}#legajos .legajo-results{max-height:280px}}
 </style>
 <script src="../../assets/supabase-2.117.2.min.js"></script><script src="../../assets/community-config.js"></script>
 <script src="../../assets/aerosuite-registration.js"></script><script src="aerosuite-agenda-publicada.js"></script>
@@ -380,6 +400,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    <button data-tab="informes" type="button">Informes de instrucción</button>
    <button data-tab="cobros" type="button" id="cobrosTab" hidden>Cobro de vuelos</button>
    <button data-tab="contaduria" type="button" id="contaduriaTab" hidden>Contaduría</button>
+   <button data-tab="legajos" type="button" id="legajosTab" hidden>Legajos e integrantes</button>
    <button data-tab="finanzas" type="button" id="financeTab" hidden>Horas de vuelo</button>
    <button data-tab="recursos" type="button">Academia y recursos</button>
   </div>
@@ -826,9 +847,24 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    <div id="contaduriaReviewHost" class="contaduria-mini-page" hidden></div>
    <div id="contaduriaDetailsHost" class="contaduria-mini-page" hidden></div>
   </section>
+  <section class="panel tab-panel" id="legajos">
+   <span class="eyebrow">Identidad · Actividad institucional</span>
+   <h2>Legajos e integrantes</h2>
+   <p class="hint">Buscá por apellido, DNI o legajo. Cada persona reúne sus reservas, vuelos, horas aprobadas, packs, deudas y operaciones económicas, sin duplicar información.</p>
+   <div class="legajo-search">
+    <label for="legajoSearch">Apellido, DNI o número de legajo</label>
+    <input id="legajoSearch" type="search" maxlength="100" autocomplete="off" placeholder="Ej.: Pérez, 30123456 o A-000001">
+    <button id="legajoReload" type="button">Actualizar</button>
+   </div>
+   <p class="hint" id="legajoStatus" role="status" aria-live="polite">Consultando integrantes…</p>
+   <div class="legajo-layout">
+    <div id="legajoResults" class="legajo-results"></div>
+    <div id="legajoHistory" class="legajo-history"><p class="hint">Seleccioná una persona para ver su historial.</p></div>
+   </div>
+  </section>
   <section class="panel tab-panel" id="recursos">
    <span class="eyebrow">Academia Aeronáutica institucional</span><h2>Material de instrucción</h2>
-   <p>Apuntes, guías y documentos de esta escuela. Los alumnos pueden consultar y descargar el material publicado por Dirección, Secretaría e Instructores.</p>
+   <p>Apuntes, guías y documentos de esta escuela. Los alumnos pueden consultar y descargar el material publicado por Dirección e Instructores.</p>
    <form id="academyForm" hidden>
     <h3>Agregar material para los alumnos</h3>
     <div class="formgrid">
@@ -905,9 +941,9 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   $("pageTitle").textContent=manager?"Administración de la escuela":role==="instructor"?"Mi actividad de instrucción":role==="piloto"?"Actividad del piloto":"Reservas y formación";
   $("backPortal").href="portal-escuela.html?institucion="+encodeURIComponent(inst)+"&rol="+encodeURIComponent(role)+"&elegida=1"+(labLogin?"&prueba=1":"");
   $("adminBooking").hidden=true;$("reportForm").hidden=role!=="instructor";$("financeForm").hidden=true;$("packPurchasePanel").hidden=!manager;$("financeOverview").hidden=!manager;$("financeWorkspaces").hidden=!manager;$("financeDisclosure").hidden=!manager;$("financeExportRow").hidden=!manager;$("frontdeskReviewPanel").hidden=!manager;
-  $("cobrosTab").hidden=!manager;$("contaduriaTab").hidden=!manager;$("financeTab").hidden=!isParticipant;
+  $("cobrosTab").hidden=!manager;$("contaduriaTab").hidden=!manager;$("legajosTab").hidden=!manager;$("financeTab").hidden=!isParticipant;
   $("tabs").querySelector('[data-tab="informes"]').hidden=role==="piloto";
-  $("tabs").querySelector('[data-tab="recursos"]').hidden=role==="piloto";
+  $("tabs").querySelector('[data-tab="recursos"]').hidden=role==="piloto"||role==="secretaria";
   if(manager){
    // Reutilizar los formularios originales en pantallas separadas, sin duplicar sus acciones.
    $("cobrosHost").append($("financeWorkspaces"));
@@ -985,7 +1021,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    $("packsArea").hidden=true;
   }
   // Instructor sin accesos económicos, alumno solo a su historial de horas.
-  $("academyForm").hidden=!(manager||role==="instructor");
+  $("academyForm").hidden=!(role==="administrador"||role==="instructor")||!school.can_write;
   if(!school.can_write){document.querySelectorAll("form input,form select,form textarea,form button").forEach(x=>x.disabled=true);$("financeHelp").textContent="Modo consulta: no se pueden guardar movimientos.";if(manager)$("cobrosHelp").textContent="Modo consulta: no se pueden registrar cobros ni descuentos."; }
   if(manager){
    const r=await db.rpc("aerosuite_director_people",{p_institution_id:inst});
@@ -1018,8 +1054,10 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   }
   function showTab(which){
    if(which==="finanzas"&&!isParticipant)which=manager?"contaduria":"turnera";
-   if((which==="cobros"||which==="contaduria")&&!manager)which="turnera";
+   if((which==="cobros"||which==="contaduria"||which==="legajos")&&!manager)which="turnera";
    if(role==="piloto"&&["informes","recursos"].includes(which))which="turnera";
+   if(role==="secretaria"&&which==="recursos")which="turnera";
+   if(which==="legajos"&&!legajosLoaded){legajosLoaded=true;void loadLegajos();}
    for(const b of $("tabs").querySelectorAll("button"))b.classList.toggle("active",b.dataset.tab===which);
    for(const s of document.querySelectorAll(".tab-panel"))s.classList.toggle("active",s.id===which);
    location.hash=which;
@@ -4022,7 +4060,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    jpeg:"image/jpeg",
    webp:"image/webp"
   };
-  const academyCanUpload=()=>school.can_write&&(manager||role==="instructor");
+  const academyCanUpload=()=>school.can_write&&(role==="administrador"||role==="instructor");
   let academyResources=[];
   async function loadAcademy(){
    const list=$("academyList"),status=$("academyStatus");
@@ -4069,7 +4107,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
      };
      actions.append(open);
     }
-    if(academyCanUpload()&&(manager||resource.created_by===user.id)){
+    if(academyCanUpload()&&(role==="administrador"||resource.created_by===user.id)){
      const remove=document.createElement("button");remove.type="button";
      remove.className="danger";remove.textContent="Eliminar material";
      remove.onclick=async()=>{
@@ -4155,7 +4193,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     await loadAircraftChoices();await loadWeek();
     if(role!=="piloto"){await loadStudentReportReadStates();await loadReports();await loadLabReports();}
     renderBookings();await loadFinance();
-    if(role!=="piloto"){await loadAcademy();renderReportFormChoices();}
+    if(role!=="piloto"){if(role!=="secretaria")await loadAcademy();renderReportFormChoices();}
     stat.textContent="Información institucional actualizada.";
    }catch(e){stat.textContent="Error al cargar el área: "+safeError(e);}
   }
@@ -4179,7 +4217,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   $("reloadAll").onclick=refresh;
   await refresh();
   const initial=(location.hash||"#turnera").slice(1);
-  if(["turnera","informes","finanzas","cobros","contaduria","recursos"].includes(initial))showTab(initial);
+  if(["turnera","informes","finanzas","cobros","contaduria","legajos","recursos"].includes(initial))showTab(initial);
  }catch(e){stat.textContent="No se pudo abrir la gestión institucional: "+safeError(e);}
 })();
 </script>
