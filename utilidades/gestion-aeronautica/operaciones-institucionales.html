@@ -842,6 +842,10 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    $("contaduriaReviewHost").append($("frontdeskReviewPanel"));
    $("contaduriaPacksHost").append($("packsArea"));
    $("contaduriaDetailsHost").append($("financeDisclosure"),$("financeExportRow"),$("moneyArea"));
+   // El formulario económico original permanece oculto, pero sus selectores
+   // siguen siendo usados por el circuito integral de cobros, packs y reportes.
+   // No eliminarlo del DOM al separar las pantallas.
+   $("cobrosExtra").append($("financeForm"));
    document.querySelector(".finance-lists").remove();
    const contaduriaViews={
     resumen:"contaduriaOverviewHost",
