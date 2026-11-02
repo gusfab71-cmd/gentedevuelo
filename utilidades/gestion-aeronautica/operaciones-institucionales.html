@@ -300,6 +300,14 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
 #contaduria .contaduria-pack-sale .finance-span-2,#contaduria #schoolExpensePanel .finance-span-2{grid-column:1/-1}
 #contaduria .contaduria-pack-sale .finance-submit,#contaduria #schoolExpensePanel .finance-submit{width:100%;font-weight:800;margin-top:12px}
 #contaduria .finance-lists{margin-top:16px}
+#contaduria .contaduria-mini-menu{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:9px;padding:12px;background:#122b40;border:1px solid #4c6c83;border-radius:11px;margin:17px 0}
+#contaduria .contaduria-mini-menu button{font-size:12px;line-height:1.35;font-weight:750;padding:11px 9px;min-height:43px;text-align:center;background:#25485e;border:1px solid #567991;border-radius:8px;color:#eef5fa;cursor:pointer}
+#contaduria .contaduria-mini-menu button.active,#contaduria .contaduria-mini-menu button[aria-pressed="true"]{background:#e1b969;color:#1c3040;border-color:#f7d397}
+#contaduria .contaduria-mini-menu button:focus-visible{outline:3px solid #fff;outline-offset:2px}
+#contaduria .contaduria-mini-page[hidden]{display:none!important}
+#contaduria .contaduria-mini-page{margin-top:14px}
+#contaduria #contaduriaPacksHost>#packsArea{margin-top:16px}
+#contaduria #contaduriaDetailsHost>#moneyArea{margin-top:17px}
 @media(max-width:630px){#cobros #flightSettlementPanel .formgrid,#contaduria .contaduria-pack-sale .formgrid,#contaduria #schoolExpensePanel .formgrid{grid-template-columns:1fr}#cobros #flightSettlementPanel{padding:14px}}
 
 /* Cobro de vuelos: identificación institucional y vista previa de horas, sin descontar hasta confirmar. */
@@ -683,8 +691,17 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   <section class="panel tab-panel" id="contaduria" aria-labelledby="contaduriaTitle">
    <span class="eyebrow">Supervisión institucional</span><h2 id="contaduriaTitle">Contaduría</h2>
    <p>Ingresos, egresos, venta de packs, conciliación e historial económico mensual y anual. Sin duplicar cobros ni sustituir la contabilidad fiscal.</p>
-   <div id="contaduriaOverviewHost"></div>
-   <section class="panel" id="studentDebtsPanel" style="margin-top:18px">
+   <nav id="contaduriaMiniMenu" class="contaduria-mini-menu" aria-label="Áreas de Contaduría">
+    <button type="button" data-contaduria-view="resumen" class="active" aria-pressed="true">Resumen y balance</button>
+    <button type="button" data-contaduria-view="deudas" aria-pressed="false">Deudas de alumnos y pilotos</button>
+    <button type="button" data-contaduria-view="honorarios" aria-pressed="false">Honorarios</button>
+    <button type="button" data-contaduria-view="packs" aria-pressed="false">Packs de horas</button>
+    <button type="button" data-contaduria-view="gastos" aria-pressed="false">Gastos institucionales</button>
+    <button type="button" data-contaduria-view="control" aria-pressed="false">Control de Secretaría y Dirección</button>
+    <button type="button" data-contaduria-view="movimientos" aria-pressed="false">Movimientos y reportes</button>
+   </nav>
+   <div id="contaduriaOverviewHost" class="contaduria-mini-page"></div>
+   <section class="panel contaduria-mini-page" id="studentDebtsPanel" style="margin-top:18px" hidden>
     <span class="eyebrow">Cuenta corriente · Secretaría y Dirección</span>
     <h3>Deudas de alumnos y pilotos</h3>
     <p class="hint">Registrá importes realmente adeudados. Un vuelo aprobado sin liquidar no constituye por sí solo una deuda con importe confirmado. Los pagos parciales descuentan saldo y solo los cobros efectivos impactan en caja.</p>
@@ -711,7 +728,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
      <div id="studentDebtPotentialList" class="list"></div>
     </details>
    </section>
-   <section class="panel" id="instructorFeesPanel" style="margin-top:18px">
+   <section class="panel contaduria-mini-page" id="instructorFeesPanel" style="margin-top:18px" hidden>
     <span class="eyebrow">Honorarios · Seguimiento por instructor</span>
     <h3>Horas de instrucción y honorarios</h3>
     <p class="hint">El 10 % es una referencia; Dirección debe guardar el porcentaje acordado para cada instructor. Los honorarios se calculan sobre el vuelo cobrado o sobre el valor proporcional del pack utilizado. No se pagan automáticamente.</p>
@@ -719,8 +736,10 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     <p id="instructorFeeStatus" class="hint" role="status" aria-live="polite">Cargando horas de instrucción…</p>
     <div id="instructorFeeList" class="list"></div>
    </section>
-   <div id="contaduriaPacksHost"></div>
-   <div id="contaduriaExpensesHost"></div><div id="contaduriaReviewHost"></div><div id="contaduriaDetailsHost"></div>
+   <div id="contaduriaPacksHost" class="contaduria-mini-page" hidden></div>
+   <div id="contaduriaExpensesHost" class="contaduria-mini-page" hidden></div>
+   <div id="contaduriaReviewHost" class="contaduria-mini-page" hidden></div>
+   <div id="contaduriaDetailsHost" class="contaduria-mini-page" hidden></div>
   </section>
   <section class="panel tab-panel" id="recursos">
    <span class="eyebrow">Academia Aeronáutica institucional</span><h2>Material de instrucción</h2>
@@ -821,7 +840,31 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    sales.append(purchaseHeading,purchaseNote,purchaseForm);$("contaduriaPacksHost").append(sales);
    $("contaduriaExpensesHost").append($("schoolExpensePanel"));
    $("contaduriaReviewHost").append($("frontdeskReviewPanel"));
-   $("contaduriaDetailsHost").append($("financeDisclosure"),$("financeExportRow"),document.querySelector(".finance-lists"));
+   $("contaduriaPacksHost").append($("packsArea"));
+   $("contaduriaDetailsHost").append($("financeDisclosure"),$("financeExportRow"),$("moneyArea"));
+   document.querySelector(".finance-lists").remove();
+   const contaduriaViews={
+    resumen:"contaduriaOverviewHost",
+    deudas:"studentDebtsPanel",
+    honorarios:"instructorFeesPanel",
+    packs:"contaduriaPacksHost",
+    gastos:"contaduriaExpensesHost",
+    control:"contaduriaReviewHost",
+    movimientos:"contaduriaDetailsHost"
+   };
+   const showContaduriaView=view=>{
+    if(!Object.hasOwn(contaduriaViews,view))return;
+    for(const [key,id] of Object.entries(contaduriaViews))$(id).hidden=key!==view;
+    $("contaduriaMiniMenu").querySelectorAll("button[data-contaduria-view]").forEach(button=>{
+     const active=button.dataset.contaduriaView===view;
+     button.classList.toggle("active",active);
+     button.setAttribute("aria-pressed",String(active));
+    });
+   };
+   $("contaduriaMiniMenu").querySelectorAll("button[data-contaduria-view]").forEach(button=>{
+    button.addEventListener("click",()=>showContaduriaView(button.dataset.contaduriaView));
+   });
+   showContaduriaView("resumen");
   }
   if(role==="alumno"){
    $("reportsEyebrow").textContent="Seguimiento de formación";
