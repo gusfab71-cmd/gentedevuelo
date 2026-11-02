@@ -480,8 +480,8 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
        <label class="finance-span-2">Buscar alumno por nombre, DNI o legajo
          <input type="search" id="settleStudentSearch" placeholder="Ej.: apellido, DNI o AL-000001" autocomplete="off" maxlength="90" aria-describedby="settleSearchStatus">
         </label>
-        <label id="settleSearchResultsRow" class="finance-span-2" hidden>Alumnos encontrados
-         <select id="settleSearchResults"><option value="">Seleccioná el alumno correcto</option></select>
+        <label id="settleSearchResultsRow" class="finance-span-2" hidden>Alumnos y pilotos encontrados
+         <select id="settleSearchResults"><option value="">Seleccioná la persona correcta</option></select>
         </label>
         <p class="finance-span-2 hint" id="settleSearchStatus" role="status" aria-live="polite">Buscá por nombre, DNI registrado o legajo. Los descuentos siempre se vinculan al alumno de la institución.</p>
         <label class="finance-span-2">Vuelo del alumno pendiente de liquidación<select id="settleBooking" name="booking" required><option value="">Elegí el vuelo</option></select></label>
@@ -801,12 +801,12 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   if(manager){
    const r=await db.rpc("aerosuite_director_people",{p_institution_id:inst});
    if(!r.error)people=(r.data||[]).filter(x=>x.kind==="integrante");
-   const studentCount=people.filter(x=>x.role==="alumno").length;
+   const studentCount=people.filter(x=>["alumno","piloto"].includes(x.role)).length;
    $("bookingStudentNotice").hidden=studentCount>0;
    for(const [id,kind] of [["bookingStudent","alumno"],["financeStudent","alumno"],["bookingInstructor","instructor"]]){
-    const s=$(id);people.filter(x=>x.role===kind).forEach(x=>s.add(new Option(x.email,x.person_id)));
+    const s=$(id);people.filter(x=>kind==="alumno"?["alumno","piloto"].includes(x.role):x.role===kind).forEach(x=>s.add(new Option((x.role==="piloto"?"Piloto · ":"")+x.email,x.person_id)));
    }
-   people.filter(x=>x.role==="alumno").forEach(x=>$("packPurchaseStudent").add(new Option(x.email,x.person_id)));
+   people.filter(x=>["alumno","piloto"].includes(x.role)).forEach(x=>$("packPurchaseStudent").add(new Option((x.role==="piloto"?"Piloto · ":"")+x.email,x.person_id)));
   }
   // La semana actual se destina a gestión de reservas; la siguiente, a nuevas reservas.
   // En el portal del alumno se abre la próxima semana para facilitar la reserva.
@@ -953,7 +953,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    inst,manager,role,school,pilotVerified,weekDates,weekMode,formatDate:stamp,today:artToday,
    aircraft:()=>registeredAircraft,simulators:()=>registeredSimulators,
    selectedStudent:()=> $("bookingStudent").value,
-   students:()=>people.filter(x=>x.role==="alumno").map(x=>({id:x.person_id,label:x.email})),
+   students:()=>people.filter(x=>["alumno","piloto"].includes(x.role)).map(x=>({id:x.person_id,label:(x.role==="piloto"?"Piloto · ":"")+x.email})),
    setSelectedStudent:id=>{$("bookingStudent").value=id;},
    isLegacyRescheduling:()=>!!rescheduleTarget,
    onLegacyReschedule:(slot,button)=>{chooseRescheduleSlot(slot);},
@@ -2265,7 +2265,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    renderSettlementCandidates();
    const matching=unsettledFlights.filter(x=>x.student_id===record.student_id);
    if(!matching.length)$("settleSearchStatus").textContent=
-    "Alumno encontrado, pero no tiene vuelos iniciados pendientes de liquidación. No se puede registrar un cobro sin vuelo.";
+    "Persona encontrada, pero no tiene vuelos iniciados pendientes de liquidación. No se puede registrar un cobro sin vuelo.";
    renderCashierPackPreview();
   }
   async function findCashierStudent(term,requestToken){
@@ -2282,7 +2282,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     }
     $("settleSearchResultsRow").hidden=!cashierSearchOptions.length;
     if(!cashierSearchOptions.length){
-     $("settleSearchStatus").textContent="No se encontró ese alumno en esta escuela. Si buscaste por DNI, verificá que esté registrado en su legajo.";
+     $("settleSearchStatus").textContent="No se encontró esa persona en esta escuela. Si buscaste por DNI, verificá que esté registrado en su legajo.";
      return;
     }
     $("settleSearchStatus").textContent=cashierSearchOptions.length===1?
@@ -2314,7 +2314,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     $("settleSearchStatus").textContent="Ingresá al menos 2 caracteres del nombre, DNI o legajo.";
     return;
    }
-   $("settleSearchStatus").textContent="Buscando alumno…";
+   $("settleSearchStatus").textContent="Buscando alumno o piloto…";
    cashierSearchTimer=setTimeout(()=>findCashierStudent(term,token),300);
   });
   $("settleSearchResults").addEventListener("change",()=>{
