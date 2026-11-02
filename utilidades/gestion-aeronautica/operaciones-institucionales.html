@@ -1065,6 +1065,155 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   async function rpc(name,args){
    const r=await db.rpc(name,args);if(r.error)throw r.error;return r.data;
   }
+
+  let legajosLoaded=false,selectedLegajoId=null,legajosPeople=[],legajoSearchTimer=null,legajoRequest=0;
+  const legajoRoles={alumno:"Alumno",instructor:"Instructor",piloto:"Piloto",administrador:"Dirección",secretaria:"Secretaría"};
+  async function loadLegajos(){
+   if(!manager)return;
+   const request=++legajoRequest;
+   const list=$("legajoResults"),status=$("legajoStatus");
+   const query=$("legajoSearch").value.trim();
+   status.textContent="Buscando integrantes…";
+   try{
+    const result=await rpc("aerosuite_institution_legajos_search",{p_institution_id:inst,p_search:query});
+    if(request!==legajoRequest)return;
+    legajosPeople=Array.isArray(result)?result:[];
+    list.replaceChildren();
+    status.textContent=legajosPeople.length+" integrante(s) encontrado(s)"+
+     (legajosPeople.length===80?" · Mostrando los primeros 80; refiná la búsqueda.":".");
+    if(!legajosPeople.length){
+     list.textContent="No hay coincidencias para este apellido, DNI o legajo.";
+     $("legajoHistory").textContent="Probá con otro término de búsqueda.";
+     return;
+    }
+    for(const p of legajosPeople){
+     const button=document.createElement("button");button.type="button";
+     button.className="legajo-result"+(selectedLegajoId===p.user_id?" selected":"");
+     const strong=document.createElement("strong");
+     strong.textContent=p.full_name||p.email||"Sin identificación";
+     const meta=document.createElement("small");
+     meta.textContent=(legajoRoles[p.role]||p.role)+" · "+
+      (p.legajo||"Sin legajo operativo")+" · "+(p.email||"")+
+      " · "+Number(p.completed_count||0)+" vuelo(s) realizados";
+     button.append(strong,meta);
+     button.addEventListener("click",()=>loadLegajoHistory(p.user_id));
+     list.append(button);
+    }
+    if(!selectedLegajoId||!legajosPeople.some(p=>p.user_id===selectedLegajoId)){
+     selectedLegajoId=null;
+     $("legajoHistory").textContent="Seleccioná una persona para ver su historial integrado.";
+    }
+   }catch(e){
+    if(request!==legajoRequest)return;
+    status.textContent="No se pudieron buscar los legajos: "+safeError(e);
+    list.replaceChildren();
+   }
+  }
+  function renderLegajoHistory(result){
+   const root=$("legajoHistory"),person=result.profile||{},t=result.totals||{};
+   root.replaceChildren();
+   const h=document.createElement("h3");
+   h.textContent=person.full_name||person.email||"Integrante";
+   const roles=document.createElement("p");roles.className="hint";
+   roles.textContent=(person.roles||[]).map(r=>(legajoRoles[r.role]||r.role)+
+    (r.legajo?" · "+r.legajo:"")).join(" / ")+" · "+(person.email||"");
+   root.append(h,roles);
+   const stats=[
+    ["Reservas",Number(t.reservations||0)],
+    ["Vuelos aprobados",Number(t.approved_flights||0)],
+    ["Horas aprobadas",flightHoursMinutes(Number(t.approved_minutes||0))+" h"],
+    ["Movimientos",Number(t.economic_movements||0)],
+    ["Material de Academia",Number(t.academy_uploads||0)]
+   ];
+   const badges=document.createElement("div");badges.className="legajo-stats";
+   for(const [label,value] of stats){
+    const el=document.createElement("span");el.className="legajo-stat";
+    const name=document.createElement("small");name.textContent=label;
+    const amount=document.createElement("b");amount.textContent=String(value);
+    el.append(name,amount);badges.append(el);
+   }
+   root.append(badges);
+   function section(title,items,render,total){
+    const details=document.createElement("details");
+    const summary=document.createElement("summary");
+    summary.textContent=title+" ("+total+")";details.append(summary);
+    if(!items.length){
+     const empty=document.createElement("p");empty.className="hint";
+     empty.textContent="Sin registros vinculados.";details.append(empty);
+    }
+    for(const x of items){
+     const entry=document.createElement("div");entry.className="legajo-entry";
+     const [heading,body]=render(x);
+     const strong=document.createElement("strong");strong.textContent=heading;
+     const p=document.createElement("p");p.className="hint";p.textContent=body;
+     entry.append(strong,p);details.append(entry);
+    }
+    root.append(details);
+   }
+   const bookings=result.bookings||[];
+   section("Reservas, vuelos e informes",bookings,b=>[
+    stamp(b.starts_at)+" · "+(b.aircraft||"Matrícula pendiente")+" · "+
+      (b.relation==="instructor"?"Instructor":"Alumno/piloto"),
+    (statuses[b.status]||b.status||"Sin estado")+
+      " · Informe: "+(statuses[b.report_status]||"Sin informe")+
+      (b.flight_minutes!=null?" · Vuelo "+flightHoursMinutes(Number(b.flight_minutes))+" h":"")+
+      (b.checkout_minutes!=null?" · Liquidación "+flightHoursMinutes(Number(b.checkout_minutes))+" h"+
+       (b.checkout_method==="pack"?" de pack":" cobradas"):" · Sin liquidación")
+   ],Number(t.reservations||bookings.length));
+   const types={pack_sale:"Venta de pack",pack_reversal:"Corrección de pack",
+    hour_payment:"Cobro",expense:"Gasto institucional",petty_expense:"Caja chica",refund:"Devolución"};
+   const movements=result.movements||[];
+   section("Movimientos económicos relacionados",movements,m=>[
+    stamp(m.created_at)+" · "+(types[m.movement_type]||m.movement_type)+
+      " · "+currencyAmount(Number(m.amount||0),m.currency),
+    (m.relation==="instructor_pagado"?"Pago al instructor":
+      m.relation==="registrado_por"?"Movimiento registrado por esta cuenta":"Operación del alumno/piloto")+
+      (m.expense_category?" · "+m.expense_category:"")+
+      (m.description?" · "+m.description:"")
+   ],Number(t.economic_movements||movements.length));
+   const packs=result.packs||[];
+   section("Packs y horas disponibles",packs,p=>[
+    stamp(p.created_at)+" · "+(p.voided_at?"Pack anulado":"Pack registrado"),
+    "Compradas "+flightHoursMinutes(Number(p.total_minutes||0))+" h · "+
+    "Utilizadas "+flightHoursMinutes(Number(p.used_minutes||0))+" h · "+
+    (p.voided_at?"Sin saldo disponible (anulado)":
+     "Restantes "+flightHoursMinutes(Math.max(0,Number(p.total_minutes||0)-Number(p.used_minutes||0)))+" h")+
+    " · "+currencyAmount(Number(p.paid_amount||0),p.currency)
+   ],packs.length);
+   const debts=result.debts||[];
+   section("Deudas y cobros parciales",debts,d=>[
+    stamp(d.created_at)+" · "+d.description,
+    "Original "+currencyAmount(Number(d.amount_due||0),d.currency)+
+    " · Cobrado "+currencyAmount(Number(d.paid||0),d.currency)+
+    " · Pendiente "+currencyAmount(Math.max(0,Number(d.amount_due||0)-Number(d.paid||0)),d.currency)+
+    (d.cancelled_at?" · Anulada":"")
+   ],debts.length);
+   const note=document.createElement("p");note.className="hint";
+   note.textContent="Consulta vinculada por identidad e institución. No cambia reservas, saldos, libros ni contabilidad."+
+    (Number(t.reservations||0)>120||Number(t.economic_movements||0)>120?
+     " El detalle muestra hasta 120 registros por categoría; los reportes conservan los demás.":"");
+   root.append(note);
+  }
+  async function loadLegajoHistory(id){
+   if(!manager)return;
+   selectedLegajoId=id;
+   $("legajoHistory").textContent="Consultando historial integrado…";
+   $("legajoResults").querySelectorAll(".legajo-result").forEach((button,index)=>
+    button.classList.toggle("selected",legajosPeople[index]?.user_id===id));
+   try{
+    const result=await rpc("aerosuite_institution_legajo_history",{p_institution_id:inst,p_person_id:id});
+    if(selectedLegajoId!==id)return;
+    renderLegajoHistory(result);
+   }catch(e){
+    if(selectedLegajoId===id)$("legajoHistory").textContent="No se pudo consultar: "+safeError(e);
+   }
+  }
+  $("legajoSearch").addEventListener("input",()=>{
+   clearTimeout(legajoSearchTimer);
+   legajoSearchTimer=setTimeout(loadLegajos,250);
+  });
+  $("legajoReload").addEventListener("click",loadLegajos);
+
   function labelOf(v){return people.find(x=>x.person_id===v)?.email||v||"Sin asignar";}
   async function startReschedule(booking){
    if(!manager||!school.can_write)return;
