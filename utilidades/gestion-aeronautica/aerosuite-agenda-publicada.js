@@ -165,10 +165,19 @@ window.AeroSuiteAgenda={
    }catch(e){msg("No se pudo actualizar: "+e.message);}
   }
   let selectedSlotId=null,maintenanceChecks=[];
-  function studentFlightMode(){return $("agendaStudentInstructor")?.checked!==false;}
+  function studentFlightMode(){return c.role==="piloto"?false:$("agendaStudentInstructor")?.checked!==false;}
   function refreshStudentMode(){
-   $("agendaStudentFlightMode").hidden=c.role!=="alumno"||$("agendaFilter").value!=="flight";
-   $("agendaStudentModeText").textContent=studentFlightMode()?"Con instructor":"Sin instructor (sujeto a autorización)";
+   const isParticipant=c.role==="alumno"||c.role==="piloto";
+   $("agendaStudentFlightMode").hidden=!isParticipant||$("agendaFilter").value!=="flight";
+   if(c.role==="piloto"){
+    $("agendaStudentInstructor").checked=false;
+    $("agendaStudentInstructor").disabled=true;
+    $("agendaStudentModeText").textContent="Sin instructor · verificación institucional obligatoria";
+   }else $("agendaStudentModeText").textContent=studentFlightMode()?"Con instructor":"Sin instructor (sujeto a autorización)";
+  }
+  if(c.role==="piloto"){
+   for(const option of [...$("agendaFilter").options])if(option.value!=="flight")option.remove();
+   $("agendaFilter").options[0].textContent="Vuelo particular (Piloto PPA / Comercial)";
   }
   $("agendaStudentInstructor").onchange=refreshStudentMode;
   const dayLabels=["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"];
@@ -190,7 +199,7 @@ window.AeroSuiteAgenda={
    refreshStudentMode();
   }
   function myScheduleOverlaps(slot){
-   if(c.role!=="alumno")return false;
+   if(!["alumno","piloto"].includes(c.role))return false;
    const start=new Date(slot.starts_at).getTime();
    const end=start+Number(slot.duration_minutes||90)*60000;
    if(!Number.isFinite(start)||!Number.isFinite(end))return false;
@@ -210,7 +219,7 @@ window.AeroSuiteAgenda={
    feedback.scrollIntoView({behavior:"smooth",block:"nearest"});
   }
   async function reserveSlot(slot,button){
-   if(c.role!=="alumno"||!c.school.can_write||c.weekMode()!=="next"){
+   if(!["alumno","piloto"].includes(c.role)||!c.school.can_write||c.weekMode()!=="next"){
     showStudentBookingFeedback("Reservá desde «Semana siguiente» con una sesión de alumno habilitada.","error");
     return;
    }
@@ -454,8 +463,9 @@ window.AeroSuiteAgenda={
       const own=bookings.filter(r=>r.slot_id===slot.id&&r.my_booking);
       const active=bookings.filter(r=>r.slot_id===slot.id&&r.status!=="cancelled");
       const future=when>Date.now(),remaining=Number(slot.capacity)-Number(slot.reserved);
-      const conflict=c.role==="alumno"&&!own.length&&myScheduleOverlaps(slot);
-      const canBook=slot.published&&slot.bookable!==false&&future&&remaining>0&&c.role==="alumno"&&
+      const conflict=["alumno","piloto"].includes(c.role)&&!own.length&&myScheduleOverlaps(slot);
+      const canBook=slot.published&&slot.bookable!==false&&future&&remaining>0&&["alumno","piloto"].includes(c.role)&&
+       (c.role!=="piloto"||(slot.activity==="flight"&&c.pilotVerified))&&
        c.weekMode()==="next"&&!own.length&&!conflict&&c.school.can_write;
       let state=own.length?(own.some(r=>r.status==="confirmed")?"Confirmado":own.some(r=>r.status==="completed")?"Realizado":"Pendiente"):
        !slot.published?"Preparación":!future?"Pasado":slot.bookable===false?"Fuera de servicio":
@@ -508,7 +518,7 @@ window.AeroSuiteAgenda={
        (resource==="all"||String(item.aircraft||"").toUpperCase()===resource.toUpperCase()))){
        const oldButton=document.createElement("button");
        oldButton.type="button";
-       const privateBooking=c.role==="alumno"&&!old.my_booking;
+       const privateBooking=["alumno","piloto"].includes(c.role)&&!old.my_booking;
        const oldPayment=c.manager?c.settlementForBooking?.(old.booking_id):null;
        oldButton.className="slot agenda-slot-btn "+
         (privateBooking?"occupied":oldPayment?"settled":old.status==="pending"?"busy pending":
@@ -563,7 +573,7 @@ window.AeroSuiteAgenda={
     "REPROGRAMACIÓN ACTIVA: elegí la casilla verde con «Elegir · 1 h 30»; ese clic selecciona los 90 minutos completos. Confirmá el cambio en el recuadro anterior. ":
     c.weekMode()==="current"?
     "Esta semana: revisá los turnos ya asignados y sus modificaciones; las nuevas reservas se realizan en «Semana siguiente». ":
-    c.role==="alumno"?
+    ["alumno","piloto"].includes(c.role)?
     "Elegí una casilla «Libre» para reservar; si hay varias aeronaves en el mismo horario, aparecen juntas. ":
     "Seleccioná un horario de la grilla para gestionar disponibilidad y reservas. ")+
     "Turnos de 90 minutos. Horario de Argentina. "+published+" horarios publicados esta semana.";
