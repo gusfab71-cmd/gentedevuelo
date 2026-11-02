@@ -111,7 +111,7 @@ input[type=email]{width:100%;background:#122737;border:1px solid #7394aa;border-
    </a>
    <a class="tile operational-link" data-visible-role="administrador secretaria" href="#directorPeoplePanel"><h3>Personas de la escuela</h3><p>Invitaciones a alumnos, instructores y pilotos; gestión de integrantes.</p><span class="pill ready">Operativa</span></a>
    <a class="tile operational-link" data-visible-role="administrador secretaria" data-module="flota" href="#"><h3>Disponibilidad de flotas y mantenimiento</h3><p>Registrá aeronaves y simuladores, administrá su disponibilidad y consultá el seguimiento técnico de las aeronaves.</p><span class="pill ready">Operativa</span></a>
-   <a class="tile operational-link" data-visible-role="administrador secretaria" data-module="recursos" href="#"><h3>Academia Aeronáutica</h3><p>Publicá apuntes, documentos y guías para los alumnos de tu escuela.</p><span class="pill ready">Operativa</span></a>
+   <a class="tile operational-link" data-visible-role="administrador" data-module="recursos" href="#"><h3>Academia Aeronáutica</h3><p>Publicá apuntes, documentos y guías para los alumnos de tu escuela.</p><span class="pill ready">Operativa</span></a>
    <a class="tile operational-link" data-visible-role="instructor" data-module="turnera" href="#" hidden><h3>Turnera de instrucción</h3><p>Consultá horarios y confirmá solicitudes que puedas atender.</p><span class="pill ready">Operativa</span></a>
    <a class="tile operational-link" data-visible-role="instructor" data-module="informes" href="#" hidden><h3>Mis informes</h3><p>Registrá clases, horas, devoluciones, combustible y aceite.</p><span class="pill ready">Operativa</span></a>
    <a class="tile operational-link" data-visible-role="instructor" data-module="flota" href="#" hidden><h3>Flota de la escuela</h3><p>Consultá qué aeronaves están disponibles o fuera de servicio.</p><span class="pill ready">Consulta</span></a>
@@ -269,7 +269,7 @@ try{
   ?'La turnera, los informes y los recursos docentes están operativos. La flota ofrece consulta; Contaduría corresponde a Dirección y Secretaría.'
   :school.my_role==='alumno'
    ?'Podés consultar turnera, prácticas, horas de vuelo y los recursos de la Academia de tu escuela.'
-   :(school.my_role==='piloto'?'Tu portal integra ficha personal, turnera, horas de vuelo, AeroLocator y Flight Operations. La escuela verifica la licencia antes de habilitar reservas sin instructor.':'La turnera, los informes, Contaduría y la Academia institucional están operativos. El mantenimiento requiere integración específica.');
+   :(school.my_role==='piloto'?'Tu portal integra ficha personal, turnera, horas de vuelo, AeroLocator y Flight Operations. La escuela verifica la licencia antes de habilitar reservas sin instructor.':'La turnera, los informes y Contaduría están operativos. La Academia está reservada a Dirección, Instructores y Alumnos.');
  el('schoolPlan').hidden=!isManager;
  el('schoolExpiry').hidden=!isManager;
  el('schoolAccessLine').hidden=!isManager;
