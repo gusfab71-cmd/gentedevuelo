@@ -15,6 +15,28 @@
     location.replace(destination.href);
     return;
   }
+  // El perfil AeroSuite se reutiliza desde el portal institucional sin exigir
+  // una sesión distinta de la comunidad. Solo esta ruta permite el modo institucional.
+  const institutionalParams=new URLSearchParams(location.search);
+  const onInstitutionalProfile=location.pathname.endsWith('/utilidades/gestion-aeronautica/mi-ficha-alumno.html') &&
+   /^[a-f0-9]{8}-[a-f0-9-]{27,}$/i.test(institutionalParams.get('institucion')||'');
+  if(onInstitutionalProfile){
+    const role=institutionalParams.get('rol')||'';
+    const lab=institutionalParams.get('prueba')==='1'&&
+      ['alumno','instructor','administrador','secretaria'].includes(role);
+    const institutionalClient=supabase.createClient(GDV_CONFIG.url,GDV_CONFIG.key,{
+      auth:{storageKey:lab?'aerosuite-laboratorio-'+role+'-v1-auth':'aerosuite-institucional-v2-auth',
+        persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}
+    });
+    const ready=institutionalClient.auth.getUser().then(({data,error})=>{
+      if(error||!data?.user)throw Error('No hay una sesión institucional activa.');
+      document.documentElement.classList.remove('auth-pending');
+      return data.user;
+    });
+    window.GDV_AUTH={client:institutionalClient,ready};
+    // No ejecutar el guard de comunidad ni afectar sus credenciales.
+    return;
+  }
   const base = new URL('../', document.currentScript.src);
   const client = supabase.createClient(GDV_CONFIG.url, GDV_CONFIG.key);
   const loginURL = new URL('comunidad.html#ingresar', base);
