@@ -93,6 +93,8 @@ window.AeroSuiteAgenda={
    ".agenda-slot-btn.completed{background:#385b69;border-color:#547989;color:#f1f7fa}",
    ".agenda-slot-btn.occupied,.agenda-slot-btn.past,.agenda-slot-btn.unavailable{background:#3c4a55;border-color:#566977;color:#dce4eb}",
    ".agenda-slot-btn.conflict{background:#405467;border-color:#7896a7;color:#fff4d3}",
+   ".agenda-slot-btn.aircraft-change{background:#7d5b29;border-color:#d5aa62;color:#fff7e8}",
+   ".agenda-slot-btn.aircraft-change:hover{background:#996d31}",
    ".agenda-slot-btn .agenda-conflict-instruction{font-size:10px;font-weight:750;line-height:1.35;color:#ffe0a2}",
    ".agenda-booking-feedback{margin:10px 0;padding:10px 12px;border:1px solid;border-radius:8px;font-weight:700}",
    ".agenda-booking-feedback.error{background:#563b37;border-color:#d6a184;color:#fff2dd}",
@@ -254,6 +256,30 @@ window.AeroSuiteAgenda={
     showStudentBookingFeedback("Reserva registrada. El turno quedó Pendiente en amarillo suave.","success");
    }catch(e){
     showStudentBookingFeedback("No se pudo reservar: "+e.message,"error");
+    button.disabled=false;
+   }
+  }
+  async function changePendingAircraft(slot,source,button){
+   if(!source||source.status!=="pending"||!c.school.can_write||c.weekMode()!=="next")return;
+   const previous=slots.find(s=>s.id===source.slot_id);
+   if(!previous||previous.activity!=="flight"||
+    new Date(previous.starts_at).getTime()!==new Date(slot.starts_at).getTime())return;
+   if(!confirm("Ya tenés una reserva PENDIENTE en este horario.\n"+
+     "Aeronave reservada: "+previous.resource+"\n"+
+     "Nueva aeronave: "+slot.resource+"\n"+
+     "Fecha: "+c.formatDate(slot.starts_at)+" hasta las "+endTime90(slot.starts_at)+
+     "\n\n¿Deseás cambiar de aeronave? Se conservará la misma reserva pendiente."))return;
+   button.disabled=true;
+   try{
+    const result=await c.rpc("aerosuite_student_change_pending_aircraft",{
+     p_institution_id:c.inst,p_reservation_id:source.id,p_target_slot_id:slot.id
+    });
+    if(!result?.ok)throw Error("No se pudo verificar el cambio de aeronave.");
+    await reloadAfter("Aeronave cambiada de "+previous.resource+" a "+slot.resource+". La reserva sigue pendiente.");
+    showStudentBookingFeedback("Cambio registrado: "+slot.resource+" reemplaza a "+previous.resource+
+     ". La reserva permanece pendiente de confirmación.","success");
+   }catch(e){
+    showStudentBookingFeedback("No se pudo cambiar de aeronave: "+e.message,"error");
     button.disabled=false;
    }
   }
@@ -512,12 +538,21 @@ window.AeroSuiteAgenda={
       const active=bookings.filter(r=>r.slot_id===slot.id&&r.status!=="cancelled");
       const future=when>Date.now(),remaining=Number(slot.capacity)-Number(slot.reserved);
       const conflict=["alumno","piloto"].includes(c.role)&&!own.length&&myScheduleOverlaps(slot);
+      const sameTimeOwnFlight=["alumno","piloto"].includes(c.role)&&slot.activity==="flight"?
+       bookings.filter(r=>r.my_booking&&r.slot_id!==slot.id&&r.activity==="flight"&&
+        ["pending","confirmed"].includes(r.status)&&
+        new Date(r.starts_at).getTime()===when):[];
+      const pendingToSwitch=sameTimeOwnFlight.length===1&&sameTimeOwnFlight[0].status==="pending"?
+       sameTimeOwnFlight[0]:null;
+      const canChangeAircraft=!!pendingToSwitch&&future&&slot.published&&
+       slot.bookable!==false&&remaining>0&&c.weekMode()==="next"&&c.school.can_write&&
+       (c.role!=="piloto"||c.pilotVerified);
       const canBook=slot.published&&slot.bookable!==false&&future&&remaining>0&&["alumno","piloto"].includes(c.role)&&
        (c.role!=="piloto"||(slot.activity==="flight"&&c.pilotVerified))&&
        c.weekMode()==="next"&&!own.length&&!conflict&&c.school.can_write;
       let state=own.length?(own.some(r=>r.status==="confirmed")?"Confirmado":own.some(r=>r.status==="completed")?"Realizado":"Pendiente"):
        !slot.published?"Preparación":!future?"Pasado":slot.bookable===false?"Fuera de servicio":
-       remaining<=0?(slot.activity==="theory"?"Sin cupos":"Ocupado"):conflict?"No disponible":"Libre";
+       remaining<=0?(slot.activity==="theory"?"Sin cupos":"Ocupado"):conflict?(canChangeAircraft?"Cambiar aeronave":"No disponible"):"Libre";
       const settledMethod=c.manager&&slot.activity==="flight"?
        active.map(r=>r.booking_id?c.settlementForBooking?.(r.booking_id):null).find(Boolean):null;
       if(c.manager&&active.length){
@@ -537,21 +572,25 @@ window.AeroSuiteAgenda={
         settledMethod?"settled":state==="Realizado"?"completed":state==="Libre"?"available":
         state==="Preparación"?"draft":state==="Pasado"?"past":
         state==="Fuera de servicio"?"unavailable":
-        state==="No disponible"?"conflict":
+        state==="Cambiar aeronave"?"aircraft-change":state==="No disponible"?"conflict":
         ["Ocupado","Sin cupos","Solo consulta"].includes(state)?"occupied":"");
       const resourceName=document.createElement("strong");resourceName.textContent=slot.resource||names[slot.activity];
       const line=htmlText((selectedMove?"Seleccionado · 1 h 30":
        legacyMove?"Elegir · 1 h 30":state==="Libre"?"Libre · 1 h 30":state)+
        (slot.activity==="theory"?" · "+slot.reserved+"/"+slot.capacity:""),"small");
       b.append(resourceName,line);
-      if(conflict&&state==="No disponible")b.title="Ya tenés una reserva que coincide con este horario. Hacé clic para más información.";
+      if(state==="Cambiar aeronave")b.title="Tenés una reserva pendiente: clic para cambiar de aeronave manteniendo el horario.";
+      else if(conflict&&state==="No disponible")b.title="Ya tenés una reserva que coincide con este horario. Hacé clic para más información.";
       b.setAttribute("aria-label",slot.resource+" · "+state+" · "+date+" "+time);
       if(legacyMove)b.onclick=()=>c.onLegacyReschedule(slot,b);
       else if(canBook)b.onclick=()=>reserveSlot(slot,b);
       else if(reprogramming)b.onclick=()=>c.onLegacyInvalidTarget?.(slot);
+      else if(!c.manager&&canChangeAircraft)b.onclick=()=>changePendingAircraft(slot,pendingToSwitch,b);
       else if(!c.manager&&own.length)b.onclick=()=>openOwnBooking(slot,own,b);
       else if(!c.manager&&conflict&&state==="No disponible"){
-       b.onclick=()=>alert("Ya tenés otro turno reservado en ese horario.\nNo se permiten reservas superpuestas. Para cambiar de aeronave o de horario, comunicate con Secretaría.");
+       b.onclick=()=>alert(sameTimeOwnFlight.some(r=>r.status==="confirmed")?
+        "Ya tenés un turno CONFIRMADO en este horario.\nPara cambiar de aeronave, comunicate con Secretaría.":
+        "Ya tenés otra reserva superpuesta con este horario.\nPara modificarla o reprogramarla, comunicate con Secretaría.");
       }
       else if(c.manager){
        b.onclick=()=>{
