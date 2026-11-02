@@ -424,6 +424,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     <label style="margin-top:12px">Recomendaciones para la próxima práctica (opcional)<textarea name="next" maxlength="850" placeholder="Aspectos para repasar o mejorar antes del próximo vuelo."></textarea></label>
     <label style="margin-top:12px">Novedades observadas de la aeronave<textarea name="aircraft" maxlength="2000" placeholder="Opcional. Las novedades urgentes se comunican directamente al Director."></textarea></label>
     <button class="primary" type="submit" style="margin-top:12px">Presentar informe a Administración</button>
+    <p id="reportSubmitStatus" role="status" aria-live="polite" tabindex="-1" hidden style="margin:12px 0;font-weight:750"></p>
    </form>
    <div id="labReportBox" class="panel" hidden style="margin:16px 0">
     <h3>Centro de Testeo · Informe recuperado</h3>
@@ -1353,11 +1354,18 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     selected?.aircraft_class==="multimotor"?"multimotor":"";
    f.elements.namedItem("log_aircraft_power").value=selected?.engine_power_hp!=null?
     String(selected.engine_power_hp)+" HP":"";
-   $("reportAircraftPowerNotice").textContent=!selected?
+   const booking=bookings.find(b=>b.booking_id===$("reportBooking").value);
+   const reservedSlot=booking?.booking_id?publishedAgenda.getSlotForBooking(booking.booking_id):null;
+   const bookedRegistration=AeroSuiteRegistration.normalize(reservedSlot?.resource||booking?.aircraft||"");
+   $("reportAircraftPowerNotice").textContent=selected&&bookedRegistration&&
+    selected.registration!==bookedRegistration?
+    "ATENCIÓN: la reserva indica "+bookedRegistration+" pero elegiste "+selected.registration+
+    ". Verificá con Secretaría qué aeronave se utilizó realmente antes de presentar el informe.":
+    !selected?
     "Seleccioná la aeronave que se utilizó realmente.":
     !selected.model?"Falta completar el modelo en Flota.":
     !["monomotor","multimotor"].includes(selected.aircraft_class)?
-     "Tipo de aeronave pendiente: Dirección o Secretaría debe completar Monomotor/Multimotor en Flota.":
+     "FALTA UN DATO OBLIGATORIO: Dirección o Secretaría debe completar Monomotor/Multimotor en Flota → Datos para instrucción. Hasta entonces no se puede presentar el informe.":
     selected.engine_power_hp==null?
      "Matrícula, modelo y tipo completados. Potencia pendiente: Dirección o Secretaría debe cargar los HP según la ficha técnica en Flota.":
      "Datos recuperados de Flota: "+selected.registration+" · "+selected.model+" · "+
@@ -2134,8 +2142,34 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     target.append(card);
    }
   }
+  function showReportSubmitStatus(message,scroll=true){
+   const notice=$("reportSubmitStatus");
+   notice.hidden=false;
+   notice.textContent=message;
+   stat.textContent=message;
+   if(scroll)notice.scrollIntoView({behavior:"smooth",block:"center"});
+  }
+  // La validación nativa bloquea "submit": capturamos el campo inválido
+  // para que el Instructor vea la causa junto al botón.
+  $("reportForm").addEventListener("invalid",event=>{
+   const input=event.target;
+   const field=input.closest("label")?.firstChild?.textContent?.trim()||input.name||"campo obligatorio";
+   if($("reportSubmitStatus").hidden){
+    const msg="No se envió el informe. Revisá el campo «"+field+
+     "». "+(input.readOnly||input.id==="reportAircraftChoice"?
+      "Los datos de la aeronave deben completarse en Flota por Dirección o Secretaría.":
+      "Completá todos los campos obligatorios antes de volver a presentarlo.");
+    showReportSubmitStatus(msg);
+   }
+  },true);
+  $("reportForm").querySelector('button[type="submit"]').addEventListener("click",()=>{
+   $("reportSubmitStatus").hidden=true;
+  });
   $("reportForm").addEventListener("submit",async e=>{
-   e.preventDefault();const f=e.currentTarget,fd=new FormData(f),button=f.querySelector("button");button.disabled=true;
+   e.preventDefault();const f=e.currentTarget,fd=new FormData(f),button=f.querySelector('button[type="submit"]');
+   button.disabled=true;
+   $("reportSubmitStatus").hidden=true;
+   showReportSubmitStatus("Presentando informe y verificando el registro…",false);
    try{
     const durationMinutes=centiToMinutes($("reportDurationHours").value);
     if(durationMinutes===null)throw Error("Ingresá horas y minutos válidos (hasta 10:00).");
@@ -2162,8 +2196,13 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     await rpc("aerosuite_submit_flight_report_with_logbook",{p_institution_id:inst,p_booking_id:fd.get("booking"),
      p_flight_minutes:durationMinutes,p_fuel_liters:Number(fd.get("fuel")),p_oil_liters:Number(fd.get("oil")),
      p_teaching_notes:teachingNotes.join("\n\n"),p_aircraft_notes:fd.get("aircraft"),p_logbook_entry:logbook});
-    f.reset();syncReportDuration();stat.textContent="Informe y registro de vuelo presentados a Administración para su revisión.";await loadReports();
-   }catch(e){stat.textContent="No se pudo enviar el informe: "+safeError(e);}finally{button.disabled=false;}
+    f.reset();syncReportDuration();
+    showReportSubmitStatus("Informe presentado correctamente. Quedó registrado y pendiente de revisión por Administración.");
+    try{await loadReports();}catch(refreshError){
+     showReportSubmitStatus("Informe presentado correctamente, pero no se pudo actualizar la lista: "+safeError(refreshError)+". Actualizá el portal.");
+    }
+   }catch(e){showReportSubmitStatus("NO SE PRESENTÓ EL INFORME: "+safeError(e));}
+   finally{button.disabled=false;}
   });
   function renderFinanceBookingChoices(){
    if(!manager)return;const target=$("financeBooking");target.length=1;
