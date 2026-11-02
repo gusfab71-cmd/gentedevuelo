@@ -684,6 +684,33 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    <span class="eyebrow">Supervisión institucional</span><h2 id="contaduriaTitle">Contaduría</h2>
    <p>Ingresos, egresos, venta de packs, conciliación e historial económico mensual y anual. Sin duplicar cobros ni sustituir la contabilidad fiscal.</p>
    <div id="contaduriaOverviewHost"></div>
+   <section class="panel" id="studentDebtsPanel" style="margin-top:18px">
+    <span class="eyebrow">Cuenta corriente · Secretaría y Dirección</span>
+    <h3>Deudas de alumnos y pilotos</h3>
+    <p class="hint">Registrá importes realmente adeudados. Un vuelo aprobado sin liquidar no constituye por sí solo una deuda con importe confirmado. Los pagos parciales descuentan saldo y solo los cobros efectivos impactan en caja.</p>
+    <p class="hint" id="studentDebtSummary" role="status" aria-live="polite">Consultando cuentas corrientes…</p>
+    <details class="finance-history-details" id="studentDebtCreatePanel">
+     <summary>Registrar una nueva deuda</summary>
+     <form id="studentDebtForm" style="margin:13px 0">
+      <div class="formgrid">
+       <label>Alumno o piloto<select id="studentDebtPerson" required><option value="">Elegí una persona registrada</option></select></label>
+       <label>Vuelo sin liquidar (opcional)<select id="studentDebtBooking"><option value="">Otro concepto · sin vincular vuelo</option></select></label>
+       <label>Importe adeudado<input class="money-entry" id="studentDebtAmount" type="text" inputmode="decimal" required placeholder="Ej.: 125.000"></label>
+       <label>Moneda<select id="studentDebtCurrency"><option value="ARS">ARS · Pesos</option><option value="USD">USD · Dólares</option></select></label>
+       <label class="finance-span-2">Concepto de la deuda<input id="studentDebtDescription" minlength="3" maxlength="500" required placeholder="Ej.: Vuelo de instrucción sin cobrar"></label>
+      </div>
+      <button class="primary" type="submit" style="margin-top:12px">Registrar deuda pendiente</button>
+     </form>
+     <p class="hint" id="studentDebtCreateStatus" role="status" aria-live="polite"></p>
+    </details>
+    <h4 style="margin:17px 0 8px">Saldos registrados</h4>
+    <div id="studentDebtList" class="list"></div>
+    <details id="studentDebtPotentialPanel" class="finance-history-details" style="margin-top:14px">
+     <summary>Vuelos aprobados todavía sin liquidar · Ver casos</summary>
+     <p class="hint">No son deudas monetarias confirmadas hasta que Secretaría registre el importe correspondiente.</p>
+     <div id="studentDebtPotentialList" class="list"></div>
+    </details>
+   </section>
    <section class="panel" id="instructorFeesPanel" style="margin-top:18px">
     <span class="eyebrow">Honorarios · Seguimiento por instructor</span>
     <h3>Horas de instrucción y honorarios</h3>
@@ -1836,7 +1863,10 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    ".instructor-fee-row>strong{display:block;margin-bottom:7px}"+
    ".instructor-fee-payment{border:1px solid #4e7690;border-radius:8px;padding:12px;margin:10px 0}"+
    ".instructor-fee-payment summary{cursor:pointer;color:#f3d49a;font-weight:750}"+
-   ".instructor-fee-payment label{margin:8px 0}";
+   ".instructor-fee-payment label{margin:8px 0}"+
+   ".student-debt-item{border:1px solid #496f88;border-radius:9px;padding:12px 13px;margin:8px 0;background:#153448}"+
+   ".student-debt-item strong{color:#f1d9a4}"+
+   ".student-debt-paid{border-color:#426b5c;opacity:.86}";
   document.head.append(reportStyle);
   function reportFeedbackSummary(notes){
    const sections=parseTeachingNotes(notes);
@@ -2349,6 +2379,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    }
   }
   
+  let studentDebtData=null;
   let instructorFeeData=null;
   let financeOverviewData=null,financePeriodData=null,financePeriodToken=0,
    unsettledFlights=[],hourlyTariff={configured:false,amount:null,currency:"ARS"};
@@ -2735,6 +2766,188 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     list.append(box);
    }
   }
+  function renderStudentDebts(){
+   if(!manager)return;
+   const list=$("studentDebtList"),potential=$("studentDebtPotentialList");
+   list.replaceChildren();potential.replaceChildren();
+   if(!studentDebtData){
+    $("studentDebtSummary").textContent="No se pudo recuperar la cuenta corriente.";
+    return;
+   }
+   const debts=studentDebtData.debts||[],possible=studentDebtData.potential_flights||[];
+   const active=debts.filter(x=>!x.cancelled_at&&Number(x.remaining)>0);
+   const sums={};
+   for(const d of active)sums[d.currency]=(sums[d.currency]||0)+Number(d.remaining);
+   $("studentDebtSummary").textContent="Cuentas con saldo pendiente: "+
+    active.length+" · Total por moneda: "+
+    (Object.entries(sums).map(([currency,amount])=>currencyAmount(amount,currency)).join(" + ")||"Sin deuda registrada")+
+    ". Los importes pendientes no se suman a ingresos hasta cobrarlos.";
+   const person=$("studentDebtPerson"),previousPerson=person.value;
+   person.length=1;
+   const registered=people.filter(x=>["alumno","piloto"].includes(x.role));
+   for(const p of registered){
+    person.add(new Option((p.role==="piloto"?"Piloto · ":"Alumno · ")+(p.email||p.person_id),p.person_id));
+   }
+   if([...person.options].some(x=>x.value===previousPerson))person.value=previousPerson;
+   const booking=$("studentDebtBooking"),previousBooking=booking.value;
+   booking.length=1;
+   for(const f of possible.filter(x=>!person.value||x.person_id===person.value)){
+    booking.add(new Option(stamp(f.starts_at)+" · "+(f.email||"Alumno / piloto")+
+     " · "+(f.aircraft||"Aeronave pendiente")+" · "+flightHoursMinutes(Number(f.minutes))+" h",f.booking_id));
+   }
+   if([...booking.options].some(x=>x.value===previousBooking))booking.value=previousBooking;
+   const byPerson=new Map();
+   for(const d of [...debts].sort((a,b)=>
+    Number(b.remaining>0)-Number(a.remaining>0))){
+    const key=d.person_id;
+    if(!byPerson.has(key))byPerson.set(key,[]);
+    byPerson.get(key).push(d);
+   }
+   if(!debts.length)list.textContent="Todavía no hay deudas registradas para alumnos ni pilotos.";
+   for(const items of byPerson.values()){
+    const first=items[0],openItems=items.filter(x=>!x.cancelled_at&&Number(x.remaining)>0);
+    const group=document.createElement("details");group.className="report-instructor-group";
+    group.open=openItems.length>0;
+    const head=document.createElement("summary");
+    const profile=first.profile==="piloto"?"Piloto":"Alumno";
+    const grouped={};
+    for(const d of openItems)grouped[d.currency]=(grouped[d.currency]||0)+Number(d.remaining);
+    head.textContent=profile+" · "+(first.email||"Cuenta sin correo")+
+     " · "+openItems.length+" deuda(s) pendiente(s) · "+
+     (Object.entries(grouped).map(([c,a])=>currencyAmount(a,c)).join(" + ")||"Sin saldo");
+    group.append(head);
+    for(const d of items){
+     const remaining=Math.max(0,Number(d.remaining));
+     const card=document.createElement("section");
+     card.className="student-debt-item"+(remaining===0?" student-debt-paid":"");
+     const title=document.createElement("strong");title.textContent=d.description;
+     const data=document.createElement("p");data.className="hint";
+     data.textContent=(d.booking_id?"Vuelo "+stamp(d.starts_at)+" · ":"Cargo registrado "+stamp(d.created_at)+" · ")+
+      "Importe original "+currencyAmount(d.amount_due,d.currency)+
+      " · Cobrado "+currencyAmount(d.paid,d.currency)+" · Saldo "+
+      currencyAmount(remaining,d.currency)+(d.cancelled_at?" · ANULADA":remaining===0?" · SALDADA":" · PENDIENTE");
+     card.append(title,data);
+     if(remaining>0&&!d.cancelled_at&&school.can_write){
+      const form=document.createElement("form");
+      form.className="formgrid";
+      const amountLabel=document.createElement("label");amountLabel.textContent="Importe recibido (parcial o total)";
+      const amount=document.createElement("input");
+      amount.className="money-entry";amount.inputMode="decimal";
+      amount.value=displayMoney(remaining);amount.required=true;
+      amountLabel.append(amount);
+      const methodLabel=document.createElement("label");
+      methodLabel.textContent="Medio de pago";
+      const method=document.createElement("select");
+      method.add(new Option("Efectivo","cash"));
+      method.add(new Option("Transferencia acreditada","bank_transfer"));
+      methodLabel.append(method);
+      const refLabel=document.createElement("label");refLabel.textContent="Referencia bancaria si corresponde";
+      const reference=document.createElement("input");reference.maxLength=120;
+      reference.placeholder="Número de operación";
+      refLabel.append(reference);
+      const submit=document.createElement("button");submit.type="submit";submit.className="primary";
+      submit.textContent="Registrar cobro";
+      const result=document.createElement("p");result.className="hint";
+      result.setAttribute("role","status");
+      form.append(amountLabel,methodLabel,refLabel,submit,result);
+      form.onsubmit=async event=>{
+       event.preventDefault();
+       const n=parseMoney(amount.value);
+       if(n===null||Math.round(n*100)>Math.round(remaining*100)){
+        result.textContent="El cobro debe ser positivo y no superar el saldo pendiente.";return;
+       }
+       if(method.value==="bank_transfer"&&reference.value.trim().length<4){
+        result.textContent="Para transferencia, ingresá la referencia bancaria.";return;
+       }
+       if(!confirm("¿Confirmás el cobro YA RECIBIDO de "+currencyAmount(n,d.currency)+
+        " de "+first.email+"? Se registrará en caja y reducirá su deuda."))return;
+       submit.disabled=true;
+       try{
+        await rpc("aerosuite_student_debt_collect",{
+         p_institution_id:inst,p_debt_id:d.id,p_amount:n,
+         p_method:method.value,p_reference:reference.value.trim()||null
+        });
+        await loadFinance();
+        $("studentDebtCreateStatus").textContent="Cobro registrado. Se actualizó la deuda y la caja.";
+       }catch(error){result.textContent="No se pudo cobrar: "+safeError(error);submit.disabled=false;}
+      };
+      card.append(form);
+     }
+     group.append(card);
+    }
+    list.append(group);
+   }
+   $("studentDebtPotentialPanel").querySelector("summary").textContent=
+    "Vuelos aprobados sin liquidar ("+possible.length+") · Ver casos";
+   if(!possible.length)potential.textContent="No hay vuelos aprobados sin liquidación.";
+   for(const f of possible){
+    const card=document.createElement("div");card.className="list-item";
+    const head=document.createElement("strong");
+    head.textContent=(f.profile==="piloto"?"Piloto":"Alumno")+" · "+f.email;
+    const data=document.createElement("p");data.className="hint";
+    data.textContent=stamp(f.starts_at)+" · "+(f.aircraft||"Aeronave sin identificar")+
+     " · "+flightHoursMinutes(Number(f.minutes))+" h · Importe aún no confirmado";
+    card.append(head,data);
+    if(school.can_write){
+     const add=document.createElement("button");add.type="button";
+     add.textContent="Registrar como deuda";
+     add.onclick=()=>{
+      $("studentDebtCreatePanel").open=true;
+      person.value=f.person_id;
+      renderStudentDebts();
+      $("studentDebtCreatePanel").open=true;
+      person.value=f.person_id;
+      booking.value=f.booking_id;
+      $("studentDebtDescription").value="Vuelo de "+(f.profile==="piloto"?"piloto":"instrucción")+
+       " · "+stamp(f.starts_at)+" · "+(f.aircraft||"Matrícula pendiente");
+      $("studentDebtAmount").focus();
+      $("studentDebtCreatePanel").scrollIntoView({behavior:"smooth",block:"center"});
+     };
+     card.append(add);
+    }
+    potential.append(card);
+   }
+  }
+  async function loadStudentDebts(){
+   if(!manager)return;
+   try{
+    studentDebtData=await rpc("aerosuite_student_debt_overview",{p_institution_id:inst});
+    renderStudentDebts();
+   }catch(error){
+    studentDebtData=null;
+    $("studentDebtSummary").textContent="No se pudieron consultar deudas: "+safeError(error);
+    $("studentDebtList").replaceChildren();
+   }
+  }
+  $("studentDebtPerson").addEventListener("change",renderStudentDebts);
+  $("studentDebtForm").addEventListener("submit",async e=>{
+   e.preventDefault();
+   const amount=parseMoney($("studentDebtAmount").value);
+   const person=$("studentDebtPerson").value;
+   const id=$("studentDebtBooking").value||null;
+   const currency=$("studentDebtCurrency").value;
+   const description=$("studentDebtDescription").value.trim();
+   if(!person||amount===null||description.length<3){
+    $("studentDebtCreateStatus").textContent="Elegí alumno/piloto, importe y concepto válido.";return;
+   }
+   if(id&&studentDebtData?.potential_flights?.find(x=>x.booking_id===id)?.person_id!==person){
+    $("studentDebtCreateStatus").textContent="El vuelo debe pertenecer a la persona seleccionada.";return;
+   }
+   if(!confirm("¿Registrar deuda de "+currencyAmount(amount,currency)+
+    " para "+$("studentDebtPerson").selectedOptions[0]?.text+"? No se cobrará dinero automáticamente."))return;
+   const button=$("studentDebtForm").querySelector('button[type="submit"]');button.disabled=true;
+   try{
+    await rpc("aerosuite_student_debt_create",{
+     p_institution_id:inst,p_person_id:person,p_booking_id:id,p_amount:amount,
+     p_currency:currency,p_description:description
+    });
+    $("studentDebtForm").reset();$("studentDebtCreatePanel").open=false;
+    await loadFinance();
+    $("studentDebtCreateStatus").textContent="Deuda registrada correctamente. No se sumó dinero a caja.";
+   }catch(error){
+    $("studentDebtCreateStatus").textContent="No se pudo registrar: "+safeError(error);
+   }finally{button.disabled=false;}
+  });
   function feeMonth(iso){
    const p=new Intl.DateTimeFormat("en-US",{timeZone:"America/Argentina/Buenos_Aires",
     year:"numeric",month:"2-digit"}).formatToParts(new Date(iso));
@@ -2892,7 +3105,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     }
     renderFinanceOverview();
     renderSettlementCandidates();renderDeskReviews();updateCheckoutTotal();renderPackComparisonChoices();
-    await Promise.allSettled([loadFixedExpenses(),loadPettyDay(),loadVoidedPacks(),loadInstructorFees()]);
+    await Promise.allSettled([loadFixedExpenses(),loadPettyDay(),loadVoidedPacks(),loadInstructorFees(),loadStudentDebts()]);
    }else{
     finance=await rpc("aerosuite_finance_snapshot",{p_institution_id:inst});
     renderStudentPacks();
