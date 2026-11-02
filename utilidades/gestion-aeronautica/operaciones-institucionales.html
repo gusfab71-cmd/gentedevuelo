@@ -683,7 +683,16 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   <section class="panel tab-panel" id="contaduria" aria-labelledby="contaduriaTitle">
    <span class="eyebrow">Supervisión institucional</span><h2 id="contaduriaTitle">Contaduría</h2>
    <p>Ingresos, egresos, venta de packs, conciliación e historial económico mensual y anual. Sin duplicar cobros ni sustituir la contabilidad fiscal.</p>
-   <div id="contaduriaOverviewHost"></div><div id="contaduriaPacksHost"></div>
+   <div id="contaduriaOverviewHost"></div>
+   <section class="panel" id="instructorFeesPanel" style="margin-top:18px">
+    <span class="eyebrow">Honorarios · Seguimiento por instructor</span>
+    <h3>Horas de instrucción y honorarios</h3>
+    <p class="hint">El 10 % es una referencia; Dirección debe guardar el porcentaje acordado para cada instructor. Los honorarios se calculan sobre el vuelo cobrado o sobre el valor proporcional del pack utilizado. No se pagan automáticamente.</p>
+    <label>Período de vuelos (Argentina)<input type="month" id="instructorFeeMonth" min="2020-01" max="2099-12"></label>
+    <p id="instructorFeeStatus" class="hint" role="status" aria-live="polite">Cargando horas de instrucción…</p>
+    <div id="instructorFeeList" class="list"></div>
+   </section>
+   <div id="contaduriaPacksHost"></div>
    <div id="contaduriaExpensesHost"></div><div id="contaduriaReviewHost"></div><div id="contaduriaDetailsHost"></div>
   </section>
   <section class="panel tab-panel" id="recursos">
@@ -1817,7 +1826,17 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    ".report-compact-title small{display:block;margin-top:4px;color:#bfd1dc}"+
    ".report-compact-expand{display:inline-block;border:1px solid #deb976;background:#294b60;color:#f6d898;border-radius:7px;padding:9px 11px;font-weight:850;font-size:12px;white-space:nowrap}"+
    ".report-management-body{padding:4px 16px 16px;border-top:1px solid #506b7d}"+
-   ".report-manager-empty{padding:12px;color:#c2d3dd}";
+   ".report-manager-empty{padding:12px;color:#c2d3dd}"+
+   ".report-instructor-group{margin:8px 0;border:1px solid #597a91;border-radius:10px;padding:0 11px 10px}"+
+   ".report-instructor-group>summary{cursor:pointer;padding:13px 4px;color:#f3d49a;font-weight:800}"+
+   ".report-instructor-group>.report-manager-list{margin-top:3px}"+
+   ".instructor-fee-card{padding:13px;border:1px solid #52738b;border-radius:10px;background:#153247;margin-top:13px}"+
+   ".instructor-fee-card h4{margin:0 0 6px;color:#f6d99f}"+
+   ".instructor-fee-row{padding:10px;border-top:1px solid #476b82;margin-top:8px}"+
+   ".instructor-fee-row>strong{display:block;margin-bottom:7px}"+
+   ".instructor-fee-payment{border:1px solid #4e7690;border-radius:8px;padding:12px;margin:10px 0}"+
+   ".instructor-fee-payment summary{cursor:pointer;color:#f3d49a;font-weight:750}"+
+   ".instructor-fee-payment label{margin:8px 0}";
   document.head.append(reportStyle);
   function reportFeedbackSummary(notes){
    const sections=parseTeachingNotes(notes);
@@ -2092,7 +2111,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     target.textContent=role==="alumno"?"La devolución de tu instructor aparecerá después de cada práctica finalizada.":"Todavía no hay informes de instrucción para consultar.";
     return;
    }
-   let pendingList=null,historyList=null;
+   let pendingList=null,historyList=null,instructorGroups=new Map();
    if(manager){
     const createGroup=(title,count)=>{
      const section=document.createElement("section");section.className="report-manager-section";
@@ -2110,6 +2129,29 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
      pendingList.append(empty);
     }
     historyList=createGroup("Otros informes · minimizados",reports.length-pendingCount);
+   }
+   function groupedDestination(r){
+    if(!manager)return target;
+    const isPending=r.status==="submitted";
+    const instructorId=r.instructor_id||r.instructor_email||"sin-asignar";
+    const key=(isPending?"pendiente:":"historial:")+instructorId;
+    if(instructorGroups.has(key))return instructorGroups.get(key);
+    const source=isPending?pendingList:historyList;
+    const group=document.createElement("details");
+    group.className="report-instructor-group";
+    group.open=isPending;
+    const title=document.createElement("summary");
+    const entries=reports.filter(x=>x.status==="submitted"===isPending&&
+     (x.instructor_id||x.instructor_email||"sin-asignar")===instructorId);
+    const minutes=entries.reduce((sum,x)=>sum+(Number(x.flight_minutes)||0),0);
+    title.textContent="Instructor: "+(r.instructor_email||"Sin identificar")+
+     " · "+entries.length+(entries.length===1?" vuelo":" vuelos")+
+     " · "+flightHoursMinutes(minutes)+" h"+
+     (isPending?" · VER PENDIENTES":" · Ver historial");
+    const list=document.createElement("div");list.className="report-manager-list";
+    group.append(title,list);source.append(group);
+    instructorGroups.set(key,list);
+    return list;
    }
    for(const r of reports){
     if(role==="alumno"){
@@ -2194,7 +2236,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
      }
      content.append(row);
     }
-    (manager?(r.status==="submitted"?pendingList:historyList):target).append(card);
+    groupedDestination(r).append(card);
    }
   }
   function showReportSubmitStatus(message,scroll=true){
