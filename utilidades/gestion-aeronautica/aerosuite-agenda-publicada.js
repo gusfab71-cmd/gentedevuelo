@@ -709,7 +709,7 @@ window.AeroSuiteAgenda={
   function formatAgendaFlightRegistration(){
    const field=$("agendaResource");
    if($("agendaType").value!=="flight"||!window.AeroSuiteRegistration)return field.value.trim();
-   const compact=field.value.normalize("NFKC").toUpperCase().replace(/[\\s\\-_\\u2010-\\u2015\\u2212]/g,"");
+   const compact=field.value.normalize("NFKC").toUpperCase().replace(/[^A-Z0-9]/g,"");
    // Solo matrículas argentinas: no modificar nombres de aulas, simuladores ni cupos.
    if(/^(LV|LQ)[A-Z0-9]*$/.test(compact))window.AeroSuiteRegistration.formatField(field);
    return field.value.trim();
