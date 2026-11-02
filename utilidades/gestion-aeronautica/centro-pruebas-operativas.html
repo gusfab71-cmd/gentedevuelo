@@ -147,7 +147,11 @@ function sharedPassword(){
 }
 async function createTechnicalRole(role,password){
  const {data,error}=await db.functions.invoke('aerosuite-test-accounts',{body:{role,password}});
- if(error||!data?.ok||data.mail_sent!==false)throw Error(data?.error||error?.message||'No se pudo confirmar el alta sin correo.');
+ if(error||!data?.ok||data.mail_sent!==false){
+  let detail=data?.error||'';
+  if(!detail&&error?.context?.json){try{const body=await error.context.json();detail=body?.error||body?.message||'';}catch{}}
+  throw Error(detail||error?.message||'No se pudo confirmar el alta sin correo.');
+ }
  labAccounts[role]=true;
 }
 async function provisionLabRole(role){
