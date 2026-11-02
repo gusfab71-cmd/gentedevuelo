@@ -374,6 +374,10 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
 #legajos .legajo-result strong{display:block;color:#f0d29c}
 #legajos .legajo-result small{display:block;margin-top:4px;overflow-wrap:anywhere;color:#bed3e0}
 #legajos .legajo-result.selected{outline:2px solid #e4bd7c;background:#2c4c60}
+#legajos .legajo-account{font-size:11px;font-weight:800;display:block;margin-top:7px;padding:7px 9px;border-radius:7px;line-height:1.45}
+#legajos .legajo-account.debtor{color:#ffe0dc;background:#703a41;border:1px solid #c86d73}
+#legajos .legajo-account.unsettled{color:#fbe5b5;background:#564a2b;border:1px solid #b99c54}
+#legajos .legajo-account.ok{color:#c2e9d7;background:#274c45;border:1px solid #619888}
 #legajos .legajo-history{border:1px solid #54768a;background:#173348;border-radius:10px;padding:16px;min-width:0}
 #legajos .legajo-history h3{color:#f0d29c;margin:0 0 9px}
 #legajos .legajo-stats{display:flex;gap:9px;flex-wrap:wrap;margin:12px 0}
@@ -1096,6 +1100,25 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
       (p.legajo||"Sin legajo operativo")+" · "+(p.email||"")+
       " · "+Number(p.completed_count||0)+" vuelo(s) realizados";
      button.append(strong,meta);
+     const account=p.account_status||{};
+     const confirmed=account.balances||{};
+     if(account.is_debtor===true){
+      const label=document.createElement("span");
+      label.className="legajo-account debtor";
+      const amount=Object.entries(confirmed)
+       .filter(([currency,value])=>Number(value)>0&&["ARS","USD"].includes(currency))
+       .map(([currency,value])=>currencyAmount(Number(value),currency))
+       .join(" + ");
+      label.textContent="DEUDOR · "+(amount||"Saldo pendiente registrado");
+      button.append(label);
+     }
+     if(Number(account.pending_unsettled_flights||0)>0){
+      const label=document.createElement("span");
+      label.className="legajo-account unsettled";
+      label.textContent="PENDIENTE DE LIQUIDACIÓN · "+
+       Number(account.pending_unsettled_flights)+" vuelo(s), importe sin confirmar";
+      button.append(label);
+     }
      button.addEventListener("click",()=>loadLegajoHistory(p.user_id));
      list.append(button);
     }
@@ -1118,6 +1141,24 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    roles.textContent=(person.roles||[]).map(r=>(legajoRoles[r.role]||r.role)+
     (r.legajo?" · "+r.legajo:"")).join(" / ")+" · "+(person.email||"");
    root.append(h,roles);
+   const account=result.account_status||{};
+   if(account.is_debtor===true){
+    const alert=document.createElement("p");alert.className="legajo-account debtor";
+    const amounts=Object.entries(account.balances||{})
+     .filter(([currency,value])=>Number(value)>0&&["ARS","USD"].includes(currency))
+     .map(([currency,value])=>currencyAmount(Number(value),currency))
+     .join(" + ");
+    alert.textContent="DEUDOR · "+(amounts||"Saldo pendiente confirmado en Contaduría")+
+     ". Consultá Contaduría → Deudas de alumnos y pilotos para cobrar o registrar abonos.";
+    root.append(alert);
+   }
+   if(Number(account.pending_unsettled_flights||0)>0){
+    const notice=document.createElement("p");notice.className="legajo-account unsettled";
+    notice.textContent="PENDIENTE DE LIQUIDACIÓN · "+
+     Number(account.pending_unsettled_flights)+
+     " vuelo(s) realizado(s) y aprobado(s), todavía sin cobro ni descuento del pack. El importe no constituye una deuda confirmada.";
+    root.append(notice);
+   }
    const stats=[
     ["Reservas",Number(t.reservations||0)],
     ["Vuelos aprobados",Number(t.approved_flights||0)],
