@@ -56,17 +56,19 @@ textarea{font:inherit;color:#fff;background:#102738;border:1px solid #63879b;bor
 <div class="tile"><strong>Secretaría de AeroSuite</strong><span>Mismas funciones administrativas si existe una cuenta de Secretaría habilitada. No se usa la clave del Director.</span><br><a id="secretaria" target="_blank" rel="noopener">Abrir Secretaría de AeroSuite</a></div>
 <div class="tile"><strong>Instructor de AeroSuite</strong><span>Ver turnos asignados, confirmar solicitudes y cargar informes.</span><br><a id="instructor" target="_blank" rel="noopener">Abrir Instructor de AeroSuite</a></div>
 <div class="tile"><strong>Alumno de AeroSuite</strong><span>Solicitar turnos, revisar devoluciones y saldos de packs.</span><br><a id="alumno" target="_blank" rel="noopener">Abrir Alumno de AeroSuite</a></div>
+<div class="tile"><strong>Piloto PPA / PCA de AeroSuite</strong><span>Probar ficha personal, reservas sin instructor (sujetas a habilitación), horas de vuelo, AeroLocator y Flight Operations.</span><br><a id="piloto" target="_blank" rel="noopener">Abrir Piloto PPA / PCA</a></div>
 </div>
 <div class="notice warn" id="roleReadiness" role="status">Comprobando las cuentas disponibles para el laboratorio...</div>
-<p class="muted">Cada enlace abre el ingreso institucional real. Cada rol tiene su identidad técnica, sesión y permisos propios, sin invitación; los cuatro alias llegan a la misma casilla Gmail.</p>
+<p class="muted">Cada enlace abre el ingreso institucional real. Cada rol tiene su identidad técnica, sesión y permisos propios, sin invitación; los cinco alias llegan a la misma casilla Gmail.</p>
 </section>
 <section class="panel" aria-labelledby="testAccountsTitle">
 <h2 id="testAccountsTitle">Cuentas técnicas permanentes · Sin invitaciones</h2>
-<p>Creá las cuatro identidades independientes del laboratorio. Todas pueden compartir una contraseña; sus permisos son los del portal real y ninguna reemplaza al Superadministrador.</p>
+<p>Creá las cinco identidades independientes del laboratorio. Todas pueden compartir una contraseña; sus permisos son los del portal real y ninguna reemplaza al Superadministrador.</p>
 <div class="grid"><div class="tile"><strong>Administrador de prueba</strong><span>gentedevuelo+administrador@gmail.com</span><p class="muted" id="administradorAccountState">Consultando…</p><button id="createAdministrador" type="button" class="primary">Crear Administrador sin correo</button></div>
 <div class="tile"><strong>Secretaría de prueba</strong><span>gentedevuelo+secretaria@gmail.com</span><p class="muted" id="secretariaAccountState">Consultando…</p><button id="createSecretaria" type="button" class="primary">Crear Secretaría sin correo</button></div>
 <div class="tile"><strong>Instructor de prueba</strong><span>gentedevuelo+instructor@gmail.com</span><p class="muted" id="instructorAccountState">Consultando…</p><button id="createInstructor" type="button" class="primary">Crear Instructor sin correo</button></div>
-<div class="tile"><strong>Alumno de prueba</strong><span>gentedevuelo+alumno@gmail.com</span><p class="muted" id="alumnoAccountState">Consultando…</p><button id="createAlumno" type="button" class="primary">Crear Alumno sin correo</button></div></div>
+<div class="tile"><strong>Alumno de prueba</strong><span>gentedevuelo+alumno@gmail.com</span><p class="muted" id="alumnoAccountState">Consultando…</p><button id="createAlumno" type="button" class="primary">Crear Alumno sin correo</button></div>
+<div class="tile"><strong>Piloto PPA / PCA de prueba</strong><span>gentedevuelo+piloto@gmail.com</span><p class="muted" id="pilotoAccountState">Consultando…</p><button id="createPiloto" type="button" class="primary">Crear Piloto sin correo</button></div></div>
 <div class="tile" style="margin-top:14px"><div class="grid">
 <div><label class="muted" for="testPassword">Contraseña común · 9 caracteres</label><input id="testPassword" type="password" autocomplete="new-password" minlength="9" maxlength="9" placeholder="Mayúscula, minúscula, número y símbolo" style="width:100%;padding:10px;background:#102738;color:#fff;border:1px solid #63879b;border-radius:8px"></div>
 <div><label class="muted" for="testPasswordConfirm">Confirmar contraseña</label><input id="testPasswordConfirm" type="password" autocomplete="new-password" minlength="9" maxlength="9" placeholder="Repetir contraseña" style="width:100%;padding:10px;background:#102738;color:#fff;border:1px solid #63879b;border-radius:8px"></div>
@@ -104,11 +106,12 @@ const names=[
  ['aprobacion','Aprobación de Dirección','Director verifica, aprueba y consulta el informe.'],
  ['contaduria','Cobro o pack','Director o Secretaría registra una operación ficticia de cobro o pack y comprueba su reflejo en Contaduría.'],
  ['alumno_resultado','Resultado para Alumno de AeroSuite','Alumno comprueba informe aprobado, historial y saldo actualizado.'],
+ ['piloto','Portal PPA / PCA','Ingresar con piloto técnico, completar ficha PPA/PCA y verificar turnera sin instructor, horas de vuelo, AeroLocator y Flight Operations.'],
  ['integridad','Diagnóstico sin anomalías','Actualizar indicadores y revisar que no haya inconsistencias.']
 ];
 const $=id=>document.getElementById(id);const status=$('status');let testId=null;
 let db,user,health={},active=null;
-const roles=['administrador','secretaria','instructor','alumno'];let labAccounts={};
+const roles=['administrador','secretaria','instructor','alumno','piloto'];let labAccounts={};
 function msg(s){status.textContent=s;}
 function setText(id,s){$(id).textContent=s;}
 function url(role){return 'ingreso-escuela.html?institucion='+encodeURIComponent(testId)+'&rol='+encodeURIComponent(role)+'&prueba=1';}
@@ -126,7 +129,7 @@ function renderLabAccounts(){
  $('createAll').disabled=pending.length===0;
  $('roleReadiness').classList.toggle('warn',pending.length>0);
  $('roleReadiness').textContent=pending.length?'Faltan cuentas técnicas: '+pending.join(', ')+'. Crealas sin invitaciones.':
- 'Las cuatro identidades técnicas están habilitadas. Revisá los accesos y permisos en sus portales reales.';
+ 'Las cinco identidades técnicas están habilitadas. Revisá los accesos y permisos en sus portales reales.';
 }
 async function refreshLabAccounts(){
  const {data,error}=await db.functions.invoke('aerosuite-test-accounts',{body:{action:'status'}});
@@ -263,7 +266,7 @@ try{
  if(org.error)throw org.error;
  if(org.data?.is_test!==true||org.data?.status!=='active')throw Error('El laboratorio no está marcado como activo y de prueba. Se bloquea el test por seguridad.');
  setText('institutionTitle',org.data.name);setText('institutionInfo','Laboratorio técnico exclusivo para control de calidad · '+org.data.kind+' · Estado: '+org.data.status+'. Este laboratorio no es una escuela cliente; no se generan cobros ni usuarios automáticamente.');
- for(const role of ['administrador','secretaria','instructor','alumno'])$(role==='administrador'?'director':role).href=url(role);
+ for(const role of ['administrador','secretaria','instructor','alumno','piloto'])$(role==='administrador'?'director':role).href=url(role);
  $('content').hidden=false;msg('Acceso autorizado. Los resultados se conservan en Supabase y se restringen a la institución de prueba.');
  $('refresh').onclick=async()=>{await reloadHealth();};$('historyRefresh').onclick=reloadHistory;
  for(const role of roles)$('create'+role[0].toUpperCase()+role.slice(1)).onclick=()=>provisionLabRole(role);
