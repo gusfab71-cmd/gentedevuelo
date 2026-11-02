@@ -192,6 +192,8 @@ button:disabled{cursor:wait;opacity:.56}
  const institutionalParams=new URLSearchParams(location.search);
  const institutionalId=institutionalParams.get('institucion');
  const institutionalRole=institutionalParams.get('rol')||'';
+ // El rol lo determina el acceso institucional; nunca se modifica desde la ficha.
+ const institutionalProfile=institutionalId?({alumno:'student',instructor:'instructor',piloto:'pilot'})[institutionalRole]||null:null;
  if(institutionalId){
   const back=document.querySelector('header nav a');
   if(back){back.href='portal-escuela.html?institucion='+encodeURIComponent(institutionalId)+'&rol='+encodeURIComponent(institutionalRole||'alumno')+'&elegida=1'+(institutionalParams.get('prueba')==='1'?'&prueba=1':'');back.textContent='Volver al portal institucional';}
@@ -199,6 +201,18 @@ button:disabled{cursor:wait;opacity:.56}
   if(intro)intro.textContent=institutionalRole==='piloto'?
    'Completá tu ficha como Piloto PPA o Comercial. Estos datos personales se comparten con los demás módulos AeroSuite. Secretaría deberá verificar tu licencia y documentación antes de habilitar vuelos sin instructor.':
    'Completá tus datos y documentos en una sola ficha. La escuela utilizará la misma información en tus turnos y registros institucionales.';
+ }
+ if(institutionalProfile){
+  const headings={student:'Ficha del Alumno',instructor:'Ficha del Instructor',pilot:'Ficha del Piloto PPA / PCA'};
+  document.title=headings[institutionalProfile]+' · AeroSuite';
+  document.querySelector('.hero h1').textContent=headings[institutionalProfile];
+  const selector=document.querySelector('.aerosuite-role-options');
+  const section=selector.closest('section');
+  section.querySelector('h2').textContent='1 · '+headings[institutionalProfile];
+  section.querySelector('.panel-subtitle').textContent='Completá los datos correspondientes a tu rol. Los datos personales se comparten entre los módulos autorizados de AeroSuite.';
+  selector.hidden=true;
+  const emailLabel=document.querySelector('#accountEmail').closest('label');
+  if(emailLabel)emailLabel.firstChild.textContent='Correo de acceso a AeroSuite';
  }
  let user=null,profile=null,documentIds=[],portraitBlobUrl='',newPortrait=null,busy=false;
  const fields=['given_names','family_names','birth_country','birth_date','residence_country','residence_province','residence_city','residence_address','postal_code','mobile_phone','landline_phone','other_phone'];
@@ -216,6 +230,7 @@ button:disabled{cursor:wait;opacity:.56}
  const roleInputs=new Set(roleDefs.flatMap(def=>def.fields));
  function syncRoleFields(){
   for(const def of roleDefs){
+   if(institutionalProfile)get(def.flag).checked=def.key===institutionalProfile;
    const enabled=get(def.flag).checked;
    $(def.panel).hidden=!enabled;
    for(const name of def.fields){
@@ -233,10 +248,8 @@ button:disabled{cursor:wait;opacity:.56}
    .eq('user_id',user.id);
   if(error)throw error;
   for(const def of roleDefs){
-   get(def.flag).checked=Boolean(data?.some(x=>x.role===def.key));
+   get(def.flag).checked=institutionalProfile?def.key===institutionalProfile:Boolean(data?.some(x=>x.role===def.key));
   }
-  if(institutionalRole==='piloto'&&!data?.some(x=>x.role==='pilot'))get('role_pilot').checked=true;
-  if(institutionalRole==='alumno'&&!data?.some(x=>x.role==='student'))get('role_student').checked=true;
   syncRoleFields();
   for(const row of data||[]){
    if(row.role==='student'){
@@ -285,7 +298,8 @@ button:disabled{cursor:wait;opacity:.56}
    const {error}=await client.from('aerosuite_role_declarations').upsert(rolePayload(def),{onConflict:'user_id,role'});
    if(error)throw Error('No se pudo guardar el perfil '+def.key+': '+error.message);
   }
-  for(const former of before||[]){
+  // No eliminar declaraciones de otros roles desde una ficha institucional.
+  for(const former of institutionalProfile?[]:(before||[])){
    if(active.some(d=>d.key===former.role))continue;
    const {error}=await client.from('aerosuite_role_declarations').delete()
     .eq('user_id',user.id).eq('role',former.role);
@@ -478,7 +492,7 @@ button:disabled{cursor:wait;opacity:.56}
    profile=updated;
    await loadDocuments();
    for(const name of ['document_type','document_number','expires_on'])get(name).value='';
-   status('Tu perfil privado de AeroSuite se guardó. Los roles declarados no conceden acceso institucional hasta ser verificados. La fotografía es opcional.');
+   status('Tu ficha personal de AeroSuite se guardó correctamente. La fotografía es opcional.');
   }catch(error){status('No se pudo completar el guardado: '+error.message,true)}
   finally{busy=false;$('saveStudent').disabled=false}
  });
