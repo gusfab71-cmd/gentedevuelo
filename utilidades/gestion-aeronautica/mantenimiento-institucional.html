@@ -188,7 +188,7 @@ body .overflow-x-auto{scrollbar-color:#697e7d transparent}
 <nav id="nav" class="flex overflow-x-auto border-b border-white/10 px-3"></nav>
 
 <div class="maint-status-wrap"><p id="sync" role="status">Cargando tu información...</p>
-<section id="maintenanceAlerts" class="maint-alerts" aria-live="polite"></section><p class="maint-notice">Apta para seguimiento de uso privado, instrucción o ambos, con el régimen declarado por el usuario. Es un registro auxiliar institucional: no certifica aeronavegabilidad, no autoriza retorno al servicio ni reemplaza libretas, firmas, programas aprobados ni la documentación exigida por ANAC. <a href="https://www.argentina.gob.ar/anac/resoluciones-disposiciones-y-otras-normas-aeronauticas/raac" target="_blank" rel="noopener noreferrer">Consultar RAAC oficiales</a>.</p></div><section id="maintOverview" class="maint-overview" aria-label="Resumen de mantenimiento"></section>
+<section id="maintenanceAlerts" class="maint-alerts" aria-live="polite"></section><section id="flightMaintenanceReconciliation" class="maint-alerts" aria-label="Vuelos, flota y mantenimiento" aria-live="polite"></section><p class="maint-notice">Apta para seguimiento de uso privado, instrucción o ambos, con el régimen declarado por el usuario. Es un registro auxiliar institucional: no certifica aeronavegabilidad, no autoriza retorno al servicio ni reemplaza libretas, firmas, programas aprobados ni la documentación exigida por ANAC. <a href="https://www.argentina.gob.ar/anac/resoluciones-disposiciones-y-otras-normas-aeronauticas/raac" target="_blank" rel="noopener noreferrer">Consultar RAAC oficiales</a>.</p></div><section id="maintOverview" class="maint-overview" aria-label="Resumen de mantenimiento"></section>
 <main id="app" class="max-w-7xl mx-auto p-4"></main>
 <script src="../../assets/maintenance-consumables.js?v=20261022inventario1"></script>
 
@@ -288,6 +288,40 @@ async function refreshMaintenanceAlerts(){
   const target=$('maintenanceAlerts');if(target)target.textContent='No se pudieron consultar las alertas de mantenimiento: '+(e.message||e);
  }
 }
+async function refreshFlightMaintenanceReconciliation(){
+ const target=$('flightMaintenanceReconciliation');if(!target||!db||!institutionId)return;
+ try{
+  const {data,error}=await db.rpc('aerosuite_aircraft_flight_reconciliation',{p_institution_id:institutionId});
+  if(error)throw error;
+  target.replaceChildren();
+  const header=document.createElement('h3');header.textContent='Vuelos registrados · Flota y mantenimiento';header.style.fontWeight='800';target.append(header);
+  const summary=data?.summary||{};
+  const note=document.createElement('p');note.className='maint-notice';
+  note.textContent='Total registrado en caja: '+Number(summary.flights||0)+' vuelos, '+Number(summary.minutes||0)+
+   ' minutos. Libro de Vuelo cotejado: '+Number(summary.confirmed_minutes||0)+
+   ' minutos. Liquidaciones pendientes de conciliación: '+Number(summary.pending_review||0)+'.';
+  target.append(note);
+  for(const item of data?.aircraft||[]){
+   const card=document.createElement('div');card.className='maint-alert-card';
+   const name=document.createElement('strong');name.textContent=item.registration+' · '+(item.model||'Modelo sin informar')+
+    (item.archived?' · Archivada':item.availability==='out_of_service'?' · Fuera de servicio':'');
+   const detail=document.createElement('p');detail.textContent='Vuelos liquidados: '+item.flights_registered+
+    ' · Minutos declarados: '+item.minutes_at_checkout+
+    ' · Minutos sin cotejo de Libro: '+item.minutes_pending_logbook+
+    ' · Pendientes de conciliación: '+item.flights_pending_review;
+   card.append(name,detail);target.append(card);
+  }
+  if(data?.unmatched?.length){
+   const warning=document.createElement('div');warning.className='maint-alert-card due';
+   const name=document.createElement('strong');name.textContent='ATENCIÓN: '+data.unmatched.length+' liquidación(es) sin matrícula coincidente';
+   const detail=document.createElement('p');detail.textContent='Revisar en Contaduría; no asignar matrículas antiguas sin respaldo documental.';
+   warning.append(name,detail);target.append(warning);
+  }
+  const disclaimer=document.createElement('p');disclaimer.className='maint-notice';
+  disclaimer.textContent='No se suman minutos de caja a los contadores de célula, motor o hélice: el cómputo técnico exige cotejar Hobbs, tacómetro, ciclos y libretas.';
+  target.append(disclaimer);
+ }catch(e){target.textContent='No se pudo consultar el vínculo entre operaciones y mantenimiento: '+(e.message||e);}
+}
 async function loadApp(){
  try{
   if(!institutionId)throw Error("Ingresá desde Flota y disponibilidad.");
@@ -336,6 +370,7 @@ async function loadApp(){
    registeredFleet.length+" aeronave(s) y "+registeredSimulators.filter(x=>!x.archived_at).length+
    " simulador(es).":"Acceso institucional de solo lectura.");
   await refreshMaintenanceAlerts();
+  await refreshFlightMaintenanceReconciliation();
  }catch(error){
   maintWritable=false;currentUser=null;
   showStatus("Error de mantenimiento institucional: "+(error.message||error));
