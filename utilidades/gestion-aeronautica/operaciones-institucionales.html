@@ -2349,6 +2349,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    }
   }
   
+  let instructorFeeData=null;
   let financeOverviewData=null,financePeriodData=null,financePeriodToken=0,
    unsettledFlights=[],hourlyTariff={configured:false,amount:null,currency:"ARS"};
   const currencyAmount=(amount,currency)=>Number(amount||0).toLocaleString("es-AR",{
@@ -2730,6 +2731,139 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     list.append(box);
    }
   }
+  function feeMonth(iso){
+   const p=new Intl.DateTimeFormat("en-US",{timeZone:"America/Argentina/Buenos_Aires",
+    year:"numeric",month:"2-digit"}).formatToParts(new Date(iso));
+   return p.find(x=>x.type==="year")?.value+"-"+p.find(x=>x.type==="month")?.value;
+  }
+  function renderInstructorFees(){
+   if(!manager)return;
+   const root=$("instructorFeeList"),status=$("instructorFeeStatus");
+   root.replaceChildren();
+   if(!instructorFeeData){status.textContent="Honorarios sin cargar.";return;}
+   const month=$("instructorFeeMonth").value;
+   const flights=(instructorFeeData.flights||[]).filter(x=>feeMonth(x.starts_at)===month);
+   const instructors=new Map((instructorFeeData.instructors||[]).map(x=>[x.instructor_id,x]));
+   for(const x of flights)if(!instructors.has(x.instructor_id))
+    instructors.set(x.instructor_id,{instructor_id:x.instructor_id,email:x.instructor_email,configured:false,former:true});
+   status.textContent="Vuelos aprobados de "+financeMonthLabel(month)+": "+flights.length+
+    ". Sin cobro o descuento de pack no se calcula honorario. El 10 % es referencia, no acuerdo.";
+   for(const instructor of [...instructors.values()].sort((a,b)=>
+    String(a.email).localeCompare(String(b.email),"es"))){
+    const own=flights.filter(x=>x.instructor_id===instructor.instructor_id);
+    const mins=own.reduce((a,x)=>a+Number(x.flight_minutes||0),0);
+    const card=document.createElement("section");card.className="instructor-fee-card";
+    const title=document.createElement("h4");title.textContent=instructor.email||"Instructor";
+    const total=document.createElement("p");
+    total.textContent=own.length+" vuelo(s) aprobado(s) · "+flightHoursMinutes(mins)+" h · "+
+     (instructor.configured?instructor.percentage+" % acordado":"10 % referencial; falta acuerdo de Dirección");
+    card.append(title,total);
+    const unpaid=own.filter(x=>!x.payout_id&&Number(x.proposed_fee)>0);
+    const moneyByCurrency=(entries,paid)=>{
+     const amounts={};
+     for(const x of entries){
+      if(!["ARS","USD"].includes(x.currency))continue;
+      amounts[x.currency]=(amounts[x.currency]||0)+Number(paid?x.paid_amount:x.proposed_fee);
+     }
+     return Object.entries(amounts).map(([c,a])=>currencyAmount(a,c)).join(" + ")||"—";
+    };
+    const recap=document.createElement("p");recap.className="hint";
+    recap.textContent="Pendiente de pago: "+moneyByCurrency(unpaid,false)+
+     " · Pagado: "+moneyByCurrency(own.filter(x=>x.payout_id),true)+
+     " · Vuelos sin liquidación del alumno: "+own.filter(x=>x.base_amount==null).length;
+    card.append(recap);
+    if(role==="administrador"&&!instructor.former&&school.can_write){
+     const form=document.createElement("form");form.className="formgrid";
+     const label=document.createElement("label");label.textContent="Porcentaje acordado por Dirección";
+     const rate=document.createElement("input");rate.type="number";rate.min="0.01";rate.max="100";
+     rate.step="0.01";rate.value=String(instructor.percentage??10);rate.required=true;
+     label.append(rate);
+     const save=document.createElement("button");save.type="submit";save.className="primary";
+     save.textContent="Guardar porcentaje acordado";
+     form.append(label,save);
+     form.onsubmit=async e=>{
+      e.preventDefault();const n=Number(rate.value);
+      if(n<=0||n>100||!Number.isFinite(n)){status.textContent="Porcentaje inválido.";return;}
+      if(!confirm("¿Dirección acordó "+n+" % con "+instructor.email+
+       "? Los pagos registrados no se modifican."))return;
+      save.disabled=true;
+      try{
+       await rpc("aerosuite_instructor_fee_terms_set",{p_institution_id:inst,
+        p_instructor_id:instructor.instructor_id,p_percentage:n});
+       await loadInstructorFees();$("instructorFeeStatus").textContent="Porcentaje acordado registrado.";
+      }catch(e){status.textContent="No se guardó el acuerdo: "+safeError(e);save.disabled=false;}
+     };
+     card.append(form);
+    }
+    const details=document.createElement("details");details.className="instructor-fee-payment";
+    const summary=document.createElement("summary");
+    summary.textContent="Ver vuelos y liquidaciones ("+own.length+")";details.append(summary);
+    for(const x of own){
+     const row=document.createElement("div");row.className="instructor-fee-row";
+     const line=document.createElement("strong");line.textContent=stamp(x.starts_at)+
+      " · "+(x.aircraft_registration||"Aeronave pendiente")+" · "+(x.student_email||"Alumno");
+     row.append(line);
+     const time=document.createElement("p");time.className="hint";
+     time.textContent="Instrucción aprobada: "+flightHoursMinutes(Number(x.flight_minutes))+" h"+
+      (x.checkout_minutes==null?" · Sin liquidar al alumno":
+       " · Tiempo cobrado: "+flightHoursMinutes(Number(x.checkout_minutes))+" h");
+     row.append(time);
+     const info=document.createElement("p");info.className="hint";
+     if(x.base_amount==null)info.textContent="Aún no hay cobro/descuento de pack. Honorarios pendientes de cálculo.";
+     else if(x.payout_id)info.textContent="PAGADO "+currencyAmount(x.paid_amount,x.currency)+
+      " · "+x.paid_percentage+" % · "+(x.payment_method==="cash"?"Efectivo":"Transferencia");
+     else if(x.configured)info.textContent="Base "+(x.method==="pack"?"proporcional del pack":"del cobro")+": "+
+      currencyAmount(x.base_amount,x.currency)+" · "+x.percentage+" % = "+
+      currencyAmount(x.proposed_fee,x.currency)+" pendientes";
+     else info.textContent="Base "+currencyAmount(x.base_amount,x.currency)+
+      " · Estimación 10 %: "+currencyAmount(Math.round(Number(x.base_amount)*10)/100,x.currency)+
+      " · NO pagable sin acuerdo de Dirección";
+     row.append(info);
+     if(x.configured&&Number(x.proposed_fee)>0&&!x.payout_id&&school.can_write){
+      const method=document.createElement("select");
+      method.add(new Option("Efectivo","cash"));method.add(new Option("Transferencia","bank_transfer"));
+      method.setAttribute("aria-label","Medio de pago al instructor");
+      const ref=document.createElement("input");ref.maxLength=120;
+      ref.placeholder="Referencia de transferencia, si corresponde";
+      const pay=document.createElement("button");pay.type="button";pay.className="primary";
+      pay.textContent="Registrar honorarios pagados";
+      pay.onclick=async()=>{
+       if(method.value==="bank_transfer"&&ref.value.trim().length<3){
+        status.textContent="Ingresá la referencia bancaria.";return;
+       }
+       if(!confirm("¿Confirmás el PAGO YA REALIZADO a "+instructor.email+" de "+
+        currencyAmount(x.proposed_fee,x.currency)+"? Se registrará como egreso en Contaduría."))return;
+       pay.disabled=true;
+       try{
+        await rpc("aerosuite_instructor_fee_pay",{p_institution_id:inst,
+         p_booking_id:x.booking_id,p_method:method.value,p_reference:ref.value.trim()||null});
+        await loadFinance();$("instructorFeeStatus").textContent="Pago registrado; impactó en egresos sin duplicación.";
+       }catch(e){status.textContent="No se registró el pago: "+safeError(e);pay.disabled=false;}
+      };
+      row.append(method,ref,pay);
+     }
+     details.append(row);
+    }
+    if(!own.length){
+     const note=document.createElement("p");note.className="hint";
+     note.textContent="Sin vuelos aprobados en este período.";details.append(note);
+    }
+    card.append(details);root.append(card);
+   }
+  }
+  async function loadInstructorFees(){
+   if(!manager)return;
+   try{
+    instructorFeeData=await rpc("aerosuite_instructor_fee_overview",{p_institution_id:inst});
+    renderInstructorFees();
+   }catch(e){
+    instructorFeeData=null;
+    $("instructorFeeList").replaceChildren();
+    $("instructorFeeStatus").textContent="No se pudieron consultar honorarios: "+safeError(e);
+   }
+  }
+  $("instructorFeeMonth").value=artToday().slice(0,7);
+  $("instructorFeeMonth").addEventListener("change",renderInstructorFees);
   async function loadFinance(){
    if(!manager&&!isParticipant)return;
    if(manager){
@@ -2754,7 +2888,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     }
     renderFinanceOverview();
     renderSettlementCandidates();renderDeskReviews();updateCheckoutTotal();renderPackComparisonChoices();
-    await Promise.allSettled([loadFixedExpenses(),loadPettyDay(),loadVoidedPacks()]);
+    await Promise.allSettled([loadFixedExpenses(),loadPettyDay(),loadVoidedPacks(),loadInstructorFees()]);
    }else{
     finance=await rpc("aerosuite_finance_snapshot",{p_institution_id:inst});
     renderStudentPacks();
