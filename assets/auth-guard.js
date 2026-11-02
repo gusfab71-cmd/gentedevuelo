@@ -29,8 +29,8 @@
         persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}
     });
     const ready=institutionalClient.auth.getUser().then(({data,error})=>{
-      if(error||!data?.user)throw Error('No hay una sesión institucional activa.');
       document.documentElement.classList.remove('auth-pending');
+      if(error||!data?.user)throw Error('No hay una sesión institucional activa. Ingresá nuevamente desde el portal de tu escuela.');
       return data.user;
     });
     window.GDV_AUTH={client:institutionalClient,ready};
