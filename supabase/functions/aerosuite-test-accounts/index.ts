@@ -32,10 +32,13 @@ Deno.serve(async req => {
     const body=await req.json().catch(()=>({}));
     const role=body?.role;
     const password=body?.password;
-    if(role!=="instructor"&&role!=="alumno")return respond(origin,400,{error:"Rol de laboratorio inválido."});
-    if(typeof password!=="string"||password.length!==9||
-       !/[A-Z]/.test(password)||!/[a-z]/.test(password)||!/[0-9]/.test(password)||!/[^a-zA-Z0-9]/.test(password))
-      return respond(origin,400,{error:"La clave requiere 9 caracteres exactos, mayúscula, minúscula, número y símbolo."});
+    const aliases: Record<string,string>={
+      administrador:"gentedevuelo+administrador@gmail.com",
+      secretaria:"gentedevuelo+secretaria@gmail.com",
+      instructor:"gentedevuelo+instructor@gmail.com",
+      alumno:"gentedevuelo+alumno@gmail.com",
+      piloto:"gentedevuelo+piloto@gmail.com"
+    };
     const {data:lab,error:labError}=await admin.from("aerosuite_permanent_test_lab")
       .select("institution_id").eq("singleton",true).single();
     if(labError||!lab?.institution_id)return respond(origin,404,{error:"Laboratorio permanente no configurado."});
@@ -43,15 +46,37 @@ Deno.serve(async req => {
       .select("id,is_test,status").eq("id",lab.institution_id).single();
     if(institutionError||!institution||institution.is_test!==true||institution.status!=="active")
       return respond(origin,403,{error:"El laboratorio debe estar activo y marcado como prueba."});
+    if(body?.action==="status"){
+      const {data:members,error:readError}=await admin.from("aerosuite_institution_members")
+        .select("user_id,role").eq("institution_id",lab.institution_id);
+      if(readError)return respond(origin,500,{error:"No se pudo consultar el estado técnico."});
+      const accounts:Record<string,boolean>={administrador:false,secretaria:false,instructor:false,alumno:false,piloto:false};
+      for(const member of members||[]){
+        if(!aliases[member.role])continue;
+        const {data:account,error:accountError}=await admin.auth.admin.getUserById(member.user_id);
+        if(accountError)return respond(origin,500,{error:"No se pudo consultar una identidad técnica."});
+        if(account?.user?.email?.toLowerCase()===aliases[member.role])accounts[member.role]=true;
+      }
+      return respond(origin,200,{ok:true,accounts});
+    }
+    if(!Object.prototype.hasOwnProperty.call(aliases,role))
+      return respond(origin,400,{error:"Rol de laboratorio inválido."});
+    if(typeof password!=="string"||password.length!==9||
+       !/[A-Z]/.test(password)||!/[a-z]/.test(password)||!/[0-9]/.test(password)||!/[^a-zA-Z0-9]/.test(password))
+      return respond(origin,400,{error:"La clave requiere 9 caracteres exactos, mayúscula, minúscula, número y símbolo."});
     const {data:existing,error:existingError}=await admin.from("aerosuite_institution_members")
       .select("user_id").eq("institution_id",lab.institution_id).eq("role",role);
     if(existingError)return respond(origin,500,{error:"No se pudo verificar el rol."});
-    if((existing||[]).length)return respond(origin,409,{error:"Ya hay una cuenta de "+role+" asignada. No se modificó su contraseña."});
-    const email=role==="instructor"?"gentedevuelo+instructor@gmail.com":"gentedevuelo+alumno@gmail.com";
+    // La cuenta principal de Superadministración conserva su rol global. Solo se
+    // reemplaza su antigua membresía operativa en el laboratorio, nunca su Auth.
+    const legacyDirector=role==="administrador"&&existing?.length===1&&existing[0].user_id===identity.user.id;
+    if((existing||[]).length&&!legacyDirector)
+      return respond(origin,409,{error:"Ya hay una cuenta de "+role+" asignada. No se modificó su contraseña."});
+    const email=aliases[role];
     const {data:created,error:createError}=await admin.auth.admin.createUser({
       email,password,email_confirm:true,
       app_metadata:{aerosuite_lab:true,aerosuite_lab_role:role,aerosuite_lab_institution:lab.institution_id},
-      user_metadata:{display_name:role==="instructor"?"Instructor · Laboratorio AeroSuite":"Alumno · Laboratorio AeroSuite"}
+      user_metadata:{display_name:(role==="administrador"?"Administrador":role==="secretaria"?"Secretaría":role==="instructor"?"Instructor":role==="piloto"?"Piloto PPA / PCA":"Alumno")+" · Laboratorio AeroSuite"}
     });
     if(createError||!created?.user?.id){
       const duplicate=/already|registered|exists|duplicate/i.test(String(createError?.message||""));
@@ -67,6 +92,17 @@ Deno.serve(async req => {
       return respond(origin,500,{error:cleanup.error?
         "No se pudo asociar el rol ni revertir la identidad técnica. Requiere revisión manual.":
         "No se pudo asociar el rol; la creación técnica fue revertida."});
+    }
+    if(legacyDirector){
+      const {data:removed,error:unlinkError}=await admin.from("aerosuite_institution_members")
+        .delete().eq("institution_id",lab.institution_id)
+        .eq("user_id",identity.user.id).eq("role","administrador").select("user_id");
+      if(unlinkError||removed?.length!==1){
+        const cleanup=await admin.auth.admin.deleteUser(userId);
+        return respond(origin,500,{error:cleanup.error?
+          "No se completó la separación de la cuenta principal. Requiere revisión manual.":
+          "No se pudo separar la antigua membresía del Superadministrador. La creación fue revertida."});
+      }
     }
     return respond(origin,200,{ok:true,role,email,created:true,mail_sent:false});
   }catch{
