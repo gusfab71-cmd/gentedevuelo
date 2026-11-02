@@ -276,7 +276,7 @@ try{
   ?'La turnera, los informes y los recursos docentes están operativos. La flota ofrece consulta; Contaduría corresponde a Dirección y Secretaría.'
   :school.my_role==='alumno'
    ?'Podés consultar turnera, prácticas, horas de vuelo y los recursos de la Academia de tu escuela.'
-   :'La turnera, los informes, Contaduría y la Academia institucional están operativos. El mantenimiento requiere integración específica.';
+   :(school.my_role==='piloto'?'Tu portal integra ficha personal, turnera, horas de vuelo, AeroLocator y Flight Operations. La escuela verifica la licencia antes de habilitar reservas sin instructor.':'La turnera, los informes, Contaduría y la Academia institucional están operativos. El mantenimiento requiere integración específica.');
  el('schoolPlan').hidden=!isManager;
  el('schoolExpiry').hidden=!isManager;
  el('schoolAccessLine').hidden=!isManager;
@@ -308,6 +308,56 @@ try{
  }
  if(isManager){
    el('directorPeoplePanel').hidden=false;
+   el('pilotPeoplePanel').hidden=false;
+   const pilotStatus=el('pilotPeopleStatus'),pilotList=el('pilotPeopleList');
+   async function loadPilotCandidates(){
+    pilotStatus.textContent='Consultando pilotos de la institución…';
+    pilotList.replaceChildren();
+    try{
+     const res=await client.rpc('aerosuite_pilot_candidates',{p_institution_id:school.institution_id});
+     if(res.error)throw res.error;
+     const pilots=Array.isArray(res.data)?res.data:[];
+     for(const pilot of pilots){
+      const card=document.createElement('div');card.className='person-card';
+      const meta=document.createElement('div');meta.className='person-meta';
+      const title=document.createElement('strong');
+      title.textContent=(pilot.name||pilot.email||'Piloto')+' · '+(pilot.license_type||'Licencia pendiente');
+      const detail=document.createElement('small');
+      detail.textContent=(pilot.verified?'Licencia verificada':'Verificación pendiente')+
+       (pilot.license_number?' · Licencia N.º '+pilot.license_number:' · Sin licencia declarada');
+      meta.append(title,detail);card.append(meta);
+      const supported=/(PPA|PILOTO PRIVADO|PCA|PILOTO COMERCIAL|COMERCIAL)/i.test(pilot.license_type||'');
+      if(school.can_write&&supported){
+       const button=document.createElement('button');button.type='button';
+       button.textContent=pilot.verified?'Revocar autorización':'Verificar licencia y habilitar';
+       if(pilot.verified)button.className='danger';
+       button.onclick=async()=>{
+        const reference=prompt(pilot.verified?'Referencia de revocación:':
+         'Referencia documental: licencia, habilitaciones y aptitud médica verificadas:', '');
+        if(reference===null)return;
+        if(reference.trim().length<8){pilotStatus.textContent='Indicá una referencia de al menos 8 caracteres.';return;}
+        if(!confirm(pilot.verified?'¿Revocar la autorización de vuelo sin instructor?':
+         '¿Confirmás que verificaste la licencia y habilitaciones del piloto?'))return;
+        button.disabled=true;
+        try{
+         const result=await client.rpc('aerosuite_pilot_verify',{
+          p_institution_id:school.institution_id,p_user_id:pilot.user_id,
+          p_approved:!pilot.verified,p_reference:reference.trim()
+         });
+         if(result.error)throw result.error;
+         await loadPilotCandidates();
+         pilotStatus.textContent='Autorización actualizada y registrada.';
+        }catch(e){pilotStatus.textContent='Error: '+(e.message||'No se pudo guardar.');button.disabled=false;}
+       };
+       card.append(button);
+      }
+      pilotList.append(card);
+     }
+     pilotStatus.textContent=pilots.length?pilots.length+' piloto(s) registrado(s).':'Todavía no hay pilotos. Enviá una invitación «Piloto PPA o Comercial».';
+    }catch(e){pilotStatus.textContent='No se pudo consultar: '+(e.message||'Error de acceso');}
+   }
+   el('refreshPilots').addEventListener('click',loadPilotCandidates);
+   await loadPilotCandidates();
    const list=el('peopleList'),listFeedback=el('peopleFeedback');
    const roles={secretaria:'Secretaría',instructor:'Instructor',alumno:'Alumno',piloto:'Piloto PPA / Comercial'};
    el('secretaryInviteOption').hidden=!isDirector;
