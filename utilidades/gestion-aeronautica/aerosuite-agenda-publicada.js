@@ -23,7 +23,8 @@ window.AeroSuiteAgenda={
   '<label>Actividad<select id="agendaType"><option value="flight">Vuelo de instrucción</option><option value="simulator">Vuelo virtual</option><option value="theory">Teoría grupal</option></select></label>',
   '<label>Día<input id="agendaDay" type="date" required></label>',
   '<label>Hora<select id="agendaHour"><option>08:30</option><option>10:00</option><option>11:30</option><option>13:00</option><option>14:30</option><option>16:00</option></select></label>',
-  '<label>Recurso / aeronave / aula<input id="agendaResource" list="agendaResourceList" maxlength="90" required placeholder="LV-ERT, Simulador 1 o Aula 1" autocomplete="off" autocapitalize="characters"><datalist id="agendaResourceList"></datalist><span class="hint">Las matrículas LV/LQ se escriben automáticamente en mayúsculas y con guion.</span></label>',
+  '<label id="agendaAircraftLabel">Aeronave de la flota<select id="agendaAircraft" required><option value="">Seleccioná una aeronave</option></select><span class="hint">Solo se pueden seleccionar aeronaves disponibles. Las que están fuera de servicio aparecen deshabilitadas.</span></label>',
+  '<label id="agendaResourceLabel" hidden>Simulador o aula<input id="agendaResource" list="agendaResourceList" maxlength="90" placeholder="Simulador 1 o Aula 1" autocomplete="off"><datalist id="agendaResourceList"></datalist></label>',
   '<label id="agendaCapacityLabel">Cupos<input id="agendaCapacity" type="number" min="1" max="50" value="1" required></label>',
   '</div><button class="primary" type="submit">Agregar horario en preparación</button></form>',
   '<div class="actions"><button type="button" id="agendaPublish" class="primary">Publicar los horarios preparados</button></div>',
@@ -706,26 +707,34 @@ window.AeroSuiteAgenda={
    }catch(err){msg("No se pudo publicar la semana: "+err.message);}
    finally{b.disabled=!c.school.can_write;}
   }
-  function formatAgendaFlightRegistration(){
-   const field=$("agendaResource");
-   if($("agendaType").value!=="flight"||!window.AeroSuiteRegistration)return field.value.trim();
-   const compact=field.value.normalize("NFKC").toUpperCase().replace(/[^A-Z0-9]/g,"");
-   // Solo matrículas argentinas: no modificar nombres de aulas, simuladores ni cupos.
-   if(/^(LV|LQ)[A-Z0-9]*$/.test(compact))window.AeroSuiteRegistration.formatField(field);
-   return field.value.trim();
-  }
   function syncResource(){
-   const kind=$("agendaType").value;
-   $("agendaCapacityLabel").hidden=kind==="flight";
-   $("agendaCapacity").value=kind==="flight"?"1":kind==="theory"?"12":"1";
+   const kind=$("agendaType").value,flight=kind==="flight";
+   $("agendaAircraftLabel").hidden=!flight;
+   $("agendaResourceLabel").hidden=flight;
+   $("agendaAircraft").required=flight;
+   $("agendaResource").required=!flight;
+   $("agendaCapacityLabel").hidden=flight;
+   $("agendaCapacity").value=flight?"1":kind==="theory"?"12":"1";
    $("agendaResource").value="";
-   $("agendaResource").placeholder=kind==="flight"?"LV-ABC o Cupo vuelo 1":kind==="theory"?"Aula 1":"Simulador 1";
+   $("agendaResource").placeholder=kind==="theory"?"Aula 1":"Simulador 1";
+   const selector=$("agendaAircraft");selector.replaceChildren();
+   const available=c.aircraft().filter(a=>!a.archived_at);
+   const first=document.createElement("option");
+   first.value="";first.textContent=available.length?"Seleccioná una aeronave":"No hay aeronaves registradas";
+   first.disabled=true;first.selected=true;selector.append(first);
+   for(const a of available.sort((a,b)=>a.registration.localeCompare(b.registration))){
+    const option=document.createElement("option");
+    option.value=a.registration;
+    option.disabled=a.availability!=="available";
+    option.textContent=a.registration+(a.model?" · "+a.model:"")+
+     (option.disabled?" · Fuera de servicio":" · Disponible");
+    selector.append(option);
+   }
    const list=$("agendaResourceList");list.replaceChildren();
-   const resources=kind==="flight"?
-    c.aircraft().filter(x=>x.availability==="available"&&!x.archived_at).map(x=>x.registration):
-    kind==="simulator"?c.simulators().filter(x=>x.availability==="available"&&!x.archived_at).map(x=>x.name):[];
-   for(const name of resources){
-    const option=document.createElement("option");option.value=name;list.append(option);
+   if(kind==="simulator"){
+    for(const sim of c.simulators().filter(x=>x.availability==="available"&&!x.archived_at)){
+     const option=document.createElement("option");option.value=sim.name;list.append(option);
+    }
    }
   }
   $("agendaFilter").onchange=()=>{$("agendaResourceFilter").value="all";selectedSlotId=null;render();};
@@ -734,16 +743,15 @@ window.AeroSuiteAgenda={
    $("agendaBulkType").onchange=syncBulkOptions;
    $("agendaBulkForm").onsubmit=publishFullWeek;
    $("agendaType").onchange=syncResource;
-   $("agendaResource").addEventListener("input",formatAgendaFlightRegistration);
-   $("agendaResource").addEventListener("change",formatAgendaFlightRegistration);
    $("agendaDay").value=c.today();$("agendaDay").min=c.today();
    $("agendaCreate").onsubmit=async e=>{
     e.preventDefault();if(!c.school.can_write)return;
     const date=$("agendaDay").value,hour=$("agendaHour").value;
-    const kind=$("agendaType").value,resource=formatAgendaFlightRegistration();
-    if(kind==="flight"&&/^(LV|LQ)[-A-Z0-9]*$/.test(resource)&&
-       !window.AeroSuiteRegistration?.isValid(resource)){
-     msg("Matrícula incompleta: ingresá por ejemplo LV-ERT.");return;
+    const kind=$("agendaType").value;
+    const resource=kind==="flight"?$("agendaAircraft").value:$("agendaResource").value.trim();
+    if(kind==="flight"&&!c.aircraft().some(a=>!a.archived_at&&
+       a.availability==="available"&&a.registration===resource)){
+     msg("Elegí una aeronave disponible del desplegable de Flota.");return;
     }
     const capacity=kind==="flight"?1:Number($("agendaCapacity").value);
     const starts=new Date(date+"T"+hour+":00-03:00");
@@ -783,6 +791,7 @@ window.AeroSuiteAgenda={
        const alerts=await c.rpc("aerosuite_maintenance_alerts",{p_institution_id:c.inst});
        maintenanceChecks=Array.isArray(alerts?.aircraft)?alerts.aircraft:[];
        syncBulkOptions();
+       syncResource();
       }catch(e){msg("No se pudieron consultar avisos de mantenimiento: "+e.message);}
      }
      msg(slots.filter(s=>s.published).length+" horarios publicados en la semana.");render();
