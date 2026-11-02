@@ -165,19 +165,22 @@ window.AeroSuiteAgenda={
    }catch(e){msg("No se pudo actualizar: "+e.message);}
   }
   let selectedSlotId=null,maintenanceChecks=[];
-  function studentFlightMode(){return c.role==="piloto"?false:$("agendaStudentInstructor")?.checked!==false;}
+  function studentFlightMode(){return c.role==="alumno"?true:$("agendaStudentInstructor")?.checked!==false;}
   function refreshStudentMode(){
-   const isParticipant=c.role==="alumno"||c.role==="piloto";
-   $("agendaStudentFlightMode").hidden=!isParticipant||$("agendaFilter").value!=="flight";
-   if(c.role==="piloto"){
-    $("agendaStudentInstructor").checked=false;
+   const pilot=c.role==="piloto";
+   $("agendaStudentFlightMode").hidden=!pilot||$("agendaFilter").value!=="flight";
+   if(c.role==="alumno"){
+    $("agendaStudentInstructor").checked=true;
     $("agendaStudentInstructor").disabled=true;
-    $("agendaStudentModeText").textContent="Sin instructor · verificación institucional obligatoria";
-   }else $("agendaStudentModeText").textContent=studentFlightMode()?"Con instructor":"Sin instructor (sujeto a autorización)";
+   }else if(pilot){
+    $("agendaStudentInstructor").disabled=false;
+    $("agendaStudentModeText").textContent=studentFlightMode()?"Con instructor":"Sin instructor · requiere autorización institucional";
+   }
   }
   if(c.role==="piloto"){
    for(const option of [...$("agendaFilter").options])if(option.value!=="flight")option.remove();
    $("agendaFilter").options[0].textContent="Vuelo particular (Piloto PPA / Comercial)";
+   $("agendaStudentInstructor").checked=false;
   }
   $("agendaStudentInstructor").onchange=refreshStudentMode;
   const dayLabels=["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"];
