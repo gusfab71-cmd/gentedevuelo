@@ -36,6 +36,7 @@ window.AeroSuiteAgenda={
   '<p class="hint" role="status" aria-live="polite" id="agendaStatus"></p>',
   '<div id="agendaGridHost" class="agenda-grid-host"></div>',
   '<p class="hint" id="agendaGridHelp">Verde: libre · Amarillo: pendiente · Azul: confirmado · Gris: ocupado o no disponible. Elegí una casilla para reservar.</p>',
+  '<p id="agendaBookingFeedback" class="agenda-booking-feedback" role="alert" hidden></p>',
   '<section id="agendaOldReservations" class="agenda-legacy-reserved" hidden aria-label="Reservas anteriores fuera de la nueva franja horaria"><strong>Turnos anteriores conservados</strong><p class="hint">Estas reservas ya existían. Se conservan para su gestión, pero no se admiten nuevas reservas fuera de 08:30 a 17:30.</p><div id="agendaOldReservationList"></div></section>',
   '<section id="agendaStaffDetails" hidden><h3>Gestión del turno seleccionado</h3><div id="agendaStaffCards" class="agenda-cards"></div></section>'
   ].join("");
@@ -80,6 +81,10 @@ window.AeroSuiteAgenda={
    ".agenda-slot-btn.settled{background:linear-gradient(140deg,#E1C994,#C9A66E);border-color:#E4CAA1;color:#293541}",
    ".agenda-slot-btn.completed{background:#385b69;border-color:#547989;color:#f1f7fa}",
    ".agenda-slot-btn.occupied,.agenda-slot-btn.past,.agenda-slot-btn.unavailable{background:#3c4a55;border-color:#566977;color:#dce4eb}",
+   ".agenda-slot-btn.conflict{background:#405467;border-color:#7896a7;color:#fff4d3}",
+   ".agenda-booking-feedback{margin:10px 0;padding:10px 12px;border:1px solid;border-radius:8px;font-weight:700}",
+   ".agenda-booking-feedback.error{background:#563b37;border-color:#d6a184;color:#fff2dd}",
+   ".agenda-booking-feedback.success{background:#234e40;border-color:#8ec3a3;color:#f0fff4}",
    ".agenda-slot-btn.draft{background:#594c38;border-color:#aa8951;color:#fff0d7}",
    ".agenda-slot-btn:disabled{cursor:default;opacity:.85}",
    ".agenda-instructor-switch{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:10px 0;padding:10px 12px;background:#1c394d;border:1px solid #587b90;border-radius:9px;font-weight:700}",
@@ -184,8 +189,35 @@ window.AeroSuiteAgenda={
    select.value=available.includes(current)?current:"all";
    refreshStudentMode();
   }
+  function myScheduleOverlaps(slot){
+   if(c.role!=="alumno")return false;
+   const start=new Date(slot.starts_at).getTime();
+   const end=start+Number(slot.duration_minutes||90)*60000;
+   if(!Number.isFinite(start)||!Number.isFinite(end))return false;
+   const overlaps=records=>records.some(item=>{
+    if(!item.my_booking||!["pending","confirmed"].includes(item.status)||item.slot_id===slot.id)return false;
+    const otherStart=new Date(item.starts_at).getTime();
+    return Number.isFinite(otherStart)&&otherStart<end&&start<otherStart+90*60000;
+   });
+   return overlaps(bookings)||overlaps(c.legacyBookings?.()||[]);
+  }
+  function showStudentBookingFeedback(message,kind){
+   const feedback=$("agendaBookingFeedback");
+   feedback.hidden=false;
+   feedback.textContent=message;
+   feedback.className="agenda-booking-feedback "+(kind==="success"?"success":"error");
+   msg(message);
+   feedback.scrollIntoView({behavior:"smooth",block:"nearest"});
+  }
   async function reserveSlot(slot,button){
-   if(c.role!=="alumno"||!c.school.can_write||c.weekMode()!=="next")return;
+   if(c.role!=="alumno"||!c.school.can_write||c.weekMode()!=="next"){
+    showStudentBookingFeedback("Reservá desde «Semana siguiente» con una sesión de alumno habilitada.","error");
+    return;
+   }
+   if(myScheduleOverlaps(slot)){
+    showStudentBookingFeedback("Ya tenés otra actividad que se superpone con este turno de 90 minutos. Elegí otro horario.","error");
+    return;
+   }
    const label=names[slot.activity]+" · "+slot.resource+" · "+c.formatDate(slot.starts_at)+
     " hasta las "+endTime90(slot.starts_at)+" (1 hora y 30 minutos completos)";
    const chosen=slot.activity==="flight"?studentFlightMode():true;
@@ -195,7 +227,11 @@ window.AeroSuiteAgenda={
    try{
     await c.rpc("aerosuite_reserve_with_instructor",{p_institution_id:c.inst,p_slot_id:slot.id,p_student_id:null,p_with_instructor:chosen});
     await reloadAfter("Turno solicitado. Secretaría confirmará la reserva.");
-   }catch(e){msg("No se pudo reservar: "+e.message);button.disabled=false;}
+    showStudentBookingFeedback("Reserva registrada. El turno quedó Pendiente en amarillo suave.","success");
+   }catch(e){
+    showStudentBookingFeedback("No se pudo reservar: "+e.message,"error");
+    button.disabled=false;
+   }
   }
   function openSlotEdit(slot,card){
    const existing=card.querySelector(".agenda-edit-form");
@@ -418,11 +454,12 @@ window.AeroSuiteAgenda={
       const own=bookings.filter(r=>r.slot_id===slot.id&&r.my_booking);
       const active=bookings.filter(r=>r.slot_id===slot.id&&r.status!=="cancelled");
       const future=when>Date.now(),remaining=Number(slot.capacity)-Number(slot.reserved);
+      const conflict=c.role==="alumno"&&!own.length&&myScheduleOverlaps(slot);
       const canBook=slot.published&&slot.bookable!==false&&future&&remaining>0&&c.role==="alumno"&&
-       c.weekMode()==="next"&&!own.length&&c.school.can_write;
+       c.weekMode()==="next"&&!own.length&&!conflict&&c.school.can_write;
       let state=own.length?(own.some(r=>r.status==="confirmed")?"Confirmado":own.some(r=>r.status==="completed")?"Realizado":"Pendiente"):
        !slot.published?"Preparación":!future?"Pasado":slot.bookable===false?"Fuera de servicio":
-       remaining<=0?(slot.activity==="theory"?"Sin cupos":"Ocupado"):"Libre";
+       remaining<=0?(slot.activity==="theory"?"Sin cupos":"Ocupado"):conflict?"Ya tenés otro turno":"Libre";
       const settledMethod=c.manager&&slot.activity==="flight"?
        active.map(r=>r.booking_id?c.settlementForBooking?.(r.booking_id):null).find(Boolean):null;
       if(c.manager&&active.length){
@@ -442,6 +479,7 @@ window.AeroSuiteAgenda={
         settledMethod?"settled":state==="Realizado"?"completed":state==="Libre"?"available":
         state==="Preparación"?"draft":state==="Pasado"?"past":
         state==="Fuera de servicio"?"unavailable":
+        state==="Ya tenés otro turno"?"conflict":
         ["Ocupado","Sin cupos","Solo consulta"].includes(state)?"occupied":"");
       const resourceName=document.createElement("strong");resourceName.textContent=slot.resource||names[slot.activity];
       const line=htmlText((selectedMove?"Seleccionado · 1 h 30":
