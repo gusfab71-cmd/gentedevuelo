@@ -6,7 +6,7 @@
 @keyframes faceHappy{0%{transform:scale(.35) rotate(-18deg);opacity:0}35%{transform:scale(1.23) rotate(12deg);opacity:1}60%{transform:scale(.92) rotate(-7deg)}80%{transform:scale(1.08) rotate(4deg)}100%{transform:scale(1) rotate(0)}}@keyframes faceSad{0%{transform:translateY(-25px) scale(.8);opacity:0}35%{transform:translateY(8px) scale(1.06);opacity:1}60%{transform:translateY(-5px)}100%{transform:translateY(0) scale(1)}}#result-face.happy{animation:faceHappy 1.1s ease-out both}#result-face.sad{animation:faceSad 1.1s ease-out both}@media(prefers-reduced-motion:reduce){#result-face.happy,#result-face.sad{animation:none}}#audit-summary{border-color:#b19a65}#audit-stats strong{color:#ffe4a3}#audit-summary button{background:#34465c}
 #flag{background:#72563a;border-color:#c6a458}#flag.flagged{background:#784452;border-color:#ffb4c0}
 #reset-seq{background:#3b4656}#question-meta{font-size:.94rem;color:#e8d3a3;margin:10px 0}
-</style><link rel="stylesheet" href="./estilo-flight-operations.css?v=20261103a"></head>
+</style><link rel="stylesheet" href="./estilo-flight-operations.css?v=20261103-anac385"></head>
 <body><main id="ppa-app" hidden>
 <nav class="ppa-topbar" aria-label="Navegación de Academia">
  <div class="ppa-topmark"><span class="ppa-mark" aria-hidden="true">✈</span><span>Academia aeronáutica</span></div>
@@ -15,8 +15,13 @@
 <header class="ppa-hero">
  <p class="ppa-eyebrow">Preparación teórica · PPA</p>
  <h1>Simulador Examen PPA</h1>
- <p id="ppaIntro">Prueba privada para administración. La práctica con claves históricas es provisional; el examen verificado utiliza únicamente las preguntas revisadas.</p>
+ <p id="ppaIntro">Cuestionario de referencia para Piloto Privado de Avión (PPA): 385 preguntas. Práctica educativa con respuestas en revisión.</p>
 </header>
+<aside class="ppa-anac-note" aria-label="Información sobre el examen teórico oficial">
+ <strong>Examen teórico real de ANAC</strong>
+ <span>100 preguntas seleccionadas aleatoriamente. Se aprueba con un mínimo del 75 % de respuestas correctas (75 de 100).</span>
+ <a href="https://www.argentina.gob.ar/anac/personal-aeronautico/examenes" target="_blank" rel="noopener noreferrer">Fuente: ANAC</a>
+</aside>
 <div class="panel" id="gate"><h2>Acceso restringido</h2><p>Acceso sujeto a autenticación y a políticas de acceso exclusivas para administración en Supabase.</p><p class="notice">Banco PPA en revisión técnica. Las respuestas mostradas son para pruebas internas; no sustituyen la documentación de ANAC.</p></div>
 <section class="panel" id="ppa-configuracion" aria-labelledby="configTitle">
  <div class="ppa-panel-head"><h2 id="configTitle">Configuración</h2><p class="ppa-panel-note">Elegí cómo querés practicar</p></div>
@@ -482,7 +487,7 @@ $('again').onclick=()=>{
    if(accessError||!(institutions||[]).some(x=>x.institution_id===ppaInstitution&&x.my_role==='alumno'&&x.can_access===true)){
     throw Error("No tenés acceso como alumno a esta institución.");
    }
-   $('ppaIntro').textContent='Práctica educativa PPA. Algunas claves históricas y fundamentos siguen en revisión: tu puntaje es provisional y no equivale a un examen oficial de ANAC.';
+   $('ppaIntro').textContent='Cuestionario de referencia para Piloto Privado de Avión (PPA): 385 preguntas. Práctica educativa; algunas respuestas todavía están en revisión y el puntaje es provisional.';
    $('gate').classList.add('hidden');
    $('practice').querySelector('option[value="review"]').remove();
    $('practice').querySelector('option[value="exam"]').remove();

@@ -88,6 +88,11 @@ assert.match(html,/No equivale a un examen oficial|no equivale a un examen ofici
 const uiCss=fs.readFileSync(path.join(__dirname,'../simulador-ppa/estilo-flight-operations.css'),'utf8');
 assert.match(html,/<title>Simulador Examen PPA<\/title>/);
 assert.match(html,/<h1>Simulador Examen PPA<\/h1>/);
+assert.match(html,/Piloto Privado de Avión \(PPA\): 385 preguntas/);
+assert.match(html,/Examen teórico real de ANAC/);
+assert.match(html,/100 preguntas seleccionadas aleatoriamente/);
+assert.match(html,/75 % de respuestas correctas \(75 de 100\)/);
+assert.match(html,/argentina\.gob\.ar\/anac\/personal-aeronautico\/examenes/);
 assert.match(html,/estilo-flight-operations\.css/);
 assert.match(html,/id="ppaProgressTrack"/);
 assert.match(html,/function updateProgressVisual\(\)/);
