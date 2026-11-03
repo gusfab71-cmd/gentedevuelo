@@ -21,7 +21,7 @@
 <section class="panel" id="ppa-configuracion" aria-labelledby="configTitle">
  <div class="ppa-panel-head"><h2 id="configTitle">Configuración</h2><p class="ppa-panel-note">Elegí cómo querés practicar</p></div>
  <div class="ppa-config-grid">
-  <label class="ppa-field" for="practice">Modalidad de práctica
+  <label class="ppa-field" for="practice">Tipo
    <select id="practice"><option value="practice">Práctica con puntaje · banco ANAC histórico</option><option value="exam">Examen · solo preguntas verificadas</option><option value="review">Revisar banco · sin puntaje</option><option value="sequential">Revisión correlativa completa · con puntaje provisional</option></select>
   </label>
   <label class="ppa-field" id="ppaSubjectField" for="subject">Materia<select id="subject"><option value="all">Todas las materias</option></select></label>
@@ -482,8 +482,8 @@ $('again').onclick=()=>{
    $('gate').classList.add('hidden');
    $('practice').querySelector('option[value="review"]').remove();
    $('practice').querySelector('option[value="exam"]').remove();
-   $('practice').querySelector('option[value="practice"]').textContent='10 preguntas aleatorias';
-   $('practice').querySelector('option[value="sequential"]').textContent='Todas las preguntas consecutivas';
+   $('practice').querySelector('option[value="practice"]').textContent='Preguntas aleatorias';
+   $('practice').querySelector('option[value="sequential"]').textContent='Preguntas correlativas';
    $('practice').value='practice';
    $('count').replaceChildren(new Option('10','10'));
    $('mode').value='all';
