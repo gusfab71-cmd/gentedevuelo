@@ -87,7 +87,7 @@ function resumeSequential(){
  sequentialAnswers={};sequentialFlags={};index=0;points=0;gradedCount=0;
  try{
   const saved=JSON.parse(localStorage.getItem(seqStorageKey())||'null');
-  if(saved&&saved.version===sequenceSignature&&saved.answers&&typeof saved.answers==='object'&&saved.flags&&typeof saved.flags==='object'){
+  if(saved&&(saved.version===sequenceSignature||saved.version==='384-65ca5fbd')&&saved.answers&&typeof saved.answers==='object'&&saved.flags&&typeof saved.flags==='object'){
    sequentialAnswers=saved.answers;sequentialFlags=saved.flags;
    index=Math.max(0,Math.min(exam.length,Math.floor(Number(saved.cursor)||0)));
    // Solo se computan respuestas anteriores al cursor confirmado: evita dobles puntos al recargar.
