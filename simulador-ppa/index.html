@@ -1,15 +1,44 @@
 <!doctype html>
 <html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Simulador PPA · Gente de Vuelo</title><script src="../assets/supabase-2.117.2.min.js"></script><script src="../assets/community-config.js"></script><script src="./sesion-institucional.js?v=ppa-session-isolated-20261103"></script>
+<title>Simulador Examen PPA</title><script src="../assets/supabase-2.117.2.min.js"></script><script src="../assets/community-config.js"></script><script src="./sesion-institucional.js?v=ppa-session-isolated-20261103"></script>
 <style>
 :root{font-family:system-ui,Arial;color:#e9eef7;background:#141c27}*{box-sizing:border-box}body{margin:0}main{max-width:850px;margin:32px auto;padding:20px}.panel{background:#243143;border:1px solid #45556c;border-radius:18px;padding:24px;margin:18px 0}h1{margin:0 0 8px}p{line-height:1.5;color:#c8d4e3}button,select{font:inherit;border-radius:10px;padding:12px;border:1px solid #64748b;background:#34465c;color:white}button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}.choice{display:block;width:100%;text-align:left;margin:10px 0}.choice.selected{outline:2px solid #d8b86a}.choice.correct{background:#17633d;border-color:#4ade80;color:#fff;outline:2px solid #4ade80}.choice.incorrect{background:#71333a;border-color:#fb7185;color:#fff}.primary{background:#c6a458;color:#121923;font-weight:700}.hidden{display:none}.meta{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}.notice{color:#f4d48a}#feedback{border-left:4px solid #c6a458;padding-left:15px}small{color:#cbd5e1}.perfect-bonus{text-align:center;border:1px solid #d6b65d;border-radius:16px;padding:20px;margin:18px 0;background:linear-gradient(135deg,#3a3142,#1d4350)}.perfect-bonus strong{display:block;font-size:1.4rem;color:#ffe49b}.perfect-bonus .trophy{font-size:4rem;display:block}.perfect-bonus p{color:#fff}.result-face{font-size:84px;text-align:center;margin:16px 0}.result-face svg{width:min(100%,360px);height:auto;display:block;margin:auto}#figure img{display:block;max-width:100%;height:auto;margin:12px auto;border-radius:8px;background:white}#figure{margin:16px 0}#figure a,#figure a:link,#figure a:visited,#figure a:hover,#figure a:active,#figure a:focus-visible{color:#fff;text-decoration:underline;text-underline-offset:2px}#figure small,#figure figcaption,#figure p{color:#fff}
 @keyframes faceHappy{0%{transform:scale(.35) rotate(-18deg);opacity:0}35%{transform:scale(1.23) rotate(12deg);opacity:1}60%{transform:scale(.92) rotate(-7deg)}80%{transform:scale(1.08) rotate(4deg)}100%{transform:scale(1) rotate(0)}}@keyframes faceSad{0%{transform:translateY(-25px) scale(.8);opacity:0}35%{transform:translateY(8px) scale(1.06);opacity:1}60%{transform:translateY(-5px)}100%{transform:translateY(0) scale(1)}}#result-face.happy{animation:faceHappy 1.1s ease-out both}#result-face.sad{animation:faceSad 1.1s ease-out both}@media(prefers-reduced-motion:reduce){#result-face.happy,#result-face.sad{animation:none}}#audit-summary{border-color:#b19a65}#audit-stats strong{color:#ffe4a3}#audit-summary button{background:#34465c}
 #flag{background:#72563a;border-color:#c6a458}#flag.flagged{background:#784452;border-color:#ffb4c0}
 #reset-seq{background:#3b4656}#question-meta{font-size:.94rem;color:#e8d3a3;margin:10px 0}
-</style></head><body><main id="ppa-app" hidden><h1>Gente de Vuelo · Simulador PPA</h1><p id="ppaIntro">Prueba privada para administración. La práctica con claves históricas es provisional; el examen verificado utiliza únicamente las preguntas revisadas.</p><p id="ppaReturn" hidden><a id="ppaReturnLink" href="../utilidades/gestion-aeronautica/portal-escuela.html">Volver a Academia del Alumno</a></p>
+</style><link rel="stylesheet" href="./estilo-flight-operations.css?v=20261103a"></head>
+<body><main id="ppa-app" hidden>
+<nav class="ppa-topbar" aria-label="Navegación de Academia">
+ <div class="ppa-topmark"><span class="ppa-mark" aria-hidden="true">✈</span><span>Academia aeronáutica</span></div>
+ <p id="ppaReturn" hidden><a id="ppaReturnLink" class="ppa-breadcrumb" href="../utilidades/gestion-aeronautica/portal-escuela.html">Volver a Academia del Alumno</a></p>
+</nav>
+<header class="ppa-hero">
+ <p class="ppa-eyebrow">Preparación teórica · PPA</p>
+ <h1>Simulador Examen PPA</h1>
+ <p id="ppaIntro">Prueba privada para administración. La práctica con claves históricas es provisional; el examen verificado utiliza únicamente las preguntas revisadas.</p>
+</header>
 <div class="panel" id="gate"><h2>Acceso restringido</h2><p>Acceso sujeto a autenticación y a políticas de acceso exclusivas para administración en Supabase.</p><p class="notice">Banco PPA en revisión técnica. Las respuestas mostradas son para pruebas internas; no sustituyen la documentación de ANAC.</p></div>
-<section class="panel"><h2>Configuración</h2><label for="practice">Tipo</label> <select id="practice"><option value="practice">Práctica con puntaje · banco ANAC histórico</option><option value="exam">Examen · solo preguntas verificadas</option><option value="review">Revisar banco · sin puntaje</option><option value="sequential">Revisión correlativa completa · con puntaje provisional</option></select> <label for="subject">Materia</label> <select id="subject"><option value="all">Todas las materias</option></select> <label for="mode">Modalidad</label> <select id="mode"><option value="figure">Con figuras</option><option value="all">Mixto · todas</option><option value="simple">Sin figuras</option></select> <label for="count">Preguntas</label> <select id="count"><option>10</option><option>5</option><option>20</option><option>40</option></select> <button id="start" class="primary">Comenzar práctica</button> <button id="reset-seq" class="hidden">Reiniciar correlativo</button><p id="mode-description" class="notice" aria-live="polite"></p><p id="status" aria-live="polite"></p></section>
-<section class="panel hidden" id="audit-summary"><h2>Auditoría del banco PPA</h2><p id="audit-stats"></p><p class="notice">Las claves históricas y los fundamentos requieren cotejo con ANAC. Los huecos de numeración son indicios a revisar, no prueban por sí solos que falten preguntas.</p><button id="audit-export">Exportar informe CSV</button></section><section class="panel hidden" id="exam"><div class="meta"><strong id="progress"></strong><strong id="score"></strong></div><p id="question-meta"></p><h2 id="question"></h2><div id="figure" class="hidden"></div><div id="options"></div><button id="submit" class="primary" disabled>Responder</button><div id="feedback" class="hidden" aria-live="polite"></div><button id="flag" class="hidden">Marcar para cotejo</button> <button id="next" class="hidden">Siguiente pregunta</button></section>
+<section class="panel" id="ppa-configuracion" aria-labelledby="configTitle">
+ <div class="ppa-panel-head"><h2 id="configTitle">Configuración</h2><p class="ppa-panel-note">Elegí cómo querés practicar</p></div>
+ <div class="ppa-config-grid">
+  <label class="ppa-field" for="practice">Tipo
+   <select id="practice"><option value="practice">Práctica con puntaje · banco ANAC histórico</option><option value="exam">Examen · solo preguntas verificadas</option><option value="review">Revisar banco · sin puntaje</option><option value="sequential">Revisión correlativa completa · con puntaje provisional</option></select>
+  </label>
+  <label class="ppa-field" for="subject">Materia<select id="subject"><option value="all">Todas las materias</option></select></label>
+  <label class="ppa-field" for="mode">Modalidad<select id="mode"><option value="figure">Con figuras</option><option value="all">Mixto · todas</option><option value="simple">Sin figuras</option></select></label>
+  <label class="ppa-field" for="count">Preguntas<select id="count"><option>10</option><option>5</option><option>20</option><option>40</option></select></label>
+ </div>
+ <div class="ppa-actionbar"><button id="start" class="primary">Comenzar práctica</button><button id="reset-seq" class="hidden">Reiniciar correlativo</button></div>
+ <p id="mode-description" class="notice" aria-live="polite"></p><p id="status" role="status" aria-live="polite"></p>
+</section>
+<section class="panel hidden" id="audit-summary"><h2>Auditoría del banco PPA</h2><p id="audit-stats"></p><p class="notice">Las claves históricas y los fundamentos requieren cotejo con ANAC. Los huecos de numeración son indicios a revisar, no prueban por sí solos que falten preguntas.</p><button id="audit-export">Exportar informe CSV</button></section><section class="panel hidden" id="exam" aria-label="Pregunta actual del simulador">
+ <div class="ppa-question-toolbar"><div class="meta"><strong id="progress"></strong><strong id="score"></strong></div></div>
+ <div id="ppaProgressTrack" class="ppa-progress-track" role="progressbar" aria-label="Preguntas completadas" aria-valuemin="0" aria-valuemax="10" aria-valuenow="0"><span id="ppaProgressFill"></span></div>
+ <p id="question-meta"></p><h2 id="question"></h2><div id="figure" class="hidden"></div>
+ <div id="options" role="group" aria-label="Opciones de respuesta"></div>
+ <div id="feedback" class="hidden" aria-live="polite"></div>
+ <div class="ppa-question-actions"><button id="submit" class="primary" disabled>Responder</button><button id="flag" class="hidden">Marcar para cotejo</button><button id="next" class="hidden">Siguiente pregunta</button></div>
+</section>
 <section class="panel hidden" id="results"><h2>Resultado</h2><p id="summary"></p><div id="result-face" class="result-face" role="img" aria-live="polite"></div><div id="perfect-bonus" class="perfect-bonus hidden" aria-live="polite"><span class="trophy">🏆✈️</span><strong>¡MISIÓN PERFECTA!</strong><p>¡10 de 10! Alas de oro para este vuelo. ¡Felicitaciones, comandante!</p><p>🎉 ⭐ 🎉</p></div><button id="again">Nueva práctica</button></section>
 </main><script src="./auditoria.js?v=20261022correlativo1"></script><script type="module">
 const $=id=>document.getElementById(id);
@@ -271,7 +300,17 @@ async function load(){
   }
  }catch(e){$('status').textContent=e.message;$('start').disabled=true}
 }
+function updateProgressVisual(){
+ const track=$('ppaProgressTrack');
+ if(!track)return;
+ const total=exam.length||1;
+ const done=Math.min(exam.length,index+(answered?1:0));
+ track.setAttribute('aria-valuemax',String(exam.length));
+ track.setAttribute('aria-valuenow',String(done));
+ $('ppaProgressFill').style.width=(100*done/total)+'%';
+}
 function show(){answered=false;selected=null;figureReady=false;const q=exam[index];const requiresFigure=needsFigure(q);
+ updateProgressVisual();
 const figureBox=$('figure');figureBox.replaceChildren();figureBox.classList.toggle('hidden',!requiresFigure);
 if(requiresFigure){
  const found=q.pregunta.match(/\bfigura\s*(?:(?:n[uú]mero|n[.ºo])\s*)?(\d{1,3})\b/i);
@@ -314,6 +353,7 @@ if(q.opciones.length<2){
  $('submit').classList.add('hidden');$('feedback').classList.remove('hidden');
  $('feedback').textContent='Registro incompleto: falta el conjunto de opciones. No se puntúa. Marcá para cotejar y continuá.';
  $('next').classList.remove('hidden');$('next').textContent=index===exam.length-1?'Ver resultado':'Siguiente registro';
+ updateProgressVisual();
 }
 }
 $('start').onclick=()=>{
@@ -357,6 +397,7 @@ $('submit').onclick=()=>{
   return;
  }
  answered=true;
+ updateProgressVisual();
  const graded=!reviewMode&&hasValidKey(q)&&(!needsFigure(q)||figureReady);
  const ok=graded&&selected===q.correcta;
  if(ok)points++;
@@ -386,6 +427,7 @@ $('submit').onclick=()=>{
  $('next').textContent=index===exam.length-1?'Ver resultado':'Siguiente pregunta';
 };
 function finishSession(){
+ updateProgressVisual();
  $('exam').classList.add('hidden');$('results').classList.remove('hidden');
  $('perfect-bonus').classList.add('hidden');
  if(reviewMode||sequentialMode){
