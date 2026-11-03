@@ -1,0 +1,94 @@
+/* Simulador Examen PPA · Identidad visual Flight Operations / AeroSuite. */
+:root{
+  color-scheme:dark;
+  --ppa-bg:#101719;--ppa-surface:#1a2426;--ppa-panel:#202d30;--ppa-raised:#27383d;
+  --ppa-line:#455759;--ppa-line-strong:#6c8586;--ppa-ink:#f4f3ec;
+  --ppa-muted:#bdccc9;--ppa-accent:#f5b870;--ppa-accent-deep:#dc9754;
+  --ppa-mint:#9cdfc7;--ppa-red:#ffb6aa;
+}
+html{scroll-behavior:smooth}
+body{background:radial-gradient(circle at 90% 0%,#243538 0%,transparent 35%),var(--ppa-bg);color:var(--ppa-ink);font:15px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+[hidden],.hidden{display:none!important}
+main#ppa-app{width:min(100%,1180px);max-width:none;margin:0 auto;padding:23px 24px 80px}
+#ppa-app *{box-sizing:border-box}
+#ppa-app h1,#ppa-app h2,#ppa-app h3{line-height:1.25;letter-spacing:-.027em}
+#ppa-app h2{font-size:clamp(20px,2.1vw,25px)}
+#ppa-app p{color:var(--ppa-muted);line-height:1.6}
+#ppa-app a{color:#ffe1b5}
+#ppa-app a:hover{color:#fff2d9}
+#ppa-app .ppa-topbar{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:16px;color:var(--ppa-muted);font-size:13px}
+#ppa-app .ppa-topmark{display:flex;align-items:center;gap:10px;color:var(--ppa-ink);font-weight:750}
+#ppa-app .ppa-mark{display:grid;place-items:center;width:34px;height:34px;border-radius:10px;background:var(--ppa-accent);color:#181d1d;font-size:17px;font-weight:900}
+#ppa-app .ppa-breadcrumb{text-decoration:none;padding:9px 13px;border:1px solid var(--ppa-line-strong);background:#1c292b;border-radius:10px;font-weight:650}
+#ppa-app .ppa-hero{position:relative;overflow:hidden;border:1px solid #516062;border-radius:22px;padding:29px clamp(20px,3vw,36px);margin:0 0 17px;background:radial-gradient(65% 130% at 100% 0%,#4b352a 0%,#253035 46%,#1b2729 100%)}
+#ppa-app .ppa-hero:after{content:"";position:absolute;width:280px;height:280px;right:-105px;top:-142px;border:1px solid #dca16b56;border-radius:50%;box-shadow:0 0 0 34px #dca16b0d,0 0 0 77px #dca16b0b;pointer-events:none}
+#ppa-app .ppa-eyebrow{color:var(--ppa-accent);text-transform:uppercase;letter-spacing:.16em;font-size:11px;font-weight:850;margin:0 0 7px}
+#ppa-app .ppa-hero h1{font-size:clamp(29px,4vw,46px);margin:0 0 9px;font-weight:830;max-width:820px;color:#f6f3eb}
+#ppa-app .ppa-hero #ppaIntro{max-width:760px;margin:0;color:#e1ded4;font-size:14px}
+#ppa-app .ppa-hero #ppaIntro:before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--ppa-accent);margin-right:9px}
+#ppa-app .panel{background:var(--ppa-surface);border:1px solid var(--ppa-line);border-radius:18px;padding:clamp(18px,2.6vw,27px);margin:16px 0;box-shadow:0 9px 24px #080e101f;min-width:0}
+#ppa-app .ppa-panel-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+#ppa-app .ppa-panel-head h2{margin:0}
+#ppa-app .ppa-panel-note{margin:0;font-size:12px;color:var(--ppa-muted)}
+#ppa-app .ppa-config-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+#ppa-app .ppa-field{display:flex;flex-direction:column;gap:7px;min-width:0;color:#e4e9e6;font-size:12px;font-weight:760;letter-spacing:.01em}
+#ppa-app select{display:block;width:100%;min-width:0;min-height:46px;padding:10px 11px;color:var(--ppa-ink);background:#111d21;border:1px solid #627778;border-radius:10px;font:inherit;font-size:13px;line-height:1.35}
+#ppa-app button{font:inherit;font-weight:720;border-radius:11px;min-height:44px;border:1px solid #687e7f;background:#304449;color:var(--ppa-ink);padding:11px 17px;transition:background .14s,border-color .14s,transform .14s}
+#ppa-app button:hover:not(:disabled){background:#3a5558;border-color:#a9bcba}
+#ppa-app button:disabled{cursor:not-allowed;opacity:.53}
+#ppa-app button:focus-visible,#ppa-app select:focus-visible,#ppa-app a:focus-visible{outline:3px solid #f9c990;outline-offset:3px}
+#ppa-app .primary,#ppa-app button.primary{color:#191e1e;background:linear-gradient(180deg,#ffd099,#e9a85f);border:1px solid #ffd099;font-weight:850;box-shadow:0 4px 15px #0002}
+#ppa-app .primary:hover:not(:disabled),#ppa-app button.primary:hover:not(:disabled){background:#ffdcad;border-color:#ffe0b5}
+#ppa-app .ppa-actionbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:17px 0 0}
+#ppa-app .ppa-actionbar #start{min-width:195px}
+#ppa-app #mode-description{display:block;background:#332c25;border:1px solid #725944;border-left:4px solid var(--ppa-accent);border-radius:11px;padding:11px 14px;font-size:12px;line-height:1.5;color:#ffe0b6;margin:15px 0 8px}
+#ppa-app #status{margin:7px 0 0;color:var(--ppa-muted);font-size:12px}
+#ppa-app #exam{border-color:#607476;background:linear-gradient(165deg,#202e31,#1a2629)}
+#ppa-app .ppa-question-toolbar{display:flex;justify-content:space-between;align-items:center;gap:13px;flex-wrap:wrap}
+#ppa-app .meta{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;width:100%}
+#ppa-app #progress{font-size:13px;font-weight:850;color:var(--ppa-accent);letter-spacing:.015em}
+#ppa-app #score{color:#e5eeec;font-size:12px;border:1px solid #596d6d;padding:7px 10px;border-radius:99px;background:#152427}
+#ppa-app .ppa-progress-track{position:relative;width:100%;height:8px;background:#0d191d;border:1px solid #425555;border-radius:99px;margin:15px 0 20px;overflow:hidden}
+#ppa-app .ppa-progress-track>span{display:block;width:0;height:100%;background:linear-gradient(90deg,#d48a4f,#ffcf8a);border-radius:99px;transition:width .25s ease}
+#ppa-app #question-meta{font-size:11px;text-transform:uppercase;letter-spacing:.11em;color:#d2b88e;margin:0 0 11px}
+#ppa-app #question{font-size:clamp(19px,2.2vw,27px);font-weight:760;color:#fff8eb;margin:0 0 24px;line-height:1.4;max-width:920px}
+#ppa-app #options{display:grid;gap:11px;margin:14px 0 20px}
+#ppa-app .choice{width:100%;text-align:left;padding:16px 18px;border:1px solid #587174;background:#1a2b2f;color:#f1f6f1;font-size:15px;line-height:1.6;min-height:62px;margin:0;border-radius:12px;font-weight:560;white-space:normal}
+#ppa-app .choice:hover:not(:disabled){background:#263f42;border-color:#dfb783;transform:translateY(-1px)}
+#ppa-app .choice.selected{outline:2px solid var(--ppa-accent);outline-offset:0;border-color:var(--ppa-accent);background:#3a362b;color:#fff6e5}
+#ppa-app .choice.correct{background:#174935;border-color:#7ddeac;outline:2px solid #78d5a0;color:#fff}
+#ppa-app .choice.incorrect{background:#5a3235;border-color:#f2a6a5;outline:2px solid #f2a6a5;color:#fff}
+#ppa-app .ppa-question-actions{display:flex;gap:11px;align-items:center;flex-wrap:wrap;border-top:1px solid #44585a;padding-top:18px;margin-top:20px}
+#ppa-app #submit,#ppa-app #next{min-width:180px}
+#ppa-app #feedback{background:#233432;border:1px solid #527566;border-left:4px solid var(--ppa-accent);border-radius:12px;padding:15px 18px;margin:17px 0;color:#e8efed;line-height:1.6}
+#ppa-app #feedback h3{margin:0 0 6px;font-size:17px;color:#fff0d8}
+#ppa-app #feedback p{font-size:13px;color:#e2e9e5;margin:8px 0}
+#ppa-app #feedback small{font-size:11px;color:#b7cfca}
+#ppa-app #figure{background:#111d21;border:1px solid #526667;border-radius:14px;padding:14px;margin:12px 0 18px}
+#ppa-app #figure img{max-width:100%;max-height:460px;object-fit:contain;background:#fff;padding:8px;border-radius:9px}
+#ppa-app #figure a{color:#ffe2ba}
+#ppa-app #results{background:linear-gradient(160deg,#243535,#1a2528);text-align:center}
+#ppa-app #results #summary{font-size:16px;max-width:750px;margin:16px auto}
+#ppa-app #results #again{margin-top:12px;min-width:195px;background:var(--ppa-accent);color:#181c1b;border-color:var(--ppa-accent);font-weight:830}
+#ppa-app #gate{background:#322b26;border-color:#997451}
+#ppa-app #audit-summary{background:#28302c;border-color:#ab845f}
+#ppa-app #audit-stats{font-size:13px}
+#ppa-app #flag.flagged{background:#683f44}
+@media(max-width:840px){
+  #ppa-app .ppa-config-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  main#ppa-app{padding:15px 16px 55px}
+  #ppa-app .ppa-hero{padding:25px}
+}
+@media(max-width:540px){
+  main#ppa-app{padding:12px 11px 40px}
+  #ppa-app .ppa-topbar{align-items:stretch}
+  #ppa-app .ppa-breadcrumb{width:100%;text-align:center}
+  #ppa-app .ppa-hero{padding:23px 18px}
+  #ppa-app .ppa-config-grid{grid-template-columns:1fr}
+  #ppa-app .panel{padding:17px}
+  #ppa-app .ppa-actionbar,#ppa-app .ppa-question-actions{display:grid;grid-template-columns:1fr}
+  #ppa-app #start,#ppa-app #submit,#ppa-app #next{width:100%}
+  #ppa-app .choice{font-size:14px;padding:14px}
+  #ppa-app .meta{align-items:flex-start}
+}
+@media(prefers-reduced-motion:reduce){#ppa-app *{scroll-behavior:auto;transition:none!important;animation:none!important}}
