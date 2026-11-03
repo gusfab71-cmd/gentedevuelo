@@ -45,10 +45,31 @@ assert.match(csv,/'=SUM\(1\+1\)/);
 
 // Academia institucional: permiso de alumno comprobado en servidor y sesión aislada.
 const guard=fs.readFileSync(path.join(__dirname,'../assets/auth-guard.js'),'utf8');
+const sessionSource=fs.readFileSync(path.join(__dirname,'../simulador-ppa/sesion-institucional.js'),'utf8');
+new vm.Script(sessionSource,{filename:'simulador-ppa/sesion-institucional.js'});
+function sessionFor(query){
+ let selected;
+ const client={auth:{getUser:()=>Promise.resolve({data:{user:{id:'test'}},error:null})}};
+ const context={
+  location:{search:query},
+  URLSearchParams,
+  GDV_CONFIG:{url:'https://example.supabase.co',key:'public'},
+  supabase:{createClient:(_url,_key,options)=>{selected=options?.auth?.storageKey||'community';return client}},
+  window:{}
+ };
+ vm.runInNewContext(sessionSource,context);
+ assert.equal(context.window.GDV_AUTH.client,client);
+ return selected;
+}
+const testInstitution='dbbe4bc4-2016-404a-a0a8-241ba7d15e4e';
+assert.equal(sessionFor('?institucion='+testInstitution+'&rol=alumno&prueba=1'),'aerosuite-laboratorio-alumno-v1-auth');
+assert.equal(sessionFor('?institucion='+testInstitution+'&rol=alumno'),'aerosuite-institucional-v2-auth');
+assert.equal(sessionFor('?institucion='+testInstitution+'&rol=piloto&prueba=1'),'community');
+assert.equal(sessionFor('?institucion=malformada&rol=alumno&prueba=1'),'community');
 const operations=fs.readFileSync(path.join(__dirname,'../utilidades/gestion-aeronautica/operaciones-institucionales.html'),'utf8');
 assert.match(guard,/onInstitutionalPpa/);
-assert.match(html,/auth-guard\.js\?v=aerosuite-ppa-alumno-20261103b/);
-assert.match(operations,/ppaUrl\.searchParams\.set\("v","ppa-alumno-20261103b"\)/);
+assert.match(html,/sesion-institucional\.js\?v=ppa-session-isolated-20261103/);
+assert.match(operations,/ppaUrl\.searchParams\.set\("v","ppa-session-isolated-20261103"\)/);
 assert.match(html,/stage='validar el rol Alumno en la institución'/);
 assert.match(guard,/aerosuite-institucional-v2-auth/);
 assert.match(guard,/aerosuite-laboratorio-/);
