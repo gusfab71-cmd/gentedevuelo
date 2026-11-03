@@ -1032,6 +1032,8 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
   // Solo los alumnos de la institución acceden a la práctica educativa PPA.
   if(role==="alumno"){
    const ppaUrl=new URL("../../simulador-ppa/index.html",location.href);
+   // La revisión del HTML asegura cargar el guard institucional actualizado.
+   ppaUrl.searchParams.set("v","ppa-alumno-20261103b");
    ppaUrl.searchParams.set("institucion",inst);
    ppaUrl.searchParams.set("rol","alumno");
    if(labLogin)ppaUrl.searchParams.set("prueba","1");
