@@ -99,6 +99,26 @@ for(const id of ['practice','subject','mode','count','start','exam','question','
  assert.equal((html.match(new RegExp('id="'+id+'"','g'))||[]).length,1,'Elemento único: '+id);
 }
 
+// Alumnos: exactamente dos modalidades, sin acceso al examen de auditoría.
+assert.match(html,/option\[value="exam"\]'\)\.remove\(\)/);
+assert.match(html,/option\[value="review"\]'\)\.remove\(\)/);
+assert.match(html,/option\[value="sequential"\]'\)\.textContent='Todas las preguntas consecutivas'/);
+assert.match(html,/option\[value="practice"\]'\)\.textContent='10 preguntas aleatorias'/);
+assert.match(html,/if\(ppaStudentMode\)\$\('count'\)\.value='10'/);
+assert.match(html,/const desired=ppaStudentMode\?10:Number\(\$\('count'\)\.value\)/);
+assert.match(html,/if\(ppaStudentMode&&!\['practice','sequential'\]\.includes\(option\)\)return/);
+assert.match(html,/exam=AUDIT\.sortByNumber\(reviewBank\)/);
+assert.match(html,/\$\('flag'\)\.classList\.toggle\('hidden',!sequentialMode\|\|ppaStudentMode\)/);
+assert.match(html,/\(ppaStudentMode\?'RECORRIDO COMPLETO FINALIZADO/);
+assert.match(html,/\(ppaStudentMode\?'':' Exportá el informe CSV/);
+assert.match(html,/\$\('ppaSubjectField'\)\.hidden|\['ppaSubjectField','ppaModeField','ppaCountField'\]/);
+const fullBank=Array.from({length:384},(_,i)=>make(384-i,{estado:'pendiente_revision',correcta:i%19===0?null:1}));
+const sequence=audit.sortByNumber(fullBank);
+assert.equal(sequence.length,384,'El recorrido conserva también los registros pendientes o sin clave.');
+assert.equal(audit.numericId(sequence[0]),1);
+assert.equal(audit.numericId(sequence[383]),384);
+assert.equal(sequence.filter(audit.hasKey).length,fullBank.filter(audit.hasKey).length);
+
 // La interfaz debe incluir las dos rutas sin afectar la práctica aleatoria.
 assert.match(html,/<option value="sequential">/);
 assert.match(html,/<option value="practice">/);
