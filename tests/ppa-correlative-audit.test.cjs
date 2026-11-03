@@ -119,7 +119,7 @@ assert.match(html,/const desired=ppaStudentMode\?10:Number\(\$\('count'\)\.value
 assert.match(html,/if\(ppaStudentMode&&!\['practice','sequential'\]\.includes\(option\)\)return/);
 assert.match(html,/exam=AUDIT\.sortByNumber\(reviewBank\)/);
 assert.match(html,/\$\('flag'\)\.classList\.toggle\('hidden',!sequentialMode\|\|ppaStudentMode\)/);
-assert.match(html,/\(ppaStudentMode\?'RECORRIDO COMPLETO FINALIZADO/);
+assert.match(html,/ppaStudentMode\?'Recorrido completo finalizado':'Revisión correlativa finalizada'/);
 assert.match(html,/\(ppaStudentMode\?'':' Exportá el informe CSV/);
 assert.match(html,/\$\('ppaSubjectField'\)\.hidden|\['ppaSubjectField','ppaModeField','ppaCountField'\]/);
 const fullBank=Array.from({length:384},(_,i)=>make(384-i,{estado:'pendiente_revision',correcta:i%19===0?null:1}));
@@ -134,10 +134,24 @@ assert.match(html,/const ANSWER_EXPLOSION_DURATION_SECONDS=2\.60;/);
 assert.match(html,/function playAnswerSound\(\)\{/);
 assert.match(html,/if\(graded\)\{gradedCount\+\+;playAnswerSound\(\)\}/);
 assert.doesNotMatch(html,/playAnswerSound\(ok\)/);
-const audioFunction=html.slice(html.indexOf('function playAnswerSound(){'),html.indexOf('function playResultSound(passed){'));
+const audioFunction=html.slice(html.indexOf('function playAnswerSound(){'),html.indexOf('function figureNumber(q){'));
 assert.match(audioFunction,/blast\.stop\(t\+ANSWER_EXPLOSION_DURATION_SECONDS\)/);
 assert.doesNotMatch(audioFunction,/if\s*\(correct\)/);
 assert.doesNotMatch(audioFunction,/if\s*\(ok\)/);
+
+// El resultado final solo muestra métricas, sin caritas, animaciones ni melodía.
+assert.match(html,/id="results" aria-labelledby="result-heading"/);
+for(const id of ['result-percentage','result-status','result-correct','result-evaluated','result-ungraded','result-caption']){
+ assert.equal((html.match(new RegExp('id="'+id+'"','g'))||[]).length,1,'Métrica final única: '+id);
+}
+assert.match(html,/Math\.round\(100\*points\/gradedCount\)/);
+assert.match(html,/function finishSession\(\)/);
+assert.match(html,/function playAnswerSound\(\)/);
+assert.match(html,/gradedCount\+\+;playAnswerSound\(\)/);
+assert.doesNotMatch(html,/function playResultSound\(/);
+assert.doesNotMatch(html,/result-face|perfect-bonus|faceHappy|faceSad|Piloto feliz|Piloto triste|😄|😞|🎉/);
+assert.match(uiCss,/\.ppa-result-grid/);
+assert.match(uiCss,/\.ppa-result-score/);
 
 // La interfaz debe incluir las dos rutas sin afectar la práctica aleatoria.
 assert.match(html,/<option value="sequential">/);
