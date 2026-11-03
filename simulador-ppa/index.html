@@ -6,7 +6,7 @@
 @keyframes faceHappy{0%{transform:scale(.35) rotate(-18deg);opacity:0}35%{transform:scale(1.23) rotate(12deg);opacity:1}60%{transform:scale(.92) rotate(-7deg)}80%{transform:scale(1.08) rotate(4deg)}100%{transform:scale(1) rotate(0)}}@keyframes faceSad{0%{transform:translateY(-25px) scale(.8);opacity:0}35%{transform:translateY(8px) scale(1.06);opacity:1}60%{transform:translateY(-5px)}100%{transform:translateY(0) scale(1)}}#result-face.happy{animation:faceHappy 1.1s ease-out both}#result-face.sad{animation:faceSad 1.1s ease-out both}@media(prefers-reduced-motion:reduce){#result-face.happy,#result-face.sad{animation:none}}#audit-summary{border-color:#b19a65}#audit-stats strong{color:#ffe4a3}#audit-summary button{background:#34465c}
 #flag{background:#72563a;border-color:#c6a458}#flag.flagged{background:#784452;border-color:#ffb4c0}
 #reset-seq{background:#3b4656}#question-meta{font-size:.94rem;color:#e8d3a3;margin:10px 0}
-</style></head><body><main id="ppa-app" hidden><h1>Gente de Vuelo · Simulador PPA</h1><p>Prueba privada para administración. La práctica con claves históricas es provisional; el examen verificado utiliza únicamente las preguntas revisadas.</p>
+</style></head><body><main id="ppa-app" hidden><h1>Gente de Vuelo · Simulador PPA</h1><p id="ppaIntro">Prueba privada para administración. La práctica con claves históricas es provisional; el examen verificado utiliza únicamente las preguntas revisadas.</p><p id="ppaReturn" hidden><a id="ppaReturnLink" href="../utilidades/gestion-aeronautica/portal-escuela.html">Volver a Academia del Alumno</a></p>
 <div class="panel" id="gate"><h2>Acceso restringido</h2><p>Acceso sujeto a autenticación y a políticas de acceso exclusivas para administración en Supabase.</p><p class="notice">Banco PPA en revisión técnica. Las respuestas mostradas son para pruebas internas; no sustituyen la documentación de ANAC.</p></div>
 <section class="panel"><h2>Configuración</h2><label for="practice">Tipo</label> <select id="practice"><option value="practice">Práctica con puntaje · banco ANAC histórico</option><option value="exam">Examen · solo preguntas verificadas</option><option value="review">Revisar banco · sin puntaje</option><option value="sequential">Revisión correlativa completa · con puntaje provisional</option></select> <label for="subject">Materia</label> <select id="subject"><option value="all">Todas las materias</option></select> <label for="mode">Modalidad</label> <select id="mode"><option value="figure">Con figuras</option><option value="all">Mixto · todas</option><option value="simple">Sin figuras</option></select> <label for="count">Preguntas</label> <select id="count"><option>10</option><option>5</option><option>20</option><option>40</option></select> <button id="start" class="primary">Comenzar práctica</button> <button id="reset-seq" class="hidden">Reiniciar correlativo</button><p id="mode-description" class="notice" aria-live="polite"></p><p id="status" aria-live="polite"></p></section>
 <section class="panel hidden" id="audit-summary"><h2>Auditoría del banco PPA</h2><p id="audit-stats"></p><p class="notice">Las claves históricas y los fundamentos requieren cotejo con ANAC. Los huecos de numeración son indicios a revisar, no prueban por sí solos que falten preguntas.</p><button id="audit-export">Exportar informe CSV</button></section><section class="panel hidden" id="exam"><div class="meta"><strong id="progress"></strong><strong id="score"></strong></div><p id="question-meta"></p><h2 id="question"></h2><div id="figure" class="hidden"></div><div id="options"></div><button id="submit" class="primary" disabled>Responder</button><div id="feedback" class="hidden" aria-live="polite"></div><button id="flag" class="hidden">Marcar para cotejo</button> <button id="next" class="hidden">Siguiente pregunta</button></section>
@@ -19,7 +19,10 @@ const figureDocUrl=page=>ANAC_FIGURE_PDF+'#page='+page+'&zoom=page-width';
 let bank=[],historicalBank=[],reviewBank=[],rawBank=[],exam=[],index=0,points=0,selected=null,answered=false,figureReady=false,gradedCount=0,reviewMode=false,practiceMode=false,sequentialMode=false;
 let sequentialAnswers={},sequentialFlags={},currentAdminId='',sequenceSignature='';
 const AUDIT=window.PPA_AUDIT;
-const seqStorageKey=()=>currentAdminId?'gdv-ppa-admin-correlativo-'+currentAdminId:'';
+const ppaParams=new URLSearchParams(location.search);
+const ppaInstitution=ppaParams.get('institucion')||'';
+const ppaStudentMode=/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(ppaInstitution)&&ppaParams.get('rol')==='alumno';
+const seqStorageKey=()=>currentAdminId?(ppaStudentMode?'gdv-ppa-alumno-correlativo-'+ppaInstitution+'-':'gdv-ppa-admin-correlativo-')+currentAdminId:'';
 function computeSequenceSignature(){
  const data=exam.map(q=>String(q.id)+'/'+String(q.correcta)+'/'+String(q.pregunta)).join('|');
  let hash=2166136261;
@@ -214,7 +217,8 @@ function describeMode(){
  const sequential=option==='sequential';
  $('start').textContent=sequential?'Comenzar / continuar revisión':option==='review'?'Comenzar revisión':option==='exam'?'Comenzar examen':'Comenzar práctica';
  $('reset-seq').classList.toggle('hidden',!sequential);
- for(const id of ['subject','mode','count'])$(id).disabled=sequential;
+ for(const id of ['subject','mode','count'])$(id).disabled=sequential||(ppaStudentMode&&option==='exam'&&id==='count');
+ if(ppaStudentMode&&option==='exam')$('count').value='10';
  $('mode-description').textContent=option==='practice'?
   'Práctica aleatoria puntuable (+1 por acierto) con claves históricas ANAC todavía pendientes de revisión.':
   option==='exam'?'Examen puntuable solo con respuestas y fundamentos marcados como verificados.':
@@ -249,7 +253,8 @@ async function load(){
   $('mode').onchange=describeMode;
   $('audit-export').onclick=exportAuditCsv;
   $('start').disabled=!reviewBank.length;
-  updateAuditSummary();describeMode();
+  if(!ppaStudentMode)updateAuditSummary();
+  describeMode();
   const questionId=new URLSearchParams(location.search).get('pregunta');
   if(questionId){
    const target=reviewBank.find(q=>q.id===questionId);
@@ -325,11 +330,20 @@ $('start').onclick=()=>{
  }
  const activeBank=reviewMode?reviewBank:practiceMode?historicalBank:bank;
  const filtered=activeBank.filter(q=>($('subject').value==='all'||q.materia===$('subject').value)&&($('mode').value==='all'||($('mode').value==='figure'?needsFigure(q):!needsFigure(q))));
- if(!filtered.length){$('status').textContent='No hay preguntas para esta combinación. Podés cambiar el tipo, materia o modalidad.';return}
+ const desired=Number($('count').value);
+ if(filtered.length<desired){
+  $('status').textContent='No hay suficientes preguntas: '+filtered.length+' disponibles para '+desired+' solicitadas. Elegí otra modalidad o cantidad.';
+  return;
+ }
  const prefix=reviewMode?'review:':practiceMode?'practice:':'exam:';
  let available=shuffle(filtered.filter(q=>!usedQuestionIds.has(prefix+q.id))),newCycle=false;
- if(!available.length){filtered.forEach(q=>usedQuestionIds.delete(prefix+q.id));available=shuffle(filtered);newCycle=true}
- exam=available.slice(0,Number($('count').value));
+ if(available.length<desired){
+  const unseen=new Set(available.map(q=>q.id));
+  available.push(...shuffle(filtered.filter(q=>!unseen.has(q.id))).slice(0,desired-available.length));
+  filtered.forEach(q=>usedQuestionIds.delete(prefix+q.id));
+  newCycle=true;
+ }
+ exam=available.slice(0,desired);
  exam.forEach(q=>usedQuestionIds.add(prefix+q.id));
  $('status').textContent=(reviewMode?'Revisión':practiceMode?'Práctica histórica':'Examen verificado')+' preparada: '+exam.length+' pregunta(s). '+(newCycle?'Nuevo ciclo al agotarse las preguntas. ':'')+(practiceMode?'Las respuestas y el puntaje son provisionales.':'');
  index=0;points=0;gradedCount=0;
@@ -384,14 +398,15 @@ function finishSession(){
   }else $('summary').textContent='Revisión completada: '+exam.length+' preguntas consultadas, sin puntaje.';
   return;
  }
- const passed=gradedCount>0&&points/gradedCount>=0.7;
+ // No aprobar sesiones incompletas o con preguntas sin calificar.
+ const passed=gradedCount===exam.length&&exam.length>0&&points/gradedCount>=0.7;
  const perfect=exam.length===10&&points===10&&gradedCount===10;
  $('perfect-bonus').classList.toggle('hidden',!perfect);
  $('result-face').className='result-face '+(passed?'happy':'sad');
  $('result-face').textContent=passed?'😄':'😞';
  $('result-face').setAttribute('aria-label',passed?'Piloto feliz':'Piloto triste');
  playResultSound(passed);
- $('summary').textContent=(practiceMode?'PRÁCTICA HISTÓRICA · PUNTAJE PROVISIONAL. ':'EXAMEN VERIFICADO. ')+points+' de '+gradedCount+' respuestas correctas. '+(practiceMode?'Las claves históricas deben cotejarse antes de considerarlas definitivas.':'Resultados de las preguntas verificadas en el banco.');
+ $('summary').textContent=(practiceMode?'PRÁCTICA HISTÓRICA · PUNTAJE PROVISIONAL. ':'EXAMEN VERIFICADO. ')+points+' de '+gradedCount+' respuestas correctas. '+(gradedCount!==exam.length?'Evaluación incompleta: no se considera aprobada. ':'')+(practiceMode?'Las claves históricas deben cotejarse antes de considerarlas definitivas. No equivale a un examen oficial.':'Resultados de las preguntas verificadas en el banco.');
 }
 $('next').onclick=()=>{
  if(sequentialMode&&exam[index]&&!sequentialAnswers[exam[index].id])
@@ -421,5 +436,38 @@ $('again').onclick=()=>{
  $('results').classList.add('hidden');$('exam').classList.add('hidden');
  $('practice').focus();
 };
-(async()=>{try{await window.GDV_AUTH.ready;const client=window.GDV_AUTH.client;const {data:{user},error}=await client.auth.getUser();if(error||!user)throw Error("Acceso denegado");const {data,error:roleError}=await client.from("site_admins").select("user_id").eq("user_id",user.id).maybeSingle();if(roleError||!data)throw Error("Solo administrador");currentAdminId=user.id;$("ppa-app").hidden=false;load()}catch(e){document.body.textContent="Simulador PPA: acceso exclusivo del administrador."}})();
+(async()=>{
+ try{
+  await window.GDV_AUTH.ready;
+  const client=window.GDV_AUTH.client;
+  const {data:{user},error}=await client.auth.getUser();
+  if(error||!user)throw Error("Acceso denegado");
+  if(ppaStudentMode){
+   const {data:institutions,error:accessError}=await client.rpc("aerosuite_my_institution_access_v2");
+   if(accessError||!(institutions||[]).some(x=>x.institution_id===ppaInstitution&&x.my_role==='alumno'&&x.can_access===true)){
+    throw Error("No tenés acceso como alumno a esta institución.");
+   }
+   $('ppaIntro').textContent='Práctica educativa PPA. Algunas claves históricas y fundamentos siguen en revisión: tu puntaje es provisional y no equivale a un examen oficial de ANAC.';
+   $('gate').classList.add('hidden');
+   $('practice').querySelector('option[value="review"]').remove();
+   $('practice').querySelector('option[value="sequential"]').remove();
+   $('mode').value='all';
+   const returnUrl=new URL('../utilidades/gestion-aeronautica/operaciones-institucionales.html',location.href);
+   returnUrl.searchParams.set('institucion',ppaInstitution);
+   returnUrl.searchParams.set('rol','alumno');
+   if(ppaParams.get('prueba')==='1')returnUrl.searchParams.set('prueba','1');
+   returnUrl.hash='recursos';
+   $('ppaReturnLink').href=returnUrl.href;
+   $('ppaReturn').hidden=false;
+  }else{
+   const {data,error:roleError}=await client.from("site_admins").select("user_id").eq("user_id",user.id).maybeSingle();
+   if(roleError||!data)throw Error("Solo administrador");
+  }
+  currentAdminId=user.id;
+  $("ppa-app").hidden=false;
+  await load();
+ }catch(e){
+  document.body.textContent='Simulador PPA: acceso denegado. Entrá desde la Academia de tu institución o con una cuenta administradora.';
+ }
+})();
 </script></body></html>

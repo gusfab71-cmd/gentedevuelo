@@ -18,9 +18,13 @@
   // El perfil AeroSuite se reutiliza desde el portal institucional sin exigir
   // una sesión distinta de la comunidad. Solo esta ruta permite el modo institucional.
   const institutionalParams=new URLSearchParams(location.search);
-  const onInstitutionalProfile=location.pathname.endsWith('/utilidades/gestion-aeronautica/mi-ficha-alumno.html') &&
-   /^[a-f0-9]{8}-[a-f0-9-]{27,}$/i.test(institutionalParams.get('institucion')||'');
-  if(onInstitutionalProfile){
+  const institutionalUuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    .test(institutionalParams.get('institucion')||'');
+  const onInstitutionalProfile=location.pathname.endsWith('/utilidades/gestion-aeronautica/mi-ficha-alumno.html') && institutionalUuid;
+  // El simulador PPA institucional reutiliza la sesión de Alumno de AeroSuite, nunca la sesión comunitaria.
+  const onInstitutionalPpa=location.pathname.endsWith('/simulador-ppa/index.html') &&
+    institutionalUuid && institutionalParams.get('rol')==='alumno';
+  if(onInstitutionalProfile||onInstitutionalPpa){
     const role=institutionalParams.get('rol')||'';
     const lab=institutionalParams.get('prueba')==='1'&&
       ['alumno','instructor','administrador','secretaria','piloto'].includes(role);
