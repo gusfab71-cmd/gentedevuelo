@@ -119,7 +119,7 @@ assert.match(html,/const desired=ppaStudentMode\?10:Number\(\$\('count'\)\.value
 assert.match(html,/if\(ppaStudentMode&&!\['practice','sequential'\]\.includes\(option\)\)return/);
 assert.match(html,/exam=AUDIT\.sortByNumber\(reviewBank\)/);
 assert.match(html,/\$\('flag'\)\.classList\.toggle\('hidden',!sequentialMode\|\|ppaStudentMode\)/);
-assert.match(html,/\(ppaStudentMode\?'RECORRIDO COMPLETO FINALIZADO/);
+assert.match(html,/ppaStudentMode\?'Recorrido completo finalizado':'Revisión correlativa finalizada'/);
 assert.match(html,/\(ppaStudentMode\?'':' Exportá el informe CSV/);
 assert.match(html,/\$\('ppaSubjectField'\)\.hidden|\['ppaSubjectField','ppaModeField','ppaCountField'\]/);
 const fullBank=Array.from({length:384},(_,i)=>make(384-i,{estado:'pendiente_revision',correcta:i%19===0?null:1}));
