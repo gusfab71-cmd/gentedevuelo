@@ -84,6 +84,21 @@ assert.match(html,/filtered\.length<desired/);
 assert.match(html,/gradedCount===exam\.length&&exam\.length>0/);
 assert.match(html,/No equivale a un examen oficial|no equivale a un examen oficial/);
 
+// Diseño inspirado en Flight Operations, sin cambiar la lógica de examen.
+const uiCss=fs.readFileSync(path.join(__dirname,'../simulador-ppa/estilo-flight-operations.css'),'utf8');
+assert.match(html,/<title>Simulador Examen PPA<\/title>/);
+assert.match(html,/<h1>Simulador Examen PPA<\/h1>/);
+assert.match(html,/estilo-flight-operations\.css/);
+assert.match(html,/id="ppaProgressTrack"/);
+assert.match(html,/function updateProgressVisual\(\)/);
+assert.match(html,/class="ppa-config-grid"/);
+assert.match(uiCss,/\.ppa-config-grid/);
+assert.match(uiCss,/\.ppa-hero/);
+assert.match(uiCss,/@media\(max-width:540px\)/);
+for(const id of ['practice','subject','mode','count','start','exam','question','options','submit','feedback','next','results']){
+ assert.equal((html.match(new RegExp('id="'+id+'"','g'))||[]).length,1,'Elemento único: '+id);
+}
+
 // La interfaz debe incluir las dos rutas sin afectar la práctica aleatoria.
 assert.match(html,/<option value="sequential">/);
 assert.match(html,/<option value="practice">/);
