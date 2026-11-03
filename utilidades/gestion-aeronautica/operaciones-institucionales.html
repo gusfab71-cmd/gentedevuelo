@@ -882,6 +882,11 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     <p class="hint">Compartido exclusivamente con los integrantes de la institución. No subas datos personales innecesarios de alumnos.</p>
     <button class="primary" id="academySubmit" type="submit" style="margin-top:12px">Publicar en la Academia</button>
    </form>
+   <section class="list-item" id="ppaSimulatorCard" hidden aria-label="Simulador PPA">
+    <div class="row between"><strong>Simulador de Examen PPA</strong><span class="hint">Práctica educativa</span></div>
+    <p class="hint">Resolvé preguntas de preparación PPA y consultá las explicaciones. El banco de respuestas históricas sigue en revisión; el puntaje de práctica es provisional y no reemplaza un examen oficial de ANAC.</p>
+    <a id="ppaSimulatorLink" class="primary" href="#" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:11px 16px;border-radius:9px;text-decoration:none">Abrir simulador PPA</a>
+   </section>
    <p class="hint" id="academyStatus" role="status">Consultando biblioteca institucional…</p>
    <h3>Material disponible</h3><div class="list" id="academyList"></div>
   </section>
@@ -1023,6 +1028,15 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    $("studentFlightHours").hidden=false;
    $("pilotRavPanel").hidden=role!=="piloto";
    $("packsArea").hidden=true;
+  }
+  // Solo los alumnos de la institución acceden a la práctica educativa PPA.
+  if(role==="alumno"){
+   const ppaUrl=new URL("../../simulador-ppa/index.html",location.href);
+   ppaUrl.searchParams.set("institucion",inst);
+   ppaUrl.searchParams.set("rol","alumno");
+   if(labLogin)ppaUrl.searchParams.set("prueba","1");
+   $("ppaSimulatorLink").href=ppaUrl.href;
+   $("ppaSimulatorCard").hidden=false;
   }
   // Instructor sin accesos económicos, alumno solo a su historial de horas.
   $("academyForm").hidden=!(role==="administrador"||role==="instructor")||!school.can_write;
