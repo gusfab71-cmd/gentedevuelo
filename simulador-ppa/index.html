@@ -21,12 +21,12 @@
 <section class="panel" id="ppa-configuracion" aria-labelledby="configTitle">
  <div class="ppa-panel-head"><h2 id="configTitle">Configuración</h2><p class="ppa-panel-note">Elegí cómo querés practicar</p></div>
  <div class="ppa-config-grid">
-  <label class="ppa-field" for="practice">Tipo
+  <label class="ppa-field" for="practice">Modalidad de práctica
    <select id="practice"><option value="practice">Práctica con puntaje · banco ANAC histórico</option><option value="exam">Examen · solo preguntas verificadas</option><option value="review">Revisar banco · sin puntaje</option><option value="sequential">Revisión correlativa completa · con puntaje provisional</option></select>
   </label>
-  <label class="ppa-field" for="subject">Materia<select id="subject"><option value="all">Todas las materias</option></select></label>
-  <label class="ppa-field" for="mode">Modalidad<select id="mode"><option value="figure">Con figuras</option><option value="all">Mixto · todas</option><option value="simple">Sin figuras</option></select></label>
-  <label class="ppa-field" for="count">Preguntas<select id="count"><option>10</option><option>5</option><option>20</option><option>40</option></select></label>
+  <label class="ppa-field" id="ppaSubjectField" for="subject">Materia<select id="subject"><option value="all">Todas las materias</option></select></label>
+  <label class="ppa-field" id="ppaModeField" for="mode">Tipo de preguntas<select id="mode"><option value="figure">Con figuras</option><option value="all">Mixto · todas</option><option value="simple">Sin figuras</option></select></label>
+  <label class="ppa-field" id="ppaCountField" for="count">Cantidad de preguntas<select id="count"><option>10</option><option>5</option><option>20</option><option>40</option></select></label>
  </div>
  <div class="ppa-actionbar"><button id="start" class="primary">Comenzar práctica</button><button id="reset-seq" class="hidden">Reiniciar correlativo</button></div>
  <p id="mode-description" class="notice" aria-live="polite"></p><p id="status" role="status" aria-live="polite"></p>
@@ -92,8 +92,8 @@ function exportAuditCsv(){
  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),500);
 }
 function updateFlagLabel(){
- $('flag').classList.toggle('hidden',!sequentialMode);
- if(!sequentialMode)return;
+ $('flag').classList.toggle('hidden',!sequentialMode||ppaStudentMode);
+ if(!sequentialMode||ppaStudentMode)return;
  const flagged=Boolean(sequentialFlags[exam[index]?.id]);
  $('flag').textContent=flagged?'Observación registrada · editar':'Marcar para cotejo';
  $('flag').classList.toggle('flagged',flagged);
@@ -113,7 +113,10 @@ function answerNoise(ctx){
  answerNoiseBuffer=buffer;
  return buffer;
 }
-function playAnswerSound(correct){
+// El mismo efecto de explosión suena para un acierto o un error.
+// Duración única (2,60 segundos); la evaluación se muestra únicamente con texto y colores.
+const ANSWER_EXPLOSION_DURATION_SECONDS=2.60;
+function playAnswerSound(){
  try{
   const AudioCtx=window.AudioContext||window.webkitAudioContext;
   if(!AudioCtx)return;
@@ -121,81 +124,42 @@ function playAnswerSound(correct){
   const ctx=audioContext;
   if(ctx.state==='suspended')ctx.resume().catch(()=>{});
   const t=ctx.currentTime+.015;
-  // Moderate master volume for both effects; every generator stops itself.
   const master=ctx.createGain();master.gain.value=.42;
   master.connect(ctx.destination);
   activeAnswerMaster=master;
   const sound=ctx.createGain();
-  if(correct){
-   // Airplane flyby: a pulsing propeller engine, Doppler pitch shift,
-   // swept wind noise and (if supported) movement from left to right.
-   sound.gain.setValueAtTime(.0001,t);
-   sound.gain.exponentialRampToValueAtTime(.72,t+.72);
-   sound.gain.exponentialRampToValueAtTime(.0001,t+2.68);
-   if(typeof ctx.createStereoPanner==='function'){
-    const pan=ctx.createStereoPanner();
-    pan.pan.setValueAtTime(-.85,t);
-    pan.pan.linearRampToValueAtTime(.85,t+2.68);
-    sound.connect(pan);pan.connect(master);
-   }else sound.connect(master);
-   const engine=ctx.createOscillator();
-   engine.type='sawtooth';
-   engine.frequency.setValueAtTime(168,t);
-   engine.frequency.exponentialRampToValueAtTime(94,t+2.68);
-   const engineFilter=ctx.createBiquadFilter();engineFilter.type='lowpass';
-   engineFilter.frequency.setValueAtTime(930,t);
-   engineFilter.frequency.exponentialRampToValueAtTime(380,t+2.68);
-   const engineGain=ctx.createGain();engineGain.gain.value=.18;
-   const pulse=ctx.createOscillator();pulse.type='sine';
-   pulse.frequency.setValueAtTime(26,t);
-   pulse.frequency.linearRampToValueAtTime(17,t+2.68);
-   const pulseDepth=ctx.createGain();pulseDepth.gain.value=.09;
-   pulse.connect(pulseDepth);pulseDepth.connect(engineGain.gain);
-   engine.connect(engineFilter);engineFilter.connect(engineGain);engineGain.connect(sound);
-   engine.start(t);engine.stop(t+2.70);
-   pulse.start(t);pulse.stop(t+2.70);
-   const wind=ctx.createBufferSource();wind.buffer=answerNoise(ctx);
-   const windFilter=ctx.createBiquadFilter();windFilter.type='bandpass';windFilter.Q.value=.65;
-   windFilter.frequency.setValueAtTime(1150,t);
-   windFilter.frequency.exponentialRampToValueAtTime(390,t+2.68);
-   const windGain=ctx.createGain();windGain.gain.value=.22;
-   wind.connect(windFilter);windFilter.connect(windGain);windGain.connect(sound);
-   wind.start(t);wind.stop(t+2.70);
-  }else{
-   // Longer stylized explosion: a short crack, downward thump, and extended fading rumble.
-   sound.gain.setValueAtTime(.8,t);
-   sound.connect(master);
-   const blast=ctx.createBufferSource();blast.buffer=answerNoise(ctx);
-   const blastFilter=ctx.createBiquadFilter();blastFilter.type='lowpass';
-   blastFilter.frequency.setValueAtTime(2400,t);
-   blastFilter.frequency.exponentialRampToValueAtTime(115,t+2.55);
-   const blastGain=ctx.createGain();
-   blastGain.gain.setValueAtTime(.0001,t);
-   blastGain.gain.linearRampToValueAtTime(.7,t+.018);
-   blastGain.gain.exponentialRampToValueAtTime(.0001,t+2.55);
-   blast.connect(blastFilter);blastFilter.connect(blastGain);blastGain.connect(sound);
-   blast.start(t);blast.stop(t+2.60);
-   const crack=ctx.createBufferSource();crack.buffer=answerNoise(ctx);
-   const crackFilter=ctx.createBiquadFilter();crackFilter.type='highpass';crackFilter.frequency.value=1300;
-   const crackGain=ctx.createGain();
-   crackGain.gain.setValueAtTime(.0001,t);
-   crackGain.gain.linearRampToValueAtTime(.28,t+.008);
-   crackGain.gain.exponentialRampToValueAtTime(.0001,t+.16);
-   crack.connect(crackFilter);crackFilter.connect(crackGain);crackGain.connect(sound);
-   crack.start(t);crack.stop(t+.17);
-   const thud=ctx.createOscillator();thud.type='triangle';
-   thud.frequency.setValueAtTime(108,t);
-   thud.frequency.exponentialRampToValueAtTime(38,t+1.65);
-   const thudGain=ctx.createGain();
-   thudGain.gain.setValueAtTime(.0001,t);
-   thudGain.gain.linearRampToValueAtTime(.55,t+.025);
-   thudGain.gain.exponentialRampToValueAtTime(.0001,t+1.70);
-   thud.connect(thudGain);thudGain.connect(sound);
-   thud.start(t);thud.stop(t+1.72);
-  }
- }catch(e){/* El examen sigue funcionando aunque el navegador bloquee audio. */}
+  // Explosión: estampido breve, golpe grave y retumbo final.
+  sound.gain.setValueAtTime(.8,t);
+  sound.connect(master);
+  const blast=ctx.createBufferSource();blast.buffer=answerNoise(ctx);
+  const blastFilter=ctx.createBiquadFilter();blastFilter.type='lowpass';
+  blastFilter.frequency.setValueAtTime(2400,t);
+  blastFilter.frequency.exponentialRampToValueAtTime(115,t+2.55);
+  const blastGain=ctx.createGain();
+  blastGain.gain.setValueAtTime(.0001,t);
+  blastGain.gain.linearRampToValueAtTime(.7,t+.018);
+  blastGain.gain.exponentialRampToValueAtTime(.0001,t+2.55);
+  blast.connect(blastFilter);blastFilter.connect(blastGain);blastGain.connect(sound);
+  blast.start(t);blast.stop(t+ANSWER_EXPLOSION_DURATION_SECONDS);
+  const crack=ctx.createBufferSource();crack.buffer=answerNoise(ctx);
+  const crackFilter=ctx.createBiquadFilter();crackFilter.type='highpass';crackFilter.frequency.value=1300;
+  const crackGain=ctx.createGain();
+  crackGain.gain.setValueAtTime(.0001,t);
+  crackGain.gain.linearRampToValueAtTime(.28,t+.008);
+  crackGain.gain.exponentialRampToValueAtTime(.0001,t+.16);
+  crack.connect(crackFilter);crackFilter.connect(crackGain);crackGain.connect(sound);
+  crack.start(t);crack.stop(t+.17);
+  const thud=ctx.createOscillator();thud.type='triangle';
+  thud.frequency.setValueAtTime(108,t);
+  thud.frequency.exponentialRampToValueAtTime(38,t+1.65);
+  const thudGain=ctx.createGain();
+  thudGain.gain.setValueAtTime(.0001,t);
+  thudGain.gain.linearRampToValueAtTime(.55,t+.025);
+  thudGain.gain.exponentialRampToValueAtTime(.0001,t+1.70);
+  thud.connect(thudGain);thudGain.connect(sound);
+  thud.start(t);thud.stop(t+1.72);
+ }catch(e){/* El examen funciona aunque el navegador bloquee el audio. */}
 }
-
 function playResultSound(passed){
  try{
   const AudioCtx=window.AudioContext||window.webkitAudioContext;
@@ -244,6 +208,24 @@ const hasImage=q=>localFigure(q)||/^https:\/\/[^ ]+\.(png|jpe?g|webp)$/i.test(q.
 function describeMode(){
  const option=$('practice').value;
  const sequential=option==='sequential';
+ if(ppaStudentMode){
+  // Academia del Alumno: únicamente tandas de 10 o el banco completo en orden.
+  $('count').value='10';
+  $('count').disabled=true;
+  for(const id of ['ppaSubjectField','ppaModeField','ppaCountField'])$(id).hidden=sequential;
+  $('subject').disabled=sequential;
+  $('mode').disabled=sequential;
+  $('start').textContent=sequential?'Comenzar / continuar recorrido completo':'Comenzar 10 preguntas';
+  $('reset-seq').classList.toggle('hidden',!sequential);
+  $('reset-seq').textContent='Reiniciar recorrido';
+  $('mode-description').textContent=sequential?
+   'Todas las preguntas del banco, de la primera a la última, en orden numérico. El avance se guarda al pasar de pregunta; podés continuar en otro momento. Las respuestas históricas siguen en revisión.':
+   'Prácticas de 10 preguntas aleatorias. Cada tanda obtiene un puntaje provisional; las claves históricas todavía requieren cotejo con ANAC.';
+  $('status').textContent=sequential?
+   'Banco completo: '+reviewBank.length+' preguntas consecutivas, incluidas las que todavía no tienen clave válida.':
+   'Tandas de 10: '+historicalBank.length+' preguntas con clave histórica disponibles.';
+  return;
+ }
  $('start').textContent=sequential?'Comenzar / continuar revisión':option==='review'?'Comenzar revisión':option==='exam'?'Comenzar examen':'Comenzar práctica';
  $('reset-seq').classList.toggle('hidden',!sequential);
  for(const id of ['subject','mode','count'])$(id).disabled=sequential||(ppaStudentMode&&option==='exam'&&id==='count');
@@ -285,7 +267,7 @@ async function load(){
   if(!ppaStudentMode)updateAuditSummary();
   describeMode();
   const questionId=new URLSearchParams(location.search).get('pregunta');
-  if(questionId){
+  if(questionId&&!ppaStudentMode){
    const target=reviewBank.find(q=>q.id===questionId);
    if(target){
     practiceMode=historicalBank.some(q=>q.id===questionId)&&!bank.some(q=>q.id===questionId);
@@ -336,7 +318,7 @@ if(requiresFigure){
 const originalNumber=q.pregunta.match(/^\s*(\d+)\s*[.\-–]/);
 const idNumber=AUDIT.numericId(q);
 $('progress').textContent=(idNumber!==null?'ANAC N.º '+idNumber:originalNumber?'ANAC N.º '+originalNumber[1]:'Registro '+q.id)+' · Pregunta '+(index+1)+' de '+exam.length;
-$('score').textContent=reviewMode?'Revisión · sin puntos':sequentialMode?'Correlativo: '+points+' puntos / '+gradedCount+' calificadas':practiceMode?'Práctica: '+points+' puntos (provisionales)':'Puntos: '+points;
+$('score').textContent=reviewMode?'Revisión · sin puntos':sequentialMode?(ppaStudentMode?'Recorrido completo: ':'Correlativo: ')+points+' puntos provisionales / '+gradedCount+' calificadas':practiceMode?'Práctica: '+points+' puntos (provisionales)':'Puntos: '+points;
 $('question-meta').textContent=sequentialMode?'Registro '+q.id+' · '+q.materia+' · Estado: '+q.estado+' · '+(hasValidKey(q)?'Clave histórica disponible':'SIN CLAVE VÁLIDA'):'';
 $('question').textContent=q.pregunta;
 $('options').replaceChildren();
@@ -358,19 +340,21 @@ if(q.opciones.length<2){
 }
 $('start').onclick=()=>{
  const option=$('practice').value;
+ if(ppaStudentMode&&!['practice','sequential'].includes(option))return;
+ if(ppaStudentMode)$('count').value='10';
  reviewMode=option==='review';practiceMode=option==='practice';sequentialMode=option==='sequential';
  if(sequentialMode){
   exam=AUDIT.sortByNumber(reviewBank);
   sequenceSignature=computeSequenceSignature();
   resumeSequential();
-  $('status').textContent='Revisión correlativa: '+exam.length+' registros. '+(index?'Retomando desde el número '+(AUDIT.numericId(exam[Math.min(index,exam.length-1)])??exam[Math.min(index,exam.length-1)].id)+'. ':'')+'Las claves sin validar proporcionan puntaje provisional.';
+  $('status').textContent=(ppaStudentMode?'Recorrido completo: ':'Revisión correlativa: ')+exam.length+' registros. '+(index?'Retomando desde el número '+(AUDIT.numericId(exam[Math.min(index,exam.length-1)])??exam[Math.min(index,exam.length-1)].id)+'. ':'')+'Las claves sin validar proporcionan puntaje provisional.';
   if(index>=exam.length){finishSession();return}
   $('results').classList.add('hidden');$('exam').classList.remove('hidden');show();
   return;
  }
  const activeBank=reviewMode?reviewBank:practiceMode?historicalBank:bank;
  const filtered=activeBank.filter(q=>($('subject').value==='all'||q.materia===$('subject').value)&&($('mode').value==='all'||($('mode').value==='figure'?needsFigure(q):!needsFigure(q))));
- const desired=Number($('count').value);
+ const desired=ppaStudentMode?10:Number($('count').value);
  if(filtered.length<desired){
   $('status').textContent='No hay suficientes preguntas: '+filtered.length+' disponibles para '+desired+' solicitadas. Elegí otra modalidad o cantidad.';
   return;
@@ -401,14 +385,14 @@ $('submit').onclick=()=>{
  const graded=!reviewMode&&hasValidKey(q)&&(!needsFigure(q)||figureReady);
  const ok=graded&&selected===q.correcta;
  if(ok)points++;
- if(graded){gradedCount++;playAnswerSound(ok)}
+ if(graded){gradedCount++;playAnswerSound()}
  if(sequentialMode)sequentialAnswers[q.id]={selected,attempted:true,graded,correct:ok};
  document.querySelectorAll('.choice').forEach((b,i)=>{
   b.disabled=true;
   if(graded&&i===q.correcta)b.classList.add('correct');
   else if(graded&&i===selected&&!ok)b.classList.add('incorrect');
  });
- $('score').textContent=reviewMode?'Revisión · sin puntos':sequentialMode?'Correlativo: '+points+' puntos / '+gradedCount+' calificadas':practiceMode?'Práctica: '+points+' puntos (provisionales)':'Puntos: '+points;
+ $('score').textContent=reviewMode?'Revisión · sin puntos':sequentialMode?(ppaStudentMode?'Recorrido completo: ':'Correlativo: ')+points+' puntos provisionales / '+gradedCount+' calificadas':practiceMode?'Práctica: '+points+' puntos (provisionales)':'Puntos: '+points;
  const f=$('feedback');f.replaceChildren();
  const heading=document.createElement('h3');
  heading.textContent=reviewMode?'Revisión del banco · sin puntaje':!graded?(!hasValidKey(q)?'SIN CLAVE VÁLIDA · sin puntaje':'Figura no disponible · sin puntaje'):ok?'Correcto según clave · +1 punto':'Incorrecto según clave · +0 puntos';
@@ -434,9 +418,10 @@ function finishSession(){
   $('result-face').className='result-face';$('result-face').textContent='';
   if(sequentialMode){
    const reviewed=Object.keys(sequentialAnswers).filter(id=>sequentialAnswers[id]?.attempted).length;
-   $('summary').textContent='REVISIÓN CORRELATIVA COMPLETADA · '+reviewed+' de '+exam.length+
-    ' registros recorridos. '+points+' puntos en '+gradedCount+' preguntas calificables. '+
-    (reviewed-gradedCount)+' registros sin calificar. El puntaje es provisional porque las claves históricas requieren cotejo oficial. Exportá el informe CSV para verificar cada registro.';
+   $('summary').textContent=(ppaStudentMode?'RECORRIDO COMPLETO FINALIZADO · ':'REVISIÓN CORRELATIVA COMPLETADA · ')+reviewed+' de '+exam.length+
+    ' preguntas recorridas. '+points+' puntos en '+gradedCount+' preguntas calificables. '+
+    (reviewed-gradedCount)+' preguntas sin calificar. El puntaje es provisional porque las claves históricas requieren cotejo oficial.'+
+    (ppaStudentMode?'':' Exportá el informe CSV para verificar cada registro.');
   }else $('summary').textContent='Revisión completada: '+exam.length+' preguntas consultadas, sin puntaje.';
   return;
  }
@@ -459,7 +444,7 @@ $('next').onclick=()=>{
  finishSession();
 };
 $('flag').onclick=()=>{
- if(!sequentialMode||!exam[index])return;
+ if(!sequentialMode||ppaStudentMode||!exam[index])return;
  const id=exam[index].id,prev=sequentialFlags[id]||'';
  const note=prompt('Observación para cotejar con ANAC. Dejá el campo vacío para retirar la marca:',prev);
  if(note===null)return;
@@ -469,7 +454,9 @@ $('flag').onclick=()=>{
  saveSequential();
 };
 $('reset-seq').onclick=()=>{
- if(!confirm('¿Reiniciar la revisión correlativa desde la primera pregunta y borrar el puntaje y las marcas guardadas en este navegador?'))return;
+ if(!confirm(ppaStudentMode?
+  '¿Reiniciar todo el recorrido y borrar el avance guardado en este navegador?':
+  '¿Reiniciar la revisión correlativa desde la primera pregunta y borrar el puntaje y las marcas guardadas en este navegador?'))return;
  try{localStorage.removeItem(seqStorageKey())}catch(_){}
  sequentialAnswers={};sequentialFlags={};points=0;gradedCount=0;index=0;
  $('practice').value='sequential';$('start').click();
@@ -494,7 +481,11 @@ $('again').onclick=()=>{
    $('ppaIntro').textContent='Práctica educativa PPA. Algunas claves históricas y fundamentos siguen en revisión: tu puntaje es provisional y no equivale a un examen oficial de ANAC.';
    $('gate').classList.add('hidden');
    $('practice').querySelector('option[value="review"]').remove();
-   $('practice').querySelector('option[value="sequential"]').remove();
+   $('practice').querySelector('option[value="exam"]').remove();
+   $('practice').querySelector('option[value="practice"]').textContent='10 preguntas aleatorias';
+   $('practice').querySelector('option[value="sequential"]').textContent='Todas las preguntas consecutivas';
+   $('practice').value='practice';
+   $('count').replaceChildren(new Option('10','10'));
    $('mode').value='all';
    const returnUrl=new URL('../utilidades/gestion-aeronautica/operaciones-institucionales.html',location.href);
    returnUrl.searchParams.set('institucion',ppaInstitution);
