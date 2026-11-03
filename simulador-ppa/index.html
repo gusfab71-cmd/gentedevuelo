@@ -74,7 +74,7 @@ const ppaInstitution=ppaParams.get('institucion')||'';
 const ppaStudentMode=/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(ppaInstitution)&&ppaParams.get('rol')==='alumno';
 const seqStorageKey=()=>currentAdminId?(ppaStudentMode?'gdv-ppa-alumno-correlativo-'+ppaInstitution+'-':'gdv-ppa-admin-correlativo-')+currentAdminId:'';
 function computeSequenceSignature(){
- const data=exam.map(q=>String(q.id)+'/'+String(q.correcta)+'/'+String(q.pregunta)).join('|');
+ const data=exam.map(q=>String(q.id)+'/'+String(q.correcta)).join('|');
  let hash=2166136261;
  for(let j=0;j<data.length;j++){hash^=data.charCodeAt(j);hash=Math.imul(hash,16777619)}
  return data.length+'-'+(hash>>>0).toString(16);
@@ -87,7 +87,7 @@ function resumeSequential(){
  sequentialAnswers={};sequentialFlags={};index=0;points=0;gradedCount=0;
  try{
   const saved=JSON.parse(localStorage.getItem(seqStorageKey())||'null');
-  if(saved&&(saved.version===sequenceSignature||saved.version==='384-65ca5fbd')&&saved.answers&&typeof saved.answers==='object'&&saved.flags&&typeof saved.flags==='object'){
+  if(saved&&[sequenceSignature,'47312-65ca5fbd','46934-7f2d9ca3','384-65ca5fbd'].includes(saved.version)&&saved.answers&&typeof saved.answers==='object'&&saved.flags&&typeof saved.flags==='object'){
    sequentialAnswers=saved.answers;sequentialFlags=saved.flags;
    index=Math.max(0,Math.min(exam.length,Math.floor(Number(saved.cursor)||0)));
    // Solo se computan respuestas anteriores al cursor confirmado: evita dobles puntos al recargar.
