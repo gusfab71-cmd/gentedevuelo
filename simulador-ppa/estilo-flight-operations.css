@@ -92,3 +92,15 @@ main#ppa-app{width:min(100%,1180px);max-width:none;margin:0 auto;padding:23px 24
   #ppa-app .meta{align-items:flex-start}
 }
 @media(prefers-reduced-motion:reduce){#ppa-app *{scroll-behavior:auto;transition:none!important;animation:none!important}}
+
+/* Formato y criterio de aprobación del examen oficial ANAC. */
+#ppa-app .ppa-anac-note{
+ display:flex;align-items:center;flex-wrap:wrap;gap:9px 18px;
+ border:1px solid #66735e;background:#222e2c;border-left:4px solid var(--ppa-accent);
+ border-radius:13px;padding:14px 19px;margin:0 0 18px;
+ font-size:13px;line-height:1.5;color:#e6ece7;
+}
+#ppa-app .ppa-anac-note strong{color:#ffdcaa;font-size:13px}
+#ppa-app .ppa-anac-note span{flex:1 1 420px}
+#ppa-app .ppa-anac-note a{color:#ffe2b8;white-space:nowrap;font-weight:650}
+@media(max-width:540px){#ppa-app .ppa-anac-note{padding:13px 15px;gap:6px}}
