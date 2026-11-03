@@ -134,7 +134,7 @@ assert.match(html,/const ANSWER_EXPLOSION_DURATION_SECONDS=2\.60;/);
 assert.match(html,/function playAnswerSound\(\)\{/);
 assert.match(html,/if\(graded\)\{gradedCount\+\+;playAnswerSound\(\)\}/);
 assert.doesNotMatch(html,/playAnswerSound\(ok\)/);
-const audioFunction=html.slice(html.indexOf('function playAnswerSound(){'),html.indexOf('function playResultSound(passed){'));
+const audioFunction=html.slice(html.indexOf('function playAnswerSound(){'),html.indexOf('function figureNumber(q){'));
 assert.match(audioFunction,/blast\.stop\(t\+ANSWER_EXPLOSION_DURATION_SECONDS\)/);
 assert.doesNotMatch(audioFunction,/if\s*\(correct\)/);
 assert.doesNotMatch(audioFunction,/if\s*\(ok\)/);
