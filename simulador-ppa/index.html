@@ -255,6 +255,9 @@ async function load(){
    opciones:Array.isArray(q.opciones)?q.opciones:[],
    fuente:String(q.fuente||'Fuente no identificada')
   }));
+  if(ppaStudentMode){
+   $('ppaIntro').textContent='Banco de '+reviewBank.length+' preguntas para preparar el examen teórico de Piloto Privado de Avión (PPA) de ANAC. Las claves históricas y fundamentos siguen en revisión; el puntaje es provisional y no equivale a un examen oficial.';
+  }
   historicalBank=reviewBank.filter(q=>hasValidKey(q)&&(!needsFigure(q)||hasImage(q)));
   bank=historicalBank.filter(q=>q.estado==='verificada'&&typeof q.fundamento==='string'&&q.fundamento.trim()&&!/falta cotejo visual/i.test(q.revision_detalle||''));
   [...new Set(reviewBank.map(q=>q.materia))]
@@ -482,7 +485,7 @@ $('again').onclick=()=>{
    if(accessError||!(institutions||[]).some(x=>x.institution_id===ppaInstitution&&x.my_role==='alumno'&&x.can_access===true)){
     throw Error("No tenés acceso como alumno a esta institución.");
    }
-   $('ppaIntro').textContent='Práctica educativa PPA. Algunas claves históricas y fundamentos siguen en revisión: tu puntaje es provisional y no equivale a un examen oficial de ANAC.';
+   $('ppaIntro').textContent='Simulador de preparación para el examen teórico de Piloto Privado de Avión (PPA) de ANAC. Consultando el banco de preguntas; las respuestas siguen en revisión y el puntaje es provisional.';
    $('gate').classList.add('hidden');
    $('practice').querySelector('option[value="review"]').remove();
    $('practice').querySelector('option[value="exam"]').remove();
