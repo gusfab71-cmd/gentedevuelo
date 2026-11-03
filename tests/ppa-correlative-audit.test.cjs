@@ -106,6 +106,10 @@ assert.match(html,/option\[value="sequential"\]'\)\.textContent='Preguntas corre
 assert.match(html,/option\[value="practice"\]'\)\.textContent='Preguntas aleatorias'/);
 assert.match(html,/if\(ppaStudentMode\)\$\('count'\)\.value='10'/);
 assert.match(html,/<label class="ppa-field" for="practice">Tipo/);
+// La categoría interna no aparece como opción de Materia, sin borrar registros del banco.
+assert.match(html,/\.filter\(name=>name!=='Banco ANAC \(pendiente de clasificación\)'\)/);
+assert.match(html,/new Set\(reviewBank\.map\(q=>q\.materia\)\)/);
+assert.match(html,/reviewBank\.filter\(q=>/);
 assert.match(html,/const desired=ppaStudentMode\?10:Number\(\$\('count'\)\.value\)/);
 assert.match(html,/if\(ppaStudentMode&&!\['practice','sequential'\]\.includes\(option\)\)return/);
 assert.match(html,/exam=AUDIT\.sortByNumber\(reviewBank\)/);
