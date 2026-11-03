@@ -2,11 +2,11 @@
 <html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Simulador Examen PPA</title><script src="../assets/supabase-2.117.2.min.js"></script><script src="../assets/community-config.js"></script><script src="./sesion-institucional.js?v=ppa-session-isolated-20261103"></script>
 <style>
-:root{font-family:system-ui,Arial;color:#e9eef7;background:#141c27}*{box-sizing:border-box}body{margin:0}main{max-width:850px;margin:32px auto;padding:20px}.panel{background:#243143;border:1px solid #45556c;border-radius:18px;padding:24px;margin:18px 0}h1{margin:0 0 8px}p{line-height:1.5;color:#c8d4e3}button,select{font:inherit;border-radius:10px;padding:12px;border:1px solid #64748b;background:#34465c;color:white}button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}.choice{display:block;width:100%;text-align:left;margin:10px 0}.choice.selected{outline:2px solid #d8b86a}.choice.correct{background:#17633d;border-color:#4ade80;color:#fff;outline:2px solid #4ade80}.choice.incorrect{background:#71333a;border-color:#fb7185;color:#fff}.primary{background:#c6a458;color:#121923;font-weight:700}.hidden{display:none}.meta{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}.notice{color:#f4d48a}#feedback{border-left:4px solid #c6a458;padding-left:15px}small{color:#cbd5e1}.perfect-bonus{text-align:center;border:1px solid #d6b65d;border-radius:16px;padding:20px;margin:18px 0;background:linear-gradient(135deg,#3a3142,#1d4350)}.perfect-bonus strong{display:block;font-size:1.4rem;color:#ffe49b}.perfect-bonus .trophy{font-size:4rem;display:block}.perfect-bonus p{color:#fff}.result-face{font-size:84px;text-align:center;margin:16px 0}.result-face svg{width:min(100%,360px);height:auto;display:block;margin:auto}#figure img{display:block;max-width:100%;height:auto;margin:12px auto;border-radius:8px;background:white}#figure{margin:16px 0}#figure a,#figure a:link,#figure a:visited,#figure a:hover,#figure a:active,#figure a:focus-visible{color:#fff;text-decoration:underline;text-underline-offset:2px}#figure small,#figure figcaption,#figure p{color:#fff}
-@keyframes faceHappy{0%{transform:scale(.35) rotate(-18deg);opacity:0}35%{transform:scale(1.23) rotate(12deg);opacity:1}60%{transform:scale(.92) rotate(-7deg)}80%{transform:scale(1.08) rotate(4deg)}100%{transform:scale(1) rotate(0)}}@keyframes faceSad{0%{transform:translateY(-25px) scale(.8);opacity:0}35%{transform:translateY(8px) scale(1.06);opacity:1}60%{transform:translateY(-5px)}100%{transform:translateY(0) scale(1)}}#result-face.happy{animation:faceHappy 1.1s ease-out both}#result-face.sad{animation:faceSad 1.1s ease-out both}@media(prefers-reduced-motion:reduce){#result-face.happy,#result-face.sad{animation:none}}#audit-summary{border-color:#b19a65}#audit-stats strong{color:#ffe4a3}#audit-summary button{background:#34465c}
+:root{font-family:system-ui,Arial;color:#e9eef7;background:#141c27}*{box-sizing:border-box}body{margin:0}main{max-width:850px;margin:32px auto;padding:20px}.panel{background:#243143;border:1px solid #45556c;border-radius:18px;padding:24px;margin:18px 0}h1{margin:0 0 8px}p{line-height:1.5;color:#c8d4e3}button,select{font:inherit;border-radius:10px;padding:12px;border:1px solid #64748b;background:#34465c;color:white}button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}.choice{display:block;width:100%;text-align:left;margin:10px 0}.choice.selected{outline:2px solid #d8b86a}.choice.correct{background:#17633d;border-color:#4ade80;color:#fff;outline:2px solid #4ade80}.choice.incorrect{background:#71333a;border-color:#fb7185;color:#fff}.primary{background:#c6a458;color:#121923;font-weight:700}.hidden{display:none}.meta{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}.notice{color:#f4d48a}#feedback{border-left:4px solid #c6a458;padding-left:15px}small{color:#cbd5e1}#figure img{display:block;max-width:100%;height:auto;margin:12px auto;border-radius:8px;background:white}#figure{margin:16px 0}#figure a,#figure a:link,#figure a:visited,#figure a:hover,#figure a:active,#figure a:focus-visible{color:#fff;text-decoration:underline;text-underline-offset:2px}#figure small,#figure figcaption,#figure p{color:#fff}
+#audit-summary{border-color:#b19a65}#audit-stats strong{color:#ffe4a3}#audit-summary button{background:#34465c}
 #flag{background:#72563a;border-color:#c6a458}#flag.flagged{background:#784452;border-color:#ffb4c0}
 #reset-seq{background:#3b4656}#question-meta{font-size:.94rem;color:#e8d3a3;margin:10px 0}
-</style><link rel="stylesheet" href="./estilo-flight-operations.css?v=20261103-anac385"></head>
+</style><link rel="stylesheet" href="./estilo-flight-operations.css?v=20261103-resultados"></head>
 <body><main id="ppa-app" hidden>
 <nav class="ppa-topbar" aria-label="Navegación de Academia">
  <div class="ppa-topmark"><span class="ppa-mark" aria-hidden="true">✈</span><span>Developed by Gente de Vuelo</span></div>
@@ -44,7 +44,23 @@
  <div id="feedback" class="hidden" aria-live="polite"></div>
  <div class="ppa-question-actions"><button id="submit" class="primary" disabled>Responder</button><button id="flag" class="hidden">Marcar para cotejo</button><button id="next" class="hidden">Siguiente pregunta</button></div>
 </section>
-<section class="panel hidden" id="results"><h2>Resultado</h2><p id="summary"></p><div id="result-face" class="result-face" role="img" aria-live="polite"></div><div id="perfect-bonus" class="perfect-bonus hidden" aria-live="polite"><span class="trophy">🏆✈️</span><strong>¡MISIÓN PERFECTA!</strong><p>¡10 de 10! Alas de oro para este vuelo. ¡Felicitaciones, comandante!</p><p>🎉 ⭐ 🎉</p></div><button id="again">Nueva práctica</button></section>
+<section class="panel hidden" id="results" aria-labelledby="result-heading">
+ <p class="ppa-result-eyebrow">Informe de práctica</p>
+ <h2 id="result-heading">Resultado</h2>
+ <div class="ppa-result-main">
+  <div class="ppa-result-score"><strong id="result-percentage" aria-label="Porcentaje de aciertos">—</strong><span id="result-caption">Aciertos sobre preguntas calificadas</span></div>
+  <div class="ppa-result-details">
+   <h3 id="result-status">Práctica finalizada</h3>
+   <p id="summary" aria-live="polite"></p>
+  </div>
+ </div>
+ <div class="ppa-result-grid" aria-label="Detalle del resultado">
+  <div><strong id="result-correct">0</strong><span>Respuestas correctas</span></div>
+  <div><strong id="result-evaluated">0</strong><span>Preguntas calificadas</span></div>
+  <div><strong id="result-ungraded">0</strong><span>Sin calificar</span></div>
+ </div>
+ <div class="ppa-result-actions"><button id="again">Nueva práctica</button></div>
+</section>
 </main><script src="./auditoria.js?v=20261022correlativo1"></script><script type="module">
 const $=id=>document.getElementById(id);
 const ANAC_FIGURE_PDF='https://www.argentina.gob.ar/sites/default/files/2021/05/anexo-figuras-para-las-preguntas-ppa.pdf';
@@ -106,7 +122,6 @@ function updateFlagLabel(){
 
 const usedQuestionIds=new Set(); // Evita repetir preguntas entre exámenes hasta agotar el conjunto filtrado.
 let audioContext=null;
-let activeAnswerMaster=null;
 let answerNoiseBuffer=null;
 function answerNoise(ctx){
  if(answerNoiseBuffer&&answerNoiseBuffer.sampleRate===ctx.sampleRate)return answerNoiseBuffer;
@@ -131,7 +146,6 @@ function playAnswerSound(){
   const t=ctx.currentTime+.015;
   const master=ctx.createGain();master.gain.value=.42;
   master.connect(ctx.destination);
-  activeAnswerMaster=master;
   const sound=ctx.createGain();
   // Explosión: estampido breve, golpe grave y retumbo final.
   sound.gain.setValueAtTime(.8,t);
@@ -165,45 +179,6 @@ function playAnswerSound(){
   thud.start(t);thud.stop(t+1.72);
  }catch(e){/* El examen funciona aunque el navegador bloquee el audio. */}
 }
-function playResultSound(passed){
- try{
-  const AudioCtx=window.AudioContext||window.webkitAudioContext;
-  if(!AudioCtx)return;
-  if(!audioContext)audioContext=new AudioCtx();
-  const ctx=audioContext;
-  if(ctx.state==='suspended')ctx.resume().catch(()=>{});
-  const now=ctx.currentTime;
-  // Transition from the last answer effect into the result melody.
-  if(activeAnswerMaster){
-   activeAnswerMaster.gain.cancelScheduledValues(now);
-   activeAnswerMaster.gain.setValueAtTime(.42,now);
-   activeAnswerMaster.gain.linearRampToValueAtTime(.0001,now+.13);
-   activeAnswerMaster=null;
-  }
-  const start=now+.15;
-  const master=ctx.createGain();
-  master.gain.value=.30;
-  master.connect(ctx.destination);
-  // Happy face: short triumphant major fanfare.
-  // Sad face: soft descending minor melody.
-  const notes=passed?
-   [{f:392,t:0,d:.21},{f:523.25,t:.25,d:.23},{f:659.25,t:.52,d:.26},{f:783.99,t:.84,d:.31},{f:1046.5,t:1.21,d:.72}]:
-   [{f:392,t:0,d:.36},{f:349.23,t:.40,d:.37},{f:293.66,t:.84,d:.43},{f:196,t:1.35,d:.71}];
-  notes.forEach(({f,t,d})=>{
-   const oscillator=ctx.createOscillator();
-   oscillator.type=passed?'triangle':'sine';
-   oscillator.frequency.setValueAtTime(f,start+t);
-   const gain=ctx.createGain();
-   gain.gain.setValueAtTime(.0001,start+t);
-   gain.gain.linearRampToValueAtTime(passed?.54:.43,start+t+.035);
-   gain.gain.setValueAtTime(passed?.54:.43,start+t+d*.53);
-   gain.gain.exponentialRampToValueAtTime(.0001,start+t+d);
-   oscillator.connect(gain);gain.connect(master);
-   oscillator.start(start+t);oscillator.stop(start+t+d+.02);
-  });
- }catch(e){/* El resultado se muestra aunque el navegador bloquee audio. */}
-}
-
 function figureNumber(q){const m=q.pregunta.match(/\bfigura\s*(\d{1,3})\b/i);return m?Number(m[1]):null}
 function needsFigure(q){return Boolean(q.figura_r2_key)||/\bfigura\b|\bilustraci[oó]n\b|\bgr[aá]fico\b/i.test(q.pregunta)}
 function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
@@ -422,27 +397,31 @@ $('submit').onclick=()=>{
 function finishSession(){
  updateProgressVisual();
  $('exam').classList.add('hidden');$('results').classList.remove('hidden');
- $('perfect-bonus').classList.add('hidden');
+ const withoutGrade=Math.max(0,exam.length-gradedCount);
+ $('result-correct').textContent=String(points);
+ $('result-evaluated').textContent=String(gradedCount);
+ $('result-ungraded').textContent=String(withoutGrade);
+ $('result-percentage').textContent=gradedCount?Math.round(100*points/gradedCount)+'%':'—';
+ $('result-caption').textContent=gradedCount?'Aciertos sobre preguntas calificadas':'No hay preguntas calificables';
  if(reviewMode||sequentialMode){
-  $('result-face').className='result-face';$('result-face').textContent='';
   if(sequentialMode){
    const reviewed=Object.keys(sequentialAnswers).filter(id=>sequentialAnswers[id]?.attempted).length;
-   $('summary').textContent=(ppaStudentMode?'RECORRIDO COMPLETO FINALIZADO · ':'REVISIÓN CORRELATIVA COMPLETADA · ')+reviewed+' de '+exam.length+
-    ' preguntas recorridas. '+points+' puntos en '+gradedCount+' preguntas calificables. '+
-    (reviewed-gradedCount)+' preguntas sin calificar. El puntaje es provisional porque las claves históricas requieren cotejo oficial.'+
+   $('result-status').textContent=ppaStudentMode?'Recorrido completo finalizado':'Revisión correlativa finalizada';
+   $('summary').textContent=reviewed+' de '+exam.length+' preguntas recorridas. '+points+' aciertos en '+gradedCount+
+    ' preguntas calificables. '+withoutGrade+' sin calificar. El puntaje es provisional: las claves históricas requieren cotejo oficial.'+
     (ppaStudentMode?'':' Exportá el informe CSV para verificar cada registro.');
-  }else $('summary').textContent='Revisión completada: '+exam.length+' preguntas consultadas, sin puntaje.';
+  }else{
+   $('result-status').textContent='Revisión finalizada';
+   $('summary').textContent='Se revisaron '+exam.length+' preguntas sin puntaje.';
+  }
   return;
  }
- // No aprobar sesiones incompletas o con preguntas sin calificar.
+ // El puntaje histórico es orientativo; solo el examen verificado utiliza su umbral interno de práctica.
  const passed=gradedCount===exam.length&&exam.length>0&&points/gradedCount>=0.7;
- const perfect=exam.length===10&&points===10&&gradedCount===10;
- $('perfect-bonus').classList.toggle('hidden',!perfect);
- $('result-face').className='result-face '+(passed?'happy':'sad');
- $('result-face').textContent=passed?'😄':'😞';
- $('result-face').setAttribute('aria-label',passed?'Piloto feliz':'Piloto triste');
- playResultSound(passed);
- $('summary').textContent=(practiceMode?'PRÁCTICA HISTÓRICA · PUNTAJE PROVISIONAL. ':'EXAMEN VERIFICADO. ')+points+' de '+gradedCount+' respuestas correctas. '+(gradedCount!==exam.length?'Evaluación incompleta: no se considera aprobada. ':'')+(practiceMode?'Las claves históricas deben cotejarse antes de considerarlas definitivas. No equivale a un examen oficial.':'Resultados de las preguntas verificadas en el banco.');
+ $('result-status').textContent=gradedCount!==exam.length?'Evaluación incompleta':passed?'Objetivo de práctica alcanzado':'Práctica finalizada';
+ $('summary').textContent=(practiceMode?'Puntaje provisional. ':'')+points+' respuestas correctas de '+gradedCount+
+  ' calificadas. '+(withoutGrade?'Quedaron '+withoutGrade+' preguntas sin calificar. ':'')+
+  (practiceMode?'Las claves históricas requieren verificación y este resultado no es un examen oficial de ANAC.':'Resultado de las preguntas verificadas de este banco.');
 }
 $('next').onclick=()=>{
  if(sequentialMode&&exam[index]&&!sequentialAnswers[exam[index].id])
