@@ -139,6 +139,20 @@ assert.match(audioFunction,/blast\.stop\(t\+ANSWER_EXPLOSION_DURATION_SECONDS\)/
 assert.doesNotMatch(audioFunction,/if\s*\(correct\)/);
 assert.doesNotMatch(audioFunction,/if\s*\(ok\)/);
 
+// El resultado final solo muestra métricas, sin caritas, animaciones ni melodía.
+assert.match(html,/id="results" aria-labelledby="result-heading"/);
+for(const id of ['result-percentage','result-status','result-correct','result-evaluated','result-ungraded','result-caption']){
+ assert.equal((html.match(new RegExp('id="'+id+'"','g'))||[]).length,1,'Métrica final única: '+id);
+}
+assert.match(html,/Math\.round\(100\*points\/gradedCount\)/);
+assert.match(html,/function finishSession\(\)/);
+assert.match(html,/function playAnswerSound\(\)/);
+assert.match(html,/gradedCount\+\+;playAnswerSound\(\)/);
+assert.doesNotMatch(html,/function playResultSound\(/);
+assert.doesNotMatch(html,/result-face|perfect-bonus|faceHappy|faceSad|Piloto feliz|Piloto triste|😄|😞|🎉/);
+assert.match(uiCss,/\.ppa-result-grid/);
+assert.match(uiCss,/\.ppa-result-score/);
+
 // La interfaz debe incluir las dos rutas sin afectar la práctica aleatoria.
 assert.match(html,/<option value="sequential">/);
 assert.match(html,/<option value="practice">/);
