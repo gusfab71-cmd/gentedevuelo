@@ -421,7 +421,7 @@ function finishSession(){
  $('result-status').textContent=gradedCount!==exam.length?'Evaluación incompleta':passed?'Objetivo de práctica alcanzado':'Práctica finalizada';
  $('summary').textContent=(practiceMode?'Puntaje provisional. ':'')+points+' respuestas correctas de '+gradedCount+
   ' calificadas. '+(withoutGrade?'Quedaron '+withoutGrade+' preguntas sin calificar. ':'')+
-  (practiceMode?'Las claves históricas requieren verificación y este resultado no es un examen oficial de ANAC.':'Resultado de las preguntas verificadas de este banco.');
+  (practiceMode?'Las claves históricas requieren verificación y este resultado no equivale a un examen oficial de ANAC.':'Resultado de las preguntas verificadas de este banco.');
 }
 $('next').onclick=()=>{
  if(sequentialMode&&exam[index]&&!sequentialAnswers[exam[index].id])
