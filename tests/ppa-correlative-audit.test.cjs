@@ -43,6 +43,23 @@ assert.match(csv,/Fundamento no coincide/);
 assert.ok(!csv.includes(';"=SUM(1+1)"'),'El CSV no ejecuta fórmulas desde observaciones');
 assert.match(csv,/'=SUM\(1\+1\)/);
 
+// Academia institucional: permiso de alumno comprobado en servidor y sesión aislada.
+const guard=fs.readFileSync(path.join(__dirname,'../assets/auth-guard.js'),'utf8');
+const operations=fs.readFileSync(path.join(__dirname,'../utilidades/gestion-aeronautica/operaciones-institucionales.html'),'utf8');
+assert.match(guard,/onInstitutionalPpa/);
+assert.match(guard,/aerosuite-institucional-v2-auth/);
+assert.match(guard,/aerosuite-laboratorio-/);
+assert.match(operations,/id="ppaSimulatorCard" hidden/);
+assert.match(operations,/if\(role==="alumno"\)/);
+assert.match(operations,/ppaUrl\.searchParams\.set\("institucion",inst\)/);
+assert.match(operations,/ppaUrl\.searchParams\.set\("rol","alumno"\)/);
+assert.match(html,/ppaStudentMode/);
+assert.match(html,/aerosuite_my_institution_access_v2/);
+assert.match(html,/x\.my_role==='alumno'&&x\.can_access===true/);
+assert.match(html,/filtered\.length<desired/);
+assert.match(html,/gradedCount===exam\.length&&exam\.length>0/);
+assert.match(html,/No equivale a un examen oficial|no equivale a un examen oficial/);
+
 // La interfaz debe incluir las dos rutas sin afectar la práctica aleatoria.
 assert.match(html,/<option value="sequential">/);
 assert.match(html,/<option value="practice">/);
