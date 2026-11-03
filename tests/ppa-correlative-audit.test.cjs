@@ -69,7 +69,7 @@ assert.equal(sessionFor('?institucion=malformada&rol=alumno&prueba=1'),'communit
 const operations=fs.readFileSync(path.join(__dirname,'../utilidades/gestion-aeronautica/operaciones-institucionales.html'),'utf8');
 assert.match(guard,/onInstitutionalPpa/);
 assert.match(html,/sesion-institucional\.js\?v=ppa-session-isolated-20261103/);
-assert.match(operations,/ppaUrl\.searchParams\.set\("v","ppa-session-isolated-20261103"\)/);
+assert.match(operations,/ppaUrl\.searchParams\.set\("v","ppa-tipo-dos-opciones-20261103"\)/);
 assert.match(html,/stage='validar el rol Alumno en la institución'/);
 assert.match(guard,/aerosuite-institucional-v2-auth/);
 assert.match(guard,/aerosuite-laboratorio-/);
@@ -102,9 +102,10 @@ for(const id of ['practice','subject','mode','count','start','exam','question','
 // Alumnos: exactamente dos modalidades, sin acceso al examen de auditoría.
 assert.match(html,/option\[value="exam"\]'\)\.remove\(\)/);
 assert.match(html,/option\[value="review"\]'\)\.remove\(\)/);
-assert.match(html,/option\[value="sequential"\]'\)\.textContent='Todas las preguntas consecutivas'/);
-assert.match(html,/option\[value="practice"\]'\)\.textContent='10 preguntas aleatorias'/);
+assert.match(html,/option\[value="sequential"\]'\)\.textContent='Preguntas correlativas'/);
+assert.match(html,/option\[value="practice"\]'\)\.textContent='Preguntas aleatorias'/);
 assert.match(html,/if\(ppaStudentMode\)\$\('count'\)\.value='10'/);
+assert.match(html,/<label class="ppa-field" for="practice">Tipo/);
 assert.match(html,/const desired=ppaStudentMode\?10:Number\(\$\('count'\)\.value\)/);
 assert.match(html,/if\(ppaStudentMode&&!\['practice','sequential'\]\.includes\(option\)\)return/);
 assert.match(html,/exam=AUDIT\.sortByNumber\(reviewBank\)/);
