@@ -210,10 +210,12 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
 .dispatch-map-toolbar-links button{background:#294a64;border:1px solid #6e9ab8;padding:7px 11px;font-size:11px}
 .dispatch-map-main{flex:1;display:flex;flex-direction:column;min-height:0;position:relative;padding:0}
 .dispatch-map-main #map{flex:1;width:100%;min-height:0;height:auto;margin:0;border-radius:0;touch-action:pan-x pan-y}
-.dispatch-map-main .basemap-selector{position:absolute;right:13px;top:12px;z-index:800;
+.dispatch-map-main .basemap-selector{position:absolute;right:13px;bottom:12px;top:auto;z-index:800;
  margin:0;width:auto;max-width:min(360px,calc(100% - 25px))}
 .dispatch-map-main .basemap-selector .leaflet-control-layers{width:auto;background:#122b3fdc;box-shadow:0 5px 19px #091728ab}
 .dispatch-map-main .basemap-selector .leaflet-control-layers-base{gap:5px 12px}
+.dispatch-map-main .leaflet-control-attribution{font-size:9px!important;background:#ffffffdf!important}
+.dispatch-map-main .basemap-selector .leaflet-control-layers{margin:0;border:1px solid #7293aa;box-sizing:border-box}
 .dispatch-map-bottom{border-top:1px solid #3d5d74;background:#152b3d;max-height:180px;overflow-y:auto;padding:9px 15px}
 .dispatch-map-bottom .pin-legend{margin:0;padding:6px 0;background:transparent;border:0;gap:7px 14px}
 .dispatch-map-bottom .map-actions{margin:9px 0 0}
@@ -230,7 +232,7 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
  .dispatch-sidebar-scroll{height:auto;overflow:visible;padding:13px}
  .dispatch-map-panel{order:1;min-height:580px}
  .dispatch-map-main #map{height:68dvh;min-height:440px}
- .dispatch-map-main .basemap-selector{top:9px;right:9px}
+ .dispatch-map-main .basemap-selector{top:auto;bottom:10px;right:9px}
  .dispatch-map-toolbar-links{gap:7px}
  .dispatch-map-toolbar-links a{font-size:11px}
  .dispatch-map-bottom{max-height:none}
@@ -243,7 +245,7 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
  .dispatch-sidebar .pista-filter-grid,.dispatch-sidebar .pista-service-filters{grid-template-columns:1fr}
  .dispatch-map-toolbar{gap:8px;flex-wrap:wrap}
  .dispatch-map-main #map{min-height:500px}
- .dispatch-map-main .basemap-selector{position:static;max-width:none;width:100%;background:#1c3346;padding:6px}
+ .dispatch-map-main .basemap-selector{position:absolute;top:auto;right:8px;bottom:18px;max-width:min(290px,calc(100% - 15px));width:auto;background:#1c3346ec;padding:5px;border-radius:8px}
  .dispatch-map-bottom .pin-legend{gap:8px}
 }
 
@@ -513,6 +515,8 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
 (async()=>{
 const client=supabase.createClient(GDV_CONFIG.url,GDV_CONFIG.key);
 const map=L.map('map',{touchZoom:true,scrollWheelZoom:true,doubleClickZoom:true,tapHold:true}).setView([-35.0,-58.2],10);const satellite=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Imagery © Esri and contributors'}).addTo(map);const streets=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'});const basemapControl=L.control.layers({'Satélite · ver pistas':satellite,'Calles y caminos':streets},null,{collapsed:false});basemapControl.addTo(map);const basemapSelector=document.getElementById('basemap-selector');basemapSelector.appendChild(basemapControl.getContainer());
+/* Atribuciones Esri/OSM y Leaflet permanecen visibles a la izquierda; selector a la derecha. */
+map.attributionControl.setPosition('bottomleft');
 let markers=L.layerGroup().addTo(map),records=[],admin=false;
 
 /* Ordena los controles existentes sin duplicarlos ni perder formularios o filtros. */
