@@ -113,7 +113,7 @@ window.GDV_ROUTE_PLANNER_BOOT=function(options){
  map.getContainer().append(notice);
  const menu=document.createElement('div');menu.className='route-context-menu';menu.hidden=true;
  map.getContainer().append(menu);
- let points=[],drawing=false,finished=false,windGroups=[],lastHover=null;
+ let points=[],drawing=false,finished=false,windGroups=[],lastHover=null,lastLongPress=0;
  const fmt=n=>Number.isFinite(n)?n.toFixed(1):'—';
  function setMessage(msg){status.textContent=msg}
  function setNotice(msg){notice.textContent=msg;notice.hidden=!msg}
@@ -230,7 +230,7 @@ window.GDV_ROUTE_PLANNER_BOOT=function(options){
  }
  function cancelMenu(){menu.hidden=true;menu.replaceChildren()}
  function begin(){
-  if(!points.length)finished=false;
+  finished=false;
   drawing=true;
   options.disableRuler?.();
   panel.open=false;
@@ -249,6 +249,10 @@ window.GDV_ROUTE_PLANNER_BOOT=function(options){
   hideHover();cancelMenu();updateButtons();refresh();setMessage('Ruta borrada. Pulsá «Trazar ruta» para comenzar nuevamente.');
  }
  function appendPoint(latlng){
+  if(points.length&&nm(points.at(-1),latlng)<0.015){
+   setMessage('El punto está demasiado cerca del anterior. Desplazá el cursor para agregar otra pierna.');
+   return;
+  }
   points.push({lat:latlng.lat,lng:latlng.lng});
   render();setMessage(points.length===1?'Salida definida. Clic para agregar punto intermedio o destino.':
    'Punto '+points.length+' marcado. Clic derecho: «Próxima pierna» o «Finalizar ruta».');
@@ -328,6 +332,7 @@ window.GDV_ROUTE_PLANNER_BOOT=function(options){
   showHover(e.latlng,e.originalEvent);
  }
  function handleClick(e){
+  if(Date.now()-lastLongPress<950)return true;
   cancelMenu();
   if(!drawing)return false;
   if(!Number.isFinite(e.latlng.lat)||!Number.isFinite(e.latlng.lng))return true;
@@ -357,6 +362,34 @@ window.GDV_ROUTE_PLANNER_BOOT=function(options){
  continueButton.addEventListener('click',begin);
  $('route-finish').addEventListener('click',finish);
  clearButton.addEventListener('click',clear);
+ // Capturar clics sobre pistas/objetos existentes, para poder fijar exactamente
+ // el origen o destino incluso si hay un marcador de aeródromo debajo.
+ map.getContainer().addEventListener('click',e=>{
+  if(!drawing)return;
+  const marker=e.target.closest?.('.leaflet-marker-icon,.leaflet-interactive');
+  if(!marker||e.target.closest?.('.route-point-label'))return;
+  const pos=map.mouseEventToContainerPoint(e);
+  e.preventDefault();e.stopPropagation();
+  handleClick({latlng:map.containerPointToLatLng(pos),originalEvent:e});
+ },true);
+ // Pulsación prolongada en dispositivos táctiles: mismo menú del clic derecho.
+ let touchTimer=null,touchOrigin=null;
+ const cancelTouch=()=>{clearTimeout(touchTimer);touchTimer=null;touchOrigin=null};
+ map.getContainer().addEventListener('touchstart',e=>{
+  if(!drawing||e.touches.length!==1)return;
+  const t=e.touches[0];touchOrigin={x:t.clientX,y:t.clientY};
+  touchTimer=setTimeout(()=>{
+   if(!drawing||!touchOrigin)return;
+   lastLongPress=Date.now();
+   const pos=map.mouseEventToContainerPoint({clientX:touchOrigin.x,clientY:touchOrigin.y});
+   openMenu(map.containerPointToLatLng(pos),null);
+  },650);
+ },{passive:true});
+ map.getContainer().addEventListener('touchmove',e=>{
+  if(!touchOrigin||e.touches.length!==1)return;
+  if(Math.hypot(e.touches[0].clientX-touchOrigin.x,e.touches[0].clientY-touchOrigin.y)>12)cancelTouch();
+ },{passive:true});
+ for(const evt of ['touchend','touchcancel'])map.getContainer().addEventListener(evt,cancelTouch,{passive:true});
  map.on('mousemove',mouseMove);
  map.getContainer().addEventListener('mouseleave',hideHover);
  map.on('mousedown',()=>cancelMenu());
