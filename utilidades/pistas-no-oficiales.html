@@ -311,6 +311,34 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
 .dispatch-map-bottom .map-view-context{margin:0 0 3px;font-size:10px}
 #airfields-map-actions{display:none!important} /* Función OSM reservada temporalmente. */
 @media(max-width:620px){.control-submenu>summary{padding:12px 10px}.control-summary-note{font-size:9px}}
+
+/* Paneles contextuales: seleccionar regiones y cargar PRONAREA sin reducir el mapa. */
+#map-inspector-toggle{background:#315873;border:1px solid #7ba5c5;padding:8px 12px;border-radius:8px;color:#eff9ff;font-size:12px;font-weight:800;min-height:39px;white-space:nowrap}
+#map-inspector-toggle[aria-expanded=true]{background:#d5eaff;color:#17374c}
+.map-context-panel{position:absolute;z-index:810;right:14px;top:81px;width:min(400px,calc(100% - 80px));max-height:calc(100% - 94px);overflow:auto;background:#18334bf0;border:1px solid #83acc6;box-shadow:0 12px 28px #071623bb;color:#f1f7fc;border-radius:13px;padding:14px}
+.map-context-panel[hidden],.map-view-hint[hidden]{display:none!important}
+.map-context-panel-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin:0 0 10px}
+.map-context-panel-header h3{color:#f4f9fd;font-size:16px;margin:0}
+.map-context-panel-header p{font-size:11px;color:#c5d8e8;margin:3px 0 0}
+.map-context-panel-close{background:transparent;border:1px solid #6d90a9;color:#e6f4ff;border-radius:8px;padding:4px 9px;min-width:34px;font-weight:800}
+.airspace-items{display:grid;gap:8px}
+.airspace-choice{display:flex;gap:10px;align-items:center;text-align:left;background:#20465f;border:1px solid #5e819a;color:#f6fbff;border-radius:10px;padding:9px 11px;width:100%;cursor:pointer}
+.airspace-choice:hover,.airspace-choice:focus-visible{background:#2c5e7e;border-color:#bad8ed}
+.airspace-choice .airspace-dot{height:15px;width:15px;min-width:15px;border-radius:50%;border:2px solid #e5f4fd}
+.airspace-choice .airspace-choice-text{display:grid;gap:2px;font-size:12px}
+.airspace-choice small{color:#bdd6e9;font-size:10px}
+.map-context-note{font-size:11px;color:#c8dceb;line-height:1.45;margin:9px 0 0}
+.map-context-note a{color:#ffdfb7}
+.map-view-hint{position:absolute;bottom:13px;left:12px;max-width:min(470px,calc(100% - 24px));padding:7px 11px;background:#102a3dd9;border:1px solid #64869b;border-radius:9px;color:#e4f2fc;z-index:790;font-size:11px;pointer-events:none}
+.pronarea-visual.map-context-panel{display:block;max-height:calc(100% - 94px);margin:0}
+.pronarea-visual textarea{height:175px;max-height:38dvh;min-height:130px;resize:vertical;color:#192d40;background:#f6faff;border:1px solid #87aec7;font-size:12px}
+.pronarea-visual .pronarea-actions{display:flex;flex-wrap:wrap;gap:8px}
+.pronarea-visual .pronarea-actions button{font-size:11px;padding:8px 10px;background:#265b7c;border:1px solid #8bb2cd;color:#f0f7fb;border-radius:8px}
+.pronarea-visual .pronarea-actions #pronarea-map-analyze{background:#d4eafb;color:#102c40;font-weight:800}
+.pronarea-visual a{font-size:11px}
+@media(max-width:959px){.map-context-panel{top:85px;right:9px;width:min(420px,calc(100% - 18px));max-height:calc(100% - 95px)}}
+@media(max-width:620px){#map-inspector-toggle{font-size:11px;min-height:38px}.map-context-panel{top:128px;max-height:calc(100% - 140px)}.map-view-hint{font-size:10px;bottom:7px}}
+
 </style></head><body><header class="dispatch-nav"><div class="dispatch-nav-logo"><span class="dispatch-nav-symbol" aria-hidden="true">✈</span>
  <div><strong>GENTE DE VUELO</strong><small>AEROLOCATOR · MAPA AERONÁUTICO</small></div></div>
  <nav aria-label="Herramientas Gente de Vuelo"><a href="../index.html">Portada</a><a href="../comunidad.html#foro">Foro</a><a href="index.html">Utilidades</a>
@@ -423,10 +451,33 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
  <option value="fir">FIR · uso educativo</option>
  <option value="sigmet">SIGMET · fenómenos</option>
  <option value="pronarea">PRONAREA · carga manual</option>
- </select></label><div class="dispatch-map-toolbar-links">
+ </select></label><div class="dispatch-map-toolbar-links"><button id="map-inspector-toggle" type="button" aria-controls="airspace-inspector pronarea-visual" aria-expanded="false" hidden>Ver información</button>
     <button id="map-fullscreen" type="button">Ampliar mapa</button><a href="https://ais.anac.gob.ar/aip" target="_blank" rel="noopener noreferrer">AIP oficial ↗</a></div></div>
    <div class="dispatch-map-main"><div id="basemap-selector" class="basemap-selector" aria-label="Elegir tipo de mapa"></div>
 <div id="map" aria-label="Mapa satelital de pistas"></div>
+ <p id="map-view-hint" class="map-view-hint" role="status" hidden></p>
+ <section id="airspace-inspector" class="map-context-panel" aria-label="Explorar regiones y avisos meteorológicos" hidden>
+  <div class="map-context-panel-header"><div><h3 id="airspace-inspector-title">Información de la capa</h3>
+  <p id="airspace-inspector-subtitle">Elegí una zona para ubicarla y consultar su ficha.</p></div>
+  <button id="airspace-inspector-close" class="map-context-panel-close" type="button" aria-label="Cerrar información">×</button></div>
+  <div id="airspace-inspector-items" class="airspace-items" aria-live="polite"></div>
+  <p class="map-context-note" id="airspace-inspector-footnote">Los datos son orientativos: comprobá siempre las publicaciones oficiales.</p>
+ </section>
+ <section id="pronarea-visual" class="pronarea-visual map-context-panel" aria-label="Cargar PRONAREA manualmente" hidden>
+  <div class="map-context-panel-header"><div><h3>PRONAREA · carga manual</h3>
+  <p>Como en Flight Operations: consultá el SMN y pegá el boletín completo aquí.</p></div>
+  <button id="pronarea-map-close" class="map-context-panel-close" type="button" aria-label="Cerrar editor PRONAREA">×</button></div>
+  <label for="pronarea-map-input">Texto oficial del PRONAREA (FIR, emisión, validez, sectores y niveles)
+   <textarea id="pronarea-map-input" maxlength="12000" rows="8" placeholder="Copiá el PRONAREA del SMN y pegalo aquí con Ctrl + V."></textarea></label>
+  <div class="pronarea-actions">
+   <button id="pronarea-map-paste" type="button">Pegar del portapapeles</button>
+   <button id="pronarea-map-analyze" type="button">Identificar fenómenos</button>
+   <button id="pronarea-map-clear" type="button">Limpiar texto</button>
+  </div>
+  <p id="pronarea-map-result" role="status">Todavía no se cargó un PRONAREA. No se dibujan zonas sin límites geográficos verificables.</p>
+  <a href="https://www.smn.gob.ar/pronarea" target="_blank" rel="noopener noreferrer">Consultar PRONAREA oficial · SMN</a>
+  <p class="map-context-note">Este texto se usa solo en esta pantalla: no se publica ni confirma automáticamente la vigencia del boletín.</p>
+ </section>
 </div>
    <div class="dispatch-map-bottom">
  <p id="map-view-status" role="status" aria-live="polite" class="map-view-context">Pistas y aeródromos visibles. Elegí otra capa para ocultarlas.</p>
@@ -445,13 +496,7 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
  <span><i style="border-color:#d9cbaf"></i>Otros</span>
  <small>Solo avisos con geometría de NOAA. Verificar vigencia y fuentes oficiales argentinas.</small>
  </div>
- <div id="pronarea-visual" class="pronarea-visual" hidden>
- <label for="pronarea-map-input">PRONAREA del SMN · pegar texto con FIR, emisión, vigencia y niveles:
- <textarea id="pronarea-map-input" maxlength="12000" placeholder="Pegá aquí el PRONAREA completo"></textarea></label>
- <button id="pronarea-map-analyze" type="button">Identificar fenómenos</button>
- <p id="pronarea-map-result" role="status">Sin límites geográficos explícitos no se dibujarán áreas.</p>
- <a href="https://www.smn.gob.ar/pronarea" target="_blank" rel="noopener noreferrer">PRONAREA oficial · SMN</a>
- </div>
+
  <div id="airfields-map-legend" class="pin-legend" aria-label="Leyenda de marcadores">
   <span class="legend-item"><span class="legend-dot controlled" aria-hidden="true"></span>TWR público</span>
   <span class="legend-item"><span class="legend-dot uncontrolled" aria-hidden="true"></span>Público sin TWR</span>
