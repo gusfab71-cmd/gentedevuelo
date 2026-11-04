@@ -24,7 +24,15 @@
   // El simulador PPA institucional reutiliza la sesión de Alumno de AeroSuite, nunca la sesión comunitaria.
   const onInstitutionalPpa=location.pathname.endsWith('/simulador-ppa/index.html') &&
     institutionalUuid && institutionalParams.get('rol')==='alumno';
-  if(onInstitutionalProfile||onInstitutionalPpa){
+  // Flight Operations para Instructor y Piloto: verificar la membresía en servidor,
+  // nunca conceder acceso en función del rol declarado en la URL.
+  const flightRole=institutionalParams.get('rol')||'';
+  const flightContext=institutionalParams.get('aerosuite')||'';
+  const onInstitutionalFlightOps=location.pathname.endsWith('/utilidades/meteorologia-aeronautica.html') &&
+    institutionalUuid &&
+    ((flightRole==='instructor'&&flightContext==='instruccion')||
+      (flightRole==='piloto'&&flightContext==='piloto'));
+  if(onInstitutionalProfile||onInstitutionalPpa||onInstitutionalFlightOps){
     const role=institutionalParams.get('rol')||'';
     const lab=institutionalParams.get('prueba')==='1'&&
       ['alumno','instructor','administrador','secretaria','piloto'].includes(role);
@@ -32,11 +40,20 @@
       auth:{storageKey:lab?'aerosuite-laboratorio-'+role+'-v1-auth':'aerosuite-institucional-v2-auth',
         persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}
     });
-    const ready=institutionalClient.auth.getUser().then(({data,error})=>{
-      document.documentElement.classList.remove('auth-pending');
+    const ready=(async()=>{
+      const {data,error}=await institutionalClient.auth.getUser();
       if(error||!data?.user)throw Error('No hay una sesión institucional activa. Ingresá nuevamente desde el portal de tu escuela.');
+      if(onInstitutionalFlightOps){
+        const {data:memberships,error:accessError}=await institutionalClient.rpc('aerosuite_my_institution_access_v2');
+        if(accessError||!Array.isArray(memberships))throw Error('No se pudo comprobar tu acceso institucional a Flight Operations.');
+        const permitted=memberships.some(entry=>
+          entry.institution_id===institutionalParams.get('institucion')&&
+          entry.my_role===role&&entry.can_access===true
+        );
+        if(!permitted)throw Error('Tu cuenta no tiene acceso a Flight Operations para esta institución y rol.');
+      }
       return data.user;
-    });
+    })().finally(()=>document.documentElement.classList.remove('auth-pending'));
     window.GDV_AUTH={client:institutionalClient,ready};
     // No ejecutar el guard de comunidad ni afectar sus credenciales.
     return;
