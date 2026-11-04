@@ -114,6 +114,13 @@ window.GDV_ROUTE_PLANNER_BOOT=function(options){
  map.getContainer().append(notice);
  const menu=document.createElement('div');menu.className='route-context-menu';menu.hidden=true;
  map.getContainer().append(menu);
+ // El menú está dentro del contenedor Leaflet: sus eventos NO deben llegar
+ // al mapa, porque mousedown estaba ocultándolo antes de que se disparara click.
+ L.DomEvent.disableClickPropagation(menu);
+ L.DomEvent.disableScrollPropagation(menu);
+ for(const eventName of ['pointerdown','mousedown','mouseup','touchstart','touchend','contextmenu']){
+  menu.addEventListener(eventName,event=>event.stopPropagation());
+ }
  let points=[],drawing=false,finished=false,windGroups=[],lastHover=null,lastLongPress=0;
  let mousePress=null,ignoreMapClick=false,pointDrag=false;
  const fmt=n=>Number.isFinite(n)?n.toFixed(1):'—';
@@ -287,8 +294,10 @@ window.GDV_ROUTE_PLANNER_BOOT=function(options){
    const button=document.createElement('button');button.type='button';button.dataset.routeCmd=cmd;
    button.textContent=title;
    button.addEventListener('click',e=>{
-    e.stopPropagation();cancelMenu();
+    e.preventDefault();e.stopPropagation();
+    // Confirmar primero; finish() retira el menú después de fijar el destino.
     if(cmd==='finish'){finish();return}
+    cancelMenu();
     if(cmd==='continue'){begin();return}
     if(cmd==='delete'){
      const removedLast=index===points.length-1;
@@ -446,7 +455,12 @@ window.GDV_ROUTE_PLANNER_BOOT=function(options){
  for(const evt of ['touchend','touchcancel'])map.getContainer().addEventListener(evt,cancelTouch,{passive:true});
  map.on('mousemove',mouseMove);
  map.getContainer().addEventListener('mouseleave',hideHover);
- map.on('mousedown',()=>cancelMenu());
+ map.on('mousedown',event=>{
+  // Al presionar el botón «Finalizar navegación aquí», mantener el menú hasta
+  // que se ejecute el click del botón. Solo un clic fuera debe cerrarlo.
+  if(menu.contains(event.originalEvent?.target))return;
+  cancelMenu();
+ });
  window.addEventListener('keydown',e=>{
   if(e.key==='Escape'){cancelMenu();if(drawing)pause();return}
   if(e.key.toLowerCase()==='z'&&(e.ctrlKey||e.metaKey)&&!e.altKey&&!e.shiftKey&&points.length){
