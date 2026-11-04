@@ -686,7 +686,7 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
   </div>
   <section id="pronarea-nav" class="pronarea-nav" aria-label="Navegar a las zonas mencionadas en PRONAREA" hidden>
    <strong class="pronarea-nav-title">Zonas reconocidas en el boletín</strong>
-   <p class="pronarea-nav-note">Seleccioná una referencia para trasladar el mapa. Los recuadros solo aparecen cuando el texto aporta coordenadas explícitas: NO representan zonas de peligro.</p>
+   <p class="pronarea-nav-note">Elegí una FIR para centrar y sombrear su región educativa, o una referencia antártica. Las FIR no sustituyen al AIP y los recuadros WIND/T no representan zonas de peligro.</p>
    <div id="pronarea-nav-options" class="pronarea-nav-options"></div>
   </section>
   <p class="map-context-note"><strong>El PRONAREA permite ubicar referencias geográficas.</strong> La lectura identifica fenómenos y niveles, pero NO representa automáticamente tormentas, hielo ni turbulencia sobre el mapa.</p>
@@ -2295,6 +2295,25 @@ function locatePronareaRegions(raw){
  }
  return regions;
 }
+
+/* El mapa ya dispone de cinco polígonos FIR educativos. Se reutilizan para
+ * centrar cada PRONAREA sin inventar una geometría meteorológica. */
+let pronareaFirShapes=null,pronareaFirPending=null;
+async function getPronareaFirShapes(){
+ if(pronareaFirShapes)return pronareaFirShapes;
+ if(pronareaFirPending)return pronareaFirPending;
+ pronareaFirPending=(async()=>{
+  const response=await fetch('/assets/argentina-fir-educativas.geojson',{signal:AbortSignal.timeout(12000)});
+  if(!response.ok)throw Error('Geometría FIR no disponible');
+  const geo=await response.json();
+  if(geo.type!=='FeatureCollection'||!Array.isArray(geo.features)||geo.features.length!==5)
+   throw Error('Geometría FIR incompleta');
+  pronareaFirShapes=new Map(geo.features.map(x=>[x.properties?.code,x]));
+  return pronareaFirShapes;
+ })().finally(()=>{pronareaFirPending=null});
+ return pronareaFirPending;
+}
+
 function drawPronareaReferences(){
  pronareaFocusLayer.clearLayers();
  if(mapViewMode!=='pronarea')return;
@@ -2307,6 +2326,21 @@ function drawPronareaReferences(){
    tip.textContent=region.name+' · límites de referencia del texto WIND/T, NO fenómeno';
    rect.bindTooltip(tip,{sticky:true});
    rect.on('click',()=>focusPronareaRegion(region));
+  }else if(region.kind==='fir'){
+   const feature=pronareaFirShapes?.get(region.code);
+   if(feature){
+    L.geoJSON(feature,{
+     style:{color:FIR_COLORS[region.code]||'#b5d2f3',weight:2.2,dashArray:'6 7',fillOpacity:.19,opacity:.95},
+     onEachFeature:(_,layer)=>{
+      layer.bindTooltip(region.name+' · mapa FIR educativo, verificar AIP ENR 2.1',{sticky:true});
+      layer.on('click',()=>focusPronareaRegion(region));
+      layer.on('mouseover',()=>{if(layer.setStyle)layer.setStyle({fillOpacity:.29,weight:3})});
+      layer.on('mouseout',()=>{if(layer.setStyle)layer.setStyle({fillOpacity:.19,weight:2.2})});
+     }
+    }).addTo(pronareaFocusLayer);
+   }else L.circleMarker([region.lat,region.lon],{
+    radius:6,color:'#eff9ff',weight:2,fillColor:FIR_COLORS[region.code]||'#4898ba',fillOpacity:.9
+   }).addTo(pronareaFocusLayer).bindTooltip(region.name+' · punto de orientación');
   }else if(region.id==='marambio'){
    const dot=L.circleMarker([region.lat,region.lon],{
     radius:7,color:'#d4f2ff',weight:2,fillColor:'#0b5684',fillOpacity:.9
@@ -2320,12 +2354,32 @@ function drawPronareaReferences(){
 function focusPronareaRegion(region){
  if(mapViewMode!=='pronarea'||!region)return;
  if(region.kind==='bounds')map.flyToBounds(region.bounds,{padding:[35,35],maxZoom:7,duration:.9});
- else map.flyTo([region.lat,region.lon],region.zoom||6,{duration:.9});
+ else if(region.kind==='fir'){
+  map.flyTo([region.lat,region.lon],region.zoom||6,{duration:.6});
+  const drawFocus=features=>{
+   if(mapViewMode!=='pronarea'||!pronareaRegions.some(x=>x.id===region.id))return;
+   const feature=features.get(region.code);
+   if(!feature)return;
+   drawPronareaReferences();
+   const bounds=L.geoJSON(feature).getBounds();
+   if(bounds.isValid())map.flyToBounds(bounds,{padding:[35,35],maxZoom:8,duration:.8});
+   viewStatus.textContent='PRONAREA · '+region.name+' ('+
+    PRONAREA_FIR_REFERENCES[region.code].short+
+    '): región educativa centrada y sombreada. Verificar límites ATS vigentes en AIP ENR 2.1.';
+  };
+  if(pronareaFirShapes)drawFocus(pronareaFirShapes);
+  else void getPronareaFirShapes().then(drawFocus).catch(()=>{
+   if(mapViewMode==='pronarea')viewStatus.textContent='PRONAREA · '+region.name+
+    ': punto central aproximado; no se pudo cargar la cartografía FIR educativa.';
+  });
+ }else map.flyTo([region.lat,region.lon],region.zoom||6,{duration:.9});
  for(const button of pronareaNavOptions.querySelectorAll('button')){
   button.setAttribute('aria-pressed',String(button.dataset.id===region.id));
  }
- const label=region.kind==='bounds'?'Rango de coordenadas del boletín (NO zona de peligro)':'Referencia de ubicación, NO zona de peligro';
- viewStatus.textContent='PRONAREA · '+region.name+'. '+label+'. Vigencia y fenómenos: verificar boletín oficial del SMN.';
+ if(region.kind!=='fir'){
+  const label=region.kind==='bounds'?'Rango WIND/T del boletín (NO zona de peligro)':'Referencia de ubicación, NO zona de peligro';
+  viewStatus.textContent='PRONAREA · '+region.name+'. '+label+'. Vigencia: verificar SMN.';
+ }
 }
 function renderPronareaRegions(autoFocus=false){
  pronareaRegions=locatePronareaRegions(pronareaInput.value);
@@ -2337,7 +2391,8 @@ function renderPronareaRegions(autoFocus=false){
   button.textContent='Ver '+region.name;
   button.setAttribute('aria-pressed','false');
   const sub=document.createElement('small');
-  sub.textContent=region.kind==='bounds'?'Área WIND/T con coordenadas expresas':'Punto de orientación geográfica';
+  sub.textContent=region.kind==='bounds'?'Rango WIND/T con coordenadas expresas':
+   region.kind==='fir'?'Sombreado FIR educativo · AIP ENR 2.1':'Punto de orientación geográfica';
   button.append(sub);button.addEventListener('click',()=>focusPronareaRegion(region));
   pronareaNavOptions.append(button);
  }
