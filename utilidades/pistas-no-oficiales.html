@@ -139,6 +139,19 @@ body{background:#0b1826;color:var(--dispatch-fg)}
 main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
 .dispatch-layout{width:100%;display:grid;grid-template-columns:minmax(350px,29%) minmax(0,1fr);
  min-height:calc(100dvh - 60px);height:calc(100dvh - 60px)}
+/* Centro de control plegable. La vista inicial deja todo el ancho al mapa. */
+.dispatch-layout.is-control-collapsed{grid-template-columns:minmax(0,1fr)}
+.dispatch-layout.is-control-collapsed .dispatch-sidebar{display:none!important}
+#control-toggle{background:#294c67;border:1px solid #7ba5c5;padding:9px 12px;border-radius:9px;color:#f3f9ff;font-size:12px;font-weight:800;white-space:nowrap;min-height:39px}
+#control-toggle:hover,#control-toggle:focus-visible{background:#3a698a}
+#control-toggle[aria-expanded=true]{background:#c4e0f3;color:#143550}
+@media(max-width:959px){
+ .dispatch-layout.is-control-collapsed{height:calc(100dvh - 58px);min-height:540px}
+ .dispatch-layout.is-control-collapsed .dispatch-map-panel{flex:1;min-height:0}
+ .dispatch-layout.is-control-collapsed .dispatch-map-main{flex:1;min-height:0}
+ .dispatch-layout.is-control-collapsed #map{height:auto;min-height:0}
+}
+@media(max-width:620px){.dispatch-layout.is-control-collapsed{min-height:580px}}
 .dispatch-sidebar{min-width:0;min-height:0;background:#122337;border-right:1px solid #4a6983}
 .dispatch-sidebar-scroll{height:100%;overflow:auto;overscroll-behavior:contain;padding:18px 16px 36px;scrollbar-color:#54738b #142638}
 .dispatch-kicker{font-size:10px;letter-spacing:.13em;font-weight:850;color:#9ed0f5}
@@ -280,8 +293,8 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
  <nav aria-label="Herramientas Gente de Vuelo"><a href="../index.html">Portada</a><a href="../comunidad.html#foro">Foro</a><a href="index.html">Utilidades</a>
  <a href="meteorologia-aeronautica.html">Flight Operations</a>
  <a href="gestion-aeronautica/">AeroSuite</a></nav></header><main class="dispatch-main">
- <div class="dispatch-layout">
-  <aside class="dispatch-sidebar" id="dispatch-sidebar" aria-label="Panel de control del mapa">
+ <div class="dispatch-layout is-control-collapsed" id="dispatch-layout">
+  <aside class="dispatch-sidebar" id="dispatch-sidebar" aria-label="Panel de control del mapa" aria-hidden="true">
    <div class="dispatch-sidebar-scroll">
     <div class="dispatch-sidebar-heading"><span class="dispatch-kicker">CENTRO DE CONTROL</span>
      <h1>AeroLocator</h1><p>Mapa de pistas y aeródromos · Gente de Vuelo / AeroSuite</p></div>
@@ -379,7 +392,7 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
    </div>
   </aside>
   <section class="dispatch-map-panel" id="dispatch-map-panel" aria-label="Mapa geográfico interactivo">
-   <div class="dispatch-map-toolbar"><div><span class="dispatch-kicker">ÁREA DE NAVEGACIÓN</span>
+   <div class="dispatch-map-toolbar"><button type="button" id="control-toggle" aria-controls="dispatch-sidebar" aria-expanded="false" title="Mostrar u ocultar el Centro de control">☰ Mostrar centro de control</button><div><span class="dispatch-kicker">ÁREA DE NAVEGACIÓN</span>
     <strong>AeroLocator · Mapa interactivo</strong></div>
  <label class="map-view-picker">Mostrar una capa a la vez
  <select id="map-view-mode" aria-controls="map" aria-describedby="map-view-status">
@@ -783,7 +796,7 @@ function selectAirfield(marker,point,label,createCard){
   return;
  }
  showAirfieldDetail(createCard,label);
- if(desktopMode()){
+ if(desktopMode()&&!document.getElementById('dispatch-layout').classList.contains('is-control-collapsed')){
   marker.closePopup();
   selectedPanel.scrollIntoView({behavior:'smooth',block:'nearest'});
  }else{
@@ -804,6 +817,19 @@ rulerToggle.addEventListener('click',()=>{
  }
 });
 document.getElementById('ruler-clear').addEventListener('click',clearRuler);
+/* Oculta o restaura el menú sin reconstruir el mapa ni perder la vista actual. */
+const controlToggle=document.getElementById('control-toggle');
+const controlLayout=document.getElementById('dispatch-layout');
+const controlSidebar=document.getElementById('dispatch-sidebar');
+function setControlOpen(open){
+ controlLayout.classList.toggle('is-control-collapsed',!open);
+ controlSidebar.setAttribute('aria-hidden',String(!open));
+ controlToggle.setAttribute('aria-expanded',String(open));
+ controlToggle.textContent=open?'☰ Ocultar centro de control':'☰ Mostrar centro de control';
+ requestAnimationFrame(()=>map.invalidateSize({animate:false}));
+ setTimeout(()=>map.invalidateSize({animate:false}),150);
+}
+controlToggle.addEventListener('click',()=>setControlOpen(controlLayout.classList.contains('is-control-collapsed')));
 const expandMap=document.getElementById('map-fullscreen');
 expandMap.addEventListener('click',()=>{
  const panel=document.getElementById('dispatch-map-panel');
