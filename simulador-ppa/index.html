@@ -41,11 +41,18 @@
  <a href="https://www.argentina.gob.ar/anac/personal-aeronautico/examenes" target="_blank" rel="noopener noreferrer">Fuente: ANAC</a>
 </aside>
 <div class="panel" id="gate"><h2>Acceso restringido</h2><p>Acceso sujeto a autenticación y a políticas de acceso exclusivas para administración en Supabase.</p><p class="notice">Banco PPA en revisión técnica. Las respuestas mostradas son para pruebas internas; no sustituyen la documentación de ANAC.</p></div>
+<section class="panel" id="ppa-exam50" aria-labelledby="exam50Title">
+ <div class="ppa-panel-head"><h2 id="exam50Title">Simulacro PPA · 50 preguntas</h2><p class="ppa-panel-note">Modalidad independiente</p></div>
+ <p>50 preguntas en orden correlativo, siguiendo los capítulos del PDF ANAC. Corrección después de cada respuesta y resultado final. Objetivo educativo: 38 aciertos de 50 (75 %).</p>
+ <div class="ppa-actionbar"><button type="button" id="start50" class="primary" disabled>Comenzar simulacro de 50 preguntas</button></div>
+ <p class="notice">Claves del banco histórico Gente de Vuelo, todavía en revisión. No es un examen oficial de ANAC.</p>
+ <p id="status50" role="status" aria-live="polite"></p>
+</section>
 <section class="panel" id="ppa-configuracion" aria-labelledby="configTitle">
  <div class="ppa-panel-head"><h2 id="configTitle">Configuración</h2><p class="ppa-panel-note">Elegí cómo querés practicar</p></div>
  <div class="ppa-config-grid">
   <label class="ppa-field" for="practice"><span id="ppaPracticeLabel">Tipo</span>
-   <select id="practice"><option value="practice">Práctica con puntaje · banco ANAC histórico</option><option value="exam50">Simulacro PPA · 50 preguntas (PDF por capítulos)</option><option value="exam">Examen · solo preguntas verificadas</option><option value="review">Revisar banco · sin puntaje</option><option value="sequential">Revisión correlativa completa · con puntaje provisional</option></select>
+   <select id="practice"><option value="practice">Práctica con puntaje · banco ANAC histórico</option><option value="exam">Examen · solo preguntas verificadas</option><option value="review">Revisar banco · sin puntaje</option><option value="sequential">Revisión correlativa completa · con puntaje provisional</option></select>
   </label>
   <label class="ppa-field" id="ppaSubjectField" for="subject">Materia<select id="subject"><option value="all">Todas las materias</option></select></label>
   <label class="ppa-field" id="ppaModeField" for="mode">Tipo de preguntas<select id="mode"><option value="figure">Con figuras</option><option value="all">Mixto · todas</option><option value="simple">Sin figuras</option></select></label>
@@ -108,7 +115,7 @@ const ANAC_PAGES={1:1,2:1,3:2,4:2,5:3,6:3,7:4,8:5,9:6,29:6,30:7,31:7,33:8,34:11,
 const figureDocUrl=page=>ANAC_FIGURE_PDF+'#page='+page+'&zoom=page-width';
 let bank=[],historicalBank=[],reviewBank=[],rawBank=[],exam=[],index=0,points=0,selected=null,answered=false,figureReady=false,gradedCount=0,reviewMode=false,practiceMode=false,sequentialMode=false;
 // Muestra fija de preguntas coincidentes en el PDF ANAC por capítulos. Claves del banco GdV.
-const EXAM50_SOURCE=[["151",1,25],["037",1,10],["048",1,11],["052",1,12],["059",1,13],["069",1,14],["072",1,15],["359",2,37],["274",3,7],["032",3,1],["041",3,10],["051",3,12],["057",3,13],["064",3,14],["077",3,16],["034",4,1],["042",4,10],["053",4,12],["061",4,13],["065",4,14],["071",4,15],["080",4,16],["264",5,5],["030",5,1],["040",5,10],["045",5,11],["050",5,12],["094",5,18],["096",5,19],["035",6,1],["039",6,10],["047",6,11],["055",6,12],["058",6,13],["068",6,14],["075",6,15],["031",7,1],["038",7,10],["046",7,11],["073",7,15],["054",7,12],["062",7,13],["066",7,14],["036",8,1],["043",8,10],["049",8,11],["056",8,12],["060",8,13],["076",8,15],["090",8,18]].map(([num,capitulo,numero])=>({id:'ANAC-PPA-'+num,capitulo,numero}));
+const EXAM50_SOURCE=[["151",1,25],["037",1,10],["048",1,11],["052",1,12],["059",1,13],["069",1,14],["072",1,15],["359",2,37],["274",3,7],["032",3,1],["041",3,10],["051",3,12],["057",3,13],["064",3,14],["077",3,16],["034",4,1],["042",4,10],["053",4,12],["061",4,13],["065",4,14],["071",4,15],["080",4,16],["264",5,5],["030",5,1],["040",5,10],["045",5,11],["050",5,12],["094",5,18],["096",5,19],["035",6,1],["039",6,10],["047",6,11],["055",6,12],["058",6,13],["068",6,14],["075",6,15],["031",7,1],["038",7,10],["046",7,11],["073",7,15],["054",7,12],["062",7,13],["066",7,14],["036",8,1],["043",8,10],["049",8,11],["056",8,12],["060",8,13],["076",8,15],["090",8,18]].map(([num,capitulo,numero])=>({id:'ANAC-PPA-'+num,capitulo,numero})).sort((a,b)=>a.capitulo-b.capitulo||a.numero-b.numero);
 const EXAM50_MAP=new Map(EXAM50_SOURCE.map(x=>[x.id,x]));
 let exam50Mode=false;
 let sequentialAnswers={},sequentialFlags={},currentAdminId='',sequenceSignature='';
@@ -231,17 +238,6 @@ const localFigure=q=>/^\/simulador-ppa\/figuras\/[a-z0-9_-]+\.png$/i.test(q.figu
 const hasImage=q=>localFigure(q)||/^https:\/\/[^ ]+\.(png|jpe?g|webp)$/i.test(q.figura_r2_key||'');
 function describeMode(){
  const option=$('practice').value;
- const is50=option==='exam50';
- for(const id of ['ppaSubjectField','ppaModeField','ppaCountField'])$(id).hidden=is50;
- if(is50){
-  const ready=EXAM50_SOURCE.filter(x=>historicalBank.some(q=>q.id===x.id)).length;
-  for(const id of ['subject','mode','count'])$(id).disabled=true;
-  $('reset-seq').classList.add('hidden');
-  $('start').textContent='Comenzar simulacro de 50 preguntas';
-  $('mode-description').textContent='Selección de 50 preguntas coincidentes con el PDF ANAC por capítulos. La corrección se muestra después de cada respuesta; objetivo interno 38/50 (75%). Puntaje basado en claves históricas, no equivale al examen oficial.';
-  $('status').textContent='Simulacro PPA · '+ready+' de 50 preguntas disponibles. El banco principal de 385 permanece independiente.';
-  return;
- }
  const sequential=option==='sequential';
  if(ppaStudentMode){
   // Academia del Alumno: únicamente tandas de 10 o el banco completo en orden.
@@ -263,6 +259,7 @@ function describeMode(){
  }
  $('start').textContent=sequential?'Comenzar / continuar revisión':option==='review'?'Comenzar revisión':option==='exam'?'Comenzar examen':'Comenzar práctica';
  $('reset-seq').classList.toggle('hidden',!sequential);
+ for(const id of ['ppaSubjectField','ppaModeField','ppaCountField'])$(id).hidden=sequential;
  for(const id of ['subject','mode','count'])$(id).disabled=sequential||(ppaStudentMode&&option==='exam'&&id==='count');
  if(ppaStudentMode&&option==='exam')$('count').value='10';
  $('mode-description').textContent=option==='practice'?
@@ -302,6 +299,9 @@ async function load(){
   $('practice').onchange=describeMode;
   $('mode').onchange=describeMode;
   $('audit-export').onclick=exportAuditCsv;
+  const ready50=EXAM50_SOURCE.filter(item=>historicalBank.some(q=>q.id===item.id)).length;
+  $('start50').disabled=ready50!==50;
+  $('status50').textContent=ready50===50?'50 preguntas disponibles en orden correlativo.':'Solo '+ready50+' de 50 preguntas disponibles.';
   $('start').disabled=!reviewBank.length;
    $('ppaLookupSearch').disabled=!reviewBank.length;
   if(!ppaStudentMode)updateAuditSummary();
@@ -448,22 +448,26 @@ if(q.opciones.length<2){
  updateProgressVisual();
 }
 }
+$('start50').onclick=()=>{
+ const byId=new Map(historicalBank.map(q=>[q.id,q]));
+ const selected50=EXAM50_SOURCE.map(item=>byId.get(item.id));
+ if(selected50.length!==50||selected50.some(q=>!q)){
+  $('status50').textContent='No se puede iniciar: alguna pregunta o figura no está disponible.';
+  return;
+ }
+ exam50Mode=true;reviewMode=false;practiceMode=true;sequentialMode=false;
+ exam=selected50;index=0;points=0;gradedCount=0;
+ $('results').classList.add('hidden');$('exam').classList.remove('hidden');
+ $('status50').textContent='Simulacro correlativo de 50 preguntas en curso, con corrección inmediata.';
+ show();
+ $('exam').scrollIntoView({behavior:'smooth',block:'start'});
+};
 $('start').onclick=()=>{
  const option=$('practice').value;
- if(ppaStudentMode&&!['practice','sequential','exam50'].includes(option))return;
+ if(ppaStudentMode&&!['practice','sequential'].includes(option))return;
  if(ppaStudentMode)$('count').value='10';
- exam50Mode=option==='exam50';
-  if(exam50Mode){
-   const byId=new Map(historicalBank.map(q=>[q.id,q]));
-   const choices=EXAM50_SOURCE.map(x=>byId.get(x.id));
-   if(choices.some(q=>!q)){$('status').textContent='No se puede iniciar: alguna pregunta o su figura no está disponible.';return;}
-   reviewMode=false;practiceMode=true;sequentialMode=false;
-   exam=shuffle(choices);index=0;points=0;gradedCount=0;
-   $('results').classList.add('hidden');$('exam').classList.remove('hidden');
-   $('status').textContent='Simulacro PPA · 50 preguntas. Cada respuesta se corrige al pulsar Responder. El resultado total aparece al final. Umbral interno: 38 aciertos.';
-   show();return;
-  }
-  reviewMode=option==='review';practiceMode=option==='practice';sequentialMode=option==='sequential';
+ exam50Mode=false;
+ reviewMode=option==='review';practiceMode=option==='practice';sequentialMode=option==='sequential';
  if(sequentialMode){
   exam=AUDIT.sortByNumber(reviewBank);
   sequenceSignature=computeSequenceSignature();
@@ -617,7 +621,7 @@ $('again').onclick=()=>{
    $('ppaPracticeLabel').textContent='Modalidad de práctica';
    $('practice').querySelector('option[value="practice"]').textContent='10 preguntas aleatorias';
    $('practice').querySelector('option[value="sequential"]').textContent='Banco completo en orden';
-    $('practice').querySelector('option[value="exam50"]').textContent='Simulacro de examen · 50 preguntas';
+    
    $('practice').value='practice';
    $('count').replaceChildren(new Option('10','10'));
    $('mode').value='all';
