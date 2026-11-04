@@ -130,6 +130,9 @@ window.GDV_ROUTE_PLANNER_BOOT=function(options){
  let points=[],drawing=false,finished=false,windGroups=[],lastHover=null,lastLongPress=0;
  let windChoiceManual=false;
  let mousePress=null,ignoreMapClick=false,pointDrag=false;
+ // Arrastre directo de la pierna terminada: presionar sobre la línea, arrastrar
+ // y soltar. Se guarda una única revisión para poder deshacerlo con Ctrl+Z.
+ let bendGesture=null,suppressLegClickUntil=0;
  const routeHistory=[];
  function saveRouteRevision(){
   routeHistory.push({points:points.map(p=>({...p})),drawing,finished});
@@ -155,7 +158,7 @@ window.GDV_ROUTE_PLANNER_BOOT=function(options){
   setNotice(drawing?
    'Arrastrá el mapa normalmente. Clic breve: marcar punto. Al llegar: clic derecho sobre el destino → «Finalizar navegación aquí».':
    finished?
-   'Editar trayectoria: clic sobre la línea blanca para agregar un punto amarillo. Arrastralo hasta la ciudad de referencia. Ctrl + Z deshace.':'');
+   'Corregir trayectoria: presioná sobre la línea blanca, arrastrala hacia la ciudad de referencia y soltá. Ctrl + Z deshace el desvío.':'');
  }
  function getForecast(){
   const alt=Number(altitude.value),speed=Number(ias.value);
@@ -287,14 +290,31 @@ window.GDV_ROUTE_PLANNER_BOOT=function(options){
       color:'#fff',weight:22,opacity:0.01,interactive:true,
       bubblingMouseEvents:false,className:'route-leg-insert-target'
      }).addTo(layer);
+     hit.on('mousedown',event=>{
+      if(!finished||drawing||bendGesture||!event.latlng)return;
+      const native=event.originalEvent;
+      if(!native||native.button!==0)return;
+      // Evitar que Leaflet arrastre el mapa: se arrastra la pierna.
+      L.DomEvent.stop(native);
+      cancelMenu();hideHover();
+      const wasMapDraggable=Boolean(map.dragging?.enabled());
+      if(wasMapDraggable)map.dragging.disable();
+      bendGesture={
+       index:legIndex,
+       start:{lat:event.latlng.lat,lng:event.latlng.lng},
+       startX:native.clientX,startY:native.clientY,
+       inserted:false,draggable:wasMapDraggable
+      };
+     });
      hit.on('click',event=>{
-      if(!finished||drawing)return;
+      // Un clic sin movimiento también permite agregar un punto, sobre todo en móvil.
+      if(!finished||drawing||Date.now()<suppressLegClickUntil)return;
       if(event.originalEvent?.button!==undefined&&event.originalEvent.button!==0)return;
       if(!event.latlng)return;
       if(event.originalEvent)L.DomEvent.stopPropagation(event.originalEvent);
       insertReferencePoint(legIndex,event.latlng);
      });
-     hit.bindTooltip('Clic para agregar punto intermedio y desviar la trayectoria',{
+     hit.bindTooltip('Mantené clic izquierdo y arrastrá esta pierna para desviar la ruta',{
       sticky:true,direction:'top',opacity:.95
      });
     }
@@ -457,7 +477,7 @@ window.GDV_ROUTE_PLANNER_BOOT=function(options){
   lastHover=latlng;
  }
  function mouseMove(e){
-  if(!points.length||menu.hidden===false)return;
+  if(bendGesture||!points.length||menu.hidden===false)return;
   if(drawing){
    const coords=[points.at(-1),e.latlng];
    preview.clearLayers();
@@ -526,6 +546,54 @@ window.GDV_ROUTE_PLANNER_BOOT=function(options){
  undoButton.addEventListener('click',undoLastPoint);
  undoFloat.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();undoLastPoint()});
  const mapNode=map.getContainer();
+ // Seguimiento global: el usuario puede mover el cursor fuera de la línea
+ // o incluso del mapa sin perder la pierna que está arrastrando.
+ function pointerLatLng(e){
+  const p=map.mouseEventToContainerPoint(e),width=mapNode.clientWidth,height=mapNode.clientHeight;
+  const bounded=L.point(Math.min(Math.max(p.x,0),Math.max(0,width-1)),
+   Math.min(Math.max(p.y,0),Math.max(0,height-1)));
+  const ll=map.containerPointToLatLng(bounded);
+  return {lat:ll.lat,lng:ll.lng};
+ }
+ function moveBend(e){
+  const drag=bendGesture;if(!drag||e.buttons===0)return;
+  if(Math.hypot(e.clientX-drag.startX,e.clientY-drag.startY)<6&&!drag.inserted)return;
+  if(!drag.inserted){
+   saveRouteRevision();
+   points.splice(drag.index,0,{...drag.start});
+   drag.inserted=true;
+  }
+  points[drag.index]=pointerLatLng(e);
+  ignoreMapClick=true;
+  e.preventDefault?.();
+  e.stopPropagation?.();
+  render();updateButtons();
+ }
+ function endBend(e){
+  const drag=bendGesture;if(!drag)return;
+  // Hay que guardar el estado final antes de liberar la captura.
+  if(drag.inserted){
+   points[drag.index]=pointerLatLng(e);
+   render();updateButtons();
+   setMessage('Trayectoria desviada por el punto P'+drag.index+
+    '. Rumbos, distancias, GS y tiempos recalculados. Usá Ctrl + Z para deshacer.');
+  }else{
+   // Se conserva el comportamiento anterior para un simple clic sin arrastre.
+   insertReferencePoint(drag.index,drag.start);
+  }
+  if(drag.draggable)map.dragging?.enable();
+  bendGesture=null;
+  suppressLegClickUntil=Date.now()+450;
+  ignoreMapClick=true;hideHover();
+  e.preventDefault?.();e.stopPropagation?.();
+ }
+ document.addEventListener('mousemove',moveBend,true);
+ document.addEventListener('mouseup',endBend,true);
+ window.addEventListener('blur',()=>{
+  if(!bendGesture)return;
+  if(bendGesture.draggable)map.dragging?.enable();
+  bendGesture=null;suppressLegClickUntil=Date.now()+450;render();updateButtons();
+ });
  // Una interacción arrastrada no es un punto. Detectar desplazamiento real
  // antes de que Leaflet despache el clic, incluso sobre marcadores ajenos.
  mapNode.addEventListener('mousedown',e=>{
