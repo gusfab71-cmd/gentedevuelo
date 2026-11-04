@@ -2193,6 +2193,275 @@ document.getElementById('pronarea-map-analyze').addEventListener('click',()=>{
  (levels.length?'\nNiveles citados en el boletín (NO asociados automáticamente a cada fenómeno): '+levels.join(', '):'\nSin niveles de vuelo reconocidos automáticamente.')+
  '\nEsto es una lectura del texto: NO dibuja los fenómenos sobre el mapa. Comprobá FIR, emisión y vigencia en el SMN.';
 });
+
+/* OurAirports Argentina: TODAS las instalaciones de la fuente; separadas del mapa oficial.
+ * Revisión propia, sin validar habilitación aeronáutica ni frecuencia operativa.
+ */
+let oaRecords=[],oaInfo=null,oaLoading=null,oaCurrent=null,oaMaxList=60;
+const oaReviews=new Map(),oaPointMarkers=new Map();
+const oaSearch=document.getElementById('oa-search'),
+ oaRegion=document.getElementById('oa-region'),
+ oaKind=document.getElementById('oa-kind'),
+ oaStatus=document.getElementById('oa-status'),
+ oaStats=document.getElementById('oa-stats'),
+ oaDetail=document.getElementById('oa-selected-detail');
+const oaRegionNames={
+ 'AR-A':'Salta','AR-B':'Buenos Aires','AR-C':'CABA','AR-D':'San Luis',
+ 'AR-E':'Entre Ríos','AR-F':'La Rioja','AR-G':'Santiago del Estero',
+ 'AR-H':'Chaco','AR-J':'San Juan','AR-K':'Catamarca','AR-L':'La Pampa',
+ 'AR-M':'Mendoza','AR-N':'Misiones','AR-P':'Formosa','AR-Q':'Neuquén',
+ 'AR-R':'Río Negro','AR-S':'Santa Fe','AR-T':'Tucumán','AR-U':'Chubut',
+ 'AR-V':'Tierra del Fuego','AR-W':'Corrientes','AR-X':'Córdoba',
+ 'AR-Y':'Jujuy','AR-Z':'Santa Cruz'
+};
+const oaTypeNames={
+ small_airport:'Aeródromo / pista pequeña',medium_airport:'Aeropuerto mediano',
+ large_airport:'Aeropuerto grande',heliport:'Helipuerto',seaplane_base:'Hidroaeródromo',
+ balloonport:'Área para aeróstatos',closed:'Cerrado / histórico',closed_airport:'Cerrado / histórico'
+};
+const oaStatusNames={
+ pending:'Pendiente de revisar',reviewed:'Revisado por Gente de Vuelo (no oficial)',
+ duplicate:'Marcado como posible duplicado',excluded:'Descartado de uso en nuestro catálogo'
+};
+function oaReviewFor(record){return oaReviews.get(record.id)||null}
+function oaState(record){return oaReviewFor(record)?.review_status||'pending'}
+function oaLocation(record){
+ const rev=oaReviewFor(record);
+ return rev&&Number.isFinite(rev.corrected_lat)&&Number.isFinite(rev.corrected_lon)?
+ L.latLng(rev.corrected_lat,rev.corrected_lon):L.latLng(record.lat,record.lon);
+}
+function oaLikelyDuplicate(record){
+ const sourceCode=(record.icao||record.gps||'').trim().toUpperCase();
+ for(const site of documentedAirstrips){
+  const code=String(site.details?.icao||'').trim().toUpperCase();
+  if(sourceCode&&code===sourceCode)return true;
+  if(nauticalMiles(site.lat,site.lon,record.lat,record.lon)<.18)return true;
+ }
+ for(const site of records){
+  if(Number.isFinite(site.latitude)&&Number.isFinite(site.longitude)&&
+   nauticalMiles(site.latitude,site.longitude,record.lat,record.lon)<.12)return true;
+ }
+ return false;
+}
+function oaMarkerColor(record){
+ const state=oaState(record);
+ if(state==='duplicate')return '#8b8d91';
+ if(state==='excluded'||record.closed)return '#ac5656';
+ if(state==='reviewed')return '#23846e';
+ if(oaLikelyDuplicate(record))return '#c79b3d';
+ return '#191d27';
+}
+function oaMatches(record){
+ const region=oaRegion.value,kind=oaKind.value,status=oaStatus.value;
+ if(region!=='all'&&record.region!==region)return false;
+ if(kind!=='all'&&(kind==='closed'?!record.closed:record.type!==kind))return false;
+ if(status!=='all'&&(status==='matches'?!oaLikelyDuplicate(record):oaState(record)!==status))return false;
+ const q=normalizePista(oaSearch.value.trim());
+ return !q||normalizePista([
+  record.name,record.ident,record.icao,record.iata,record.local,
+  record.municipality,record.region,oaRegionNames[record.region],record.keywords
+ ].join(' ')).includes(q);
+}
+function oaInfoLine(parent,key,val){
+ if(val===null||val===undefined||val==='')return;
+ const p=document.createElement('p');
+ const title=document.createElement('strong');title.textContent=key+': ';
+ p.append(title,document.createTextNode(String(val)));parent.append(p);
+}
+function oaShowRecord(record){
+ oaCurrent=record;
+ contextualInspector(true);
+ const selected=oaReviewFor(record),at=oaLocation(record),status=oaState(record);
+ oaDetail.hidden=false;oaDetail.replaceChildren();
+ const title=document.createElement('h4');title.textContent=record.name;
+ oaDetail.append(title);
+ oaInfoLine(oaDetail,'Estado de revisión',oaStatusNames[status]);
+ oaInfoLine(oaDetail,'Tipo publicado por OurAirports',oaTypeNames[record.type]||record.type);
+ if(record.closed)oaInfoLine(oaDetail,'Advertencia','Figura como CERRADO en OurAirports; no usar como destino sin confirmar oficialmente.');
+ if(oaLikelyDuplicate(record))oaInfoLine(oaDetail,'Cruce automático','Posible coincidencia con un registro ANAC o comunitario existente (NO se eliminó).');
+ oaInfoLine(oaDetail,'Identificador OurAirports',record.ident+' · id '+record.id);
+ oaInfoLine(oaDetail,'Códigos', [record.icao&&'OACI '+record.icao,record.iata&&'IATA '+record.iata,
+ record.gps&&'GPS '+record.gps,record.local&&'Local '+record.local].filter(Boolean).join(' / ')||'Sin código acreditado');
+ oaInfoLine(oaDetail,'Ubicación', [record.municipality,oaRegionNames[record.region]||record.region].filter(Boolean).join(' · '));
+ oaInfoLine(oaDetail,'Coordenadas originales',record.lat.toFixed(6)+', '+record.lon.toFixed(6));
+ if(selected&&Number.isFinite(selected.corrected_lat))oaInfoLine(oaDetail,'Referencia corregida GdV',selected.corrected_lat.toFixed(6)+', '+selected.corrected_lon.toFixed(6)+' (no oficial)');
+ if(record.elevationFt!==null)oaInfoLine(oaDetail,'Elevación aportada',Math.round(record.elevationFt)+' ft');
+ if(record.runways.length){
+  const rows=record.runways.map(r=>[r.ident||'sin designación',r.lengthFt!==null?Math.round(r.lengthFt*.3048)+' m':'long. s/d',
+   r.widthFt!==null?Math.round(r.widthFt*.3048)+' m ancho':'ancho s/d',r.surface||'superficie s/d',r.closed?'cerrada':''].filter(Boolean).join(' · '));
+  oaInfoLine(oaDetail,'Pistas (OurAirports, sin validar)',rows.join(' | '));
+ }else oaInfoLine(oaDetail,'Pistas','La fuente no incluye detalles de superficies para este registro.');
+ if(record.frequencies.length){
+  const rows=record.frequencies.map(r=>[r.type,r.mhz!==null?r.mhz+' MHz':'MHz sin informar',r.description].filter(Boolean).join(' '));
+  oaInfoLine(oaDetail,'Frecuencias de terceros, NO verificar por mapa',rows.join(' | '));
+ }else oaInfoLine(oaDetail,'Frecuencias','No publicadas en esta fuente. No implica ausencia de frecuencia ATS.');
+ if(selected?.review_note)oaInfoLine(oaDetail,'Observación de revisión GdV',selected.review_note);
+ const link=document.createElement('a');link.href='https://ourairports.com/airports/'+encodeURIComponent(record.ident)+'/';
+ link.target='_blank';link.rel='noopener noreferrer';link.textContent='Consultar registro original en OurAirports';
+ oaDetail.append(link);
+ const caution=document.createElement('p');caution.className='oa-review-note';
+ caution.textContent='No utilizar estos datos para planificar operaciones sin corroborar con AIP, MADHEL, NOTAM, titular del aeródromo y autoridades correspondientes.';
+ oaDetail.append(caution);
+ if(admin)oaReviewForm(record,selected);
+ oaDetail.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function oaReviewForm(record,review){
+ const box=document.createElement('form');box.className='oa-review-form';
+ const name=document.createElement('strong');name.textContent='Auditoría administrativa · Gente de Vuelo';
+ box.append(name);
+ const label=(caption,control)=>{
+  const item=document.createElement('label');item.textContent=caption;item.append(control);box.append(item);return control;
+ };
+ const status=document.createElement('select');
+ for(const [key,caption] of Object.entries(oaStatusNames)){
+  const opt=document.createElement('option');opt.value=key;opt.textContent=caption;status.append(opt);
+ }
+ status.value=review?.review_status||'pending';label('Estado',status);
+ const note=document.createElement('textarea');note.maxLength=700;note.rows=3;note.value=review?.review_note||'';
+ note.placeholder='Ej.: pista existente, revisar imagen satelital, confirmar contra ANAC';
+ label('Observaciones de revisión (públicas)',note);
+ const coords=document.createElement('div');coords.className='oa-filter-grid';
+ const correctedLat=document.createElement('input');correctedLat.type='number';correctedLat.step='any';correctedLat.placeholder='Latitud corregida';
+ const correctedLon=document.createElement('input');correctedLon.type='number';correctedLon.step='any';correctedLon.placeholder='Longitud corregida';
+ if(Number.isFinite(review?.corrected_lat))correctedLat.value=String(review.corrected_lat);
+ if(Number.isFinite(review?.corrected_lon))correctedLon.value=String(review.corrected_lon);
+ const la=document.createElement('label');la.textContent='Latitud de referencia';la.append(correctedLat);
+ const lo=document.createElement('label');lo.textContent='Longitud de referencia';lo.append(correctedLon);
+ coords.append(la,lo);box.append(coords);
+ const notice=document.createElement('p');notice.className='oa-review-note';
+ notice.textContent='Las coordenadas corregidas solo cambian el punto visible de esta capa; la ficha original se conserva.';
+ box.append(notice);
+ const save=document.createElement('button');save.type='submit';save.textContent='Guardar revisión';
+ const feedback=document.createElement('p');feedback.setAttribute('role','status');
+ box.append(save,feedback);
+ box.addEventListener('submit',async e=>{
+  e.preventDefault();save.disabled=true;feedback.textContent='Guardando revisión…';
+  try{
+   const {data:{user},error:authError}=await client.auth.getUser();
+   if(authError||!user)throw Error('Iniciá sesión como administrador.');
+   const latString=correctedLat.value.trim(),lonString=correctedLon.value.trim();
+   if(Boolean(latString)!==Boolean(lonString))throw Error('Ingresá ambas coordenadas o dejá ambas en blanco.');
+   const lat=latString?Number(latString):null,lon=lonString?Number(lonString):null;
+   if(lat!==null&&(!Number.isFinite(lat)||!Number.isFinite(lon)||lat<-90||lat>0||lon<-85||lon>-25))
+    throw Error('Las coordenadas corregidas deben estar dentro del área geográfica admitida.');
+   const row={airport_id:record.id,review_status:status.value,review_note:note.value.trim(),
+    corrected_lat:lat,corrected_lon:lon,updated_by:user.id,updated_at:new Date().toISOString()};
+   const {error}=await client.from('aerolocator_ourairports_review').upsert(row,{onConflict:'airport_id'});
+   if(error)throw Error(error.message);
+   oaReviews.set(record.id,row);
+   renderOACatalog();
+   oaShowRecord(record);
+  }catch(error){feedback.textContent='No se pudo guardar: '+error.message}
+  finally{save.disabled=false}
+ });
+ oaDetail.append(box);
+}
+function oaDrawList(filtered){
+ areaItems.replaceChildren();
+ const toShow=filtered.slice(0,oaMaxList);
+ for(const record of toShow){
+  const state=oaState(record),pos=oaLocation(record);
+  const label=[record.ident,record.municipality,oaRegionNames[record.region]||record.region].filter(Boolean).join(' · ');
+  const button=inspectorChoice(record.name,label,oaMarkerColor(record),()=>{
+   map.setView(pos,Math.max(map.getZoom(),11),{animate:false});
+   oaShowRecord(record);
+  });
+  const small=document.createElement('small');small.textContent=(oaTypeNames[record.type]||record.type)+' · '+oaStatusNames[state]+
+   (oaLikelyDuplicate(record)?' · Posible coincidencia':'');
+  const copy=button.querySelector('.airspace-choice-text');copy.append(small);
+  areaItems.append(button);
+ }
+ if(filtered.length>oaMaxList){
+  const more=document.createElement('button');more.className='airspace-choice';more.type='button';
+  more.textContent='Mostrar 60 registros más ('+(filtered.length-oaMaxList)+' restantes)';
+  more.addEventListener('click',()=>{oaMaxList+=60;oaDrawList(filtered)});
+  areaItems.append(more);
+ }
+ if(!filtered.length)inspectorMessage('No hay registros con esos filtros. Probá otra provincia, tipo o estado.');
+}
+function renderOACatalog(){
+ oaLayer.clearLayers();oaPointMarkers.clear();
+ if(!oaRecords.length){oaStats.textContent='No hay registros cargados.';return}
+ const filtered=oaRecords.filter(oaMatches);
+ let countClosed=0,countDuplicate=0,countReviewed=0;
+ for(const record of filtered){
+  if(record.closed)countClosed++;
+  if(oaLikelyDuplicate(record))countDuplicate++;
+  if(oaState(record)==='reviewed')countReviewed++;
+  const point=oaLocation(record);
+  const marker=L.circleMarker(point,{radius:5,color:'#f2faff',weight:1.3,
+   fillColor:oaMarkerColor(record),fillOpacity:.96,keyboard:true,
+   title:record.name+' · OurAirports, por verificar'}).addTo(oaLayer);
+  oaPointMarkers.set(record.id,marker);
+  marker.bindTooltip(record.name+' · '+record.ident+' · OurAirports sin verificar',{sticky:true});
+  marker.on('click',()=>oaShowRecord(record));
+  marker.on('contextmenu',e=>{
+   if(e.originalEvent)L.DomEvent.stop(e.originalEvent);
+   oaShowRecord(record);
+  });
+ }
+ if(mapViewMode==='ourairports'&&!map.hasLayer(oaLayer))oaLayer.addTo(map);
+ const total=oaRecords.length;
+ const sourceCount=oaInfo?.counts||{};
+ oaStats.textContent=filtered.length+' visibles / '+total+' registros AR · '+countClosed+
+  ' cerrados · '+countDuplicate+' posibles coincidencias · '+countReviewed+' revisados. '+(oaInfo?.checkedUtc?'Consulta '+dated(oaInfo.checkedUtc):'');
+ oaDrawList(filtered);
+ viewStatus.textContent='OurAirports: '+total+' registros comunitarios para revisar ('+
+  sourceCount.runways+' fichas de pista y '+sourceCount.frequencies+
+  ' frecuencias asociadas). '+filtered.length+' cumplen los filtros. No confirma habilitación ni apertura.';
+}
+async function showOurAirports(force=false){
+ if(oaLoading)return oaLoading;
+ if(oaRecords.length&&!force){
+  renderOACatalog();
+  return;
+ }
+ oaStats.textContent='Descargando registros de OurAirports…';
+ inspectorMessage('Recuperando el catálogo argentino y sus datos de pista/frecuencias…');
+ const button=document.getElementById('oa-reload');button.disabled=true;
+ oaLoading=(async()=>{
+  try{
+   const controller=new AbortController();
+   const timer=setTimeout(()=>controller.abort(),35000);
+   let response;
+   try{response=await fetch('/api/aerolocator-ourairports',{cache:'no-store',signal:controller.signal})}
+   finally{clearTimeout(timer)}
+   const payload=await response.json();
+   if(!response.ok||!payload.ok||!Array.isArray(payload.records))
+    throw Error(payload.error||'La fuente no devolvió registros argentinos.');
+   oaRecords=payload.records.filter(r=>Number.isInteger(r.id)&&Number.isFinite(r.lat)&&
+    Number.isFinite(r.lon)&&Array.isArray(r.runways)&&Array.isArray(r.frequencies));
+   oaInfo=payload;
+   const {data,reviewsError,error}=await client.from('aerolocator_ourairports_review')
+    .select('airport_id,review_status,review_note,corrected_lat,corrected_lon,updated_at').limit(5000);
+   oaReviews.clear();
+   if(!error)for(const row of data||[])oaReviews.set(Number(row.airport_id),row);
+   const regions=[...new Set(oaRecords.map(r=>r.region).filter(Boolean))].sort();
+   oaRegion.replaceChildren(new Option('Todas las provincias','all'));
+   for(const region of regions)oaRegion.append(new Option(oaRegionNames[region]||region,region));
+   if(mapViewMode==='ourairports'){
+    renderOACatalog();
+    if(oaRecords.length)map.fitBounds([[-55.5,-74.5],[-21.5,-52.5]],{padding:[16,16],animate:false});
+    const warnings=[...(payload.warnings||[])];
+    if(error)warnings.push('No se pudo leer el avance de revisión: '+error.message);
+    if(warnings.length)oaInfoLine(document.getElementById('airspace-inspector-footnote'),'Advertencias',warnings.join(' | '));
+   }
+  }catch(error){
+   if(mapViewMode==='ourairports'){
+    oaStats.textContent='Catálogo no disponible';
+    viewStatus.textContent='No se pudo importar OurAirports: '+error.message;
+    inspectorMessage('No se pudo obtener la fuente. Probá «Actualizar fuente». No se fabricaron marcadores.');
+   }
+  }finally{button.disabled=false;oaLoading=null}
+ })();
+ return oaLoading;
+}
+for(const element of [oaRegion,oaKind,oaStatus]){
+ element.addEventListener('change',()=>{oaMaxList=60;if(oaRecords.length)renderOACatalog()});
+}
+oaSearch.addEventListener('input',()=>{oaMaxList=60;if(oaRecords.length)renderOACatalog()});
+document.getElementById('oa-reload').addEventListener('click',()=>{void showOurAirports(true)});
+
 viewSelect.addEventListener('change',()=>{
  const next=viewSelect.value;if(!['airfields','ourairports','fir','sigmet','pronarea'].includes(next))return;
  mapViewMode=next;
