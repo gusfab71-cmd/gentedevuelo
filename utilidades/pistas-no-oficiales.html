@@ -1220,6 +1220,46 @@ function openMarkerEditor(marker,meta,pendingPosition=null){
  const name=document.createElement('input');name.type='text';name.maxLength=120;name.value=old.display_label||'';name.placeholder=meta.name;label.append(name);
  const noteLabel=document.createElement('label');noteLabel.textContent='Comentario / pista de referencia';
  const note=document.createElement('textarea');note.maxLength=600;note.value=old.display_note||'';note.placeholder='Ej.: desplazar círculo hacia el umbral de pista';noteLabel.append(note);
+ // Los colores aportados no validan TWR, clasificación legal ni condición operativa.
+ const kindLabel=document.createElement('label');kindLabel.textContent='Tipo de pista · color del círculo (dato aportado)';
+ const kind=document.createElement('select');kind.setAttribute('aria-label','Tipo de pista aportado, no oficial');
+ for(const [key,text] of MARKER_VISUAL_TYPES){
+  const option=document.createElement('option');option.value=key;option.textContent=text;
+  if(key===(old.display_kind||''))option.selected=true;
+  kind.append(option);
+ }
+ kindLabel.append(kind);
+ const frequencyLabel=document.createElement('label');frequencyLabel.textContent='Frecuencia informada (no validada)';
+ const frequency=document.createElement('input');frequency.type='text';frequency.maxLength=100;
+ frequency.placeholder='Ej.: 123.45 MHz · verificar publicación AIP/ATS';
+ frequency.value=old.reported_frequency||'';
+ frequencyLabel.append(frequency);
+ const fuelGrid=document.createElement('div');fuelGrid.className='marker-grid';
+ const fuelLabel=document.createElement('label');fuelLabel.textContent='Disponibilidad de combustible';
+ const fuel=document.createElement('select');
+ for(const [key,text] of MARKER_FUEL){
+  const option=document.createElement('option');option.value=key;option.textContent=text;
+  if(key===(old.fuel_availability||''))option.selected=true;
+  fuel.append(option);
+ }
+ fuelLabel.append(fuel);
+ const fuelTypeLabel=document.createElement('label');fuelTypeLabel.textContent='Tipo de combustible';
+ const fuelType=document.createElement('select');
+ for(const [key,text] of MARKER_FUEL_TYPES){
+  const option=document.createElement('option');option.value=key;option.textContent=text;
+  if(key===(old.fuel_type||''))option.selected=true;
+  fuelType.append(option);
+ }
+ fuelTypeLabel.append(fuelType);
+ const syncFuel=()=>{
+  const hasFuel=fuel.value==='declared_available';
+  fuelType.disabled=!hasFuel;fuelTypeLabel.title=hasFuel?'Tipo declarado por el usuario':'Se habilita cuando se informa combustible disponible';
+  if(!hasFuel)fuelType.value='';
+ };
+ fuel.addEventListener('change',syncFuel);syncFuel();
+ fuelGrid.append(fuelLabel,fuelTypeLabel);
+ const caution=document.createElement('p');caution.className='marker-note-source';
+ caution.textContent='Clasificación, frecuencia y combustible son aportes administrativos, NO información aeronáutica oficial. Verificar con ANAC, AIP/MADHEL y operador antes de volar.';
  const candidate=pendingPosition||marker.getLatLng();
  const current=document.createElement('p');current.textContent='Posición visual propuesta: '+candidate.lat.toFixed(6)+', '+candidate.lng.toFixed(6);
  const feedback=document.createElement('p');feedback.className='marker-edit-status';feedback.setAttribute('role','status');
@@ -1233,6 +1273,9 @@ function openMarkerEditor(marker,meta,pendingPosition=null){
   try{
    await saveMarkerOverride(meta,{
     display_label:name.value.trim()||null,display_note:note.value.trim()||null,
+    display_kind:kind.value||null,reported_frequency:frequency.value.trim()||null,
+    fuel_availability:fuel.value||null,
+    fuel_type:fuel.value==='declared_available'?(fuelType.value||null):null,
     display_lat:pendingPosition?Number(candidate.lat):(old.display_lat??null),
     display_lon:pendingPosition?Number(candidate.lng):(old.display_lon??null),
     hidden:false
@@ -1274,14 +1317,14 @@ function openMarkerEditor(marker,meta,pendingPosition=null){
   if(pendingPosition)marker.setLatLng(previousLocation);
   map.closePopup();
  });
- box.append(title,source,coords,warning,label,noteLabel,current,feedback,actions);
+ box.append(title,source,coords,warning,label,noteLabel,kindLabel,frequencyLabel,fuelGrid,caution,current,feedback,actions);
  L.popup({maxWidth:340,minWidth:245,autoPan:true}).setLatLng(marker.getLatLng()).setContent(box).openOn(map);
 }
 function attachSelection(marker,point,label,createCard,meta=null){
  if(meta){
   const visual=markerVisualPosition(meta);marker.setLatLng(visual);
   marker.options.title=markerVisualLabel(meta);
-  marker.setIcon(markerVisualIcon(meta));
+  if(markerOverrides.get(meta.key)?.display_kind)marker.setIcon(markerVisualIcon(meta));
   const updatedCard=()=>popupWithVisualReference(createCard,meta);
   marker.bindPopup(updatedCard,{maxWidth:365,minWidth:240});
   marker.on('click',()=>selectAirfield(marker,[visual.lat,visual.lng],markerVisualLabel(meta),updatedCard));
