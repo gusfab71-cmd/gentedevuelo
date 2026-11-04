@@ -664,11 +664,12 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
   </div>
   <p id="route-planner-status" class="route-planner-state" role="status">Arrastrá el mapa con el izquierdo normalmente. Solo un clic breve marca un punto. Para finalizar, clic derecho sobre el último punto y confirmá con el izquierdo. Deshacer: botón o Ctrl + Z.</p>
   <div class="route-planner-fields">
-   <label class="route-pronarea-input">PRONAREA oficial (pegá WIND/T)
+   <label class="route-pronarea-input">PRONAREA oficial · compartido con la capa meteorológica
     <textarea id="route-pronarea" maxlength="12000" rows="3" placeholder="WIND/T: DIA-CDU-PAR-SVO-ROS ... FL030/32025P19 FL065/29025P09 ..."></textarea></label>
    <div class="route-planner-commands route-pronarea-input">
-    <button id="route-read-pronarea" type="button">Leer viento y temperatura</button>
-    <button id="route-use-existing" type="button">Usar PRONAREA de la otra capa</button>
+    <button id="route-read-pronarea" type="button">Releer viento y temperatura</button>
+    <span id="route-pronarea-sync-status" class="route-planner-caption" role="status">Pegá el boletín aquí o en PRONAREA · carga manual: los dos cuadros se sincronizan.</span>
+    <button id="route-use-existing" type="button" hidden>Usar PRONAREA de la otra capa</button>
    </div>
    <label class="route-wind-select">Grupo WIND/T / localidades
     <select id="route-wind-select"><option value="">Sin WIND/T reconocido</option></select></label>
@@ -679,8 +680,8 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
    <details class="route-fields-advanced">
     <summary>Corrección VFR y datos meteorológicos manuales (opcional)</summary>
     <div class="route-planner-advanced-grid">
-     <label>Variación magnética · E + / O − (°)
-      <input id="route-variation" type="number" min="-30" max="30" step="0.1" placeholder="Ej.: +9.8"></label>
+     <label>Variación magnética manual · E + / O − (°)
+      <input id="route-variation" type="number" min="-30" max="30" step="0.1" placeholder="Automática WMM2025"></label>
      <label>Dirección del viento · desde °V
       <input id="route-manual-dir" type="number" min="0" max="360" step="1" placeholder="Ej.: 270"></label>
      <label>Intensidad del viento · kt
@@ -690,7 +691,8 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
     </div>
    </details>
   </div>
-  <p class="route-planner-caption">PRONAREA WIND/T: seleccioná el grupo de localidades correcto; un único grupo no representa necesariamente toda la ruta. La TAS es aproximada (IAS≈CAS, presión ISA); los vientos son previstos, no mediciones en vivo.</p>
+  <p class="route-planner-caption">El primer grupo WIND/T reconocido se propone provisionalmente: verificá las localidades y cambiá de grupo si corresponde. La variación magnética se estima con WMM2025 (podés sobrescribirla). TAS aproximada (IAS≈CAS, presión ISA), no sustituye la información de la aeronave.</p>
+  <div class="route-cruise-alert" id="route-cruise-alert" role="status" aria-live="polite" hidden></div>
   <div class="route-planner-results" id="route-planner-results" aria-live="polite"></div>
   <p class="route-planner-warnings" id="route-planner-warnings" role="status"></p>
  </div>
@@ -833,7 +835,7 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
 </div><p class="map-actions" id="airfields-map-actions"><button id="explore" type="button">Explorar pistas en esta zona</button> <small id="osm-status">Acercá el mapa a una zona y presioná el botón. Fuente: OpenStreetMap / Overpass.</small></p></div>
   </section>
  </div>
-</main><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="../assets/supabase-2.117.2.min.js"></script><script src="../assets/community-config.js"></script><script src="../assets/r2-media.js"></script><script src="gestion-aeronautica/src/catalogo-pistas-anac.js"></script><script src="gestion-aeronautica/src/clasificacion-pistas.js"></script><script src="../assets/aerolocator-route-planner.js?v=20261104route2-finish"></script><script>
+</main><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="../assets/supabase-2.117.2.min.js"></script><script src="../assets/community-config.js"></script><script src="../assets/r2-media.js"></script><script src="gestion-aeronautica/src/catalogo-pistas-anac.js"></script><script src="gestion-aeronautica/src/clasificacion-pistas.js"></script><script src="../assets/aerolocator-wmm2025.js?v=20261104wmm1"></script><script src="../assets/aerolocator-route-planner.js?v=20261104route3-weather"></script><script>
 (async()=>{
 const client=supabase.createClient(GDV_CONFIG.url,GDV_CONFIG.key);
 let routePlanner=null;
