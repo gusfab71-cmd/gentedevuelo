@@ -90,3 +90,17 @@
 @media(max-width:700px){
  .route-undo-float{bottom:75px;left:10px;padding:9px 12px;font-size:11px}
 }
+
+/* Alerta de nivel VFR: separada del resumen meteorológico para no perderse. */
+.route-cruise-alert{
+ display:block;font-size:12px;font-weight:750;line-height:1.5;
+ border:1px solid #7baea3;border-left:5px solid #5eb7a5;
+ background:#21423e;color:#e0fff1;border-radius:8px;
+ padding:11px 12px;white-space:normal;
+}
+.route-cruise-alert[data-warning="true"]{
+ border-color:#e1b35a;border-left-color:#f6be52;
+ background:#473622;color:#fff2cf;
+}
+.route-cruise-alert[hidden]{display:none!important}
+#route-pronarea-sync-status{font-size:11px;color:#cde7ed;line-height:1.4;flex:1}
