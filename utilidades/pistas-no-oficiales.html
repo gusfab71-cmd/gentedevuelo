@@ -1095,7 +1095,7 @@ function attachSelection(marker,point,label,createCard,meta=null){
    if(e.originalEvent)L.DomEvent.stop(e.originalEvent);
    if(admin&&mapViewMode==='airfields')openMarkerEditor(marker,meta);
   });
-  if(admin)marker.bindTooltip('Clic derecho: editar posición, nombre u ocultar',{direction:'top'});
+  marker.bindTooltip(markerVisualLabel(meta)+(admin?' · Clic derecho para editar, mover u ocultar':''),{direction:'top'});
  }else{
   marker.on('click',()=>selectAirfield(marker,point,label,createCard));
  }
