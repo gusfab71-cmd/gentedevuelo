@@ -1,0 +1,41 @@
+name: AeroLocator - importar OurAirports Argentina
+
+on:
+  push:
+    paths:
+      - "scripts/sync_ourairports_ar.py"
+      - ".github/workflows/aerolocator-ourairports.yml"
+  workflow_dispatch:
+  schedule:
+    - cron: "15 7 * * 1"
+
+permissions:
+  contents: write
+
+jobs:
+  sync-ourairports:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Configure Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Obtener catálogo comunitario AR
+        run: python scripts/sync_ourairports_ar.py
+      - name: Publicar snapshot si cambió
+        shell: bash
+        run: |
+          git config user.name "Gente de Vuelo Catalog Bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/aerolocator-ourairports-ar.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Datos: actualizar catálogo OurAirports AR (no verificado)"
+            git push
+          else
+            echo "Sin cambios en el catálogo"
+          fi
