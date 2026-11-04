@@ -461,6 +461,20 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
 .oa-choice-badge{font-size:10px;border:1px solid #789bb4;color:#f4f9fd;border-radius:5px;padding:2px 5px}
 @media(max-width:550px){.oa-filter-grid{grid-template-columns:1fr}.oa-filter-grid label:nth-child(3){grid-column:auto}}
 
+
+/* Navegación PRONAREA: referencias geográficas explícitas sin inventar fenómenos. */
+.pronarea-nav{display:grid;gap:8px;margin:10px 0;background:#153c55;border:1px solid #7099b6;border-radius:10px;padding:10px}
+.pronarea-nav[hidden]{display:none!important}
+.pronarea-nav-title{display:block;font-size:12px;font-weight:800;color:#edfaff}
+.pronarea-nav-note{margin:0!important;font-size:10px;line-height:1.45;color:#d6e9f4}
+.pronarea-nav-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:6px}
+.pronarea-nav-options button{font-size:11px;line-height:1.35;text-align:left;border-radius:8px;padding:8px;background:#e7f4ff;border:1px solid #a1c8e3;color:#143249;cursor:pointer;min-height:39px}
+.pronarea-nav-options button:hover,.pronarea-nav-options button:focus-visible{background:#cce9fb;outline:2px solid #a8d9f4;outline-offset:1px}
+.pronarea-nav-options button[aria-pressed=true]{background:#c5eedf;border-color:#3f9b84}
+.pronarea-nav-options button small{display:block;font-size:9px;color:#385d75;margin-top:3px}
+.pronarea-nav-coords{font:700 10px ui-monospace,monospace;color:#d7f3ff}
+.pronarea-map-reference{pointer-events:none}
+
 </style></head><body><header class="dispatch-nav"><div class="dispatch-nav-logo"><span class="dispatch-nav-symbol" aria-hidden="true">✈</span>
  <div><strong>GENTE DE VUELO</strong><small>AEROLOCATOR · MAPA AERONÁUTICO</small></div></div>
  <nav aria-label="Herramientas Gente de Vuelo"><a href="../index.html">Portada</a><a href="../comunidad.html#foro">Foro</a><a href="index.html">Utilidades</a>
@@ -667,10 +681,15 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
   <label for="pronarea-map-input">Texto oficial del PRONAREA (FIR, emisión, validez, sectores y niveles)
    <textarea id="pronarea-map-input" maxlength="12000" rows="8" placeholder="Copiá el PRONAREA del SMN y pegalo aquí con Ctrl + V."></textarea></label>
   <div class="pronarea-actions">
-   <button id="pronarea-map-analyze" type="button">Leer fenómenos del texto</button>
+   <button id="pronarea-map-analyze" type="button">Leer y ubicar PRONAREA</button>
    <button id="pronarea-map-clear" type="button">Limpiar texto</button>
   </div>
-  <p class="map-context-note"><strong>Esta función solo analiza texto.</strong> Identifica menciones de fenómenos y niveles, pero todavía no dibuja áreas sobre el mapa.</p>
+  <section id="pronarea-nav" class="pronarea-nav" aria-label="Navegar a las zonas mencionadas en PRONAREA" hidden>
+   <strong class="pronarea-nav-title">Zonas reconocidas en el boletín</strong>
+   <p class="pronarea-nav-note">Seleccioná una referencia para trasladar el mapa. Los recuadros solo aparecen cuando el texto aporta coordenadas explícitas: NO representan zonas de peligro.</p>
+   <div id="pronarea-nav-options" class="pronarea-nav-options"></div>
+  </section>
+  <p class="map-context-note"><strong>El PRONAREA permite ubicar referencias geográficas.</strong> La lectura identifica fenómenos y niveles, pero NO representa automáticamente tormentas, hielo ni turbulencia sobre el mapa.</p>
   <p id="pronarea-map-result" role="status">Pegá un PRONAREA y pulsá «Leer fenómenos del texto». Los resultados aparecerán aquí.</p>
   <a href="https://www.smn.gob.ar/pronarea" target="_blank" rel="noopener noreferrer">Consultar PRONAREA oficial · SMN</a>
   <p class="map-context-note">Este texto se usa solo en esta pantalla: no se publica ni confirma automáticamente la vigencia del boletín.</p>
@@ -1948,7 +1967,7 @@ function contextualInspector(open){
   mapViewHint.textContent=mode==='fir'?'Seleccioná una FIR con «Ver FIR» para centrarla o pasá el cursor sobre su zona punteada para identificarla.':
    mode==='sigmet'?'Seleccioná un aviso de la lista o tocá su área para ver fenómenos, niveles y horarios.':
    mode==='ourairports'?'OurAirports: registros comunitarios para revisar. Seleccioná un punto o buscá en el catálogo; no son pistas habilitadas.':
-   'Abrí «Ver PRONAREA» para copiar y pegar el boletín del SMN; no se inventan polígonos.';
+   'Pegá el boletín del SMN: el mapa se desplazará a las zonas reconocidas. Solo rangos geográficos explícitos, no polígonos de peligro.';
  }
 }
 inspectorToggle.addEventListener('click',()=>{
@@ -2187,21 +2206,156 @@ async function showSIG(){
  })();
  return sigLoading;
 }
+const pronareaFocusLayer=L.layerGroup();
 const pronareaInput=document.getElementById('pronarea-map-input');
 const pronareaStatus=document.getElementById('pronarea-map-result');
+const pronareaNav=document.getElementById('pronarea-nav');
+const pronareaNavOptions=document.getElementById('pronarea-nav-options');
+let pronareaRegions=[];
+const MARAMBIO_REFERENCE={lat:-64.23913,lon:-56.63085,name:'Base Marambio · SAWB',
+ source:'ARP ANAC; referencia puntual, no delimita un fenómeno'};
+const PRONAREA_FIR_REFERENCES={
+ SAEF:{name:'FIR Ezeiza · referencia central',lat:-34.82,lon:-58.54},
+ SACF:{name:'FIR Córdoba · referencia central',lat:-31.33,lon:-64.21},
+ SAMF:{name:'FIR Mendoza · referencia central',lat:-32.83,lon:-68.79},
+ SARR:{name:'FIR Resistencia · referencia central',lat:-27.45,lon:-59.04},
+ SAVF:{name:'FIR Comodoro Rivadavia · referencia central',lat:-45.79,lon:-67.47}
+};
+function normalizePronarea(v){
+ return String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase();
+}
+function locatePronareaRegions(raw){
+ const normalized=normalizePronarea(raw);
+ if(normalized.trim().length<30)return [];
+ const regions=[];
+ const antarctic=/\bANTARTIC[AO]S?\b|\bMARAMBIO\b|\bSAWB\b|\bCENTRO METEOROLOGICO ANTARTICO\b/.test(normalized);
+ if(antarctic){
+  regions.push({
+   id:'marambio',name:'Antártida · Base Marambio (SAWB)',kind:'point',
+   lat:MARAMBIO_REFERENCE.lat,lon:MARAMBIO_REFERENCE.lon,zoom:5,
+   note:'Ubicación puntual oficial del aeródromo Marambio: orienta hacia la Antártida, no representa el área cubierta por el PRONAREA.'
+  });
+ }
+ // Solo dibujar rectángulos si el mismo texto proporciona rangos geográficos explícitos.
+ // Ej. SMN: WIND/T: DRAKE NORTE (55-60S 62-68W).
+ const pattern=/\b(DRAKE\s+(?:NORTE|SUR))\s*\(\s*(\d{1,2})\s*[-–]\s*(\d{1,2})\s*([NS])\s+(\d{1,3})\s*[-–]\s*(\d{1,3})\s*([EW])\s*\)/g;
+ let match;
+ while((match=pattern.exec(normalized))!==null){
+  const y1=Number(match[2]),y2=Number(match[3]),x1=Number(match[5]),x2=Number(match[6]);
+  const latSign=match[4]==='S'?-1:1,lonSign=match[7]==='W'?-1:1;
+  if(y1>90||y2>90||x1>180||x2>180||y1===y2||x1===x2)continue;
+  const a=y1*latSign,b=y2*latSign,c=x1*lonSign,d=x2*lonSign;
+  if(Math.max(a,b)>-40||Math.min(a,b)<-90)continue;
+  const bounds=[[Math.min(a,b),Math.min(c,d)],[Math.max(a,b),Math.max(c,d)]];
+  const key=match[1].replace(/\s+/g,' ').trim();
+  if(regions.some(region=>region.id===key))continue;
+  regions.push({
+   id:key,name:key==='DRAKE NORTE'?'Drake Norte':'Drake Sur',kind:'bounds',
+   bounds,lat:(a+b)/2,lon:(c+d)/2,
+   note:'Rango de coordenadas citado explícitamente en WIND/T del PRONAREA. No es un área de turbulencia, hielo ni SIGMET.'
+  });
+ }
+ // Para otras FIR argentinas ofrecer una localización de referencia, no polígonos.
+ if(!antarctic)for(const [code,region] of Object.entries(PRONAREA_FIR_REFERENCES)){
+  if(!new RegExp('(?:\\bFIR\\s+'+code+'\\b|\\bFIR\\s+'+
+      normalizePronarea(region.name).replace('FIR ','').split(' · ')[0]+'\\b)').test(normalized))continue;
+  regions.push({id:code,...region,kind:'point',zoom:6,
+   note:'Punto central aproximado para orientación. NO delimita los límites ATS de la FIR; consultar AIP ENR 2.1.'});
+ }
+ return regions;
+}
+function drawPronareaReferences(){
+ pronareaFocusLayer.clearLayers();
+ if(mapViewMode!=='pronarea')return;
+ for(const region of pronareaRegions){
+  if(region.kind==='bounds'){
+   const rect=L.rectangle(region.bounds,{
+    color:'#9ed7ef',weight:2,dashArray:'8 6',opacity:.95,fillColor:'#8fd6e9',fillOpacity:.07
+   }).addTo(pronareaFocusLayer);
+   const tip=document.createElement('span');
+   tip.textContent=region.name+' · límites de referencia del texto WIND/T, NO fenómeno';
+   rect.bindTooltip(tip,{sticky:true});
+   rect.on('click',()=>focusPronareaRegion(region));
+  }else if(region.id==='marambio'){
+   const dot=L.circleMarker([region.lat,region.lon],{
+    radius:7,color:'#d4f2ff',weight:2,fillColor:'#0b5684',fillOpacity:.9
+   }).addTo(pronareaFocusLayer);
+   dot.bindTooltip('Base Marambio SAWB · punto geográfico oficial, NO área de fenómeno');
+   dot.on('click',()=>focusPronareaRegion(region));
+  }
+ }
+ if(!map.hasLayer(pronareaFocusLayer))pronareaFocusLayer.addTo(map);
+}
+function focusPronareaRegion(region){
+ if(mapViewMode!=='pronarea'||!region)return;
+ if(region.kind==='bounds')map.flyToBounds(region.bounds,{padding:[35,35],maxZoom:7,duration:.9});
+ else map.flyTo([region.lat,region.lon],region.zoom||6,{duration:.9});
+ for(const button of pronareaNavOptions.querySelectorAll('button')){
+  button.setAttribute('aria-pressed',String(button.dataset.id===region.id));
+ }
+ const label=region.kind==='bounds'?'Rango de coordenadas del boletín (NO zona de peligro)':'Referencia de ubicación, NO zona de peligro';
+ viewStatus.textContent='PRONAREA · '+region.name+'. '+label+'. Vigencia y fenómenos: verificar boletín oficial del SMN.';
+}
+function renderPronareaRegions(autoFocus=false){
+ pronareaRegions=locatePronareaRegions(pronareaInput.value);
+ pronareaNav.hidden=!pronareaRegions.length;
+ pronareaNavOptions.replaceChildren();
+ for(const region of pronareaRegions){
+  const button=document.createElement('button');
+  button.type='button';button.dataset.id=region.id;
+  button.textContent='Ver '+region.name;
+  button.setAttribute('aria-pressed','false');
+  const sub=document.createElement('small');
+  sub.textContent=region.kind==='bounds'?'Área WIND/T con coordenadas expresas':'Punto de orientación geográfica';
+  button.append(sub);button.addEventListener('click',()=>focusPronareaRegion(region));
+  pronareaNavOptions.append(button);
+ }
+ drawPronareaReferences();
+ if(autoFocus&&pronareaRegions.length&&mapViewMode==='pronarea'){
+  const ranged=pronareaRegions.filter(x=>x.kind==='bounds');
+  if(ranged.length){
+   let combined=L.latLngBounds(ranged[0].bounds);
+   for(const sector of ranged.slice(1))combined.extend(L.latLngBounds(sector.bounds));
+   const marambio=pronareaRegions.find(x=>x.id==='marambio');
+   if(marambio)combined.extend([marambio.lat,marambio.lon]);
+   map.flyToBounds(combined,{padding:[40,45],maxZoom:6,duration:1});
+   viewStatus.textContent='PRONAREA antártico: vista de los sectores WIND/T y Marambio. Solo referencias geográficas, NO áreas de riesgo.';
+  }else focusPronareaRegion(pronareaRegions[0]);
+ }
+ return pronareaRegions;
+}
 document.getElementById('pronarea-map-clear').addEventListener('click',()=>{
  pronareaInput.value='';
  pronareaStatus.textContent='Texto limpiado. Podés pegar otro PRONAREA.';
+ pronareaRegions=[];pronareaNavOptions.replaceChildren();pronareaNav.hidden=true;
+ pronareaFocusLayer.clearLayers();
  pronareaInput.focus();
+});
+// Al pegar, mover el mapa automáticamente; con escritura normal no se interrumpe la vista.
+pronareaInput.addEventListener('paste',()=>{
+ setTimeout(()=>{
+  if(mapViewMode==='pronarea'){
+   const areas=renderPronareaRegions(true);
+   if(!areas.length)pronareaStatus.textContent='No se reconoció una zona geográfica. Usá «Leer y ubicar PRONAREA» para analizar el texto; no se dibuja ningún límite supuesto.';
+  }
+ },0);
 });
 document.getElementById('pronarea-map-analyze').addEventListener('click',()=>{
  const text=pronareaInput.value.trim();
- if(text.length<40){pronareaStatus.textContent='Pegá el PRONAREA completo, con emisión, FIR y vigencia. Este campo no confirma la actualidad del boletín.';return}
- const lines=text.split(/\r?\n/).map(x=>x.trim()).filter(Boolean).filter(x=>/TURB|ENGELAMIENTO|ICE|HIELO|TORMENTA|TS\b|CENIZA|VA\b|MTW|CB\b/i.test(x)).slice(0,12);
+ if(text.length<40){
+  pronareaStatus.textContent='Pegá el PRONAREA completo, con emisión, FIR y vigencia. Este campo no confirma la actualidad del boletín.';
+  return;
+ }
+ const lines=text.split(/\r?\n/).map(x=>x.trim()).filter(Boolean)
+  .filter(x=>/TURB|ENGELAMIENTO|ICE|HIELO|TORMENTA|TS\b|CENIZA|VA\b|MTW|CB\b/i.test(x)).slice(0,12);
  const levels=[...new Set(text.match(/\bFL\s?\d{2,3}\b|\b\d{3,5}\s?(?:FT|PIES)\b/gi)||[])].slice(0,15);
- pronareaStatus.textContent=(lines.length?'Fragmentos que mencionan fenómenos:\n'+lines.join('\n'):'No se identificaron fenómenos en líneas reconocibles.')+
- (levels.length?'\nNiveles citados en el boletín (NO asociados automáticamente a cada fenómeno): '+levels.join(', '):'\nSin niveles de vuelo reconocidos automáticamente.')+
- '\nEsto es una lectura del texto: NO dibuja los fenómenos sobre el mapa. Comprobá FIR, emisión y vigencia en el SMN.';
+ const regions=renderPronareaRegions(true);
+ pronareaStatus.textContent=(regions.length?
+  'Zonas geográficas reconocidas: '+regions.map(x=>x.name).join(', ')+'. Podés desplazarte a cada una con los botones de arriba.\n':
+  'No se reconoció una región cartografiable con suficiente certeza.\n')+
+ (lines.length?'Fragmentos que mencionan fenómenos:\n'+lines.join('\n'):'No se identificaron fenómenos en líneas reconocibles.')+
+ (levels.length?'\nNiveles citados (NO asociados automáticamente a cada fenómeno): '+levels.join(', '):'\nSin niveles de vuelo reconocidos automáticamente.')+
+ '\nSolo se muestran rangos del texto y referencias, NO áreas reales de turbulencia, hielo ni tormentas. Confirmá emisión y vigencia con el SMN.';
 });
 
 /* OurAirports Argentina: TODAS las instalaciones de la fuente; separadas del mapa oficial.
@@ -2564,6 +2718,8 @@ viewSelect.addEventListener('change',()=>{
  if(map.hasLayer(layerFIR))map.removeLayer(layerFIR);
  if(map.hasLayer(layerSIG))map.removeLayer(layerSIG);
  if(map.hasLayer(sigLabelLayer))map.removeLayer(sigLabelLayer);
+ if(map.hasLayer(pronareaFocusLayer))map.removeLayer(pronareaFocusLayer);
+ if(next==='pronarea')renderPronareaRegions(false);
  if(map.hasLayer(oaLayer))map.removeLayer(oaLayer);
  syncLayerVisibility();auxiliary(next==='airfields');map.closePopup();
  if(next==='airfields'){
