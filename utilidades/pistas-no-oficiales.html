@@ -1914,7 +1914,7 @@ if(admin){document.getElementById('admin').hidden=false;async function pending()
 
 /* Selector de vistas cartográficas excluyentes. Otras capas quedan invisibles. */
 const viewSelect=document.getElementById('map-view-mode'),viewStatus=document.getElementById('map-view-status');
-const layerFIR=L.layerGroup(),layerSIG=L.layerGroup(),sigLabelLayer=L.layerGroup();
+const layerFIR=L.layerGroup(),layerSIG=L.layerGroup(),sigLabelLayer=L.layerGroup(),oaLayer=L.layerGroup();
 let sigmetData=[],sigmetMetadata=null;
 const FIR_COLORS={SAEF:'#dba8b8',SACF:'#a7c3e2',SAMF:'#bca9e7',SARR:'#b7d5aa',SAVF:'#e8cb91'};
 let firDone=false,firLoading=null,sigLoading=null;
@@ -1927,16 +1927,17 @@ const firShapes=new Map(),sigShapes=[];
 function contextualInspector(open){
  const mode=mapViewMode;
  inspectorToggle.hidden=mode==='airfields';
- areaInspector.hidden=!(open&&(mode==='fir'||mode==='sigmet'));
+ areaInspector.hidden=!(open&&(mode==='fir'||mode==='sigmet'||mode==='ourairports'));
  pronareaEditor.hidden=!(open&&mode==='pronarea');
  inspectorToggle.setAttribute('aria-expanded',String(open&&mode!=='airfields'));
- const label=mode==='fir'?'FIR':mode==='sigmet'?'SIGMET':'PRONAREA';
+ const label=mode==='fir'?'FIR':mode==='sigmet'?'SIGMET':mode==='ourairports'?'catálogo':'PRONAREA';
  inspectorToggle.textContent=open?'Ocultar '+label:'Ver '+label;
  if(mode==='airfields')mapViewHint.hidden=true;
  else{
   mapViewHint.hidden=false;
   mapViewHint.textContent=mode==='fir'?'Seleccioná una FIR con «Ver FIR» para centrarla o pasá el cursor sobre su zona punteada para identificarla.':
    mode==='sigmet'?'Seleccioná un aviso de la lista o tocá su área para ver fenómenos, niveles y horarios.':
+   mode==='ourairports'?'OurAirports: registros comunitarios para revisar. Seleccioná un punto o buscá en el catálogo; no son pistas habilitadas.':
    'Abrí «Ver PRONAREA» para copiar y pegar el boletín del SMN; no se inventan polígonos.';
  }
 }
@@ -2193,7 +2194,7 @@ document.getElementById('pronarea-map-analyze').addEventListener('click',()=>{
  '\nEsto es una lectura del texto: NO dibuja los fenómenos sobre el mapa. Comprobá FIR, emisión y vigencia en el SMN.';
 });
 viewSelect.addEventListener('change',()=>{
- const next=viewSelect.value;if(!['airfields','fir','sigmet','pronarea'].includes(next))return;
+ const next=viewSelect.value;if(!['airfields','ourairports','fir','sigmet','pronarea'].includes(next))return;
  mapViewMode=next;
  document.getElementById('map-tool-shortcuts').hidden=next!=='airfields';
  if(next!=='airfields'){
@@ -2204,8 +2205,10 @@ viewSelect.addEventListener('change',()=>{
  document.getElementById('airfields-map-actions').hidden=next!=='airfields';
  document.getElementById('fir-map-legend').hidden=next!=='fir';
  document.getElementById('sigmet-map-legend').hidden=next!=='sigmet';
+ document.getElementById('ourairports-map-legend').hidden=next!=='ourairports';
  contextualInspector(next!=='airfields');
  document.getElementById('sigmet-controls').hidden=next!=='sigmet';
+ document.getElementById('oa-controls').hidden=next!=='ourairports';
  if(next==='fir'){
   document.getElementById('airspace-inspector-title').textContent='Explorar FIR argentinas';
   document.getElementById('airspace-inspector-subtitle').textContent='Elegí una FIR de esta lista para centrar su región en el mapa.';
@@ -2214,14 +2217,20 @@ viewSelect.addEventListener('change',()=>{
   document.getElementById('airspace-inspector-title').textContent='Explorar avisos SIGMET';
   document.getElementById('airspace-inspector-subtitle').textContent='Elegí un aviso o tocá directamente un área sombreada.';
   inspectorMessage('Consultando fenómenos SIGMET disponibles…');
+ }else if(next==='ourairports'){
+  document.getElementById('airspace-inspector-title').textContent='OurAirports · catálogo argentino';
+  document.getElementById('airspace-inspector-subtitle').textContent='Registros para revisión: seleccioná un círculo, filtrá o buscá por nombre y código.';
+  inspectorMessage('Recuperando registros comunitarios y preparando la revisión…');
  }
  if(map.hasLayer(layerFIR))map.removeLayer(layerFIR);
  if(map.hasLayer(layerSIG))map.removeLayer(layerSIG);
  if(map.hasLayer(sigLabelLayer))map.removeLayer(sigLabelLayer);
+ if(map.hasLayer(oaLayer))map.removeLayer(oaLayer);
  syncLayerVisibility();auxiliary(next==='airfields');map.closePopup();
  if(next==='airfields'){viewStatus.textContent='Solo pistas, aeródromos y referencias comunitarias. FIR y meteorología ocultas.';render();renderExternal()}
  else if(next==='fir')void showFIR();
  else if(next==='sigmet')void showSIG();
+ else if(next==='ourairports')void showOurAirports();
  else{viewStatus.textContent='PRONAREA de carga manual: no se dibujan zonas sin geometría oficial explícita.';map.fitBounds([[-55.5,-74.5],[-21.5,-52.5]])}
 });
 
