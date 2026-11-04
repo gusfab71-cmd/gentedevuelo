@@ -679,11 +679,11 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
    <div class="dispatch-map-bottom">
  <p id="map-view-status" role="status" aria-live="polite" class="map-view-context">Pistas y aeródromos visibles. Elegí otra capa para ocultarlas.</p>
  <div id="fir-map-legend" class="airspace-legend" hidden>
- <span><i style="border-color:#dba8b8;background:#dba8b812"></i>Ezeiza</span>
- <span><i style="border-color:#a7c3e2;background:#a7c3e212"></i>Córdoba</span>
- <span><i style="border-color:#bca9e7;background:#bca9e712"></i>Mendoza</span>
- <span><i style="border-color:#b7d5aa;background:#b7d5aa12"></i>Resistencia</span>
- <span><i style="border-color:#e8cb91;background:#e8cb9112"></i>Comodoro Rivadavia</span>
+ <span><i style="border-color:#dba8b8;background:#dba8b838"></i>Ezeiza</span>
+ <span><i style="border-color:#a7c3e2;background:#a7c3e238"></i>Córdoba</span>
+ <span><i style="border-color:#bca9e7;background:#bca9e738"></i>Mendoza</span>
+ <span><i style="border-color:#b7d5aa;background:#b7d5aa38"></i>Resistencia</span>
+ <span><i style="border-color:#e8cb91;background:#e8cb9138"></i>Comodoro Rivadavia</span>
  <small>Colores suaves y líneas punteadas. Geometría educativa: verificar AIP ENR 2.1 vigente.</small>
  </div>
  <div id="sigmet-map-legend" class="airspace-legend" hidden>
@@ -2028,14 +2028,14 @@ async function showFIR(){
    if(!response.ok)throw Error('no se pudo descargar el mapa FIR');
    const geo=await response.json();
    if(geo.type!=='FeatureCollection'||!Array.isArray(geo.features)||geo.features.length!==5)throw Error('geometría FIR incompleta');
-   L.geoJSON(geo,{style:f=>({color:FIR_COLORS[f.properties?.code]||'#bfcdda',weight:1.8,dashArray:'5 8',fillOpacity:.045,opacity:.9}),
+   L.geoJSON(geo,{style:f=>({color:FIR_COLORS[f.properties?.code]||'#bfcdda',weight:2.2,dashArray:'6 7',fillOpacity:.20,opacity:.95}),
     onEachFeature:(f,l)=>{
      const code=String(f.properties?.code||''),name=String(f.properties?.name||'');
      const tip=document.createElement('span');tip.textContent='FIR '+name+' · '+code;
      l.bindTooltip(tip,{sticky:true});
      firShapes.set(code,{name,layer:l});
-     l.on('mouseover',()=>{if(l.setStyle)l.setStyle({fillOpacity:.12,weight:2.8})});
-     l.on('mouseout',()=>{if(l.setStyle)l.setStyle({fillOpacity:.045,weight:1.8})});
+     l.on('mouseover',()=>{if(l.setStyle)l.setStyle({fillOpacity:.33,weight:3.1})});
+     l.on('mouseout',()=>{if(l.setStyle)l.setStyle({fillOpacity:.20,weight:2.2})});
      l.on('click',()=>contextualInspector(false));
     }}).addTo(layerFIR);
    firDone=true;
