@@ -328,8 +328,8 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
 
     <div class="dispatch-list-block"><label>Filtrar registros visibles <input id="search" placeholder="Nombre, provincia, código OACI o número LAD"></label>
 <section class="pista-official-list" aria-labelledby="pista-official-title">
- <h2 id="pista-official-title">Registros con respaldo documental ANAC · Muestra inicial</h2>
- <p>Esta es una muestra parcial identificada en publicaciones oficiales, no un inventario completo ni una constancia de habilitación vigente.</p>
+ <h2 id="pista-official-title">Registros con respaldo documental ANAC · Muestra ampliada</h2>
+ <p>Referencias de distintas fechas (2021-2026). Clasificación y servicios ATS históricos pueden haber cambiado: consultar AIP, MADHEL y NOTAM actuales.</p>
  <div id="pista-documented-list"></div>
 </section><details id="alternatives" class="notice"><summary style="cursor:pointer;font-weight:bold;padding:8px">Buscar alternativas cercanas · distancia en NM</summary><h2>Buscar posibles alternativas cercanas</h2><p>Ingresá un punto de referencia o seleccioná un lugar en el mapa. Las distancias son en línea recta y solo orientativas.</p><label>Latitud de referencia <input id="ref-lat" type="number" step="any" min="-90" max="90" placeholder="-34.8"></label> <label>Longitud de referencia <input id="ref-lon" type="number" step="any" min="-180" max="180" placeholder="-58.4"></label> <label>Radio de búsqueda <select id="radius"><option value="25">25 NM</option><option value="50" selected>50 NM</option><option value="100">100 NM</option><option value="200">200 NM</option></select></label> <button type="button" id="pick-ref">Elegir punto en mapa</button> <button type="button" id="find-near">Buscar cercanas</button> <button type="button" id="reset-near">Quitar filtro</button><p id="near-status"></p></details><h2>Pistas identificadas por la comunidad</h2><div id="list"></div><details id="contribute"><summary style="cursor:pointer;padding:14px;background:#28648c;border-radius:10px;font-weight:bold">+ Agregar una pista conocida</summary><h2>Proponer una pista</h2><p>Solo integrantes registrados. Cada propuesta requiere aprobación de administración.</p><form id="form"><label>Nombre de la pista<input name="name" required maxlength="120" minlength="3"></label><label>Provincia<input name="province" required maxlength="80"></label><label>Latitud decimal<input name="latitude" type="number" step="any" min="-56" max="-21" required></label><label>Longitud decimal<input name="longitude" type="number" step="any" min="-74" max="-53" required></label><label>Orientación de pista<input name="runway" maxlength="50"></label><label>Dimensiones<input name="dimensions" maxlength="80"></label><label>Elevación<input name="elevation" maxlength="50"></label><label>Superficie<select name="surface"><option>Desconocida</option><option>Césped</option><option>Tierra</option><option>Asfalto</option><option>Ripio</option><option>Otra</option></select></label><label>Acceso<select name="permission"><option>Requiere autorización previa</option><option>Consultar al responsable</option><option>Acceso no confirmado</option></select></label><label>Frecuencia (si corresponde)<input name="frequency" maxlength="60"></label><label>Contacto autorizado para publicar<input name="contact" maxlength="150"></label><label class="wide">Obstáculos<textarea name="obstacles" maxlength="1500"></textarea></label><label class="wide">Observaciones<textarea name="notes" maxlength="2500"></textarea></label><div class="airstrip-photos wide">
  <label for="airstrip-photo-files">Fotografías de la pista (hasta 3)</label>
@@ -565,7 +565,7 @@ document.getElementById('zone-search-form').addEventListener('submit',async even
    const found=documentedMatches[0];focusMapAt(found.lat,found.lon,found.name,14);
    const marker=documentaryMarkers.get(found.id);if(marker)marker.openPopup();
   }else{
-   presentZoneOptions(documentedMatches.map(x=>({lat:x.lat,lon:x.lon,label:x.name+' · '+(x.category==='lad'?'LAD registrado':'AIP documentado'),zoom:14})));
+   presentZoneOptions(documentedMatches.map(x=>({lat:x.lat,lon:x.lon,label:x.name+' · '+(x.category==='lad'?'LAD registrado':'ANAC documentado'),zoom:14})));
    zoneStatus.textContent=documentedMatches.length+' referencias ANAC de esta muestra. Elegí una para ir a la zona.';
   }
   return;
@@ -886,7 +886,7 @@ function documentaryPopup(record,nm=null){
   sourceUrl:record.sourceUrl||'',verification:record.verification||'',
   legal_use:record.legal_use,ats_service:record.ats_service,operation_rules:record.operation_rules,
   access_policy:record.access_policy,facility_kind:record.facility_kind,heliport_structure:record.heliport_structure,
-  documentCategory:record.category==='lad'?'LAD (no habilitación)':'Publicado AIP; datos de ATS históricos',
+  documentCategory:record.category==='lad'?'LAD (no habilitación)':(record.sourceType==='registro_anac_historico'?'Nómina ANAC 09/2021 · Referencia histórica':'Publicación AIP · Verificar vigencia'),
   notes:[record.details?.notes,record.classificationSourceDate?'Clasificación de control y uso: datos oficiales '+record.classificationSourceDate:''].filter(Boolean).join(' · ')};
  return airstripPopup(record.name,kind,record.lat,record.lon,details,nm,record.sourceDate);
 }
@@ -976,13 +976,14 @@ function renderDocumented(){
  }
  if(!count){
   const empty=document.createElement('p');
-  empty.textContent='Sin registros documentales de la muestra que coincidan con la selección. El catálogo es parcial.';
+  empty.textContent='Sin registros documentales que coincidan con la selección. El catálogo todavía es parcial.';
   root.append(empty);
  }
  document.getElementById('pista-catalog-status').textContent=
-  'Muestra documental: '+(ANAC_CATALOG.official||[]).length+' aeródromos con carta AIP y '+
+  'Muestra documental: '+(ANAC_CATALOG.official||[]).filter(x=>x.sourceType==='publicacion_aip').length+' aeródromos con referencia AIP, '+
+  (ANAC_CATALOG.official||[]).filter(x=>x.sourceType==='registro_anac_historico').length+' referencias ANAC de 2021 y '+
   (ANAC_CATALOG.lad||[]).length+' registros LAD del listado ANAC del 28/09/2026. '+
-  count+' registros visibles con los filtros actuales. Cobertura parcial, no inventario nacional.';
+  count+' registros visibles con los filtros actuales. No acredita vigencia ni habilitación; inventario nacional incompleto.';
 }
 
 function render(){
