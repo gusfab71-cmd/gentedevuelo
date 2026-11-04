@@ -106,6 +106,7 @@ window.GDV_ROUTE_PLANNER_BOOT=function(options){
  const raw=$('route-pronarea'),altitude=$('route-altitude'),ias=$('route-ias'),variation=$('route-variation');
  const select=$('route-wind-select'),manualDir=$('route-manual-dir'),manualKt=$('route-manual-kt'),manualTemp=$('route-manual-temp');
  const drawButton=$('route-start'),continueButton=$('route-continue'),clearButton=$('route-clear');
+ const undoButton=$('route-undo'),undoFloat=$('route-undo-float');
  const layer=L.layerGroup().addTo(map),preview=L.layerGroup().addTo(map);
  const routeHover=document.createElement('div');routeHover.className='route-hover-card';routeHover.hidden=true;
  map.getContainer().append(routeHover);
@@ -114,6 +115,7 @@ window.GDV_ROUTE_PLANNER_BOOT=function(options){
  const menu=document.createElement('div');menu.className='route-context-menu';menu.hidden=true;
  map.getContainer().append(menu);
  let points=[],drawing=false,finished=false,windGroups=[],lastHover=null,lastLongPress=0;
+ let mousePress=null,ignoreMapClick=false,pointDrag=false;
  const fmt=n=>Number.isFinite(n)?n.toFixed(1):'—';
  function setMessage(msg){status.textContent=msg}
  function setNotice(msg){notice.textContent=msg;notice.hidden=!msg}
@@ -122,9 +124,12 @@ window.GDV_ROUTE_PLANNER_BOOT=function(options){
   toggle.textContent=drawing?'Trazando ruta…':'Trazar ruta VFR';
   drawButton.disabled=drawing;
   continueButton.disabled=points.length===0||drawing;
+  undoButton.disabled=points.length===0;
+  undoFloat.hidden=points.length===0;
+  undoFloat.disabled=points.length===0;
   $('route-finish').disabled=points.length<2||finished;
   map.getContainer().classList.toggle('route-drawing',drawing);
-  setNotice(drawing?'Clic izquierdo: salida y puntos siguientes. Al llegar al destino: clic derecho, después clic izquierdo en «Finalizar ruta». Pulsación larga en móvil.':'');
+  setNotice(drawing?'Arrastrá el mapa normalmente. Clic breve: marcar punto. Para terminar: clic derecho SOBRE el último punto → «Finalizar navegación aquí». ↶ Deshacer o Ctrl + Z.':'');
  }
  function getForecast(){
   const alt=Number(altitude.value),speed=Number(ias.value);
@@ -215,15 +220,18 @@ window.GDV_ROUTE_PLANNER_BOOT=function(options){
     icon:L.divIcon({className:'route-point-label',html,iconSize:[22,22],iconAnchor:[11,11]}),
     title:index===0?'Salida':finished&&index===points.length-1?'Destino':'Punto '+index}).addTo(layer);
    marker.bindTooltip(index===0?'Salida':finished&&index===points.length-1?'Destino':'Punto '+index,{direction:'top'});
-   marker.on('dragstart',()=>hideHover());
+   marker.on('dragstart',()=>{pointDrag=true;ignoreMapClick=true;hideHover()});
    marker.on('dragend',()=>{
-    const p=marker.getLatLng();points[index]={lat:p.lat,lng:p.lng};render();refresh();
+    const p=marker.getLatLng();points[index]={lat:p.lat,lng:p.lng};
+    ignoreMapClick=true;pointDrag=false;render();refresh();
     setMessage('Punto '+(index+1)+' ajustado. Navegación recalculada.');
    });
    marker.on('click',e=>{if(e.originalEvent)L.DomEvent.stopPropagation(e.originalEvent)});
    marker.on('contextmenu',e=>{
     if(e.originalEvent)L.DomEvent.stop(e.originalEvent);
-    openMenu(e.latlng,index);
+    if(index===points.length-1&&points.length>=2)openMenu(e.latlng,index);
+    else if(index>0)openMenu(e.latlng,index);
+    else setMessage('La salida ya está marcada. Para finalizar, clic derecho sobre el último punto.');
    });
   });
   refresh();
@@ -243,6 +251,16 @@ window.GDV_ROUTE_PLANNER_BOOT=function(options){
   drawing=false;finished=true;preview.clearLayers();hideHover();cancelMenu();render();updateButtons();panel.open=true;
   setMessage('Ruta finalizada. Ahora pegá el PRONAREA, elegí grupo WIND/T, altitud e IAS; consultá los valores al mover el puntero.');
  }
+ function undoLastPoint(){
+  if(!points.length){setMessage('No hay puntos para deshacer.');return}
+  points.pop();
+  const wasFinished=finished;
+  if(wasFinished){finished=false;drawing=true;panel.open=false;options.disableRuler?.()}
+  cancelMenu();preview.clearLayers();hideHover();render();updateButtons();
+  setMessage(points.length?
+   'Último punto deshecho. Podés seguir marcando o ajustar la ruta.':
+   'Punto de salida deshecho. Arrastrá libremente el mapa y volvé a marcar la salida.');
+ }
  function clear(){
   if(points.length&&!window.confirm('¿Borrar el trazado completo y sus puntos?'))return;
   points=[];finished=false;drawing=false;layer.clearLayers();preview.clearLayers();
@@ -261,8 +279,9 @@ window.GDV_ROUTE_PLANNER_BOOT=function(options){
   if(!points.length)return;
   cancelMenu();
   const content=[];
-  if(drawing&&points.length>=2)content.push(['finish','Finalizar ruta']);
-  else if(finished)content.push(['continue','Continuar trazando']);
+  const lastPoint=Number.isInteger(index)&&index===points.length-1;
+  if(drawing&&points.length>=2&&lastPoint)content.push(['finish','Finalizar navegación aquí']);
+  else if(finished&&lastPoint)content.push(['continue','Continuar trazando']);
   if(Number.isInteger(index)&&index>0&&index<points.length)content.push(['delete','Eliminar este punto']);
   for(const [cmd,title] of content){
    const button=document.createElement('button');button.type='button';button.dataset.routeCmd=cmd;
@@ -272,9 +291,10 @@ window.GDV_ROUTE_PLANNER_BOOT=function(options){
     if(cmd==='finish'){finish();return}
     if(cmd==='continue'){begin();return}
     if(cmd==='delete'){
+     const removedLast=index===points.length-1;
      points.splice(index,1);
-     if(points.length<2)finished=false;
-     render();setMessage('Punto eliminado. Las piernas se recalcularon.');return;
+     if(removedLast&&finished){finished=false;drawing=true;options.disableRuler?.();panel.open=false}
+     render();updateButtons();setMessage('Punto eliminado. Las piernas se recalcularon.');return;
     }
    });
    menu.append(button);
@@ -331,16 +351,26 @@ window.GDV_ROUTE_PLANNER_BOOT=function(options){
   showHover(e.latlng,e.originalEvent);
  }
  function handleClick(e){
-  if(Date.now()-lastLongPress<950)return true;
-  cancelMenu();
   if(!drawing)return false;
+  if(Date.now()-lastLongPress<950||ignoreMapClick||pointDrag){
+   ignoreMapClick=false;return true;
+  }
+  if(e.originalEvent?.button!==undefined&&e.originalEvent.button!==0)return true;
+  cancelMenu();
   if(!Number.isFinite(e.latlng.lat)||!Number.isFinite(e.latlng.lng))return true;
   appendPoint(e.latlng);preview.clearLayers();return true;
  }
  function handleContext(e){
   if(!drawing&&!finished)return false;
-  if(points.length<2){setMessage('Marcá salida y al menos un destino antes de finalizar.');return true}
-  openMenu(e.latlng,null);return true;
+  if(points.length<2){setMessage('Marcá la salida y la llegada antes de finalizar.');return true}
+  const last=points.at(-1),a=map.latLngToContainerPoint(last),b=map.latLngToContainerPoint(e.latlng);
+  if(Math.hypot(a.x-b.x,a.y-b.y)<=25){
+   openMenu(last,points.length-1);
+  }else{
+   cancelMenu();
+   setMessage('Para finalizar: clic derecho SOBRE el último punto amarillo (destino) y luego clic izquierdo en «Finalizar navegación aquí».');
+  }
+  return true;
  }
  const onInput=()=>refresh();
  for(const field of [altitude,ias,variation,manualDir,manualKt,manualTemp,select])field.addEventListener('input',onInput);
@@ -361,10 +391,35 @@ window.GDV_ROUTE_PLANNER_BOOT=function(options){
  continueButton.addEventListener('click',begin);
  $('route-finish').addEventListener('click',finish);
  clearButton.addEventListener('click',clear);
+ undoButton.addEventListener('click',undoLastPoint);
+ undoFloat.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();undoLastPoint()});
+ const mapNode=map.getContainer();
+ // Una interacción arrastrada no es un punto. Detectar desplazamiento real
+ // antes de que Leaflet despache el clic, incluso sobre marcadores ajenos.
+ mapNode.addEventListener('mousedown',e=>{
+  if(!drawing||e.button!==0)return;
+  ignoreMapClick=false;
+  mousePress={x:e.clientX,y:e.clientY,moved:false};
+ },true);
+ mapNode.addEventListener('mousemove',e=>{
+  if(mousePress&&Math.hypot(e.clientX-mousePress.x,e.clientY-mousePress.y)>7){
+   mousePress.moved=true;ignoreMapClick=true;
+  }
+ },true);
+ mapNode.addEventListener('mouseup',e=>{
+  if(mousePress){
+   if(Math.hypot(e.clientX-mousePress.x,e.clientY-mousePress.y)>7)mousePress.moved=true;
+   if(mousePress.moved)ignoreMapClick=true;
+  }
+  mousePress=null;
+ },true);
+ mapNode.addEventListener('mouseleave',()=>{if(mousePress?.moved)ignoreMapClick=true;mousePress=null},true);
+ map.on('dragstart',()=>{if(drawing)ignoreMapClick=true});
  // Capturar clics sobre pistas/objetos existentes, para poder fijar exactamente
  // el origen o destino incluso si hay un marcador de aeródromo debajo.
  map.getContainer().addEventListener('click',e=>{
-  if(!drawing)return;
+  if(!drawing||ignoreMapClick||pointDrag||Date.now()-lastLongPress<950)return;
+  if(e.button!==undefined&&e.button!==0)return;
   const marker=e.target.closest?.('.leaflet-marker-icon,.leaflet-interactive');
   if(!marker||e.target.closest?.('.route-point-label'))return;
   const pos=map.mouseEventToContainerPoint(e);
@@ -381,7 +436,7 @@ window.GDV_ROUTE_PLANNER_BOOT=function(options){
    if(!drawing||!touchOrigin)return;
    lastLongPress=Date.now();
    const pos=map.mouseEventToContainerPoint({clientX:touchOrigin.x,clientY:touchOrigin.y});
-   openMenu(map.containerPointToLatLng(pos),null);
+   handleContext({latlng:map.containerPointToLatLng(pos)});
   },650);
  },{passive:true});
  map.getContainer().addEventListener('touchmove',e=>{
@@ -392,7 +447,14 @@ window.GDV_ROUTE_PLANNER_BOOT=function(options){
  map.on('mousemove',mouseMove);
  map.getContainer().addEventListener('mouseleave',hideHover);
  map.on('mousedown',()=>cancelMenu());
- window.addEventListener('keydown',e=>{if(e.key==='Escape'){cancelMenu();if(drawing)pause()}});
+ window.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){cancelMenu();if(drawing)pause();return}
+  if(e.key.toLowerCase()==='z'&&(e.ctrlKey||e.metaKey)&&!e.altKey&&!e.shiftKey&&points.length){
+   const focused=document.activeElement;
+   if(focused&&(focused.isContentEditable||['INPUT','TEXTAREA','SELECT'].includes(focused.tagName)))return;
+   e.preventDefault();undoLastPoint();
+  }
+ });
  updateButtons();refresh();
  return {isDrawing:()=>drawing,isActive:()=>drawing||finished,handleClick,handleContext,
   pauseForOtherMode:()=>{if(drawing)pause()},
