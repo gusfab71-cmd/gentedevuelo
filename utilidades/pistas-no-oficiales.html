@@ -475,6 +475,21 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
 .pronarea-nav-coords{font:700 10px ui-monospace,monospace;color:#d7f3ff}
 .pronarea-map-reference{pointer-events:none}
 
+
+/* FIR identificada por PRONAREA, visible directamente sobre el mapa. */
+.pronarea-map-fir-label{position:absolute;z-index:805;top:12px;left:50%;transform:translateX(-50%);
+ max-width:calc(100% - 190px);width:max-content;display:flex;align-items:center;gap:9px;
+ padding:9px 13px;background:#11354bea;border:1px solid #a8d0e8;color:#f4fbff;
+ border-radius:11px;box-shadow:0 4px 16px #0b2136a6;pointer-events:none}
+.pronarea-map-fir-label[hidden]{display:none!important}
+.pronarea-map-fir-label .pronarea-fir-swatch{width:13px;height:13px;flex:none;border:2px solid #ebfaff;border-radius:50%;background:#8bb7d2}
+.pronarea-map-fir-label strong{display:block;font-size:14px;line-height:1.3;letter-spacing:.02em}
+.pronarea-map-fir-label small{display:block;font-size:10px;color:#cde6f5;line-height:1.35}
+@media(max-width:700px){
+ .pronarea-map-fir-label{top:12px;left:59px;right:8px;transform:none;width:auto;max-width:calc(100% - 75px);padding:7px 9px}
+ .pronarea-map-fir-label strong{font-size:12px}
+ .pronarea-map-fir-label small{font-size:9px}
+}
 </style></head><body><header class="dispatch-nav"><div class="dispatch-nav-logo"><span class="dispatch-nav-symbol" aria-hidden="true">✈</span>
  <div><strong>GENTE DE VUELO</strong><small>AEROLOCATOR · MAPA AERONÁUTICO</small></div></div>
  <nav aria-label="Herramientas Gente de Vuelo"><a href="../index.html">Portada</a><a href="../comunidad.html#foro">Foro</a><a href="index.html">Utilidades</a>
@@ -588,13 +603,16 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
  <select id="map-view-mode" aria-controls="map" aria-describedby="map-view-status">
  <option value="airfields">Aeródromos y pistas</option>
  <option value="ourairports">OurAirports · por revisar</option>
- <option value="fir">FIR · uso educativo</option>
  <option value="sigmet">SIGMET · fenómenos</option>
  <option value="pronarea">PRONAREA · carga manual</option>
  </select></label><div class="dispatch-map-toolbar-links"><button id="map-inspector-toggle" type="button" aria-controls="airspace-inspector pronarea-visual" aria-expanded="false" hidden>Ver información</button>
     <button id="map-fullscreen" type="button">Ampliar mapa</button><a href="https://ais.anac.gob.ar/aip" target="_blank" rel="noopener noreferrer">AIP oficial ↗</a></div></div>
    <div class="dispatch-map-main"><div id="basemap-selector" class="basemap-selector" aria-label="Elegir tipo de mapa"></div>
 <div id="map" aria-label="Mapa satelital de pistas"></div>
+<div id="pronarea-map-fir-label" class="pronarea-map-fir-label" role="status" aria-live="polite" hidden>
+  <span id="pronarea-fir-swatch" class="pronarea-fir-swatch" aria-hidden="true"></span>
+  <span><strong id="pronarea-map-fir-name"></strong><small id="pronarea-map-fir-status">Región FIR · referencia educativa; verificar AIP</small></span>
+ </div>
 
  <nav class="map-tool-shortcuts" id="map-tool-shortcuts" aria-label="Accesos rápidos de AeroLocator">
   <button id="map-shortcut-ruler" type="button" title="Medir distancia y rumbo" aria-label="Activar regla de distancias" aria-pressed="false">
@@ -690,21 +708,13 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
    <div id="pronarea-nav-options" class="pronarea-nav-options"></div>
   </section>
   <p class="map-context-note"><strong>El PRONAREA permite ubicar referencias geográficas.</strong> La lectura identifica fenómenos y niveles, pero NO representa automáticamente tormentas, hielo ni turbulencia sobre el mapa.</p>
-  <p id="pronarea-map-result" role="status">Pegá un PRONAREA y pulsá «Leer fenómenos del texto». Los resultados aparecerán aquí.</p>
+  <p id="pronarea-map-result" role="status">Pegá el PRONAREA y pulsá «Leer y ubicar PRONAREA»: la FIR identificada aparecerá indicada en el mapa.</p>
   <a href="https://www.smn.gob.ar/pronarea" target="_blank" rel="noopener noreferrer">Consultar PRONAREA oficial · SMN</a>
   <p class="map-context-note">Este texto se usa solo en esta pantalla: no se publica ni confirma automáticamente la vigencia del boletín.</p>
  </section>
 </div>
    <div class="dispatch-map-bottom">
  <p id="map-view-status" role="status" aria-live="polite" class="map-view-context">Pistas y aeródromos visibles. Elegí otra capa para ocultarlas.</p>
- <div id="fir-map-legend" class="airspace-legend" hidden>
- <span><i style="border-color:#dba8b8;background:#dba8b838"></i>Ezeiza</span>
- <span><i style="border-color:#a7c3e2;background:#a7c3e238"></i>Córdoba</span>
- <span><i style="border-color:#bca9e7;background:#bca9e738"></i>Mendoza</span>
- <span><i style="border-color:#b7d5aa;background:#b7d5aa38"></i>Resistencia</span>
- <span><i style="border-color:#e8cb91;background:#e8cb9138"></i>Comodoro Rivadavia</span>
- <small>Colores suaves y líneas punteadas. Geometría educativa: verificar AIP ENR 2.1 vigente.</small>
- </div>
  <div id="sigmet-map-legend" class="airspace-legend" hidden>
  <span><i style="border-color:#ffbb82"></i>Turbulencia</span>
  <span><i style="border-color:#80cdef"></i>Engelamiento</span>
@@ -2351,8 +2361,29 @@ function drawPronareaReferences(){
  }
  if(!map.hasLayer(pronareaFocusLayer))pronareaFocusLayer.addTo(map);
 }
+
+const pronareaMapFirLabel=document.getElementById('pronarea-map-fir-label');
+const pronareaMapFirName=document.getElementById('pronarea-map-fir-name');
+const pronareaMapFirStatus=document.getElementById('pronarea-map-fir-status');
+const pronareaMapFirSwatch=document.getElementById('pronarea-fir-swatch');
+function identifyFIRonMap(region){
+ if(mapViewMode!=='pronarea'||region?.kind!=='fir'){
+  pronareaMapFirLabel.hidden=true;
+  return;
+ }
+ const entry=PRONAREA_FIR_REFERENCES[region.code];
+ if(!entry){pronareaMapFirLabel.hidden=true;return}
+ pronareaMapFirName.textContent=entry.name.toLocaleUpperCase('es-AR')+' · '+entry.short;
+ pronareaMapFirStatus.textContent=region.manual?
+  'Elegida manualmente · verificar FIR en el boletín y límites en AIP ENR 2.1':
+  'Identificada en el PRONAREA · sombreado educativo; verificar AIP ENR 2.1';
+ pronareaMapFirSwatch.style.backgroundColor=FIR_COLORS[region.code]||'#a8c7de';
+ pronareaMapFirLabel.hidden=false;
+}
+
 function focusPronareaRegion(region){
  if(mapViewMode!=='pronarea'||!region)return;
+ identifyFIRonMap(region);
  if(region.kind==='bounds')map.flyToBounds(region.bounds,{padding:[35,35],maxZoom:7,duration:.9});
  else if(region.kind==='fir'){
   map.flyTo([region.lat,region.lon],region.zoom||6,{duration:.6});
@@ -2383,6 +2414,7 @@ function focusPronareaRegion(region){
 }
 function renderPronareaRegions(autoFocus=false){
  pronareaRegions=locatePronareaRegions(pronareaInput.value);
+ identifyFIRonMap(pronareaRegions.find(r=>r.kind==='fir'));
  const manualChoices=!pronareaRegions.length&&pronareaInput.value.trim().length>=25;
  pronareaNav.hidden=!pronareaRegions.length&&!manualChoices;
  const heading=document.getElementById('pronarea-nav-title');
@@ -2403,6 +2435,7 @@ function renderPronareaRegions(autoFocus=false){
   button.append(sub);
   button.addEventListener('click',()=>{
    if(manualChoices){
+    region.manual=true;
     pronareaRegions=[region];
     drawPronareaReferences();
     pronareaStatus.textContent='FIR seleccionada manualmente: '+region.name+
@@ -2431,6 +2464,7 @@ document.getElementById('pronarea-map-clear').addEventListener('click',()=>{
  pronareaInput.value='';
  pronareaStatus.textContent='Texto limpiado. Podés pegar otro PRONAREA.';
  pronareaRegions=[];pronareaNavOptions.replaceChildren();pronareaNav.hidden=true;
+ pronareaMapFirLabel.hidden=true;
  pronareaFocusLayer.clearLayers();
  pronareaInput.focus();
 });
@@ -2789,8 +2823,9 @@ oaSearch.addEventListener('input',()=>{oaMaxList=60;if(oaRecords.length)renderOA
 document.getElementById('oa-reload').addEventListener('click',()=>{void showOurAirports(true)});
 
 viewSelect.addEventListener('change',()=>{
- const next=viewSelect.value;if(!['airfields','ourairports','fir','sigmet','pronarea'].includes(next))return;
+ const next=viewSelect.value;if(!['airfields','ourairports','sigmet','pronarea'].includes(next))return;
  mapViewMode=next;
+ if(next!=='pronarea')pronareaMapFirLabel.hidden=true;
  oaOpenInMainMap=false;
  document.getElementById('map-tool-shortcuts').hidden=next!=='airfields';
  if(next!=='airfields'){
@@ -2799,17 +2834,12 @@ viewSelect.addEventListener('change',()=>{
  }
  document.getElementById('airfields-map-legend').hidden=next!=='airfields';
  document.getElementById('airfields-map-actions').hidden=next!=='airfields';
- document.getElementById('fir-map-legend').hidden=next!=='fir';
  document.getElementById('sigmet-map-legend').hidden=next!=='sigmet';
  document.getElementById('ourairports-map-legend').hidden=next!=='ourairports';
  contextualInspector(next!=='airfields');
  document.getElementById('sigmet-controls').hidden=next!=='sigmet';
  document.getElementById('oa-controls').hidden=next!=='ourairports';
- if(next==='fir'){
-  document.getElementById('airspace-inspector-title').textContent='Explorar FIR argentinas';
-  document.getElementById('airspace-inspector-subtitle').textContent='Elegí una FIR de esta lista para centrar su región en el mapa.';
-  inspectorMessage('Cargando regiones FIR educativas…');
- }else if(next==='sigmet'){
+ if(next==='sigmet'){
   document.getElementById('airspace-inspector-title').textContent='Explorar avisos SIGMET';
   document.getElementById('airspace-inspector-subtitle').textContent='Elegí un aviso o tocá directamente un área sombreada.';
   inspectorMessage('Consultando fenómenos SIGMET disponibles…');
@@ -2831,7 +2861,6 @@ viewSelect.addEventListener('change',()=>{
   if(oaRecords.length)renderOACatalog();
   else void showOurAirports();
  }
- else if(next==='fir')void showFIR();
  else if(next==='sigmet')void showSIG();
  else if(next==='ourairports')void showOurAirports();
  else{viewStatus.textContent='PRONAREA de carga manual: no se dibujan zonas sin geometría oficial explícita.';map.fitBounds([[-55.5,-74.5],[-21.5,-52.5]])}
