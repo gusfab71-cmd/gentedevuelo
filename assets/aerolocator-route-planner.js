@@ -124,7 +124,7 @@ window.GDV_ROUTE_PLANNER_BOOT=function(options){
   continueButton.disabled=points.length===0||drawing;
   $('route-finish').disabled=points.length<2||finished;
   map.getContainer().classList.toggle('route-drawing',drawing);
-  setNotice(drawing?'Clic izquierdo: marcar un punto. Clic derecho: «Próxima pierna» o «Finalizar ruta». Pulsación larga en móvil.':'');
+  setNotice(drawing?'Clic izquierdo: salida y puntos siguientes. Al llegar al destino: clic derecho, después clic izquierdo en «Finalizar ruta». Pulsación larga en móvil.':'');
  }
  function getForecast(){
   const alt=Number(altitude.value),speed=Number(ias.value);
@@ -255,13 +255,13 @@ window.GDV_ROUTE_PLANNER_BOOT=function(options){
   }
   points.push({lat:latlng.lat,lng:latlng.lng});
   render();setMessage(points.length===1?'Salida definida. Clic para agregar punto intermedio o destino.':
-   'Punto '+points.length+' marcado. Clic derecho: «Próxima pierna» o «Finalizar ruta».');
+   'Punto '+points.length+' marcado. Clic izquierdo para más puntos; clic derecho y luego izquierdo en «Finalizar ruta» para terminar.');
  }
  function openMenu(ll,index){
   if(!points.length)return;
   cancelMenu();
   const content=[];
-  if(drawing)content.push(['next','Próxima pierna'],['finish','Finalizar ruta']);
+  if(drawing&&points.length>=2)content.push(['finish','Finalizar ruta']);
   else if(finished)content.push(['continue','Continuar trazando']);
   if(Number.isInteger(index)&&index>0&&index<points.length)content.push(['delete','Eliminar este punto']);
   for(const [cmd,title] of content){
@@ -269,7 +269,6 @@ window.GDV_ROUTE_PLANNER_BOOT=function(options){
    button.textContent=title;
    button.addEventListener('click',e=>{
     e.stopPropagation();cancelMenu();
-    if(cmd==='next'){setMessage('Pierna confirmada. Hacé clic para marcar el siguiente punto.');return}
     if(cmd==='finish'){finish();return}
     if(cmd==='continue'){begin();return}
     if(cmd==='delete'){
@@ -340,7 +339,7 @@ window.GDV_ROUTE_PLANNER_BOOT=function(options){
  }
  function handleContext(e){
   if(!drawing&&!finished)return false;
-  if(!points.length){setMessage('Primero marcá el punto de salida con clic izquierdo.');return true}
+  if(points.length<2){setMessage('Marcá salida y al menos un destino antes de finalizar.');return true}
   openMenu(e.latlng,null);return true;
  }
  const onInput=()=>refresh();
