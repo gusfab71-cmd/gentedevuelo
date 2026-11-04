@@ -2423,12 +2423,23 @@ async function showOurAirports(force=false){
   try{
    const controller=new AbortController();
    const timer=setTimeout(()=>controller.abort(),35000);
-   let response;
-   try{response=await fetch('/api/aerolocator-ourairports',{cache:'no-store',signal:controller.signal})}
-   finally{clearTimeout(timer)}
-   const payload=await response.json();
-   if(!response.ok||!payload.ok||!Array.isArray(payload.records))
-    throw Error(payload.error||'La fuente no devolvió registros argentinos.');
+   let payload=null;
+   try{
+    // Preferir la copia del repositorio (reproducible y rápida); alternativa: consulta en vivo.
+    try{
+     const snapshot=await fetch('/assets/aerolocator-ourairports-ar.json',{cache:'no-store',signal:controller.signal});
+     if(snapshot.ok){
+      const json=await snapshot.json();
+      if(json.ok&&Array.isArray(json.records)&&json.records.length>100)payload=json;
+     }
+    }catch(_){}
+    if(!payload){
+     const response=await fetch('/api/aerolocator-ourairports',{cache:'no-store',signal:controller.signal});
+     const json=await response.json();
+     if(!response.ok||!json.ok||!Array.isArray(json.records))throw Error(json.error||'La fuente no devolvió registros argentinos.');
+     payload=json;
+    }
+   }finally{clearTimeout(timer)}
    oaRecords=payload.records.filter(r=>Number.isInteger(r.id)&&Number.isFinite(r.lat)&&
     Number.isFinite(r.lon)&&Array.isArray(r.runways)&&Array.isArray(r.frequencies));
    oaInfo=payload;
