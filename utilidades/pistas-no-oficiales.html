@@ -1271,12 +1271,15 @@ function renderExternal(){
  if(!layerSelected('reference')||!meetsServiceFilters({ats_service:'unknown',access_policy:'unknown',operation_rules:'unknown'}))return;
  let count=0;
  for(const x of externalPoints){
+  const meta={key:'reference:'+x.lat.toFixed(5)+':'+x.lon.toFixed(5)+':'+normalizePista(x.name).slice(0,45),
+   sourceKind:'reference',name:x.name,lat:x.lat,lon:x.lon};
+  if(markerOverrides.get(meta.key)?.hidden)continue;
   const nm=reference?nauticalMiles(reference[0],reference[1],x.lat,x.lon):null;
   if(nearRadius!==null&&nm>nearRadius)continue;
   if(!meetsSurfaceFilter(x))continue;
   const marker=L.marker([x.lat,x.lon],{icon:runwayPin('reference'),title:x.name})
     .bindPopup(referencePopup(x,nm),{maxWidth:350,minWidth:245}).addTo(external);
-  attachSelection(marker,[x.lat,x.lon],x.name,()=>referencePopup(x,nm));
+  attachSelection(marker,[x.lat,x.lon],x.name,()=>referencePopup(x,nm),meta);
   count++;
  }
  document.getElementById('near-status').textContent=nearRadius!==null?
@@ -1317,6 +1320,8 @@ function renderDocumented(){
  const q=normalizePista(document.getElementById('search').value.trim());
  let count=0;
  for(const point of documentedAirstrips){
+  const meta={key:point.category+':'+point.id,sourceKind:point.category,name:point.name,lat:point.lat,lon:point.lon};
+  if(markerOverrides.get(meta.key)?.hidden)continue;
   const kind=airfieldClass(point);
   if(!layerSelected(kind)||!meetsServiceFilters(point)||!meetsSurfaceFilter(point))continue;
   const fields=[point.name,point.details?.province,point.details?.icao,point.details?.registry].join(' ');
@@ -1326,7 +1331,7 @@ function renderDocumented(){
   const marker=L.marker([point.lat,point.lon],{icon:runwayPin(kind),title:point.name})
     .bindPopup(documentaryPopup(point,distance),{maxWidth:360,minWidth:250})
     .addTo(documentedLayers[point.category]);
-  attachSelection(marker,[point.lat,point.lon],point.name,()=>documentaryPopup(point,distance));
+  attachSelection(marker,[point.lat,point.lon],point.name,()=>documentaryPopup(point,distance),meta);
   documentaryMarkers.set(point.id,marker);
   count++;
   const article=document.createElement('article');article.className='pista-record';
@@ -1341,8 +1346,8 @@ function renderDocumented(){
   source.textContent='Fuente: '+point.sourceLabel+' · '+point.sourceDate;
   const btn=document.createElement('button');btn.type='button';btn.textContent='Ver ficha en el mapa';
   btn.addEventListener('click',()=>{
-   map.setView([point.lat,point.lon],14);
-   selectAirfield(marker,[point.lat,point.lon],point.name,()=>documentaryPopup(point,distance));
+   map.setView(marker.getLatLng(),14);
+   selectAirfield(marker,[marker.getLatLng().lat,marker.getLatLng().lng],markerVisualLabel(meta),()=>popupWithVisualReference(()=>documentaryPopup(point,distance),meta));
    (desktopMode()?selectedPanel:document.getElementById('map')).scrollIntoView({behavior:'smooth',block:'center'});
   });
   article.append(tag,title,description,source,btn);root.append(article);
@@ -1363,16 +1368,18 @@ function render(){
  markers.clearLayers();list.replaceChildren();
  const q=document.getElementById('search').value.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
  const all=records
+  .filter(x=>!markerOverrides.get('community:'+x.id)?.hidden)
   .filter(x=>layerSelected(airfieldClass(x))&&meetsServiceFilters(x)&&meetsSurfaceFilter(x))
   .filter(x=>(x.name+' '+(x.details?.province||'')).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().includes(q))
   .filter(x=>nearRadius===null||(reference&&nauticalMiles(reference[0],reference[1],x.latitude,x.longitude)<=nearRadius))
   .sort((a,b)=>reference?
    nauticalMiles(reference[0],reference[1],a.latitude,a.longitude)-nauticalMiles(reference[0],reference[1],b.latitude,b.longitude):0);
  for(const p of all){
+  const meta={key:'community:'+p.id,sourceKind:'community',name:p.name,lat:p.latitude,lon:p.longitude};
   const nm=reference?nauticalMiles(reference[0],reference[1],p.latitude,p.longitude):null;
   const marker=L.marker([p.latitude,p.longitude],{icon:runwayPin(airfieldClass(p)),title:p.name})
    .bindPopup(communityPopup(p,nm),{maxWidth:350,minWidth:245}).addTo(markers);
-  attachSelection(marker,[p.latitude,p.longitude],p.name,()=>communityPopup(p,nm));
+  attachSelection(marker,[p.latitude,p.longitude],p.name,()=>communityPopup(p,nm),meta);
   const entry=el('article','');entry.className='entry';
   const title=el('strong',p.name),surface=el('p',(p.details?.province||'Provincia sin informar')+' · '+(p.details?.surface||'Superficie sin verificar'));
   const coords=el('small','Coordenadas: '+Number(p.latitude).toFixed(6)+', '+Number(p.longitude).toFixed(6));
@@ -1385,8 +1392,8 @@ function render(){
   if(nm!==null)entry.append(el('small','Distancia aproximada: '+nm.toFixed(1)+' NM'));
   const button=el('button','Ver ficha y ubicación');
   button.type='button';button.addEventListener('click',()=>{
-   map.setView([p.latitude,p.longitude],14);
-   selectAirfield(marker,[p.latitude,p.longitude],p.name,()=>communityPopup(p,nm));
+   map.setView(marker.getLatLng(),14);
+   selectAirfield(marker,[marker.getLatLng().lat,marker.getLatLng().lng],markerVisualLabel(meta),()=>popupWithVisualReference(()=>communityPopup(p,nm),meta));
    (desktopMode()?selectedPanel:document.getElementById('map')).scrollIntoView({behavior:'smooth',block:'center'});
   });
   entry.append(button);list.append(entry);
@@ -1728,6 +1735,7 @@ viewSelect.addEventListener('change',()=>{
  else{viewStatus.textContent='PRONAREA de carga manual: no se dibujan zonas sin geometría oficial explícita.';map.fitBounds([[-55.5,-74.5],[-21.5,-52.5]])}
 });
 
+await loadMarkerOverrides();
 render(); // Las referencias documentales se muestran aun si falla la conexión a la comunidad.
 await load();
 })();
