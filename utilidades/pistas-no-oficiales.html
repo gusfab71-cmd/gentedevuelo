@@ -1540,7 +1540,7 @@ function contextualInspector(open){
  if(mode==='airfields')mapViewHint.hidden=true;
  else{
   mapViewHint.hidden=false;
-  mapViewHint.textContent=mode==='fir'?'Seleccioná una FIR de la lista o tocá su zona punteada para ver la ficha.':
+  mapViewHint.textContent=mode==='fir'?'Seleccioná una FIR con «Ver FIR» para centrarla o pasá el cursor sobre su zona punteada para identificarla.':
    mode==='sigmet'?'Seleccioná un aviso de la lista o tocá su área para ver fenómenos, niveles y horarios.':
    'Abrí «Ver PRONAREA» para copiar y pegar el boletín del SMN; no se inventan polígonos.';
  }
@@ -1574,11 +1574,11 @@ function focusAirspace(layer){
 function inspectorFIR(){
  areaItems.replaceChildren();
  document.getElementById('airspace-inspector-title').textContent='Explorar FIR argentinas';
- document.getElementById('airspace-inspector-subtitle').textContent='Elegí una de las cinco FIR o tocá una zona directamente en el mapa.';
+ document.getElementById('airspace-inspector-subtitle').textContent='Elegí una de las cinco FIR para centrarla. El mapa no abre recuadros sobre las regiones.';
  document.getElementById('airspace-inspector-footnote').textContent='FIR educativas de cartografía histórica; verificar límite y clasificación ATS vigentes en AIP ENR 2.1.';
  for(const code of ['SAEF','SACF','SAMF','SARR','SAVF']){
   const item=firShapes.get(code);if(!item)continue;
-  areaItems.append(inspectorChoice('FIR '+item.name+' · '+code,'Centrar región y abrir su ficha',FIR_COLORS[code],()=>focusAirspace(item.layer)));
+  areaItems.append(inspectorChoice('FIR '+item.name+' · '+code,'Centrar región en el mapa',FIR_COLORS[code],()=>focusAirspace(item.layer)));
  }
  if(!areaItems.childNodes.length)inspectorMessage('No se pudo obtener la cartografía de las FIR.');
 }
@@ -1609,14 +1609,6 @@ function auxiliary(show){
   else if(!show&&map.hasLayer(lyr))map.removeLayer(lyr);
  }
 }
-function popupFIR(feature){
- const p=feature.properties||{},box=document.createElement('section');
- box.style.color='#152e40';
- const t=document.createElement('strong');t.textContent='FIR '+String(p.name||'')+' · '+String(p.code||'');
- const desc=document.createElement('p');desc.textContent='Límite ilustrativo. La geometría histórica puede diferir del límite ATS vigente. Uso exclusivamente educativo.';
- const a=document.createElement('a');a.href='https://ais.anac.gob.ar/aip';a.target='_blank';a.rel='noopener noreferrer';a.textContent='Comprobar AIP ENR 2.1';
- box.append(t,desc,a);return box;
-}
 async function showFIR(){
  if(firDone){if(mapViewMode==='fir'){layerFIR.addTo(map);inspectorFIR()}return}
  if(firLoading)return firLoading;
@@ -1630,8 +1622,7 @@ async function showFIR(){
    L.geoJSON(geo,{style:f=>({color:FIR_COLORS[f.properties?.code]||'#bfcdda',weight:1.8,dashArray:'5 8',fillOpacity:.045,opacity:.9}),
     onEachFeature:(f,l)=>{
      const code=String(f.properties?.code||''),name=String(f.properties?.name||'');
-     l.bindPopup(popupFIR(f));
-     const tip=document.createElement('span');tip.textContent='FIR '+name+' · Tocá para ver información';
+     const tip=document.createElement('span');tip.textContent='FIR '+name+' · '+code;
      l.bindTooltip(tip,{sticky:true});
      firShapes.set(code,{name,layer:l});
      l.on('mouseover',()=>{if(l.setStyle)l.setStyle({fillOpacity:.12,weight:2.8})});
@@ -1641,7 +1632,7 @@ async function showFIR(){
    firDone=true;
    inspectorFIR();
    if(mapViewMode==='fir'){layerFIR.addTo(map);map.fitBounds([[-55.5,-74.5],[-21.5,-52.5]]);
-    viewStatus.textContent='Cinco FIR argentinas. Seleccioná una desde el panel o tocá una zona punteada para ver su ficha. Solo educativo; verificar AIP ENR 2.1.'}
+    viewStatus.textContent='Cinco FIR argentinas. El nombre aparece al pasar el cursor; podés centrar cada región desde «Ver FIR». Solo educativo: verificar AIP ENR 2.1.'}
   }catch(e){if(mapViewMode==='fir'){viewStatus.textContent='No se cargaron las FIR: '+e.message+'. Consultar AIP ENR 2.1.';inspectorMessage(viewStatus.textContent)}}
   finally{firLoading=null}
  })();return firLoading;
@@ -1719,7 +1710,7 @@ viewSelect.addEventListener('change',()=>{
  contextualInspector(next!=='airfields');
  if(next==='fir'){
   document.getElementById('airspace-inspector-title').textContent='Explorar FIR argentinas';
-  document.getElementById('airspace-inspector-subtitle').textContent='Elegí una FIR de esta lista o tocá la región sombreada.';
+  document.getElementById('airspace-inspector-subtitle').textContent='Elegí una FIR de esta lista para centrar su región en el mapa.';
   inspectorMessage('Cargando regiones FIR educativas…');
  }else if(next==='sigmet'){
   document.getElementById('airspace-inspector-title').textContent='Explorar avisos SIGMET';
