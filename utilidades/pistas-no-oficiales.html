@@ -2215,15 +2215,43 @@ let pronareaRegions=[];
 const MARAMBIO_REFERENCE={lat:-64.23913,lon:-56.63085,name:'Base Marambio · SAWB',
  source:'ARP ANAC; referencia puntual, no delimita un fenómeno'};
 const PRONAREA_FIR_REFERENCES={
- SAEF:{name:'FIR Ezeiza · referencia central',lat:-34.82,lon:-58.54},
- SACF:{name:'FIR Córdoba · referencia central',lat:-31.33,lon:-64.21},
- SAMF:{name:'FIR Mendoza · referencia central',lat:-32.83,lon:-68.79},
- SARR:{name:'FIR Resistencia · referencia central',lat:-27.45,lon:-59.04},
- SAVF:{name:'FIR Comodoro Rivadavia · referencia central',lat:-45.79,lon:-67.47}
+ SAEF:{name:'FIR Ezeiza',lat:-34.82,lon:-58.54,short:'EZE',fbag:'82',aliases:['EZEIZA','EZE','SAEF']},
+ SACF:{name:'FIR Córdoba',lat:-31.33,lon:-64.21,short:'CBA',fbag:'44',aliases:['CORDOBA','CBA','SACF']},
+ SAMF:{name:'FIR Mendoza',lat:-32.83,lon:-68.79,short:'DOZ',fbag:'68',aliases:['MENDOZA','DOZ','SAMF']},
+ SARR:{name:'FIR Resistencia',lat:-27.45,lon:-59.04,short:'SIS',fbag:'55',aliases:['RESISTENCIA','SIS','SARR']},
+ SAVF:{name:'FIR Comodoro Rivadavia',lat:-45.79,lon:-67.47,short:'CRV',fbag:'60',aliases:['COMODORO RIVADAVIA','COMODORO','CRV','SAVF']}
 };
 function normalizePronarea(v){
  return String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase();
 }
+
+/* En los PRONAREA oficiales se usan EZE/CBA/DOZ/SIS/CRV y códigos FBAG,
+ * distintos de los códigos cartográficos SAEF/SACF/SAMF/SARR/SAVF.
+ * La identificación usa el encabezado para evitar falsas coincidencias en
+ * los aeródromos nombrados en WIND/T y FCST.
+ */
+function detectPronareaFIR(raw){
+ const normalized=normalizePronarea(raw).replace(/\s+/g,' ').trim();
+ if(!normalized)return null;
+ const header=normalized.slice(0,1300).split(/\bSIGFENOM\s*:|\bSECCION\s+I\b/)[0];
+ const entries=Object.entries(PRONAREA_FIR_REFERENCES);
+ const names='(COMODORO\\s+RIVADAVIA|RESISTENCIA|CORDOBA|MENDOZA|EZEIZA|COMODORO|EZE|CBA|DOZ|SIS|CRV|SAEF|SACF|SAMF|SARR|SAVF)';
+ const decode=(name)=>entries.find(([,item])=>item.aliases.includes(name.replace(/\s+/g,' ')))?.[0]||null;
+ let match=new RegExp('\\bPRONAREA\\s+(?:FIR\\s+)?'+names+'\\b').exec(header);
+ if(match)return decode(match[1]);
+ match=/\bFBAG\s*(82|44|68|55|60)\b/.exec(header.slice(0,450));
+ if(match)return entries.find(([,item])=>item.fbag===match[1])?.[0]||null;
+ match=new RegExp('\\bFIR\\s+'+names+'\\b').exec(header);
+ if(match)return decode(match[1]);
+ const beginning=header.slice(0,300);
+ for(const [code,item] of entries){
+  const proper=item.aliases[0].replace(/\s+/g,'\\s+');
+  if(new RegExp('\\b(?:PRONAREA\\s+(?:DE\\s+|PARA\\s+)?'+proper+'|'+proper+'\\s+PRONAREA)\\b').test(beginning))
+   return code;
+ }
+ return null;
+}
+
 function locatePronareaRegions(raw){
  const normalized=normalizePronarea(raw);
  if(normalized.trim().length<30)return [];
@@ -2255,12 +2283,15 @@ function locatePronareaRegions(raw){
    note:'Rango de coordenadas citado explícitamente en WIND/T del PRONAREA. No es un área de turbulencia, hielo ni SIGMET.'
   });
  }
- // Para otras FIR argentinas ofrecer una localización de referencia, no polígonos.
- if(!antarctic)for(const [code,region] of Object.entries(PRONAREA_FIR_REFERENCES)){
-  if(!new RegExp('(?:\\bFIR\\s+'+code+'\\b|\\bFIR\\s+'+
-      normalizePronarea(region.name).replace('FIR ','').split(' · ')[0]+'\\b)').test(normalized))continue;
-  regions.push({id:code,...region,kind:'point',zoom:6,
-   note:'Punto central aproximado para orientación. NO delimita los límites ATS de la FIR; consultar AIP ENR 2.1.'});
+ // Enfoque sobre la FIR identificada en el encabezado. La geometría se carga
+ // del mapa educativo existente; si falla se utiliza solo un punto orientativo.
+ if(!antarctic){
+  const code=detectPronareaFIR(raw);
+  if(code){
+   const region=PRONAREA_FIR_REFERENCES[code];
+   regions.push({id:code,code,name:region.name,lat:region.lat,lon:region.lon,kind:'fir',zoom:6,
+    note:'Región cartográfica educativa, sin sustituir límites oficiales del AIP ENR 2.1.'});
+  }
  }
  return regions;
 }
