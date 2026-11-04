@@ -112,6 +112,7 @@ window.GDV_ROUTE_PLANNER_BOOT=function(options){
  const select=$('route-wind-select'),manualDir=$('route-manual-dir'),manualKt=$('route-manual-kt'),manualTemp=$('route-manual-temp');
  const drawButton=$('route-start'),continueButton=$('route-continue'),clearButton=$('route-clear');
  const undoButton=$('route-undo'),undoFloat=$('route-undo-float');
+ const viewMapPanel=$('route-view-map-panel'),viewMapToolbar=$('route-view-map-toolbar');
  const layer=L.layerGroup().addTo(map),preview=L.layerGroup().addTo(map);
  const routeHover=document.createElement('div');routeHover.className='route-hover-card';routeHover.hidden=true;
  map.getContainer().append(routeHover);
@@ -134,11 +135,15 @@ window.GDV_ROUTE_PLANNER_BOOT=function(options){
  function setNotice(msg){notice.textContent=msg;notice.hidden=!msg}
  function updateButtons(){
   toggle.setAttribute('aria-pressed',String(drawing));
-  toggle.textContent=drawing?'Trazando ruta…':'Trazar ruta VFR';
+  toggle.textContent=drawing?'Trazando ruta…':finished?'Datos de la ruta VFR':'Trazar ruta VFR';
   drawButton.disabled=drawing;
+  const routeReady=points.length>=2&&finished;
+  viewMapPanel.disabled=!routeReady;
+  viewMapToolbar.disabled=!routeReady;
+  viewMapToolbar.hidden=!routeReady;
   continueButton.disabled=points.length===0||drawing;
   undoButton.disabled=points.length===0;
-  undoFloat.hidden=points.length===0;
+  undoFloat.hidden=points.length===0||panel.open;
   undoFloat.disabled=points.length===0;
   $('route-finish').disabled=points.length<2||finished;
   map.getContainer().classList.toggle('route-drawing',drawing);
@@ -316,6 +321,14 @@ window.GDV_ROUTE_PLANNER_BOOT=function(options){
    'Último punto deshecho. Podés seguir marcando o ajustar la ruta.':
    'Punto de salida deshecho. Arrastrá libremente el mapa y volvé a marcar la salida.');
  }
+ function showRouteMap(){
+  if(points.length<2){setMessage('Primero marcá la salida y el destino de la ruta.');return}
+  if(!finished){setMessage('Finalizá la ruta antes de regresar al mapa para explorar sus cálculos.');return}
+  panel.open=false;
+  hideHover();preview.clearLayers();cancelMenu();updateButtons();
+  setMessage('Ruta visible en mapa. Pasá el puntero sobre una pierna para consultar rumbo, distancia, GS y ETE. Para editar datos, pulsá «Datos de la ruta VFR».');
+  options.showRouteOnMap?.(points.map(p=>({...p})));
+ }
  function clear(){
   if(points.length&&!window.confirm('¿Borrar el trazado completo y sus puntos?'))return;
   points=[];finished=false;drawing=false;layer.clearLayers();preview.clearLayers();
@@ -461,6 +474,9 @@ window.GDV_ROUTE_PLANNER_BOOT=function(options){
  continueButton.addEventListener('click',begin);
  $('route-finish').addEventListener('click',finish);
  clearButton.addEventListener('click',clear);
+ viewMapPanel.addEventListener('click',showRouteMap);
+ viewMapToolbar.addEventListener('click',showRouteMap);
+ panel.addEventListener('toggle',updateButtons);
  undoButton.addEventListener('click',undoLastPoint);
  undoFloat.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();undoLastPoint()});
  const mapNode=map.getContainer();
