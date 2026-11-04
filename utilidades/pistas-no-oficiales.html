@@ -658,10 +658,11 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
   <div class="route-planner-commands">
    <button type="button" id="route-start" data-action="draw">Iniciar trazado</button>
    <button type="button" id="route-continue">Continuar / editar ruta</button>
+   <button type="button" id="route-undo" title="Quitar el último punto marcado (Ctrl + Z)">↶ Deshacer último punto</button>
    <button type="button" id="route-finish">Finalizar ruta</button>
    <button type="button" id="route-clear" data-action="clear">Borrar ruta</button>
   </div>
-  <p id="route-planner-status" class="route-planner-state" role="status">Primero marcá salida, referencias intermedias y destino con clic izquierdo. Usá clic derecho para continuar o finalizar; podés arrastrar los puntos para ajustarlos.</p>
+  <p id="route-planner-status" class="route-planner-state" role="status">Arrastrá el mapa con el izquierdo normalmente. Solo un clic breve marca un punto. Para finalizar, clic derecho sobre el último punto y confirmá con el izquierdo. Deshacer: botón o Ctrl + Z.</p>
   <div class="route-planner-fields">
    <label class="route-pronarea-input">PRONAREA oficial (pegá WIND/T)
     <textarea id="route-pronarea" maxlength="12000" rows="3" placeholder="WIND/T: DIA-CDU-PAR-SVO-ROS ... FL030/32025P19 FL065/29025P09 ..."></textarea></label>
@@ -695,6 +696,7 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
  </div>
 </details>
 <div id="map" aria-label="Mapa satelital de pistas"></div>
+<button id="route-undo-float" class="route-undo-float" type="button" title="Deshacer el último punto de la ruta (Ctrl + Z)" hidden>↶ Deshacer punto</button>
 <div id="pronarea-map-fir-label" class="pronarea-map-fir-label" role="status" aria-live="polite" hidden>
   <span id="pronarea-fir-swatch" class="pronarea-fir-swatch" aria-hidden="true"></span>
   <span><strong id="pronarea-map-fir-name"></strong><small id="pronarea-map-fir-status">Región FIR · referencia educativa; verificar AIP</small></span>
