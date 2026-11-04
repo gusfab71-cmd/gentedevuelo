@@ -425,7 +425,7 @@ if(requiresFigure){
 }
 const originalNumber=q.pregunta.match(/^\s*(\d+)\s*[.\-–]/);
 const idNumber=AUDIT.numericId(q);
-$('progress').textContent=(idNumber!==null?'ANAC N.º '+idNumber:originalNumber?'ANAC N.º '+originalNumber[1]:'Registro '+q.id)+' · Pregunta '+(index+1)+' de '+exam.length;
+$('progress').textContent=exam50Mode?'Simulacro PPA · Pregunta '+(index+1)+' de '+exam.length:(idNumber!==null?'ANAC N.º '+idNumber:originalNumber?'ANAC N.º '+originalNumber[1]:'Registro '+q.id)+' · Pregunta '+(index+1)+' de '+exam.length;
 $('score').textContent=exam50Mode?'Simulacro · '+gradedCount+' de 50 respondidas':reviewMode?'Revisión · sin puntos':sequentialMode?(ppaStudentMode?'Recorrido completo: ':'Correlativo: ')+points+' puntos provisionales / '+gradedCount+' calificadas':practiceMode?'Práctica: '+points+' puntos (provisionales)':'Puntos: '+points;
 $('question-meta').textContent=exam50Mode?'PDF ANAC: capítulo '+EXAM50_MAP.get(q.id).capitulo+', pregunta '+EXAM50_MAP.get(q.id).numero+' · banco '+q.id:sequentialMode?'Registro '+q.id+' · '+q.materia+' · Estado: '+q.estado+' · '+(hasValidKey(q)?'Clave histórica disponible':'SIN CLAVE VÁLIDA'):'';
 $('question').textContent=q.pregunta;
