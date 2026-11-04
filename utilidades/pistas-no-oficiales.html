@@ -1184,6 +1184,104 @@ document.getElementById('form').addEventListener('submit',async e=>{
 });
 const {data:{user}}=await client.auth.getUser();if(user){const {data}=await client.from('site_admins').select('user_id').eq('user_id',user.id).maybeSingle();admin=!!data}
 if(admin){document.getElementById('admin').hidden=false;async function pending(){const r=await client.from('community_airstrips').select('*').eq('status','pending').order('created_at');const root=document.getElementById('pending');root.replaceChildren();for(const p of r.data||[]){const d=el('div',p.name+' · '+p.latitude+', '+p.longitude+' · '+(p.details?.province||''));d.className='entry';airstripImageGallery(d,p.details?.photos,p.name);for(const status of ['approved','rejected']){const b=el('button',status==='approved'?'Aprobar':'Rechazar');b.onclick=async()=>{const {error}=await client.from('community_airstrips').update({status}).eq('id',p.id);if(error)msg.textContent=error.message;else{await pending();await load()}};d.append(b)}root.append(d)}}await pending()}
+
+/* Selector de vistas cartográficas excluyentes. Otras capas quedan invisibles. */
+const viewSelect=document.getElementById('map-view-mode'),viewStatus=document.getElementById('map-view-status');
+const layerFIR=L.layerGroup(),layerSIG=L.layerGroup();
+const FIR_COLORS={SAEF:'#dba8b8',SACF:'#a7c3e2',SAMF:'#bca9e7',SARR:'#b7d5aa',SAVF:'#e8cb91'};
+let firDone=false,firLoading=null,sigLoading=null;
+function dated(value){
+ if(value==null||value==='')return 'Sin informar';
+ const t=typeof value==='number'?new Date(value<1e12?value*1000:value):new Date(value);
+ return Number.isFinite(t.getTime())?t.toISOString().slice(0,16).replace('T',' ')+' UTC':'Sin informar';
+}
+function auxiliary(show){
+ for(const lyr of [draftMarker,referenceMarker,zoneLocationMarker,rulerLine,...rulerMarkers]){
+  if(!lyr)continue;
+  if(show&&!map.hasLayer(lyr))lyr.addTo(map);
+  else if(!show&&map.hasLayer(lyr))map.removeLayer(lyr);
+ }
+}
+function popupFIR(feature){
+ const p=feature.properties||{},box=document.createElement('section');
+ box.style.color='#152e40';
+ const t=document.createElement('strong');t.textContent='FIR '+String(p.name||'')+' · '+String(p.code||'');
+ const desc=document.createElement('p');desc.textContent='Límite ilustrativo. La geometría histórica puede diferir del límite ATS vigente. Uso exclusivamente educativo.';
+ const a=document.createElement('a');a.href='https://ais.anac.gob.ar/aip';a.target='_blank';a.rel='noopener noreferrer';a.textContent='Comprobar AIP ENR 2.1';
+ box.append(t,desc,a);return box;
+}
+async function showFIR(){
+ if(firDone){if(mapViewMode==='fir')layerFIR.addTo(map);return}
+ if(firLoading)return firLoading;
+ viewStatus.textContent='Cargando referencias FIR educativas…';
+ firLoading=(async()=>{
+  try{
+   const response=await fetch('/assets/argentina-fir-educativas.geojson',{signal:AbortSignal.timeout(12000)});
+   if(!response.ok)throw Error('no se pudo descargar el mapa FIR');
+   const geo=await response.json();
+   if(geo.type!=='FeatureCollection'||!Array.isArray(geo.features)||geo.features.length!==5)throw Error('geometría FIR incompleta');
+   L.geoJSON(geo,{style:f=>({color:FIR_COLORS[f.properties?.code]||'#bfcdda',weight:1.8,dashArray:'5 8',fillOpacity:.045,opacity:.9}),
+    onEachFeature:(f,l)=>l.bindPopup(popupFIR(f))}).addTo(layerFIR);
+   firDone=true;
+   if(mapViewMode==='fir'){layerFIR.addTo(map);map.fitBounds([[-55.5,-74.5],[-21.5,-52.5]]);
+    viewStatus.textContent='Cinco FIR argentinas con líneas punteadas y relleno suave. Referencia cartográfica educativa, NO delimitación ATS oficial. Ver AIP ENR 2.1.'}
+  }catch(e){if(mapViewMode==='fir')viewStatus.textContent='No se cargaron las FIR: '+e.message+'. Consultar AIP ENR 2.1.'}
+  finally{firLoading=null}
+ })();return firLoading;
+}
+const sigColor=p=>/TURB|MTW/i.test(p.hazard||'')?'#ffbb82':/ICE/i.test(p.hazard||'')?'#80cdef':/TS|CONV/i.test(p.hazard||'')?'#eb8cc6':'#d9cbaf';
+function popupSIG(p){
+ const card=document.createElement('section');card.style.color='#152e40';
+ const title=document.createElement('strong');title.textContent='SIGMET · '+String(p.hazard||p.phenomenon||'fenómeno');card.append(title);
+ for(const [name,value] of [['Intensidad',p.severity],['Límite inferior',p.base!=null?p.base+' pies':p.bottom!=null?p.bottom+' pies':null],
+ ['Límite superior',p.top!=null?p.top+' pies':null],['Desde',dated(p.validTimeFrom)],['Hasta',dated(p.validTimeTo)]]){
+  if(value==null)continue;const line=document.createElement('p');line.textContent=name+': '+String(value);line.style.margin='5px 0';card.append(line)}
+ const raw=p.raw||p.rawText||p.text;if(raw){const pre=document.createElement('pre');pre.textContent=String(raw);pre.style.cssText='white-space:pre-wrap;font-size:10px;max-height:180px;overflow:auto';card.append(pre)}
+ const link=document.createElement('a');link.href='https://www.smn.gob.ar/mensajes-sigmet';link.target='_blank';link.rel='noopener noreferrer';link.textContent='Verificar SIGMET oficial · SMN';card.append(link);return card;
+}
+async function showSIG(){
+ if(sigLoading)return sigLoading;
+ viewStatus.textContent='Consultando polígonos SIGMET de NOAA…';
+ sigLoading=(async()=>{
+  try{
+   const response=await fetch('/api/airspace-sigmet',{signal:AbortSignal.timeout(16000)});
+   const data=await response.json();if(!response.ok||!data.ok||!Array.isArray(data.features))throw Error(data.error||'No hubo respuesta válida');
+   layerSIG.clearLayers();
+   L.geoJSON({type:'FeatureCollection',features:data.features},{
+    style:f=>({color:sigColor(f.properties||{}),weight:2,dashArray:'6 5',fillOpacity:.15}),
+    pointToLayer:(f,ll)=>L.circleMarker(ll,{radius:8,color:sigColor(f.properties||{}),fillOpacity:.2}),
+    onEachFeature:(f,l)=>l.bindPopup(popupSIG(f.properties||{}))}).addTo(layerSIG);
+   if(mapViewMode==='sigmet'){layerSIG.addTo(map);map.fitBounds([[-55.5,-74.5],[-21.5,-52.5]]);
+    viewStatus.textContent=data.features.length+' zonas SIGMET con geometría en la consulta NOAA ('+dated(data.checkedUtc)+'). Cobertura parcial: sin zonas no significa ausencia de SIGMET. Consultar SMN.'}
+  }catch(e){if(mapViewMode==='sigmet')viewStatus.textContent='No disponible: '+e.message+'. Comprobar los SIGMET publicados por SMN.'}
+  finally{sigLoading=null}
+ })();return sigLoading;
+}
+document.getElementById('pronarea-map-analyze').addEventListener('click',()=>{
+ const text=document.getElementById('pronarea-map-input').value.trim();
+ const info=document.getElementById('pronarea-map-result');
+ if(text.length<40){info.textContent='Pegá el PRONAREA completo, con emisión, validez, FIR y fenómenos.';return}
+ const lines=text.split(/\r?\n/).map(x=>x.trim()).filter(Boolean).filter(x=>/TURB|ENGELAMIENTO|ICE|HIELO|TORMENTA|TS\b|CENIZA|VA\b|MTW/i.test(x)).slice(0,12);
+ info.textContent=(lines.length?'Líneas con fenómenos:\n'+lines.join('\n'):'No se identificaron líneas de fenómenos con las abreviaturas usuales.')+
+ '\nNo se trazan áreas sin coordenadas geográficas verificadas ni se infieren niveles. Comprobar vigencia en SMN.';
+});
+viewSelect.addEventListener('change',()=>{
+ const next=viewSelect.value;if(!['airfields','fir','sigmet','pronarea'].includes(next))return;
+ mapViewMode=next;
+ document.getElementById('airfields-map-legend').hidden=next!=='airfields';
+ document.getElementById('airfields-map-actions').hidden=next!=='airfields';
+ document.getElementById('fir-map-legend').hidden=next!=='fir';
+ document.getElementById('sigmet-map-legend').hidden=next!=='sigmet';
+ document.getElementById('pronarea-visual').hidden=next!=='pronarea';
+ if(map.hasLayer(layerFIR))map.removeLayer(layerFIR);
+ if(map.hasLayer(layerSIG))map.removeLayer(layerSIG);
+ syncLayerVisibility();auxiliary(next==='airfields');map.closePopup();
+ if(next==='airfields'){viewStatus.textContent='Solo pistas, aeródromos y referencias comunitarias. FIR y meteorología ocultas.';render();renderExternal()}
+ else if(next==='fir')void showFIR();
+ else if(next==='sigmet')void showSIG();
+ else{viewStatus.textContent='PRONAREA de carga manual: no se dibujan zonas sin geometría oficial explícita.';map.fitBounds([[-55.5,-74.5],[-21.5,-52.5]])}
+});
+
 render(); // Las referencias documentales se muestran aun si falla la conexión a la comunidad.
 await load();
 })();
