@@ -139,5 +139,6 @@
 }
 
 /* Segmento editable: una línea de 22 px invisible captura clics sin alterar la línea blanca. */
-.route-leg-insert-target{cursor:copy!important}
+.route-leg-insert-target{cursor:grab!important}
+.route-bending,.route-bending .route-leg-insert-target{cursor:grabbing!important}
 .route-leg-insert-target:focus-visible{outline:2px dashed #e5c35b}
