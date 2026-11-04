@@ -359,6 +359,13 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
 .marker-admin-hidden p{font-size:11px;color:#c4dfef;margin:7px 0}
 .marker-admin-hidden .hidden-marker-row{display:flex;align-items:center;justify-content:space-between;gap:7px;border-top:1px solid #3c607a;padding:7px 0}
 .marker-admin-hidden .hidden-marker-row span{font-size:11px;color:#e4f1fa;min-width:0;overflow-wrap:anywhere}
+.marker-edit-card{max-height:min(66vh,535px);overflow-y:auto;overscroll-behavior:contain;padding-right:4px}
+.marker-edit-card select{width:100%;box-sizing:border-box;background:#fff;color:#182c41;border:1px solid #95adbc;border-radius:6px;padding:7px;font:12px system-ui}
+.marker-edit-card .marker-note-source{background:#fff4d6;border:1px solid #ead28c;border-radius:7px;padding:7px;color:#77531e;font-size:10px}
+.marker-edit-card .marker-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.marker-edit-card .marker-grid label{min-width:0}
+@media(max-width:480px){.marker-edit-card .marker-grid{grid-template-columns:1fr}}
+
 .ruler-unit-option{display:grid;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#d8e9f5;min-width:160px}
 .ruler-unit-option select{width:100%;min-height:35px;padding:7px;border-radius:7px;font-size:12px;background:#eaf5ff;color:#102e43}
 
@@ -1072,7 +1079,7 @@ const markerOverrides=new Map();
 let markerEditBusy=false;
 async function loadMarkerOverrides(){
  const {data,error}=await client.from('aerolocator_marker_edits')
-  .select('marker_key,source_kind,display_lat,display_lon,display_label,display_note,hidden,updated_at');
+  .select('marker_key,source_kind,display_lat,display_lon,display_label,display_note,display_kind,reported_frequency,fuel_availability,fuel_type,hidden,updated_at');
  if(error){document.getElementById('message').textContent='No se pudieron cargar las correcciones visuales: '+error.message;return}
  markerOverrides.clear();for(const row of data||[])markerOverrides.set(row.marker_key,row);
  renderHiddenMarkerAdmin();
@@ -1083,18 +1090,53 @@ function markerVisualPosition(meta){
   L.latLng(o.display_lat,o.display_lon):L.latLng(meta.lat,meta.lon);
 }
 function markerVisualLabel(meta){return markerOverrides.get(meta.key)?.display_label||meta.name}
+const MARKER_VISUAL_TYPES=[
+ ['','Mantener color de origen'],['controlled_public','Aeropuerto/aeródromo público controlado'],
+ ['uncontrolled_public','Aeródromo público no controlado'],['private_aerodrome','Aeródromo privado'],
+ ['lad','LAD · Lugar Apto Denunciado'],['heliport','Helipuerto / helipunto'],
+ ['unverified','Pista sin clasificación verificada']
+];
+const MARKER_FUEL=[
+ ['','Sin información'],['unknown','Desconocido'],['declared_available','Combustible informado como disponible'],
+ ['declared_unavailable','Combustible informado como no disponible'],['ask_before_flight','Consultar disponibilidad antes de operar']
+];
+const MARKER_FUEL_TYPES=[
+ ['','Tipo sin informar'],['avgas100ll','AVGAS 100LL'],['jeta1','JET A-1'],
+ ['both','AVGAS 100LL y JET A-1'],['other','Otro / consultar']
+];
+function markerDisplayKind(meta){return markerOverrides.get(meta.key)?.display_kind||meta.documentedKind||'unverified'}
+function markerVisualIcon(meta){return runwayPin(markerDisplayKind(meta))}
+function markerOptionLabel(options,value){return options.find(([key])=>key===value)?.[1]||'Sin informar'}
 function popupWithVisualReference(createCard,meta){
  const el=createCard(),o=markerOverrides.get(meta.key);
- if(o&&(o.display_label||o.display_note||Number.isFinite(o.display_lat))){
-  const notice=document.createElement('div');notice.className='marker-edit-note';
-  const label=document.createElement('strong');label.textContent='Referencia visual del mapa (edición administrativa)';
-  const text=document.createElement('p');
-  const facts=[];
-  if(o.display_label)facts.push('Etiqueta: '+o.display_label);
-  if(o.display_note)facts.push('Nota: '+o.display_note);
-  if(Number.isFinite(o.display_lat))facts.push('Punto visual: '+Number(o.display_lat).toFixed(6)+', '+Number(o.display_lon).toFixed(6)+' (el dato de origen no se modificó)');
-  text.textContent=facts.join(' · ');notice.append(label,text);el.prepend(notice);
+ if(!o)return el;
+ const hasExtra=o.display_label||o.display_note||Number.isFinite(o.display_lat)||o.display_kind||
+  o.reported_frequency||o.fuel_availability||o.fuel_type;
+ if(!hasExtra)return el;
+ const notice=document.createElement('section');notice.className='marker-edit-note';
+ const header=document.createElement('strong');
+ header.textContent='Datos y referencias aportados por administración · SIN verificación aeronáutica';
+ notice.append(header);
+ const list=document.createElement('dl');list.className='popup-facts';
+ function fact(label,value){
+  if(value===null||value===undefined||value==='')return;
+  const row=document.createElement('div');row.className='popup-fact';
+  const dt=document.createElement('dt');dt.textContent=label;
+  const dd=document.createElement('dd');dd.textContent=String(value);
+  row.append(dt,dd);list.append(row);
  }
+ fact('Referencia',o.display_label);
+ fact('Observaciones',o.display_note);
+ if(Number.isFinite(o.display_lat))fact('Punto visual',Number(o.display_lat).toFixed(6)+', '+Number(o.display_lon).toFixed(6));
+ if(o.display_kind)fact('Tipo de pista aportado (no oficial)',markerOptionLabel(MARKER_VISUAL_TYPES,o.display_kind));
+ fact('Frecuencia aportada (verificar AIP/ATS)',o.reported_frequency);
+ if(o.fuel_availability)fact('Combustible aportado (sin garantía)',markerOptionLabel(MARKER_FUEL,o.fuel_availability));
+ if(o.fuel_type&&o.fuel_availability==='declared_available')fact('Tipo de combustible aportado',markerOptionLabel(MARKER_FUEL_TYPES,o.fuel_type));
+ if(o.updated_at)fact('Referencia actualizada',new Date(o.updated_at).toLocaleDateString('es-AR'));
+ notice.append(list);
+ const caution=document.createElement('p');caution.textContent='Esta información no modifica las coordenadas originales ni acredita habilitación, frecuencias activas o disponibilidad efectiva de combustible. Confirmá con el operador y fuentes vigentes.';
+ notice.append(caution);
+ el.prepend(notice);
  return el;
 }
 async function saveMarkerOverride(meta,patch){
@@ -1108,6 +1150,10 @@ async function saveMarkerOverride(meta,patch){
   display_lon:patch.display_lon!==undefined?patch.display_lon:(previous.display_lon??null),
   display_label:patch.display_label!==undefined?patch.display_label:(previous.display_label??null),
   display_note:patch.display_note!==undefined?patch.display_note:(previous.display_note??null),
+  display_kind:patch.display_kind!==undefined?patch.display_kind:(previous.display_kind??null),
+  reported_frequency:patch.reported_frequency!==undefined?patch.reported_frequency:(previous.reported_frequency??null),
+  fuel_availability:patch.fuel_availability!==undefined?patch.fuel_availability:(previous.fuel_availability??null),
+  fuel_type:patch.fuel_type!==undefined?patch.fuel_type:(previous.fuel_type??null),
   hidden:patch.hidden!==undefined?patch.hidden:!!previous.hidden,
   updated_by:user.id,updated_at:new Date().toISOString()
  };
@@ -1235,6 +1281,7 @@ function attachSelection(marker,point,label,createCard,meta=null){
  if(meta){
   const visual=markerVisualPosition(meta);marker.setLatLng(visual);
   marker.options.title=markerVisualLabel(meta);
+  marker.setIcon(markerVisualIcon(meta));
   const updatedCard=()=>popupWithVisualReference(createCard,meta);
   marker.bindPopup(updatedCard,{maxWidth:365,minWidth:240});
   marker.on('click',()=>selectAirfield(marker,[visual.lat,visual.lng],markerVisualLabel(meta),updatedCard));
