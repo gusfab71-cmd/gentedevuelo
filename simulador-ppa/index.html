@@ -44,7 +44,7 @@
  <div class="ppa-panel-head"><h2 id="configTitle">Configuración</h2><p class="ppa-panel-note">Elegí cómo querés practicar</p></div>
  <div class="ppa-config-grid">
   <label class="ppa-field" for="practice"><span id="ppaPracticeLabel">Tipo</span>
-   <select id="practice"><option value="practice">Práctica con puntaje · banco ANAC histórico</option><option value="exam">Examen · solo preguntas verificadas</option><option value="review">Revisar banco · sin puntaje</option><option value="sequential">Revisión correlativa completa · con puntaje provisional</option></select>
+   <select id="practice"><option value="practice">Práctica con puntaje · banco ANAC histórico</option><option value="exam50">Simulacro PPA · 50 preguntas (PDF por capítulos)</option><option value="exam">Examen · solo preguntas verificadas</option><option value="review">Revisar banco · sin puntaje</option><option value="sequential">Revisión correlativa completa · con puntaje provisional</option></select>
   </label>
   <label class="ppa-field" id="ppaSubjectField" for="subject">Materia<select id="subject"><option value="all">Todas las materias</option></select></label>
   <label class="ppa-field" id="ppaModeField" for="mode">Tipo de preguntas<select id="mode"><option value="figure">Con figuras</option><option value="all">Mixto · todas</option><option value="simple">Sin figuras</option></select></label>
@@ -106,6 +106,10 @@ const ANAC_FIGURE_PDF='https://www.argentina.gob.ar/sites/default/files/2021/05/
 const ANAC_PAGES={1:1,2:1,3:2,4:2,5:3,6:3,7:4,8:5,9:6,29:6,30:7,31:7,33:8,34:11,35:12,36:13,37:14,38:15,39:15,41:16,48:17,49:18,50:19,59:20,61:20,62:21,63:21,65:22,66:23,67:24};
 const figureDocUrl=page=>ANAC_FIGURE_PDF+'#page='+page+'&zoom=page-width';
 let bank=[],historicalBank=[],reviewBank=[],rawBank=[],exam=[],index=0,points=0,selected=null,answered=false,figureReady=false,gradedCount=0,reviewMode=false,practiceMode=false,sequentialMode=false;
+// Muestra fija de preguntas coincidentes en el PDF ANAC por capítulos. Claves del banco GdV.
+const EXAM50_SOURCE=[["151",1,25],["037",1,10],["048",1,11],["052",1,12],["059",1,13],["069",1,14],["072",1,15],["359",2,37],["274",3,7],["032",3,1],["041",3,10],["051",3,12],["057",3,13],["064",3,14],["077",3,16],["034",4,1],["042",4,10],["053",4,12],["061",4,13],["065",4,14],["071",4,15],["080",4,16],["264",5,5],["030",5,1],["040",5,10],["045",5,11],["050",5,12],["094",5,18],["096",5,19],["035",6,1],["039",6,10],["047",6,11],["055",6,12],["058",6,13],["068",6,14],["075",6,15],["031",7,1],["038",7,10],["046",7,11],["073",7,15],["054",7,12],["062",7,13],["066",7,14],["036",8,1],["043",8,10],["049",8,11],["056",8,12],["060",8,13],["076",8,15],["090",8,18]].map(([num,capitulo,numero])=>({id:'ANAC-PPA-'+num,capitulo,numero}));
+const EXAM50_MAP=new Map(EXAM50_SOURCE.map(x=>[x.id,x]));
+let exam50Mode=false;
 let sequentialAnswers={},sequentialFlags={},currentAdminId='',sequenceSignature='';
 const AUDIT=window.PPA_AUDIT;
 const ppaParams=new URLSearchParams(location.search);
@@ -226,6 +230,17 @@ const localFigure=q=>/^\/simulador-ppa\/figuras\/[a-z0-9_-]+\.png$/i.test(q.figu
 const hasImage=q=>localFigure(q)||/^https:\/\/[^ ]+\.(png|jpe?g|webp)$/i.test(q.figura_r2_key||'');
 function describeMode(){
  const option=$('practice').value;
+ const is50=option==='exam50';
+ for(const id of ['ppaSubjectField','ppaModeField','ppaCountField'])$(id).hidden=is50;
+ if(is50){
+  const ready=EXAM50_SOURCE.filter(x=>historicalBank.some(q=>q.id===x.id)).length;
+  for(const id of ['subject','mode','count'])$(id).disabled=true;
+  $('reset-seq').classList.add('hidden');
+  $('start').textContent='Comenzar simulacro de 50 preguntas';
+  $('mode-description').textContent='Selección de 50 preguntas coincidentes con el PDF ANAC por capítulos. La corrección se muestra al finalizar; objetivo interno 38/50 (75%). Puntaje basado en claves históricas, no equivale al examen oficial.';
+  $('status').textContent='Simulacro PPA · '+ready+' de 50 preguntas disponibles. El banco principal de 385 permanece independiente.';
+  return;
+ }
  const sequential=option==='sequential';
  if(ppaStudentMode){
   // Academia del Alumno: únicamente tandas de 10 o el banco completo en orden.
@@ -411,8 +426,8 @@ if(requiresFigure){
 const originalNumber=q.pregunta.match(/^\s*(\d+)\s*[.\-–]/);
 const idNumber=AUDIT.numericId(q);
 $('progress').textContent=(idNumber!==null?'ANAC N.º '+idNumber:originalNumber?'ANAC N.º '+originalNumber[1]:'Registro '+q.id)+' · Pregunta '+(index+1)+' de '+exam.length;
-$('score').textContent=reviewMode?'Revisión · sin puntos':sequentialMode?(ppaStudentMode?'Recorrido completo: ':'Correlativo: ')+points+' puntos provisionales / '+gradedCount+' calificadas':practiceMode?'Práctica: '+points+' puntos (provisionales)':'Puntos: '+points;
-$('question-meta').textContent=sequentialMode?'Registro '+q.id+' · '+q.materia+' · Estado: '+q.estado+' · '+(hasValidKey(q)?'Clave histórica disponible':'SIN CLAVE VÁLIDA'):'';
+$('score').textContent=exam50Mode?'Simulacro · '+gradedCount+' de 50 respondidas':reviewMode?'Revisión · sin puntos':sequentialMode?(ppaStudentMode?'Recorrido completo: ':'Correlativo: ')+points+' puntos provisionales / '+gradedCount+' calificadas':practiceMode?'Práctica: '+points+' puntos (provisionales)':'Puntos: '+points;
+$('question-meta').textContent=exam50Mode?'PDF ANAC: capítulo '+EXAM50_MAP.get(q.id).capitulo+', pregunta '+EXAM50_MAP.get(q.id).numero+' · banco '+q.id:sequentialMode?'Registro '+q.id+' · '+q.materia+' · Estado: '+q.estado+' · '+(hasValidKey(q)?'Clave histórica disponible':'SIN CLAVE VÁLIDA'):'';
 $('question').textContent=q.pregunta;
 $('options').replaceChildren();
 q.opciones.forEach((value,i)=>{
@@ -433,9 +448,20 @@ if(q.opciones.length<2){
 }
 $('start').onclick=()=>{
  const option=$('practice').value;
- if(ppaStudentMode&&!['practice','sequential'].includes(option))return;
+ if(ppaStudentMode&&!['practice','sequential','exam50'].includes(option))return;
  if(ppaStudentMode)$('count').value='10';
- reviewMode=option==='review';practiceMode=option==='practice';sequentialMode=option==='sequential';
+ exam50Mode=option==='exam50';
+  if(exam50Mode){
+   const byId=new Map(historicalBank.map(q=>[q.id,q]));
+   const choices=EXAM50_SOURCE.map(x=>byId.get(x.id));
+   if(choices.some(q=>!q)){$('status').textContent='No se puede iniciar: alguna pregunta o su figura no está disponible.';return;}
+   reviewMode=false;practiceMode=true;sequentialMode=false;
+   exam=shuffle(choices);index=0;points=0;gradedCount=0;
+   $('results').classList.add('hidden');$('exam').classList.remove('hidden');
+   $('status').textContent='Simulacro PPA · 50 preguntas. Respuestas y puntaje se muestran al final. Umbral interno: 38 aciertos.';
+   show();return;
+  }
+  reviewMode=option==='review';practiceMode=option==='practice';sequentialMode=option==='sequential';
  if(sequentialMode){
   exam=AUDIT.sortByNumber(reviewBank);
   sequenceSignature=computeSequenceSignature();
@@ -478,15 +504,21 @@ $('submit').onclick=()=>{
  const graded=!reviewMode&&hasValidKey(q)&&(!needsFigure(q)||figureReady);
  const ok=graded&&selected===q.correcta;
  if(ok)points++;
- if(graded){gradedCount++;playAnswerSound()}
+ if(graded){gradedCount++;if(!exam50Mode)playAnswerSound()}
  if(sequentialMode)sequentialAnswers[q.id]={selected,attempted:true,graded,correct:ok};
  document.querySelectorAll('.choice').forEach((b,i)=>{
   b.disabled=true;
-  if(graded&&i===q.correcta)b.classList.add('correct');
-  else if(graded&&i===selected&&!ok)b.classList.add('incorrect');
+  if(!exam50Mode&&graded&&i===q.correcta)b.classList.add('correct');
+  else if(!exam50Mode&&graded&&i===selected&&!ok)b.classList.add('incorrect');
  });
- $('score').textContent=reviewMode?'Revisión · sin puntos':sequentialMode?(ppaStudentMode?'Recorrido completo: ':'Correlativo: ')+points+' puntos provisionales / '+gradedCount+' calificadas':practiceMode?'Práctica: '+points+' puntos (provisionales)':'Puntos: '+points;
+ $('score').textContent=exam50Mode?'Simulacro · '+gradedCount+' de 50 respondidas':reviewMode?'Revisión · sin puntos':sequentialMode?(ppaStudentMode?'Recorrido completo: ':'Correlativo: ')+points+' puntos provisionales / '+gradedCount+' calificadas':practiceMode?'Práctica: '+points+' puntos (provisionales)':'Puntos: '+points;
  const f=$('feedback');f.replaceChildren();
+  if(exam50Mode){
+   f.textContent='Respuesta registrada. La corrección se muestra al terminar las 50 preguntas.';
+   f.classList.remove('hidden');$('submit').classList.add('hidden');$('next').classList.remove('hidden');
+   $('next').textContent=index===exam.length-1?'Ver resultado':'Siguiente pregunta';
+   return;
+  }
  const heading=document.createElement('h3');
  heading.textContent=reviewMode?'Revisión del banco · sin puntaje':!graded?(!hasValidKey(q)?'SIN CLAVE VÁLIDA · sin puntaje':'Figura no disponible · sin puntaje'):ok?'Correcto según clave · +1 punto':'Incorrecto según clave · +0 puntos';
  const answer=document.createElement('p');
@@ -526,8 +558,15 @@ function finishSession(){
   return;
  }
  // El puntaje histórico es orientativo; solo el examen verificado utiliza su umbral interno de práctica.
- const passed=gradedCount===exam.length&&exam.length>0&&points/gradedCount>=0.7;
- $('result-status').textContent=gradedCount!==exam.length?'Evaluación incompleta':passed?'Objetivo de práctica alcanzado':'Práctica finalizada';
+ const passed=gradedCount===exam.length&&exam.length>0&&points/gradedCount>=(exam50Mode?0.75:0.7);
+  $('result-heading').textContent=exam50Mode?'Resultado · Simulacro PPA de 50 preguntas':'Resultado';
+ $('result-status').textContent=gradedCount!==exam.length?'Evaluación incompleta':exam50Mode?(passed?'Objetivo del simulacro alcanzado':'Objetivo del simulacro no alcanzado'):passed?'Objetivo de práctica alcanzado':'Práctica finalizada';
+  if(exam50Mode){
+   $('summary').textContent=points+' respuestas correctas de '+gradedCount+' calificadas. Objetivo interno: 38 de 50 (75%). '+
+   (withoutGrade?'Quedaron '+withoutGrade+' preguntas sin calificar. ':'')+
+   'Selección del PDF ANAC por capítulos, corregida con el banco histórico de Gente de Vuelo. No sustituye al examen oficial.';
+   return;
+  }
  $('summary').textContent=(practiceMode?'Puntaje provisional. ':'')+points+' respuestas correctas de '+gradedCount+
   ' calificadas. '+(withoutGrade?'Quedaron '+withoutGrade+' preguntas sin calificar. ':'')+
   (practiceMode?'Las claves históricas requieren verificación y este resultado no equivale a un examen oficial de ANAC.':'Resultado de las preguntas verificadas de este banco.');
@@ -582,6 +621,7 @@ $('again').onclick=()=>{
    $('ppaPracticeLabel').textContent='Modalidad de práctica';
    $('practice').querySelector('option[value="practice"]').textContent='10 preguntas aleatorias';
    $('practice').querySelector('option[value="sequential"]').textContent='Banco completo en orden';
+    $('practice').querySelector('option[value="exam50"]').textContent='Simulacro de examen · 50 preguntas';
    $('practice').value='practice';
    $('count').replaceChildren(new Option('10','10'));
    $('mode').value='all';
