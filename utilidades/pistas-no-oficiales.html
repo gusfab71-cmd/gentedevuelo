@@ -538,6 +538,7 @@ const external=L.layerGroup().addTo(map);let lastRequest=0;let reference=null,ne
 function nauticalMiles(a,b,c,d){const r=Math.PI/180,p1=a*r,p2=c*r,dp=(c-a)*r,dl=(d-b)*r,h=Math.sin(dp/2)**2+Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)**2;return 3440.065*2*Math.atan2(Math.sqrt(h),Math.sqrt(1-h))}
 function setReference(lat,lon){reference=[lat,lon];document.getElementById('ref-lat').value=lat.toFixed(6);document.getElementById('ref-lon').value=lon.toFixed(6);if(referenceMarker)map.removeLayer(referenceMarker);referenceMarker=L.circleMarker(reference,{radius:9,color:'#00d7ff',fillOpacity:.8}).addTo(map).bindPopup('Punto de referencia').openPopup()}
 map.on('click',e=>{
+ if(mapViewMode!=='airfields')return;
  if(pickReference){pickReference=false;setReference(e.latlng.lat,e.latlng.lng);document.getElementById('near-status').textContent='Punto seleccionado. Presioná Buscar cercanas.';return}
  if(proposeMode){proposeMode=false;proposeAt(e.latlng);return}
  if(rulerEnabled){rulerPoint(e.latlng);}
@@ -752,7 +753,7 @@ function clearRuler(){
   'Regla lista: dos puntos calculan NM y rumbo verdadero inicial.';
 }
 function rulerPoint(point,label){
- if(!rulerEnabled)return;
+ if(!rulerEnabled||mapViewMode!=='airfields')return;
  if(rulerPoints.length>=2)clearRuler();
  rulerPoints.push({lat:point.lat,lng:point.lng,label:label||'Punto '+rulerPoints.length});
  const marker=L.circleMarker(point,{radius:7,color:'#19384d',weight:2,fillColor:'#9addff',fillOpacity:1,interactive:false}).addTo(map);
@@ -1192,7 +1193,8 @@ const FIR_COLORS={SAEF:'#dba8b8',SACF:'#a7c3e2',SAMF:'#bca9e7',SARR:'#b7d5aa',SA
 let firDone=false,firLoading=null,sigLoading=null;
 function dated(value){
  if(value==null||value==='')return 'Sin informar';
- const t=typeof value==='number'?new Date(value<1e12?value*1000:value):new Date(value);
+ const n=typeof value==='string'&&/^\d{10,13}$/.test(value)?Number(value):value;
+ const t=typeof n==='number'?new Date(n<1e12?n*1000:n):new Date(n);
  return Number.isFinite(t.getTime())?t.toISOString().slice(0,16).replace('T',' ')+' UTC':'Sin informar';
 }
 function auxiliary(show){
