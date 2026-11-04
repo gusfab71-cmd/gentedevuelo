@@ -2824,6 +2824,17 @@ function oaShowRecord(record){
  const link=document.createElement('a');link.href='https://ourairports.com/airports/'+encodeURIComponent(record.ident)+'/';
  link.target='_blank';link.rel='noopener noreferrer';link.textContent='Consultar registro original en OurAirports';
  oaDetail.append(link);
+ const officialChecks=[
+  ['Consultar MADHEL de ANAC','https://ais.anac.gob.ar/madhel/'],
+  ['Consultar AIP de ANAC','https://ais.anac.gob.ar/aip'],
+  ['Consultar listado ANAC · septiembre 2026','https://datos.transporte.gob.ar/dataset/aerodromos/archivo/4cd56378-072b-4ed8-9453-65dd341ed3e8']
+ ];
+ for(const [label,url] of officialChecks){
+  const official=document.createElement('a');
+  official.href=url;official.target='_blank';official.rel='noopener noreferrer';
+  official.textContent=label;
+  oaDetail.append(official);
+ }
  const caution=document.createElement('p');caution.className='oa-review-note';
  caution.textContent='No utilizar estos datos para planificar operaciones sin corroborar con AIP, MADHEL, NOTAM, titular del aeródromo y autoridades correspondientes.';
  oaDetail.append(caution);
