@@ -481,6 +481,16 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
 .oa-quick-buttons .oa-quick-review{background:#26795d;color:#fff}
 .oa-quick-buttons .oa-quick-exclude{background:#8f463b;color:#fff}
 .oa-quick-buttons .oa-quick-reset{background:#3b5971;color:#fff}
+.oa-quick-buttons .oa-quick-move{background:#205a82;color:#fff}
+.oa-moving-marker{background:none;border:0}
+.oa-moving-marker span{display:grid;place-items:center;width:22px;height:22px;background:#1685d0;color:white;font-weight:900;border:3px solid #fff;border-radius:50%;box-shadow:0 0 0 3px #103d5a;cursor:grab}
+.oa-move-dialog{display:grid;gap:8px;color:#17344c;min-width:220px;font:12px/1.5 system-ui}
+.oa-move-dialog strong{font-size:14px}
+.oa-move-dialog p{margin:0}
+.oa-move-dialog div{display:flex;gap:8px;flex-wrap:wrap}
+.oa-move-dialog button{border-radius:7px;padding:7px 9px;background:#245f85;color:white;border:1px solid #7ca6c3;font-weight:800;cursor:pointer}
+.oa-move-dialog button:disabled{opacity:.45;cursor:not-allowed}
+.oa-move-dialog .oa-cancel{background:#e4edf5;color:#254358}
 .dispatch-map-toolbar-links .toolbar-ruler-button{display:inline-flex;align-items:center;gap:5px;background:#225b7c;border:1px solid #9ac8e6;color:#effbff;font-weight:800}
 .toolbar-ruler-button svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .dispatch-map-toolbar-links .toolbar-ruler-button[aria-pressed=true]{background:#f4c77d;color:#183951}
@@ -2644,6 +2654,8 @@ document.getElementById('pronarea-map-analyze').addEventListener('click',()=>{
  */
 let oaRecords=[],oaInfo=null,oaLoading=null,oaCurrent=null,oaMaxList=60;
 const oaReviews=new Map(),oaPointMarkers=new Map();
+let oaActiveMove=null;
+function oaCancelMove(){if(oaActiveMove){oaActiveMove();oaActiveMove=null;}}
 // La selección se realiza con clic izquierdo, sin modificar datos por accidente.
 const oaSearch=document.getElementById('oa-search'),
  oaRegion=document.getElementById('oa-region'),
@@ -2817,6 +2829,66 @@ async function oaApplyQuickReview(record,target,feedback){
  oaShowRecord(record);
  return true;
 }
+function oaBeginMoveRecord(record){
+ if(!admin)return;
+ oaCancelMove();
+ if(rulerEnabled)setRulerActive(false);
+ if(routePlanner?.isDrawing())routePlanner.pauseForOtherMode();
+ map.closePopup();
+ const oldMarker=oaPointMarkers.get(record.id);
+ if(oldMarker)oldMarker.setStyle({opacity:0,fillOpacity:0});
+ const marker=L.marker(oaLocation(record),{
+  draggable:true,autoPan:true,title:'Arrastrar hasta la pista',
+  icon:L.divIcon({className:'oa-moving-marker',html:'<span>+</span>',iconSize:[28,28],iconAnchor:[14,14]})
+ }).addTo(map);
+ marker.setZIndexOffset(1600);
+ let moved=false,closed=false;
+ const cancel=()=>{
+  if(closed)return;
+  closed=true;map.removeLayer(marker);
+  if(oldMarker)oldMarker.setStyle({opacity:1,fillOpacity:.98});
+  map.closePopup();
+  if(oaActiveMove===cancel)oaActiveMove=null;
+ };
+ oaActiveMove=cancel;
+ const popup=()=>{
+  if(closed)return;
+  const pos=marker.getLatLng(),valid=pos.lat>=-56&&pos.lat<=-21&&pos.lng>=-74&&pos.lng<=-53;
+  const box=document.createElement('div');box.className='oa-move-dialog';
+  const title=document.createElement('strong');title.textContent='Mover punto: '+record.name;
+  const guide=document.createElement('p');
+  guide.textContent=moved?'Nueva ubicación: '+pos.lat.toFixed(6)+', '+pos.lng.toFixed(6):
+   'Arrastrá el marcador azul hasta la pista. Después guardá la nueva ubicación.';
+  const actions=document.createElement('div');
+  const save=document.createElement('button');save.type='button';save.textContent='Guardar ubicación';save.disabled=!moved||!valid;
+  const back=document.createElement('button');back.type='button';back.textContent='Cancelar';back.className='oa-cancel';
+  const feedback=document.createElement('p');feedback.setAttribute('role','status');
+  back.addEventListener('click',cancel);
+  save.addEventListener('click',async()=>{
+   save.disabled=true;back.disabled=true;marker.dragging.disable();feedback.textContent='Guardando…';
+   try{
+    const {data,error:authError}=await client.auth.getUser();
+    if(!admin||authError||!data?.user)throw Error('Se requiere sesión de administrador.');
+    const old=oaReviewFor(record)||{};
+    const row={airport_id:record.id,review_status:old.review_status||'pending',
+     review_note:old.review_note||'',corrected_lat:Number(pos.lat.toFixed(7)),
+     corrected_lon:Number(pos.lng.toFixed(7)),updated_by:data.user.id,updated_at:new Date().toISOString()};
+    const {error}=await client.from('aerolocator_ourairports_review').upsert(row,{onConflict:'airport_id'});
+    if(error)throw Error(error.message);
+    oaReviews.set(record.id,row);cancel();renderOACatalog();oaShowRecord(record);
+   }catch(error){
+    feedback.textContent='Error: '+error.message;
+    back.disabled=false;save.disabled=false;marker.dragging.enable();
+   }
+  });
+  actions.append(save,back);box.append(title,guide,actions,feedback);
+  L.popup({maxWidth:360,minWidth:240,autoPan:true}).setLatLng(pos).setContent(box).openOn(map);
+ };
+ marker.on('dragstart',()=>map.closePopup());
+ marker.on('dragend',()=>{moved=true;popup()});
+ marker.on('click',()=>{if(moved)popup()});
+ popup();
+}
 function oaReviewQuickActions(record){
  const wrap=document.createElement('div');wrap.className='oa-quick-actions';
  const guidance=document.createElement('p');guidance.className='oa-quick-note';
@@ -2838,6 +2910,10 @@ function oaReviewQuickActions(record){
   });
   actions.append(button);
  }
+ const move=document.createElement('button');move.type='button';move.className='oa-quick-move';
+ move.textContent='Mover punto';move.title='Corregir la ubicación cartográfica con el mouse';
+ move.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();oaBeginMoveRecord(record)});
+ actions.append(move);
  if(oaState(record)!=='reviewed')add('Marcar revisado por GdV','reviewed','review');
  if(oaState(record)!=='excluded')add('Descartar del mapa','excluded','exclude');
  if(oaState(record)!=='pending')add('Volver a pendiente','pending','reset');
@@ -2966,6 +3042,7 @@ function renderOACatalog(){
   marker.on('click',e=>{
    if(routePlanner?.isDrawing())return;
    if(e.originalEvent)L.DomEvent.stopPropagation(e.originalEvent);
+   if(rulerEnabled){rulerPoint(oaLocation(record),record.name);return;}
    oaOpenSelectedPoint(record);
   });
   marker.on('contextmenu',e=>{
@@ -3068,6 +3145,7 @@ document.getElementById('oa-reload').addEventListener('click',()=>{void showOurA
 viewSelect.addEventListener('change',()=>{
  const next=viewSelect.value;if(!['airfields','ourairports','sigmet','pronarea'].includes(next))return;
  mapViewMode=next;
+ oaCancelMove();
  toolbarRuler.hidden=next!=='airfields';
  map.getContainer().classList.toggle('has-airfield-shortcuts',next==='airfields');
  if(next!=='airfields')routePlanner?.pauseForOtherMode();
