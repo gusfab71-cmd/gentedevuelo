@@ -72,3 +72,21 @@
  .route-hover-card{max-width:220px}
  .route-leg-row{grid-template-columns:75px 1fr}
 }
+
+/* Deshacer permanece visible durante el trazado, incluso si el panel está plegado. */
+.route-undo-float{
+ position:absolute;bottom:80px;left:61px;z-index:830;
+ font-size:12px;font-weight:800;line-height:1.2;
+ padding:10px 14px;border-radius:9px;
+ background:#e5c35b;color:#142a35;border:2px solid #fff;
+ box-shadow:0 4px 14px #0c192a99;cursor:pointer;
+}
+.route-undo-float[hidden]{display:none!important}
+.route-undo-float:hover,.route-undo-float:focus-visible{
+ background:#f4d779;outline:2px solid #fff;outline-offset:2px;
+}
+.route-planner-commands #route-undo{background:#756341;color:#fff2c6}
+.route-planner-commands #route-undo:disabled{opacity:.5}
+@media(max-width:700px){
+ .route-undo-float{bottom:75px;left:10px;padding:9px 12px;font-size:11px}
+}
