@@ -1934,6 +1934,7 @@ const firShapes=new Map(),sigShapes=[];
 let oaOpenInMainMap=false;
 function contextualInspector(open){
  const mode=mapViewMode;
+ if(!open&&mode==='airfields')oaOpenInMainMap=false;
  const oaInMain=mode==='airfields'&&oaOpenInMainMap;
  inspectorToggle.hidden=mode==='airfields'&&!oaInMain;
  areaInspector.hidden=!(open&&(mode==='fir'||mode==='sigmet'||mode==='ourairports'||oaInMain));
@@ -1941,7 +1942,6 @@ function contextualInspector(open){
  inspectorToggle.setAttribute('aria-expanded',String(open&&(mode!=='airfields'||oaInMain)));
  const label=mode==='fir'?'FIR':mode==='sigmet'?'SIGMET':mode==='ourairports'?'catálogo':oaInMain?'ficha OurAirports':'PRONAREA';
  inspectorToggle.textContent=open?'Ocultar '+label:'Ver '+label;
- if(!open&&mode==='airfields')oaOpenInMainMap=false;
  if(mode==='airfields')mapViewHint.hidden=true;
  else{
   mapViewHint.hidden=false;
