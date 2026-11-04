@@ -649,21 +649,21 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
  <option value="ourairports">OurAirports · por revisar</option>
  <option value="sigmet">SIGMET · fenómenos</option>
  <option value="pronarea">PRONAREA · Planificador de vuelo VFR</option>
- </select></label><div class="dispatch-map-toolbar-links"><button id="route-planner-toggle" class="route-planner-toolbar-button" type="button" aria-controls="route-planner-panel" aria-pressed="false">Trazar ruta VFR</button><button id="route-view-map-toolbar" class="route-go-map toolbar-map-return" type="button" aria-controls="map" disabled hidden>Ver recorrido en mapa</button><button id="map-inspector-toggle" type="button" aria-controls="airspace-inspector pronarea-visual" aria-expanded="false" hidden>Ver información</button>
+ </select></label><div class="dispatch-map-toolbar-links"><button id="route-planner-toggle" class="route-planner-toolbar-button" type="button" aria-controls="route-planner-panel" aria-pressed="false">Trazar ruta VFR</button><button id="route-view-map-toolbar" class="route-go-map toolbar-map-return" type="button" aria-controls="map" disabled hidden>Volver al mapa satelital</button><button id="map-inspector-toggle" type="button" aria-controls="airspace-inspector pronarea-visual" aria-expanded="false" hidden>Ver información</button>
     <button id="map-fullscreen" type="button">Ampliar mapa</button><a href="https://ais.anac.gob.ar/aip" target="_blank" rel="noopener noreferrer">AIP oficial ↗</a></div></div>
    <div class="dispatch-map-main"><div id="basemap-selector" class="basemap-selector" aria-label="Elegir tipo de mapa"></div>
 <details id="route-planner-panel" class="route-planner-panel">
  <summary>Planificador de ruta VFR <small>1. Dibujá con clics · 2. Cargá PRONAREA, altitud e IAS · 3. Consultá el puntero</small></summary>
  <div class="route-planner-inner">
   <div class="route-planner-commands">
-   <button type="button" id="route-view-map-panel" class="route-go-map route-go-map-primary" aria-controls="map" disabled>Ver recorrido en el mapa →</button>
+   <button type="button" id="route-view-map-panel" class="route-go-map route-go-map-primary" aria-controls="map" disabled>Volver al mapa satelital →</button>
    <button type="button" id="route-start" data-action="draw">Iniciar trazado</button>
    <button type="button" id="route-continue">Continuar / editar ruta</button>
    <button type="button" id="route-undo" title="Quitar el último punto marcado (Ctrl + Z)">↶ Deshacer último punto</button>
    <button type="button" id="route-finish">Finalizar ruta</button>
    <button type="button" id="route-clear" data-action="clear">Borrar ruta</button>
   </div>
-  <p id="route-planner-status" class="route-planner-state" role="status">Arrastrá el mapa con el izquierdo normalmente. Un clic breve marca un punto. Para finalizar: clic derecho sobre el último punto y confirmación con el izquierdo. Luego pulsá «Ver recorrido en el mapa». Deshacer: botón o Ctrl + Z.</p>
+  <p id="route-planner-status" class="route-planner-state" role="status">Arrastrá el mapa con el izquierdo normalmente. Un clic breve marca un punto. Para finalizar: clic derecho sobre el último punto y confirmación con el izquierdo. Luego pulsá «Volver al mapa satelital». Deshacer: botón o Ctrl + Z.</p>
   <div class="route-planner-fields">
    <label class="route-pronarea-input">PRONAREA oficial · compartido con la capa meteorológica
     <textarea id="route-pronarea" maxlength="12000" rows="3" placeholder="WIND/T: DIA-CDU-PAR-SVO-ROS ... FL030/32025P19 FL065/29025P09 ..."></textarea></label>
@@ -696,7 +696,7 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
   <div class="route-cruise-alert" id="route-cruise-alert" role="status" aria-live="polite" hidden></div>
   <div class="route-planner-results" id="route-planner-results" aria-live="polite"></div>
   <p class="route-planner-warnings" id="route-planner-warnings" role="status"></p>
-  <p class="route-planner-return-note">Cuando termines de cargar los datos, usá el botón verde para volver al mapa y explorar cada pierna con el puntero.</p>
+  <p class="route-planner-return-note">Cuando termines de cargar los datos, usá el botón verde para volver al mapa satelital y explorar cada pierna con el puntero.</p>
  </div>
 </details>
 <div id="map" aria-label="Mapa satelital de pistas"></div>
@@ -2972,6 +2972,11 @@ routePlanner=window.GDV_ROUTE_PLANNER_BOOT?.({
  disableRuler:()=>{if(rulerEnabled)setRulerActive(false)},
  showRouteOnMap:(routePoints)=>{
   if(!Array.isArray(routePoints)||routePoints.length<2)return;
+  // Recuperar el mapa satelital para inspeccionar referencias visuales.
+  if(!map.hasLayer(satellite)){
+   if(map.hasLayer(streets))map.removeLayer(streets);
+   satellite.addTo(map);
+  }
   // Ocultar el panel meteorológico lateral para recuperar toda la cartografía.
   if(viewSelect.value!=='airfields'){
    viewSelect.value='airfields';
