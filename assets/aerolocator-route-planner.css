@@ -137,3 +137,7 @@
   font-size:11px;padding:8px;
  }
 }
+
+/* Segmento editable: una línea de 22 px invisible captura clics sin alterar la línea blanca. */
+.route-leg-insert-target{cursor:copy!important}
+.route-leg-insert-target:focus-visible{outline:2px dashed #e5c35b}
