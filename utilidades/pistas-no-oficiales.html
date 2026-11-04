@@ -2990,6 +2990,10 @@ function oaReviewForm(record,review){
   const opt=document.createElement('option');opt.value=key;opt.textContent=caption;status.append(opt);
  }
  status.value=review?.review_status||'pending';label('Estado',status);
+ const category=oaCategoryPicker(record);box.append(category.label);
+ const categoryNote=document.createElement('p');categoryNote.className='oa-category-help';
+ categoryNote.textContent='Al revisar, el color coincidirá con la leyenda inferior. No acredita habilitación ANAC.';
+ box.append(categoryNote);
  const note=document.createElement('textarea');note.maxLength=700;note.rows=3;note.value=review?.review_note||'';
  note.placeholder='Ej.: pista existente, revisar imagen satelital, confirmar contra ANAC';
  label('Observaciones de revisión (públicas)',note);
@@ -3017,7 +3021,10 @@ function oaReviewForm(record,review){
    const lat=latString?Number(latString):null,lon=lonString?Number(lonString):null;
    if(lat!==null&&(!Number.isFinite(lat)||!Number.isFinite(lon)||lat<-90||lat>0||lon<-85||lon>-25))
     throw Error('Las coordenadas corregidas deben estar dentro del área geográfica admitida.');
+   if(status.value==='reviewed'&&!Object.prototype.hasOwnProperty.call(oaCategoryNames,category.select.value))
+    throw Error('Elegí una categoría para marcar el registro revisado.');
    const row={airport_id:record.id,review_status:status.value,review_note:note.value.trim(),
+    gdv_category:category.select.value||null,
     corrected_lat:lat,corrected_lon:lon,updated_by:user.id,updated_at:new Date().toISOString()};
    const {error}=await client.from('aerolocator_ourairports_review').upsert(row,{onConflict:'airport_id'});
    if(error)throw Error(error.message);
@@ -3040,6 +3047,7 @@ function oaDrawList(filtered){
    oaShowRecord(record);
   });
   const small=document.createElement('small');small.textContent=(oaTypeNames[record.type]||record.type)+' · '+oaStatusNames[state]+
+   (oaCategoryFor(record)?' · '+oaCategoryNames[oaCategoryFor(record)]+' (GdV)':'')+
    (oaLikelyDuplicate(record)?' · Posible coincidencia':'');
   const copy=button.querySelector('.airspace-choice-text');copy.append(small);
   areaItems.append(button);
@@ -3074,11 +3082,13 @@ function renderOACatalog(){
    weight:selected?3:1.35,
    fillColor:merged?oaMainColor(record):oaMarkerColor(record),fillOpacity:.98,keyboard:true,
    className:'oa-clickable-point',
-   title:record.name+' · OurAirports · '+oaStatusNames[oaState(record)]
+   title:record.name+' · OurAirports · '+oaStatusNames[oaState(record)]+
+    (oaCategoryFor(record)?' · '+oaCategoryNames[oaCategoryFor(record)]+' (GdV)':'')
   }).addTo(oaLayer);
   oaPointMarkers.set(record.id,marker);
   marker.bindTooltip(record.name+' · '+record.ident+' · OurAirports ('+
-   (record.closed?'figura cerrado · ':'')+oaStatusNames[oaState(record)]+')',{sticky:true});
+   (record.closed?'figura cerrado · ':'')+oaStatusNames[oaState(record)]+
+   (oaCategoryFor(record)?' · '+oaCategoryNames[oaCategoryFor(record)]+' (GdV)':'')+')',{sticky:true});
   marker.on('click',e=>{
    if(routePlanner?.isDrawing())return;
    if(e.originalEvent)L.DomEvent.stopPropagation(e.originalEvent);
@@ -3146,7 +3156,7 @@ async function showOurAirports(force=false){
     Number.isFinite(r.lon)&&Array.isArray(r.runways)&&Array.isArray(r.frequencies));
    oaInfo=payload;
    const {data,reviewsError,error}=await client.from('aerolocator_ourairports_review')
-    .select('airport_id,review_status,review_note,corrected_lat,corrected_lon,updated_at').limit(5000);
+    .select('airport_id,review_status,review_note,gdv_category,corrected_lat,corrected_lon,updated_at').limit(5000);
    oaReviews.clear();
    if(!error)for(const row of data||[])oaReviews.set(Number(row.airport_id),row);
    const regions=[...new Set(oaRecords.map(r=>r.region).filter(Boolean))].sort();
