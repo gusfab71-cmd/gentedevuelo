@@ -130,6 +130,11 @@ window.GDV_ROUTE_PLANNER_BOOT=function(options){
  let points=[],drawing=false,finished=false,windGroups=[],lastHover=null,lastLongPress=0;
  let windChoiceManual=false;
  let mousePress=null,ignoreMapClick=false,pointDrag=false;
+ const routeHistory=[];
+ function saveRouteRevision(){
+  routeHistory.push({points:points.map(p=>({...p})),drawing,finished});
+  if(routeHistory.length>70)routeHistory.shift();
+ }
  const fmt=n=>Number.isFinite(n)?n.toFixed(1):'—';
  function setMessage(msg){status.textContent=msg}
  function setNotice(msg){notice.textContent=msg;notice.hidden=!msg}
@@ -142,12 +147,15 @@ window.GDV_ROUTE_PLANNER_BOOT=function(options){
   viewMapToolbar.disabled=!routeReady;
   viewMapToolbar.hidden=!routeReady;
   continueButton.disabled=points.length===0||drawing;
-  undoButton.disabled=points.length===0;
-  undoFloat.hidden=points.length===0||panel.open;
-  undoFloat.disabled=points.length===0;
+  undoButton.disabled=routeHistory.length===0;
+  undoFloat.hidden=routeHistory.length===0||panel.open;
+  undoFloat.disabled=routeHistory.length===0;
   $('route-finish').disabled=points.length<2||finished;
   map.getContainer().classList.toggle('route-drawing',drawing);
-  setNotice(drawing?'Arrastrá el mapa normalmente. Clic breve: marcar punto. Para terminar: clic derecho SOBRE el último punto → «Finalizar navegación aquí». ↶ Deshacer o Ctrl + Z.':'');
+  setNotice(drawing?
+   'Arrastrá el mapa normalmente. Clic breve: marcar punto. Al llegar: clic derecho sobre el destino → «Finalizar navegación aquí».':
+   finished?
+   'Editar trayectoria: clic sobre la línea blanca para agregar un punto amarillo. Arrastralo hasta la ciudad de referencia. Ctrl + Z deshace.':'');
  }
  function getForecast(){
   const alt=Number(altitude.value),speed=Number(ias.value);
@@ -271,6 +279,26 @@ window.GDV_ROUTE_PLANNER_BOOT=function(options){
    const coords=points.map(p=>[p.lat,p.lng]);
    L.polyline(coords,{color:'#26323d',weight:8,opacity:.95,interactive:false}).addTo(layer);
    L.polyline(coords,{color:'#fff',weight:4.3,opacity:1,interactive:false}).addTo(layer);
+   if(finished){
+    // Una zona de clic más ancha que la línea blanca facilita insertar referencias.
+    // Capa individual por pierna para mantener el orden de los waypoints.
+    for(let legIndex=1;legIndex<points.length;legIndex++){
+     const hit=L.polyline([coords[legIndex-1],coords[legIndex]],{
+      color:'#fff',weight:22,opacity:0.01,interactive:true,
+      bubblingMouseEvents:false,className:'route-leg-insert-target'
+     }).addTo(layer);
+     hit.on('click',event=>{
+      if(!finished||drawing)return;
+      if(event.originalEvent?.button!==undefined&&event.originalEvent.button!==0)return;
+      if(!event.latlng)return;
+      if(event.originalEvent)L.DomEvent.stopPropagation(event.originalEvent);
+      insertReferencePoint(legIndex,event.latlng);
+     });
+     hit.bindTooltip('Clic para agregar punto intermedio y desviar la trayectoria',{
+      sticky:true,direction:'top',opacity:.95
+     });
+    }
+   }
   }
   points.forEach((point,index)=>{
    const endpoint=index===0||(finished&&index===points.length-1);
@@ -282,9 +310,11 @@ window.GDV_ROUTE_PLANNER_BOOT=function(options){
    marker.bindTooltip(index===0?'Salida':finished&&index===points.length-1?'Destino':'Punto '+index,{direction:'top'});
    marker.on('dragstart',()=>{pointDrag=true;ignoreMapClick=true;hideHover()});
    marker.on('dragend',()=>{
-    const p=marker.getLatLng();points[index]={lat:p.lat,lng:p.lng};
-    ignoreMapClick=true;pointDrag=false;render();refresh();
-    setMessage('Punto '+(index+1)+' ajustado. Navegación recalculada.');
+    const p=marker.getLatLng();
+    if(nm(point,p)>0.003)saveRouteRevision();
+    points[index]={lat:p.lat,lng:p.lng};
+    ignoreMapClick=true;pointDrag=false;render();refresh();updateButtons();
+    setMessage('Punto '+(index+1)+' ajustado. Piernas y tiempos recalculados.');
    });
    marker.on('click',e=>{if(e.originalEvent)L.DomEvent.stopPropagation(e.originalEvent)});
    marker.on('contextmenu',e=>{
@@ -312,14 +342,15 @@ window.GDV_ROUTE_PLANNER_BOOT=function(options){
   setMessage('Ruta finalizada. Ahora pegá el PRONAREA, elegí grupo WIND/T, altitud e IAS; consultá los valores al mover el puntero.');
  }
  function undoLastPoint(){
-  if(!points.length){setMessage('No hay puntos para deshacer.');return}
-  points.pop();
-  const wasFinished=finished;
-  if(wasFinished){finished=false;drawing=true;panel.open=false;options.disableRuler?.()}
+  const prior=routeHistory.pop();
+  if(!prior){setMessage('No hay modificaciones para deshacer.');return}
+  points=prior.points.map(p=>({...p}));
+  drawing=prior.drawing;finished=prior.finished;
+  if(drawing)options.disableRuler?.();
   cancelMenu();preview.clearLayers();hideHover();render();updateButtons();
   setMessage(points.length?
-   'Último punto deshecho. Podés seguir marcando o ajustar la ruta.':
-   'Punto de salida deshecho. Arrastrá libremente el mapa y volvé a marcar la salida.');
+   'Último cambio deshecho. La trayectoria y los cálculos se actualizaron.':
+   'Salida deshecha. Mové el mapa y marcá nuevamente el origen.');
  }
  function showRouteMap(){
   if(points.length<2){setMessage('Primero marcá la salida y el destino de la ruta.');return}
@@ -331,7 +362,7 @@ window.GDV_ROUTE_PLANNER_BOOT=function(options){
  }
  function clear(){
   if(points.length&&!window.confirm('¿Borrar el trazado completo y sus puntos?'))return;
-  points=[];finished=false;drawing=false;layer.clearLayers();preview.clearLayers();
+  points=[];finished=false;drawing=false;routeHistory.length=0;layer.clearLayers();preview.clearLayers();
   hideHover();cancelMenu();updateButtons();refresh();setMessage('Ruta borrada. Pulsá «Trazar ruta» para comenzar nuevamente.');
  }
  function appendPoint(latlng){
@@ -339,9 +370,23 @@ window.GDV_ROUTE_PLANNER_BOOT=function(options){
    setMessage('El punto está demasiado cerca del anterior. Desplazá el cursor para agregar otra pierna.');
    return;
   }
+  saveRouteRevision();
   points.push({lat:latlng.lat,lng:latlng.lng});
   render();updateButtons();setMessage(points.length===1?'Salida definida. Clic para agregar punto intermedio o destino.':
    'Punto '+points.length+' marcado. Clic izquierdo para más puntos; clic derecho y luego izquierdo en «Finalizar ruta» para terminar.');
+ }
+ function insertReferencePoint(index,latlng){
+  if(!finished||index<1||index>=points.length)return;
+  const ll={lat:latlng.lat,lng:latlng.lng};
+  if(!Number.isFinite(ll.lat)||!Number.isFinite(ll.lng))return;
+  if(nm(points[index-1],ll)<0.02||nm(points[index],ll)<0.02){
+   setMessage('Para ajustar el origen o destino, arrastrá su círculo. Para una nueva referencia, elegí un punto más alejado.');
+   return;
+  }
+  saveRouteRevision();
+  points.splice(index,0,ll);
+  hideHover();cancelMenu();render();updateButtons();
+  setMessage('Punto P'+index+' agregado. Arrastrá el círculo amarillo hasta la ciudad que quieras usar para bordear la montaña. Rumbos, distancias y tiempos recalculados.');
  }
  function openMenu(ll,index){
   if(!points.length)return;
@@ -362,6 +407,7 @@ window.GDV_ROUTE_PLANNER_BOOT=function(options){
     if(cmd==='continue'){begin();return}
     if(cmd==='delete'){
      const removedLast=index===points.length-1;
+     saveRouteRevision();
      points.splice(index,1);
      if(removedLast&&finished){finished=false;drawing=true;options.disableRuler?.();panel.open=false}
      render();updateButtons();setMessage('Punto eliminado. Las piernas se recalcularon.');return;
@@ -540,7 +586,7 @@ window.GDV_ROUTE_PLANNER_BOOT=function(options){
  });
  window.addEventListener('keydown',e=>{
   if(e.key==='Escape'){cancelMenu();if(drawing)pause();return}
-  if(e.key.toLowerCase()==='z'&&(e.ctrlKey||e.metaKey)&&!e.altKey&&!e.shiftKey&&points.length){
+  if(e.key.toLowerCase()==='z'&&(e.ctrlKey||e.metaKey)&&!e.altKey&&!e.shiftKey&&routeHistory.length){
    const focused=document.activeElement;
    if(focused&&(focused.isContentEditable||['INPUT','TEXTAREA','SELECT'].includes(focused.tagName)))return;
    e.preventDefault();undoLastPoint();
@@ -551,6 +597,7 @@ window.GDV_ROUTE_PLANNER_BOOT=function(options){
  else refreshMeteoGroups();
  return {isDrawing:()=>drawing,isActive:()=>drawing||finished,handleClick,handleContext,
   pauseForOtherMode:()=>{if(drawing)pause()},
-  getState:()=>({points:points.map(p=>({...p})),drawing,finished})};
+  getState:()=>({points:points.map(p=>({...p})),drawing,finished}),
+  undo:undoLastPoint,insertReferencePoint};
 };
 })();
