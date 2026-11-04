@@ -2796,6 +2796,7 @@ function oaShowRecord(record){
  const title=document.createElement('h4');title.textContent=record.name;
  oaDetail.append(title);
  oaInfoLine(oaDetail,'Estado de revisión',oaStatusNames[status]);
+ oaInfoLine(oaDetail,'Clasificación GdV (orientativa)',oaCategoryFor(record)?oaCategoryNames[oaCategoryFor(record)]:'Sin clasificar');
  if(admin)oaDetail.append(oaReviewQuickActions(record));
  oaInfoLine(oaDetail,'Tipo publicado por OurAirports',oaTypeNames[record.type]||record.type);
  if(record.closed)oaInfoLine(oaDetail,'Advertencia','Figura como CERRADO en OurAirports; no usar como destino sin confirmar oficialmente.');
@@ -2828,9 +2829,11 @@ function oaShowRecord(record){
 }
 // Las acciones rápidas reutilizan la tabla de auditoría y respetan sus
 // políticas RLS: no destruyen ni actualizan el catálogo original OurAirports.
-async function oaApplyQuickReview(record,target,feedback){
+async function oaApplyQuickReview(record,target,feedback,category=null){
  if(!admin)throw Error('Solo un administrador puede revisar estos puntos.');
  if(!['reviewed','excluded','pending'].includes(target))throw Error('Estado inválido.');
+ if(target==='reviewed'&&!Object.prototype.hasOwnProperty.call(oaCategoryNames,category))
+  throw Error('Elegí una categoría de la leyenda antes de marcar revisado.');
  const prompt=target==='reviewed'?
   '¿Confirmás la revisión de este registro por Gente de Vuelo? No acredita habilitación ni apertura ANAC.':
   target==='excluded'?
@@ -2845,6 +2848,7 @@ async function oaApplyQuickReview(record,target,feedback){
   airport_id:record.id,
   review_status:target,
   review_note:old.review_note||'',
+  gdv_category:target==='reviewed'?category:(old.gdv_category??null),
   corrected_lat:old.corrected_lat??null,
   corrected_lon:old.corrected_lon??null,
   updated_by:user.id,
@@ -2901,7 +2905,8 @@ function oaBeginMoveRecord(record){
     if(!admin||authError||!data?.user)throw Error('Se requiere sesión de administrador.');
     const old=oaReviewFor(record)||{};
     const row={airport_id:record.id,review_status:old.review_status||'pending',
-     review_note:old.review_note||'',corrected_lat:Number(pos.lat.toFixed(7)),
+     review_note:old.review_note||'',gdv_category:old.gdv_category??null,
+     corrected_lat:Number(pos.lat.toFixed(7)),
      corrected_lon:Number(pos.lng.toFixed(7)),updated_by:data.user.id,updated_at:new Date().toISOString()};
     const {error}=await client.from('aerolocator_ourairports_review').upsert(row,{onConflict:'airport_id'});
     if(error)throw Error(error.message);
@@ -2924,6 +2929,10 @@ function oaReviewQuickActions(record){
  const guidance=document.createElement('p');guidance.className='oa-quick-note';
  guidance.textContent='Revisión interna GdV: nunca equivale a validación oficial ANAC. El descarte solo oculta el punto del mapa combinado.';
  wrap.append(guidance);
+ const category=oaCategoryPicker(record);wrap.append(category.label);
+ const help=document.createElement('p');help.className='oa-category-help';
+ help.textContent='El punto usará el color de la leyenda inferior. TWR y LAD requieren contraste con AIP/MADHEL; la clasificación GdV no es oficial.';
+ wrap.append(help);
  const actions=document.createElement('div');actions.className='oa-quick-buttons';
  const status=document.createElement('p');status.className='oa-quick-feedback';status.setAttribute('role','status');
  function add(text,target,cls){
@@ -2934,7 +2943,7 @@ function oaReviewQuickActions(record){
    if(button.disabled)return;
    button.disabled=true;status.textContent='Guardando revisión…';
    try{
-    const saved=await oaApplyQuickReview(record,target,status);
+    const saved=await oaApplyQuickReview(record,target,status,category.select.value);
     if(!saved){status.textContent='Acción cancelada.';button.disabled=false}
    }catch(err){status.textContent=err.message;button.disabled=false}
   });
@@ -2944,7 +2953,7 @@ function oaReviewQuickActions(record){
  move.textContent='Mover punto';move.title='Corregir la ubicación cartográfica con el mouse';
  move.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();oaBeginMoveRecord(record)});
  actions.append(move);
- if(oaState(record)!=='reviewed')add('Marcar revisado por GdV','reviewed','review');
+ add(oaState(record)==='reviewed'?'Guardar clasificación':'Marcar revisado por GdV','reviewed','review');
  if(oaState(record)!=='excluded')add('Descartar del mapa','excluded','exclude');
  if(oaState(record)!=='pending')add('Volver a pendiente','pending','reset');
  wrap.append(actions,status);
@@ -2957,7 +2966,8 @@ function oaOpenSelectedPoint(record){
  const summary=document.createElement('section');summary.className='oa-map-selection';
  const title=document.createElement('strong');title.textContent=record.name;
  const label=document.createElement('p');label.textContent=
-  (record.ident||'Sin identificador')+' · '+oaStatusNames[oaState(record)];
+  (record.ident||'Sin identificador')+' · '+oaStatusNames[oaState(record)]+
+  (oaCategoryFor(record)?' · '+oaCategoryNames[oaCategoryFor(record)]+' (GdV)':'');
  summary.append(title,label);
  if(admin)summary.append(oaReviewQuickActions(record));
  else{
