@@ -485,16 +485,16 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
  </section>
  <section id="pronarea-visual" class="pronarea-visual map-context-panel" aria-label="Cargar PRONAREA manualmente" hidden>
   <div class="map-context-panel-header"><div><h3>PRONAREA · carga manual</h3>
-  <p>Como en Flight Operations: consultá el SMN y pegá el boletín completo aquí.</p></div>
+  <p>Consultá el SMN, copiá el boletín y pegalo aquí con Ctrl + V.</p></div>
   <button id="pronarea-map-close" class="map-context-panel-close" type="button" aria-label="Cerrar editor PRONAREA">×</button></div>
   <label for="pronarea-map-input">Texto oficial del PRONAREA (FIR, emisión, validez, sectores y niveles)
    <textarea id="pronarea-map-input" maxlength="12000" rows="8" placeholder="Copiá el PRONAREA del SMN y pegalo aquí con Ctrl + V."></textarea></label>
   <div class="pronarea-actions">
-   <button id="pronarea-map-paste" type="button">Pegar del portapapeles</button>
-   <button id="pronarea-map-analyze" type="button">Identificar fenómenos</button>
+   <button id="pronarea-map-analyze" type="button">Leer fenómenos del texto</button>
    <button id="pronarea-map-clear" type="button">Limpiar texto</button>
   </div>
-  <p id="pronarea-map-result" role="status">Todavía no se cargó un PRONAREA. No se dibujan zonas sin límites geográficos verificables.</p>
+  <p class="map-context-note"><strong>Esta función solo analiza texto.</strong> Identifica menciones de fenómenos y niveles, pero todavía no dibuja áreas sobre el mapa.</p>
+  <p id="pronarea-map-result" role="status">Pegá un PRONAREA y pulsá «Leer fenómenos del texto». Los resultados aparecerán aquí.</p>
   <a href="https://www.smn.gob.ar/pronarea" target="_blank" rel="noopener noreferrer">Consultar PRONAREA oficial · SMN</a>
   <p class="map-context-note">Este texto se usa solo en esta pantalla: no se publica ni confirma automáticamente la vigencia del boletín.</p>
  </section>
@@ -1677,15 +1677,6 @@ async function showSIG(){
 }
 const pronareaInput=document.getElementById('pronarea-map-input');
 const pronareaStatus=document.getElementById('pronarea-map-result');
-document.getElementById('pronarea-map-paste').addEventListener('click',async()=>{
- try{
-  if(!navigator.clipboard||!navigator.clipboard.readText)throw Error('portapapeles no habilitado');
-  const value=await navigator.clipboard.readText();
-  if(!value.trim()){pronareaStatus.textContent='El portapapeles está vacío. Copiá el PRONAREA del SMN primero.';return}
-  pronareaInput.value=value.slice(0,12000);
-  pronareaStatus.textContent='Texto pegado ('+pronareaInput.value.length+' caracteres). Comprobá emisión, FIR y vigencia antes de analizar.'+(value.length>12000?' El texto excedió 12.000 caracteres y se recortó.':'');
- }catch(_){pronareaStatus.textContent='El navegador no permitió leer el portapapeles. Hacé clic en el cuadro de texto y pegá con Ctrl + V.';pronareaInput.focus()}
-});
 document.getElementById('pronarea-map-clear').addEventListener('click',()=>{
  pronareaInput.value='';
  pronareaStatus.textContent='Texto limpiado. Podés pegar otro PRONAREA.';
@@ -1698,7 +1689,7 @@ document.getElementById('pronarea-map-analyze').addEventListener('click',()=>{
  const levels=[...new Set(text.match(/\bFL\s?\d{2,3}\b|\b\d{3,5}\s?(?:FT|PIES)\b/gi)||[])].slice(0,15);
  pronareaStatus.textContent=(lines.length?'Fragmentos que mencionan fenómenos:\n'+lines.join('\n'):'No se identificaron fenómenos en líneas reconocibles.')+
  (levels.length?'\nNiveles citados en el boletín (NO asociados automáticamente a cada fenómeno): '+levels.join(', '):'\nSin niveles de vuelo reconocidos automáticamente.')+
- '\nSolo se representan zonas si sus límites geográficos están verificados. Comprobá FIR, emisión y vigencia en el SMN.';
+ '\nEsto es una lectura del texto: NO dibuja los fenómenos sobre el mapa. Comprobá FIR, emisión y vigencia en el SMN.';
 });
 viewSelect.addEventListener('change',()=>{
  const next=viewSelect.value;if(!['airfields','fir','sigmet','pronarea'].includes(next))return;
