@@ -104,3 +104,36 @@
 }
 .route-cruise-alert[hidden]{display:none!important}
 #route-pronarea-sync-status{font-size:11px;color:#cde7ed;line-height:1.4;flex:1}
+
+/* Acción principal de regreso al mapa: visible sin buscar un ícono oculto. */
+.route-planner-commands .route-go-map-primary{
+ background:#27775d!important;color:#fff!important;
+ border:2px solid #b8e7cf!important;
+ padding:11px 15px!important;font-size:13px!important;
+ font-weight:850!important;box-shadow:0 2px 9px #071f1999;
+ order:-1;
+}
+.route-planner-commands .route-go-map-primary:hover:not(:disabled),
+.route-planner-commands .route-go-map-primary:focus-visible:not(:disabled){
+ background:#329878!important;outline:2px solid #fff;outline-offset:2px;
+}
+.route-planner-commands .route-go-map-primary:disabled{
+ background:#314a49!important;color:#cbd8d5!important;box-shadow:none;opacity:.65;
+}
+.dispatch-map-toolbar-links #route-view-map-toolbar{
+ background:#28765e;color:#fff;border:1px solid #a3d9c0;
+ font-size:12px;font-weight:850;padding:9px 12px;
+}
+.dispatch-map-toolbar-links #route-view-map-toolbar:hover:not(:disabled){
+ background:#378f72;
+}
+#route-view-map-toolbar[hidden]{display:none!important}
+.route-planner-return-note{font-size:11px;color:#bfe8cf;margin:0;line-height:1.45}
+@media(max-width:760px){
+ .route-planner-commands .route-go-map-primary{
+  width:100%;min-height:45px;justify-content:center;
+ }
+ .dispatch-map-toolbar-links #route-view-map-toolbar{
+  font-size:11px;padding:8px;
+ }
+}
