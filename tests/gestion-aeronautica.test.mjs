@@ -701,6 +701,19 @@ assert.match(airstripsOriginal,/<title>AeroLocator · Mapa de pistas y aeródrom
 assert.match(airstripsOriginal,/<h1>AeroLocator<\/h1>/,'AeroLocator en el centro de control');
 assert.match(airstripsOriginal,/<strong>AeroLocator · Mapa interactivo<\/strong>/,'AeroLocator en el mapa');
 assert.match(airstripsOriginal,/<small>AEROLOCATOR · MAPA AERONÁUTICO<\/small>/,'AeroLocator en la barra superior');
+
+for(const category of ['controlled_public','uncontrolled_public','private_aerodrome','lad','heliport','unverified']){
+ assert.ok(airstripsOriginal.includes(category+':'),'Debe existir categoría GdV '+category);
+}
+assert.match(airstripsOriginal,/const oaCategoryColors=Object\.fromEntries/,'Paleta de categorías compartida');
+assert.match(airstripsOriginal,/PIN_PALETTE\[key\]\.fill/,'Colores iguales a los de la leyenda');
+assert.match(airstripsOriginal,/oaCategoryColors\[oaCategoryFor\(record\)\]/,'Marcadores revisados adoptan su categoría');
+assert.match(airstripsOriginal,/oaApplyQuickReview\(record,target,status,category\.select\.value\)/,'Revisión rápida requiere categoría');
+assert.match(airstripsOriginal,/gdv_category:target==='reviewed'\?category/,'Revisión guarda categoría');
+assert.match(airstripsOriginal,/gdv_category:old\.gdv_category\?\?null/,'Mover conserva clasificación');
+assert.match(airstripsOriginal,/review_note,gdv_category,corrected_lat/,'Leer clasificación de Supabase');
+assert.match(airstripsOriginal,/gdv_category:category\.select\.value\|\|null/,'Formulario guarda clasificación');
+
 assert.match(html,/AeroLocator en AeroSuite/,'Nombre en el portal de AeroSuite');
 assert.match(landing,/<h3>AeroLocator<\/h3>/,'Nombre en presentación pública de AeroSuite');
 assert.match(fs.readFileSync(new URL('../utilidades/index.html',import.meta.url),'utf8'),/<h2>AeroLocator<\/h2>/,'Nombre en Utilidades Gente de Vuelo');
