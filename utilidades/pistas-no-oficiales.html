@@ -341,6 +341,24 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
 @media(max-width:959px){.map-context-panel{top:85px;right:9px;width:min(420px,calc(100% - 18px));max-height:calc(100% - 95px)}}
 @media(max-width:620px){#map-inspector-toggle{font-size:11px;min-height:38px}.map-context-panel{top:128px;max-height:calc(100% - 140px)}.map-view-hint{font-size:10px;bottom:7px}}
 
+
+/* Editor cartográfico de los círculos: solo administración. La información documental permanece intacta. */
+.marker-edit-card{min-width:230px;max-width:305px;color:#193044;font:12px/1.5 system-ui,sans-serif}
+.marker-edit-card h3{font-size:15px;margin:0 0 6px;color:#143047}
+.marker-edit-card p{font-size:11px;margin:6px 0}
+.marker-edit-card label{display:grid;gap:3px;margin:8px 0;font-size:11px;font-weight:700}
+.marker-edit-card input,.marker-edit-card textarea{width:100%;box-sizing:border-box;background:#fff;color:#182c41;border:1px solid #95adbc;border-radius:6px;padding:6px;font:12px system-ui}
+.marker-edit-card textarea{min-height:60px;resize:vertical}
+.marker-edit-actions{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px}
+.marker-edit-actions button,.marker-admin-hidden button{padding:6px 8px;font-size:11px;line-height:1.3;border-radius:6px;border:1px solid #8aacc2;background:#245575;color:#fff;cursor:pointer}
+.marker-edit-actions .marker-hide{background:#8a442d;color:#fff;border-color:#ba816e}
+.marker-edit-card .marker-edit-status{color:#8d3022;font-weight:700}
+.marker-edit-note{background:#fff1c7;color:#63480d;padding:6px 8px;border-radius:7px}
+.marker-admin-hidden{border:1px solid #587b96;background:#163048;border-radius:10px;padding:9px;margin-top:12px}
+.marker-admin-hidden h3{font-size:13px;color:#e6f4ff;margin:5px 0}
+.marker-admin-hidden p{font-size:11px;color:#c4dfef;margin:7px 0}
+.marker-admin-hidden .hidden-marker-row{display:flex;align-items:center;justify-content:space-between;gap:7px;border-top:1px solid #3c607a;padding:7px 0}
+.marker-admin-hidden .hidden-marker-row span{font-size:11px;color:#e4f1fa;min-width:0;overflow-wrap:anywhere}
 </style></head><body><header class="dispatch-nav"><div class="dispatch-nav-logo"><span class="dispatch-nav-symbol" aria-hidden="true">✈</span>
  <div><strong>GENTE DE VUELO</strong><small>AEROLOCATOR · MAPA AERONÁUTICO</small></div></div>
  <nav aria-label="Herramientas Gente de Vuelo"><a href="../index.html">Portada</a><a href="../comunidad.html#foro">Foro</a><a href="index.html">Utilidades</a>
@@ -647,7 +665,7 @@ const mapElement=document.getElementById('map');
 mapElement.addEventListener('touchstart',e=>{clearTimeout(holdTimer);holdTriggered=false;if(e.touches.length!==1||pickReference)return;const t=e.touches[0];holdStart={x:t.clientX,y:t.clientY};holdTimer=setTimeout(()=>{holdTriggered=true;proposeAt(map.containerPointToLatLng(map.mouseEventToContainerPoint({clientX:holdStart.x,clientY:holdStart.y})))},650)},{passive:true});
 mapElement.addEventListener('touchmove',e=>{if(e.touches.length!==1||!holdStart||Math.hypot(e.touches[0].clientX-holdStart.x,e.touches[0].clientY-holdStart.y)>12)clearTimeout(holdTimer)},{passive:true});
 for(const event of ['touchend','touchcancel'])mapElement.addEventListener(event,()=>{clearTimeout(holdTimer);holdStart=null},{passive:true});
-map.on('contextmenu',e=>{if(!holdTriggered)proposeAt(e.latlng);holdTriggered=false});
+map.on('contextmenu',e=>{if(e.originalEvent?.target?.closest?.('.airstrip-marker'))return;if(!holdTriggered)proposeAt(e.latlng);holdTriggered=false});
 const external=L.layerGroup().addTo(map);let lastRequest=0;let reference=null,nearRadius=null,referenceMarker=null,pickReference=false,externalPoints=[];
 function nauticalMiles(a,b,c,d){const r=Math.PI/180,p1=a*r,p2=c*r,dp=(c-a)*r,dl=(d-b)*r,h=Math.sin(dp/2)**2+Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)**2;return 3440.065*2*Math.atan2(Math.sqrt(h),Math.sqrt(1-h))}
 function setReference(lat,lon){reference=[lat,lon];document.getElementById('ref-lat').value=lat.toFixed(6);document.getElementById('ref-lon').value=lon.toFixed(6);if(referenceMarker)map.removeLayer(referenceMarker);referenceMarker=L.circleMarker(reference,{radius:9,color:'#00d7ff',fillOpacity:.8}).addTo(map).bindPopup('Punto de referencia').openPopup()}
@@ -901,10 +919,189 @@ function selectAirfield(marker,point,label,createCard){
   marker.openPopup();
  }
 }
-function attachSelection(marker,point,label,createCard){
- marker.on('click',()=>selectAirfield(marker,point,label,createCard));
+
+/* Correcciones visuales guardadas por admins. Nunca cambian coordenadas ni documentos de origen. */
+const markerOverrides=new Map();
+let markerEditBusy=false;
+async function loadMarkerOverrides(){
+ const {data,error}=await client.from('aerolocator_marker_edits')
+  .select('marker_key,source_kind,display_lat,display_lon,display_label,display_note,hidden,updated_at');
+ if(error){document.getElementById('message').textContent='No se pudieron cargar las correcciones visuales: '+error.message;return}
+ markerOverrides.clear();for(const row of data||[])markerOverrides.set(row.marker_key,row);
+ renderHiddenMarkerAdmin();
+}
+function markerVisualPosition(meta){
+ const o=markerOverrides.get(meta.key);
+ return o&&Number.isFinite(o.display_lat)&&Number.isFinite(o.display_lon)?
+  L.latLng(o.display_lat,o.display_lon):L.latLng(meta.lat,meta.lon);
+}
+function markerVisualLabel(meta){return markerOverrides.get(meta.key)?.display_label||meta.name}
+function popupWithVisualReference(createCard,meta){
+ const el=createCard(),o=markerOverrides.get(meta.key);
+ if(o&&(o.display_label||o.display_note||Number.isFinite(o.display_lat))){
+  const notice=document.createElement('div');notice.className='marker-edit-note';
+  const label=document.createElement('strong');label.textContent='Referencia visual del mapa (edición administrativa)';
+  const text=document.createElement('p');
+  const facts=[];
+  if(o.display_label)facts.push('Etiqueta: '+o.display_label);
+  if(o.display_note)facts.push('Nota: '+o.display_note);
+  if(Number.isFinite(o.display_lat))facts.push('Punto visual: '+Number(o.display_lat).toFixed(6)+', '+Number(o.display_lon).toFixed(6)+' (el dato de origen no se modificó)');
+  text.textContent=facts.join(' · ');notice.append(label,text);el.prepend(notice);
+ }
+ return el;
+}
+async function saveMarkerOverride(meta,patch){
+ if(!admin||markerEditBusy)throw Error('Solo la administración puede modificar la presentación de estos círculos.');
+ const {data:{user},error:userError}=await client.auth.getUser();
+ if(userError||!user)throw Error('Debés iniciar sesión como administrador.');
+ const previous=markerOverrides.get(meta.key)||{};
+ const row={
+  marker_key:meta.key,source_kind:meta.sourceKind,
+  display_lat:patch.display_lat!==undefined?patch.display_lat:(previous.display_lat??null),
+  display_lon:patch.display_lon!==undefined?patch.display_lon:(previous.display_lon??null),
+  display_label:patch.display_label!==undefined?patch.display_label:(previous.display_label??null),
+  display_note:patch.display_note!==undefined?patch.display_note:(previous.display_note??null),
+  hidden:patch.hidden!==undefined?patch.hidden:!!previous.hidden,
+  updated_by:user.id,updated_at:new Date().toISOString()
+ };
+ if((row.display_lat===null)!==(row.display_lon===null)||
+  (row.display_lat!==null&&(!Number.isFinite(row.display_lat)||!Number.isFinite(row.display_lon)||
+   row.display_lat<-56||row.display_lat>-21||row.display_lon<-74||row.display_lon>-53))){
+  throw Error('Coordenadas fuera de Argentina o incompletas.');
+ }
+ markerEditBusy=true;
+ try{
+  const {error}=await client.from('aerolocator_marker_edits').upsert(row,{onConflict:'marker_key'});
+  if(error)throw Error('No se pudo guardar: '+error.message);
+  markerOverrides.set(meta.key,row);render();renderExternal();renderHiddenMarkerAdmin();
+ }finally{markerEditBusy=false}
+}
+async function resetMarkerOverride(key){
+ if(!admin||markerEditBusy)throw Error('Solo la administración puede restaurar un círculo.');
+ markerEditBusy=true;
+ try{
+  const {error}=await client.from('aerolocator_marker_edits').delete().eq('marker_key',key);
+  if(error)throw Error('No se pudo restaurar: '+error.message);
+  markerOverrides.delete(key);render();renderExternal();renderHiddenMarkerAdmin();
+ }finally{markerEditBusy=false}
+}
+function renderHiddenMarkerAdmin(){
+ if(!admin)return;
+ let panel=document.getElementById('marker-admin-hidden');
+ if(!panel){
+  panel=document.createElement('section');panel.id='marker-admin-hidden';panel.className='marker-admin-hidden';
+  const parent=document.getElementById('control-catalog-menu')?.querySelector('.control-submenu-body');
+  if(!parent)return;parent.append(panel);
+ }
+ panel.replaceChildren();
+ const heading=document.createElement('h3');heading.textContent='Círculos ocultos · Administración';
+ panel.append(heading);
+ const hidden=[...markerOverrides.values()].filter(x=>x.hidden);
+ if(!hidden.length){
+  const none=document.createElement('p');none.textContent='No hay círculos ocultos. Con clic derecho sobre un círculo podés moverlo, referenciarlo u ocultarlo.';panel.append(none);return;
+ }
+ for(const row of hidden){
+  const line=document.createElement('div');line.className='hidden-marker-row';
+  const name=document.createElement('span');name.textContent=(row.display_label||row.marker_key)+' · '+row.source_kind;
+  const restore=document.createElement('button');restore.type='button';restore.textContent='Restaurar';
+  restore.addEventListener('click',async()=>{
+   restore.disabled=true;
+   try{await resetMarkerOverride(row.marker_key)}
+   catch(error){restore.disabled=false;alert(error.message)}
+  });
+  line.append(name,restore);panel.append(line);
+ }
+}
+function openMarkerEditor(marker,meta,pendingPosition=null){
+ if(!admin||mapViewMode!=='airfields')return;
+ const old=markerOverrides.get(meta.key)||{};
+ const previousLocation=markerVisualPosition(meta);
+ const box=document.createElement('section');box.className='marker-edit-card';
+ const title=document.createElement('h3');title.textContent='Editar círculo del mapa';
+ const source=document.createElement('p');source.textContent='Registro: '+meta.name+' · '+meta.sourceKind;
+ const coords=document.createElement('p');
+ coords.textContent='Coordenada documental sin cambios: '+Number(meta.lat).toFixed(6)+', '+Number(meta.lon).toFixed(6);
+ const warning=document.createElement('p');warning.className='marker-edit-note';
+ warning.textContent='Se modifica la ubicación visual y su descripción, NO el registro de origen ANAC/AIP/OSM.';
+ const label=document.createElement('label');label.textContent='Nombre visual o referencia (opcional)';
+ const name=document.createElement('input');name.type='text';name.maxLength=120;name.value=old.display_label||'';name.placeholder=meta.name;label.append(name);
+ const noteLabel=document.createElement('label');noteLabel.textContent='Comentario / pista de referencia';
+ const note=document.createElement('textarea');note.maxLength=600;note.value=old.display_note||'';note.placeholder='Ej.: desplazar círculo hacia el umbral de pista';noteLabel.append(note);
+ const candidate=pendingPosition||marker.getLatLng();
+ const current=document.createElement('p');current.textContent='Posición visual propuesta: '+candidate.lat.toFixed(6)+', '+candidate.lng.toFixed(6);
+ const feedback=document.createElement('p');feedback.className='marker-edit-status';feedback.setAttribute('role','status');
+ const actions=document.createElement('div');actions.className='marker-edit-actions';
+ function button(text,run,cls=''){
+  const b=document.createElement('button');b.type='button';b.textContent=text;if(cls)b.className=cls;
+  b.addEventListener('click',run);actions.append(b);return b;
+ }
+ const save=button('Guardar cambios',async()=>{
+  save.disabled=true;feedback.textContent='Guardando cambios…';
+  try{
+   await saveMarkerOverride(meta,{
+    display_label:name.value.trim()||null,display_note:note.value.trim()||null,
+    display_lat:pendingPosition?Number(candidate.lat):(old.display_lat??null),
+    display_lon:pendingPosition?Number(candidate.lng):(old.display_lon??null),
+    hidden:false
+   });
+   map.closePopup();
+  }catch(error){feedback.textContent=error.message;save.disabled=false}
+ });
+ if(!pendingPosition){
+  button('Mover círculo',()=>{
+   map.closePopup();
+   const original=marker.getLatLng();
+   if(!marker.dragging){alert('Este marcador no admite arrastre.');return}
+   marker.dragging.enable();
+   marker.bindTooltip('Arrastrá el círculo hasta la ubicación deseada y soltalo',{permanent:true,direction:'top'}).openTooltip();
+   marker.once('dragend',()=>{
+    marker.dragging.disable();marker.unbindTooltip();
+    const newPoint=marker.getLatLng();
+    if(newPoint.lat<-56||newPoint.lat>-21||newPoint.lng<-74||newPoint.lng>-53){
+     marker.setLatLng(original);alert('Marcá un punto dentro de Argentina.');return;
+    }
+    openMarkerEditor(marker,meta,newPoint);
+   });
+  });
+ }
+ button('Ocultar círculo',async()=>{
+  if(!confirm('¿Ocultar este círculo para todos los visitantes? El registro original no será eliminado.'))return;
+  feedback.textContent='Ocultando círculo…';
+  try{await saveMarkerOverride(meta,{hidden:true});map.closePopup()}
+  catch(error){feedback.textContent=error.message}
+ },'marker-hide');
+ if(markerOverrides.has(meta.key)){
+  button('Restaurar original',async()=>{
+   if(!confirm('¿Restaurar el círculo original y descartar todas las correcciones visuales?'))return;
+   try{await resetMarkerOverride(meta.key);map.closePopup()}
+   catch(error){feedback.textContent=error.message}
+  });
+ }
+ button('Cancelar',()=>{
+  if(pendingPosition)marker.setLatLng(previousLocation);
+  map.closePopup();
+ });
+ box.append(title,source,coords,warning,label,noteLabel,current,feedback,actions);
+ L.popup({maxWidth:340,minWidth:245,autoPan:true}).setLatLng(marker.getLatLng()).setContent(box).openOn(map);
+}
+function attachSelection(marker,point,label,createCard,meta=null){
+ if(meta){
+  const visual=markerVisualPosition(meta);marker.setLatLng(visual);
+  marker.options.title=markerVisualLabel(meta);
+  const updatedCard=()=>popupWithVisualReference(createCard,meta);
+  marker.bindPopup(updatedCard,{maxWidth:365,minWidth:240});
+  marker.on('click',()=>selectAirfield(marker,[visual.lat,visual.lng],markerVisualLabel(meta),updatedCard));
+  marker.on('contextmenu',e=>{
+   if(e.originalEvent)L.DomEvent.stop(e.originalEvent);
+   if(admin&&mapViewMode==='airfields')openMarkerEditor(marker,meta);
+  });
+  if(admin)marker.bindTooltip('Clic derecho: editar posición, nombre u ocultar',{direction:'top'});
+ }else{
+  marker.on('click',()=>selectAirfield(marker,point,label,createCard));
+ }
  return marker;
 }
+
 rulerToggle.addEventListener('click',()=>{
  rulerEnabled=!rulerEnabled;
  rulerToggle.setAttribute('aria-pressed',String(rulerEnabled));
