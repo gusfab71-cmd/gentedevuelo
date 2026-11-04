@@ -41,7 +41,7 @@ function readCSV(text,consume){
  csvRows(text,row=>{
   if(!header){
    header=row.map(c=>String(c||'').trim().replace(/^\ufeff/,''));
-   if(!header.includes('id')||!header.includes('ident'))throw Error('Encabezado CSV incompatible');
+   if(!header.includes('id'))throw Error('Encabezado CSV incompatible: falta id');
    return;
   }
   const record=Object.create(null);
