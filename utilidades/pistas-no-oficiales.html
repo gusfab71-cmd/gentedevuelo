@@ -359,6 +359,8 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
 .marker-admin-hidden p{font-size:11px;color:#c4dfef;margin:7px 0}
 .marker-admin-hidden .hidden-marker-row{display:flex;align-items:center;justify-content:space-between;gap:7px;border-top:1px solid #3c607a;padding:7px 0}
 .marker-admin-hidden .hidden-marker-row span{font-size:11px;color:#e4f1fa;min-width:0;overflow-wrap:anywhere}
+.ruler-unit-option{display:grid;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#d8e9f5;min-width:160px}
+.ruler-unit-option select{width:100%;min-height:35px;padding:7px;border-radius:7px;font-size:12px;background:#eaf5ff;color:#102e43}
 
 /* Sectores SIGMET: cartografía de la fuente, etiquetas de altura y controles explícitos. */
 .sigmet-controls{display:flex;flex-wrap:wrap;align-items:end;gap:9px;background:#113149;border:1px solid #547b96;padding:9px;border-radius:9px;margin-bottom:10px}
@@ -434,6 +436,9 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
  <div class="dispatch-quick">
       <button id="ruler-toggle" type="button" aria-pressed="false">Regla · Distancia y rumbo</button>
       <button id="ruler-clear" type="button">Borrar medición</button>
+      <label class="ruler-unit-option" for="ruler-unit">Unidad de distancia
+       <select id="ruler-unit" aria-label="Unidad para medir distancias"><option value="nm" selected>Millas náuticas (NM)</option><option value="km">Kilómetros (km)</option></select>
+      </label>
       <button id="contribute-fast" type="button">+ Aportar pista</button>
     </div>
     <div id="ruler-info" role="status" class="dispatch-ruler-info">Seleccioná «Regla» y marcá dos puntos o pines para medir NM y rumbo verdadero.</div>
@@ -996,7 +1001,23 @@ const selectedDetail=document.getElementById('selected-detail');
 const selectedTitle=document.getElementById('selected-title');
 const rulerToggle=document.getElementById('ruler-toggle');
 const rulerInfo=document.getElementById('ruler-info');
+const rulerUnit=document.getElementById('ruler-unit');
 let rulerEnabled=false,rulerPoints=[],rulerLine=null,rulerMarkers=[];
+function updateRulerInfo(){
+ const unit=rulerUnit.value;
+ if(rulerPoints.length<2){
+  rulerInfo.textContent=rulerPoints.length===1?'Origen: '+rulerPoints[0].label+' · Seleccioná destino para medir.':
+   rulerEnabled?'Elegí el punto de salida en el mapa o tocá su círculo.':
+   'Regla lista: seleccioná dos puntos para medir distancia en NM o km y rumbo verdadero.';
+  return;
+ }
+ const a=rulerPoints[0],b=rulerPoints[1];
+ const nm=nauticalMiles(a.lat,a.lng,b.lat,b.lng),bearing=trueBearing(a.lat,a.lng,b.lat,b.lng);
+ const distance=unit==='km'?nm*1.852:nm;
+ rulerInfo.textContent='Desde '+a.label+' hasta '+b.label+': '+distance.toFixed(2)+' '+(unit==='km'?'km':'NM')+
+  ' · RV inicial '+bearing.toFixed(1)+'° verdadero (sin corrección magnética). Distancia de círculo máximo.';
+}
+rulerUnit.addEventListener('change',updateRulerInfo);
 const desktopMode=()=>window.matchMedia('(min-width:960px)').matches;
 function trueBearing(lat1,lon1,lat2,lon2){
  const rad=Math.PI/180,p1=lat1*rad,p2=lat2*rad,dLon=(lon2-lon1)*rad;
@@ -1010,8 +1031,7 @@ function clearRuler(){
  if(rulerLine){map.removeLayer(rulerLine);rulerLine=null}
  for(const x of rulerMarkers)map.removeLayer(x);
  rulerMarkers=[];
- rulerInfo.textContent=rulerEnabled?'Elegí el punto de salida en el mapa o tocá su pin.':
-  'Regla lista: dos puntos calculan NM y rumbo verdadero inicial.';
+ updateRulerInfo();
 }
 function rulerPoint(point,label){
  if(!rulerEnabled||mapViewMode!=='airfields')return;
@@ -1020,14 +1040,12 @@ function rulerPoint(point,label){
  const marker=L.circleMarker(point,{radius:7,color:'#19384d',weight:2,fillColor:'#9addff',fillOpacity:1,interactive:false}).addTo(map);
  rulerMarkers.push(marker);
  if(rulerPoints.length===1){
-  rulerInfo.textContent='Origen: '+rulerPoints[0].label+' · Seleccioná destino para medir.';
+  updateRulerInfo();
   return;
  }
  const a=rulerPoints[0],b=rulerPoints[1];
- const nm=nauticalMiles(a.lat,a.lng,b.lat,b.lng);
- const bearing=trueBearing(a.lat,a.lng,b.lat,b.lng);
  rulerLine=L.polyline([[a.lat,a.lng],[b.lat,b.lng]],{color:'#b9e7ff',weight:3,dashArray:'9 8',interactive:false}).addTo(map);
- rulerInfo.textContent='Desde '+a.label+' hasta '+b.label+': '+nm.toFixed(2)+' NM · RV inicial '+bearing.toFixed(1)+'° verdadero (sin variación magnética). Línea geodésica orientativa.';
+ updateRulerInfo();
 }
 function showAirfieldDetail(createCard,name){
  document.getElementById("control-detail-menu").open=true;
