@@ -1,0 +1,74 @@
+
+/* AeroLocator · trazador experimental VFR: independiente de basemap/capas. */
+.route-planner-toolbar-button{background:#246851;color:#f4fffc;border:1px solid #8bd1b5!important;
+ font-weight:800;font-size:12px;padding:8px 11px!important}
+.route-planner-toolbar-button[aria-pressed="true"]{background:#317860;outline:2px solid #debd55;outline-offset:1px}
+.route-planner-panel{background:#152d40;border:1px solid #6e94a7;border-radius:11px;
+ color:#edf7ff;padding:0 12px;margin:7px 0 3px;box-shadow:0 2px 13px #08192a50}
+.route-planner-panel>summary{padding:10px 4px;cursor:pointer;list-style:inside;color:#f3faff;
+ font-size:13px;font-weight:850;user-select:none}
+.route-planner-panel>summary::marker{color:#e5c35b}
+.route-planner-panel>summary small{font-size:10px;color:#b8d3e7;font-weight:500;margin-left:6px}
+.route-planner-panel[open]>summary{border-bottom:1px solid #527184}
+.route-planner-inner{padding:12px 2px 14px;display:grid;gap:11px}
+.route-planner-commands{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.route-planner-commands button,.route-planner-fields button{border:1px solid #7899ae;
+ padding:8px 11px;font-size:12px;font-weight:750;background:#26536b;color:#e8f7ff;border-radius:8px}
+.route-planner-commands button[data-action="draw"]{background:#28795f}
+.route-planner-commands button[data-action="clear"]{background:#59434b}
+.route-planner-commands button:disabled{opacity:.5;cursor:not-allowed}
+.route-planner-caption,.route-planner-state{font-size:11px;line-height:1.5;margin:0;color:#d1e4ef}
+.route-planner-state{border-radius:8px;padding:8px 10px;background:#243d50;color:#f0f8fe}
+.route-planner-fields{display:grid;grid-template-columns:repeat(4,minmax(105px,1fr));gap:9px;align-items:end}
+.route-planner-fields label{display:grid;gap:4px;font-size:11px;color:#dcf0fc}
+.route-planner-fields input,.route-planner-fields select,.route-planner-fields textarea{
+ width:100%;max-width:100%;background:#f5faff;color:#182a37;border:1px solid #a9c3d4;border-radius:7px;
+ padding:8px;font-size:13px}
+.route-planner-fields textarea{min-height:72px;resize:vertical}
+.route-planner-fields .route-pronarea-input{grid-column:1/-1}
+.route-planner-fields .route-wind-select{grid-column:span 2}
+.route-planner-fields .route-fields-advanced{grid-column:1/-1}
+.route-planner-fields .route-fields-advanced summary{font-size:11px;color:#c7e5fa;cursor:pointer;padding:5px}
+.route-planner-advanced-grid{display:grid;grid-template-columns:repeat(3,minmax(105px,1fr));gap:9px;margin-top:9px}
+.route-planner-warnings{font-size:11px;line-height:1.5;color:#f5deb4;margin:0;white-space:pre-line}
+.route-planner-results{display:grid;gap:7px;font-size:11px;line-height:1.5;max-height:270px;overflow-y:auto}
+.route-leg-row{display:grid;grid-template-columns:90px 1fr;gap:7px;padding:9px 10px;
+ border:1px solid #466277;background:#1d3547;border-radius:8px}
+.route-leg-row strong{color:#faf4e1}
+.route-leg-row small{color:#d3e6f4;font-size:10px}
+.route-leg-row[data-warning="true"]{border-color:#ae8256}
+.route-draw-status{position:absolute;z-index:810;left:61px;bottom:19px;width:min(490px,calc(100% - 80px));
+ background:#1a3348ee;color:#fff;border:1px solid #93b7ce;border-radius:9px;
+ padding:8px 10px;font-size:11px;line-height:1.45;pointer-events:none}
+.route-draw-status[hidden]{display:none!important}
+.route-hover-card{position:absolute;z-index:995;min-width:190px;max-width:290px;
+ pointer-events:none;color:#f5fbff;background:#162d3ff5;border:1px solid #e6eff6;
+ border-radius:10px;padding:9px 11px;box-shadow:0 3px 12px #0b1e32a8;
+ font-size:11px;line-height:1.4;white-space:pre-line}
+.route-hover-card[hidden]{display:none!important}
+.route-hover-card strong{color:#fff;font-size:12px}
+.route-point-label{display:block;border:0;background:transparent}
+.route-point-pin{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;
+ justify-content:center;color:#102a35;font:900 10px Arial,sans-serif;box-shadow:0 2px 7px #0b1115aa;
+ border:2.5px solid white}
+.route-point-pin.route-end{background:#43a886}
+.route-point-pin.route-middle{background:#e5c35b}
+.route-context-menu{position:absolute;z-index:1100;background:#142f43f5;color:white;
+ border:1px solid #a2c4d9;border-radius:9px;padding:7px;min-width:174px;
+ box-shadow:0 5px 18px #091a2eb8}
+.route-context-menu[hidden]{display:none!important}
+.route-context-menu button{display:block;width:100%;font-size:12px;text-align:left;padding:9px;
+ margin:2px 0;border:0;background:transparent;color:#eff7fc;border-radius:6px}
+.route-context-menu button:hover,.route-context-menu button:focus-visible{background:#365a70}
+.route-context-menu button[data-route-cmd="finish"]{color:#bdf5da;font-weight:800}
+.route-context-menu button[data-route-cmd="delete"]{color:#ffddc1}
+#map.route-drawing{cursor:crosshair!important}
+#map.route-drawing .leaflet-container{cursor:crosshair}
+@media(max-width:700px){
+ .route-planner-fields{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .route-planner-fields .route-wind-select{grid-column:1/-1}
+ .route-planner-advanced-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .route-draw-status{bottom:10px;left:10px;width:calc(100% - 20px);font-size:10px}
+ .route-hover-card{max-width:220px}
+ .route-leg-row{grid-template-columns:75px 1fr}
+}
