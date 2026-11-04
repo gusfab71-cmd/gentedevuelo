@@ -2444,7 +2444,13 @@ async function showOurAirports(force=false){
     if(oaRecords.length)map.fitBounds([[-55.5,-74.5],[-21.5,-52.5]],{padding:[16,16],animate:false});
     const warnings=[...(payload.warnings||[])];
     if(error)warnings.push('No se pudo leer el avance de revisión: '+error.message);
-    if(warnings.length)oaInfoLine(document.getElementById('airspace-inspector-footnote'),'Advertencias',warnings.join(' | '));
+    if(warnings.length){
+     document.getElementById('airspace-inspector-footnote').textContent=
+      'OurAirports · datos comunitarios. Advertencias de la descarga: '+warnings.join(' | ');
+    }else{
+     document.getElementById('airspace-inspector-footnote').textContent=
+      'Fuente OurAirports · datos comunitarios, no oficiales. Revisar cada registro contra ANAC/AIP/MADHEL.';
+    }
    }
   }catch(error){
    if(mapViewMode==='ourairports'){
