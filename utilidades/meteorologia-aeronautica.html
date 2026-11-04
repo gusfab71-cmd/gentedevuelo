@@ -536,7 +536,7 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
 <style>html.auth-pending body{visibility:hidden}</style>
 <script src="../assets/supabase-2.117.2.min.js"></script>
 <script src="../assets/community-config.js"></script>
-<script src="../assets/auth-guard.js?v=20261013registro2"></script>
+<script src="../assets/auth-guard.js?v=20261104flightopsinstitucional1"></script>
 <style>
 /* Control VFR: capa visual de planeamiento, sin nuevos endpoints. */
 .flight-vfr-screenreader{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip-path:inset(50%)!important;white-space:nowrap!important;border:0!important}
@@ -1950,12 +1950,15 @@ el('copy-report').addEventListener('click',async()=>{
   // AeroSuite solo utiliza estos parámetros para QUITAR capacidades (modo formativo),
   // nunca para otorgar permisos; las funciones privilegiadas conservan su validación de servidor.
   const aeroContext=new URLSearchParams(window.location.search).get('aerosuite');
-  const trainingView=aeroContext==='formacion'||aeroContext==='instruccion';
+  const trainingView=['formacion','instruccion','piloto'].includes(aeroContext);
   if(trainingView)document.documentElement.dataset.flightAerosuiteContext=aeroContext;
   // Acceso para integrantes autenticados; la función de IA valida al administrador en el servidor.
   try{
     const client=window.GDV_AUTH?.client;
     if(!client){status.textContent='No se pudo comprobar la sesión. Volvé a ingresar.';return;}
+    // El guard institucional comprueba sesión, membresía, institución y rol en el servidor.
+    try{await window.GDV_AUTH.ready}
+    catch(error){status.textContent=error?.message||'No se pudo verificar el acceso institucional.';return;}
     const {data:identity,error:identityError}=await client.auth.getUser();
     if(identityError||!identity?.user){
       status.textContent='Iniciá sesión con tu cuenta de Gente de Vuelo para acceder.';
@@ -1971,7 +1974,8 @@ el('copy-report').addEventListener('click',async()=>{
     document.documentElement.dataset.flightRole=isAdmin&&!trainingView?'admin':'member';
     if(trainingView){
       const eyebrow=page.querySelector('.hero .eyebrow');
-      if(eyebrow)eyebrow.textContent=aeroContext==='formacion'?'AeroSuite · Formación del Alumno':'AeroSuite · Instrucción y Jefatura';
+      if(eyebrow)eyebrow.textContent=aeroContext==='formacion'?'AeroSuite · Formación del Alumno':
+        aeroContext==='piloto'?'AeroSuite · Portal del Piloto':'AeroSuite · Instrucción y Jefatura';
       const introduction=page.querySelector('.hero .ops-intro');
       if(introduction)introduction.textContent='Herramienta compartida para práctica y enseñanza de planificación de vuelo. Verificá siempre boletines, datos y condiciones con fuentes oficiales.';
     }
