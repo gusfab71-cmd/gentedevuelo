@@ -1,4 +1,4 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AeroLocator · Mapa de pistas y aeródromos | Gente de Vuelo / AeroSuite</title><link rel="stylesheet" href="../assets/comunidad.css"><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"><link rel="stylesheet" href="../assets/aerolocator-route-planner.css?v=20261104route3-weather"><style>body{background:#18232d;color:#edf4fa;font-family:Arial,sans-serif;margin:0;overflow-x:hidden}main{box-sizing:border-box;width:100%;max-width:1200px;margin:auto;padding:12px}*{box-sizing:border-box}h1{font-size:1.7rem}#map{width:100%;height:72dvh;min-height:430px;border-radius:12px;margin:10px 0;touch-action:pan-x pan-y}input,select,textarea,button{font:inherit;padding:10px;border-radius:8px;max-width:100%}input,select,textarea{background:#fff;color:#172634;border:1px solid #9db1c1}button{background:#28648c;color:white;border:0;cursor:pointer}form{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;background:#263846;padding:16px;border-radius:12px}form textarea,form .wide{grid-column:1/-1}.basemap-selector{display:flex;align-items:center;margin:8px 0;width:100%;min-width:0}.basemap-selector .leaflet-control-layers{position:static;float:none;margin:0;background:#263846;color:#fff;border:1px solid #647b8d;border-radius:10px;box-shadow:none;padding:8px 12px}.basemap-selector .leaflet-control-layers-list{display:block!important}.basemap-selector .leaflet-control-layers-base{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center}.basemap-selector label{display:inline-flex;flex-direction:row;align-items:center;gap:6px;white-space:normal;font-size:14px;line-height:1.3}.basemap-selector input{accent-color:#36a4f5}details{margin:14px 0}summary{list-style-position:inside}summary:hover{filter:brightness(1.15)}.gdv-pin span{font-size:29px;line-height:36px;display:block;text-align:center;filter:drop-shadow(0 2px 2px #000)}label{display:flex;flex-direction:column;gap:5px}#list{display:grid;gap:10px}.entry{padding:12px;background:#263846;border-radius:10px}small{color:#bed0de}.notice{padding:12px;background:#344756;border-radius:8px}a{color:#a8d8ff}.map-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.map-actions button{max-width:100%;white-space:normal}.map-actions small{flex:1 1 200px;overflow-wrap:anywhere}.basemap-selector .leaflet-control-layers{width:100%;max-width:100%}@media(max-width:600px){main{padding:8px}#map{height:76dvh;min-height:470px}h1{font-size:1.35rem}.notice{font-size:13px;padding:9px}.basemap-selector .leaflet-control-layers-base{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.basemap-selector label{font-size:12px}.map-actions button{width:100%}}
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AeroLocator · Mapa de pistas y aeródromos | Gente de Vuelo / AeroSuite</title><link rel="stylesheet" href="../assets/comunidad.css"><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"><link rel="stylesheet" href="../assets/aerolocator-route-planner.css?v=20261104route4-mapreturn"><style>body{background:#18232d;color:#edf4fa;font-family:Arial,sans-serif;margin:0;overflow-x:hidden}main{box-sizing:border-box;width:100%;max-width:1200px;margin:auto;padding:12px}*{box-sizing:border-box}h1{font-size:1.7rem}#map{width:100%;height:72dvh;min-height:430px;border-radius:12px;margin:10px 0;touch-action:pan-x pan-y}input,select,textarea,button{font:inherit;padding:10px;border-radius:8px;max-width:100%}input,select,textarea{background:#fff;color:#172634;border:1px solid #9db1c1}button{background:#28648c;color:white;border:0;cursor:pointer}form{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;background:#263846;padding:16px;border-radius:12px}form textarea,form .wide{grid-column:1/-1}.basemap-selector{display:flex;align-items:center;margin:8px 0;width:100%;min-width:0}.basemap-selector .leaflet-control-layers{position:static;float:none;margin:0;background:#263846;color:#fff;border:1px solid #647b8d;border-radius:10px;box-shadow:none;padding:8px 12px}.basemap-selector .leaflet-control-layers-list{display:block!important}.basemap-selector .leaflet-control-layers-base{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center}.basemap-selector label{display:inline-flex;flex-direction:row;align-items:center;gap:6px;white-space:normal;font-size:14px;line-height:1.3}.basemap-selector input{accent-color:#36a4f5}details{margin:14px 0}summary{list-style-position:inside}summary:hover{filter:brightness(1.15)}.gdv-pin span{font-size:29px;line-height:36px;display:block;text-align:center;filter:drop-shadow(0 2px 2px #000)}label{display:flex;flex-direction:column;gap:5px}#list{display:grid;gap:10px}.entry{padding:12px;background:#263846;border-radius:10px}small{color:#bed0de}.notice{padding:12px;background:#344756;border-radius:8px}a{color:#a8d8ff}.map-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.map-actions button{max-width:100%;white-space:normal}.map-actions small{flex:1 1 200px;overflow-wrap:anywhere}.basemap-selector .leaflet-control-layers{width:100%;max-width:100%}@media(max-width:600px){main{padding:8px}#map{height:76dvh;min-height:470px}h1{font-size:1.35rem}.notice{font-size:13px;padding:9px}.basemap-selector .leaflet-control-layers-base{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.basemap-selector label{font-size:12px}.map-actions button{width:100%}}
 /* Navegador de pistas · AeroSuite / Gente de Vuelo */
 :root{--air-blue:#91c8f4;--air-panel:#203646;--air-stroke:#557891}
 main{max-width:1500px;padding:14px clamp(9px,1.8vw,26px) 30px}
@@ -649,20 +649,21 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
  <option value="ourairports">OurAirports · por revisar</option>
  <option value="sigmet">SIGMET · fenómenos</option>
  <option value="pronarea">PRONAREA · Planificador de vuelo VFR</option>
- </select></label><div class="dispatch-map-toolbar-links"><button id="route-planner-toggle" class="route-planner-toolbar-button" type="button" aria-controls="route-planner-panel" aria-pressed="false">Trazar ruta VFR</button><button id="map-inspector-toggle" type="button" aria-controls="airspace-inspector pronarea-visual" aria-expanded="false" hidden>Ver información</button>
+ </select></label><div class="dispatch-map-toolbar-links"><button id="route-planner-toggle" class="route-planner-toolbar-button" type="button" aria-controls="route-planner-panel" aria-pressed="false">Trazar ruta VFR</button><button id="route-view-map-toolbar" class="route-go-map toolbar-map-return" type="button" aria-controls="map" disabled hidden>Ver recorrido en mapa</button><button id="map-inspector-toggle" type="button" aria-controls="airspace-inspector pronarea-visual" aria-expanded="false" hidden>Ver información</button>
     <button id="map-fullscreen" type="button">Ampliar mapa</button><a href="https://ais.anac.gob.ar/aip" target="_blank" rel="noopener noreferrer">AIP oficial ↗</a></div></div>
    <div class="dispatch-map-main"><div id="basemap-selector" class="basemap-selector" aria-label="Elegir tipo de mapa"></div>
 <details id="route-planner-panel" class="route-planner-panel">
  <summary>Planificador de ruta VFR <small>1. Dibujá con clics · 2. Cargá PRONAREA, altitud e IAS · 3. Consultá el puntero</small></summary>
  <div class="route-planner-inner">
   <div class="route-planner-commands">
+   <button type="button" id="route-view-map-panel" class="route-go-map route-go-map-primary" aria-controls="map" disabled>Ver recorrido en el mapa →</button>
    <button type="button" id="route-start" data-action="draw">Iniciar trazado</button>
    <button type="button" id="route-continue">Continuar / editar ruta</button>
    <button type="button" id="route-undo" title="Quitar el último punto marcado (Ctrl + Z)">↶ Deshacer último punto</button>
    <button type="button" id="route-finish">Finalizar ruta</button>
    <button type="button" id="route-clear" data-action="clear">Borrar ruta</button>
   </div>
-  <p id="route-planner-status" class="route-planner-state" role="status">Arrastrá el mapa con el izquierdo normalmente. Solo un clic breve marca un punto. Para finalizar, clic derecho sobre el último punto y confirmá con el izquierdo. Deshacer: botón o Ctrl + Z.</p>
+  <p id="route-planner-status" class="route-planner-state" role="status">Arrastrá el mapa con el izquierdo normalmente. Un clic breve marca un punto. Para finalizar: clic derecho sobre el último punto y confirmación con el izquierdo. Luego pulsá «Ver recorrido en el mapa». Deshacer: botón o Ctrl + Z.</p>
   <div class="route-planner-fields">
    <label class="route-pronarea-input">PRONAREA oficial · compartido con la capa meteorológica
     <textarea id="route-pronarea" maxlength="12000" rows="3" placeholder="WIND/T: DIA-CDU-PAR-SVO-ROS ... FL030/32025P19 FL065/29025P09 ..."></textarea></label>
@@ -695,6 +696,7 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
   <div class="route-cruise-alert" id="route-cruise-alert" role="status" aria-live="polite" hidden></div>
   <div class="route-planner-results" id="route-planner-results" aria-live="polite"></div>
   <p class="route-planner-warnings" id="route-planner-warnings" role="status"></p>
+  <p class="route-planner-return-note">Cuando termines de cargar los datos, usá el botón verde para volver al mapa y explorar cada pierna con el puntero.</p>
  </div>
 </details>
 <div id="map" aria-label="Mapa satelital de pistas"></div>
@@ -835,7 +837,7 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
 </div><p class="map-actions" id="airfields-map-actions"><button id="explore" type="button">Explorar pistas en esta zona</button> <small id="osm-status">Acercá el mapa a una zona y presioná el botón. Fuente: OpenStreetMap / Overpass.</small></p></div>
   </section>
  </div>
-</main><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="../assets/supabase-2.117.2.min.js"></script><script src="../assets/community-config.js"></script><script src="../assets/r2-media.js"></script><script src="gestion-aeronautica/src/catalogo-pistas-anac.js"></script><script src="gestion-aeronautica/src/clasificacion-pistas.js"></script><script src="../assets/aerolocator-wmm2025.js?v=20261104wmm1"></script><script src="../assets/aerolocator-route-planner.js?v=20261104route3-weather"></script><script>
+</main><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="../assets/supabase-2.117.2.min.js"></script><script src="../assets/community-config.js"></script><script src="../assets/r2-media.js"></script><script src="gestion-aeronautica/src/catalogo-pistas-anac.js"></script><script src="gestion-aeronautica/src/clasificacion-pistas.js"></script><script src="../assets/aerolocator-wmm2025.js?v=20261104wmm1"></script><script src="../assets/aerolocator-route-planner.js?v=20261104route4-mapreturn"></script><script>
 (async()=>{
 const client=supabase.createClient(GDV_CONFIG.url,GDV_CONFIG.key);
 let routePlanner=null;
@@ -2965,7 +2967,26 @@ viewSelect.addEventListener('change',()=>{
 });
 
 // Capa de navegación independiente: nunca se elimina al alternar Satélite / Calles.
-routePlanner=window.GDV_ROUTE_PLANNER_BOOT?.({map,disableRuler:()=>{if(rulerEnabled)setRulerActive(false)}})||null;
+routePlanner=window.GDV_ROUTE_PLANNER_BOOT?.({
+ map,
+ disableRuler:()=>{if(rulerEnabled)setRulerActive(false)},
+ showRouteOnMap:(routePoints)=>{
+  if(!Array.isArray(routePoints)||routePoints.length<2)return;
+  // Ocultar el panel meteorológico lateral para recuperar toda la cartografía.
+  if(viewSelect.value!=='airfields'){
+   viewSelect.value='airfields';
+   viewSelect.dispatchEvent(new Event('change',{bubbles:true}));
+  }else if(!pronareaEditor.hidden){
+   contextualInspector(false);
+  }
+  requestAnimationFrame(()=>{
+   map.invalidateSize({animate:false});
+   const bounds=L.latLngBounds(routePoints.map(p=>[p.lat,p.lng]));
+   if(bounds.isValid())map.fitBounds(bounds,{padding:[48,58],maxZoom:11,animate:false});
+   map.getContainer().scrollIntoView?.({behavior:'smooth',block:'nearest'});
+  });
+ }
+})||null;
 
 await loadMarkerOverrides();
 render(); // Las referencias documentales se muestran aun si falla la conexión a la comunidad.
