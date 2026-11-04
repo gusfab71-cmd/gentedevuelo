@@ -665,7 +665,7 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
  <h2 id="pista-official-title">Registros con respaldo documental ANAC · Muestra ampliada</h2>
  <p>Referencias de distintas fechas (2021-2026). Clasificación y servicios ATS históricos pueden haber cambiado: consultar AIP, MADHEL y NOTAM actuales.</p>
  <div id="pista-documented-list"></div>
-</section><details id="alternatives" class="notice"><summary style="cursor:pointer;font-weight:bold;padding:8px">Buscar alternativas cercanas · distancia en NM</summary><h2>Buscar posibles alternativas cercanas</h2><p>Ingresá un punto de referencia o seleccioná un lugar en el mapa. Las distancias son en línea recta y solo orientativas.</p><label>Latitud de referencia <input id="ref-lat" type="number" step="any" min="-90" max="90" placeholder="-34.8"></label> <label>Longitud de referencia <input id="ref-lon" type="number" step="any" min="-180" max="180" placeholder="-58.4"></label> <label>Radio de búsqueda <select id="radius"><option value="25">25 NM</option><option value="50" selected>50 NM</option><option value="100">100 NM</option><option value="200">200 NM</option></select></label> <button type="button" id="pick-ref">Elegir punto en mapa</button> <button type="button" id="find-near">Buscar cercanas</button> <button type="button" id="reset-near">Quitar filtro</button><p id="near-status"></p></details><h2>Pistas identificadas por la comunidad</h2><div id="list"></div><details id="contribute"><summary style="cursor:pointer;padding:14px;background:#28648c;border-radius:10px;font-weight:bold">+ Agregar una pista conocida</summary><h2>Proponer una pista</h2><p>Solo integrantes registrados. Cada propuesta requiere aprobación de administración.</p><form id="form"><label>Nombre de la pista<input name="name" required maxlength="120" minlength="3"></label><label>Provincia<input name="province" required maxlength="80"></label><label>Latitud decimal<input name="latitude" type="number" step="any" min="-56" max="-21" required></label><label>Longitud decimal<input name="longitude" type="number" step="any" min="-74" max="-53" required></label><label>Orientación de pista<input name="runway" maxlength="50"></label><label>Dimensiones<input name="dimensions" maxlength="80"></label><label>Elevación<input name="elevation" maxlength="50"></label><label>Superficie<select name="surface"><option>Desconocida</option><option>Césped</option><option>Tierra</option><option>Asfalto</option><option>Ripio</option><option>Otra</option></select></label><label>Acceso<select name="permission"><option>Requiere autorización previa</option><option>Consultar al responsable</option><option>Acceso no confirmado</option></select></label><label>Frecuencia (si corresponde)<input name="frequency" maxlength="60"></label><label>Contacto autorizado para publicar<input name="contact" maxlength="150"></label><label class="wide">Obstáculos<textarea name="obstacles" maxlength="1500"></textarea></label><label class="wide">Observaciones<textarea name="notes" maxlength="2500"></textarea></label><div class="airstrip-photos wide">
+</section><details id="alternatives" class="notice"><summary style="cursor:pointer;font-weight:bold;padding:8px">Buscar alternativas cercanas · distancia en NM</summary><h2>Buscar posibles alternativas cercanas</h2><p>Ingresá un punto de referencia o seleccioná un lugar en el mapa. Las distancias son en línea recta y solo orientativas.</p><label>Latitud de referencia <input id="ref-lat" type="number" step="any" min="-90" max="90" placeholder="-34.8"></label> <label>Longitud de referencia <input id="ref-lon" type="number" step="any" min="-180" max="180" placeholder="-58.4"></label> <label>Radio de búsqueda <select id="radius"><option value="25">25 NM</option><option value="50" selected>50 NM</option><option value="100">100 NM</option><option value="200">200 NM</option></select></label> <button type="button" id="pick-ref">Elegir punto en mapa</button> <button type="button" id="find-near">Buscar cercanas</button> <button type="button" id="reset-near">Quitar filtro</button><p id="near-status"></p></details><h2>Aportes de la comunidad pendientes de cotejo</h2><p class="pista-filter-note">Estos aportes no aparecen en el mapa principal hasta completar su revisión cartográfica GdV.</p><div id="list"></div><details id="contribute"><summary style="cursor:pointer;padding:14px;background:#28648c;border-radius:10px;font-weight:bold">+ Agregar una pista conocida</summary><h2>Proponer una pista</h2><p>Solo integrantes registrados. Cada propuesta requiere aprobación de administración.</p><form id="form"><label>Nombre de la pista<input name="name" required maxlength="120" minlength="3"></label><label>Provincia<input name="province" required maxlength="80"></label><label>Latitud decimal<input name="latitude" type="number" step="any" min="-56" max="-21" required></label><label>Longitud decimal<input name="longitude" type="number" step="any" min="-74" max="-53" required></label><label>Orientación de pista<input name="runway" maxlength="50"></label><label>Dimensiones<input name="dimensions" maxlength="80"></label><label>Elevación<input name="elevation" maxlength="50"></label><label>Superficie<select name="surface"><option>Desconocida</option><option>Césped</option><option>Tierra</option><option>Asfalto</option><option>Ripio</option><option>Otra</option></select></label><label>Acceso<select name="permission"><option>Requiere autorización previa</option><option>Consultar al responsable</option><option>Acceso no confirmado</option></select></label><label>Frecuencia (si corresponde)<input name="frequency" maxlength="60"></label><label>Contacto autorizado para publicar<input name="contact" maxlength="150"></label><label class="wide">Obstáculos<textarea name="obstacles" maxlength="1500"></textarea></label><label class="wide">Observaciones<textarea name="notes" maxlength="2500"></textarea></label><div class="airstrip-photos wide">
  <label for="airstrip-photo-files">Fotografías de la pista (hasta 3)</label>
  <div id="airstrip-photo-drop" class="airstrip-photo-drop" role="button" tabindex="0"
   aria-label="Arrastrar fotos o seleccionar imágenes JPG, PNG y WebP">
@@ -816,7 +816,7 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
   <label for="oa-status">Estado de revisión
    <select id="oa-status">
     <option value="all">Todos, incluidos cerrados</option>
-    <option value="pending">Pendientes</option>
+    <option value="pending" selected>Pendientes</option>
     <option value="reviewed">Revisados por GdV</option>
     <option value="duplicate">Marcados como duplicados</option>
     <option value="excluded">Descartados</option>
@@ -884,8 +884,8 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
   <span class="legend-item"><span class="legend-dot lad" aria-hidden="true"></span>LAD</span>
   <span class="legend-item"><span class="legend-dot heliport" aria-hidden="true"></span>Helipuerto</span>
   <span class="legend-item"><span class="legend-dot unverified" aria-hidden="true"></span>⚠ Sin verificar</span>
-  <span class="legend-item"><span class="legend-dot oa-main-dot" aria-hidden="true"></span>OurAirports · sin revisar</span>
-  <span class="legend-item"><span class="legend-dot oa-checked-dot" aria-hidden="true"></span>OurAirports · revisado GdV</span>
+
+  <span class="legend-item"><span class="legend-dot oa-checked-dot" aria-hidden="true"></span>OurAirports · revisado y clasificado GdV</span>
   <span class="legend-item"><span class="legend-dot reference" aria-hidden="true"></span>OSM sin verificar</span>
   <span class="legend-item"><span class="legend-dot draft" aria-hidden="true"></span>Propuesta pendiente</span>
 </div><p class="map-actions" id="airfields-map-actions"><button id="explore" type="button">Explorar pistas en esta zona</button> <small id="osm-status">Acercá el mapa a una zona y presioná el botón. Fuente: OpenStreetMap / Overpass.</small></p></div>
@@ -988,7 +988,8 @@ for(const id of ['filter-ats','filter-access','filter-rules']){
  document.getElementById(id).addEventListener('change',()=>{render();renderExternal()});
 }
 function syncLayerVisibility(){
- const showOurAirports=mapViewMode==='ourairports'||(mapViewMode==='airfields'&&layerSelected('unverified'));
+ // El mapa depurado incluye únicamente ANAC documental y puntos GdV revisados y clasificados.
+ const showOurAirports=mapViewMode==='ourairports'||mapViewMode==='airfields';
  if(showOurAirports&&oaLayer.getLayers().length&&!map.hasLayer(oaLayer))oaLayer.addTo(map);
  else if(!showOurAirports&&map.hasLayer(oaLayer))map.removeLayer(oaLayer);
  for(const kind of ['official','lad']){
@@ -997,7 +998,8 @@ function syncLayerVisibility(){
   else if(!show&&map.hasLayer(group))map.removeLayer(group);
  }
  for(const [kind,group] of [['community',markers],['reference',external]]){
-  const show=mapViewMode==='airfields'&&layerSelected(kind);
+  // Sin marcadores cartográficos OSM ni aportes comunitarios aún sin revisión.
+  const show=false;
   if(show&&!map.hasLayer(group))group.addTo(map);
   else if(!show&&map.hasLayer(group))map.removeLayer(group);
  }
@@ -2800,7 +2802,8 @@ function oaShowRecord(record){
  if(admin)oaDetail.append(oaReviewQuickActions(record));
  oaInfoLine(oaDetail,'Tipo publicado por OurAirports',oaTypeNames[record.type]||record.type);
  if(record.closed)oaInfoLine(oaDetail,'Advertencia','Figura como CERRADO en OurAirports; no usar como destino sin confirmar oficialmente.');
- if(oaLikelyDuplicate(record))oaInfoLine(oaDetail,'Cruce automático','Posible coincidencia con un registro ANAC o comunitario existente (NO se eliminó).');
+ if(oaMatchesANAC(record))oaInfoLine(oaDetail,'Cruce ANAC','Este registro coincide con una referencia documental ANAC del mapa principal. No se agrega un segundo marcador ni implica vigencia operacional.');
+ else if(oaLikelyDuplicate(record))oaInfoLine(oaDetail,'Cruce automático','Posible coincidencia con un registro ANAC o comunitario existente (NO se eliminó).');
  oaInfoLine(oaDetail,'Identificador OurAirports',record.ident+' · id '+record.id);
  oaInfoLine(oaDetail,'Códigos', [record.icao&&'OACI '+record.icao,record.iata&&'IATA '+record.iata,
  record.gps&&'GPS '+record.gps,record.local&&'Local '+record.local].filter(Boolean).join(' / ')||'Sin código acreditado');
@@ -3066,9 +3069,12 @@ function renderOACatalog(){
  const merged=mapViewMode==='airfields';
  let anacMatches=0,reviewExcluded=0;
  const filtered=(merged?oaRecords.filter(record=>{
+  // Los ya registrados en ANAC tienen marcador documental propio.
   if(oaMatchesANAC(record)){anacMatches++;return false}
   if(['excluded','duplicate'].includes(oaState(record))){reviewExcluded++;return false}
-  return true;
+  // No publicar puntos negros pendientes, cerrados o sin categoría GdV.
+  if(oaState(record)!=='reviewed'||record.closed||!oaCategoryFor(record))return false;
+  return layerSelected(oaCategoryFor(record));
  }):oaRecords.filter(oaMatches));
  let countClosed=0,countDuplicate=0,countReviewed=0;
  for(const record of filtered){
@@ -3101,7 +3107,7 @@ function renderOACatalog(){
    oaOpenSelectedPoint(record);
   });
  }
- const visible=mapViewMode==='ourairports'||(merged&&layerSelected('unverified'));
+ const visible=mapViewMode==='ourairports'||merged;
  if(visible&&!map.hasLayer(oaLayer))oaLayer.addTo(map);
  else if(!visible&&map.hasLayer(oaLayer))map.removeLayer(oaLayer);
  const total=oaRecords.length;
@@ -3110,7 +3116,7 @@ function renderOACatalog(){
   ' cerrados · '+countDuplicate+' posibles coincidencias · '+countReviewed+' revisados. '+(oaInfo?.checkedUtc?'Consulta '+dated(oaInfo.checkedUtc):'');
  if(merged){
   viewStatus.textContent='Mapa combinado: '+documentedAirstrips.length+' registros ANAC/LAD con sus colores + '+
-   filtered.length+' puntos OurAirports (negros pendientes, revisados con colores de la leyenda GdV). '+
+   filtered.length+' puntos OurAirports revisados y clasificados GdV (ningún pendiente). '+
    anacMatches+' coincidencias ANAC sin segundo marcador y '+reviewExcluded+
    ' registros descartados o duplicados por revisión. Total en catálogo OurAirports: '+total+
    '. Sin validación operativa; verificar AIP/MADHEL.';
@@ -3128,7 +3134,7 @@ async function showOurAirports(force=false){
   return;
  }
  oaStats.textContent='Descargando registros de OurAirports…';
- if(mapViewMode==='airfields')viewStatus.textContent='Cargando la capa negra OurAirports junto a los registros ANAC…';
+ if(mapViewMode==='airfields')viewStatus.textContent='Cargando puntos revisados GdV; los pendientes permanecen en OurAirports…';
  else inspectorMessage('Recuperando el catálogo argentino y sus datos de pista/frecuencias…');
  const button=document.getElementById('oa-reload');button.disabled=true;
  oaLoading=(async()=>{
@@ -3230,7 +3236,7 @@ viewSelect.addEventListener('change',()=>{
  if(map.hasLayer(oaLayer))map.removeLayer(oaLayer);
  syncLayerVisibility();auxiliary(next==='airfields');map.closePopup();
  if(next==='airfields'){
-  viewStatus.textContent='Pistas y aeródromos ANAC + OurAirports en negro (datos pendientes de revisión). FIR y meteorología ocultas.';
+  viewStatus.textContent='Mapa depurado: referencias documentales ANAC y puntos clasificados y revisados por GdV; los pendientes se consultan en OurAirports.';
   render();renderExternal();
   if(oaRecords.length)renderOACatalog();
   else void showOurAirports();
