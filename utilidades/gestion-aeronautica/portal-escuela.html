@@ -124,8 +124,8 @@ input[type=email]{width:100%;background:#122737;border:1px solid #7394aa;border-
 <a class="tile" data-visible-role="piloto" id="pilotProfileLink" href="mi-ficha-alumno.html" hidden><h3>Ficha del piloto</h3><p>Datos personales, licencia PPA o comercial y documentación compartida.</p><span class="pill ready">Mi ficha</span></a>
 <a class="tile operational-link" data-visible-role="piloto" data-module="turnera" href="#" hidden><h3>Turnera y reservas</h3><p>Reservas de vuelo sujetas a verificación institucional.</p><span class="pill ready">Operativa</span></a>
 <a class="tile operational-link" data-visible-role="piloto" data-module="finanzas" href="#" hidden><h3>Mi actividad de vuelo y RAV</h3><p>Historial de vuelos, horas registradas y preparación de antecedentes para RAV institucional.</p><span class="pill ready">Consulta</span></a>
-<a class="tile" data-visible-role="piloto" href="../pistas-no-oficiales.html" target="_blank" rel="noopener noreferrer" hidden><h3>AeroLocator</h3><p>Mapa de aeródromos, pistas y helipuntos.</p><span class="pill ready">Abrir</span></a>
-<a class="tile" data-visible-role="piloto" href="../meteorologia-aeronautica.html" target="_blank" rel="noopener noreferrer" hidden><h3>Flight Operations</h3><p>Planificación VFR, meteorología, navegación y combustible.</p><span class="pill ready">Abrir</span></a>
+<a class="tile" id="aerosuiteAerolocatorLink" data-visible-role="piloto instructor" href="../pistas-no-oficiales.html" target="_blank" rel="noopener noreferrer" hidden><h3>AeroLocator</h3><p>Mapa de pistas y aeródromos, FIR educativas, SIGMET y consulta PRONAREA.</p><span class="pill ready">Abrir mapa</span></a>
+<a class="tile" id="aerosuiteFlightOperationsLink" data-visible-role="piloto instructor" href="../meteorologia-aeronautica.html" target="_blank" rel="noopener noreferrer" hidden><h3>Flight Operations</h3><p>Planificación VFR, meteorología, navegación y combustible para vuelos e instrucción.</p><span class="pill ready">Abrir planificación</span></a>
   </div>
   <section class="panel" id="directorInvitePanel" hidden>
    <span class="label">Gestión administrativa de la institución</span>
@@ -240,6 +240,16 @@ try{
  for(const card of document.querySelectorAll('[data-visible-role]')){
   card.hidden=!card.dataset.visibleRole.split(/\s+/).includes(school.my_role);
  }
+ // Herramienta compartida para Instructor y Piloto, usando la sesión institucional
+ // verificada de AeroSuite. No se concede acceso por el parámetro de rol.
+ if(['instructor','piloto'].includes(school.my_role)){
+  const flightUrl=new URL('../meteorologia-aeronautica.html',location.href);
+  flightUrl.searchParams.set('aerosuite',school.my_role==='instructor'?'instruccion':'piloto');
+  flightUrl.searchParams.set('institucion',school.institution_id);
+  flightUrl.searchParams.set('rol',school.my_role);
+  if(labLogin)flightUrl.searchParams.set('prueba','1');
+  el('aerosuiteFlightOperationsLink').href=flightUrl.href;
+ }
  for(const link of document.querySelectorAll('.operational-link[data-module]')){
    link.href=(link.dataset.module==='flota'?'flota-institucional.html':'operaciones-institucionales.html')+'?institucion='+encodeURIComponent(school.institution_id)+'&rol='+encodeURIComponent(school.my_role)+(labLogin?'&prueba=1':'')+(link.dataset.module==='flota'?'':'#'+encodeURIComponent(link.dataset.module));
   }
@@ -266,7 +276,7 @@ try{
    const tileArea=el('schoolArea').querySelector('.tiles');if(tileArea)tileArea.before(v);
   }
  portalFooter.textContent=school.my_role==='instructor'
-  ?'La turnera, los informes y los recursos docentes están operativos. La flota ofrece consulta; Contaduría corresponde a Dirección y Secretaría.'
+  ?'La turnera, los informes, AeroLocator y Flight Operations están disponibles para instrucción. La flota ofrece consulta; Contaduría corresponde a Dirección y Secretaría.'
   :school.my_role==='alumno'
    ?'Podés consultar turnera, prácticas, horas de vuelo y los recursos de la Academia de tu escuela.'
    :(school.my_role==='piloto'?'Tu portal integra ficha personal, turnera, horas de vuelo, AeroLocator y Flight Operations. La escuela verifica la licencia antes de habilitar reservas sin instructor.':'La turnera, los informes y Contaduría están operativos. La Academia está reservada a Dirección, Instructores y Alumnos.');
