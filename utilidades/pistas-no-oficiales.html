@@ -430,6 +430,35 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
  .map-shortcut-tip{top:161px;left:57px;max-width:calc(100% - 65px)}
 }
 
+
+/* Catálogo masivo de pistas para revisión colaborativa, separado de ANAC/AIP. */
+.oa-controls{display:grid;gap:9px;padding:5px 0 10px}
+.oa-controls[hidden]{display:none!important}
+.oa-controls label{display:grid;gap:4px;font-size:11px;color:#d5e6f1;font-weight:700}
+.oa-controls input,.oa-controls select,.oa-selected-detail select,.oa-selected-detail textarea,.oa-selected-detail input{
+ width:100%;min-height:34px;border:1px solid #9bbdd1;background:#f5faff;color:#193249;border-radius:7px;padding:6px 8px;font:12px system-ui}
+.oa-filter-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.oa-filter-grid label:nth-child(3){grid-column:1/-1}
+.oa-commands{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+.oa-commands button,.oa-selected-detail button{padding:7px 11px;border:1px solid #9cc7de;background:#2a6384;color:#fff;border-radius:7px;font-size:11px;font-weight:800}
+.oa-commands span{font-size:11px;line-height:1.4;color:#d4e7f3}
+.oa-disclaimer{font-size:10px!important;color:#f0d7a4!important;margin:0!important;line-height:1.4}
+.oa-selected-detail{display:grid;gap:7px;padding:11px;border:1px solid #86aec7;border-radius:11px;background:#0d2437}
+.oa-selected-detail[hidden]{display:none!important}
+.oa-selected-detail h4{font-size:14px;margin:0;color:#fff}
+.oa-selected-detail p{font-size:11px;color:#dceef8;margin:0;line-height:1.5}
+.oa-selected-detail strong{color:#f4f9fd}
+.oa-selected-detail a{color:#a9dffd;text-decoration:underline}
+.oa-selected-detail .oa-review-note{font-size:10px;color:#e5ce9b}
+.oa-selected-detail .oa-review-form{display:grid;gap:9px;border-top:1px solid #4a708a;padding-top:8px}
+.oa-selected-detail .oa-review-form label{color:#daebf6;font-size:11px}
+.oa-selected-detail textarea{resize:vertical;min-height:55px}
+.oa-selected-detail .oa-review-actions{display:flex;flex-wrap:wrap;gap:6px}
+.oa-choice-count{font-size:10px;color:#d4e3ed}
+.oa-choice-sub{font-size:10px;color:#c3d8e8}
+.oa-choice-badge{font-size:10px;border:1px solid #789bb4;color:#f4f9fd;border-radius:5px;padding:2px 5px}
+@media(max-width:550px){.oa-filter-grid{grid-template-columns:1fr}.oa-filter-grid label:nth-child(3){grid-column:auto}}
+
 </style></head><body><header class="dispatch-nav"><div class="dispatch-nav-logo"><span class="dispatch-nav-symbol" aria-hidden="true">✈</span>
  <div><strong>GENTE DE VUELO</strong><small>AEROLOCATOR · MAPA AERONÁUTICO</small></div></div>
  <nav aria-label="Herramientas Gente de Vuelo"><a href="../index.html">Portada</a><a href="../comunidad.html#foro">Foro</a><a href="index.html">Utilidades</a>
@@ -542,6 +571,7 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
  <label class="map-view-picker">Mostrar una capa a la vez
  <select id="map-view-mode" aria-controls="map" aria-describedby="map-view-status">
  <option value="airfields">Aeródromos y pistas</option>
+ <option value="ourairports">OurAirports · por revisar</option>
  <option value="fir">FIR · uso educativo</option>
  <option value="sigmet">SIGMET · fenómenos</option>
  <option value="pronarea">PRONAREA · carga manual</option>
@@ -587,7 +617,45 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
    <button id="sigmet-refresh" type="button" title="Vuelve a consultar NOAA. La respuesta puede conservarse hasta 5 minutos en caché.">Reconsultar NOAA</button>
    <span id="sigmet-summary" class="sigmet-summary" role="status">Cargando sectores…</span>
   </div>
-  <div id="airspace-inspector-items" class="airspace-items" aria-live="polite"></div>
+  <section id="oa-controls" class="oa-controls" hidden aria-label="Filtros de registros OurAirports">
+ <label for="oa-search">Buscar nombre, código o localidad
+  <input id="oa-search" type="search" placeholder="Ej.: aeroclub, Sauce Viejo, SAAV…" autocomplete="off">
+ </label>
+ <div class="oa-filter-grid">
+  <label for="oa-region">Provincia o región
+   <select id="oa-region"><option value="all">Todas las provincias</option></select>
+  </label>
+  <label for="oa-kind">Tipo de instalación
+   <select id="oa-kind">
+    <option value="all">Todos los tipos</option>
+    <option value="small_airport">Aeródromo pequeño</option>
+    <option value="medium_airport">Aeropuerto mediano</option>
+    <option value="large_airport">Aeropuerto grande</option>
+    <option value="heliport">Helipuerto</option>
+    <option value="closed">Cerrado / histórico</option>
+    <option value="seaplane_base">Hidroaeródromo</option>
+    <option value="balloonport">Aeróstatos</option>
+   </select>
+  </label>
+  <label for="oa-status">Estado de revisión
+   <select id="oa-status">
+    <option value="all">Todos, incluidos cerrados</option>
+    <option value="pending">Pendientes</option>
+    <option value="reviewed">Revisados por GdV</option>
+    <option value="duplicate">Marcados como duplicados</option>
+    <option value="excluded">Descartados</option>
+    <option value="matches">Posibles coincidencias ANAC</option>
+   </select>
+  </label>
+ </div>
+ <div class="oa-commands">
+  <button id="oa-reload" type="button" title="Recargar fuente comunitaria (el servidor puede conservar caché durante seis horas)">Actualizar fuente</button>
+  <span id="oa-stats" role="status">Cargando catálogo…</span>
+ </div>
+ <div id="oa-selected-detail" class="oa-selected-detail" aria-live="polite" hidden></div>
+ <p class="oa-disclaimer">Fuente comunitaria OurAirports, dominio público. No confirma que una instalación exista, esté abierta, habilitada o tenga servicios. Verificar AIP, MADHEL, NOTAM y propietario.</p>
+</section>
+<div id="airspace-inspector-items" class="airspace-items" aria-live="polite"></div>
   <p class="map-context-note" id="airspace-inspector-footnote">Los datos son orientativos: comprobá siempre las publicaciones oficiales.</p>
  </section>
  <section id="pronarea-visual" class="pronarea-visual map-context-panel" aria-label="Cargar PRONAREA manualmente" hidden>
@@ -625,6 +693,13 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
  <small>Polígonos SIGMET de NOAA (no son límites de FIR). Las etiquetas indican los niveles informados; verificar aviso original y SMN.</small>
  </div>
 
+ <div id="ourairports-map-legend" class="airspace-legend" hidden>
+  <span><i style="border-radius:50%;border:2px solid #f4fbff;background:#1a1c23"></i>Pendiente</span>
+  <span><i style="border-radius:50%;border:2px solid #f4fbff;background:#23846e"></i>Revisado por GdV</span>
+  <span><i style="border-radius:50%;border:2px solid #f4fbff;background:#c79b3d"></i>Posible coincidencia</span>
+  <span><i style="border-radius:50%;border:2px solid #f4fbff;background:#ac5656"></i>Cerrado / excluido</span>
+  <small>OurAirports · datos para investigación; colores no certifican habilitación ni uso operativo. Clic en un círculo para ver su ficha.</small>
+ </div>
  <div id="airfields-map-legend" class="pin-legend" aria-label="Leyenda de marcadores">
   <span class="legend-item"><span class="legend-dot controlled" aria-hidden="true"></span>TWR público</span>
   <span class="legend-item"><span class="legend-dot uncontrolled" aria-hidden="true"></span>Público sin TWR</span>
