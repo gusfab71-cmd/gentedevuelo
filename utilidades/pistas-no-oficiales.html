@@ -253,6 +253,20 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
 .airstrip-gallery strong{font-size:11px;color:#32546d}
 .airstrip-gallery img{display:block;max-width:100%;height:auto;aspect-ratio:16/9;object-fit:cover;border-radius:8px;border:1px solid #b6ccdb}
 .dispatch-sidebar .airstrip-gallery img{width:100%}
+
+/* Vista cartográfica excluyente: las capas no se mezclan por defecto. */
+.map-view-picker{display:flex;flex-direction:column;gap:3px;max-width:260px;font-size:11px;color:#d9ebfa}
+.map-view-picker select{background:#15354a;color:white;padding:8px 10px;font-size:12px;min-height:39px}
+.map-view-context{color:#cce0ee;font-size:11px;margin:5px 0}
+.airspace-legend{display:flex;flex-wrap:wrap;gap:7px 13px;align-items:center}
+.airspace-legend span{display:inline-flex;align-items:center;gap:6px;font-size:11px}
+.airspace-legend i{width:17px;height:13px;display:inline-block;border:2px dashed;border-radius:4px}
+.airspace-legend small{font-size:10px;color:#c0d2de}
+.pronarea-visual{display:grid;gap:7px;margin-top:6px}
+.pronarea-visual textarea{min-height:90px;max-height:160px;font:12px/1.5 ui-monospace,monospace}
+.pronarea-visual button{width:max-content;font-size:12px}
+.pronarea-visual p{font-size:11px;color:#efdab4;white-space:pre-line}
+@media(max-width:680px){.map-view-picker{max-width:none;width:100%}}
 </style></head><body><header class="dispatch-nav"><div class="dispatch-nav-logo"><span class="dispatch-nav-symbol" aria-hidden="true">✈</span>
  <div><strong>GENTE DE VUELO</strong><small>AEROLOCATOR · MAPA AERONÁUTICO</small></div></div>
  <nav aria-label="Herramientas Gente de Vuelo"><a href="../index.html">Portada</a><a href="../comunidad.html#foro">Foro</a><a href="index.html">Utilidades</a>
@@ -358,12 +372,43 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
   </aside>
   <section class="dispatch-map-panel" id="dispatch-map-panel" aria-label="Mapa geográfico interactivo">
    <div class="dispatch-map-toolbar"><div><span class="dispatch-kicker">ÁREA DE NAVEGACIÓN</span>
-    <strong>AeroLocator · Mapa interactivo</strong></div><div class="dispatch-map-toolbar-links">
+    <strong>AeroLocator · Mapa interactivo</strong></div>
+ <label class="map-view-picker">Mostrar una capa a la vez
+ <select id="map-view-mode" aria-controls="map" aria-describedby="map-view-status">
+ <option value="airfields">Aeródromos y pistas</option>
+ <option value="fir">FIR · uso educativo</option>
+ <option value="sigmet">SIGMET · fenómenos</option>
+ <option value="pronarea">PRONAREA · carga manual</option>
+ </select></label><div class="dispatch-map-toolbar-links">
     <button id="map-fullscreen" type="button">Ampliar mapa</button><a href="https://ais.anac.gob.ar/aip" target="_blank" rel="noopener noreferrer">AIP oficial ↗</a></div></div>
    <div class="dispatch-map-main"><div id="basemap-selector" class="basemap-selector" aria-label="Elegir tipo de mapa"></div>
 <div id="map" aria-label="Mapa satelital de pistas"></div>
 </div>
-   <div class="dispatch-map-bottom"><div class="pin-legend" aria-label="Leyenda de marcadores">
+   <div class="dispatch-map-bottom">
+ <p id="map-view-status" role="status" aria-live="polite" class="map-view-context">Pistas y aeródromos visibles. Elegí otra capa para ocultarlas.</p>
+ <div id="fir-map-legend" class="airspace-legend" hidden>
+ <span><i style="border-color:#dba8b8;background:#dba8b812"></i>Ezeiza</span>
+ <span><i style="border-color:#a7c3e2;background:#a7c3e212"></i>Córdoba</span>
+ <span><i style="border-color:#bca9e7;background:#bca9e712"></i>Mendoza</span>
+ <span><i style="border-color:#b7d5aa;background:#b7d5aa12"></i>Resistencia</span>
+ <span><i style="border-color:#e8cb91;background:#e8cb9112"></i>Comodoro Rivadavia</span>
+ <small>Colores suaves y líneas punteadas. Geometría educativa: verificar AIP ENR 2.1 vigente.</small>
+ </div>
+ <div id="sigmet-map-legend" class="airspace-legend" hidden>
+ <span><i style="border-color:#ffbb82"></i>Turbulencia</span>
+ <span><i style="border-color:#80cdef"></i>Engelamiento</span>
+ <span><i style="border-color:#eb8cc6"></i>Tormentas</span>
+ <span><i style="border-color:#d9cbaf"></i>Otros</span>
+ <small>Solo avisos con geometría de NOAA. Verificar vigencia y fuentes oficiales argentinas.</small>
+ </div>
+ <div id="pronarea-visual" class="pronarea-visual" hidden>
+ <label for="pronarea-map-input">PRONAREA del SMN · pegar texto con FIR, emisión, vigencia y niveles:
+ <textarea id="pronarea-map-input" maxlength="12000" placeholder="Pegá aquí el PRONAREA completo"></textarea></label>
+ <button id="pronarea-map-analyze" type="button">Identificar fenómenos</button>
+ <p id="pronarea-map-result" role="status">Sin límites geográficos explícitos no se dibujarán áreas.</p>
+ <a href="https://www.smn.gob.ar/pronarea" target="_blank" rel="noopener noreferrer">PRONAREA oficial · SMN</a>
+ </div>
+ <div id="airfields-map-legend" class="pin-legend" aria-label="Leyenda de marcadores">
   <span class="legend-item"><span class="legend-dot controlled" aria-hidden="true"></span>TWR público</span>
   <span class="legend-item"><span class="legend-dot uncontrolled" aria-hidden="true"></span>Público sin TWR</span>
   <span class="legend-item"><span class="legend-dot private" aria-hidden="true"></span>Privado</span>
@@ -372,7 +417,7 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
   <span class="legend-item"><span class="legend-dot unverified" aria-hidden="true"></span>⚠ Sin verificar</span>
   <span class="legend-item"><span class="legend-dot reference" aria-hidden="true"></span>OSM sin verificar</span>
   <span class="legend-item"><span class="legend-dot draft" aria-hidden="true"></span>Propuesta pendiente</span>
-</div><p class="map-actions"><button id="explore" type="button">Explorar pistas en esta zona</button> <small id="osm-status">Acercá el mapa a una zona y presioná el botón. Fuente: OpenStreetMap / Overpass.</small></p></div>
+</div><p class="map-actions" id="airfields-map-actions"><button id="explore" type="button">Explorar pistas en esta zona</button> <small id="osm-status">Acercá el mapa a una zona y presioná el botón. Fuente: OpenStreetMap / Overpass.</small></p></div>
   </section>
  </div>
 </main><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="../assets/supabase-2.117.2.min.js"></script><script src="../assets/community-config.js"></script><script src="../assets/r2-media.js"></script><script src="gestion-aeronautica/src/catalogo-pistas-anac.js"></script><script src="gestion-aeronautica/src/clasificacion-pistas.js"></script><script>
@@ -380,6 +425,7 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
 const client=supabase.createClient(GDV_CONFIG.url,GDV_CONFIG.key);
 const map=L.map('map',{touchZoom:true,scrollWheelZoom:true,doubleClickZoom:true,tapHold:true}).setView([-35.0,-58.2],10);const satellite=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Imagery © Esri and contributors'}).addTo(map);const streets=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'});const basemapControl=L.control.layers({'Satélite · ver pistas':satellite,'Calles y caminos':streets},null,{collapsed:false});basemapControl.addTo(map);const basemapSelector=document.getElementById('basemap-selector');basemapSelector.appendChild(basemapControl.getContainer());
 let markers=L.layerGroup().addTo(map),records=[],admin=false;
+ let mapViewMode='airfields';
 const PIN_PALETTE={
  official:{fill:'#286ba8',edge:'#e2f2ff'},
  controlled_public:{fill:'#286ba8',edge:'#e2f2ff'},
@@ -446,13 +492,14 @@ for(const id of ['filter-ats','filter-access','filter-rules']){
 }
 function syncLayerVisibility(){
  for(const kind of ['official','lad']){
-  const group=documentedLayers[kind];
-  if(layerSelected(kind)&&!map.hasLayer(group))group.addTo(map);
-  else if(!layerSelected(kind)&&map.hasLayer(group))map.removeLayer(group);
+  const group=documentedLayers[kind],show=mapViewMode==='airfields'&&layerSelected(kind);
+  if(show&&!map.hasLayer(group))group.addTo(map);
+  else if(!show&&map.hasLayer(group))map.removeLayer(group);
  }
  for(const [kind,group] of [['community',markers],['reference',external]]){
-  if(layerSelected(kind)&&!map.hasLayer(group))group.addTo(map);
-  else if(!layerSelected(kind)&&map.hasLayer(group))map.removeLayer(group);
+  const show=mapViewMode==='airfields'&&layerSelected(kind);
+  if(show&&!map.hasLayer(group))group.addTo(map);
+  else if(!show&&map.hasLayer(group))map.removeLayer(group);
  }
 }
 function setLayerVisible(kind,visible){
@@ -474,7 +521,7 @@ if(!AIRFIELD_TYPES)throw Error('No está disponible el catálogo de clasificaci�
 function airfieldClass(record){return AIRFIELD_TYPES.classification(record)}
 const draftPin=runwayPin('draft');let draftMarker=null;
 function proposeAt(latlng){
- if(pickReference||rulerEnabled)return;
+ if(mapViewMode!=='airfields'||pickReference||rulerEnabled)return;
  const lat=latlng.lat,lon=latlng.lng;
  if(lat < -56||lat > -21||lon < -74||lon > -53){alert('Por ahora solo se pueden proponer pistas dentro de Argentina.');return}
  if(draftMarker)map.removeLayer(draftMarker);
