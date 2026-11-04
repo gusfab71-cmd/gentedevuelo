@@ -406,6 +406,30 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
 .new-runway-actions .new-runway-cancel{background:#e7f0f7;color:#14334a;border:1px solid #9cbacf}
 .new-runway-card .new-runway-message{font-size:11px;color:#9b4129;min-height:10px}
 
+
+/* Accesos rápidos flotantes: se usan con el Centro de control cerrado. */
+.map-tool-shortcuts{position:absolute;top:72px;left:11px;z-index:820;display:flex;flex-direction:column;gap:7px;align-items:center}
+.map-tool-shortcuts[hidden],.map-ruler-overlay[hidden],.map-shortcut-tip[hidden]{display:none!important}
+.map-tool-shortcuts button{width:42px;height:42px;display:flex;align-items:center;justify-content:center;padding:6px;border-radius:10px;
+ background:#f5faff;color:#1a465f;border:1px solid #7296ae;box-shadow:0 2px 7px #122d3e80}
+.map-tool-shortcuts button svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.map-tool-shortcuts button[aria-pressed=true]{background:#f2c87c;color:#172c40;border:2px solid #d98f28;box-shadow:0 0 0 3px #152d3d70}
+.map-tool-shortcuts button:hover,.map-tool-shortcuts button:focus-visible{outline:2px solid #b2dffd;outline-offset:2px}
+.map-ruler-overlay{position:absolute;top:72px;left:61px;z-index:815;width:min(360px,calc(100% - 82px));padding:10px 12px;
+ background:#142d42ef;color:#ecf6fe;border:1px solid #8cbbd8;border-radius:10px;box-shadow:0 3px 14px #0e2036a3}
+.map-ruler-overlay-head{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.map-ruler-overlay-head strong{font-size:12px;flex:1;min-width:120px}
+.map-ruler-overlay-head button{border-radius:7px;padding:5px 9px;min-height:30px;background:#d6eafa;color:#15334a;border:1px solid #89afc9;font-size:11px;font-weight:800}
+#map-ruler-readout{font-size:11px;line-height:1.5;margin:7px 0 0;color:#e1edf7;overflow-wrap:anywhere}
+.map-shortcut-tip{position:absolute;z-index:805;top:172px;left:61px;max-width:min(365px,calc(100% - 82px));
+ background:#f7e6b7;color:#3a301a;padding:8px 11px;border-radius:9px;border:1px solid #b9974d;font-size:11px;box-shadow:0 2px 9px #122a3e80}
+@media(max-width:620px){
+ .map-tool-shortcuts{top:71px;left:8px;gap:6px}
+ .map-tool-shortcuts button{width:40px;height:40px}
+ .map-ruler-overlay{top:71px;left:57px;width:min(305px,calc(100% - 65px));padding:8px}
+ .map-shortcut-tip{top:161px;left:57px;max-width:calc(100% - 65px)}
+}
+
 </style></head><body><header class="dispatch-nav"><div class="dispatch-nav-logo"><span class="dispatch-nav-symbol" aria-hidden="true">✈</span>
  <div><strong>GENTE DE VUELO</strong><small>AEROLOCATOR · MAPA AERONÁUTICO</small></div></div>
  <nav aria-label="Herramientas Gente de Vuelo"><a href="../index.html">Portada</a><a href="../comunidad.html#foro">Foro</a><a href="index.html">Utilidades</a>
@@ -525,6 +549,25 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
     <button id="map-fullscreen" type="button">Ampliar mapa</button><a href="https://ais.anac.gob.ar/aip" target="_blank" rel="noopener noreferrer">AIP oficial ↗</a></div></div>
    <div class="dispatch-map-main"><div id="basemap-selector" class="basemap-selector" aria-label="Elegir tipo de mapa"></div>
 <div id="map" aria-label="Mapa satelital de pistas"></div>
+
+ <nav class="map-tool-shortcuts" id="map-tool-shortcuts" aria-label="Accesos rápidos de AeroLocator">
+  <button id="map-shortcut-ruler" type="button" title="Medir distancia y rumbo" aria-label="Activar regla de distancias" aria-pressed="false">
+   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.3 8.7 15.3 2.7a1 1 0 0 0-1.4 0L2.7 13.9a1 1 0 0 0 0 1.4l6 6a1 1 0 0 0 1.4 0L21.3 10a1 1 0 0 0 0-1.4Z"/><path d="m7.5 10.5 2 2m1-5 2 2m1-5 2 2m-8 8 2 2"/></svg>
+  </button>
+  <button id="map-shortcut-add" type="button" title="Agregar una pista en el mapa" aria-label="Marcar una nueva pista" aria-pressed="false">
+   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.1 7-12a7 7 0 0 0-14 0c0 5.9 7 12 7 12Z"/><path d="M12 6v6m-3-3h6"/></svg>
+  </button>
+ </nav>
+ <section class="map-ruler-overlay" id="map-ruler-overlay" aria-label="Resultado de la regla" hidden>
+  <div class="map-ruler-overlay-head">
+   <strong>Distancia y rumbo</strong>
+   <button id="map-shortcut-unit" type="button" title="Alternar entre millas náuticas y kilómetros">NM</button>
+   <button id="map-shortcut-clear" type="button" title="Borrar los puntos medidos">Borrar</button>
+  </div>
+  <p id="map-ruler-readout" role="status" aria-live="polite">Seleccioná dos puntos en el mapa para medir.</p>
+ </section>
+ <p class="map-shortcut-tip" id="map-shortcut-tip" role="status" hidden>Tocá en el mapa dónde está la nueva pista; luego agregá su nombre y referencia.</p>
+
  <p id="map-view-hint" class="map-view-hint" role="status" hidden></p>
  <section id="airspace-inspector" class="map-context-panel" aria-label="Explorar regiones y avisos meteorológicos" hidden>
   <div class="map-context-panel-header"><div><h3 id="airspace-inspector-title">Información de la capa</h3>
@@ -813,7 +856,7 @@ function setReference(lat,lon){reference=[lat,lon];document.getElementById('ref-
 map.on('click',e=>{
  if(mapViewMode!=='airfields')return;
  if(pickReference){pickReference=false;setReference(e.latlng.lat,e.latlng.lng);document.getElementById('near-status').textContent='Punto seleccionado. Presioná Buscar cercanas.';return}
- if(proposeMode){proposeMode=false;proposeAt(e.latlng);return}
+ if(proposeMode){proposeMode=false;shortcutAdd.setAttribute('aria-pressed','false');shortcutTip.hidden=true;proposeAt(e.latlng);return}
  if(rulerEnabled){rulerPoint(e.latlng);}
 });
 document.getElementById('pick-ref').onclick=()=>{pickReference=true;document.getElementById('near-status').textContent='Tocá un punto del mapa para establecer la referencia.'};
@@ -1009,6 +1052,23 @@ const selectedTitle=document.getElementById('selected-title');
 const rulerToggle=document.getElementById('ruler-toggle');
 const rulerInfo=document.getElementById('ruler-info');
 const rulerUnit=document.getElementById('ruler-unit');
+const shortcutRuler=document.getElementById('map-shortcut-ruler');
+const shortcutAdd=document.getElementById('map-shortcut-add');
+const shortcutUnit=document.getElementById('map-shortcut-unit');
+const shortcutClear=document.getElementById('map-shortcut-clear');
+const shortcutOverlay=document.getElementById('map-ruler-overlay');
+const shortcutReadout=document.getElementById('map-ruler-readout');
+const shortcutTip=document.getElementById('map-shortcut-tip');
+function syncShortcutRuler(){
+ const active=rulerEnabled;
+ shortcutRuler.setAttribute('aria-pressed',String(active));
+ shortcutRuler.setAttribute('aria-label',active?'Desactivar regla de distancias':'Activar regla de distancias');
+ shortcutOverlay.hidden=!active;
+ shortcutReadout.textContent=rulerInfo.textContent;
+ shortcutUnit.textContent=rulerUnit.value==='km'?'km':'NM';
+ shortcutUnit.setAttribute('aria-label',rulerUnit.value==='km'?'Cambiar distancias a NM':'Cambiar distancias a km');
+}
+
 let rulerEnabled=false,rulerPoints=[],rulerLine=null,rulerMarkers=[];
 function updateRulerInfo(){
  const unit=rulerUnit.value;
@@ -1016,6 +1076,7 @@ function updateRulerInfo(){
   rulerInfo.textContent=rulerPoints.length===1?'Origen: '+rulerPoints[0].label+' · Seleccioná destino para medir.':
    rulerEnabled?'Elegí el punto de salida en el mapa o tocá su círculo.':
    'Regla lista: seleccioná dos puntos para medir distancia en NM o km y rumbo verdadero.';
+  syncShortcutRuler();
   return;
  }
  const a=rulerPoints[0],b=rulerPoints[1];
@@ -1023,6 +1084,7 @@ function updateRulerInfo(){
  const distance=unit==='km'?nm*1.852:nm;
  rulerInfo.textContent='Desde '+a.label+' hasta '+b.label+': '+distance.toFixed(2)+' '+(unit==='km'?'km':'NM')+
   ' · RV inicial '+bearing.toFixed(1)+'° verdadero (sin corrección magnética). Distancia de círculo máximo.';
+ syncShortcutRuler();
 }
 rulerUnit.addEventListener('change',updateRulerInfo);
 const desktopMode=()=>window.matchMedia('(min-width:960px)').matches;
@@ -1339,16 +1401,36 @@ function attachSelection(marker,point,label,createCard,meta=null){
  return marker;
 }
 
-rulerToggle.addEventListener('click',()=>{
- rulerEnabled=!rulerEnabled;
+function setRulerActive(active){
+ rulerEnabled=Boolean(active);
+ if(rulerEnabled)proposeMode=false;
  rulerToggle.setAttribute('aria-pressed',String(rulerEnabled));
+ shortcutAdd.setAttribute('aria-pressed','false');
+ shortcutTip.hidden=true;
  document.getElementById('map').style.cursor=rulerEnabled?'crosshair':'';
- clearRuler();
- if(rulerEnabled){
-  document.getElementById('map').scrollIntoView({behavior:'smooth',block:'center'});
- }
+ clearRuler(); // Empezar una nueva medición o limpiar al desactivar.
+ syncShortcutRuler();
+}
+rulerToggle.addEventListener('click',()=>{
+ setRulerActive(!rulerEnabled);
+ if(rulerEnabled)document.getElementById('map').scrollIntoView({behavior:'smooth',block:'center'});
 });
+shortcutRuler.addEventListener('click',()=>setRulerActive(!rulerEnabled));
 document.getElementById('ruler-clear').addEventListener('click',clearRuler);
+shortcutClear.addEventListener('click',clearRuler);
+shortcutUnit.addEventListener('click',()=>{
+ rulerUnit.value=rulerUnit.value==='nm'?'km':'nm';
+ rulerUnit.dispatchEvent(new Event('change',{bubbles:true}));
+});
+shortcutAdd.addEventListener('click',()=>{
+ if(mapViewMode!=='airfields')return;
+ if(rulerEnabled)setRulerActive(false);
+ proposeMode=!proposeMode;pickReference=false;
+ shortcutAdd.setAttribute('aria-pressed',String(proposeMode));
+ shortcutTip.hidden=!proposeMode;
+ if(proposeMode)document.getElementById('zone-status').textContent='Modo de aporte: tocá en el mapa la ubicación exacta de la pista.';
+});
+
 /* Oculta o restaura el menú sin reconstruir el mapa ni perder la vista actual. */
 const controlToggle=document.getElementById('control-toggle');
 const controlLayout=document.getElementById('dispatch-layout');
@@ -1379,10 +1461,10 @@ window.addEventListener('resize',()=>map.invalidateSize({animate:false}));
 map.whenReady(()=>setTimeout(()=>map.invalidateSize({animate:false}),150));
 let proposeMode=false;
 document.getElementById('contribute-fast').addEventListener('click',()=>{
- proposeMode=true;
- rulerEnabled=false;rulerToggle.setAttribute('aria-pressed','false');clearRuler();
+ setRulerActive(false);
+ proposeMode=true;shortcutAdd.setAttribute('aria-pressed','true');shortcutTip.hidden=false;
  document.getElementById('control-catalog-menu').open=true;document.getElementById('contribute').open=true;
- rulerInfo.textContent='Modo aporte: hacé clic en la zona exacta del mapa. Se marcará la ubicación y podrás completar el formulario.';
+ document.getElementById('zone-status').textContent='Modo aporte: tocá en el mapa la ubicación exacta de la pista para abrir su ficha.';
  document.getElementById('map').scrollIntoView({behavior:'smooth',block:'center'});
 });
 
@@ -2038,6 +2120,11 @@ document.getElementById('pronarea-map-analyze').addEventListener('click',()=>{
 viewSelect.addEventListener('change',()=>{
  const next=viewSelect.value;if(!['airfields','fir','sigmet','pronarea'].includes(next))return;
  mapViewMode=next;
+ document.getElementById('map-tool-shortcuts').hidden=next!=='airfields';
+ if(next!=='airfields'){
+  if(rulerEnabled)setRulerActive(false);
+  proposeMode=false;shortcutAdd.setAttribute('aria-pressed','false');shortcutTip.hidden=true;
+ }
  document.getElementById('airfields-map-legend').hidden=next!=='airfields';
  document.getElementById('airfields-map-actions').hidden=next!=='airfields';
  document.getElementById('fir-map-legend').hidden=next!=='fir';
