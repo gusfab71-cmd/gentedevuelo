@@ -2228,7 +2228,7 @@ function locatePronareaRegions(raw){
  const normalized=normalizePronarea(raw);
  if(normalized.trim().length<30)return [];
  const regions=[];
- const antarctic=/\bANTARTIC[AO]S?\b|\bMARAMBIO\b|\bSAWB\b|\bCENTRO METEOROLOGICO ANTARTICO\b/.test(normalized);
+ const antarctic=/\bANTARTID[AO]S?\b|\bANTARTIC[AO]S?\b|\bMARAMBIO\b|\bSAWB\b|\bCENTRO METEOROLOGICO ANTARTICO\b/.test(normalized);
  if(antarctic){
   regions.push({
    id:'marambio',name:'Antártida · Base Marambio (SAWB)',kind:'point',
