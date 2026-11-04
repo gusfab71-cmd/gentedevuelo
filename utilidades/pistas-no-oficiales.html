@@ -25,10 +25,18 @@ h1{letter-spacing:-.035em}
 .pin-legend{display:flex;flex-wrap:wrap;align-items:center;gap:9px 20px;margin:9px 0 12px;padding:10px 15px;background:#223848;border:1px solid #49687d;border-radius:12px}
 .pin-legend .legend-item{display:inline-flex;gap:8px;align-items:center;color:#e1ecf5;font-size:12px}
 .pin-legend .legend-dot{width:13px;height:13px;border-radius:50%;border:2px solid #bdd9ec;background:#28628f}
-.pin-legend .legend-dot.reference{background:#687583;border-color:#dde7f0}
+.pin-legend .legend-dot.reference{background:#171a20;border-color:#f5f8fb}
 .pin-legend .legend-dot.draft{background:#bd7f48;border-color:#ffe0b3}
 .airstrip-marker{border:0!important;background:transparent!important}
 .airstrip-marker svg{filter:drop-shadow(0 3px 3px #030e18a8)}
+.airstrip-dot svg{filter:drop-shadow(0 1px 3px rgba(0,0,0,.7))}
+.airstrip-dot:hover svg{transform:scale(1.22);transform-origin:center;transition:transform .1s ease}
+.pin-legend .legend-dot{width:17px;height:17px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:850;color:#fff}
+.pin-legend .legend-dot.lad::after{content:'L'}
+.pin-legend .legend-dot.heliport::after{content:'H'}
+.pin-legend .legend-dot.unverified::after{content:'!'}
+.pin-legend .legend-dot.draft::after{content:'+'}
+
 .airstrip-popup{font-family:inherit;color:#152b3c;max-height:360px;overflow-y:auto;min-width:min(270px,65vw)}
 .airstrip-popup h3{margin:8px 0 8px;color:#10283c;font-size:16px;line-height:1.25}
 .airstrip-popup .popup-tag{font-size:10px;letter-spacing:.055em;font-weight:850;background:#e8f1fa;color:#285477;padding:6px 9px;border-radius:8px;display:inline-block}
@@ -417,6 +425,7 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
   <span class="legend-item"><span class="legend-dot unverified" aria-hidden="true"></span>⚠ Sin verificar</span>
   <span class="legend-item"><span class="legend-dot reference" aria-hidden="true"></span>OSM sin verificar</span>
   <span class="legend-item"><span class="legend-dot draft" aria-hidden="true"></span>Propuesta pendiente</span>
+ <span class="legend-item" style="flex-basis:100%;font-size:11px;color:#d0e3f1">Los colores distinguen tipos de lugares; NO indican condiciones meteorológicas.</span>
 </div><p class="map-actions" id="airfields-map-actions"><button id="explore" type="button">Explorar pistas en esta zona</button> <small id="osm-status">Acercá el mapa a una zona y presioná el botón. Fuente: OpenStreetMap / Overpass.</small></p></div>
   </section>
  </div>
@@ -435,25 +444,20 @@ const PIN_PALETTE={
  heliport:{fill:'#427f8d',edge:'#d0f0f6'},
  unverified:{fill:'#b7433b',edge:'#ffe1d9'},
  community:{fill:'#b7433b',edge:'#ffe1d9'},
- reference:{fill:'#667282',edge:'#e1ebf4'},
+ reference:{fill:'#171a20',edge:'#f5f8fb'},
  draft:{fill:'#bc7e41',edge:'#ffe0ac'}
 };
+/* Marcadores de lectura rápida: puntos circulares en lugar de pines con gota.
+ * El color expresa la categoría cartográfica, NO condiciones METAR/VFR/IFR. */
 function runwayPin(kind='unverified'){
  const tone=PIN_PALETTE[kind]||PIN_PALETTE.unverified;
- const heli=kind==='heliport';
- const critical=kind==='unverified'||kind==='community';
- const symbol=heli?
-  '<circle cx="21" cy="22" r="14" fill="#10314b" stroke="#d7f4fc" stroke-width="1.5"/><text x="21" y="30" text-anchor="middle" fill="#fff" font-family="Arial,sans-serif" font-weight="900" font-size="24">H</text>':
-  critical?
-  '<path d="M21 10 34 34H8Z" fill="#fff1dc" stroke="#601c18" stroke-width="1.8"/><path d="M21 17v9" stroke="#8b211c" stroke-width="3" stroke-linecap="round"/><circle cx="21" cy="30" r="1.8" fill="#8b211c"/>':
-  '<path d="M14 11.4h14v21.9H14z" fill="#102639"/>'+
-  '<path d="M17 12.8v18.8M25 12.8v18.8" stroke="#d3e9f9" stroke-opacity=".85" stroke-width="1.2"/>'+
-  '<path d="M21 14v16.2" stroke="#ffffff" stroke-width="2.2" stroke-dasharray="4 3" stroke-linecap="round"/>'+
-  '<path d="M14 10.3h14M14 33.6h14" stroke="'+tone.edge+'" stroke-width="2"/>';
- const svg='<svg xmlns="http://www.w3.org/2000/svg" width="42" height="54" viewBox="0 0 42 54" aria-hidden="true">'+
-  '<path d="M21 2C10.2 2 2 10.3 2 21.2c0 13.9 19 30.8 19 30.8s19-16.9 19-30.8C40 10.3 31.8 2 21 2Z" fill="'+tone.fill+'" stroke="'+tone.edge+'" stroke-width="2.6"/>'+
+ const letters={heliport:'H',lad:'L',unverified:'!',community:'!',draft:'+'};
+ const letter=letters[kind]||'';
+ const symbol=letter?'<text x="14" y="18.1" text-anchor="middle" fill="#fff" font-family="Arial,sans-serif" font-weight="850" font-size="13">'+letter+'</text>':'';
+ const svg='<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28" aria-hidden="true">'+
+  '<circle cx="14" cy="14" r="11" fill="'+tone.fill+'" stroke="'+tone.edge+'" stroke-width="2.5"/>'+
   symbol+'</svg>';
- return L.divIcon({className:'airstrip-marker',html:svg,iconSize:[42,54],iconAnchor:[21,51],popupAnchor:[0,-48]});
+ return L.divIcon({className:'airstrip-marker airstrip-dot',html:svg,iconSize:[28,28],iconAnchor:[14,14],popupAnchor:[0,-12]});
 }
 const ANAC_CATALOG=window.AEROSUITE_OFFICIAL_AIRSTRIPS||{official:[],lad:[],sources:{},catalogStatus:'no_disponible'};
 const documentedLayers={official:L.layerGroup().addTo(map),lad:L.layerGroup().addTo(map)};
