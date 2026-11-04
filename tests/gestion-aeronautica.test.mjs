@@ -714,6 +714,18 @@ assert.match(airstripsOriginal,/gdv_category:old\.gdv_category\?\?null/,'Mover c
 assert.match(airstripsOriginal,/review_note,gdv_category,corrected_lat/,'Leer clasificación de Supabase');
 assert.match(airstripsOriginal,/gdv_category:category\.select\.value\|\|null/,'Formulario guarda clasificación');
 
+assert.match(airstripsOriginal,/oaState\(record\)!=='reviewed'\|\|record\.closed\|\|!oaCategoryFor\(record\)/,
+ 'Solo se publican puntos GdV revisados, abiertos y clasificados en el mapa principal');
+assert.match(airstripsOriginal,/return layerSelected\(oaCategoryFor\(record\)\)/,
+ 'Puntos aprobados respetan su filtro de categoría');
+assert.match(airstripsOriginal,/if\(oaMatchesANAC\(record\)\)\{anacMatches\+\+;return false\}/,
+ 'Coincidencias ANAC no crean marcadores duplicados');
+assert.match(airstripsOriginal,/<option value="pending" selected>Pendientes<\/option>/,
+ 'OurAirports debe abrir inicialmente con pendientes');
+assert.match(airstripsOriginal,/const show=false;/,
+ 'Aportes externos no revisados no aparecen en el mapa principal');
+
+
 assert.match(html,/AeroLocator en AeroSuite/,'Nombre en el portal de AeroSuite');
 assert.match(landing,/<h3>AeroLocator<\/h3>/,'Nombre en presentación pública de AeroSuite');
 assert.match(fs.readFileSync(new URL('../utilidades/index.html',import.meta.url),'utf8'),/<h2>AeroLocator<\/h2>/,'Nombre en Utilidades Gente de Vuelo');
