@@ -299,6 +299,7 @@ window.GDV_ROUTE_PLANNER_BOOT=function(options){
       cancelMenu();hideHover();
       const wasMapDraggable=Boolean(map.dragging?.enabled());
       if(wasMapDraggable)map.dragging.disable();
+      map.getContainer().classList.add('route-bending');
       bendGesture={
        index:legIndex,
        start:{lat:event.latlng.lat,lng:event.latlng.lng},
@@ -567,7 +568,12 @@ window.GDV_ROUTE_PLANNER_BOOT=function(options){
   ignoreMapClick=true;
   e.preventDefault?.();
   e.stopPropagation?.();
-  render();updateButtons();
+  // 30 FPS to avoid recreating every Leaflet marker during each mouse event.
+  const now=Date.now();
+  if(!drag.lastPaint||now-drag.lastPaint>=32){
+   drag.lastPaint=now;
+   render();updateButtons();
+  }
  }
  function endBend(e){
   const drag=bendGesture;if(!drag)return;
@@ -582,6 +588,7 @@ window.GDV_ROUTE_PLANNER_BOOT=function(options){
    insertReferencePoint(drag.index,drag.start);
   }
   if(drag.draggable)map.dragging?.enable();
+  mapNode.classList.remove('route-bending');
   bendGesture=null;
   suppressLegClickUntil=Date.now()+450;
   ignoreMapClick=true;hideHover();
@@ -592,6 +599,7 @@ window.GDV_ROUTE_PLANNER_BOOT=function(options){
  window.addEventListener('blur',()=>{
   if(!bendGesture)return;
   if(bendGesture.draggable)map.dragging?.enable();
+  mapNode.classList.remove('route-bending');
   bendGesture=null;suppressLegClickUntil=Date.now()+450;render();updateButtons();
  });
  // Una interacción arrastrada no es un punto. Detectar desplazamiento real
