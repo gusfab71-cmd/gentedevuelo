@@ -359,6 +359,30 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
 .marker-admin-hidden p{font-size:11px;color:#c4dfef;margin:7px 0}
 .marker-admin-hidden .hidden-marker-row{display:flex;align-items:center;justify-content:space-between;gap:7px;border-top:1px solid #3c607a;padding:7px 0}
 .marker-admin-hidden .hidden-marker-row span{font-size:11px;color:#e4f1fa;min-width:0;overflow-wrap:anywhere}
+
+/* Sectores SIGMET: cartografía de la fuente, etiquetas de altura y controles explícitos. */
+.sigmet-controls{display:flex;flex-wrap:wrap;align-items:end;gap:9px;background:#113149;border:1px solid #547b96;padding:9px;border-radius:9px;margin-bottom:10px}
+.sigmet-controls label{display:grid;gap:3px;font-size:11px;color:#d0e2ee;flex:1;min-width:130px}
+.sigmet-controls select{background:#f6fbff;color:#162f45;min-height:34px;border:1px solid #a7cbe2;border-radius:6px;padding:5px 7px;font-size:12px}
+.sigmet-controls button{min-height:34px;border:1px solid #accde0;background:#2e6380;color:#fff;border-radius:6px;font-size:11px;padding:6px 8px;font-weight:700}
+.sigmet-controls .sigmet-summary{font-size:10px;color:#cee3ef;flex-basis:100%;line-height:1.45}
+.sigmet-sector-label{background:transparent;border:0;pointer-events:none}
+.sigmet-sector-chip{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;text-align:center;
+ min-width:65px;max-width:130px;padding:3px 5px;color:#122a3a;background:#e5f0f7e6;border:1px solid #6d96ae;
+ border-radius:8px;box-shadow:0 2px 7px rgba(0,0,0,.32);font:700 10px/1.2 system-ui,sans-serif;white-space:nowrap}
+.sigmet-sector-chip small{font-size:9px;font-weight:600;color:#264152}
+.sigmet-sector-chip em{font-size:9px;font-style:normal;color:#683412}
+.sigmet-sector-panel{color:#182e40;max-width:290px;font:12px/1.4 system-ui,sans-serif}
+.sigmet-sector-panel h3{margin:0 0 6px;font-size:15px;color:#11324b}
+.sigmet-sector-panel dl{margin:6px 0;display:grid;gap:3px}
+.sigmet-sector-panel dl div{display:flex;justify-content:space-between;gap:9px;padding-bottom:3px;border-bottom:1px solid #d8e4ee}
+.sigmet-sector-panel dt{font-weight:700}
+.sigmet-sector-panel dd{margin:0;text-align:right;max-width:62%;overflow-wrap:anywhere}
+.sigmet-sector-panel pre{white-space:pre-wrap;max-height:145px;overflow:auto;font-size:10px;padding:6px;background:#ecf3f8}
+.sigmet-sector-panel p{margin:6px 0;font-size:11px}
+.sigmet-sector-panel .sigmet-caution{font-size:10px;color:#8d4222;font-weight:700}
+.sigmet-sector-panel a{display:block;margin:6px 0;font-size:11px}
+
 </style></head><body><header class="dispatch-nav"><div class="dispatch-nav-logo"><span class="dispatch-nav-symbol" aria-hidden="true">✈</span>
  <div><strong>GENTE DE VUELO</strong><small>AEROLOCATOR · MAPA AERONÁUTICO</small></div></div>
  <nav aria-label="Herramientas Gente de Vuelo"><a href="../index.html">Portada</a><a href="../comunidad.html#foro">Foro</a><a href="index.html">Utilidades</a>
@@ -480,6 +504,20 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
   <div class="map-context-panel-header"><div><h3 id="airspace-inspector-title">Información de la capa</h3>
   <p id="airspace-inspector-subtitle">Elegí una zona para ubicarla y consultar su ficha.</p></div>
   <button id="airspace-inspector-close" class="map-context-panel-close" type="button" aria-label="Cerrar información">×</button></div>
+  <div id="sigmet-controls" class="sigmet-controls" hidden>
+   <label for="sigmet-hazard-filter">Filtrar SIGMET por fenómeno
+    <select id="sigmet-hazard-filter">
+     <option value="all">Todos los fenómenos</option>
+     <option value="ts">Tormentas / CB</option>
+     <option value="turb">Turbulencia / onda de montaña</option>
+     <option value="ice">Engelamiento</option>
+     <option value="va">Ceniza volcánica</option>
+     <option value="other">Otros fenómenos</option>
+    </select>
+   </label>
+   <button id="sigmet-refresh" type="button" title="Vuelve a consultar NOAA. La respuesta puede conservarse hasta 5 minutos en caché.">Reconsultar NOAA</button>
+   <span id="sigmet-summary" class="sigmet-summary" role="status">Cargando sectores…</span>
+  </div>
   <div id="airspace-inspector-items" class="airspace-items" aria-live="polite"></div>
   <p class="map-context-note" id="airspace-inspector-footnote">Los datos son orientativos: comprobá siempre las publicaciones oficiales.</p>
  </section>
@@ -513,8 +551,9 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
  <span><i style="border-color:#ffbb82"></i>Turbulencia</span>
  <span><i style="border-color:#80cdef"></i>Engelamiento</span>
  <span><i style="border-color:#eb8cc6"></i>Tormentas</span>
+ <span><i style="border-color:#bca3e8"></i>Ceniza volcánica</span>
  <span><i style="border-color:#d9cbaf"></i>Otros</span>
- <small>Solo avisos con geometría de NOAA. Verificar vigencia y fuentes oficiales argentinas.</small>
+ <small>Polígonos SIGMET de NOAA (no son límites de FIR). Las etiquetas indican los niveles informados; verificar aviso original y SMN.</small>
  </div>
 
  <div id="airfields-map-legend" class="pin-legend" aria-label="Leyenda de marcadores">
@@ -1520,7 +1559,8 @@ if(admin){document.getElementById('admin').hidden=false;async function pending()
 
 /* Selector de vistas cartográficas excluyentes. Otras capas quedan invisibles. */
 const viewSelect=document.getElementById('map-view-mode'),viewStatus=document.getElementById('map-view-status');
-const layerFIR=L.layerGroup(),layerSIG=L.layerGroup();
+const layerFIR=L.layerGroup(),layerSIG=L.layerGroup(),sigLabelLayer=L.layerGroup();
+let sigmetData=[],sigmetMetadata=null;
 const FIR_COLORS={SAEF:'#dba8b8',SACF:'#a7c3e2',SAMF:'#bca9e7',SARR:'#b7d5aa',SAVF:'#e8cb91'};
 let firDone=false,firLoading=null,sigLoading=null;
 const inspectorToggle=document.getElementById('map-inspector-toggle');
@@ -1567,7 +1607,7 @@ function inspectorChoice(title,subtitle,color,onSelect){
 function focusAirspace(layer){
  contextualInspector(false);
  const bounds=typeof layer.getBounds==='function'?layer.getBounds():null;
- if(bounds&&bounds.isValid())map.fitBounds(bounds,{padding:[35,35],maxZoom:8,animate:false});
+ if(bounds&&bounds.isValid())map.fitBounds(bounds,{padding:[35,35],maxZoom:9,animate:false});
  else if(typeof layer.getLatLng==='function')map.setView(layer.getLatLng(),9,{animate:false});
  if(typeof layer.openPopup==='function')layer.openPopup();
 }
@@ -1584,15 +1624,18 @@ function inspectorFIR(){
 }
 function inspectorSIG(checkedUtc){
  areaItems.replaceChildren();
- document.getElementById('airspace-inspector-title').textContent='Explorar avisos SIGMET';
- document.getElementById('airspace-inspector-subtitle').textContent='Elegí un aviso o tocá directamente su área coloreada en el mapa.';
- document.getElementById('airspace-inspector-footnote').textContent='NOAA · Consulta '+dated(checkedUtc)+'. Cobertura internacional parcial; confirmar los SIGMET vigentes del SMN.';
- if(!sigShapes.length){inspectorMessage('No hay zonas SIGMET con geometría en esta respuesta de NOAA. Esto NO confirma ausencia de avisos.');return}
+ document.getElementById('airspace-inspector-title').textContent='Sectores y avisos SIGMET';
+ document.getElementById('airspace-inspector-subtitle').textContent='Elegí un sector para centrarlo y abrir la ficha de niveles, vigencia y movimiento.';
+ document.getElementById('airspace-inspector-footnote').textContent='NOAA · Consulta '+dated(checkedUtc)+'. Sector geográfico solo cuando hay geometría del proveedor. Comprobar publicación SIGMET del SMN.';
+ if(!sigShapes.length){
+  inspectorMessage(sigmetData.length?'No hay sectores del fenómeno elegido. Cambiá el filtro o actualizá la consulta.':
+   'NOAA no devolvió sectores geográficos en esta consulta. Esto NO confirma ausencia de SIGMET: consultá al SMN.');return;
+ }
  for(const {layer,properties} of sigShapes.slice(0,80)){
-  const p=properties||{},lower=p.base??p.bottom,upper=p.top;
-  const limits=lower!=null&&upper!=null?' · Límites: '+String(lower)+' / '+String(upper)+' (formato fuente)':'';
-  const description='Válido hasta '+dated(p.validTimeTo)+limits;
-  areaItems.append(inspectorChoice('SIGMET · '+String(p.hazard||p.phenomenon||'Fenómeno'),description,sigColor(p),()=>focusAirspace(layer)));
+  const p=properties||{};
+  const levels=[p.lowerLevel,p.upperLevel].filter(Boolean).join(' — ')||'Niveles no informados';
+  const description=(p.icaoId?'FIR / emisor '+p.icaoId+' · ':'')+levels+' · Hasta '+dated(p.validTimeTo);
+  areaItems.append(inspectorChoice(sigTitle(p),description,sigColor(p),()=>focusAirspace(layer)));
  }
 }
 
