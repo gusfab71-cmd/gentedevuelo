@@ -25,7 +25,11 @@
   // El catálogo oficial embebido es editorial; una fila pública de Supabase
   // requiere además evidencias documentales del lado servidor.
   if(x.category==='lad'&&x.sourceType==='registro_lad')return 'lad';
-  if(x.category==='official'&&x.sourceType==='publicacion_aip')
+  if(x.category==='official'&&(
+   x.sourceType==='publicacion_aip'||
+   (x.sourceType==='registro_anac_historico'&&
+    String(x.sourceUrl||'').startsWith('https://servicios.transporte.gob.ar/')&&
+    x.sourceDate==='2021-09')))
    return candidate==='controlled_public'||candidate==='uncontrolled_public'||
     candidate==='private_aerodrome'||candidate==='heliport'?candidate:'unverified';
   if(!KNOWN.has(candidate)||candidate==='unverified')return 'unverified';
