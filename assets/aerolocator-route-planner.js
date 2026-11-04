@@ -17,7 +17,10 @@ function parseWindT(raw){
  const text=String(raw||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase();
  const section=text.search(/\bWIND\s*\/\s*T\b/);
  if(section<0)return [];
- const tail=text.slice(section).slice(0,12000);
+ const fullTail=text.slice(section).slice(0,12000);
+ // El PRONAREA termina la sección WIND/T cuando comienza FCST.
+ const fcstIndex=fullTail.search(/\bFCST\s*:/);
+ const tail=fcstIndex>=0?fullTail.slice(0,fcstIndex):fullTail;
  const pattern=/\bFL\s*(\d{3})\s*\/\s*(\d{2})(\d{3})([PM])(\d{2})\b/g;
  const groups=[];let match,prev=0,current=null;
  while((match=pattern.exec(tail))){
@@ -103,6 +106,8 @@ window.GDV_ROUTE_PLANNER_BOOT=function(options){
  if(!map||!panel||!toggle)return null;
  const $=id=>document.getElementById(id);
  const status=$('route-planner-status'),warnings=$('route-planner-warnings'),results=$('route-planner-results');
+ const cruiseAlert=$('route-cruise-alert'),syncedStatus=$('route-pronarea-sync-status');
+ const pronareaOther=$('pronarea-map-input');
  const raw=$('route-pronarea'),altitude=$('route-altitude'),ias=$('route-ias'),variation=$('route-variation');
  const select=$('route-wind-select'),manualDir=$('route-manual-dir'),manualKt=$('route-manual-kt'),manualTemp=$('route-manual-temp');
  const drawButton=$('route-start'),continueButton=$('route-continue'),clearButton=$('route-clear');
@@ -122,6 +127,7 @@ window.GDV_ROUTE_PLANNER_BOOT=function(options){
   menu.addEventListener(eventName,event=>event.stopPropagation());
  }
  let points=[],drawing=false,finished=false,windGroups=[],lastHover=null,lastLongPress=0;
+ let windChoiceManual=false;
  let mousePress=null,ignoreMapClick=false,pointDrag=false;
  const fmt=n=>Number.isFinite(n)?n.toFixed(1):'—';
  function setMessage(msg){status.textContent=msg}
@@ -160,30 +166,50 @@ window.GDV_ROUTE_PLANNER_BOOT=function(options){
   windGroups=parseWindT(raw.value);
   select.replaceChildren(new Option('Sin WIND/T reconocido',''));
   for(const g of windGroups)select.append(new Option(g.label+' · '+g.levels.length+' niveles',g.id));
-  if(windGroups.some(x=>x.id===previous))select.value=previous;
-  else select.value=windGroups.length===1?windGroups[0].id:'';
+  if(windChoiceManual&&windGroups.some(x=>x.id===previous))select.value=previous;
+  else select.value=windGroups[0]?.id||'';
+  if(syncedStatus){
+   syncedStatus.textContent=windGroups.length?
+    'WIND/T reconocido: '+windGroups.length+' grupo(s). '+(windGroups.length>1?
+     'Primer grupo sugerido provisionalmente: verificá y seleccioná las localidades correctas.':
+     'Único grupo seleccionado automáticamente.') :
+    raw.value.trim()?'Boletín cargado, pero sin niveles WIND/T válidos. Revisá que esté incluida la sección II.':
+    'Pegá el PRONAREA aquí o en la capa meteorológica: ambos se sincronizan automáticamente.';
+  }
   refresh();
  }
  function displayResults(){
   const data=getForecast();results.replaceChildren();
-  if(data.error){warnings.textContent=data.error;return}
-  const issues=[];
-  if(windGroups.length>1&&!select.value&&!manualDir.value){
-   issues.push('El PRONAREA contiene varios grupos WIND/T. Seleccioná el correspondiente a tu ruta; no se asigna automáticamente por FIR.');
+  if(data.error){warnings.textContent=data.error;if(cruiseAlert)cruiseAlert.hidden=true;return}
+  const issues=[],levelWarnings=[],levelUnverified=[];
+  if(windGroups.length>1&&select.value&&!windChoiceManual&&!manualDir.value.trim()){
+   issues.push('WIND/T: PRIMER GRUPO PROPUESTO AUTOMÁTICAMENTE ('+windGroups[0].label+
+    '). Confirmá que esas localidades correspondan a tus piernas; puede no servir para toda la ruta.');
   }
-  if(!data.wind)issues.push('Sin viento válido: no se calculan deriva, rumbo corregido, GS ni tiempo. Pegá WIND/T, elegí grupo o ingresá viento manual.');
+  if(!data.wind)issues.push('Sin datos de viento: '+(raw.value.trim()?
+   'el boletín no contiene niveles WIND/T reconocidos. Comprobá el texto y seleccioná un grupo.':
+   'pegá PRONAREA en cualquiera de los dos editores para calcular deriva, rumbo corregido, GS y ETE.'));
   if(data.tempIsa)issues.push('TAS aproximada con temperatura ISA: falta temperatura WIND/T válida. Se supone IAS≈CAS.');
   else issues.push('TAS aproximada: IAS≈CAS y presión ISA a la altitud de presión. Corregir con tabla del avión si corresponde.');
   if(data.wind?.estimated)issues.push('Altitud fuera de niveles WIND/T: se usa el nivel más cercano, sin extrapolación meteorológica.');
   if(data.wind?.interpolated)issues.push('Viento y temperatura interpolados entre FL'+String(data.wind.lowFL).padStart(3,'0')+' y FL'+String(data.wind.highFL).padStart(3,'0')+'.');
   if(data.wind)issues.push(data.wind.source+' · '+fmt(data.wind.direction).replace('.0','')+'°/'+fmt(data.wind.speed)+' kt · T '+(data.temp===null?'s/d':fmt(data.temp)+'°C')+'.');
-  if(points.length<2){warnings.textContent=issues.join('\n');return}
-  const vari=variation.value.trim()===''?null:Number(variation.value);
+  if(points.length<2){
+   warnings.textContent=issues.join('\n');
+   if(cruiseAlert)cruiseAlert.hidden=true;
+   return;
+  }
+  const manualVariation=variation.value.trim()===''?null:Number(variation.value);
   let allEte=true,totalNm=0,totalEte=0;
   for(let i=1;i<points.length;i++){
    const leg=legCalc(points[i-1],points[i],data.tas,data.wind);totalNm+=leg.distance;
    if(leg.ete===null)allEte=false;else totalEte+=leg.ete;
-   const vfr=vfrCruiseCheck(data.alt,leg.track,vari);
+   // WMM2025 calcula la variación cerca del punto medio de cada pierna.
+   // Si el piloto ingresa una variación manual, se utiliza como reemplazo.
+   const mid={lat:(points[i-1].lat+points[i].lat)/2,lng:(points[i-1].lng+points[i].lng)/2};
+   const autoVariation=window.GDV_WMM2025_DECLINATION?.(mid.lat,mid.lng,data.alt)??null;
+   const actualVariation=manualVariation===null?autoVariation:manualVariation;
+   const vfr=vfrCruiseCheck(data.alt,leg.track,actualVariation);
    const row=document.createElement('div');row.className='route-leg-row';
    let left=document.createElement('strong');left.textContent='Pierna '+i;
    let right=document.createElement('span');
@@ -193,12 +219,21 @@ window.GDV_ROUTE_PLANNER_BOOT=function(options){
     'GS '+(leg.gs===null?'—':fmt(leg.gs)+' kt'),
     'ETE '+(leg.ete===null?'—':fmt(leg.ete)+' min')];
    if(vfr){
+    const source=manualVariation===null?'WMM2025':'manual';
+    parts.push('Variación '+fmt(actualVariation)+'° ('+source+')');
     parts.push('Derrota magnética '+fmt(vfr.magnetic)+'°');
     if(!vfr.valid&&data.alt>=3500){
      row.dataset.warning='true';
-     parts.push('REVISAR nivel semicircular'+(vfr.next?' · sugerido '+vfr.next+' ft':''));
+     const suggested=vfr.next?' · evaluar '+vfr.next+' ft':'';
+     parts.push('ATENCIÓN: REVISAR NIVEL VFR'+suggested);
+     levelWarnings.push('Pierna '+i+': derrota magnética '+fmt(vfr.magnetic)+
+      '°; '+data.alt+' ft no corresponde a la columna VFR de esa derrota'+suggested+'.');
     }
-   }else parts.push('Nivel VFR: falta variación magnética');
+   }else{
+    row.dataset.warning='true';
+    parts.push('No se puede verificar nivel VFR: variación magnética desconocida');
+    levelUnverified.push('Pierna '+i+': falta variación magnética para verificar el nivel.');
+   }
    if(leg.warning){row.dataset.warning='true';parts.push(leg.warning)}
    right.textContent=parts.join(' · ');row.append(left,right);results.append(row);
   }
@@ -206,8 +241,21 @@ window.GDV_ROUTE_PLANNER_BOOT=function(options){
   total.textContent='Total '+fmt(totalNm)+' NM · Tiempo total '+(allEte?fmt(totalEte)+' min':'sin calcular')+
    ' · '+(finished?'Ruta finalizada':'Ruta en construcción');
   results.prepend(total);
-  if(vari===null)issues.push('Para comprobar nivel par/impar falta la variación magnética local (E positiva, O negativa).');
-  else issues.push('La regla VFR usa derrota MAGNÉTICA y aplica según altura sobre terreno y espacio aéreo. Comprobar AIP ENR 1.7.');
+  if(cruiseAlert){
+   cruiseAlert.hidden=false;
+   cruiseAlert.dataset.warning=String(levelWarnings.length>0||levelUnverified.length>0);
+   cruiseAlert.textContent=levelWarnings.length?
+    'REVISAR NIVEL DE VUELO VFR · '+levelWarnings.join(' ') +
+    ' Verificar altura AGL, restricciones ATS y AIP; no se modifica tu altitud automáticamente.' :
+    levelUnverified.length?
+    'No se pudo verificar el nivel VFR: '+levelUnverified.join(' ') :
+    'Nivel VFR '+data.alt+' ft: compatible con la regla semicircular en las '+(points.length-1)+
+    ' piernas, según derrota magnética '+(manualVariation===null?'WMM2025':'manual')+
+    '. Comprobar aplicabilidad por altura AGL y espacio aéreo.';
+  }
+  issues.push('Niveles VFR: comprobación por derrota MAGNÉTICA '+(manualVariation===null?
+   'con variación estimada WMM2025 por pierna.':'con variación ingresada manualmente.')+
+   ' Aplica según altura sobre terreno y espacio aéreo. Comprobar AIP/MAPRI.');
   issues.push('Estimaciones educativas: no sustituyen planificación, METAR/TAF, NOTAM, AIP ni performance de aeronave.');
   warnings.textContent=issues.join('\n');
  }
@@ -382,15 +430,28 @@ window.GDV_ROUTE_PLANNER_BOOT=function(options){
   return true;
  }
  const onInput=()=>refresh();
- for(const field of [altitude,ias,variation,manualDir,manualKt,manualTemp,select])field.addEventListener('input',onInput);
- raw.addEventListener('input',refreshMeteoGroups);
- $('route-read-pronarea').addEventListener('click',refreshMeteoGroups);
- $('route-use-existing').addEventListener('click',()=>{
-  const source=$('pronarea-map-input');
-  if(!source?.value.trim()){setMessage('La capa PRONAREA todavía no tiene un boletín pegado.');return}
-  raw.value=source.value;refreshMeteoGroups();
-  setMessage('PRONAREA copiado de la otra capa. Verificá grupo de localidades y vigencia.');
+ for(const field of [altitude,ias,variation,manualDir,manualKt,manualTemp])field.addEventListener('input',onInput);
+ select.addEventListener('change',()=>{windChoiceManual=true;refresh()});
+ function sourceToRoute(){
+  if(!pronareaOther)return;
+  raw.value=pronareaOther.value;windChoiceManual=false;refreshMeteoGroups();
+ }
+ // Editar en cualquiera de los dos paneles actualiza el mismo boletín.
+ raw.addEventListener('input',()=>{
+  if(pronareaOther&&pronareaOther.value!==raw.value)pronareaOther.value=raw.value;
+  windChoiceManual=false;refreshMeteoGroups();
  });
+ if(pronareaOther){
+  pronareaOther.addEventListener('input',sourceToRoute);
+  pronareaOther.addEventListener('change',sourceToRoute);
+  $('pronarea-map-clear')?.addEventListener('click',sourceToRoute);
+  $('pronarea-map-analyze')?.addEventListener('click',sourceToRoute);
+ }
+ $('route-read-pronarea').addEventListener('click',()=>{
+  if(pronareaOther&&pronareaOther.value!==raw.value)pronareaOther.value=raw.value;
+  refreshMeteoGroups();
+ });
+ $('route-use-existing').addEventListener('click',sourceToRoute);
  toggle.addEventListener('click',()=>{
   if(drawing){pause();panel.open=true}
   else if(finished){panel.open=true;setMessage('Ruta finalizada: podés arrastrar los puntos o pulsar «Continuar trazado».')}
@@ -469,7 +530,9 @@ window.GDV_ROUTE_PLANNER_BOOT=function(options){
    e.preventDefault();undoLastPoint();
   }
  });
- updateButtons();refresh();
+ updateButtons();
+ if(pronareaOther?.value.trim()&&!raw.value.trim())sourceToRoute();
+ else refreshMeteoGroups();
  return {isDrawing:()=>drawing,isActive:()=>drawing||finished,handleClick,handleContext,
   pauseForOtherMode:()=>{if(drawing)pause()},
   getState:()=>({points:points.map(p=>({...p})),drawing,finished})};
