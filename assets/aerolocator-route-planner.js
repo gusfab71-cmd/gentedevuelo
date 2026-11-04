@@ -272,7 +272,7 @@ window.GDV_ROUTE_PLANNER_BOOT=function(options){
    return;
   }
   points.push({lat:latlng.lat,lng:latlng.lng});
-  render();setMessage(points.length===1?'Salida definida. Clic para agregar punto intermedio o destino.':
+  render();updateButtons();setMessage(points.length===1?'Salida definida. Clic para agregar punto intermedio o destino.':
    'Punto '+points.length+' marcado. Clic izquierdo para más puntos; clic derecho y luego izquierdo en «Finalizar ruta» para terminar.');
  }
  function openMenu(ll,index){
