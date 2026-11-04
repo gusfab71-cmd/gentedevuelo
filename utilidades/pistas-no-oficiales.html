@@ -288,6 +288,29 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
 .pronarea-visual button{width:max-content;font-size:12px}
 .pronarea-visual p{font-size:11px;color:#efdab4;white-space:pre-line}
 @media(max-width:680px){.map-view-picker{max-width:none;width:100%}}
+
+/* Centro de control organizado en submenús expandibles. */
+.control-submenu{margin:7px 0;border:1px solid #456985;background:#172e42;border-radius:11px;overflow:hidden}
+.control-submenu>summary{display:flex;align-items:center;gap:8px;padding:12px;cursor:pointer;font-size:13px;font-weight:800;list-style:none;color:#e8f3fc}
+.control-submenu>summary::-webkit-details-marker{display:none}
+.control-submenu>summary::after{content:"▾";font-size:15px;color:#a8d7f5;transition:transform .16s}
+.control-submenu[open]>summary::after{transform:rotate(180deg)}
+.control-submenu>summary:hover,.control-submenu>summary:focus-visible{background:#254860}
+.control-summary-note{font-size:10px;font-weight:550;color:#a9c6da;margin-left:auto;text-align:right}
+.control-submenu-body{padding:0 10px 12px}
+.control-submenu-body>.zone-panel,.control-submenu-body>.pista-classification{margin:3px 0 0}
+.control-submenu-body>.dispatch-selected{margin:4px 0}
+.control-submenu-body>.dispatch-list-block{margin:8px 0 0}
+.control-submenu-body>.official-aip-panel{margin:7px 0}
+.control-submenu-body>.dispatch-surface-filters{margin:5px 0 10px}
+.control-submenu-body>.dispatch-caution{margin:8px 0}
+.dispatch-map-bottom{padding:4px 10px;max-height:145px}
+.dispatch-map-bottom .pin-legend{padding:0;gap:4px 10px;line-height:1.12}
+.dispatch-map-bottom .pin-legend .legend-item{gap:4px;font-size:10px;white-space:nowrap}
+.dispatch-map-bottom .pin-legend .legend-dot{width:13px;height:13px;font-size:9px;border-width:1.5px}
+.dispatch-map-bottom .map-view-context{margin:0 0 3px;font-size:10px}
+#airfields-map-actions{display:none!important} /* Función OSM reservada temporalmente. */
+@media(max-width:620px){.control-submenu>summary{padding:12px 10px}.control-summary-note{font-size:9px}}
 </style></head><body><header class="dispatch-nav"><div class="dispatch-nav-logo"><span class="dispatch-nav-symbol" aria-hidden="true">✈</span>
  <div><strong>GENTE DE VUELO</strong><small>AEROLOCATOR · MAPA AERONÁUTICO</small></div></div>
  <nav aria-label="Herramientas Gente de Vuelo"><a href="../index.html">Portada</a><a href="../comunidad.html#foro">Foro</a><a href="index.html">Utilidades</a>
@@ -329,7 +352,7 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
     </div>
     <div id="ruler-info" role="status" class="dispatch-ruler-info">Seleccioná «Regla» y marcá dos puntos o pines para medir NM y rumbo verdadero.</div>
     <section class="dispatch-selected" id="selected-panel" aria-labelledby="selected-title">
-      <div class="dispatch-selected-heading"><span class="dispatch-kicker">FICHA DE PISTA</span><h2 id="selected-title">Seleccioná un pin del mapa</h2></div>
+      <div class="dispatch-selected-heading"><span class="dispatch-kicker">FICHA DE PISTA</span><h2 id="selected-title">Seleccioná un punto del mapa</h2></div>
       <div id="selected-detail" class="dispatch-selected-detail" aria-live="polite">
        <p>La información aeronáutica se mostrará aquí sin cubrir el mapa. Incluye datos de pista, fuentes, METAR cercano y referencias AIP cuando existan.</p>
       </div>
@@ -388,7 +411,7 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
   <a class="official-aip-link" href="https://ais.anac.gob.ar/aip" target="_blank" rel="noopener noreferrer" aria-label="Abrir AIP Argentina oficial de ANAC en otra pestaña">Abrir AIP oficial ↗</a>
 </section>
 
-    <p class="dispatch-caution">Advertencia: mapa de apoyo educativo y consulta geográfica. No reemplaza AIP, NOTAM, ni autorización de propietario u operador.</p>
+    <p class="dispatch-caution">Advertencia: mapa de apoyo educativo y consulta geográfica. No reemplaza AIP, NOTAM, ni autorización de propietario u operador. Los colores del mapa identifican tipos de lugares, NO condiciones meteorológicas.</p>
    </div>
   </aside>
   <section class="dispatch-map-panel" id="dispatch-map-panel" aria-label="Mapa geográfico interactivo">
@@ -438,7 +461,6 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
   <span class="legend-item"><span class="legend-dot unverified" aria-hidden="true"></span>⚠ Sin verificar</span>
   <span class="legend-item"><span class="legend-dot reference" aria-hidden="true"></span>OSM sin verificar</span>
   <span class="legend-item"><span class="legend-dot draft" aria-hidden="true"></span>Propuesta pendiente</span>
- <span class="legend-item" style="flex-basis:100%;font-size:11px;color:#d0e3f1">Los colores distinguen tipos de lugares; NO indican condiciones meteorológicas.</span>
 </div><p class="map-actions" id="airfields-map-actions"><button id="explore" type="button">Explorar pistas en esta zona</button> <small id="osm-status">Acercá el mapa a una zona y presioná el botón. Fuente: OpenStreetMap / Overpass.</small></p></div>
   </section>
  </div>
@@ -447,6 +469,32 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
 const client=supabase.createClient(GDV_CONFIG.url,GDV_CONFIG.key);
 const map=L.map('map',{touchZoom:true,scrollWheelZoom:true,doubleClickZoom:true,tapHold:true}).setView([-35.0,-58.2],10);const satellite=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Imagery © Esri and contributors'}).addTo(map);const streets=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'});const basemapControl=L.control.layers({'Satélite · ver pistas':satellite,'Calles y caminos':streets},null,{collapsed:false});basemapControl.addTo(map);const basemapSelector=document.getElementById('basemap-selector');basemapSelector.appendChild(basemapControl.getContainer());
 let markers=L.layerGroup().addTo(map),records=[],admin=false;
+
+/* Ordena los controles existentes sin duplicarlos ni perder formularios o filtros. */
+(function organizeControlSubmenus(){
+ const side=document.querySelector('#dispatch-sidebar .dispatch-sidebar-scroll');
+ const sections=[
+  ['control-search-menu','Buscar zona o aeródromo','Localidades y coordenadas',['.zone-panel'],true],
+  ['control-filters-menu','Filtros y categorías','Superficies, ATS y accesos',['#surface-filters','.pista-classification'],false],
+  ['control-tools-menu','Herramientas','Regla y mediciones',['.dispatch-quick','#ruler-info'],false],
+  ['control-detail-menu','Ficha seleccionada','Pista, fuente y METAR',['#selected-panel'],false],
+  ['control-catalog-menu','Catálogo y aportes','Listados y propuestas',['.dispatch-list-block'],false],
+  ['control-docs-menu','Fuentes oficiales','AIP y advertencias',['.official-aip-panel','.dispatch-caution'],false]
+ ];
+ let last=side.querySelector('.dispatch-sidebar-heading');
+ for(const [id,title,note,selectors,opened] of sections){
+  const elements=selectors.map(x=>side.querySelector(x));
+  if(elements.some(x=>!x))throw Error('Sección faltante en el Centro de control: '+id);
+  const group=document.createElement('details');group.id=id;group.className='control-submenu';group.open=opened;
+  const head=document.createElement('summary'),label=document.createElement('span'),description=document.createElement('span');
+  label.textContent=title;description.className='control-summary-note';description.textContent=note;
+  head.append(label,description);
+  const body=document.createElement('div');body.className='control-submenu-body';
+  elements.forEach(item=>body.append(item));
+  group.append(head,body);last.after(group);last=group;
+ }
+})();
+
  let mapViewMode='airfields';
 const PIN_PALETTE={
  official:{fill:'#286ba8',edge:'#e2f2ff'},
@@ -543,7 +591,7 @@ function proposeAt(latlng){
  if(lat < -56||lat > -21||lon < -74||lon > -53){alert('Por ahora solo se pueden proponer pistas dentro de Argentina.');return}
  if(draftMarker)map.removeLayer(draftMarker);
  draftMarker=L.marker(latlng,{icon:draftPin,title:'Nueva pista por proponer'}).addTo(map);
- const popup=document.createElement('div');const title=document.createElement('strong');title.textContent='Nueva pista';const info=document.createElement('p');info.textContent='Punto marcado. Podés cargar una descripción para solicitar su publicación.';const btn=document.createElement('button');btn.type='button';btn.textContent='Agregar pista y comentario';btn.onclick=()=>{const form=document.getElementById('form');form.elements.latitude.value=lat.toFixed(6);form.elements.longitude.value=lon.toFixed(6);document.getElementById('contribute').open=true;map.closePopup();document.getElementById('contribute').scrollIntoView({behavior:'smooth',block:'start'});form.elements.name.focus()};popup.append(title,info,btn);draftMarker.bindPopup(popup).openPopup();
+ const popup=document.createElement('div');const title=document.createElement('strong');title.textContent='Nueva pista';const info=document.createElement('p');info.textContent='Punto marcado. Podés cargar una descripción para solicitar su publicación.';const btn=document.createElement('button');btn.type='button';btn.textContent='Agregar pista y comentario';btn.onclick=()=>{const form=document.getElementById('form');form.elements.latitude.value=lat.toFixed(6);form.elements.longitude.value=lon.toFixed(6);document.getElementById('control-catalog-menu').open=true;document.getElementById('contribute').open=true;map.closePopup();document.getElementById('contribute').scrollIntoView({behavior:'smooth',block:'start'});form.elements.name.focus()};popup.append(title,info,btn);draftMarker.bindPopup(popup).openPopup();
 }
 let holdTimer=null,holdStart=null,holdTriggered=false;
 const mapElement=document.getElementById('map');
@@ -786,6 +834,7 @@ function rulerPoint(point,label){
  rulerInfo.textContent='Desde '+a.label+' hasta '+b.label+': '+nm.toFixed(2)+' NM · RV inicial '+bearing.toFixed(1)+'° verdadero (sin variación magnética). Línea geodésica orientativa.';
 }
 function showAirfieldDetail(createCard,name){
+ document.getElementById("control-detail-menu").open=true;
  selectedTitle.textContent=name;
  selectedDetail.replaceChildren(createCard());
 }
@@ -849,7 +898,7 @@ let proposeMode=false;
 document.getElementById('contribute-fast').addEventListener('click',()=>{
  proposeMode=true;
  rulerEnabled=false;rulerToggle.setAttribute('aria-pressed','false');clearRuler();
- document.getElementById('contribute').open=true;
+ document.getElementById('control-catalog-menu').open=true;document.getElementById('contribute').open=true;
  rulerInfo.textContent='Modo aporte: hacé clic en la zona exacta del mapa. Se marcará la ubicación y podrás completar el formulario.';
  document.getElementById('map').scrollIntoView({behavior:'smooth',block:'center'});
 });
