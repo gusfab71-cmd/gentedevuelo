@@ -482,6 +482,11 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
 .oa-quick-buttons .oa-quick-exclude{background:#8f463b;color:#fff}
 .oa-quick-buttons .oa-quick-reset{background:#3b5971;color:#fff}
 .oa-quick-buttons .oa-quick-move{background:#205a82;color:#fff}
+.oa-category-picker{display:grid;gap:5px;font-size:11px;font-weight:800;color:#e9f5fc}
+.oa-category-control{display:flex;align-items:center;gap:7px}
+.oa-category-control select{flex:1;min-width:0;min-height:35px;padding:6px 8px;border-radius:7px;border:1px solid #9bbdd1;background:#f5faff;color:#193249;font:12px system-ui}
+.oa-category-swatch{display:inline-block;width:17px;height:17px;min-width:17px;border:2px solid #f5faff;border-radius:50%;box-shadow:0 0 0 1px #6e91aa}
+.oa-category-help{font-size:10px!important;line-height:1.35!important;color:#d4e5f1!important;margin:0!important}
 .oa-moving-marker{background:none;border:0}
 .oa-moving-marker span{display:grid;place-items:center;width:22px;height:22px;background:#1685d0;color:white;font-weight:900;border:3px solid #fff;border-radius:50%;box-shadow:0 0 0 3px #103d5a;cursor:grab}
 .oa-move-dialog{display:grid;gap:8px;color:#17344c;min-width:220px;font:12px/1.5 system-ui}
@@ -862,11 +867,15 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
  </div>
 
  <div id="ourairports-map-legend" class="airspace-legend" hidden>
-  <span><i style="border-radius:50%;border:2px solid #f4fbff;background:#1a1c23"></i>Pendiente</span>
-  <span><i style="border-radius:50%;border:2px solid #f4fbff;background:#23846e"></i>Revisado por GdV</span>
-  <span><i style="border-radius:50%;border:2px solid #f4fbff;background:#c79b3d"></i>Posible coincidencia</span>
-  <span><i style="border-radius:50%;border:2px solid #f4fbff;background:#ac5656"></i>Cerrado / excluido</span>
-  <small>OurAirports · clic izquierdo en un punto negro para seleccionarlo; clic derecho para abrir sus opciones. La administración puede marcarlo como revisado por GdV o descartarlo del mapa (reversible). Los colores no certifican habilitación ni uso operativo.</small>
+  <span><i style="border-radius:50%;border:2px solid #f4fbff;background:#171a20"></i>Pendiente</span>
+  <span><i style="border-radius:50%;border:2px solid #f4fbff;background:#286ba8"></i>TWR público</span>
+  <span><i style="border-radius:50%;border:2px solid #f4fbff;background:#258a91"></i>Público sin TWR</span>
+  <span><i style="border-radius:50%;border:2px solid #f4fbff;background:#8367b5"></i>Privado</span>
+  <span><i style="border-radius:50%;border:2px solid #f4fbff;background:#b58b37"></i>LAD</span>
+  <span><i style="border-radius:50%;border:2px solid #f4fbff;background:#427f8d"></i>Helipuerto</span>
+  <span><i style="border-radius:50%;border:2px solid #f4fbff;background:#b7433b"></i>Sin verificar</span>
+  <span><i style="border-radius:50%;border:2px solid #f4fbff;background:#23846e"></i>Revisado sin categoría</span>
+  <small>OurAirports: los puntos negros están pendientes; los revisados adoptan los colores de la leyenda de GdV. Clic izquierdo selecciona, clic derecho abre opciones. Clasificación orientativa: no acredita habilitación ANAC, ATS ni aptitud operativa.</small>
  </div>
  <div id="airfields-map-legend" class="pin-legend" aria-label="Leyenda de marcadores">
   <span class="legend-item"><span class="legend-dot controlled" aria-hidden="true"></span>TWR público</span>
@@ -2681,7 +2690,28 @@ const oaStatusNames={
  pending:'Pendiente de revisar',reviewed:'Revisado por Gente de Vuelo (no oficial)',
  duplicate:'Marcado como posible duplicado',excluded:'Descartado de uso en nuestro catálogo'
 };
+const oaCategoryNames={controlled_public:'TWR público',uncontrolled_public:'Público sin TWR',
+ private_aerodrome:'Privado',lad:'LAD',heliport:'Helipuerto',unverified:'Sin verificar'};
+const oaCategoryColors=Object.fromEntries(Object.keys(oaCategoryNames).map(key=>[key,PIN_PALETTE[key].fill]));
 function oaReviewFor(record){return oaReviews.get(record.id)||null}
+function oaCategoryFor(record){
+ const value=oaReviewFor(record)?.gdv_category;
+ return Object.prototype.hasOwnProperty.call(oaCategoryNames,value)?value:null;
+}
+function oaCategoryPicker(record){
+ const label=document.createElement('label');label.className='oa-category-picker';
+ label.append(document.createTextNode('Clasificación cartográfica GdV'));
+ const control=document.createElement('span');control.className='oa-category-control';
+ const circle=document.createElement('span');circle.className='oa-category-swatch';circle.setAttribute('aria-hidden','true');
+ const select=document.createElement('select');select.setAttribute('aria-label','Clasificación de pista con los colores de la leyenda');
+ select.append(new Option('Elegí una categoría…',''));
+ for(const [key,name] of Object.entries(oaCategoryNames))select.append(new Option(name,key));
+ select.value=oaCategoryFor(record)||'';
+ const paint=()=>{circle.style.background=oaCategoryColors[select.value]||'#171a20'};
+ select.addEventListener('change',paint);paint();
+ control.append(circle,select);label.append(control);
+ return {label,select};
+}
 function oaState(record){return oaReviewFor(record)?.review_status||'pending'}
 function oaLocation(record){
  const rev=oaReviewFor(record);
@@ -2714,14 +2744,14 @@ function oaMatchesANAC(record){
  return false;
 }
 function oaMainColor(record){
- // Negro hasta que lo revise GdV; "revisado" no implica habilitación ANAC.
- return oaState(record)==='reviewed'?'#23846e':'#171a20';
+ if(oaState(record)!=='reviewed')return '#171a20';
+ return oaCategoryColors[oaCategoryFor(record)]||'#23846e';
 }
 function oaMarkerColor(record){
  const state=oaState(record);
  if(state==='duplicate')return '#8b8d91';
  if(state==='excluded'||record.closed)return '#ac5656';
- if(state==='reviewed')return '#23846e';
+ if(state==='reviewed')return oaCategoryColors[oaCategoryFor(record)]||'#23846e';
  if(oaLikelyDuplicate(record))return '#c79b3d';
  return '#191d27';
 }
@@ -3060,7 +3090,7 @@ function renderOACatalog(){
   ' cerrados · '+countDuplicate+' posibles coincidencias · '+countReviewed+' revisados. '+(oaInfo?.checkedUtc?'Consulta '+dated(oaInfo.checkedUtc):'');
  if(merged){
   viewStatus.textContent='Mapa combinado: '+documentedAirstrips.length+' registros ANAC/LAD con sus colores + '+
-   filtered.length+' puntos OurAirports (negros sin revisar, verdes revisados GdV). '+
+   filtered.length+' puntos OurAirports (negros pendientes, revisados con colores de la leyenda GdV). '+
    anacMatches+' coincidencias ANAC sin segundo marcador y '+reviewExcluded+
    ' registros descartados o duplicados por revisión. Total en catálogo OurAirports: '+total+
    '. Sin validación operativa; verificar AIP/MADHEL.';
