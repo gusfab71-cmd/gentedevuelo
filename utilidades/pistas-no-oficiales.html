@@ -685,7 +685,7 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
    <button id="pronarea-map-clear" type="button">Limpiar texto</button>
   </div>
   <section id="pronarea-nav" class="pronarea-nav" aria-label="Navegar a las zonas mencionadas en PRONAREA" hidden>
-   <strong class="pronarea-nav-title">Zonas reconocidas en el boletín</strong>
+   <strong id="pronarea-nav-title" class="pronarea-nav-title">Zonas reconocidas en el boletín</strong>
    <p class="pronarea-nav-note">Elegí una FIR para centrar y sombrear su región educativa, o una referencia antártica. Las FIR no sustituyen al AIP y los recuadros WIND/T no representan zonas de peligro.</p>
    <div id="pronarea-nav-options" class="pronarea-nav-options"></div>
   </section>
@@ -2383,17 +2383,34 @@ function focusPronareaRegion(region){
 }
 function renderPronareaRegions(autoFocus=false){
  pronareaRegions=locatePronareaRegions(pronareaInput.value);
- pronareaNav.hidden=!pronareaRegions.length;
+ const manualChoices=!pronareaRegions.length&&pronareaInput.value.trim().length>=25;
+ pronareaNav.hidden=!pronareaRegions.length&&!manualChoices;
+ const heading=document.getElementById('pronarea-nav-title');
+ heading.textContent=manualChoices?'No se reconoció la FIR · seleccioná una manualmente':'Zonas reconocidas en el boletín';
  pronareaNavOptions.replaceChildren();
- for(const region of pronareaRegions){
+ const choices=manualChoices?Object.entries(PRONAREA_FIR_REFERENCES).map(([code,entry])=>({
+  id:code,code,name:entry.name,lat:entry.lat,lon:entry.lon,kind:'fir',zoom:6
+ })):pronareaRegions;
+ for(const region of choices){
   const button=document.createElement('button');
   button.type='button';button.dataset.id=region.id;
   button.textContent='Ver '+region.name;
   button.setAttribute('aria-pressed','false');
   const sub=document.createElement('small');
-  sub.textContent=region.kind==='bounds'?'Rango WIND/T con coordenadas expresas':
+  sub.textContent=manualChoices?'Selección manual · comprobar FIR del boletín':
+   region.kind==='bounds'?'Rango WIND/T con coordenadas expresas':
    region.kind==='fir'?'Sombreado FIR educativo · AIP ENR 2.1':'Punto de orientación geográfica';
-  button.append(sub);button.addEventListener('click',()=>focusPronareaRegion(region));
+  button.append(sub);
+  button.addEventListener('click',()=>{
+   if(manualChoices){
+    pronareaRegions=[region];
+    drawPronareaReferences();
+    pronareaStatus.textContent='FIR seleccionada manualmente: '+region.name+
+     '. El texto no fue reconocido automáticamente. Verificá que sea la FIR correcta y que el PRONAREA esté vigente.';
+    heading.textContent='FIR seleccionada manualmente';
+   }
+   focusPronareaRegion(region);
+  });
   pronareaNavOptions.append(button);
  }
  drawPronareaReferences();
@@ -2422,7 +2439,7 @@ pronareaInput.addEventListener('paste',()=>{
  setTimeout(()=>{
   if(mapViewMode==='pronarea'){
    const areas=renderPronareaRegions(true);
-   if(!areas.length)pronareaStatus.textContent='No se reconoció una zona geográfica. Usá «Leer y ubicar PRONAREA» para analizar el texto; no se dibuja ningún límite supuesto.';
+   if(!areas.length)pronareaStatus.textContent='No se pudo identificar automáticamente la FIR. Elegí una de las cinco regiones desde los botones que aparecen en el panel; no se atribuye el boletín a una FIR sin comprobarlo.';
   }
  },0);
 });
