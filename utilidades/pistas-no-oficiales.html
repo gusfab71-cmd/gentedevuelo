@@ -25,7 +25,9 @@ h1{letter-spacing:-.035em}
 .pin-legend{display:flex;flex-wrap:wrap;align-items:center;gap:9px 20px;margin:9px 0 12px;padding:10px 15px;background:#223848;border:1px solid #49687d;border-radius:12px}
 .pin-legend .legend-item{display:inline-flex;gap:8px;align-items:center;color:#e1ecf5;font-size:12px}
 .pin-legend .legend-dot{width:13px;height:13px;border-radius:50%;border:2px solid #bdd9ec;background:#28628f}
-.pin-legend .legend-dot.reference{background:#171a20;border-color:#f5f8fb}
+.pin-legend .legend-dot.reference{background:#67727b;border-color:#f5f8fb}
+.pin-legend .legend-dot.oa-main-dot{background:#171a20;border-color:#f5f8fb}
+.pin-legend .legend-dot.oa-checked-dot{background:#23846e;border-color:#f5f8fb}
 .pin-legend .legend-dot.draft{background:#bd7f48;border-color:#ffe0b3}
 .airstrip-marker{border:0!important;background:transparent!important}
 .airstrip-marker svg{filter:drop-shadow(0 3px 3px #030e18a8)}
@@ -707,6 +709,8 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
   <span class="legend-item"><span class="legend-dot lad" aria-hidden="true"></span>LAD</span>
   <span class="legend-item"><span class="legend-dot heliport" aria-hidden="true"></span>Helipuerto</span>
   <span class="legend-item"><span class="legend-dot unverified" aria-hidden="true"></span>⚠ Sin verificar</span>
+  <span class="legend-item"><span class="legend-dot oa-main-dot" aria-hidden="true"></span>OurAirports · sin revisar</span>
+  <span class="legend-item"><span class="legend-dot oa-checked-dot" aria-hidden="true"></span>OurAirports · revisado GdV</span>
   <span class="legend-item"><span class="legend-dot reference" aria-hidden="true"></span>OSM sin verificar</span>
   <span class="legend-item"><span class="legend-dot draft" aria-hidden="true"></span>Propuesta pendiente</span>
 </div><p class="map-actions" id="airfields-map-actions"><button id="explore" type="button">Explorar pistas en esta zona</button> <small id="osm-status">Acercá el mapa a una zona y presioná el botón. Fuente: OpenStreetMap / Overpass.</small></p></div>
@@ -755,7 +759,7 @@ const PIN_PALETTE={
  heliport:{fill:'#427f8d',edge:'#d0f0f6'},
  unverified:{fill:'#b7433b',edge:'#ffe1d9'},
  community:{fill:'#b7433b',edge:'#ffe1d9'},
- reference:{fill:'#171a20',edge:'#f5f8fb'},
+ reference:{fill:'#67727b',edge:'#f5f8fb'},
  draft:{fill:'#bc7e41',edge:'#ffe0ac'}
 };
 /* Marcadores de lectura rápida: puntos circulares en lugar de pines con gota.
@@ -806,6 +810,9 @@ for(const id of ['filter-ats','filter-access','filter-rules']){
  document.getElementById(id).addEventListener('change',()=>{render();renderExternal()});
 }
 function syncLayerVisibility(){
+ const showOurAirports=mapViewMode==='ourairports'||(mapViewMode==='airfields'&&layerSelected('unverified'));
+ if(showOurAirports&&oaLayer.getLayers().length&&!map.hasLayer(oaLayer))oaLayer.addTo(map);
+ else if(!showOurAirports&&map.hasLayer(oaLayer))map.removeLayer(oaLayer);
  for(const kind of ['official','lad']){
   const group=documentedLayers[kind],show=mapViewMode==='airfields'&&layerSelected(kind);
   if(show&&!map.hasLayer(group))group.addTo(map);
@@ -1924,14 +1931,17 @@ const areaItems=document.getElementById('airspace-inspector-items');
 const pronareaEditor=document.getElementById('pronarea-visual');
 const mapViewHint=document.getElementById('map-view-hint');
 const firShapes=new Map(),sigShapes=[];
+let oaOpenInMainMap=false;
 function contextualInspector(open){
  const mode=mapViewMode;
- inspectorToggle.hidden=mode==='airfields';
- areaInspector.hidden=!(open&&(mode==='fir'||mode==='sigmet'||mode==='ourairports'));
+ const oaInMain=mode==='airfields'&&oaOpenInMainMap;
+ inspectorToggle.hidden=mode==='airfields'&&!oaInMain;
+ areaInspector.hidden=!(open&&(mode==='fir'||mode==='sigmet'||mode==='ourairports'||oaInMain));
  pronareaEditor.hidden=!(open&&mode==='pronarea');
- inspectorToggle.setAttribute('aria-expanded',String(open&&mode!=='airfields'));
- const label=mode==='fir'?'FIR':mode==='sigmet'?'SIGMET':mode==='ourairports'?'catálogo':'PRONAREA';
+ inspectorToggle.setAttribute('aria-expanded',String(open&&(mode!=='airfields'||oaInMain)));
+ const label=mode==='fir'?'FIR':mode==='sigmet'?'SIGMET':mode==='ourairports'?'catálogo':oaInMain?'ficha OurAirports':'PRONAREA';
  inspectorToggle.textContent=open?'Ocultar '+label:'Ver '+label;
+ if(!open&&mode==='airfields')oaOpenInMainMap=false;
  if(mode==='airfields')mapViewHint.hidden=true;
  else{
   mapViewHint.hidden=false;
@@ -2243,6 +2253,22 @@ function oaLikelyDuplicate(record){
  }
  return false;
 }
+/* Coincidencias con fuentes ANAC: un solo punto por instalación en el mapa combinado.
+ * No se elimina el registro OurAirports: permanece disponible en su vista de auditoría.
+ */
+function oaMatchesANAC(record){
+ const rawCodes=[record.icao,record.gps,record.ident].map(x=>String(x||'').trim().toUpperCase()).filter(Boolean);
+ for(const point of documentedAirstrips){
+  const code=String(point.details?.icao||'').trim().toUpperCase();
+  if(code&&rawCodes.includes(code))return true;
+  if(nauticalMiles(point.lat,point.lon,record.lat,record.lon)<0.20)return true;
+ }
+ return false;
+}
+function oaMainColor(record){
+ // Negro hasta que lo revise GdV; "revisado" no implica habilitación ANAC.
+ return oaState(record)==='reviewed'?'#23846e':'#171a20';
+}
 function oaMarkerColor(record){
  const state=oaState(record);
  if(state==='duplicate')return '#8b8d91';
@@ -2270,6 +2296,13 @@ function oaInfoLine(parent,key,val){
 }
 function oaShowRecord(record){
  oaCurrent=record;
+ oaOpenInMainMap=mapViewMode==='airfields';
+ if(oaOpenInMainMap){
+  document.getElementById('airspace-inspector-title').textContent='Ficha OurAirports · sin validar';
+  document.getElementById('airspace-inspector-subtitle').textContent='Datos comunitarios. Los colores ANAC conservan su clasificación documental.';
+  document.getElementById('oa-controls').hidden=true;
+  areaItems.replaceChildren();
+ }
  contextualInspector(true);
  const selected=oaReviewFor(record),at=oaLocation(record),status=oaState(record);
  oaDetail.hidden=false;oaDetail.replaceChildren();
@@ -2382,33 +2415,50 @@ function oaDrawList(filtered){
 function renderOACatalog(){
  oaLayer.clearLayers();oaPointMarkers.clear();
  if(!oaRecords.length){oaStats.textContent='No hay registros cargados.';return}
- const filtered=oaRecords.filter(oaMatches);
+ const merged=mapViewMode==='airfields';
+ let anacMatches=0,reviewExcluded=0;
+ const filtered=(merged?oaRecords.filter(record=>{
+  if(oaMatchesANAC(record)){anacMatches++;return false}
+  if(['excluded','duplicate'].includes(oaState(record))){reviewExcluded++;return false}
+  return true;
+ }):oaRecords.filter(oaMatches));
  let countClosed=0,countDuplicate=0,countReviewed=0;
  for(const record of filtered){
   if(record.closed)countClosed++;
   if(oaLikelyDuplicate(record))countDuplicate++;
   if(oaState(record)==='reviewed')countReviewed++;
   const point=oaLocation(record);
-  const marker=L.circleMarker(point,{radius:5,color:'#f2faff',weight:1.3,
-   fillColor:oaMarkerColor(record),fillOpacity:.96,keyboard:true,
-   title:record.name+' · OurAirports, por verificar'}).addTo(oaLayer);
+  const marker=L.circleMarker(point,{radius:merged?5.5:5,color:'#f2faff',weight:1.35,
+   fillColor:merged?oaMainColor(record):oaMarkerColor(record),fillOpacity:.98,keyboard:true,
+   title:record.name+' · OurAirports · '+oaStatusNames[oaState(record)]}).addTo(oaLayer);
   oaPointMarkers.set(record.id,marker);
-  marker.bindTooltip(record.name+' · '+record.ident+' · OurAirports sin verificar',{sticky:true});
+  marker.bindTooltip(record.name+' · '+record.ident+' · OurAirports ('+
+   (record.closed?'figura cerrado · ':'')+oaStatusNames[oaState(record)]+')',{sticky:true});
   marker.on('click',()=>oaShowRecord(record));
   marker.on('contextmenu',e=>{
    if(e.originalEvent)L.DomEvent.stop(e.originalEvent);
    oaShowRecord(record);
   });
  }
- if(mapViewMode==='ourairports'&&!map.hasLayer(oaLayer))oaLayer.addTo(map);
+ const visible=mapViewMode==='ourairports'||(merged&&layerSelected('unverified'));
+ if(visible&&!map.hasLayer(oaLayer))oaLayer.addTo(map);
+ else if(!visible&&map.hasLayer(oaLayer))map.removeLayer(oaLayer);
  const total=oaRecords.length;
  const sourceCount=oaInfo?.counts||{};
  oaStats.textContent=filtered.length+' visibles / '+total+' registros AR · '+countClosed+
   ' cerrados · '+countDuplicate+' posibles coincidencias · '+countReviewed+' revisados. '+(oaInfo?.checkedUtc?'Consulta '+dated(oaInfo.checkedUtc):'');
- oaDrawList(filtered);
- viewStatus.textContent='OurAirports: '+total+' registros comunitarios para revisar ('+
-  sourceCount.runways+' fichas de pista y '+sourceCount.frequencies+
-  ' frecuencias asociadas). '+filtered.length+' cumplen los filtros. No confirma habilitación ni apertura.';
+ if(merged){
+  viewStatus.textContent='Mapa combinado: '+documentedAirstrips.length+' registros ANAC/LAD con sus colores + '+
+   filtered.length+' puntos OurAirports (negros sin revisar, verdes revisados GdV). '+
+   anacMatches+' coincidencias ANAC sin segundo marcador y '+reviewExcluded+
+   ' registros descartados o duplicados por revisión. Total en catálogo OurAirports: '+total+
+   '. Sin validación operativa; verificar AIP/MADHEL.';
+ }else{
+  oaDrawList(filtered);
+  viewStatus.textContent='OurAirports: '+total+' registros comunitarios para revisar ('+
+   sourceCount.runways+' fichas de pista y '+sourceCount.frequencies+
+   ' frecuencias asociadas). '+filtered.length+' cumplen los filtros. No confirma habilitación ni apertura.';
+ }
 }
 async function showOurAirports(force=false){
  if(oaLoading)return oaLoading;
@@ -2417,7 +2467,8 @@ async function showOurAirports(force=false){
   return;
  }
  oaStats.textContent='Descargando registros de OurAirports…';
- inspectorMessage('Recuperando el catálogo argentino y sus datos de pista/frecuencias…');
+ if(mapViewMode==='airfields')viewStatus.textContent='Cargando la capa negra OurAirports junto a los registros ANAC…';
+ else inspectorMessage('Recuperando el catálogo argentino y sus datos de pista/frecuencias…');
  const button=document.getElementById('oa-reload');button.disabled=true;
  oaLoading=(async()=>{
   try{
@@ -2450,9 +2501,9 @@ async function showOurAirports(force=false){
    const regions=[...new Set(oaRecords.map(r=>r.region).filter(Boolean))].sort();
    oaRegion.replaceChildren(new Option('Todas las provincias','all'));
    for(const region of regions)oaRegion.append(new Option(oaRegionNames[region]||region,region));
-   if(mapViewMode==='ourairports'){
+   if(mapViewMode==='airfields'||mapViewMode==='ourairports'){
     renderOACatalog();
-    if(oaRecords.length)map.fitBounds([[-55.5,-74.5],[-21.5,-52.5]],{padding:[16,16],animate:false});
+    if(mapViewMode==='ourairports'&&oaRecords.length)map.fitBounds([[-55.5,-74.5],[-21.5,-52.5]],{padding:[16,16],animate:false});
     const warnings=[...(payload.warnings||[])];
     if(error)warnings.push('No se pudo leer el avance de revisión: '+error.message);
     if(warnings.length){
@@ -2464,10 +2515,11 @@ async function showOurAirports(force=false){
     }
    }
   }catch(error){
-   if(mapViewMode==='ourairports'){
+   if(mapViewMode==='ourairports'||mapViewMode==='airfields'){
     oaStats.textContent='Catálogo no disponible';
-    viewStatus.textContent='No se pudo importar OurAirports: '+error.message;
-    inspectorMessage('No se pudo obtener la fuente. Probá «Actualizar fuente». No se fabricaron marcadores.');
+    viewStatus.textContent='OurAirports no pudo cargarse: '+error.message+
+     '. Se mantienen los registros documentales ANAC. Intentá actualizar la página.';
+    if(mapViewMode==='ourairports')inspectorMessage('No se pudo obtener la fuente. Probá «Actualizar fuente». No se fabricaron marcadores.');
    }
   }finally{button.disabled=false;oaLoading=null}
  })();
@@ -2482,6 +2534,7 @@ document.getElementById('oa-reload').addEventListener('click',()=>{void showOurA
 viewSelect.addEventListener('change',()=>{
  const next=viewSelect.value;if(!['airfields','ourairports','fir','sigmet','pronarea'].includes(next))return;
  mapViewMode=next;
+ oaOpenInMainMap=false;
  document.getElementById('map-tool-shortcuts').hidden=next!=='airfields';
  if(next!=='airfields'){
   if(rulerEnabled)setRulerActive(false);
@@ -2513,7 +2566,12 @@ viewSelect.addEventListener('change',()=>{
  if(map.hasLayer(sigLabelLayer))map.removeLayer(sigLabelLayer);
  if(map.hasLayer(oaLayer))map.removeLayer(oaLayer);
  syncLayerVisibility();auxiliary(next==='airfields');map.closePopup();
- if(next==='airfields'){viewStatus.textContent='Solo pistas, aeródromos y referencias comunitarias. FIR y meteorología ocultas.';render();renderExternal()}
+ if(next==='airfields'){
+  viewStatus.textContent='Pistas y aeródromos ANAC + OurAirports en negro (datos pendientes de revisión). FIR y meteorología ocultas.';
+  render();renderExternal();
+  if(oaRecords.length)renderOACatalog();
+  else void showOurAirports();
+ }
  else if(next==='fir')void showFIR();
  else if(next==='sigmet')void showSIG();
  else if(next==='ourairports')void showOurAirports();
@@ -2523,5 +2581,7 @@ viewSelect.addEventListener('change',()=>{
 await loadMarkerOverrides();
 render(); // Las referencias documentales se muestran aun si falla la conexión a la comunidad.
 await load();
+// AERÓDROMOS Y PISTAS es la vista inicial: mostrar también OurAirports automáticamente.
+void showOurAirports();
 })();
 </script></body></html>
