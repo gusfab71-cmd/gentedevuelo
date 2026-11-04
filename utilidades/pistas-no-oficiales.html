@@ -411,6 +411,11 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
 
 /* Accesos rápidos flotantes: se usan con el Centro de control cerrado. */
 .map-tool-shortcuts{position:absolute;top:72px;left:11px;z-index:820;display:flex;flex-direction:column;gap:7px;align-items:center}
+/* Controles de zoom DEBAJO de los accesos rápidos, sin solaparse.
+   Cuando los accesos no están activos, Leaflet mantiene su posición habitual. */
+#map.has-airfield-shortcuts .leaflet-top.leaflet-left .leaflet-control-zoom{
+ margin-top:174px!important;margin-left:12px!important
+}
 .map-tool-shortcuts[hidden],.map-ruler-overlay[hidden],.map-shortcut-tip[hidden]{display:none!important}
 .map-tool-shortcuts button{width:42px;height:42px;display:flex;align-items:center;justify-content:center;padding:6px;border-radius:10px;
  background:#f5faff;color:#1a465f;border:1px solid #7296ae;box-shadow:0 2px 7px #122d3e80}
@@ -427,6 +432,9 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
  background:#f7e6b7;color:#3a301a;padding:8px 11px;border-radius:9px;border:1px solid #b9974d;font-size:11px;box-shadow:0 2px 9px #122a3e80}
 @media(max-width:620px){
  .map-tool-shortcuts{top:71px;left:8px;gap:6px}
+ #map.has-airfield-shortcuts .leaflet-top.leaflet-left .leaflet-control-zoom{
+  margin-top:170px!important;margin-left:9px!important
+ }
  .map-tool-shortcuts button{width:40px;height:40px}
  .map-ruler-overlay{top:71px;left:57px;width:min(305px,calc(100% - 65px));padding:8px}
  .map-shortcut-tip{top:161px;left:57px;max-width:calc(100% - 65px)}
@@ -461,6 +469,26 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
 .oa-choice-badge{font-size:10px;border:1px solid #789bb4;color:#f4f9fd;border-radius:5px;padding:2px 5px}
 @media(max-width:550px){.oa-filter-grid{grid-template-columns:1fr}.oa-filter-grid label:nth-child(3){grid-column:auto}}
 
+
+
+/* OurAirports: selección con mouse y acciones de revisión visibles. */
+.oa-clickable-point{cursor:pointer!important}
+.oa-quick-actions{display:grid;gap:7px;margin:7px 0;padding:9px;
+ background:#18394d;border:1px solid #679eb9;border-radius:9px;color:#f4fbff}
+.oa-quick-buttons{display:flex;gap:7px;flex-wrap:wrap}
+.oa-quick-buttons button{font-size:11px;font-weight:800;padding:9px 11px;
+ border-radius:7px;border:1px solid #aecfe0;cursor:pointer}
+.oa-quick-buttons .oa-quick-review{background:#26795d;color:#fff}
+.oa-quick-buttons .oa-quick-exclude{background:#8f463b;color:#fff}
+.oa-quick-buttons .oa-quick-reset{background:#3b5971;color:#fff}
+.oa-quick-buttons button:disabled{opacity:.6;cursor:wait}
+.oa-quick-note{font-size:11px!important;line-height:1.4!important;margin:0!important;color:#dceaf3!important}
+.oa-quick-feedback{font-size:11px!important;line-height:1.4!important;color:#ffdfad!important;margin:0!important}
+.oa-map-selection{display:grid;gap:7px;color:#173449;min-width:224px}
+.oa-map-selection>strong{font-size:14px}
+.oa-map-selection>p{font-size:11px;line-height:1.45;margin:0}
+.oa-map-selection .oa-quick-actions{margin-top:3px}
+.oa-selected-detail>.oa-quick-actions{margin:8px 0 13px}
 
 /* Navegación PRONAREA: referencias geográficas explícitas sin inventar fenómenos. */
 .pronarea-nav{display:grid;gap:8px;margin:10px 0;background:#153c55;border:1px solid #7099b6;border-radius:10px;padding:10px}
@@ -848,6 +876,8 @@ let routePlanner=null;
 const map=L.map('map',{touchZoom:true,scrollWheelZoom:true,doubleClickZoom:true,tapHold:true}).setView([-35.0,-58.2],10);const satellite=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Imagery © Esri and contributors'}).addTo(map);const streets=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'});const basemapControl=L.control.layers({'Satélite · ver pistas':satellite,'Calles y caminos':streets},null,{collapsed:false});basemapControl.addTo(map);const basemapSelector=document.getElementById('basemap-selector');basemapSelector.appendChild(basemapControl.getContainer());
 /* Atribuciones Esri/OSM y Leaflet permanecen visibles a la izquierda; selector a la derecha. */
 map.attributionControl.setPosition('bottomleft');
+// La vista de aeródromos muestra herramientas rápidas sobre el zoom.
+map.getContainer().classList.add('has-airfield-shortcuts');
 let markers=L.layerGroup().addTo(map),records=[],admin=false;
 
 /* Ordena los controles existentes sin duplicarlos ni perder formularios o filtros. */
@@ -2603,6 +2633,7 @@ document.getElementById('pronarea-map-analyze').addEventListener('click',()=>{
  */
 let oaRecords=[],oaInfo=null,oaLoading=null,oaCurrent=null,oaMaxList=60;
 const oaReviews=new Map(),oaPointMarkers=new Map();
+// La selección se realiza con clic izquierdo, sin modificar datos por accidente.
 const oaSearch=document.getElementById('oa-search'),
  oaRegion=document.getElementById('oa-region'),
  oaKind=document.getElementById('oa-kind'),
@@ -2689,7 +2720,16 @@ function oaInfoLine(parent,key,val){
  p.append(title,document.createTextNode(String(val)));parent.append(p);
 }
 function oaShowRecord(record){
+ const oldSelectedId=oaCurrent?.id;
+ if(oldSelectedId!==undefined&&oldSelectedId!==record.id){
+  const previous=oaPointMarkers.get(oldSelectedId);
+  if(previous)previous.setStyle({
+   radius:mapViewMode==='airfields'?5.5:5,color:'#f2faff',weight:1.35
+  });
+ }
  oaCurrent=record;
+ const selectedMarker=oaPointMarkers.get(record.id);
+ if(selectedMarker)selectedMarker.setStyle({radius:9,color:'#24bff3',weight:3});
  oaOpenInMainMap=mapViewMode==='airfields';
  if(oaOpenInMainMap){
   document.getElementById('airspace-inspector-title').textContent='Ficha OurAirports · sin validar';
@@ -2703,6 +2743,7 @@ function oaShowRecord(record){
  const title=document.createElement('h4');title.textContent=record.name;
  oaDetail.append(title);
  oaInfoLine(oaDetail,'Estado de revisión',oaStatusNames[status]);
+ if(admin)oaDetail.append(oaReviewQuickActions(record));
  oaInfoLine(oaDetail,'Tipo publicado por OurAirports',oaTypeNames[record.type]||record.type);
  if(record.closed)oaInfoLine(oaDetail,'Advertencia','Figura como CERRADO en OurAirports; no usar como destino sin confirmar oficialmente.');
  if(oaLikelyDuplicate(record))oaInfoLine(oaDetail,'Cruce automático','Posible coincidencia con un registro ANAC o comunitario existente (NO se eliminó).');
@@ -2731,6 +2772,84 @@ function oaShowRecord(record){
  oaDetail.append(caution);
  if(admin)oaReviewForm(record,selected);
  oaDetail.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+// Las acciones rápidas reutilizan la tabla de auditoría y respetan sus
+// políticas RLS: no destruyen ni actualizan el catálogo original OurAirports.
+async function oaApplyQuickReview(record,target,feedback){
+ if(!admin)throw Error('Solo un administrador puede revisar estos puntos.');
+ if(!['reviewed','excluded','pending'].includes(target))throw Error('Estado inválido.');
+ const prompt=target==='reviewed'?
+  '¿Confirmás la revisión de este registro por Gente de Vuelo? No acredita habilitación ni apertura ANAC.':
+  target==='excluded'?
+  '¿Descartar este punto del mapa combinado? El registro original OurAirports no se elimina y podrá restaurarse.':
+  '¿Restaurar el registro al estado Pendiente de revisar?';
+ if(!window.confirm(prompt))return false;
+ const {data,error:authError}=await client.auth.getUser();
+ const user=data?.user;
+ if(authError||!user)throw Error('Iniciá sesión como administrador para guardar.');
+ const old=oaReviewFor(record)||{};
+ const row={
+  airport_id:record.id,
+  review_status:target,
+  review_note:old.review_note||'',
+  corrected_lat:old.corrected_lat??null,
+  corrected_lon:old.corrected_lon??null,
+  updated_by:user.id,
+  updated_at:new Date().toISOString()
+ };
+ const {error}=await client.from('aerolocator_ourairports_review')
+  .upsert(row,{onConflict:'airport_id'});
+ if(error)throw Error('No se pudo guardar la revisión: '+error.message);
+ oaReviews.set(record.id,row);
+ renderOACatalog();
+ map.closePopup();
+ oaShowRecord(record);
+ return true;
+}
+function oaReviewQuickActions(record){
+ const wrap=document.createElement('div');wrap.className='oa-quick-actions';
+ const guidance=document.createElement('p');guidance.className='oa-quick-note';
+ guidance.textContent='Revisión interna GdV: nunca equivale a validación oficial ANAC. El descarte solo oculta el punto del mapa combinado.';
+ wrap.append(guidance);
+ const actions=document.createElement('div');actions.className='oa-quick-buttons';
+ const status=document.createElement('p');status.className='oa-quick-feedback';status.setAttribute('role','status');
+ function add(text,target,cls){
+  const button=document.createElement('button');button.type='button';button.className='oa-quick-'+cls;
+  button.textContent=text;
+  button.addEventListener('click',async e=>{
+   e.preventDefault();e.stopPropagation();
+   if(button.disabled)return;
+   button.disabled=true;status.textContent='Guardando revisión…';
+   try{
+    const saved=await oaApplyQuickReview(record,target,status);
+    if(!saved){status.textContent='Acción cancelada.';button.disabled=false}
+   }catch(err){status.textContent=err.message;button.disabled=false}
+  });
+  actions.append(button);
+ }
+ if(oaState(record)!=='reviewed')add('Marcar revisado por GdV','reviewed','review');
+ if(oaState(record)!=='excluded')add('Descartar del mapa','excluded','exclude');
+ if(oaState(record)!=='pending')add('Volver a pendiente','pending','reset');
+ wrap.append(actions,status);
+ return wrap;
+}
+function oaOpenSelectedPoint(record){
+ // Windows: clic izquierdo selecciona. Clic derecho abre las mismas opciones.
+ // La ficha nunca modifica nada hasta que se pulsa una acción y se confirma.
+ oaShowRecord(record);
+ const summary=document.createElement('section');summary.className='oa-map-selection';
+ const title=document.createElement('strong');title.textContent=record.name;
+ const label=document.createElement('p');label.textContent=
+  (record.ident||'Sin identificador')+' · '+oaStatusNames[oaState(record)];
+ summary.append(title,label);
+ if(admin)summary.append(oaReviewQuickActions(record));
+ else{
+  const tip=document.createElement('p');tip.className='oa-quick-note';
+  tip.textContent='Ficha de referencia OurAirports. Solo un administrador puede marcar revisiones o descartar registros.';
+  summary.append(tip);
+ }
+ L.popup({maxWidth:350,minWidth:235,autoPan:true})
+  .setLatLng(oaLocation(record)).setContent(summary).openOn(map);
 }
 function oaReviewForm(record,review){
  const box=document.createElement('form');box.className='oa-review-form';
@@ -2822,16 +2941,26 @@ function renderOACatalog(){
   if(oaLikelyDuplicate(record))countDuplicate++;
   if(oaState(record)==='reviewed')countReviewed++;
   const point=oaLocation(record);
-  const marker=L.circleMarker(point,{radius:merged?5.5:5,color:'#f2faff',weight:1.35,
+  const selected=oaCurrent?.id===record.id;
+  const marker=L.circleMarker(point,{
+   radius:selected?9:(merged?5.5:5),color:selected?'#24bff3':'#f2faff',
+   weight:selected?3:1.35,
    fillColor:merged?oaMainColor(record):oaMarkerColor(record),fillOpacity:.98,keyboard:true,
-   title:record.name+' · OurAirports · '+oaStatusNames[oaState(record)]}).addTo(oaLayer);
+   className:'oa-clickable-point',
+   title:record.name+' · OurAirports · '+oaStatusNames[oaState(record)]
+  }).addTo(oaLayer);
   oaPointMarkers.set(record.id,marker);
   marker.bindTooltip(record.name+' · '+record.ident+' · OurAirports ('+
    (record.closed?'figura cerrado · ':'')+oaStatusNames[oaState(record)]+')',{sticky:true});
-  marker.on('click',()=>oaShowRecord(record));
+  marker.on('click',e=>{
+   if(routePlanner?.isDrawing())return;
+   if(e.originalEvent)L.DomEvent.stopPropagation(e.originalEvent);
+   oaOpenSelectedPoint(record);
+  });
   marker.on('contextmenu',e=>{
+   if(routePlanner?.isDrawing())return;
    if(e.originalEvent)L.DomEvent.stop(e.originalEvent);
-   oaShowRecord(record);
+   oaOpenSelectedPoint(record);
   });
  }
  const visible=mapViewMode==='ourairports'||(merged&&layerSelected('unverified'));
@@ -2928,6 +3057,7 @@ document.getElementById('oa-reload').addEventListener('click',()=>{void showOurA
 viewSelect.addEventListener('change',()=>{
  const next=viewSelect.value;if(!['airfields','ourairports','sigmet','pronarea'].includes(next))return;
  mapViewMode=next;
+ map.getContainer().classList.toggle('has-airfield-shortcuts',next==='airfields');
  if(next!=='airfields')routePlanner?.pauseForOtherMode();
  if(next!=='pronarea')pronareaMapFirLabel.hidden=true;
  oaOpenInMainMap=false;
