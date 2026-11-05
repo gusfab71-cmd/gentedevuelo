@@ -5,6 +5,10 @@ on:
       - feature/aerolocator-openaip
     paths:
       - scripts/sync_ourairports_navaids_ar.py
+      - api/aerolocator-navaids.js
+      - assets/aerolocator-navaids.js
+      - assets/aerolocator-aip-radioaids-2026.js
+      - tests/aerolocator-navaids.test.cjs
       - .github/workflows/aerolocator-navaids-snapshot.yml
   workflow_dispatch:
 permissions:
