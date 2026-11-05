@@ -341,6 +341,7 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
 .pronarea-visual .pronarea-actions button{font-size:11px;padding:8px 10px;background:#265b7c;border:1px solid #8bb2cd;color:#f0f7fb;border-radius:8px}
 .pronarea-visual .pronarea-actions #pronarea-map-analyze{background:#d4eafb;color:#102c40;font-weight:800}
 .pronarea-visual a{font-size:11px}
+.pronarea-visual a.pronarea-official-link{display:inline-block;font-size:12px;font-weight:800;color:#bbdfff;margin:4px 0 6px;text-decoration:underline;text-underline-offset:2px}
 @media(max-width:959px){.map-context-panel{top:85px;right:9px;width:min(420px,calc(100% - 18px));max-height:calc(100% - 95px)}}
 @media(max-width:620px){#map-inspector-toggle{font-size:11px;min-height:38px}.map-context-panel{top:128px;max-height:calc(100% - 140px)}.map-view-hint{font-size:10px;bottom:7px}}
 
@@ -867,6 +868,7 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
   <div class="map-context-panel-header"><div><h3>PRONAREA · Planificador de vuelo VFR</h3>
   <p>Consultá el SMN, copiá el boletín y pegalo aquí con Ctrl + V.</p></div>
   <button id="pronarea-map-close" class="map-context-panel-close" type="button" aria-label="Cerrar editor PRONAREA">×</button></div>
+  <a class="pronarea-official-link" href="https://www.smn.gob.ar/pronarea" target="_blank" rel="noopener noreferrer">Consultar PRONAREA oficial · SMN</a>
   <label for="pronarea-map-input">Texto oficial del PRONAREA (FIR, emisión, validez, sectores y niveles)
    <textarea id="pronarea-map-input" maxlength="12000" rows="8" placeholder="Copiá el PRONAREA del SMN y pegalo aquí con Ctrl + V."></textarea></label>
   <div class="pronarea-actions">
@@ -880,7 +882,6 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
   </section>
   <p class="map-context-note"><strong>El PRONAREA permite ubicar referencias geográficas.</strong> La lectura identifica fenómenos y niveles, pero NO representa automáticamente tormentas, hielo ni turbulencia sobre el mapa.</p>
   <p id="pronarea-map-result" role="status">Pegá el PRONAREA y pulsá «Leer y ubicar PRONAREA»: la FIR identificada aparecerá indicada en el mapa.</p>
-  <a href="https://www.smn.gob.ar/pronarea" target="_blank" rel="noopener noreferrer">Consultar PRONAREA oficial · SMN</a>
   <p class="map-context-note">Este texto se usa solo en esta pantalla: no se publica ni confirma automáticamente la vigencia del boletín.</p>
  </section>
 </div>
