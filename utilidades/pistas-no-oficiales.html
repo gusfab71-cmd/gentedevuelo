@@ -2600,7 +2600,12 @@ if(admin){
     if(kind==='openaip_key_not_configured')openaipTestStatus.textContent='Falta configurar OPENAIP_API_KEY en Supabase.';
     else if(kind==='openaip_auth_or_service_error')openaipTestStatus.textContent='OpenAIP rechazó la solicitud o su servicio dio error (HTTP '+detail.providerStatus+').';
     else if(kind==='login_required'||kind==='admin_required')openaipTestStatus.textContent='Se requiere una sesión de administrador de Gente de Vuelo.';
-    else openaipTestStatus.textContent='No se pudo validar la conexión. Consultá los registros de la función de Supabase.';
+    else if(kind==='auth_configuration_missing')openaipTestStatus.textContent='Error de configuración de autenticación en la función Supabase (503).';
+    else if(kind==='auth_unavailable')openaipTestStatus.textContent='La función no logró verificar la sesión contra Supabase Auth (503).';
+    else if(kind==='authorization_unavailable')openaipTestStatus.textContent='La función no logró consultar los permisos de administrador (503).';
+    else if(kind==='openaip_connection_unavailable')openaipTestStatus.textContent='La función no pudo conectarse al servidor de OpenAIP (503). La clave aún no está validada.';
+    else if(kind==='openaip_response_not_json')openaipTestStatus.textContent='OpenAIP respondió, pero el formato no es el esperado (502).';
+    else openaipTestStatus.textContent='No se pudo validar la conexión. HTTP '+(error.context?.status||'desconocido')+' · código '+(typeof kind==='string'?kind:'sin respuesta reconocible')+'.';
     return;
    }
    if(data?.ok&&data?.configured&&data?.providerStatus===200)
