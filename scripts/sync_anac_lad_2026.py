@@ -68,8 +68,9 @@ def extract_page(page):
         lon_match = re.search(r"(?<!\d)\d{7}(?:[.,]\d+)?[EW]", complete)
         latitude = coordinate(lat_match.group(), True) if lat_match else None
         longitude = coordinate(lon_match.group(), False) if lon_match else None
-        if latitude is None or longitude is None:
-            raise ValueError(f"LAD row {n} page {page.number+1}: coordinates unreadable: {complete!r}; {columns!r}")
+        # Some published LAD entries intentionally have 000000S/0000000W or
+        # lack coordinates. Preserve their source row in quarantine rather than
+        # inventing a point or rejecting the rest of the official list.
         elevation_match = re.search(r"\d+(?:[.,]\d+)?\s*(?:mts?\.?|m\.?)",columns[7],re.I)
         if elevation_match:columns[7]=elevation_match.group().strip()
         region_match = re.search(r"\bDR(?:CE|NO|NE|SU)\b", cell(page,.85,.958,start-1,bottom),re.I)
@@ -109,12 +110,15 @@ def extract(path):
     missing = sorted(set(range(1, max(ordinals)+1)) - set(ordinals))
     if missing:
         raise ValueError("Missing official LAD rows: " + str(missing[:30]))
-    # Allow Argentine Antarctic installations; never silently discard outliers.
-    invalid = [r for r in rows if
+    # Allow Antarctic installations while isolating zero/missing/out-of-range
+    # locations as quarantined source rows.
+    quarantine=[r for r in rows if
+        r["lat"] is None or r["lon"] is None or
         not (-67 <= r["lat"] <= -21 and -75 <= r["lon"] <= -52) or not r["name"]]
-    if invalid:
-        raise ValueError("Geographic anomalies: " + repr(invalid[:5]))
-    return sorted(rows, key=lambda row:row["row"])
+    valid=[r for r in rows if r not in quarantine]
+    if len(quarantine)>30 or len(valid)<900:
+        raise ValueError(f"Too many anomalous LAD rows: {len(quarantine)}; {len(valid)} usable")
+    return sorted(valid, key=lambda row:row["row"]),sorted(quarantine,key=lambda row:row["row"])
 
 
 def main():
@@ -130,12 +134,14 @@ def main():
         if not data.startswith(b"%PDF") or len(data)<100000:
             raise ValueError("Official ANAC LAD source did not return a valid PDF")
         pdf.write_bytes(data)
-    rows=extract(pdf)
+    rows,quarantine=extract(pdf)
     snapshot={
         "schema":1, "edition":EDITION,"source":SOURCE,
         "title":"Listado de Lugares Aptos Denunciados (ANAC, 28 septiembre 2026)",
         "note":"Geographic registry only: NOT a certified aerodrome or operational authorization.",
-        "count":len(rows), "counts":dict(Counter(r["type"] for r in rows)),
+        "count":len(rows), "sourceCount":len(rows)+len(quarantine),
+        "quarantined":len(quarantine),"quarantine":quarantine,
+        "counts":dict(Counter(r["type"] for r in rows)),
         "records":rows,
     }
     output=Path(args.output)
@@ -145,7 +151,8 @@ def main():
         print("Unchanged LAD registry",len(rows))
     else:
         output.write_text(content,encoding="utf8")
-        print("Extracted",len(rows),"LAD/LADH/LADA records from",pdf)
+        print("Extracted",len(rows),"usable LAD/LADH/LADA records from",pdf,
+              ";",len(quarantine),"quarantined records remain without map pin")
 
 
 if __name__=="__main__":
