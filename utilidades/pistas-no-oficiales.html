@@ -764,6 +764,8 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
  <select id="map-view-mode" aria-controls="map" aria-describedby="map-view-status">
  <option value="airfields">Aeródromos y pistas</option>
  <option value="navaids">Radioayudas · NDB / VOR / DME</option>
+ <option value="openaip-airspaces">Espacios aéreos · OpenAIP (prueba)</option>
+ <option value="openaip-points">Puntos de notificación VFR · OpenAIP (prueba)</option>
  <option value="ourairports">Revisión · OurAirports + OSM</option>
  <option value="sigmet">SIGMET · fenómenos</option>
  <option value="pronarea">PRONAREA · Planificador de vuelo VFR</option>
@@ -930,7 +932,14 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
   <p class="map-context-note">Este texto se usa solo en esta pantalla: no se publica ni confirma automáticamente la vigencia del boletín.</p>
  </section>
 
- <section id="navaid-controls" class="navaid-control-box" aria-label="Radioayudas de Argentina, solo referencia" hidden>
+ <section id="openaip-overview" class="navaid-control-box" aria-label="Datos OpenAIP de referencia" hidden>
+ <h3>OpenAIP · Argentina</h3>
+ <p id="openaip-layer-status" role="status" aria-live="polite">Seleccioná una capa para consultar OpenAIP.</p>
+ <p>Prueba limitada a administradores. Datos comunitarios de referencia, no utilizables para navegación sin AIP y NOTAM actualizados.</p>
+ <p>Fuente <a href="https://www.openaip.net" target="_blank" rel="noopener noreferrer">OpenAIP</a> ·
+ <a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener noreferrer">CC BY-NC 4.0</a>.</p>
+</section>
+<section id="navaid-controls" class="navaid-control-box" aria-label="Radioayudas de Argentina, solo referencia" hidden>
   <h3>Radioayudas · Argentina</h3>
   <p>Seleccioná los tipos que querés ver. Clic en un símbolo para consultar la ficha.</p>
   <div class="navaid-filter-row" aria-label="Filtrar radioayudas">
@@ -980,15 +989,17 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
 </div><p class="map-actions" id="airfields-map-actions"><button id="explore" type="button">Revisar pistas OSM de esta zona</button> <small id="osm-status">Abre la revisión OSM para ver pistas y sus trazados.</small></p></div>
   </section>
  </div>
-</main><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="../assets/supabase-2.117.2.min.js"></script><script src="../assets/community-config.js"></script><script src="../assets/r2-media.js"></script><script src="gestion-aeronautica/src/catalogo-pistas-anac.js"></script><script src="gestion-aeronautica/src/clasificacion-pistas.js"></script><script src="../assets/aerolocator-official-sources.js?v=20261105official1"></script><script src="../assets/aerolocator-osm-review.js?v=20261105geom1"></script><script src="../assets/aerolocator-osm-review-ui.js?v=20261105geom1"></script><script src="../assets/aerolocator-wmm2025.js?v=20261104wmm1"></script><script src="../assets/aerolocator-route-planner.js?v=20261105-distancias-nm-km2"></script><script src="../assets/aerolocator-aip-radioaids-2026.js?v=20261105navaid1"></script><script src="../assets/aerolocator-navaids-layer.js?v=20261105navaid1"></script><script>
+</main><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="../assets/supabase-2.117.2.min.js"></script><script src="../assets/community-config.js"></script><script src="../assets/r2-media.js"></script><script src="gestion-aeronautica/src/catalogo-pistas-anac.js"></script><script src="gestion-aeronautica/src/clasificacion-pistas.js"></script><script src="../assets/aerolocator-official-sources.js?v=20261105official1"></script><script src="../assets/aerolocator-osm-review.js?v=20261105geom1"></script><script src="../assets/aerolocator-osm-review-ui.js?v=20261105geom1"></script><script src="../assets/aerolocator-wmm2025.js?v=20261104wmm1"></script><script src="../assets/aerolocator-route-planner.js?v=20261105-distancias-nm-km2"></script><script src="../assets/aerolocator-aip-radioaids-2026.js?v=20261105navaid1"></script><script src="../assets/aerolocator-openaip-layers.js?v=20261105beta1"></script><script src="../assets/aerolocator-navaids-layer.js?v=20261105openaipbeta1"></script><script>
 (async()=>{
 const client=supabase.createClient(GDV_CONFIG.url,GDV_CONFIG.key);
 let routePlanner=null;
 let radioayudas=null;
+let openAipLayers=null;
 const map=L.map('map',{touchZoom:true,scrollWheelZoom:true,doubleClickZoom:true,tapHold:true}).setView([-35.0,-58.2],10);const satellite=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Imagery © Esri and contributors'}).addTo(map);const streets=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'});const basemapControl=L.control.layers({'Satélite · ver pistas':satellite,'Calles y caminos':streets},null,{collapsed:false});basemapControl.addTo(map);const basemapSelector=document.getElementById('basemap-selector');basemapSelector.appendChild(basemapControl.getContainer());
 /* Atribuciones Esri/OSM y Leaflet permanecen visibles a la izquierda; selector a la derecha. */
 map.attributionControl.setPosition('bottomleft');
-radioayudas=window.GDV_NAVAIDS_LAYER?.boot({map,L,panel:document.getElementById('navaid-controls')})||null;
+openAipLayers=window.GDV_OPENAIP_LAYERS?.boot({map,L,client,panel:document.getElementById('openaip-overview')})||null;
+radioayudas=window.GDV_NAVAIDS_LAYER?.boot({map,L,panel:document.getElementById('navaid-controls'),readOpenAip:()=>openAipLayers?.readNavaids()})||null;
 // La vista de aeródromos muestra herramientas rápidas sobre el zoom.
 map.getContainer().classList.add('has-airfield-shortcuts');
 let markers=L.layerGroup().addTo(map),records=[],admin=false;
@@ -2634,7 +2645,7 @@ function contextualInspector(open){
  const mode=mapViewMode;
  if(!open&&mode==='airfields')oaOpenInMainMap=false;
  const oaInMain=mode==='airfields'&&oaOpenInMainMap;
- inspectorToggle.hidden=(mode==='airfields'&&!oaInMain)||mode==='navaids';
+ inspectorToggle.hidden=(mode==='airfields'&&!oaInMain)||mode==='navaids'||mode==='openaip-airspaces'||mode==='openaip-points';
  areaInspector.hidden=!(open&&(mode==='fir'||mode==='sigmet'||mode==='ourairports'||oaInMain));
  pronareaEditor.hidden=!(open&&mode==='pronarea');
  document.querySelector('.dispatch-map-main').classList.toggle('pronarea-docked',!pronareaEditor.hidden);
@@ -2642,7 +2653,7 @@ function contextualInspector(open){
  inspectorToggle.setAttribute('aria-expanded',String(open&&(mode!=='airfields'||oaInMain)));
  const label=mode==='fir'?'FIR':mode==='sigmet'?'SIGMET':mode==='ourairports'?'catálogo':oaInMain?'ficha OurAirports':'PRONAREA';
  inspectorToggle.textContent=open?'Ocultar '+label:'Ver '+label;
- if(mode==='airfields'||mode==='navaids')mapViewHint.hidden=true;
+ if(mode==='airfields'||mode==='navaids'||mode==='openaip-airspaces'||mode==='openaip-points')mapViewHint.hidden=true;
  else{
   mapViewHint.hidden=false;
   mapViewHint.textContent=mode==='fir'?'Seleccioná una FIR con «Ver FIR» para centrarla o pasá el cursor sobre su zona punteada para identificarla.':
@@ -3729,9 +3740,10 @@ oaSearch.addEventListener('input',()=>{oaMaxList=60;if(oaRecords.length)renderOA
 document.getElementById('oa-reload').addEventListener('click',()=>{void showOurAirports(true)});
 
 viewSelect.addEventListener('change',()=>{
- const next=viewSelect.value;if(!['airfields','ourairports','sigmet','pronarea','navaids'].includes(next))return;
+ const next=viewSelect.value;if(!['airfields','ourairports','sigmet','pronarea','navaids','openaip-airspaces','openaip-points'].includes(next))return;
  mapViewMode=next;
  if(next!=='navaids')radioayudas?.hide();
+  if(next!=='openaip-airspaces'&&next!=='openaip-points')openAipLayers?.hide();
  // El selector muestra PRONAREA junto al mapa satelital sin abrir el formulario superior.
  const planningMode=next==='pronarea';
  document.getElementById('dispatch-map-panel').classList.toggle('vfr-planning-selected',planningMode);
@@ -3779,6 +3791,12 @@ viewSelect.addEventListener('change',()=>{
  }
  else if(next==='sigmet')void showSIG();
  else if(next==='ourairports')void showOurAirports();
+ else if(next==='openaip-airspaces'||next==='openaip-points'){
+  const resource=next==='openaip-airspaces'?'airspaces':'reporting-points';
+  viewStatus.textContent='OpenAIP Argentina: '+(resource==='airspaces'?'espacios aéreos':'puntos VFR')+' solo referencia. Verificar AIP y NOTAM.';
+  if(!openAipLayers){viewStatus.textContent='El módulo OpenAIP no está disponible.';return}
+  void openAipLayers.show(resource);
+ }
  else if(next==='navaids'){
   viewStatus.textContent='Radioayudas NDB/VOR/DME: datos informativos de OurAirports y referencias documentales ANAC. No son información operacional vigente.';
   if(!radioayudas){viewStatus.textContent='No se pudo iniciar la capa de radioayudas.';return}
