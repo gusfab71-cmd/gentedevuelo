@@ -44,7 +44,7 @@
   const source=String(raw||'');
   const parsed=[];
   if(isHeli){
-   const rx=/FATO\s*:\s*(\d+(?:[.,]\d+)?)\s*(?:[xX×]\s*(\d+(?:[.,]\d+)?))?\s*M\b/gi;
+   const rx=/FATO\s*:?\s*(?:Circular\s+de\s+)?(\d+(?:[.,]\d+)?)\s*(?:[xX×]\s*(\d+(?:[.,]\d+)?))?\s*M\b/gi;
    for(const match of source.matchAll(rx)){
     const length=Number(match[1].replace(',','.'));
     const width=match[2]?Number(match[2].replace(',','.')):null;
@@ -52,9 +52,9 @@
      parsed.push({name:'FATO',lengthMeters:length,widthMeters:width});
    }
   }else{
-   const rx=/(\d{1,2}(?:\s*[LR])?\s*\/\s*\d{1,2}(?:\s*[LR])?)\s+(\d{2,5})\s*[xX×]\s*(\d{1,4})\s*M\b/gi;
+   const rx=/(\d{1,2}(?:\s*[LR])?\s*\/\s*\d{1,2}(?:\s*[LR])?)\s*-?\s*(\d{1,2}[.]\d{3}|\d{2,5})\s*[xX×]\s*(\d{1,4})\s*(?:M\b)?/gi;
    for(const match of source.matchAll(rx)){
-    const length=Number(match[2]),width=Number(match[3]);
+    const length=Number(match[2].replace('.','')),width=Number(match[3]);
     if(length>0&&length<=10000&&width>0&&width<=250)
      parsed.push({name:match[1].replace(/\s+/g,' ').trim(),lengthMeters:length,widthMeters:width});
    }
