@@ -1966,6 +1966,7 @@ function el(tag,text){const e=document.createElement(tag);e.textContent=text;ret
 const documentedAirstrips=[...(ANAC_CATALOG.official||[]),...(ANAC_CATALOG.lad||[])];
 let anac2026Integration={loaded:false,total:0,published:0,quarantined:0,mergedLegacy:0,archivedLegacy:0,skippedLAD:0,error:''};
 let lad2026Integration={loaded:false,total:0,added:0,updated:0,matchedOfficial:0,error:''};
+let historical2021Integration={loaded:false,total:0,matched:0,error:''};
 function normalizePista(value){return String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()}
 /* Padrón ANAC 2026 aportado en Shapefile, normalizado y almacenado localmente.
  * La lista documenta existencia geográfica, no permiso o aptitud operacional.
@@ -2170,6 +2171,56 @@ async function loadAnacLAD2026(){
   console.warn('AeroLocator: conservar LAD previo:',error);
  }
 }
+async function loadAnacHistorical2021(){
+ try{
+  const response=await fetch('../assets/aerolocator-anac-historical-2021.json?v=20261105historic1',
+   {cache:'no-cache'});
+  if(!response.ok)throw Error('Referencia histórica aún no disponible');
+  const doc=await response.json();
+  if(doc.schema!==1||doc.edition!=='2021-09'||!Array.isArray(doc.rows)||
+   doc.rows.length<400||doc.count!==doc.rows.length)
+   throw Error('El padrón histórico no superó la verificación de integridad');
+  const geoKm=(a,b,c,d)=>nauticalMiles(a,b,c,d);
+  const candidates=doc.rows;
+  let matched=0;
+  for(const site of documentedAirstrips){
+   if(site.category==='lad')continue;
+   const icao=String(site.details?.icao||'').toUpperCase();
+   const name=ladComparableName(site.name);
+   const best=candidates.find(row=>{
+    const [local,hicao,iata,designation,lat,lon]=row;
+    if(!Number.isFinite(lat)||!Number.isFinite(lon))return false;
+    const distance=geoKm(site.lat,site.lon,lat,lon);
+    if(icao&&hicao&&icao===String(hicao).trim().toUpperCase()&&distance<8)return true;
+    const oldName=ladComparableName(designation);
+    return distance<.22&&name.length>=6&&oldName.length>=6&&
+     (name.includes(oldName)||oldName.includes(name));
+   });
+   if(!best)continue;
+   const [local,oldIcao,iata,designation,lat,lon,condition,control,
+    regional,fir,use,traffic,sna,concession,disabled,province]=best;
+   const fields=[
+    'ANAC septiembre 2021 (histórico)',
+    condition&&'Condición declarada: '+condition,
+    control&&'Control: '+control,
+    fir&&'FIR indicada: '+fir,
+    use&&'Uso: '+use,
+    regional&&'Regional: '+regional,
+    disabled&&'Inhabilitado según 2021: '+disabled,
+    concession&&'Concesión en 2021: '+concession,
+    'NO acredita estado o servicio vigente'
+   ].filter(Boolean);
+   site.details=site.details||{};
+   site.details.historical2021=fields.join(' · ');
+   site.details.historical2021Source=doc.source;
+   matched++;
+  }
+  historical2021Integration={loaded:true,total:doc.rows.length,matched,error:''};
+ }catch(error){
+  historical2021Integration.error=String(error?.message||error);
+  console.warn('AeroLocator: referencia ANAC 2021 no incorporada:',error);
+ }
+}
 function renderDocumented(){
  const root=document.getElementById('pista-documented-list');
  root.replaceChildren();
@@ -2226,6 +2277,9 @@ function renderDocumented(){
     ', actualizados '+lad2026Integration.updated+
     ', coincidentes con aeródromos '+lad2026Integration.matchedOfficial+')':
    (ANAC_CATALOG.lad||[]).length+' LAD anteriores; padrón completo pendiente de importación')+
+   (historical2021Integration.loaded?
+    '. '+historical2021Integration.matched+' fichas complementadas con datos ANAC históricos de 2021':
+    '. Información complementaria de 2021 no disponible')+
    '. '+count+' puntos documentales visibles con los filtros. No certifica habilitación ni vigencia operacional.':
   'Catálogo documental anterior: '+(ANAC_CATALOG.official||[]).length+' aeródromos y '+
   (ANAC_CATALOG.lad||[]).length+' LAD. El padrón ANAC 2026 no pudo cargarse'+
@@ -3578,6 +3632,7 @@ routePlanner=window.GDV_ROUTE_PLANNER_BOOT?.({
 await loadMarkerOverrides();
 await loadAnac2026Catalog();
 await loadAnacLAD2026();
+await loadAnacHistorical2021();
 render(); // Fuentes ANAC documentales, independientes de la conexión comunitaria.
 await load();
 // AERÓDROMOS Y PISTAS es la vista inicial: mostrar también OurAirports automáticamente.
