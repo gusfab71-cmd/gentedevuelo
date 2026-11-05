@@ -160,7 +160,7 @@ function boot({map,L,client,panel}){
    }
    if(active===request)group.addTo(map);
    status.textContent=rendered+' visibles'+(data.total!=null?' de '+data.total:'')+
-     ' registros OpenAIP'+(data.partial?' · consulta parcial, quedan páginas pendientes':'')+
+     ' registros OpenAIP · CC BY-NC 4.0'+(data.partial?' · consulta parcial, quedan páginas pendientes':'')+
      '. Solo referencia, verificar AIP/NOTAM.';
   }catch(error){
    if(active===request)status.textContent=error.message||'No se pudo consultar OpenAIP.';
