@@ -1,0 +1,43 @@
+name: AeroLocator - padrón oficial ANAC LAD 2026
+
+on:
+  push:
+    paths:
+      - scripts/sync_anac_lad_2026.py
+      - .github/workflows/aerolocator-lad-anac.yml
+  workflow_dispatch:
+  schedule:
+    - cron: "25 8 1 * *"
+
+permissions:
+  contents: write
+
+jobs:
+  lad-2026:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Descargar repositorio
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Instalar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Instalar lector de PDF
+        run: python -m pip install 'pymupdf>=1.24,<2'
+      - name: Descargar e interpretar el PDF oficial ANAC
+        run: python scripts/sync_anac_lad_2026.py
+      - name: Guardar solo si pasó controles y cambió
+        shell: bash
+        run: |
+          git config user.name "Gente de Vuelo Catalog Bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/aerolocator-anac-lad-2026-ar.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Datos: actualizar listado oficial LAD 2026"
+            git push
+          else
+            echo "Sin cambios en el padrón LAD"
+          fi
