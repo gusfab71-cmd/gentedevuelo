@@ -119,6 +119,7 @@ h1{letter-spacing:-.035em}
 .swatch-uncontrolled,.pin-legend .legend-dot.uncontrolled{background:#258a91}
 .swatch-private,.pin-legend .legend-dot.private{background:#8367b5}
 .swatch-heliport,.pin-legend .legend-dot.heliport{background:#427f8d}
+.swatch-anac-2026,.pin-legend .legend-dot.anac-documental{background:#4978a0;border-color:#d8e7fd}
 .swatch-unverified,.pin-legend .legend-dot.unverified{background:#b7433b;border-color:#ffd4c9}
 .pista-filter-grid strong{overflow-wrap:anywhere}
 .airstrip-popup .popup-warning.critical{background:#ffe3dc;border-left-color:#b7433b;color:#81251c;font-weight:760}
@@ -645,6 +646,7 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
   <label class="pista-filter-option"><input type="checkbox" data-pista-layer="private_aerodrome" checked><span class="pista-filter-swatch swatch-private" aria-hidden="true"></span><span><strong>Aeródromos privados</strong><small>Acceso sujeto a autorización. Pueden contar o no con ATS; verificar habilitación.</small></span></label>
   <label class="pista-filter-option"><input type="checkbox" data-pista-layer="lad" checked><span class="pista-filter-swatch swatch-lad" aria-hidden="true"></span><span><strong>Lugares Aptos Denunciados (LAD)</strong><small>No son aeródromos habilitados. Consultar restricciones VFR, condiciones y autorización.</small></span></label>
   <label class="pista-filter-option"><input type="checkbox" data-pista-layer="heliport" checked><span class="pista-filter-swatch swatch-heliport" aria-hidden="true"></span><span><strong>Helipuertos / helipuntos</strong><small>Instalaciones para alas rotativas. Público/privado y superficie/elevado se muestran en cada ficha.</small></span></label>
+  <label class="pista-filter-option"><input type="checkbox" data-pista-layer="anac_documental" checked><span class="pista-filter-swatch swatch-anac-2026" aria-hidden="true"></span><span><strong>ANAC 2026 · Clasificación operativa no determinada</strong><small>Registro documental de aeródromos en ANAC. TWR, uso público/privado y vigencia deben comprobarse en AIP/MADHEL.</small></span></label>
   <label class="pista-filter-option critical"><input type="checkbox" data-pista-layer="unverified" checked><span class="pista-filter-swatch swatch-unverified" aria-hidden="true"></span><span><strong>⚠ No oficiales / estatus sin verificar</strong><small>Solo referencias geográficas para análisis de contingencias. NO utilizar como destino o alternativo confirmado.</small></span></label>
  </div>
  <label class="osm-toggle"><input type="checkbox" data-pista-layer="reference" checked> Dentro de «Sin verificar», mostrar también referencias de OpenStreetMap (gris)</label>
@@ -883,6 +885,7 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
   <span class="legend-item"><span class="legend-dot private" aria-hidden="true"></span>Privado</span>
   <span class="legend-item"><span class="legend-dot lad" aria-hidden="true"></span>LAD</span>
   <span class="legend-item"><span class="legend-dot heliport" aria-hidden="true"></span>Helipuerto</span>
+  <span class="legend-item"><span class="legend-dot anac-documental" aria-hidden="true"></span>ANAC 2026 · Categoría pendiente</span>
   <span class="legend-item"><span class="legend-dot unverified" aria-hidden="true"></span>⚠ Sin verificar</span>
 
   <span class="legend-item"><span class="legend-dot oa-checked-dot" aria-hidden="true"></span>OurAirports · revisado y clasificado GdV</span>
@@ -935,6 +938,7 @@ const PIN_PALETTE={
  private_aerodrome:{fill:'#8367b5',edge:'#e7d9ff'},
  lad:{fill:'#b58b37',edge:'#fff0ca'},
  heliport:{fill:'#427f8d',edge:'#d0f0f6'},
+ anac_documental:{fill:'#4978a0',edge:'#d8e7fd'},
  unverified:{fill:'#b7433b',edge:'#ffe1d9'},
  community:{fill:'#b7433b',edge:'#ffe1d9'},
  reference:{fill:'#67727b',edge:'#f5f8fb'},
@@ -954,10 +958,10 @@ function runwayPin(kind='unverified'){
 }
 const ANAC_CATALOG=window.AEROSUITE_OFFICIAL_AIRSTRIPS||{official:[],lad:[],sources:{},catalogStatus:'no_disponible'};
 const documentedLayers={official:L.layerGroup().addTo(map),lad:L.layerGroup().addTo(map)};
-const layerVisibility={controlled_public:true,uncontrolled_public:true,private_aerodrome:true,lad:true,heliport:true,unverified:true,reference:true};
+const layerVisibility={controlled_public:true,uncontrolled_public:true,private_aerodrome:true,lad:true,heliport:true,anac_documental:true,unverified:true,reference:true};
 const documentaryMarkers=new Map();
 function layerSelected(kind){
- if(kind==='official')return ['controlled_public','uncontrolled_public','private_aerodrome','heliport'].some(k=>layerVisibility[k]===true);
+ if(kind==='official')return ['controlled_public','uncontrolled_public','private_aerodrome','heliport','anac_documental'].some(k=>layerVisibility[k]===true);
  if(kind==='community')return layerVisibility.unverified===true;
  if(kind==='reference')return layerVisibility.unverified===true&&layerVisibility.reference===true;
  return layerVisibility[kind]===true;
@@ -1849,7 +1853,10 @@ function documentaryPopup(record,nm=null){
   sourceUrl:record.sourceUrl||'',verification:record.verification||'',
   legal_use:record.legal_use,ats_service:record.ats_service,operation_rules:record.operation_rules,
   access_policy:record.access_policy,facility_kind:record.facility_kind,heliport_structure:record.heliport_structure,
-  documentCategory:record.category==='lad'?'LAD (no habilitación)':(record.sourceType==='registro_anac_historico'?'Nómina ANAC 09/2021 · Referencia histórica':'Publicación AIP · Verificar vigencia'),
+  documentCategory:record.category==='lad'?'LAD (no habilitación)':
+    record.sourceType==='registro_anac_2026'?'Padrón ANAC 09/2026 · Verificar habilitación y vigencia':
+    record.sourceType==='registro_anac_historico'?'Nómina ANAC 09/2021 · Referencia histórica':
+    'Publicación AIP · Verificar vigencia',
   notes:[record.details?.notes,record.classificationSourceDate?'Clasificación de control y uso: datos oficiales '+record.classificationSourceDate:''].filter(Boolean).join(' · ')};
  return airstripPopup(record.name,kind,record.lat,record.lon,details,nm,record.sourceDate);
 }
