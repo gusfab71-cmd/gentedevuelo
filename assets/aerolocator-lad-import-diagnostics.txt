@@ -1,0 +1,14 @@
+ANAC LAD 2026 · diagnóstico de importación fallida; NO se publicó un padrón parcial.
+warning: The `fitz` API is deprecated and will be removed in future. Use `import pymupdf` instead.
+Traceback (most recent call last):
+  File "/home/runner/work/gentedevuelo/gentedevuelo/scripts/sync_anac_lad_2026.py", line 142, in <module>
+    main()
+  File "/home/runner/work/gentedevuelo/gentedevuelo/scripts/sync_anac_lad_2026.py", line 123, in main
+    rows=extract(pdf)
+         ^^^^^^^^^^^^
+  File "/home/runner/work/gentedevuelo/gentedevuelo/scripts/sync_anac_lad_2026.py", line 95, in extract
+    rows.extend(extract_page(page))
+                ^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/gentedevuelo/gentedevuelo/scripts/sync_anac_lad_2026.py", line 66, in extract_page
+    raise ValueError(f"LAD row {n} page {page.number+1}: bad coordinates: {columns!r}")
+ValueError: LAD row 1 page 1: bad coordinates: ['1', 'LAD', '176', 'EL ADUAR', '10/28', '700m. x 30m.', 'TIERRA', '60 mts. 2', '83428,00S 06', '601545,00W 25 2', 'Km. al NW de INTIYACO, Provincia de SANTA FE. D 2 Km. al SSW de CARLOS TEJEDOR, Provincia de', 'RNE']
