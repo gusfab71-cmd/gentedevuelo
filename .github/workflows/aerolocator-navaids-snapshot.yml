@@ -1,0 +1,61 @@
+name: AeroLocator - snapshot de radioayudas AR para revisión
+on:
+  push:
+    branches:
+      - feature/aerolocator-openaip
+    paths:
+      - scripts/sync_ourairports_navaids_ar.py
+      - api/aerolocator-navaids.js
+      - assets/aerolocator-navaids.js
+      - assets/aerolocator-aip-radioaids-2026.js
+      - tests/aerolocator-navaids.test.cjs
+      - .github/workflows/aerolocator-navaids-snapshot.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  snapshot-radioayudas:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validar código y pruebas
+        run: |
+          python -m py_compile scripts/sync_ourairports_navaids_ar.py
+          node --check api/aerolocator-navaids.js
+          node --check assets/aerolocator-navaids.js
+          node --check assets/aerolocator-aip-radioaids-2026.js
+          node --test tests/aerolocator-navaids.test.cjs
+      - name: Descargar radioayudas de OurAirports (solo referencia)
+        run: python scripts/sync_ourairports_navaids_ar.py
+      - name: Validar GeoJSON de Argentina
+        run: |
+          python - <<'PY'
+          import json
+          path='assets/aerolocator-navaids-ar.geojson'
+          with open(path,encoding='utf-8') as file: data=json.load(file)
+          assert data['type']=='FeatureCollection'
+          features=data['features']
+          assert len(features)>0,'No hay radioayudas de Argentina'
+          assert all(f['properties']['verification_status']=='unverified' for f in features)
+          assert all(-180<=f['geometry']['coordinates'][0]<=180 for f in features)
+          assert all(-90<=f['geometry']['coordinates'][1]<=90 for f in features)
+          print('Registros AR:',len(features))
+          PY
+      - name: Guardar snapshot comunitario en la rama de desarrollo
+        run: |
+          git config user.name "Gente de Vuelo Catalog Bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/aerolocator-navaids-ar.geojson
+          if ! git diff --cached --quiet; then
+            git commit -m "Datos: snapshot de radioayudas OurAirports AR (sin verificar)"
+            git push origin HEAD:feature/aerolocator-openaip
+          fi
