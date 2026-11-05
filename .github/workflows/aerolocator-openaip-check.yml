@@ -1,0 +1,27 @@
+name: AeroLocator - conexión privada OpenAIP
+on:
+  pull_request:
+    paths:
+      - 'utilidades/pistas-no-oficiales.html'
+      - 'supabase/functions/aerolocator-openaip-check/index.ts'
+      - 'tests/aerolocator-openaip-check.test.cjs'
+      - '.github/workflows/aerolocator-openaip-check.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'utilidades/pistas-no-oficiales.html'
+      - 'supabase/functions/aerolocator-openaip-check/index.ts'
+      - 'tests/aerolocator-openaip-check.test.cjs'
+      - '.github/workflows/aerolocator-openaip-check.yml'
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verificar acceso administrativo a OpenAIP
+        run: node --test tests/aerolocator-openaip-check.test.cjs
