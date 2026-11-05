@@ -142,3 +142,14 @@
 .route-leg-insert-target{cursor:grab!important}
 .route-bending,.route-bending .route-leg-insert-target{cursor:grabbing!important}
 .route-leg-insert-target:focus-visible{outline:2px dashed #e5c35b}
+
+/* El selector superior es el acceso al planificador VFR.
+   Se oculta el antiguo encabezado para evitar dos entradas confusas. */
+#route-planner-panel{display:none!important}
+#route-planner-panel>summary{display:none!important}
+.dispatch-map-panel.vfr-planning-selected #route-planner-panel[open]{display:block!important}
+#route-planner-toggle{display:none!important}
+.dispatch-map-panel.vfr-planning-selected #route-planner-toggle[data-route-state="drawing"],
+.dispatch-map-panel.vfr-planning-selected #route-planner-toggle[data-route-state="finished"]{
+ display:inline-flex!important;align-items:center
+}
