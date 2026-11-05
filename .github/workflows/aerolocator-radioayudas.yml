@@ -1,0 +1,41 @@
+name: AeroLocator - capa independiente de radioayudas
+on:
+  pull_request:
+    paths:
+      - 'utilidades/pistas-no-oficiales.html'
+      - 'api/aerolocator-navaids.js'
+      - 'assets/aerolocator-navaids*'
+      - 'assets/aerolocator-aip-radioaids-2026.js'
+      - 'tests/aerolocator-navaids*.cjs'
+      - '.github/workflows/aerolocator-radioayudas.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'utilidades/pistas-no-oficiales.html'
+      - 'api/aerolocator-navaids.js'
+      - 'assets/aerolocator-navaids*'
+      - 'assets/aerolocator-aip-radioaids-2026.js'
+      - 'tests/aerolocator-navaids*.cjs'
+      - '.github/workflows/aerolocator-radioayudas.yml'
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validar sintaxis
+        run: |
+          node --check api/aerolocator-navaids.js
+          node --check assets/aerolocator-navaids-layer.js
+          node --check assets/aerolocator-aip-radioaids-2026.js
+      - name: Ejecutar tests de radioayudas
+        run: |
+          node --test tests/aerolocator-navaids.test.cjs
+          node --test tests/aerolocator-navaids-layer.test.cjs
+      - name: Validar snapshot Argentina
+        run: |
+          node -e "const fs=require('fs');const f=JSON.parse(fs.readFileSync('assets/aerolocator-navaids-ar.geojson','utf8'));if(f.type!=='FeatureCollection'||f.features.length<150||f.features.some(x=>x.properties.verification_status!=='unverified'))process.exit(1);console.log('Radioayudas AR sin verificar:',f.features.length)"

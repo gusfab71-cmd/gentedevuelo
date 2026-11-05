@@ -601,6 +601,35 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
  }
  .dispatch-map-main.pronarea-docked #map-view-hint{max-width:calc(100% - 20px)}
 }
+
+/* Radioayudas: capa separada del mapa de pistas y de PRONAREA. */
+.navaid-control-box{position:absolute;right:13px;top:12px;z-index:790;
+ width:min(290px,calc(100% - 56px));max-height:min(330px,calc(100% - 28px));overflow-y:auto;
+ background:#142e43f2;color:#f0f8ff;border:1px solid #83a9c4;border-radius:12px;
+ box-shadow:0 8px 22px #06172588;padding:12px 13px;font:12px/1.5 system-ui,sans-serif}
+.navaid-control-box[hidden]{display:none!important}
+.navaid-control-box h3{font-size:14px;color:#f0f8ff;margin:0 0 3px}
+.navaid-control-box p{font-size:11px;margin:5px 0;line-height:1.45;color:#d7e8f4}
+.navaid-filter-row{display:flex;gap:8px;flex-wrap:wrap;margin:9px 0}
+.navaid-filter-row label{display:flex;flex-direction:row;align-items:center;gap:5px;
+ background:#203f55;border:1px solid #6186a1;padding:6px 8px;border-radius:7px;cursor:pointer}
+.navaid-filter-row input{width:16px;height:16px;accent-color:#b2d5ef;flex-shrink:0}
+.navaid-symbol{font-weight:850;font-size:12px;display:inline-flex;align-items:center;justify-content:center;
+ min-width:17px;height:17px;color:#fff}
+.navaid-symbol.ndb{border-radius:50%;background:#bc812c}
+.navaid-symbol.vor{background:#2169a6;transform:rotate(45deg);border:1px solid #daeaf7}
+.navaid-symbol.dme{background:#8a6cab;border-radius:3px}
+.navaid-control-box #navaid-status{font-size:11px;color:#f1dcb2}
+.navaid-control-box a{color:#bde4ff}
+.navaid-icon{background:none;border:none}
+.navaid-popup{font:12px/1.45 system-ui,sans-serif;min-width:220px;color:#1c3348}
+.navaid-popup h3{margin:0 0 6px;color:#133551;font-size:16px}
+.navaid-popup p{margin:5px 0}
+.navaid-popup-warning{background:#fff1da;color:#713c13;padding:7px 9px;border-radius:6px}
+.navaid-popup-links{display:flex;flex-wrap:wrap;gap:8px 12px;margin-top:9px}
+.navaid-popup-links a{color:#155b91}
+@media(max-width:620px){.navaid-control-box{top:8px;right:7px;
+ width:min(258px,calc(100% - 50px));max-height:35dvh;padding:9px}}
 </style></head><body><header class="dispatch-nav"><div class="dispatch-nav-logo"><span class="dispatch-nav-symbol" aria-hidden="true">✈</span>
  <div><strong>GENTE DE VUELO</strong><small>AEROLOCATOR · MAPA AERONÁUTICO</small></div></div>
  <nav aria-label="Herramientas Gente de Vuelo"><a href="../index.html">Portada</a><a href="../comunidad.html#foro">Foro</a><a href="index.html">Utilidades</a>
@@ -719,6 +748,7 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
  <label class="map-view-picker">Mostrar una capa a la vez
  <select id="map-view-mode" aria-controls="map" aria-describedby="map-view-status">
  <option value="airfields">Aeródromos y pistas</option>
+ <option value="navaids">Radioayudas · NDB / VOR / DME</option>
  <option value="ourairports">Revisión · OurAirports + OSM</option>
  <option value="sigmet">SIGMET · fenómenos</option>
  <option value="pronarea">PRONAREA · Planificador de vuelo VFR</option>
@@ -884,6 +914,19 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
   <p id="pronarea-map-result" role="status">Pegá el PRONAREA y pulsá «Leer y ubicar PRONAREA»: la FIR identificada aparecerá indicada en el mapa.</p>
   <p class="map-context-note">Este texto se usa solo en esta pantalla: no se publica ni confirma automáticamente la vigencia del boletín.</p>
  </section>
+
+ <section id="navaid-controls" class="navaid-control-box" aria-label="Radioayudas de Argentina, solo referencia" hidden>
+  <h3>Radioayudas · Argentina</h3>
+  <p>Seleccioná los tipos que querés ver. Clic en un símbolo para consultar la ficha.</p>
+  <div class="navaid-filter-row" aria-label="Filtrar radioayudas">
+   <label><input type="checkbox" data-navaid-kind="ndb" checked><span class="navaid-symbol ndb">N</span> NDB</label>
+   <label><input type="checkbox" data-navaid-kind="vor" checked><span class="navaid-symbol vor" aria-hidden="true"></span> VOR</label>
+   <label><input type="checkbox" data-navaid-kind="dme" checked><span class="navaid-symbol dme">D</span> DME</label>
+  </div>
+  <p id="navaid-status" role="status" aria-live="polite">Seleccioná la capa para cargar las radioayudas.</p>
+  <p>OurAirports: fuente comunitaria. Las coincidencias con ANAC 2026 son documentales; no indican operatividad ni disponibilidad.</p>
+  <p><a href="https://ais.anac.gob.ar/aip" target="_blank" rel="noopener noreferrer">AIP Argentina</a> · <a href="https://ais.anac.gob.ar/notam" target="_blank" rel="noopener noreferrer">NOTAM oficiales</a></p>
+ </section>
 </div>
    <div class="dispatch-map-bottom">
  <p id="map-view-status" role="status" aria-live="polite" class="map-view-context">Pistas y aeródromos visibles. Elegí otra capa para ocultarlas.</p>
@@ -922,13 +965,15 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
 </div><p class="map-actions" id="airfields-map-actions"><button id="explore" type="button">Revisar pistas OSM de esta zona</button> <small id="osm-status">Abre la revisión OSM para ver pistas y sus trazados.</small></p></div>
   </section>
  </div>
-</main><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="../assets/supabase-2.117.2.min.js"></script><script src="../assets/community-config.js"></script><script src="../assets/r2-media.js"></script><script src="gestion-aeronautica/src/catalogo-pistas-anac.js"></script><script src="gestion-aeronautica/src/clasificacion-pistas.js"></script><script src="../assets/aerolocator-official-sources.js?v=20261105official1"></script><script src="../assets/aerolocator-osm-review.js?v=20261105geom1"></script><script src="../assets/aerolocator-osm-review-ui.js?v=20261105geom1"></script><script src="../assets/aerolocator-wmm2025.js?v=20261104wmm1"></script><script src="../assets/aerolocator-route-planner.js?v=20261105planner-menu1"></script><script>
+</main><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="../assets/supabase-2.117.2.min.js"></script><script src="../assets/community-config.js"></script><script src="../assets/r2-media.js"></script><script src="gestion-aeronautica/src/catalogo-pistas-anac.js"></script><script src="gestion-aeronautica/src/clasificacion-pistas.js"></script><script src="../assets/aerolocator-official-sources.js?v=20261105official1"></script><script src="../assets/aerolocator-osm-review.js?v=20261105geom1"></script><script src="../assets/aerolocator-osm-review-ui.js?v=20261105geom1"></script><script src="../assets/aerolocator-wmm2025.js?v=20261104wmm1"></script><script src="../assets/aerolocator-route-planner.js?v=20261105planner-menu1"></script><script src="../assets/aerolocator-aip-radioaids-2026.js?v=20261105navaid1"></script><script src="../assets/aerolocator-navaids-layer.js?v=20261105navaid1"></script><script>
 (async()=>{
 const client=supabase.createClient(GDV_CONFIG.url,GDV_CONFIG.key);
 let routePlanner=null;
+let radioayudas=null;
 const map=L.map('map',{touchZoom:true,scrollWheelZoom:true,doubleClickZoom:true,tapHold:true}).setView([-35.0,-58.2],10);const satellite=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Imagery © Esri and contributors'}).addTo(map);const streets=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'});const basemapControl=L.control.layers({'Satélite · ver pistas':satellite,'Calles y caminos':streets},null,{collapsed:false});basemapControl.addTo(map);const basemapSelector=document.getElementById('basemap-selector');basemapSelector.appendChild(basemapControl.getContainer());
 /* Atribuciones Esri/OSM y Leaflet permanecen visibles a la izquierda; selector a la derecha. */
 map.attributionControl.setPosition('bottomleft');
+radioayudas=window.GDV_NAVAIDS_LAYER?.boot({map,L,panel:document.getElementById('navaid-controls')})||null;
 // La vista de aeródromos muestra herramientas rápidas sobre el zoom.
 map.getContainer().classList.add('has-airfield-shortcuts');
 let markers=L.layerGroup().addTo(map),records=[],admin=false;
@@ -2537,7 +2582,7 @@ function contextualInspector(open){
  const mode=mapViewMode;
  if(!open&&mode==='airfields')oaOpenInMainMap=false;
  const oaInMain=mode==='airfields'&&oaOpenInMainMap;
- inspectorToggle.hidden=mode==='airfields'&&!oaInMain;
+ inspectorToggle.hidden=(mode==='airfields'&&!oaInMain)||mode==='navaids';
  areaInspector.hidden=!(open&&(mode==='fir'||mode==='sigmet'||mode==='ourairports'||oaInMain));
  pronareaEditor.hidden=!(open&&mode==='pronarea');
  document.querySelector('.dispatch-map-main').classList.toggle('pronarea-docked',!pronareaEditor.hidden);
@@ -2545,7 +2590,7 @@ function contextualInspector(open){
  inspectorToggle.setAttribute('aria-expanded',String(open&&(mode!=='airfields'||oaInMain)));
  const label=mode==='fir'?'FIR':mode==='sigmet'?'SIGMET':mode==='ourairports'?'catálogo':oaInMain?'ficha OurAirports':'PRONAREA';
  inspectorToggle.textContent=open?'Ocultar '+label:'Ver '+label;
- if(mode==='airfields')mapViewHint.hidden=true;
+ if(mode==='airfields'||mode==='navaids')mapViewHint.hidden=true;
  else{
   mapViewHint.hidden=false;
   mapViewHint.textContent=mode==='fir'?'Seleccioná una FIR con «Ver FIR» para centrarla o pasá el cursor sobre su zona punteada para identificarla.':
@@ -3632,8 +3677,9 @@ oaSearch.addEventListener('input',()=>{oaMaxList=60;if(oaRecords.length)renderOA
 document.getElementById('oa-reload').addEventListener('click',()=>{void showOurAirports(true)});
 
 viewSelect.addEventListener('change',()=>{
- const next=viewSelect.value;if(!['airfields','ourairports','sigmet','pronarea'].includes(next))return;
+ const next=viewSelect.value;if(!['airfields','ourairports','sigmet','pronarea','navaids'].includes(next))return;
  mapViewMode=next;
+ if(next!=='navaids')radioayudas?.hide();
  // El selector muestra PRONAREA junto al mapa satelital sin abrir el formulario superior.
  const planningMode=next==='pronarea';
  document.getElementById('dispatch-map-panel').classList.toggle('vfr-planning-selected',planningMode);
@@ -3681,6 +3727,12 @@ viewSelect.addEventListener('change',()=>{
  }
  else if(next==='sigmet')void showSIG();
  else if(next==='ourairports')void showOurAirports();
+ else if(next==='navaids'){
+  viewStatus.textContent='Radioayudas NDB/VOR/DME: datos informativos de OurAirports y referencias documentales ANAC. No son información operacional vigente.';
+  if(!radioayudas){viewStatus.textContent='No se pudo iniciar la capa de radioayudas.';return}
+  void radioayudas.show();
+  map.fitBounds([[-55.8,-74.7],[-21.3,-53.6]],{padding:[18,18],maxZoom:6,animate:false});
+ }
  else{
   viewStatus.textContent='Planificación VFR: iniciá el trazado de ruta y consultá PRONAREA en el panel meteorológico.';
   if(!routePlanner?.getState()?.points?.length)map.fitBounds([[-55.5,-74.5],[-21.5,-52.5]]);
