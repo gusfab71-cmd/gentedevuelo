@@ -139,6 +139,8 @@ window.GDV_ROUTE_PLANNER_BOOT=function(options){
   if(routeHistory.length>70)routeHistory.shift();
  }
  const fmt=n=>Number.isFinite(n)?n.toFixed(1):'—';
+ // Mantener NM como unidad principal y mostrar kilómetros entre paréntesis.
+ const fmtDistance=n=>fmt(n)+' NM ('+fmt(n*1.852)+' km)';
  function setMessage(msg){status.textContent=msg}
  function setNotice(msg){notice.textContent=msg;notice.hidden=!msg}
  function updateButtons(){
@@ -462,12 +464,12 @@ window.GDV_ROUTE_PLANNER_BOOT=function(options){
    const a=points[legIndex-1],b=drawing?latlng:points[legIndex];
    const calc=legCalc(a,b,forecast.tas,forecast.wind);
    lines.push('Derrota verdadera '+fmt(calc.track)+'°');
-   lines.push('Pierna '+fmt(calc.distance)+' NM · Desde salida '+fmt(distanceFromOrigin)+' NM');
+   lines.push('Pierna '+fmtDistance(calc.distance)+' · Desde salida '+fmtDistance(distanceFromOrigin));
    lines.push('TAS est. '+fmt(forecast.tas)+' kt · Deriva '+(calc.wca===null?'—':(calc.wca>=0?'+':'')+fmt(calc.wca)+'°'));
    lines.push('Rumbo corregido '+(calc.heading===null?'—':fmt(calc.heading)+'°'));
    lines.push('GS '+(calc.gs===null?'—':fmt(calc.gs)+' kt')+' · ETE '+(calc.ete===null?'—':fmt(calc.ete)+' min'));
   }else{
-   lines.push('Distancia directa desde salida '+fmt(nm(points[0],latlng))+' NM');
+   lines.push('Distancia directa desde salida '+fmtDistance(nm(points[0],latlng)));
    lines.push('Acercá el puntero a una pierna para ver sus datos.');
   }
   routeHover.textContent=lines.join('\n');routeHover.hidden=false;

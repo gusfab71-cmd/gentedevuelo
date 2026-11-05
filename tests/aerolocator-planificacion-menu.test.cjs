@@ -37,3 +37,10 @@ test('Seleccionar PRONAREA no despliega la franja de ruta ni tapa el mapa',()=>{
  assert.match(html,/pronareaEditor\.hidden=!\(open&&mode==='pronarea'\)/);
  assert.match(css,/#route-planner-panel\{display:none!important\}/);
 });
+
+test('El recuadro flotante de la ruta muestra NM y kilómetros entre paréntesis',()=>{
+ assert.match(js,/const fmtDistance=n=>fmt\(n\)\+' NM \('\+fmt\(n\*1\.852\)\+' km\)'/);
+ assert.match(js,/lines\.push\('Pierna '\+fmtDistance\(calc\.distance\)\+' · Desde salida '\+fmtDistance\(distanceFromOrigin\)\)/);
+ assert.match(js,/lines\.push\('Distancia directa desde salida '\+fmtDistance\(nm\(points\[0\],latlng\)\)\)/);
+ assert.equal((10*1.852).toFixed(1),'18.5');
+});
