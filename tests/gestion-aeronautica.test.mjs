@@ -725,6 +725,27 @@ assert.match(airstripsOriginal,/<option value="pending" selected>Pendientes<\/op
 assert.match(airstripsOriginal,/const show=false;/,
  'Aportes externos no revisados no aparecen en el mapa principal');
 
+const anac26=JSON.parse(fs.readFileSync(new URL('../assets/aerolocator-anac-2026-ar.json',import.meta.url),'utf8'));
+assert.equal(anac26.edition,'2026-09','El catálogo corresponde a septiembre de 2026');
+assert.equal(anac26.total,588,'El padrón fuente conserva los 588 registros');
+assert.equal(anac26.rows.length,588,'No deben perderse registros de la fuente');
+assert.equal(new Set(anac26.rows.map(row=>row[0])).size,588,'Identificadores ANAC únicos');
+assert.equal(anac26.rows.filter(row=>row[4]==='H').length,93,'Helipuertos documentales');
+assert.equal(anac26.rows.filter(row=>row[4]==='A').length,495,'Aeródromos documentales');
+assert.deepEqual(anac26.quarantine.map(x=>x.id).sort((a,b)=>a-b),[132,590,684],'Registros de ubicación dudosa aislados');
+const fixRioCuarto=anac26.corrected.find(x=>x.id===60);
+assert.ok(fixRioCuarto&&fixRioCuarto.icao==='SAOC','Río Cuarto normalizado desde AIP');
+assert.ok(Math.abs(fixRioCuarto.lat-(-33.0922222))<0.001);
+assert.ok(Math.abs(fixRioCuarto.lon-(-64.2694444))<0.001);
+assert.match(airstripsOriginal,/await loadAnac2026Catalog\(\)/,'Debe cargar ANAC 2026 al iniciar');
+assert.match(airstripsOriginal,/anac2026Integration\.quarantined/,'Mostrar las ubicaciones en cuarentena');
+assert.match(airstripsOriginal,/const ready=\[\.\.\.imported,\.\.\.legacyLAD\]/,'No mantener registros 2021 sin reflejo en 2026');
+assert.match(airstripsOriginal,/if\(status==='pending'&&oaMatchesANAC\(record\)\)return false/,'Coincidencias ANAC no son revisión pendiente');
+const anacClasses=fs.readFileSync(new URL('../utilidades/gestion-aeronautica/src/clasificacion-pistas.js',import.meta.url),'utf8');
+assert.match(anacClasses,/anac_documental:Object\.freeze/,'Categoría documental distinta de habilitación');
+assert.match(anacClasses,/x\.sourceType==='registro_anac_2026'/,'Clasificar solo archivos ANAC documentales');
+
+
 
 assert.match(html,/AeroLocator en AeroSuite/,'Nombre en el portal de AeroSuite');
 assert.match(landing,/<h3>AeroLocator<\/h3>/,'Nombre en presentación pública de AeroSuite');
