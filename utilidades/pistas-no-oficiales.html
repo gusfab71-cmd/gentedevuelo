@@ -483,6 +483,14 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
 .oa-quick-buttons .oa-quick-exclude{background:#8f463b;color:#fff}
 .oa-quick-buttons .oa-quick-reset{background:#3b5971;color:#fff}
 .oa-quick-buttons .oa-quick-move{background:#205a82;color:#fff}
+.official-reference-panel{margin:9px 0;padding:9px;border:1px solid #9db6ce;border-radius:9px;background:#eef5fa;color:#183447}
+.official-reference-panel summary{cursor:pointer;font-weight:800;font-size:12px;line-height:1.4}
+.official-reference-panel .official-link-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:10px 0}
+.official-reference-panel a{font-size:11px;line-height:1.3;padding:7px;border:1px solid #accde0;background:#fff;border-radius:6px;text-decoration:none;color:#164b73}
+.official-reference-panel a span{font-size:9px;color:#45677b;display:block;margin-top:2px}
+.official-reference-panel p{font-size:10px!important;color:#40576b!important;margin:7px 0!important;line-height:1.4!important}
+.official-reference-panel button{background:#e5eff6;color:#153b57;border:1px solid #9cc0d2;padding:5px 9px;font-size:11px;font-weight:800;border-radius:6px;cursor:pointer}
+@media(max-width:460px){.official-reference-panel .official-link-grid{grid-template-columns:1fr}}
 .oa-category-picker{display:grid;gap:5px;font-size:11px;font-weight:800;color:#e9f5fc}
 .oa-category-control{display:flex;align-items:center;gap:7px}
 .oa-category-control select{flex:1;min-width:0;min-height:35px;padding:6px 8px;border-radius:7px;border:1px solid #9bbdd1;background:#f5faff;color:#193249;font:12px system-ui}
@@ -894,7 +902,7 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
 </div><p class="map-actions" id="airfields-map-actions"><button id="explore" type="button">Explorar pistas en esta zona</button> <small id="osm-status">Acercá el mapa a una zona y presioná el botón. Fuente: OpenStreetMap / Overpass.</small></p></div>
   </section>
  </div>
-</main><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="../assets/supabase-2.117.2.min.js"></script><script src="../assets/community-config.js"></script><script src="../assets/r2-media.js"></script><script src="gestion-aeronautica/src/catalogo-pistas-anac.js"></script><script src="gestion-aeronautica/src/clasificacion-pistas.js"></script><script src="../assets/aerolocator-wmm2025.js?v=20261104wmm1"></script><script src="../assets/aerolocator-route-planner.js?v=20261104route6-bend"></script><script>
+</main><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="../assets/supabase-2.117.2.min.js"></script><script src="../assets/community-config.js"></script><script src="../assets/r2-media.js"></script><script src="gestion-aeronautica/src/catalogo-pistas-anac.js"></script><script src="gestion-aeronautica/src/clasificacion-pistas.js"></script><script src="../assets/aerolocator-official-sources.js?v=20261105official1"></script><script src="../assets/aerolocator-wmm2025.js?v=20261104wmm1"></script><script src="../assets/aerolocator-route-planner.js?v=20261104route6-bend"></script><script>
 (async()=>{
 const client=supabase.createClient(GDV_CONFIG.url,GDV_CONFIG.key);
 let routePlanner=null;
@@ -1757,6 +1765,36 @@ function airstripImageGallery(parent,urls,name){
   gallery.append(photo);
  }
  parent.append(gallery);
+}
+function officialSourcePanel(icao='',documentType='',sna='',isLAD=false,correctionUrl=''){
+ const source=window.GDV_OFFICIAL_SOURCES;
+ if(!source)return null;
+ const panel=document.createElement('details');panel.className='official-reference-panel';
+ const heading=document.createElement('summary');heading.textContent='Consultar fuentes oficiales · ANAC, ORSNA y SMN';panel.append(heading);
+ const note=document.createElement('p');
+ note.textContent='Enlaces a organismos oficiales para consulta manual, no datos en vivo. Corroborá fecha y vigencia en cada sitio.';
+ panel.append(note);
+ const code=String(icao||'').trim().toUpperCase();
+ if(/^[A-Z]{4}$/.test(code)){
+  const hint=document.createElement('p');hint.textContent='Código OACI de referencia: '+code+'. Podés buscarlo en MADHEL y NOTAM.';
+  const copy=document.createElement('button');copy.type='button';copy.textContent='Copiar '+code;
+  copy.addEventListener('click',async()=>{
+   try{await navigator.clipboard.writeText(code);copy.textContent='OACI copiado: '+code}
+   catch(_){copy.textContent='No se pudo copiar';}
+  });
+  panel.append(hint,copy);
+ }
+ const grid=document.createElement('div');grid.className='official-link-grid';
+ const links=source.sourceLinks({document:documentType,sna,lad:isLAD});
+ if(correctionUrl&&/^https:\/\/ais\.anac\.gob\.ar\/descarga\/[-\w]+$/.test(correctionUrl))
+  links.unshift({id:'correction',label:'Corrección AIP del punto',url:correctionUrl,note:'Documento específico contrastado'});
+ for(const x of links){
+  const a=document.createElement('a');a.href=x.url;a.target='_blank';a.rel='noopener noreferrer';
+  a.textContent=x.label+' ↗';
+  const sub=document.createElement('span');sub.textContent=x.note||'';a.append(sub);grid.append(a);
+ }
+ panel.append(grid);
+ return panel;
 }
 function airstripPopup(name,kind,latitude,longitude,details={},nm=null,updated=''){
  const card=document.createElement('section');card.className='airstrip-popup';
