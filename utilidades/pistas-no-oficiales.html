@@ -2013,9 +2013,11 @@ async function loadAnac2026Catalog(){
    const isHeli=type==='H';
    const runwayText=String(correction?.runway||runways||'');
    const altitude=String(correction?.elevation||elevation||'');
-   const facilityClass=isHeli?'heliport':
-    (old&&['controlled_public','uncontrolled_public','private_aerodrome'].includes(old.facilityClass)?
-      old.facilityClass:'anac_documental');
+   const officialRunways=window.GDV_OFFICIAL_SOURCES?.runwaySummary(runwayText,isHeli)||
+    {parsed:[],display:'',surface:''};
+   // El padrón ANAC 2026 identifica tipo de instalación, no TWR/uso público.
+   // Las categorías históricas de 2021 no se trasladan como condición actual.
+   const facilityClass=isHeli?'heliport':'anac_documental';
    const originalNotes=String(observations||'').trim();
    const priorClass=old&&old.facilityClass!=='unverified'&&!isHeli;
    const notes=[
@@ -2035,12 +2037,19 @@ async function loadAnac2026Catalog(){
     sourceDate:doc.edition,sourceLabel:'ANAC · Aeródromos y helipuertos · '+doc.edition,
     verification:'Figura en el padrón documental ANAC de septiembre de 2026; no certifica habilitación vigente ni aptitud o disponibilidad operacional.',
     facilityClass,facility_kind:isHeli?'heliport':'aerodrome',
-    legal_use:old?.legal_use||'unknown',ats_service:old?.ats_service||'unknown',
-    operation_rules:'unknown',access_policy:old?.access_policy||'unknown',
+    legal_use:'unknown',ats_service:'unknown',
+    operation_rules:'unknown',access_policy:'unknown',
     classificationSourceDate:priorClass?(old.classificationSourceDate||old.sourceDate):undefined,
     name:String(name).trim(),lat,lon,
-    details:{icao,province:String(province||'Argentina'),registry:nationalId?'Código nacional: '+nationalId:'ANAC '+id,
-     runway:runwayText||'No informado',surface:runwayText,
+    details:{icao,province:String(province||'Argentina'),registry:'ANAC '+id,
+     nationalId:String(nationalId||'').trim(),
+     runway:runwayText||'No informado',
+     runwaySpecs:officialRunways.display,
+     surface:officialRunways.surface,
+     documentReference:String(document||'').trim().toUpperCase(),
+     traffic:String(traffic||'').trim(),
+     sna:String(sna||'').trim().toUpperCase(),
+     correctionUrl:correction?.sourceUrl||'',
      elevation:altitude,permission:'Consultar documentación aeronáutica y titular; uso no autorizado por este mapa',
      notes}
    });
