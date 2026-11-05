@@ -26,7 +26,25 @@ jobs:
         with:
           python-version: "3.12"
       - name: Sincronizar registros MADHEL desde ANAC, con control de errores
-        run: python scripts/sync_anac_madhel_official.py
+        shell: bash
+        run: |
+          set -o pipefail
+          python scripts/sync_anac_madhel_official.py 2>&1 | tee /tmp/aerolocator-madhel-run.log
+      - name: Registrar fallo de origen sin publicar datos parciales
+        if: failure()
+        shell: bash
+        run: |
+          {
+            echo "MADHEL ANAC · consulta fallida. No se publicó una ficha parcial."
+            if [ -f /tmp/aerolocator-madhel-run.log ]; then tail -50 /tmp/aerolocator-madhel-run.log; fi
+          } > assets/aerolocator-madhel-import-diagnostics.txt
+          git config user.name "Gente de Vuelo Catalog Bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/aerolocator-madhel-import-diagnostics.txt
+          if ! git diff --cached --quiet; then
+            git commit -m "Datos: diagnóstico de consulta MADHEL ANAC"
+            git push
+          fi
       - name: Publicar sólo una copia válida
         shell: bash
         run: |
