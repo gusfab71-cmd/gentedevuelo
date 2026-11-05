@@ -1908,7 +1908,7 @@ const msg=document.getElementById('message'),list=document.getElementById('list'
 function el(tag,text){const e=document.createElement(tag);e.textContent=text;return e}
 
 const documentedAirstrips=[...(ANAC_CATALOG.official||[]),...(ANAC_CATALOG.lad||[])];
-let anac2026Integration={loaded:false,total:0,published:0,quarantined:0,mergedLegacy:0,skippedLAD:0,error:''};
+let anac2026Integration={loaded:false,total:0,published:0,quarantined:0,mergedLegacy:0,archivedLegacy:0,skippedLAD:0,error:''};
 function normalizePista(value){return String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()}
 /* Padrón ANAC 2026 aportado en Shapefile, normalizado y almacenado localmente.
  * La lista documenta existencia geográfica, no permiso o aptitud operacional.
@@ -1996,8 +1996,10 @@ async function loadAnac2026Catalog(){
      notes}
    });
   }
+  // El catálogo de 2021 permanece disponible como respaldo, pero no se publica
+  // cuando ya cargó correctamente el padrón de 2026.
   const unmatchedLegacy=legacyOfficial.filter(p=>!usedLegacy.has(p.id));
-  const ready=[...imported,...unmatchedLegacy,...legacyLAD];
+  const ready=[...imported,...legacyLAD];
   const allIds=new Set(ready.map(r=>r.id));
   if(ready.length!==allIds.size||imported.length<500){
    throw Error('No se pudo reconciliar el inventario ANAC sin duplicar identificadores');
@@ -2005,7 +2007,7 @@ async function loadAnac2026Catalog(){
   documentedAirstrips.splice(0,documentedAirstrips.length,...ready);
   anac2026Integration={loaded:true,total:doc.rows.length,published:imported.length,
     quarantined:duplicateIds.size,mergedLegacy:usedLegacy.size,
-    skippedLAD,error:''};
+    archivedLegacy:unmatchedLegacy.length,skippedLAD,error:''};
  }catch(error){
   anac2026Integration.error=String(error?.message||error);
   console.warn('AeroLocator: se mantiene el catálogo ANAC local anterior:',error);
@@ -2062,6 +2064,7 @@ function renderDocumented(){
   anac2026Integration.published+' ubicaciones incorporadas, '+
   anac2026Integration.quarantined+' filas con ubicación dudosa apartadas, '+
   anac2026Integration.mergedLegacy+' registros históricos enlazados, '+
+  anac2026Integration.archivedLegacy+' referencias de 2021 no repetidas en 2026 apartadas del mapa, '+
   (ANAC_CATALOG.lad||[]).length+' LAD documentados por separado. '+
   count+' puntos documentales visibles con los filtros. No certifica habilitación ni vigencia operacional.':
   'Catálogo documental anterior: '+(ANAC_CATALOG.official||[]).length+' aeródromos y '+
@@ -2837,14 +2840,16 @@ function oaLocation(record){
 }
 function oaLikelyDuplicate(record){
  const sourceCode=(record.icao||record.gps||'').trim().toUpperCase();
+ const place=oaLocation(record);
  for(const site of documentedAirstrips){
   const code=String(site.details?.icao||'').trim().toUpperCase();
-  if(sourceCode&&code===sourceCode)return true;
-  if(nauticalMiles(site.lat,site.lon,record.lat,record.lon)<.18)return true;
+  const nm=nauticalMiles(site.lat,site.lon,place.lat,place.lng);
+  if(sourceCode&&code===sourceCode&&nm<6)return true;
+  if(nm<.18)return true;
  }
  for(const site of records){
   if(Number.isFinite(site.latitude)&&Number.isFinite(site.longitude)&&
-   nauticalMiles(site.latitude,site.longitude,record.lat,record.lon)<.12)return true;
+   nauticalMiles(site.latitude,site.longitude,place.lat,place.lng)<.12)return true;
  }
  return false;
 }
@@ -2853,10 +2858,13 @@ function oaLikelyDuplicate(record){
  */
 function oaMatchesANAC(record){
  const rawCodes=[record.icao,record.gps,record.ident].map(x=>String(x||'').trim().toUpperCase()).filter(Boolean);
+ const place=oaLocation(record);
  for(const point of documentedAirstrips){
   const code=String(point.details?.icao||'').trim().toUpperCase();
-  if(code&&rawCodes.includes(code))return true;
-  if(nauticalMiles(point.lat,point.lon,record.lat,record.lon)<0.20)return true;
+  const nm=nauticalMiles(point.lat,point.lon,place.lat,place.lng);
+  // Código igual muy lejos: posible error de origen, no acreditación documental.
+  if(code&&rawCodes.includes(code)&&nm<6)return true;
+  if(nm<0.20)return true;
  }
  return false;
 }
@@ -2876,7 +2884,9 @@ function oaMatches(record){
  const region=oaRegion.value,kind=oaKind.value,status=oaStatus.value;
  if(region!=='all'&&record.region!==region)return false;
  if(kind!=='all'&&(kind==='closed'?!record.closed:record.type!==kind))return false;
- if(status!=='all'&&(status==='matches'?!oaLikelyDuplicate(record):oaState(record)!==status))return false;
+ if(status==='matches'&&!oaMatchesANAC(record))return false;
+ if(status!=='all'&&status!=='matches'&&oaState(record)!==status)return false;
+ if(status==='pending'&&oaMatchesANAC(record))return false;
  const q=normalizePista(oaSearch.value.trim());
  return !q||normalizePista([
   record.name,record.ident,record.icao,record.iata,record.local,
