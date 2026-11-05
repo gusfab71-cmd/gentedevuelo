@@ -33,6 +33,35 @@ function compare(record){
  return {status:Math.abs(frequency-referenceFrequency)<0.0001?'document-match':'frequency-difference',
   referenceFrequency};
 }
-root.GDV_NAVAIDS_AIP=Object.freeze({compare,sourceUrl,aipUrl,notamUrl,
+// Cinco registros del suplemento ANAC que no aparecen con la misma clave
+// tipo/identificador en el snapshot comunitario de OurAirports. No es
+// una validación de funcionamiento ni de vigencia después del 19-02-2026.
+const documentRows=Object.freeze([
+ ['NDB','MBI','VCOM Marambio','641520S','0563850W'],
+ ['VOR-DME','CRS','Corrientes','272614S','0584542W'],
+ ['VOR-DME','LAR','La Rioja','292319S','0664813W'],
+ ['VOR-DME','DRY','Puerto Madryn','424536S','0650603W'],
+ ['VOR-DME','RCU','Río Cuarto','330532S','0641554W']
+]);
+function decimalDms(value){
+ const match=String(value).match(/^(\\d{2,3})(\\d{2})(\\d{2})([NSEW])$/);
+ if(!match)throw Error('Coordenadas DMS inválidas');
+ const degrees=Number(match[1]),minutes=Number(match[2]),seconds=Number(match[3]);
+ if(minutes>=60||seconds>=60||degrees>180)throw Error('DMS fuera de rango');
+ const sign=/[SW]/.test(match[4])?-1:1;
+ return sign*(degrees+minutes/60+seconds/3600);
+}
+function documentaryExtras(records){
+ const exists=new Set(records.map(r=>String(r.type||'')+':'+String(r.ident||'').toUpperCase()));
+ return documentRows.filter(([type,ident])=>!exists.has(type+':'+ident))
+  .map(([type,ident,name,lat,lon])=>({
+   id:'aip-2026-'+type+'-'+ident,type,ident,name,
+   lat:decimalDms(lat),lon:decimalDms(lon),frequency:index.get(type+':'+ident),
+   unit:type==='NDB'?'kHz':'MHz',source:'ANAC_AIP_2026',
+   dmeChannel:'',dmePairMHz:null,airport:'',verification:'documentary-reference',
+   operationalStatus:'unknown'
+  }));
+}
+root.GDV_NAVAIDS_AIP=Object.freeze({compare,documentaryExtras,sourceUrl,aipUrl,notamUrl,
  referenceDate:'2026-02-19',totalRecords:index.size});
 })(typeof window!=='undefined'?window:globalThis);
