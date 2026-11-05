@@ -1827,7 +1827,12 @@ function airstripPopup(name,kind,latitude,longitude,details={},nm=null,updated='
  item('Helipuerto (emplazamiento)',details.heliport_structure);
  item('Código OACI',details.icao);
  item('Registro',details.registry);
- item('Pista / rumbo',details.runway,kind==='community'||kind==='official'||kind==='lad');
+ item('Identificador nacional (ANAC 2026)',details.nationalId);
+ item('Documento citado por ANAC 2026',details.documentReference);
+ item('Tráfico en padrón ANAC 2026',details.traffic);
+ item('SNA según padrón ANAC 2026',details.sna);
+ item(details.facility_kind==='heliport'?'FATO publicada':'Pistas publicadas',details.runway,kind==='community'||kind==='official'||kind==='lad');
+ item('Medidas de pista / FATO (ANAC 2026)',details.runwaySpecs);
  item('Dimensiones',details.dimensions,kind!=='reference');
  item('Superficie',details.surface,kind!=='reference');
  item('Elevación',details.elevation);
@@ -1841,6 +1846,11 @@ function airstripPopup(name,kind,latitude,longitude,details={},nm=null,updated='
  item('Fecha del documento',details.sourceDate);
  item('Verificación',details.verification);
  card.append(facts);
+ if(details.hasOfficialCatalog){
+  const refs=officialSourcePanel(details.icao,details.documentReference,details.sna,
+   details.isLAD===true,details.correctionUrl);
+  if(refs)card.append(refs);
+ }
  airstripImageGallery(card,details.photos,name);
  const actions=document.createElement('div');actions.className='popup-actions';
  const open=document.createElement('a');
@@ -1889,6 +1899,7 @@ function documentaryPopup(record,nm=null){
  const kind=airfieldClass(record);
  const details={...(record.details||{}),sourceLabel:record.sourceLabel||'',sourceDate:record.sourceDate||'',
   sourceUrl:record.sourceUrl||'',verification:record.verification||'',
+  hasOfficialCatalog:true,isLAD:record.category==='lad',
   legal_use:record.legal_use,ats_service:record.ats_service,operation_rules:record.operation_rules,
   access_policy:record.access_policy,facility_kind:record.facility_kind,heliport_structure:record.heliport_structure,
   documentCategory:record.category==='lad'?'LAD (no habilitación)':
