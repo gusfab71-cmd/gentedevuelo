@@ -10,7 +10,7 @@ const input=header+
  '1,SVO,Santa Fe,NDB,405,-31.711,-60.811,AR,,,SAAV\n'+
  '2,EZE,Ezeiza,VOR-DME,116500,-34.82,-58.53,AR,116500,112X,SAEZ\n'+
  '3,AAA,Foreign,VOR,112000,-20,-50,BR,,,\n'+
- '4,BAD,No Position,VOR,113300,,,-AR,,,\n';
+ '4,BAD,No Position,VOR,113300,,,AR,,,\n';
 test('CSV incluye solo ayudas argentinas con coordenadas válidas y unidades apropiadas',()=>{
  const data=api._test.parseNavaids(input);
  assert.equal(data.length,2);
@@ -26,11 +26,11 @@ test('CSV incluye solo ayudas argentinas con coordenadas válidas y unidades apr
  assert.equal(vor.verification,'pending');
 });
 test('El parser maneja comas entrecomilladas y comillas dobles',()=>{
- const csv=header+'5,"AB","Campo, \"""\" Norte",NDB,330,-32,-60,AR,,,\n';
+ const csv=header+'5,AB,"Campo, ""Norte""",NDB,330,-32,-60,AR,,,\n';
  const data=api._test.parseNavaids(csv);
  assert.equal(data.length,1);
  assert.equal(data[0].ident,'AB');
- assert.ok(data[0].name.includes('Campo,'));
+ assert.equal(data[0].name,'Campo, "Norte"');
 });
 test('El suplemento AIP se usa solo como cotejo documental',()=>{
  assert.equal(official.referenceDate,'2026-02-19');
