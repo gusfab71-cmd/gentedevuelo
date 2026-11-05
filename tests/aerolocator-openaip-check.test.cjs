@@ -51,3 +51,16 @@ test('La función responde CORS solo a los dominios autorizados, incluso en erro
  assert.match(server,/const respond = \(status: number, payload: Record<string, unknown>\) => json\(status, payload, req\)/);
  assert.doesNotMatch(server,/"Access-Control-Allow-Origin": "\*"/);
 });
+
+test('AeroLocator distingue las causas del 503 sin mostrar secretos',()=>{
+ for(const code of ['auth_configuration_missing','auth_unavailable',
+  'authorization_unavailable','openaip_connection_unavailable','openaip_key_not_configured']){
+   assert.ok(html.includes("kind==='"+code+"'"));
+ }
+ assert.match(html,/error\.context\?\.status/);
+});
+test('La función registra códigos de fallo seguros, sin credenciales',()=>{
+ assert.match(server,/if \(status >= 500\)/);
+ assert.match(server,/console\.warn\("aerolocator_openaip_check_failure", errorCode, status\)/);
+ assert.doesNotMatch(server,/console\.warn\([^\n]*apiKey/);
+});
