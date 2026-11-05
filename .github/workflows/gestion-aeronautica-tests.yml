@@ -10,6 +10,10 @@ on:
       - 'api/airstrip-metar.js'
       - 'tests/airstrip-metar.test.cjs'
       - 'tests/gestion-aeronautica.test.mjs'
+      - 'tests/aerolocator-navaids.test.cjs'
+      - 'api/aerolocator-navaids.js'
+      - 'assets/aerolocator-navaids.js'
+      - 'assets/aerolocator-aip-radioaids-2026.js'
       - '.github/workflows/gestion-aeronautica-tests.yml'
   push:
     branches: [main]
@@ -22,6 +26,10 @@ on:
       - 'api/airstrip-metar.js'
       - 'tests/airstrip-metar.test.cjs'
       - 'tests/gestion-aeronautica.test.mjs'
+      - 'tests/aerolocator-navaids.test.cjs'
+      - 'api/aerolocator-navaids.js'
+      - 'assets/aerolocator-navaids.js'
+      - 'assets/aerolocator-aip-radioaids-2026.js'
       - '.github/workflows/gestion-aeronautica-tests.yml'
 permissions:
   contents: read
@@ -35,3 +43,4 @@ jobs:
           node-version: '22'
       - run: node --experimental-default-type=module tests/gestion-aeronautica.test.mjs
       - run: node tests/airstrip-metar.test.cjs
+      - run: node --test tests/aerolocator-navaids.test.cjs
