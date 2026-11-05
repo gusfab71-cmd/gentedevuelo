@@ -483,6 +483,13 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
 .oa-quick-buttons .oa-quick-exclude{background:#8f463b;color:#fff}
 .oa-quick-buttons .oa-quick-reset{background:#3b5971;color:#fff}
 .oa-quick-buttons .oa-quick-move{background:#205a82;color:#fff}
+.osm-review-tools{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px;align-items:center}
+.osm-review-tools button{padding:7px 10px;font-size:11px;font-weight:800;background:#244b67;border:1px solid #8ca9c2;border-radius:7px;color:#fff;cursor:pointer}
+.osm-review-tools button:disabled{opacity:.5;cursor:wait}
+#osm-review-status{font-size:11px;line-height:1.4;color:#b9d6e6}
+#osm-review-results{display:grid;gap:5px;max-height:220px;overflow:auto}
+#osm-review-results button{width:100%;padding:7px;text-align:left;background:#152e40;color:#e7f4fa;border:1px solid #637d94;border-radius:8px;cursor:pointer}
+#osm-review-results button small{display:block;margin-top:3px;color:#bcd4df;font-size:10px}
 .official-reference-panel{margin:9px 0;padding:9px;border:1px solid #9db6ce;border-radius:9px;background:#eef5fa;color:#183447}
 .official-reference-panel summary{cursor:pointer;font-weight:800;font-size:12px;line-height:1.4}
 .official-reference-panel .official-link-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:10px 0}
@@ -711,7 +718,7 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
  <label class="map-view-picker">Mostrar una capa a la vez
  <select id="map-view-mode" aria-controls="map" aria-describedby="map-view-status">
  <option value="airfields">Aeródromos y pistas</option>
- <option value="ourairports">OurAirports · por revisar</option>
+ <option value="ourairports">Revisión · OurAirports + OSM</option>
  <option value="sigmet">SIGMET · fenómenos</option>
  <option value="pronarea">PRONAREA · Planificador de vuelo VFR</option>
  </select></label><div class="dispatch-map-toolbar-links"><button id="map-toolbar-ruler" class="toolbar-ruler-button" type="button" title="Medir longitud de pista en metros" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.3 8.7 15.3 2.7a1 1 0 0 0-1.4 0L2.7 13.9a1 1 0 0 0 0 1.4l6 6a1 1 0 0 0 1.4 0L21.3 10a1 1 0 0 0 0-1.4Z"/><path d="m7.5 10.5 2 2m1-5 2 2m1-5 2 2m-8 8 2 2"/></svg> Medir pista</button><button id="route-planner-toggle" class="route-planner-toolbar-button" type="button" aria-controls="route-planner-panel" aria-pressed="false">Trazar ruta VFR</button><button id="route-view-map-toolbar" class="route-go-map toolbar-map-return" type="button" aria-controls="map" disabled hidden>Volver al mapa satelital</button><button id="map-inspector-toggle" type="button" aria-controls="airspace-inspector pronarea-visual" aria-expanded="false" hidden>Ver información</button>
@@ -843,6 +850,13 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
   <button id="oa-reload" type="button" title="Recargar fuente comunitaria (el servidor puede conservar caché durante seis horas)">Actualizar fuente</button>
   <span id="oa-stats" role="status">Cargando catálogo…</span>
  </div>
+ <div class="osm-review-tools" aria-label="Explorar pistas no verificadas de OpenStreetMap">
+  <button type="button" id="osm-review-find" title="Buscar pistas rurales en OpenStreetMap dentro de la zona visible">Buscar pistas OSM en esta zona</button>
+  <button type="button" id="osm-review-clear">Quitar capa OSM</button>
+ </div>
+ <div id="osm-review-status" role="status">OpenStreetMap: búsqueda a demanda. Acercá el mapa a la zona para revisar.</div>
+ <div id="osm-review-results" aria-label="Pistas encontradas en OpenStreetMap" hidden></div>
+ <p class="oa-disclaimer">Trazados colaborativos, no acreditan habilitación ni aptitud. <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">© OpenStreetMap contributors · ODbL</a>.</p>
  <div id="oa-selected-detail" class="oa-selected-detail" aria-live="polite" hidden></div>
  <p class="oa-disclaimer">Fuente comunitaria OurAirports, dominio público. No confirma que una instalación exista, esté abierta, habilitada o tenga servicios. Verificar AIP, MADHEL, NOTAM y propietario.</p>
 </section>
@@ -904,7 +918,7 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
   <span class="legend-item"><span class="legend-dot oa-checked-dot" aria-hidden="true"></span>OurAirports · revisado y clasificado GdV</span>
   <span class="legend-item"><span class="legend-dot reference" aria-hidden="true"></span>OSM sin verificar</span>
   <span class="legend-item"><span class="legend-dot draft" aria-hidden="true"></span>Propuesta pendiente</span>
-</div><p class="map-actions" id="airfields-map-actions"><button id="explore" type="button">Explorar pistas en esta zona</button> <small id="osm-status">Acercá el mapa a una zona y presioná el botón. Fuente: OpenStreetMap / Overpass.</small></p></div>
+</div><p class="map-actions" id="airfields-map-actions"><button id="explore" type="button">Revisar pistas OSM de esta zona</button> <small id="osm-status">Abre la revisión OSM para ver pistas y sus trazados.</small></p></div>
   </section>
  </div>
 </main><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="../assets/supabase-2.117.2.min.js"></script><script src="../assets/community-config.js"></script><script src="../assets/r2-media.js"></script><script src="gestion-aeronautica/src/catalogo-pistas-anac.js"></script><script src="gestion-aeronautica/src/clasificacion-pistas.js"></script><script src="../assets/aerolocator-official-sources.js?v=20261105official1"></script><script src="../assets/aerolocator-wmm2025.js?v=20261104wmm1"></script><script src="../assets/aerolocator-route-planner.js?v=20261104route6-bend"></script><script>
@@ -970,6 +984,8 @@ function runwayPin(kind='unverified'){
  return L.divIcon({className:'airstrip-marker airstrip-dot',html:svg,iconSize:[28,28],iconAnchor:[14,14],popupAnchor:[0,-12]});
 }
 const ANAC_CATALOG=window.AEROSUITE_OFFICIAL_AIRSTRIPS||{official:[],lad:[],sources:{},catalogStatus:'no_disponible'};
+const osmReviewLayer=L.layerGroup();
+let osmReviewKeepView=false,osmReviewBusy=false;
 const documentedLayers={official:L.layerGroup().addTo(map),lad:L.layerGroup().addTo(map)};
 const layerVisibility={controlled_public:true,uncontrolled_public:true,private_aerodrome:true,lad:true,heliport:true,anac_documental:true,unverified:true,reference:true};
 const documentaryMarkers=new Map();
@@ -1014,6 +1030,9 @@ function syncLayerVisibility(){
   if(show&&!map.hasLayer(group))group.addTo(map);
   else if(!show&&map.hasLayer(group))map.removeLayer(group);
  }
+ if(mapViewMode==='ourairports'&&osmReviewLayer.getLayers().length){
+  if(!map.hasLayer(osmReviewLayer))osmReviewLayer.addTo(map);
+ }else if(map.hasLayer(osmReviewLayer))map.removeLayer(osmReviewLayer);
  for(const [kind,group] of [['community',markers],['reference',external]]){
   // Sin marcadores cartográficos OSM ni aportes comunitarios aún sin revisión.
   const show=false;
@@ -3604,7 +3623,7 @@ async function showOurAirports(force=false){
    for(const region of regions)oaRegion.append(new Option(oaRegionNames[region]||region,region));
    if(mapViewMode==='airfields'||mapViewMode==='ourairports'){
     renderOACatalog();
-    if(mapViewMode==='ourairports'&&oaRecords.length)map.fitBounds([[-55.5,-74.5],[-21.5,-52.5]],{padding:[16,16],animate:false});
+    if(mapViewMode==='ourairports'&&!osmReviewKeepView&&oaRecords.length)map.fitBounds([[-55.5,-74.5],[-21.5,-52.5]],{padding:[16,16],animate:false});
     const warnings=[...(payload.warnings||[])];
     if(error)warnings.push('No se pudo leer el avance de revisión: '+error.message);
     if(warnings.length){
@@ -3635,6 +3654,7 @@ document.getElementById('oa-reload').addEventListener('click',()=>{void showOurA
 viewSelect.addEventListener('change',()=>{
  const next=viewSelect.value;if(!['airfields','ourairports','sigmet','pronarea'].includes(next))return;
  mapViewMode=next;
+ if(next!=='ourairports')osmReviewKeepView=false;
  oaCancelMove();
  toolbarRuler.hidden=next!=='airfields';
  map.getContainer().classList.toggle('has-airfield-shortcuts',next==='airfields');
@@ -3658,7 +3678,7 @@ viewSelect.addEventListener('change',()=>{
   document.getElementById('airspace-inspector-subtitle').textContent='Elegí un aviso o tocá directamente un área sombreada.';
   inspectorMessage('Consultando fenómenos SIGMET disponibles…');
  }else if(next==='ourairports'){
-  document.getElementById('airspace-inspector-title').textContent='OurAirports · catálogo argentino';
+  document.getElementById('airspace-inspector-title').textContent='Revisión · OurAirports y OpenStreetMap';
   document.getElementById('airspace-inspector-subtitle').textContent='Registros para revisión: seleccioná un círculo, filtrá o buscá por nombre y código.';
   inspectorMessage('Recuperando registros comunitarios y preparando la revisión…');
  }
