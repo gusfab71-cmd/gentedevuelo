@@ -1,0 +1,37 @@
+// La comprobación de OpenAIP debe estar limitada a administradores
+// y no debe insertar la API key en la página pública.
+const {test}=require('node:test');
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const path=require('node:path');
+const root=path.join(__dirname,'..');
+const html=fs.readFileSync(path.join(root,'utilidades/pistas-no-oficiales.html'),'utf8');
+const server=fs.readFileSync(path.join(root,'supabase/functions/aerolocator-openaip-check/index.ts'),'utf8');
+
+test('La interfaz para comprobar OpenAIP solo aparece dentro de sección admin',()=>{
+ const a=html.indexOf('<section id="admin" hidden>');
+ const b=html.indexOf('id="openaip-check-button"');
+ const c=html.indexOf('id="pending"');
+ assert.ok(a>=0&&a<b&&b<c);
+ assert.equal(html.match(/id="openaip-check-button"/g)?.length,1);
+ assert.match(html,/if\(admin\)\{\s*document\.getElementById\('admin'\)\.hidden=false/);
+});
+test('La petición usa la sesión de Supabase, no una clave OpenAIP en JavaScript',()=>{
+ assert.match(html,/client\.auth\.getSession\(\)/);
+ assert.match(html,/client\.functions\.invoke\('aerolocator-openaip-check',\{method:'GET'\}\)/);
+ assert.doesNotMatch(html,/(?:x-openaip-api-key|OPENAIP_API_KEY\s*=\s*["'])/);
+});
+test('La función comprueba la identidad y membresía admin antes de leer la clave',()=>{
+ const auth=server.indexOf('/auth/v1/user');
+ const admin=server.indexOf('/rest/v1/site_admins');
+ const secret=server.indexOf('Deno.env.get(ENV_NAME)');
+ assert.ok(auth>=0&&admin>auth&&secret>admin);
+ assert.match(server,/verifiedUserId = String\(user.id\)/);
+ assert.match(server,/rows\[0\]\?\.user_id !== verifiedUserId/);
+});
+test('La respuesta no muestra la clave al cliente',()=>{
+ assert.match(server,/OPENAIP_API_KEY/);
+ assert.match(server,/x-openaip-api-key/);
+ assert.doesNotMatch(server,/(?:apiKey\s*[:,]|key:\s*apiKey)/);
+ assert.match(server,/returnedRecords/);
+});
