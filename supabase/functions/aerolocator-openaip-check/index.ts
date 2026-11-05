@@ -48,6 +48,11 @@ function json(status: number, payload: Record<string, unknown>, req: Request) {
   });
 }
 
+// Avoid a synchronous failure on runtimes without AbortSignal.timeout().
+function timeoutSignal(milliseconds: number): AbortSignal | undefined {
+  return typeof AbortSignal.timeout === "function" ? AbortSignal.timeout(milliseconds) : undefined;
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     if (!ALLOWED_ORIGINS.has(req.headers.get("origin") ?? "")) {
@@ -71,16 +76,23 @@ Deno.serve(async (req: Request) => {
 
   let verifiedUserId: string | null = null;
   // Verify an actual signed-in user; a public anon key is not sufficient.
+  let authStage = "construct_url";
   try {
-    const userResponse = await fetch(new URL("/auth/v1/user", projectUrl), {
-      headers: { "Authorization": auth, "apikey": publishable },
-      signal: AbortSignal.timeout(8000),
+    const authUrl = new URL("/auth/v1/user", projectUrl).toString();
+    authStage = "fetch_user";
+    const userResponse = await fetch(authUrl, {
+      headers: { "Authorization": auth, "apikey": publishable, "Accept": "application/json" },
+      signal: timeoutSignal(8000),
     });
     if (!userResponse.ok) return respond(401, { ok: false, error: "login_required" });
+    authStage = "parse_user";
     const user = await userResponse.json();
     if (!user?.id || user?.is_anonymous === true) return respond(401, { ok: false, error: "login_required" });
     verifiedUserId = String(user.id);
-  } catch {
+  } catch (cause) {
+    // Diagnostic stage and exception class only, never token, URL or raw exception text.
+    const kind = cause instanceof Error ? cause.name : "UnknownError";
+    console.warn("aerolocator_openaip_auth_stage", authStage, kind);
     return respond(503, { ok: false, error: "auth_unavailable" });
   }
 
@@ -94,7 +106,7 @@ Deno.serve(async (req: Request) => {
     adminUrl.searchParams.set("limit", "1");
     const adminResponse = await fetch(adminUrl, {
       headers: { "Authorization": auth, "apikey": publishable, "Accept": "application/json" },
-      signal: AbortSignal.timeout(8000),
+      signal: timeoutSignal(8000),
     });
     if (!adminResponse.ok) return respond(403, { ok: false, error: "admin_required" });
     const rows = await adminResponse.json();
@@ -111,7 +123,7 @@ Deno.serve(async (req: Request) => {
   try {
     const response = await fetch(URL, {
       headers: { "Accept": "application/json", "x-openaip-api-key": apiKey },
-      signal: AbortSignal.timeout(12000),
+      signal: timeoutSignal(12000),
     });
     if (!response.ok) {
       // Never echo the provider body because it could include sensitive content.
