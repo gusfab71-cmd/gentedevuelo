@@ -12,7 +12,7 @@ const layer=globalThis.GDV_NAVAIDS_LAYER;
 test('El menú presenta radioayudas en una vista separada de PRONAREA',()=>{
  assert.match(html,/<option value="navaids">Radioayudas · NDB \/ VOR \/ DME<\/option>/);
  assert.match(html,/<option value="pronarea">PRONAREA · Planificador de vuelo VFR<\/option>/);
- assert.match(html,/\['airfields','ourairports','sigmet','pronarea','navaids'\]/);
+ assert.match(html,/\['airfields','ourairports','sigmet','pronarea','navaids','openaip-airspaces','openaip-points'\]/);
  assert.match(html,/if\(next!=='navaids'\)radioayudas\?\.hide\(\)/);
  assert.match(html,/else if\(next==='navaids'\)/);
  assert.match(html,/void radioayudas\.show\(\)/);
