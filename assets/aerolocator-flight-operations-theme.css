@@ -1,0 +1,123 @@
+/* AeroLocator · Identidad unificada con Flight Operations y Simulador PPA.
+   Capa puramente visual: no modifica Leaflet, fuentes, eventos ni cálculos.
+   Cartografía y controles de navegación mantienen prioridad operacional. */
+:root{
+ --al-bg:#101719;--al-surface:#1a2426;--al-panel:#202d30;
+ --al-raised:#27383d;--al-line:#455759;--al-line-strong:#6c8586;
+ --al-ink:#f4f3ec;--al-muted:#bdccc9;--al-accent:#ff994b;
+ --al-accent-light:#ffca94;--al-mint:#8cddc4;
+}
+html{scroll-behavior:smooth}
+body{background:var(--al-bg);color:var(--al-ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+button,input,textarea,select{font-family:inherit}
+a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible,
+.control-submenu>summary:focus-visible{outline:2px solid var(--al-accent-light);outline-offset:3px}
+
+/* Flight Operations: cabecera antracita, icono de navegación y palabra primero. */
+body .dispatch-nav{background:linear-gradient(105deg,#141d20 0%,#202b2d 68%,#222d2d 100%);border-bottom:1px solid #52605f;box-shadow:0 7px 22px #080e1233}
+.dispatch-nav .dispatch-nav-logo{display:flex;align-items:center;gap:11px;min-width:0;color:var(--al-ink);text-decoration:none;flex-shrink:0}
+.dispatch-nav-logo .aerolocator-brand-icon{display:block;width:46px;height:46px;padding:4px;border:1px solid #566967;background:#112127;border-radius:12px;flex:none;filter:drop-shadow(0 2px 5px #0004)}
+.dispatch-nav-logo .aerolocator-brand-copy{display:grid;gap:2px;min-width:0}
+.dispatch-nav-logo .aerolocator-brand-name{display:block;font-size:20px;font-weight:850;letter-spacing:-.05em;line-height:1.07;color:#f8f7f0}
+.dispatch-nav-logo .aerolocator-brand-name span{color:var(--al-accent-light)}
+.dispatch-nav-logo .aerolocator-brand-credit{display:block;font-size:10px;font-weight:650;line-height:1.25;color:#c4d0cc;letter-spacing:.035em;text-transform:none}
+body .dispatch-nav nav{gap:7px}
+body .dispatch-nav nav a{color:#d6ded9;font-size:12px;letter-spacing:.01em;padding:8px 10px;text-decoration:none;border:1px solid transparent;border-radius:9px;transition:background .16s,border-color .16s}
+body .dispatch-nav nav a:hover,body .dispatch-nav nav a:focus-visible{color:#ffe4c1;background:#303c3c;border-color:#596b68;text-decoration:none}
+body .dispatch-nav nav a[href="meteorologia-aeronautica.html"]{border-color:#6d5949;background:#322b26;color:#ffd1a0}
+
+/* Panel de control: misma familia de superficies y tarjetas del Flight Operations. */
+body .dispatch-sidebar{background:#141e20;border-right:1px solid #4e6262}
+body .dispatch-sidebar-scroll{scrollbar-color:#71817e #172123}
+.dispatch-sidebar-heading{position:relative;padding:17px 17px 16px;border:1px solid #52615f;border-radius:17px;overflow:hidden;background:radial-gradient(95% 130% at 100% 0%,#4a362b 0%,#253033 50%,#1a2426 100%);box-shadow:0 6px 18px #080e1226}
+.dispatch-sidebar-heading:after{content:"";position:absolute;width:135px;height:135px;border:1px solid #dca16b4d;border-radius:50%;right:-58px;top:-67px;box-shadow:0 0 0 24px #dca16b0d,0 0 0 51px #dca16b09;pointer-events:none}
+body .dispatch-kicker{color:var(--al-accent-light);font-size:10px;letter-spacing:.14em}
+body .dispatch-sidebar-heading h1{color:#f6f2e9;font-size:22px;font-weight:830;letter-spacing:-.035em;margin:8px 0 5px}
+body .dispatch-sidebar-heading p{color:#c9d4cf;font-size:12px;line-height:1.5;margin:0;max-width:315px}
+body .control-submenu{background:#1d292b;border:1px solid #455a59;border-radius:13px;box-shadow:0 4px 13px #09131623;overflow:hidden}
+body .control-submenu>summary{min-height:45px;background:#202d30;color:#edf0ec;font-weight:760;letter-spacing:-.01em;padding:12px 13px}
+body .control-submenu>summary:after{color:var(--al-accent-light)}
+body .control-submenu>summary:hover,body .control-submenu>summary:focus-visible{background:#2b3d3f}
+body .control-submenu[open]{border-color:#7f755f}
+body .control-submenu[open]>summary{background:#303a36;border-bottom:1px solid #60635b;color:#ffddb5}
+body .control-summary-note{color:#b6c4bf}
+body .control-submenu-body{background:#192427;padding:3px 10px 12px}
+body .dispatch-sidebar .zone-panel,body .dispatch-sidebar .pista-classification{background:#202e31;border:1px solid #506565;border-radius:13px;box-shadow:none}
+body .dispatch-sidebar .zone-panel h2,body .dispatch-sidebar .pista-classification h2{color:#f1f1e8}
+body .dispatch-sidebar .zone-panel p{color:#c5d2cb}
+body .dispatch-sidebar .zone-search-form{background:transparent}
+body .dispatch-sidebar .zone-search-form input,
+body .dispatch-sidebar .zone-panel input[type="search"],
+body .dispatch-sidebar .zone-panel input[type="text"]{background:#111c1e;color:var(--al-ink);border:1px solid #6b807d;border-radius:10px;box-shadow:inset 0 1px 2px #0002}
+body .dispatch-sidebar .zone-search-form input::placeholder{color:#9db1ae}
+body .dispatch-sidebar .zone-search-form label{color:#e8ece5}
+body .dispatch-sidebar button{border-radius:10px;transition:filter .12s,background .12s}
+body .dispatch-sidebar button:hover:not(:disabled){filter:brightness(1.12)}
+body .dispatch-sidebar #zone-search-button{background:linear-gradient(180deg,#ffd29e,#f4b16e);color:#21201e;border:1px solid #ffd8aa;font-weight:850}
+body .dispatch-sidebar #zone-my-location{background:#304448;border:1px solid #80918c;color:#ecf0e9}
+body .dispatch-sidebar .dispatch-quick button{background:#304549;border-color:#728a86;color:#eef1ea}
+body .dispatch-sidebar .dispatch-quick #contribute-fast{background:#f4b570;border-color:#f9d3a4;color:#24221c}
+body .dispatch-sidebar .dispatch-surface-filters{background:#1b2a2d;border-color:#576c68}
+body .dispatch-sidebar .pista-filter-option{background:#283b3f;border:1px solid #526967;border-radius:11px}
+body .dispatch-sidebar .pista-filter-option strong{color:#edf3ec}
+body .dispatch-sidebar .pista-filter-option small{color:#c7d4ce}
+body .dispatch-sidebar .pista-service-filters label{color:#e3ece5}
+body .dispatch-sidebar .official-aip-panel{border-color:#736454;background:#302d29}
+body .dispatch-sidebar .official-aip-panel h2{color:#fff4e2}
+body .dispatch-sidebar .official-aip-panel p{color:#e0d4c4}
+body .dispatch-sidebar .official-aip-link{background:#f6c48b;border-color:#ffdab0;color:#28241c}
+body .dispatch-sidebar .dispatch-list-block>h2{color:#f3f0e6}
+body .dispatch-sidebar .notice{background:#283634;color:#edf0e8;border:1px solid #526563}
+body .dispatch-sidebar #list .entry{background:#243437;border:1px solid #556966}
+body .dispatch-sidebar #form{background:#202d2f;border:1px solid #506361;border-radius:12px}
+
+/* Mantener la ficha seleccionada clara para leer atributos cartográficos. */
+body .dispatch-selected{border-color:#b6b9aa;border-radius:15px;box-shadow:0 8px 20px #0b121535}
+body .dispatch-selected-heading{background:#263a3b}
+body .dispatch-selected-heading .dispatch-kicker{color:#ffc58c}
+body .dispatch-selected-heading h2{color:#f7f4ea}
+
+/* Barra de mapa: sin nuevas superposiciones, selector y acciones siguen en su sitio. */
+body .dispatch-map-panel{background:#121e20}
+body .dispatch-map-toolbar{background:#1c292b;border-bottom:1px solid #53625f;padding:9px 15px;gap:13px}
+body .dispatch-map-toolbar>div>strong{color:#f3f3ea;font-weight:780;letter-spacing:-.015em}
+body #control-toggle{background:linear-gradient(180deg,#ffd19b,#eaa66a);border:1px solid #f8d4a7;color:#29231e;border-radius:10px;font-size:12px;font-weight:830;box-shadow:0 3px 10px #130c0733}
+body #control-toggle:hover,body #control-toggle:focus-visible{background:#ffe0bc;color:#29231e}
+body #control-toggle[aria-expanded=true]{background:#415b57;color:#fff4e5;border-color:#96aa9f}
+body .map-view-picker{color:#cbd7d0;font-weight:720;letter-spacing:.015em}
+body .map-view-picker select{background:#101d20;color:#f5f4eb;border:1px solid #7a8b81;border-radius:10px;min-height:40px;font-weight:700}
+body .dispatch-map-toolbar-links{gap:8px;flex-wrap:wrap}
+body .dispatch-map-toolbar-links button{border:1px solid #607672;background:#2d4546;color:#f4f2e9;border-radius:9px;font-weight:740}
+body .dispatch-map-toolbar-links button:hover:not(:disabled){background:#3e5856}
+body .dispatch-map-toolbar-links #route-planner-toggle{background:#35413b;color:#ffe2b9;border-color:#967755}
+body .dispatch-map-toolbar-links a{color:#ffd1a0;font-weight:700}
+body .dispatch-map-bottom{background:#1b292c;border-top:1px solid #52625e;color:#e6ece7}
+body .dispatch-map-bottom .map-view-context{color:#c8d3cd}
+body .dispatch-map-bottom .pin-legend .legend-item{color:#e8ede9}
+body .dispatch-map-main .basemap-selector .leaflet-control-layers{background:#1c2b2be9;color:#f5f5eb;border:1px solid #77908c;border-radius:11px}
+body .dispatch-map-main .basemap-selector input{accent-color:#ffb975}
+body .navaid-control-box{background:#1e2e31f5;border-color:#87988c;box-shadow:0 8px 22px #07111588}
+body .navaid-control-box h3{color:#fff1df}
+body .navaid-control-box p{color:#d7e3db}
+body .navaid-filter-row label{background:#2d4142;border-color:#728580}
+
+/* Legibilidad: no añadir controles sobre el mapa ni cambiar capas, zoom o mediciones. */
+@media(max-width:959px){
+ body .dispatch-nav{padding:9px 13px}
+ body .dispatch-nav nav{gap:5px}
+ body .dispatch-nav nav a{padding:7px 9px}
+ body .dispatch-sidebar-heading{margin-bottom:13px}
+}
+@media(max-width:620px){
+ .dispatch-nav-logo .aerolocator-brand-icon{width:41px;height:41px}
+ .dispatch-nav-logo .aerolocator-brand-name{font-size:18px}
+ .dispatch-nav-logo .aerolocator-brand-credit{font-size:9px}
+ body .dispatch-map-toolbar{padding:10px}
+ body .dispatch-map-toolbar-links{gap:6px}
+ body .dispatch-sidebar-heading{padding:14px}
+ body .dispatch-sidebar-heading h1{font-size:20px}
+ body .dispatch-nav nav a{font-size:11px}
+}
+@media(prefers-reduced-motion:reduce){
+ body .dispatch-nav nav a,body .dispatch-sidebar button{transition:none}
+}

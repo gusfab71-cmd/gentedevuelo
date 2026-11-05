@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 96 96" role="img" aria-labelledby="title desc">
+<title id="title">AeroLocator</title>
+<desc id="desc">Ubicación aeronáutica: pin de mapa, avión, brújula y trayectoria.</desc>
+<defs>
+<linearGradient id="aero" x1="10%" y1="5%" x2="90%" y2="100%">
+<stop offset="0%" stop-color="#82c9eb"/><stop offset="48%" stop-color="#2e7495"/><stop offset="100%" stop-color="#164158"/>
+</linearGradient>
+<linearGradient id="trail" x1="0%" y1="0%" x2="100%" y2="0%">
+<stop offset="0%" stop-color="#f6b875"/><stop offset="65%" stop-color="#fddab4"/><stop offset="100%" stop-color="#ff994b"/>
+</linearGradient>
+</defs>
+<path d="M48 7C28.7 7 13 22.4 13 41.3c0 23.9 35 48 35 48s35-24.1 35-48C83 22.4 67.3 7 48 7Z" fill="url(#aero)" stroke="#bbd6dd" stroke-width="2.5" stroke-linejoin="round"/>
+<circle cx="48" cy="41" r="26" fill="#112a33" stroke="#b6d9e5" stroke-width="1.5" opacity=".95"/>
+<circle cx="48" cy="41" r="21" fill="none" stroke="#91c5d4" opacity=".55" stroke-dasharray="3 5"/>
+<path d="M48 14v8M22 41h7M67 41h7" stroke="#f4d1a9" stroke-width="2.5" stroke-linecap="round"/>
+<path d="m48 16-4 7h8Z" fill="#f5b870"/>
+<path d="M46 27c0-1.7.9-3 2-3s2 1.3 2 3v14l15 9.1v4.4L50 50v10l5.3 4v3.5L48 65l-7.3 2.5V64l5.3-4V50l-15 4.5v-4.4L46 41V27Z" fill="#f8f7ed" stroke="#e4edf0" stroke-width=".6" stroke-linejoin="round"/>
+<path d="M48 66v4m0 4v3" stroke="#ffbd7c" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="2 3"/>
+<path d="M7 61c8.5 8.1 24.8 13.2 42.3 12.5C68.4 72.7 85 65 91 54" fill="none" stroke="url(#trail)" stroke-width="5.5" stroke-linecap="round"/>
+<circle cx="89" cy="54" r="3" fill="#f9d1a0"/>
+</svg>

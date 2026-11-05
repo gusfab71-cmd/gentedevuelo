@@ -1,0 +1,33 @@
+name: AeroLocator - identidad Flight Operations
+on:
+  pull_request:
+    paths:
+      - 'utilidades/pistas-no-oficiales.html'
+      - 'assets/aerolocator-brand.svg'
+      - 'assets/aerolocator-flight-operations-theme.css'
+      - 'tests/aerolocator-visual-identity.test.cjs'
+      - '.github/workflows/aerolocator-visual-identity.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'utilidades/pistas-no-oficiales.html'
+      - 'assets/aerolocator-brand.svg'
+      - 'assets/aerolocator-flight-operations-theme.css'
+      - 'tests/aerolocator-visual-identity.test.cjs'
+      - '.github/workflows/aerolocator-visual-identity.yml'
+permissions:
+  contents: read
+jobs:
+  visual:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validar identidad visual AeroLocator
+        run: node --test tests/aerolocator-visual-identity.test.cjs
+      - name: Confirmar que radioayudas y OpenAIP permanecen disponibles
+        run: |
+          node --test tests/aerolocator-navaids-layer.test.cjs
+          node --test tests/aerolocator-openaip-layers.test.cjs
