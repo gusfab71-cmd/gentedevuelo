@@ -38,4 +38,4 @@ jobs:
           node --test tests/aerolocator-navaids-layer.test.cjs
       - name: Validar snapshot Argentina
         run: |
-          node -e "const f=require('./assets/aerolocator-navaids-ar.geojson'); if(f.type!=='FeatureCollection'||f.features.length<150||f.features.some(x=>x.properties.verification_status!=='unverified')) process.exit(1); console.log('Radioayudas AR sin verificar:',f.features.length)"
+          node -e "const fs=require('fs');const f=JSON.parse(fs.readFileSync('assets/aerolocator-navaids-ar.geojson','utf8'));if(f.type!=='FeatureCollection'||f.features.length<150||f.features.some(x=>x.properties.verification_status!=='unverified'))process.exit(1);console.log('Radioayudas AR sin verificar:',f.features.length)"
