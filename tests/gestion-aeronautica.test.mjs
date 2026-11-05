@@ -745,6 +745,24 @@ const anacClasses=fs.readFileSync(new URL('../utilidades/gestion-aeronautica/src
 assert.match(anacClasses,/anac_documental:Object\.freeze/,'Categoría documental distinta de habilitación');
 assert.match(anacClasses,/x\.sourceType==='registro_anac_2026'/,'Clasificar solo archivos ANAC documentales');
 
+const historicANAC=JSON.parse(fs.readFileSync(new URL('../assets/aerolocator-anac-historical-2021.json',import.meta.url),'utf8'));
+assert.equal(historicANAC.edition,'2021-09','La referencia histórica indica fecha');
+assert.ok(historicANAC.count>=400&&historicANAC.rows.length===historicANAC.count,'Padrón ANAC 2021 completo');
+assert.match(airstripsOriginal,/await loadAnacHistorical2021\(\)/,'Cruce histórico se inicializa');
+assert.match(airstripsOriginal,/historical2021=fields\.join/,'La ficha guarda el contexto histórico separado');
+assert.match(airstripsOriginal,/NO acredita estado o servicio vigente/,'Clasificación histórica no acredita vigencia');
+assert.match(airstripsOriginal,/await loadAnacLAD2026\(\)/,'LAD se carga tras ANAC 2026');
+assert.match(airstripsOriginal,/lad2026Integration\.matchedOfficial/,'Se cotejan LAD repetidos en el padrón');
+assert.match(airstripsOriginal,/await loadMadhelOfficial\(\)/,'MADHEL oficial se consulta por código local');
+assert.match(airstripsOriginal,/nauticalMiles\(point\.lat,point\.lon,record\.lat,record\.lon\)>=6/,'No se cruzan códigos MADHEL distantes');
+assert.match(airstripsOriginal,/MADHEL · TORA\/TODA\/ASDA\/LDA/,'La ficha contiene distancias declaradas si ANAC las suministra');
+assert.match(airstripsOriginal,/MADHEL · combustible/,'La ficha contempla combustible publicado por MADHEL');
+assert.match(airstripsOriginal,/Normas generales y particulares · MADHEL/,'Normativa MADHEL se presenta diferenciada');
+const officialHelpers=fs.readFileSync(new URL('../assets/aerolocator-official-sources.js',import.meta.url),'utf8');
+assert.match(officialHelpers,/sourceLinks/,'Enlaces a fuentes oficiales');
+assert.match(officialHelpers,/runwaySummary/,'Desglose de dimensiones ANAC');
+
+
 
 
 assert.match(html,/AeroLocator en AeroSuite/,'Nombre en el portal de AeroSuite');
