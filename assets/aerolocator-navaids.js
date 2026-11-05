@@ -66,6 +66,31 @@ function boot({map,L}){
   wrap.append(links);
   return wrap;
  }
+ async function loadCatalog(){
+  try{
+   const response=await fetch(URL,{headers:{Accept:'application/json'}});
+   if(!response.ok)throw Error('API HTTP '+response.status);
+   const data=await response.json();
+   if(!data.ok||!Array.isArray(data.records)||!data.records.length)throw Error('Catálogo API inválido');
+   return data;
+  }catch(_){
+   const response=await fetch('../assets/aerolocator-navaids-ar.geojson',{cache:'no-cache'});
+   if(!response.ok)throw Error('Tampoco hay un snapshot local disponible');
+   const geo=await response.json();
+   if(geo.type!=='FeatureCollection'||!Array.isArray(geo.features)||!geo.features.length)
+    throw Error('Snapshot local inválido');
+   const records=geo.features.map(f=>{
+    const p=f.properties||{},coords=f.geometry?.coordinates||[];
+    return {id:Number(p.source_id),ident:String(p.ident||''),name:String(p.name||''),
+     type:String(p.navaid_type||''),lat:Number(coords[1]),lon:Number(coords[0]),
+     frequency:p.frequency??null,unit:p.frequency_units||'',
+     dmeChannel:p.dme_channel||'',dmePairMHz:null,
+     airport:p.associated_airport||'',source:'OurAirports',
+     verification:'pending',operationalStatus:'unknown'};
+   });
+   return {ok:true,records,stale:true,source:'Snapshot OurAirports no verificado'};
+  }
+ }
  function updateMarkers(){
   group.clearLayers();
   let visibleCount=0;
@@ -99,10 +124,7 @@ function boot({map,L}){
    if(loading)return;
    loading=true;status.textContent='Consultando radioayudas argentinas…';
    try{
-    const response=await fetch(URL,{headers:{Accept:'application/json'}});
-    if(!response.ok)throw Error('HTTP '+response.status);
-    const data=await response.json();
-    if(!data.ok||!Array.isArray(data.records))throw Error('Catálogo inválido');
+    const data=await loadCatalog();
     entries=[];
     for(const item of data.records){
      if(!Number.isFinite(item.lat)||!Number.isFinite(item.lon))continue;
