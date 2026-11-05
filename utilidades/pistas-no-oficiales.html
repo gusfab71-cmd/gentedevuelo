@@ -921,7 +921,7 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
 </div><p class="map-actions" id="airfields-map-actions"><button id="explore" type="button">Revisar pistas OSM de esta zona</button> <small id="osm-status">Abre la revisión OSM para ver pistas y sus trazados.</small></p></div>
   </section>
  </div>
-</main><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="../assets/supabase-2.117.2.min.js"></script><script src="../assets/community-config.js"></script><script src="../assets/r2-media.js"></script><script src="gestion-aeronautica/src/catalogo-pistas-anac.js"></script><script src="gestion-aeronautica/src/clasificacion-pistas.js"></script><script src="../assets/aerolocator-official-sources.js?v=20261105official1"></script><script src="../assets/aerolocator-wmm2025.js?v=20261104wmm1"></script><script src="../assets/aerolocator-route-planner.js?v=20261104route6-bend"></script><script>
+</main><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="../assets/supabase-2.117.2.min.js"></script><script src="../assets/community-config.js"></script><script src="../assets/r2-media.js"></script><script src="gestion-aeronautica/src/catalogo-pistas-anac.js"></script><script src="gestion-aeronautica/src/clasificacion-pistas.js"></script><script src="../assets/aerolocator-official-sources.js?v=20261105official1"></script><script src="../assets/aerolocator-osm-review.js?v=20261105geom1"></script><script src="../assets/aerolocator-osm-review-ui.js?v=20261105geom1"></script><script src="../assets/aerolocator-wmm2025.js?v=20261104wmm1"></script><script src="../assets/aerolocator-route-planner.js?v=20261104route6-bend"></script><script>
 (async()=>{
 const client=supabase.createClient(GDV_CONFIG.url,GDV_CONFIG.key);
 let routePlanner=null;
@@ -1996,28 +1996,7 @@ function renderExternal(){
  document.getElementById('near-status').textContent=nearRadius!==null?
   'Referencias dentro de '+nearRadius+' NM: '+count+' cartográficas, más pistas comunitarias listadas abajo. Las distancias son orientativas.':'';
 }
-document.getElementById('explore').addEventListener('click',async()=>{
- const status=document.getElementById('osm-status'),button=document.getElementById('explore');
- if(map.getZoom()<10){status.textContent='Acercá el mapa al menos hasta zoom 10 para consultar una zona pequeña.';return}
- const b=map.getBounds(),area=(b.getNorth()-b.getSouth())*(b.getEast()-b.getWest());
- if(area>1.5){status.textContent='La zona es muy extensa. Acercá un poco más el mapa.';return}
- if(Date.now()-lastRequest<10000){status.textContent='Esperá unos segundos antes de repetir la consulta.';return}
- lastRequest=Date.now();button.disabled=true;status.textContent='Consultando pistas cartografiadas…';external.clearLayers();externalPoints=[];
- const bounds=[b.getSouth(),b.getWest(),b.getNorth(),b.getEast()].map(n=>n.toFixed(5)).join(',');
- const query='[out:json][timeout:18];(nwr["aeroway"="aerodrome"]('+bounds+');nwr["aeroway"="airstrip"]('+bounds+');nwr["aeroway"="runway"]('+bounds+'););out center 250;';
- try{
-  const response=await fetch('https://overpass.kumi.systems/api/interpreter',{method:'POST',body:new URLSearchParams({data:query}),signal:AbortSignal.timeout(24000)});
-  if(!response.ok)throw Error('Servicio cartográfico temporalmente no disponible');
-  const json=await response.json();let count=0;const seen=new Set();
-  for(const x of json.elements||[]){
-   const lat=x.lat??x.center?.lat,lon=x.lon??x.center?.lon;if(!Number.isFinite(lat)||!Number.isFinite(lon))continue;
-   const tags=x.tags||{},key=Math.round(lat*10000)+':'+Math.round(lon*10000);if(seen.has(key))continue;seen.add(key);
-   const name=tags.name||tags.icao||tags.ref||(tags.aeroway==='runway'?'Pista sin nombre':'Aeródromo sin nombre');
-   externalPoints.push({lat,lon,name,details:{surface:tags.surface||'',runway:tags.ref||tags.icao||'',dimensions:tags.length||'',permission:tags.access||'',notes:'Elemento cartográfico: '+(tags.aeroway||'referencia aeronáutica')}});count++;
-  }
-  renderExternal();status.textContent=count+' referencias cartográficas encontradas. Referencias grises = OpenStreetMap; morados = comunidad; azul = documentación AIP; dorado = LAD. Los datos pueden estar incompletos.';
- }catch(e){status.textContent='No se pudo consultar el catálogo cartográfico ahora. Probá más tarde.'}finally{button.disabled=false}
-});
+// La búsqueda OSM se inicia en la vista de revisión mediante GDV_OSM_REVIEW_UI_BOOT.
 const msg=document.getElementById('message'),list=document.getElementById('list');
 function el(tag,text){const e=document.createElement(tag);e.textContent=text;return e}
 
@@ -3730,6 +3709,22 @@ routePlanner=window.GDV_ROUTE_PLANNER_BOOT?.({
  }
 })||null;
 
+window.GDV_OSM_REVIEW_UI_BOOT?.({
+ map,layer:osmReviewLayer,
+ documented:()=>documentedAirstrips,
+ community:()=>oaRecords,
+ communityLocation:record=>oaLocation(record),
+ nauticalMiles,
+ reviewMode:()=>mapViewMode==='ourairports',
+ showReview:()=>{
+  osmReviewKeepView=true;
+  if(mapViewMode!=='ourairports'){
+   viewSelect.value='ourairports';
+   viewSelect.dispatchEvent(new Event('change',{bubbles:true}));
+  }
+ },
+ syncLayers:syncLayerVisibility
+});
 await loadMarkerOverrides();
 await loadAnac2026Catalog();
 await loadAnacLAD2026();
