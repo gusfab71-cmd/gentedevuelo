@@ -64,3 +64,16 @@ test('La función registra códigos de fallo seguros, sin credenciales',()=>{
  assert.match(server,/console\.warn\("aerolocator_openaip_check_failure", errorCode, status\)/);
  assert.doesNotMatch(server,/console\.warn\([^\n]*apiKey/);
 });
+
+test('La validación de usuario tolera Edge runtimes sin AbortSignal.timeout',()=>{
+ assert.match(server,/function timeoutSignal\(milliseconds: number\)/);
+ assert.match(server,/typeof AbortSignal\.timeout === "function"/);
+ assert.doesNotMatch(server,/signal: AbortSignal\.timeout\(/);
+ assert.match(server,/signal: timeoutSignal\(8000\)/);
+});
+test('Errores de autenticación se registran sin revelar JWT o API key',()=>{
+ assert.match(server,/authStage = "fetch_user"/);
+ assert.match(server,/authStage = "parse_user"/);
+ assert.match(server,/console\.warn\("aerolocator_openaip_auth_stage", authStage, kind\)/);
+ assert.doesNotMatch(server,/console\.warn\([^\n]*auth\)/);
+});
