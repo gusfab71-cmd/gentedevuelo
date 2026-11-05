@@ -3,7 +3,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 
 const ENV_NAME = "OPENAIP_API_KEY";
-const URL = "https://api.core.openaip.net/api/navaids?country=AR&limit=1&page=1";
+const OPENAIP_ENDPOINT = "https://api.core.openaip.net/api/navaids?country=AR&limit=1&page=1";
 
 const ALLOWED_ORIGINS = new Set([
   "https://gentedevuelo.com",
@@ -121,7 +121,7 @@ Deno.serve(async (req: Request) => {
   if (!apiKey) return respond(503, { ok: false, configured: false, error: "openaip_key_not_configured" });
 
   try {
-    const response = await fetch(URL, {
+    const response = await fetch(OPENAIP_ENDPOINT, {
       headers: { "Accept": "application/json", "x-openaip-api-key": apiKey },
       signal: timeoutSignal(12000),
     });
