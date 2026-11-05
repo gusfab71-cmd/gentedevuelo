@@ -60,10 +60,20 @@ def extract_page(page):
                    for i in range(12)]
         if columns[1] not in TYPES or not re.fullmatch(r"\d+", columns[2]):
             continue
-        latitude = coordinate(columns[8], True)
-        longitude = coordinate(columns[9], False)
+        # The official PDF has tight column boundaries crossing OCR-like
+        # text spans. Read both full coordinates from ONE wide rectangle:
+        # isolated column crops can turn 283428,00S into 2 | 83428,00S.
+        complete = cell(page, .500, .895, start-1, bottom)
+        lat_match = re.search(r"(?<!\d)\d{6}(?:[.,]\d+)?[NS]", complete)
+        lon_match = re.search(r"(?<!\d)\d{7}(?:[.,]\d+)?[EW]", complete)
+        latitude = coordinate(lat_match.group(), True) if lat_match else None
+        longitude = coordinate(lon_match.group(), False) if lon_match else None
         if latitude is None or longitude is None:
-            raise ValueError(f"LAD row {n} page {page.number+1}: bad coordinates: {columns!r}")
+            raise ValueError(f"LAD row {n} page {page.number+1}: coordinates unreadable: {complete!r}; {columns!r}")
+        elevation_match = re.search(r"\d+(?:[.,]\d+)?\s*(?:mts?\.?|m\.?)",columns[7],re.I)
+        if elevation_match:columns[7]=elevation_match.group().strip()
+        region_match = re.search(r"\bDR(?:CE|NO|NE|SU)\b", cell(page,.85,.958,start-1,bottom),re.I)
+        if region_match:columns[11]=region_match.group().upper()
         matches = re.findall(r"\d+(?:[,.]\d+)?", columns[5])
         size = [float(v.replace(",", ".")) for v in matches]
         output.append({
