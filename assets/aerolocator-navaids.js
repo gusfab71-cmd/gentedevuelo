@@ -1,59 +1,130 @@
-/* AeroLocator: optional community reference layer of Argentine navaids.
- * OurAirports public-domain dataset. NOT for operational navigation.
- * Load on demand; never overwrite ANAC data or community records.
+/* AeroLocator · radioayudas argentinas de OurAirports, únicamente como referencia.
+ * Capa separada y optativa; los datos no sustituyen cartas AIP ni NOTAM.
  */
 (function(root){
 'use strict';
-const URL='https://davidmegginson.github.io/ourairports-data/navaids.csv';
-const TYPES=new Set(['NDB','NDB-DME','VOR','VOR-DME','DME','VORTAC','TACAN']);
-function parseCSV(csv){
- const rows=[];let row=[],cell='',quoted=false;
- for(let i=0;i<csv.length;i++){
-  const c=csv[i];
-  if(c==='"'){if(quoted&&csv[i+1]==='"'){cell+='"';i++}else quoted=!quoted}
-  else if(c===','&&!quoted){row.push(cell);cell=''}
-  else if((c==='\n'||c==='\r')&&!quoted){if(c==='\r'&&csv[i+1]==='\n')i++;row.push(cell);if(row.some(Boolean))rows.push(row);row=[];cell=''}
-  else cell+=c;
- }
- if(cell||row.length){row.push(cell);rows.push(row)}
- const columns=rows.shift()||[];
- return rows.map(values=>Object.fromEntries(columns.map((key,i)=>[key,values[i]||''])));
-}
+const URL='/api/aerolocator-navaids';
 function boot({map,L}){
+ if(!map||!L)throw Error('Mapa Leaflet no disponible');
  const group=L.layerGroup(),control=L.control({position:'topright'});
- let loaded=false,loading=false;
+ const AIP=root.GDV_NAVAIDS_AIP||null;
+ const chosen={ndb:true,vor:true,dme:true};
+ let entries=[],loaded=false,loading=false;
+ const colors={ndb:'#e2a034',vor:'#2579bd',dme:'#8b68a9'};
+ function family(type){
+  if(type.startsWith('NDB'))return 'ndb';
+  if(type==='DME'||type==='TACAN')return 'dme';
+  return 'vor';
+ }
+ function visible(item){
+  if(item.type.startsWith('NDB'))return chosen.ndb||Boolean(item.type.includes('DME')&&chosen.dme);
+  if(item.type==='DME'||item.type==='TACAN')return chosen.dme;
+  return chosen.vor||Boolean((item.type.includes('DME')||item.type==='VORTAC')&&chosen.dme);
+ }
+ function line(parent,text,cls=''){
+  const p=document.createElement('p');
+  if(cls)p.className=cls;
+  p.textContent=text;parent.append(p);return p;
+ }
+ function link(parent,url,text){
+  const a=document.createElement('a');
+  a.href=url;a.target='_blank';a.rel='noopener noreferrer';
+  a.textContent=text;a.style.marginRight='10px';
+  parent.append(a);
+ }
+ function popup(item,check){
+  const wrap=document.createElement('section');
+  wrap.style.cssText='min-width:220px;max-width:300px;font:12px/1.5 system-ui,sans-serif;color:#163049';
+  const title=document.createElement('strong');
+  title.textContent=(item.ident||'?')+' · '+item.type;title.style.fontSize='15px';
+  wrap.append(title);
+  line(wrap,item.name||'Sin nombre');
+  const isNdb=item.type.startsWith('NDB');
+  const frequency=item.frequency===null||item.frequency===undefined?
+   'No informada':String(item.frequency)+' '+item.unit;
+  const label=isNdb?'Frecuencia NDB':'Referencia VHF de sintonía';
+  line(wrap,label+': '+frequency);
+  if(item.dmeChannel)line(wrap,'Canal DME: '+item.dmeChannel);
+  if(item.dmePairMHz)line(wrap,'Frecuencia VHF apareada a DME: '+item.dmePairMHz+' MHz');
+  if(item.airport)line(wrap,'Aeródromo asociado: '+item.airport);
+  line(wrap,'Coordenadas comunitarias: '+item.lat.toFixed(5)+', '+item.lon.toFixed(5));
+  if(check.status==='document-match'){
+   line(wrap,'Coincidencia de identificador, tipo y frecuencia con AIP ENR 4.1 (19/02/2026). Esto NO verifica operatividad ni NOTAM vigentes.');
+  }else if(check.status==='frequency-difference'){
+   line(wrap,'ATENCIÓN: OurAirports '+frequency+' difiere de AIP ENR 4.1 (19/02/2026): '+check.referenceFrequency+' '+item.unit+'. No utilizar sin cotejo oficial.','navaid-discrepancy');
+  }else if(check.status==='frequency-missing'){
+   line(wrap,'OurAirports no indica frecuencia. Referencia AIP ENR 4.1 (19/02/2026): '+check.referenceFrequency+' '+item.unit+'.');
+  }else{
+   line(wrap,'Sin cotejo documental individual. OurAirports no es una fuente aeronáutica oficial.');
+  }
+  line(wrap,'Estado operacional: DESCONOCIDO. Antes de volar consultar AIP, actualizaciones AIRAC y NOTAM.');
+  const links=document.createElement('div');links.style.marginTop='8px';
+  link(links,AIP?.aipUrl||'https://ais.anac.gob.ar/aip','AIP Argentina');
+  link(links,AIP?.notamUrl||'https://ais.anac.gob.ar/notam','NOTAM');
+  if(check.status!=='not-compared'&&AIP?.sourceUrl)
+   link(links,AIP.sourceUrl,'Documento ENR 4.1');
+  wrap.append(links);
+  return wrap;
+ }
+ function updateMarkers(){
+  group.clearLayers();
+  let visibleCount=0;
+  for(const entry of entries)if(visible(entry.item)){
+   entry.marker.addTo(group);visibleCount++;
+  }
+  return visibleCount;
+ }
  control.onAdd=()=>{
-  const el=L.DomUtil.create('div','leaflet-bar');
-  el.style.cssText='background:white;padding:7px 9px;max-width:190px;font:12px/1.4 system-ui,sans-serif';
-  el.innerHTML='<label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" aria-label="Mostrar radioayudas de Argentina"> NDB / VOR / DME</label><small class="gdv-navaid-status" style="display:block">Fuente: OurAirports · no verificada</small>';
+  const el=L.DomUtil.create('div','gdv-navaids-control leaflet-bar');
+  el.style.cssText='background:#f5f9fd;color:#193247;border:1px solid #739ab8;border-radius:9px;padding:9px 10px;max-width:220px;box-shadow:0 2px 8px #0004;font:12px/1.45 system-ui,sans-serif';
+  el.innerHTML='<label style="display:flex;flex-direction:row;gap:6px;align-items:center;font-weight:800;cursor:pointer"><input class="navaids-master" type="checkbox"> Radioayudas NDB / VOR / DME</label><div class="navaids-filters" hidden style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:3px;margin-top:7px"><label><input type="checkbox" data-fam="ndb" checked> NDB</label><label><input type="checkbox" data-fam="vor" checked> VOR</label><label><input type="checkbox" data-fam="dme" checked> DME</label></div><small class="navaids-status" style="display:block;margin-top:4px;line-height:1.3">Fuente comunitaria · SIN verificar</small>';
   L.DomEvent.disableClickPropagation(el);
   L.DomEvent.disableScrollPropagation(el);
-  const checkbox=el.querySelector('input'),status=el.querySelector('small');
-  checkbox.addEventListener('change',async()=>{
-   if(!checkbox.checked){map.removeLayer(group);return}
+  const master=el.querySelector('.navaids-master');
+  const filters=el.querySelector('.navaids-filters');
+  const status=el.querySelector('.navaids-status');
+  filters.hidden=true;filters.style.display='none';
+  filters.querySelectorAll('input').forEach(check=>{
+   check.addEventListener('change',()=>{
+    chosen[check.dataset.fam]=check.checked;
+    const showing=updateMarkers();
+    if(loaded)status.textContent=showing+' visibles de '+entries.length+' registros · NO operativos verificados';
+   });
+  });
+  master.addEventListener('change',async()=>{
+   filters.hidden=!master.checked;filters.style.display=master.checked?'grid':'none';
+   if(!master.checked){map.removeLayer(group);return}
    group.addTo(map);
-   if(loaded||loading)return;
-   loading=true;status.textContent='Descargando radioayudas…';
+   if(loaded){status.textContent=updateMarkers()+' visibles de '+entries.length+' registros · SIN verificación operacional';return}
+   if(loading)return;
+   loading=true;status.textContent='Consultando radioayudas argentinas…';
    try{
-    const response=await fetch(URL,{mode:'cors',cache:'no-store'});
-    if(!response.ok)throw new Error('HTTP '+response.status);
-    const data=parseCSV(await response.text());
-    let count=0;
-    for(const item of data){
-     if(item.iso_country!=='AR'||!TYPES.has(item.type))continue;
-     const lat=Number(item.latitude_deg),lon=Number(item.longitude_deg);
-     if(!Number.isFinite(lat)||!Number.isFinite(lon)||Math.abs(lat)>90||Math.abs(lon)>180)continue;
-     const freq=Number(item.frequency_khz);
-     const frequency=freq>0?(item.type.startsWith('NDB')?freq+' kHz':(freq/1000).toFixed(3)+' MHz'):'Sin dato';
-     const safe=v=>String(v||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-     L.circleMarker([lat,lon],{radius:5,color:'#305d91',weight:2,fillColor:'#fff',fillOpacity:0.9})
-      .bindPopup('<strong>'+safe(item.ident)+' · '+safe(item.type)+'</strong><div>'+safe(item.name)+'</div><div>Frecuencia: '+safe(frequency)+'</div><small>OurAirports · pendiente de verificar con AIP/NOTAM. No usar para navegación.</small>')
-      .addTo(group);
-     count++;
+    const response=await fetch(URL,{headers:{Accept:'application/json'}});
+    if(!response.ok)throw Error('HTTP '+response.status);
+    const data=await response.json();
+    if(!data.ok||!Array.isArray(data.records))throw Error('Catálogo inválido');
+    entries=[];
+    for(const item of data.records){
+     if(!Number.isFinite(item.lat)||!Number.isFinite(item.lon))continue;
+     const compare=AIP?.compare(item)||{status:'not-compared'};
+     const category=family(item.type);
+     const warning=compare.status==='frequency-difference';
+     const marker=L.circleMarker([item.lat,item.lon],{
+      radius:warning?8:6,weight:warning?3:2,
+      color:warning?'#b02e2e':'#fff',fillColor:warning?'#cc443b':colors[category],
+      fillOpacity:.96
+     });
+     marker.bindPopup(()=>popup(item,compare),{maxWidth:360});
+     marker.bindTooltip((item.ident||'?')+' · '+item.type+' · referencia no operativa');
+     entries.push({item,marker});
     }
-    loaded=true;status.textContent=count+' radioayudas · datos no verificados';
-   }catch(err){status.textContent='Fuente no disponible. Desactivá y volvé a intentar.';checkbox.checked=false;map.removeLayer(group)}
-   finally{loading=false}
+    loaded=true;
+    const showing=updateMarkers();
+    status.textContent=showing+' visibles de '+entries.length+' registros. Frecuencias NO verificadas para uso operacional'+(data.stale?' · caché':'')+'.';
+   }catch(_){
+    status.textContent='No se pudo consultar el catálogo; comprobá la conexión e intentá nuevamente.';
+    master.checked=false;filters.hidden=true;filters.style.display='none';map.removeLayer(group);
+   }finally{loading=false}
   });
   return el;
  };
