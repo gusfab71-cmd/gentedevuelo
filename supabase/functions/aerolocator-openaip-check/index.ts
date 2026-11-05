@@ -26,6 +26,17 @@ function corsHeaders(req: Request): Record<string, string> {
 }
 
 function json(status: number, payload: Record<string, unknown>, req: Request) {
+  // Diagnostic codes only. Never log API keys, tokens, user data or provider bodies.
+  if (status >= 500) {
+    const known = new Set([
+      "auth_configuration_missing", "auth_unavailable", "authorization_unavailable",
+      "openaip_key_not_configured", "openaip_auth_or_service_error",
+      "openaip_response_not_json", "openaip_connection_unavailable",
+    ]);
+    const errorCode = typeof payload.error === "string" && known.has(payload.error)
+      ? payload.error : "unexpected_server_error";
+    console.warn("aerolocator_openaip_check_failure", errorCode, status);
+  }
   return new Response(JSON.stringify(payload), {
     status,
     headers: {
