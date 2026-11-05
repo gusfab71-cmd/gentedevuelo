@@ -27,7 +27,7 @@ test('Logo distintivo vectorial sin dependencias externas',()=>{
  assert.match(logo,/<title id="title">AeroLocator<\/title>/);
  assert.match(logo,/<desc id="desc">/);
  assert.match(logo,/fill="url\(#aero\)"/);
- assert.match(logo,/fill="url\(#trail\)"/);
+ assert.match(logo,/stroke="url\(#trail\)"/);
  assert.doesNotMatch(logo,/<script\b|<foreignObject\b|onload\s*=/i);
 });
 test('El nuevo tema no cambia el mapa ni oculta sus herramientas',()=>{
