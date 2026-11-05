@@ -1,0 +1,41 @@
+name: AeroLocator - integración OpenAIP de tres capas
+on:
+  pull_request:
+    paths:
+      - 'utilidades/pistas-no-oficiales.html'
+      - 'assets/aerolocator-openaip-layers.js'
+      - 'assets/aerolocator-navaids-layer.js'
+      - 'supabase/functions/aerolocator-openaip-catalog/**'
+      - 'tests/aerolocator-openaip-layers.test.cjs'
+      - '.github/workflows/aerolocator-openaip-layers.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'utilidades/pistas-no-oficiales.html'
+      - 'assets/aerolocator-openaip-layers.js'
+      - 'assets/aerolocator-navaids-layer.js'
+      - 'supabase/functions/aerolocator-openaip-catalog/**'
+      - 'tests/aerolocator-openaip-layers.test.cjs'
+      - '.github/workflows/aerolocator-openaip-layers.yml'
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verificar JavaScript
+        run: |
+          node --check assets/aerolocator-navaids-layer.js
+          node --check assets/aerolocator-openaip-layers.js
+      - name: Verificar JavaScript incrustado en HTML
+        run: |
+          node -e "const vm=require('node:vm'),fs=require('fs');const html=fs.readFileSync('utilidades/pistas-no-oficiales.html','utf8');for(const m of html.matchAll(/<script(?:\\s[^>]*)?>([\\s\\S]*?)<\\/script>/g)){if(m[1].trim())new vm.Script(m[1])}console.log('Scripts internos válidos')"
+      - name: Pruebas de capas OpenAIP y radioayudas
+        run: |
+          node --test tests/aerolocator-openaip-layers.test.cjs
+          node --test tests/aerolocator-navaids-layer.test.cjs
+          node --test tests/aerolocator-navaids.test.cjs
