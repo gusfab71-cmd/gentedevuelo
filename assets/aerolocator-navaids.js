@@ -39,6 +39,8 @@ function boot({map,L}){
   title.textContent=(item.ident||'?')+' · '+item.type;title.style.fontSize='15px';
   wrap.append(title);
   line(wrap,item.name||'Sin nombre');
+  const documentary=item.source==='ANAC_AIP_2026';
+  if(documentary)line(wrap,'Registro documental ANAC ENR 4.1 (19/02/2026), NO verificado para operación actual.');
   const isNdb=item.type.startsWith('NDB');
   const frequency=item.frequency===null||item.frequency===undefined?
    'No informada':String(item.frequency)+' '+item.unit;
@@ -48,7 +50,9 @@ function boot({map,L}){
   if(item.dmePairMHz)line(wrap,'Frecuencia VHF apareada a DME: '+item.dmePairMHz+' MHz');
   if(item.airport)line(wrap,'Aeródromo asociado: '+item.airport);
   line(wrap,'Coordenadas comunitarias: '+item.lat.toFixed(5)+', '+item.lon.toFixed(5));
-  if(check.status==='document-match'){
+  if(documentary){
+   line(wrap,'Fuente: suplemento oficial ANAC A 21/2026. Falta comprobar AIP/NOTAM posteriores.');
+  }else if(check.status==='document-match'){
    line(wrap,'Coincidencia de identificador, tipo y frecuencia con AIP ENR 4.1 (19/02/2026). Esto NO verifica operatividad ni NOTAM vigentes.');
   }else if(check.status==='frequency-difference'){
    line(wrap,'ATENCIÓN: OurAirports '+frequency+' difiere de AIP ENR 4.1 (19/02/2026): '+check.referenceFrequency+' '+item.unit+'. No utilizar sin cotejo oficial.','navaid-discrepancy');
@@ -126,23 +130,26 @@ function boot({map,L}){
    try{
     const data=await loadCatalog();
     entries=[];
-    for(const item of data.records){
+    const documentOnly=AIP?.documentaryExtras(data.records)||[];
+    for(const item of [...data.records,...documentOnly]){
      if(!Number.isFinite(item.lat)||!Number.isFinite(item.lon))continue;
      const compare=AIP?.compare(item)||{status:'not-compared'};
      const category=family(item.type);
      const warning=compare.status==='frequency-difference';
+     const documented=item.source==='ANAC_AIP_2026';
      const marker=L.circleMarker([item.lat,item.lon],{
-      radius:warning?8:6,weight:warning?3:2,
-      color:warning?'#b02e2e':'#fff',fillColor:warning?'#cc443b':colors[category],
+      radius:warning?8:documented?7:6,weight:warning?3:2,
+      color:warning?'#b02e2e':documented?'#416277':'#fff',
+      fillColor:warning?'#cc443b':documented?'#e7f0f8':colors[category],
       fillOpacity:.96
      });
      marker.bindPopup(()=>popup(item,compare),{maxWidth:360});
-     marker.bindTooltip((item.ident||'?')+' · '+item.type+' · referencia no operativa');
+     marker.bindTooltip((item.ident||'?')+' · '+item.type+(documented?' · AIP documental 2026':' · OurAirports no verificado'));
      entries.push({item,marker});
     }
     loaded=true;
     const showing=updateMarkers();
-    status.textContent=showing+' visibles de '+entries.length+' registros. Frecuencias NO verificadas para uso operacional'+(data.stale?' · caché':'')+'.';
+    status.textContent=showing+' visibles: '+data.records.length+' OurAirports + '+documentOnly.length+' fichas ANAC 2026. Ninguna verificada para uso operacional'+(data.stale?' · caché':'')+'.';
    }catch(_){
     status.textContent='No se pudo consultar el catálogo; comprobá la conexión e intentá nuevamente.';
     master.checked=false;filters.hidden=true;filters.style.display='none';map.removeLayer(group);
