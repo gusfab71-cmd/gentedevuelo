@@ -35,3 +35,19 @@ test('La respuesta no muestra la clave al cliente',()=>{
  assert.doesNotMatch(server,/(?:apiKey\s*[:,]|key:\s*apiKey)/);
  assert.match(server,/returnedRecords/);
 });
+
+test('La función responde OPTIONS con CORS antes de verificar token',()=>{
+ const preflight=server.indexOf('if (req.method === "OPTIONS")');
+ const login=server.indexOf('const auth = req.headers.get("authorization")');
+ assert.ok(preflight>0&&login>preflight);
+ assert.match(server,/new Response\(null, \{ status: 204, headers: corsHeaders\(req\) \}\)/);
+ assert.match(server,/"Access-Control-Allow-Methods": "GET, OPTIONS"/);
+ assert.match(server,/"Access-Control-Allow-Headers": req\.headers\.get\("access-control-request-headers"\)/);
+});
+test('La función responde CORS solo a los dominios autorizados, incluso en errores',()=>{
+ assert.match(server,/"https:\/\/gentedevuelo\.com"/);
+ assert.match(server,/if \(!origin \|\| !ALLOWED_ORIGINS\.has\(origin\)\) return \{\}/);
+ assert.match(server,/\.\.\.corsHeaders\(req\)/);
+ assert.match(server,/const respond = \(status: number, payload: Record<string, unknown>\) => json\(status, payload, req\)/);
+ assert.doesNotMatch(server,/"Access-Control-Allow-Origin": "\*"/);
+});
