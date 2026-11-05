@@ -1,0 +1,3645 @@
+{
+  "type": "FeatureCollection",
+  "metadata": {
+    "source": "https://davidmegginson.github.io/ourairports-data/navaids.csv",
+    "generated_at": "2026-11-05T17:05:26.185944+00:00",
+    "country": "AR",
+    "operational_warning": "Refer to current AIP Argentina and NOTAM before flight"
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -58.52239990234375,
+          -34.84159851074219
+        ]
+      },
+      "properties": {
+        "source_id": "85154",
+        "ident": "A",
+        "name": "Ministro Pistarini",
+        "navaid_type": "NDB",
+        "frequency": 237,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": null,
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -59.70759963989258,
+          -29.211000442504883
+        ]
+      },
+      "properties": {
+        "source_id": "85155",
+        "ident": "A",
+        "name": "Reconquista",
+        "navaid_type": "NDB",
+        "frequency": 242,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": null,
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -63.79570007324219,
+          -22.635900497436523
+        ]
+      },
+      "properties": {
+        "source_id": "85156",
+        "ident": "A",
+        "name": "Tartagal",
+        "navaid_type": "NDB",
+        "frequency": 415,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": null,
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -65.9094009399414,
+          -47.733299255371094
+        ]
+      },
+      "properties": {
+        "source_id": "85270",
+        "ident": "ADO",
+        "name": "Puerto Deseado",
+        "navaid_type": "NDB",
+        "frequency": 210,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": "SAWD",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -70.80110168457031,
+          -45.01639938354492
+        ]
+      },
+      "properties": {
+        "source_id": "85599",
+        "ident": "ARS",
+        "name": "Alto Rio Senguerr",
+        "navaid_type": "NDB",
+        "frequency": 310,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": "SAVR",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.18250274658203,
+          -41.142601013183594
+        ]
+      },
+      "properties": {
+        "source_id": "85750",
+        "ident": "B",
+        "name": "San Carlos De Bariloche",
+        "navaid_type": "NDB",
+        "frequency": 305,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": null,
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -64.2750015258789,
+          -31.43829917907715
+        ]
+      },
+      "properties": {
+        "source_id": "85751",
+        "ident": "B",
+        "name": "Escuela De Aviacion Militar",
+        "navaid_type": "NDB",
+        "frequency": 242,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": null,
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -72.22139739990234,
+          -51.61000061035156
+        ]
+      },
+      "properties": {
+        "source_id": "86056",
+        "ident": "BIO",
+        "name": "El Turbio",
+        "navaid_type": "NDB",
+        "frequency": 205,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": "SAWT",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -62.15999984741211,
+          -38.70669937133789
+        ]
+      },
+      "properties": {
+        "source_id": "86527",
+        "ident": "C",
+        "name": "Comandante Espora",
+        "navaid_type": "NDB",
+        "frequency": 280,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": null,
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -67.43270111083984,
+          -45.78139877319336
+        ]
+      },
+      "properties": {
+        "source_id": "86528",
+        "ident": "C",
+        "name": "Comodoro Rivadavia",
+        "navaid_type": "NDB",
+        "frequency": 280,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": "SAVC",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -58.564701080322266,
+          -34.817100524902344
+        ]
+      },
+      "properties": {
+        "source_id": "86529",
+        "ident": "C",
+        "name": "Ministro Pistarini",
+        "navaid_type": "NDB",
+        "frequency": 305,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": null,
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -58.7588996887207,
+          -27.428199768066406
+        ]
+      },
+      "properties": {
+        "source_id": "86530",
+        "ident": "C",
+        "name": "Corrientes",
+        "navaid_type": "NDB",
+        "frequency": 305,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": "SARC",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -65.756103515625,
+          -28.595800399780273
+        ]
+      },
+      "properties": {
+        "source_id": "86589",
+        "ident": "CAT",
+        "name": "Catamarca",
+        "navaid_type": "NDB",
+        "frequency": 235,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": "SANC",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -64.21890258789062,
+          -31.30970001220703
+        ]
+      },
+      "properties": {
+        "source_id": "86611",
+        "ident": "CBA",
+        "name": "Cordoba",
+        "navaid_type": "NDB",
+        "frequency": 350,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": "SACO",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.14720153808594,
+          -40.08169937133789
+        ]
+      },
+      "properties": {
+        "source_id": "86775",
+        "ident": "CHP",
+        "name": "San Martin De Los Andes",
+        "navaid_type": "NDB",
+        "frequency": 265,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": "SAZY",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -64.32170104980469,
+          -27.78499984741211
+        ]
+      },
+      "properties": {
+        "source_id": "87218",
+        "ident": "D",
+        "name": "Santiago Del Estero",
+        "navaid_type": "NDB",
+        "frequency": 330,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": null,
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -57.98830032348633,
+          -31.281700134277344
+        ]
+      },
+      "properties": {
+        "source_id": "87219",
+        "ident": "D",
+        "name": "Comodoro Pierrestegui",
+        "navaid_type": "NDB",
+        "frequency": 280,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": null,
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -59.22669982910156,
+          -37.20830154418945
+        ]
+      },
+      "properties": {
+        "source_id": "87220",
+        "ident": "D",
+        "name": "Tandil",
+        "navaid_type": "NDB",
+        "frequency": 255,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": null,
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -68.7926025390625,
+          -32.85490036010742
+        ]
+      },
+      "properties": {
+        "source_id": "87221",
+        "ident": "D",
+        "name": "El Plumerillo",
+        "navaid_type": "NDB",
+        "frequency": 395,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": null,
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -58.00419998168945,
+          -31.301700592041016
+        ]
+      },
+      "properties": {
+        "source_id": "87375",
+        "ident": "DIA",
+        "name": "Concordia",
+        "navaid_type": "NDB",
+        "frequency": 335,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": "SAAC",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -72.05000305175781,
+          -50.284698486328125
+        ]
+      },
+      "properties": {
+        "source_id": "87643",
+        "ident": "ECA",
+        "name": "El Calafate",
+        "navaid_type": "NDB",
+        "frequency": 385,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": "SAWC",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -62.16279983520508,
+          -38.7338981628418
+        ]
+      },
+      "properties": {
+        "source_id": "87786",
+        "ident": "EPO",
+        "name": "Comandante Espora",
+        "navaid_type": "NDB",
+        "frequency": 370,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": "SAZB",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -58.238399505615234,
+          -26.23240089416504
+        ]
+      },
+      "properties": {
+        "source_id": "87903",
+        "ident": "F",
+        "name": "Formosa",
+        "navaid_type": "NDB",
+        "frequency": 300,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": null,
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -60.779701232910156,
+          -32.88240051269531
+        ]
+      },
+      "properties": {
+        "source_id": "87904",
+        "ident": "F",
+        "name": "Rosario",
+        "navaid_type": "NDB",
+        "frequency": 305,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": null,
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -69.27410125732422,
+          -51.606998443603516
+        ]
+      },
+      "properties": {
+        "source_id": "88227",
+        "ident": "G",
+        "name": "Rio Gallegos",
+        "navaid_type": "NDB",
+        "frequency": 255,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": "SAWG",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -63.750301361083984,
+          -35.71500015258789
+        ]
+      },
+      "properties": {
+        "source_id": "88228",
+        "ident": "G",
+        "name": "General Pico",
+        "navaid_type": "NDB",
+        "frequency": 307,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": null,
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -69.2844009399414,
+          -51.625
+        ]
+      },
+      "properties": {
+        "source_id": "88255",
+        "ident": "GAL",
+        "name": "Rio Gallegos",
+        "navaid_type": "NDB",
+        "frequency": 330,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": "SAWG",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -57.02389907836914,
+          -37.23469924926758
+        ]
+      },
+      "properties": {
+        "source_id": "88344",
+        "ident": "GES",
+        "name": "Villa Gesell",
+        "navaid_type": "NDB",
+        "frequency": 242,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": "SAZV",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -67.6010971069336,
+          -38.98310089111328
+        ]
+      },
+      "properties": {
+        "source_id": "88495",
+        "ident": "GNR",
+        "name": "General Roca",
+        "navaid_type": "NDB",
+        "frequency": 275,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": "SAHR",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -63.75809860229492,
+          -35.6875
+        ]
+      },
+      "properties": {
+        "source_id": "88523",
+        "ident": "GPI",
+        "name": "General Pico",
+        "navaid_type": "NDB",
+        "frequency": 286,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": "SAZG",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -67.76080322265625,
+          -53.78499984741211
+        ]
+      },
+      "properties": {
+        "source_id": "88547",
+        "ident": "GRA",
+        "name": "Rio Grande",
+        "navaid_type": "NDB",
+        "frequency": 365,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": "SAWE",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -70.1613998413086,
+          -48.78310012817383
+        ]
+      },
+      "properties": {
+        "source_id": "88554",
+        "ident": "GRE",
+        "name": "Gobernador Gregores",
+        "navaid_type": "NDB",
+        "frequency": 360,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": "SAWR",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -64.2073974609375,
+          -31.286100387573242
+        ]
+      },
+      "properties": {
+        "source_id": "88687",
+        "ident": "H",
+        "name": "Cordoba",
+        "navaid_type": "NDB",
+        "frequency": 262,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": null,
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -58.240299224853516,
+          -34.71080017089844
+        ]
+      },
+      "properties": {
+        "source_id": "89235",
+        "ident": "ILM",
+        "name": "Quilmes",
+        "navaid_type": "NDB",
+        "frequency": 210,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": "SADQ",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -68.41670227050781,
+          -31.54330062866211
+        ]
+      },
+      "properties": {
+        "source_id": "89412",
+        "ident": "J",
+        "name": "San Juan",
+        "navaid_type": "NDB",
+        "frequency": 305,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": null,
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -65.08329772949219,
+          -24.416000366210938
+        ]
+      },
+      "properties": {
+        "source_id": "89413",
+        "ident": "J",
+        "name": "Jujuy",
+        "navaid_type": "NDB",
+        "frequency": 330,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": null,
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -70.43440246582031,
+          -44.058101654052734
+        ]
+      },
+      "properties": {
+        "source_id": "89556",
+        "ident": "JSM",
+        "name": "Jose De San Martin",
+        "navaid_type": "NDB",
+        "frequency": 250,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": "SAWS",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -65.49739837646484,
+          -24.86359977722168
+        ]
+      },
+      "properties": {
+        "source_id": "90108",
+        "ident": "L",
+        "name": "Salta",
+        "navaid_type": "NDB",
+        "frequency": 305,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": "SASA",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -66.78150177001953,
+          -29.35849952697754
+        ]
+      },
+      "properties": {
+        "source_id": "90109",
+        "ident": "L",
+        "name": "La Rioja",
+        "navaid_type": "NDB",
+        "frequency": 307,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": null,
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -57.155799865722656,
+          -29.66939926147461
+        ]
+      },
+      "properties": {
+        "source_id": "90110",
+        "ident": "L",
+        "name": "Paso De Los Libres",
+        "navaid_type": "NDB",
+        "frequency": 325,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": null,
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -58.625,
+          -34.58829879760742
+        ]
+      },
+      "properties": {
+        "source_id": "90111",
+        "ident": "L",
+        "name": "El Palomar",
+        "navaid_type": "NDB",
+        "frequency": 315,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": null,
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.11260223388672,
+          -42.89289855957031
+        ]
+      },
+      "properties": {
+        "source_id": "90112",
+        "ident": "L",
+        "name": "Esquel",
+        "navaid_type": "NDB",
+        "frequency": 260,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": null,
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -66.7925033569336,
+          -29.38279914855957
+        ]
+      },
+      "properties": {
+        "source_id": "90170",
+        "ident": "LAR",
+        "name": "La Rioja",
+        "navaid_type": "NDB",
+        "frequency": 410,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": "SANL",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -65.14250183105469,
+          -31.952800750732422
+        ]
+      },
+      "properties": {
+        "source_id": "90251",
+        "ident": "LDR",
+        "name": "Villa Dolores",
+        "navaid_type": "NDB",
+        "frequency": 310,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": "SAOD",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -57.148101806640625,
+          -29.694700241088867
+        ]
+      },
+      "properties": {
+        "source_id": "90338",
+        "ident": "LIB",
+        "name": "Paso De Los Libres",
+        "navaid_type": "NDB",
+        "frequency": 250,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": "SARL",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -69.55829620361328,
+          -35.513301849365234
+        ]
+      },
+      "properties": {
+        "source_id": "90680",
+        "ident": "M",
+        "name": "Malargue",
+        "navaid_type": "NDB",
+        "frequency": 320,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": null,
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -57.575599670410156,
+          -37.93939971923828
+        ]
+      },
+      "properties": {
+        "source_id": "90842",
+        "ident": "MDP",
+        "name": "Mar Del Plata",
+        "navaid_type": "NDB",
+        "frequency": 385,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": "SAZM",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -59.045101165771484,
+          -27.424299240112305
+        ]
+      },
+      "properties": {
+        "source_id": "91428",
+        "ident": "N",
+        "name": "Resistencia",
+        "navaid_type": "NDB",
+        "frequency": 262,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": null,
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -65.76499938964844,
+          -28.621700286865234
+        ]
+      },
+      "properties": {
+        "source_id": "91429",
+        "ident": "N",
+        "name": "Catamarca",
+        "navaid_type": "NDB",
+        "frequency": 282,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": null,
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -68.18710327148438,
+          -38.95000076293945
+        ]
+      },
+      "properties": {
+        "source_id": "91430",
+        "ident": "N",
+        "name": "Presidente Peron",
+        "navaid_type": "NDB",
+        "frequency": 307,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": "SAZN",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -60.935001373291016,
+          -34.52830123901367
+        ]
+      },
+      "properties": {
+        "source_id": "91431",
+        "ident": "N",
+        "name": "Junin",
+        "navaid_type": "NDB",
+        "frequency": 345,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": null,
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -58.368900299072266,
+          -34.58489990234375
+        ]
+      },
+      "properties": {
+        "source_id": "91432",
+        "ident": "N",
+        "name": "Aeroparque",
+        "navaid_type": "NDB",
+        "frequency": 375,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": null,
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -60.93389892578125,
+          -34.55110168457031
+        ]
+      },
+      "properties": {
+        "source_id": "91575",
+        "ident": "NIN",
+        "name": "Junin",
+        "navaid_type": "NDB",
+        "frequency": 220,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": "AR-0743",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -64.2699966430664,
+          -36.56829833984375
+        ]
+      },
+      "properties": {
+        "source_id": "91813",
+        "ident": "O",
+        "name": "Santa Rosa",
+        "navaid_type": "NDB",
+        "frequency": 300,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": null,
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -58.50600051879883,
+          -34.89030075073242
+        ]
+      },
+      "properties": {
+        "source_id": "91829",
+        "ident": "OA",
+        "name": "Ministro Pistarini",
+        "navaid_type": "NDB",
+        "frequency": 270,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": null,
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.24849700927734,
+          -41.12419891357422
+        ]
+      },
+      "properties": {
+        "source_id": "91847",
+        "ident": "OB",
+        "name": "San Carlos De Bariloche",
+        "navaid_type": "NDB",
+        "frequency": 330,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": null,
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -58.633399963378906,
+          -34.8047981262207
+        ]
+      },
+      "properties": {
+        "source_id": "91867",
+        "ident": "OC",
+        "name": "Ministro Pistarini",
+        "navaid_type": "NDB",
+        "frequency": 330,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": null,
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -62.18170166015625,
+          -38.65169906616211
+        ]
+      },
+      "properties": {
+        "source_id": "91868",
+        "ident": "OC",
+        "name": "Comandante Espora",
+        "navaid_type": "NDB",
+        "frequency": 260,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": null,
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -67.3644027709961,
+          -45.77479934692383
+        ]
+      },
+      "properties": {
+        "source_id": "91869",
+        "ident": "OC",
+        "name": "Comodoro Rivadavia",
+        "navaid_type": "NDB",
+        "frequency": 260,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": "SAVC",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -59.22169876098633,
+          -37.15829849243164
+        ]
+      },
+      "properties": {
+        "source_id": "91884",
+        "ident": "OD",
+        "name": "Tandil",
+        "navaid_type": "NDB",
+        "frequency": 300,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": "SAZT",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -65.0553970336914,
+          -24.460800170898438
+        ]
+      },
+      "properties": {
+        "source_id": "91948",
+        "ident": "OJ",
+        "name": "Jujuy",
+        "navaid_type": "NDB",
+        "frequency": 315,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": null,
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.0708999633789,
+          -42.87289810180664
+        ]
+      },
+      "properties": {
+        "source_id": "91987",
+        "ident": "OL",
+        "name": "Esquel",
+        "navaid_type": "NDB",
+        "frequency": 275,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": "SAVE",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -65.54419708251953,
+          -24.896699905395508
+        ]
+      },
+      "properties": {
+        "source_id": "91988",
+        "ident": "OL",
+        "name": "Salta",
+        "navaid_type": "NDB",
+        "frequency": 340,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": null,
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -68.25779724121094,
+          -38.94990158081055
+        ]
+      },
+      "properties": {
+        "source_id": "92023",
+        "ident": "ON",
+        "name": "Presidente Peron",
+        "navaid_type": "NDB",
+        "frequency": 332,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": "SAZN",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -58.48649978637695,
+          -34.51789855957031
+        ]
+      },
+      "properties": {
+        "source_id": "92049",
+        "ident": "OP",
+        "name": "Aeroparque Jorge Newbery",
+        "navaid_type": "NDB",
+        "frequency": 260,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": "SABE",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -60.461700439453125,
+          -31.72330093383789
+        ]
+      },
+      "properties": {
+        "source_id": "92050",
+        "ident": "OP",
+        "name": "General Urquiza",
+        "navaid_type": "NDB",
+        "frequency": 330,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": null,
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -64.31999969482422,
+          -33.14830017089844
+        ]
+      },
+      "properties": {
+        "source_id": "92067",
+        "ident": "OR",
+        "name": "Rio Cuarto",
+        "navaid_type": "NDB",
+        "frequency": 322,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": null,
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -64.32420349121094,
+          -23.14940071105957
+        ]
+      },
+      "properties": {
+        "source_id": "92080",
+        "ident": "ORA",
+        "name": "Oran",
+        "navaid_type": "NDB",
+        "frequency": 285,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": "SASO",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -65.12000274658203,
+          -26.91860008239746
+        ]
+      },
+      "properties": {
+        "source_id": "92148",
+        "ident": "OU",
+        "name": "Teniente Benjamin Matienzo",
+        "navaid_type": "NDB",
+        "frequency": 322,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": null,
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -60.843101501464844,
+          -31.780799865722656
+        ]
+      },
+      "properties": {
+        "source_id": "92159",
+        "ident": "OV",
+        "name": "Sauce Viejo",
+        "navaid_type": "NDB",
+        "frequency": 262,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": "SAAV",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -58.82170104980469,
+          -34.483299255371094
+        ]
+      },
+      "properties": {
+        "source_id": "92200",
+        "ident": "OZ",
+        "name": "Mariano Moreno",
+        "navaid_type": "NDB",
+        "frequency": 295,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": "SADJ",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -55.97019958496094,
+          -27.406200408935547
+        ]
+      },
+      "properties": {
+        "source_id": "92215",
+        "ident": "P",
+        "name": "Posadas",
+        "navaid_type": "NDB",
+        "frequency": 307,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": null,
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -58.43949890136719,
+          -34.5463981628418
+        ]
+      },
+      "properties": {
+        "source_id": "92216",
+        "ident": "P",
+        "name": "Aeroparque Jorge Newbery",
+        "navaid_type": "NDB",
+        "frequency": 280,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": null,
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -67.72039794921875,
+          -53.776798248291016
+        ]
+      },
+      "properties": {
+        "source_id": "92217",
+        "ident": "P",
+        "name": "Rio Grande",
+        "navaid_type": "NDB",
+        "frequency": 265,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": "SAWE",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -60.47669982910156,
+          -31.77669906616211
+        ]
+      },
+      "properties": {
+        "source_id": "92218",
+        "ident": "P",
+        "name": "General Urquiza",
+        "navaid_type": "NDB",
+        "frequency": 250,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": null,
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -57.30720138549805,
+          -35.35279846191406
+        ]
+      },
+      "properties": {
+        "source_id": "92339",
+        "ident": "PDI",
+        "name": "Punta Indio",
+        "navaid_type": "NDB",
+        "frequency": 325,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": "SAAI",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -61.860801696777344,
+          -35.84109878540039
+        ]
+      },
+      "properties": {
+        "source_id": "92364",
+        "ident": "PEH",
+        "name": "Pehuajo",
+        "navaid_type": "NDB",
+        "frequency": 265,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": "SAZP",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -60.48609924316406,
+          -26.74720001220703
+        ]
+      },
+      "properties": {
+        "source_id": "92742",
+        "ident": "PSP",
+        "name": "Presidencia Roque Saenz Pena",
+        "navaid_type": "NDB",
+        "frequency": 205,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": null,
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -57.89780044555664,
+          -34.96670150756836
+        ]
+      },
+      "properties": {
+        "source_id": "92759",
+        "ident": "PTA",
+        "name": "La Plata",
+        "navaid_type": "NDB",
+        "frequency": 250,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": "SADL",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -70.98609924316406,
+          -46.536399841308594
+        ]
+      },
+      "properties": {
+        "source_id": "92773",
+        "ident": "PTM",
+        "name": "Perito Moreno",
+        "navaid_type": "NDB",
+        "frequency": 335,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": "SAWP",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -64.2750015258789,
+          -33.111698150634766
+        ]
+      },
+      "properties": {
+        "source_id": "92931",
+        "ident": "R",
+        "name": "Rio Cuarto",
+        "navaid_type": "NDB",
+        "frequency": 305,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": null,
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -70.26280212402344,
+          -45.7047004699707
+        ]
+      },
+      "properties": {
+        "source_id": "93148",
+        "ident": "RMY",
+        "name": "Rio Mayo",
+        "navaid_type": "NDB",
+        "frequency": 290,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": "SAWM",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -65.38580322265625,
+          -33.72439956665039
+        ]
+      },
+      "properties": {
+        "source_id": "93308",
+        "ident": "RYD",
+        "name": "Villa Reynolds",
+        "navaid_type": "NDB",
+        "frequency": 335,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": "SAOR",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -65.0342025756836,
+          -40.76470184326172
+        ]
+      },
+      "properties": {
+        "source_id": "93380",
+        "ident": "SAN",
+        "name": "San Antonio Oeste",
+        "navaid_type": "NDB",
+        "frequency": 220,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": "SAVN",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -68.57939910888672,
+          -50.02170181274414
+        ]
+      },
+      "properties": {
+        "source_id": "93469",
+        "ident": "SCZ",
+        "name": "Santa Cruz",
+        "navaid_type": "NDB",
+        "frequency": 245,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": "SAWU",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -59.069698333740234,
+          -27.46419906616211
+        ]
+      },
+      "properties": {
+        "source_id": "93633",
+        "ident": "SIS",
+        "name": "Resistancia",
+        "navaid_type": "NDB",
+        "frequency": 285,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": null,
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -59.47560119628906,
+          -34.247798919677734
+        ]
+      },
+      "properties": {
+        "source_id": "93824",
+        "ident": "SNT",
+        "name": "San Antonio De Areco",
+        "navaid_type": "NDB",
+        "frequency": 340,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": "SAAA",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -56.68389892578125,
+          -36.54970169067383
+        ]
+      },
+      "properties": {
+        "source_id": "94011",
+        "ident": "STR",
+        "name": "Santa Teresita",
+        "navaid_type": "NDB",
+        "frequency": 365,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": "SAZL",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -60.806400299072266,
+          -31.711700439453125
+        ]
+      },
+      "properties": {
+        "source_id": "94073",
+        "ident": "SVO",
+        "name": "Sauce Viejo",
+        "navaid_type": "NDB",
+        "frequency": 405,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": "SAAV",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -65.23799896240234,
+          -43.201499938964844
+        ]
+      },
+      "properties": {
+        "source_id": "94155",
+        "ident": "T",
+        "name": "Trelew",
+        "navaid_type": "NDB",
+        "frequency": 280,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": null,
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -63.81919860839844,
+          -22.62779998779297
+        ]
+      },
+      "properties": {
+        "source_id": "94199",
+        "ident": "TAR",
+        "name": "Tartagal",
+        "navaid_type": "NDB",
+        "frequency": 210,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": "SAST",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -66.36170196533203,
+          -33.30500030517578
+        ]
+      },
+      "properties": {
+        "source_id": "94762",
+        "ident": "U",
+        "name": "San Luis",
+        "navaid_type": "NDB",
+        "frequency": 307,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": null,
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -60.82109832763672,
+          -31.7322998046875
+        ]
+      },
+      "properties": {
+        "source_id": "95015",
+        "ident": "V",
+        "name": "Sauce Viejo",
+        "navaid_type": "NDB",
+        "frequency": 282,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": null,
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -65.4032974243164,
+          -33.72829818725586
+        ]
+      },
+      "properties": {
+        "source_id": "95016",
+        "ident": "V",
+        "name": "Villa Reynolds",
+        "navaid_type": "NDB",
+        "frequency": 295,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": null,
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -63.025001525878906,
+          -40.8650016784668
+        ]
+      },
+      "properties": {
+        "source_id": "95017",
+        "ident": "V",
+        "name": "Viedma",
+        "navaid_type": "NDB",
+        "frequency": 305,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": null,
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -63.00669860839844,
+          -40.86249923706055
+        ]
+      },
+      "properties": {
+        "source_id": "95138",
+        "ident": "VIE",
+        "name": "Viedma",
+        "navaid_type": "NDB",
+        "frequency": 275,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": "SAVV",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -65.4000015258789,
+          -33.736698150634766
+        ]
+      },
+      "properties": {
+        "source_id": "95351",
+        "ident": "W",
+        "name": "Villa Reynolds",
+        "navaid_type": "NDB",
+        "frequency": 237,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": null,
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -59.20000076293945,
+          -29.088300704956055
+        ]
+      },
+      "properties": {
+        "source_id": "95597",
+        "ident": "Y",
+        "name": "Goya",
+        "navaid_type": "NDB",
+        "frequency": 277,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": null,
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -58.79999923706055,
+          -34.538299560546875
+        ]
+      },
+      "properties": {
+        "source_id": "95950",
+        "ident": "Z",
+        "name": "Mariano Moreno",
+        "navaid_type": "NDB",
+        "frequency": 395,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": null,
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -54.44770050048828,
+          -25.74810028076172
+        ]
+      },
+      "properties": {
+        "source_id": "95951",
+        "ident": "Z",
+        "name": "Cataratas Del Igauzu",
+        "navaid_type": "NDB",
+        "frequency": 310,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": null,
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -68.54329681396484,
+          -50.01169967651367
+        ]
+      },
+      "properties": {
+        "source_id": "95952",
+        "ident": "Z",
+        "name": "Santa Cruz",
+        "navaid_type": "NDB",
+        "frequency": 282,
+        "frequency_units": "kHz",
+        "dme_channel": null,
+        "associated_airport": null,
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -58.46390151977539,
+          -35.7510986328125
+        ]
+      },
+      "properties": {
+        "source_id": "88279",
+        "ident": "GBE",
+        "name": "General Belgrano",
+        "navaid_type": "VOR",
+        "frequency": 115.6,
+        "frequency_units": "MHz",
+        "dme_channel": null,
+        "associated_airport": null,
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -63.75080108642578,
+          -35.69279861450195
+        ]
+      },
+      "properties": {
+        "source_id": "88522",
+        "ident": "GPI",
+        "name": "General Pico",
+        "navaid_type": "VOR",
+        "frequency": 112.2,
+        "frequency_units": "MHz",
+        "dme_channel": null,
+        "associated_airport": "SAZG",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -60.54389953613281,
+          -24.736099243164062
+        ]
+      },
+      "properties": {
+        "source_id": "89361",
+        "ident": "ITA",
+        "name": "Las Lomitas",
+        "navaid_type": "VOR",
+        "frequency": 112.2,
+        "frequency_units": "MHz",
+        "dme_channel": null,
+        "associated_airport": "SATK",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -67.44249725341797,
+          -29.21109962463379
+        ]
+      },
+      "properties": {
+        "source_id": "89365",
+        "ident": "ITO",
+        "name": "Chilecito",
+        "navaid_type": "VOR",
+        "frequency": 116.5,
+        "frequency_units": "MHz",
+        "dme_channel": null,
+        "associated_airport": "SANO",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -66.80359649658203,
+          -29.388599395751953
+        ]
+      },
+      "properties": {
+        "source_id": "90166",
+        "ident": "LAR",
+        "name": "La Rioja",
+        "navaid_type": "VOR",
+        "frequency": 113.5,
+        "frequency_units": "MHz",
+        "dme_channel": null,
+        "associated_airport": "SANL",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -63.36249923706055,
+          -34.1411018371582
+        ]
+      },
+      "properties": {
+        "source_id": "90662",
+        "ident": "LYE",
+        "name": "Laboulaye",
+        "navaid_type": "VOR",
+        "frequency": 116.3,
+        "frequency_units": "MHz",
+        "dme_channel": null,
+        "associated_airport": "SASQ",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -62.16080093383789,
+          -32.687801361083984
+        ]
+      },
+      "properties": {
+        "source_id": "90997",
+        "ident": "MJZ",
+        "name": "Marcos Juarez",
+        "navaid_type": "VOR",
+        "frequency": 114.7,
+        "frequency_units": "MHz",
+        "dme_channel": null,
+        "associated_airport": "SAOM",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -60.93389892578125,
+          -34.541099548339844
+        ]
+      },
+      "properties": {
+        "source_id": "91574",
+        "ident": "NIN",
+        "name": "Junin",
+        "navaid_type": "VOR",
+        "frequency": 116.1,
+        "frequency_units": "MHz",
+        "dme_channel": null,
+        "associated_airport": "AR-0743",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -57.89830017089844,
+          -34.975799560546875
+        ]
+      },
+      "properties": {
+        "source_id": "92757",
+        "ident": "PTA",
+        "name": "La Plata",
+        "navaid_type": "VOR",
+        "frequency": 113.7,
+        "frequency_units": "MHz",
+        "dme_channel": null,
+        "associated_airport": "SADL",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -64.31809997558594,
+          -27.779399871826172
+        ]
+      },
+      "properties": {
+        "source_id": "93477",
+        "ident": "SDE",
+        "name": "Santiago Del Estero",
+        "navaid_type": "VOR",
+        "frequency": 114.8,
+        "frequency_units": "MHz",
+        "dme_channel": null,
+        "associated_airport": "SANE",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -68.39469909667969,
+          -34.58940124511719
+        ]
+      },
+      "properties": {
+        "source_id": "93915",
+        "ident": "SRA",
+        "name": "San Rafael",
+        "navaid_type": "VOR",
+        "frequency": 116.9,
+        "frequency_units": "MHz",
+        "dme_channel": null,
+        "associated_airport": "SAMR",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -64.26499938964844,
+          -33.092201232910156
+        ]
+      },
+      "properties": {
+        "source_id": "94578",
+        "ident": "TRC",
+        "name": "Rio Cuarto",
+        "navaid_type": "VOR",
+        "frequency": 114.2,
+        "frequency_units": "MHz",
+        "dme_channel": null,
+        "associated_airport": "SAOC",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -66.36080169677734,
+          -33.26940155029297
+        ]
+      },
+      "properties": {
+        "source_id": "94863",
+        "ident": "UIS",
+        "name": "San Luis",
+        "navaid_type": "VOR",
+        "frequency": 116.0,
+        "frequency_units": "MHz",
+        "dme_channel": null,
+        "associated_airport": "SAOU",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -68.2842025756836,
+          -54.83810043334961
+        ]
+      },
+      "properties": {
+        "source_id": "94969",
+        "ident": "USU",
+        "name": "Ushuaia",
+        "navaid_type": "VOR",
+        "frequency": 113.7,
+        "frequency_units": "MHz",
+        "dme_channel": null,
+        "associated_airport": "SAWH",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -63.00080108642578,
+          -40.8671989440918
+        ]
+      },
+      "properties": {
+        "source_id": "95135",
+        "ident": "VIE",
+        "name": "Viedma",
+        "navaid_type": "VOR",
+        "frequency": 117.1,
+        "frequency_units": "MHz",
+        "dme_channel": null,
+        "associated_airport": "SAVV",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.18890380859375,
+          -41.14030075073242
+        ]
+      },
+      "properties": {
+        "source_id": "85810",
+        "ident": "BAR",
+        "name": "San Carlos De Bariloche",
+        "navaid_type": "VOR-DME",
+        "frequency": 117.4,
+        "frequency_units": "MHz",
+        "dme_channel": "121X",
+        "associated_airport": "SAZS",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -62.15829849243164,
+          -38.720001220703125
+        ]
+      },
+      "properties": {
+        "source_id": "85865",
+        "ident": "BCA",
+        "name": "Bahia Blanca",
+        "navaid_type": "VOR-DME",
+        "frequency": 114.3,
+        "frequency_units": "MHz",
+        "dme_channel": "090X",
+        "associated_airport": "SAZB",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -65.74669647216797,
+          -28.583599090576172
+        ]
+      },
+      "properties": {
+        "source_id": "86586",
+        "ident": "CAT",
+        "name": "Catamarca",
+        "navaid_type": "VOR-DME",
+        "frequency": 114.3,
+        "frequency_units": "MHz",
+        "dme_channel": "090X",
+        "associated_airport": "SANC",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -64.20359802246094,
+          -31.31329917907715
+        ]
+      },
+      "properties": {
+        "source_id": "86608",
+        "ident": "CBA",
+        "name": "Cordoba",
+        "navaid_type": "VOR-DME",
+        "frequency": 114.5,
+        "frequency_units": "MHz",
+        "dme_channel": "092X",
+        "associated_airport": "SACO",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.09529876708984,
+          -40.04890060424805
+        ]
+      },
+      "properties": {
+        "source_id": "86774",
+        "ident": "CHP",
+        "name": "San Martin De Los Andes",
+        "navaid_type": "VOR-DME",
+        "frequency": 117.0,
+        "frequency_units": "MHz",
+        "dme_channel": "117X",
+        "associated_airport": "SAZY",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -58.76169967651367,
+          -27.43720054626465
+        ]
+      },
+      "properties": {
+        "source_id": "87046",
+        "ident": "CRR",
+        "name": "Corrientes",
+        "navaid_type": "VOR-DME",
+        "frequency": 115.4,
+        "frequency_units": "MHz",
+        "dme_channel": "101X",
+        "associated_airport": "SARC",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -67.37169647216797,
+          -45.77330017089844
+        ]
+      },
+      "properties": {
+        "source_id": "87051",
+        "ident": "CRV",
+        "name": "Comodoro Rivadavia",
+        "navaid_type": "VOR-DME",
+        "frequency": 117.5,
+        "frequency_units": "MHz",
+        "dme_channel": "122X",
+        "associated_airport": "SAVC",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -59.229400634765625,
+          -37.224998474121094
+        ]
+      },
+      "properties": {
+        "source_id": "87381",
+        "ident": "DIL",
+        "name": "Tandil",
+        "navaid_type": "VOR-DME",
+        "frequency": 115.9,
+        "frequency_units": "MHz",
+        "dme_channel": "106X",
+        "associated_airport": "SAZT",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -68.79080200195312,
+          -32.83190155029297
+        ]
+      },
+      "properties": {
+        "source_id": "87496",
+        "ident": "DOZ",
+        "name": "Mendoza",
+        "navaid_type": "VOR-DME",
+        "frequency": 114.9,
+        "frequency_units": "MHz",
+        "dme_channel": "096X",
+        "associated_airport": "SAME",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -72.04560089111328,
+          -50.27830123901367
+        ]
+      },
+      "properties": {
+        "source_id": "87642",
+        "ident": "ECA",
+        "name": "El Calafate",
+        "navaid_type": "VOR-DME",
+        "frequency": 114.7,
+        "frequency_units": "MHz",
+        "dme_channel": "094X",
+        "associated_airport": "SAWC",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -58.79059982299805,
+          -34.562801361083984
+        ]
+      },
+      "properties": {
+        "source_id": "87765",
+        "ident": "ENO",
+        "name": "Mariano Moreno",
+        "navaid_type": "VOR-DME",
+        "frequency": 112.9,
+        "frequency_units": "MHz",
+        "dme_channel": "076X",
+        "associated_airport": "SADJ",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -61.87220001220703,
+          -29.86440086364746
+        ]
+      },
+      "properties": {
+        "source_id": "87803",
+        "ident": "ERE",
+        "name": "Ceres",
+        "navaid_type": "VOR-DME",
+        "frequency": 115.5,
+        "frequency_units": "MHz",
+        "dme_channel": "102X",
+        "associated_airport": null,
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.10030364990234,
+          -42.88719940185547
+        ]
+      },
+      "properties": {
+        "source_id": "87841",
+        "ident": "ESQ",
+        "name": "Esquel",
+        "navaid_type": "VOR-DME",
+        "frequency": 117.8,
+        "frequency_units": "MHz",
+        "dme_channel": "125X",
+        "associated_airport": "SAVE",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -58.535301208496094,
+          -34.82419967651367
+        ]
+      },
+      "properties": {
+        "source_id": "87894",
+        "ident": "EZE",
+        "name": "Ezeiza",
+        "navaid_type": "VOR-DME",
+        "frequency": 116.5,
+        "frequency_units": "MHz",
+        "dme_channel": "112X",
+        "associated_airport": "SAEZ",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -58.58420181274414,
+          -34.45140075683594
+        ]
+      },
+      "properties": {
+        "source_id": "87957",
+        "ident": "FDO",
+        "name": "San Fernando",
+        "navaid_type": "VOR-DME",
+        "frequency": 114.4,
+        "frequency_units": "MHz",
+        "dme_channel": "091X",
+        "associated_airport": "SADF",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -58.224700927734375,
+          -26.21030044555664
+        ]
+      },
+      "properties": {
+        "source_id": "88158",
+        "ident": "FSA",
+        "name": "Formosa",
+        "navaid_type": "VOR-DME",
+        "frequency": 115.6,
+        "frequency_units": "MHz",
+        "dme_channel": "103X",
+        "associated_airport": "SARF",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -69.3302001953125,
+          -51.611000061035156
+        ]
+      },
+      "properties": {
+        "source_id": "88254",
+        "ident": "GAL",
+        "name": "Rio Gallegos",
+        "navaid_type": "VOR-DME",
+        "frequency": 116.7,
+        "frequency_units": "MHz",
+        "dme_channel": "114X",
+        "associated_airport": "SAWG",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -67.74579620361328,
+          -53.775299072265625
+        ]
+      },
+      "properties": {
+        "source_id": "88546",
+        "ident": "GRA",
+        "name": "Rio Grande",
+        "navaid_type": "VOR-DME",
+        "frequency": 117.3,
+        "frequency_units": "MHz",
+        "dme_channel": "120X",
+        "associated_airport": "SAWE",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -58.614200592041016,
+          -33.009700775146484
+        ]
+      },
+      "properties": {
+        "source_id": "88625",
+        "ident": "GUA",
+        "name": "Gualeguaychu",
+        "navaid_type": "VOR-DME",
+        "frequency": 113.2,
+        "frequency_units": "MHz",
+        "dme_channel": "079X",
+        "associated_airport": "SAAG",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -54.48569869995117,
+          -25.734500885009766
+        ]
+      },
+      "properties": {
+        "source_id": "89183",
+        "ident": "IGU",
+        "name": "Cataratas Del Iguazu",
+        "navaid_type": "VOR-DME",
+        "frequency": 114.1,
+        "frequency_units": "MHz",
+        "dme_channel": "088X",
+        "associated_airport": "SARI",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -68.42140197753906,
+          -31.563899993896484
+        ]
+      },
+      "properties": {
+        "source_id": "89571",
+        "ident": "JUA",
+        "name": "San Juan",
+        "navaid_type": "VOR-DME",
+        "frequency": 113.1,
+        "frequency_units": "MHz",
+        "dme_channel": "078X",
+        "associated_airport": "SANU",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -65.0927963256836,
+          -24.393600463867188
+        ]
+      },
+      "properties": {
+        "source_id": "89575",
+        "ident": "JUJ",
+        "name": "Jujuy",
+        "navaid_type": "VOR-DME",
+        "frequency": 112.9,
+        "frequency_units": "MHz",
+        "dme_channel": "076X",
+        "associated_airport": "SASJ",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -57.638301849365234,
+          -30.266700744628906
+        ]
+      },
+      "properties": {
+        "source_id": "90807",
+        "ident": "MCS",
+        "name": "Monte Caseros",
+        "navaid_type": "VOR-DME",
+        "frequency": 113.9,
+        "frequency_units": "MHz",
+        "dme_channel": "086X",
+        "associated_airport": "SARM",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -57.57640075683594,
+          -37.9296989440918
+        ]
+      },
+      "properties": {
+        "source_id": "90841",
+        "ident": "MDP",
+        "name": "Mar Del Plata",
+        "navaid_type": "VOR-DME",
+        "frequency": 116.2,
+        "frequency_units": "MHz",
+        "dme_channel": "109X",
+        "associated_airport": "SAZM",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -69.57859802246094,
+          -35.48609924316406
+        ]
+      },
+      "properties": {
+        "source_id": "91062",
+        "ident": "MLG",
+        "name": "Malargue",
+        "navaid_type": "VOR-DME",
+        "frequency": 117.2,
+        "frequency_units": "MHz",
+        "dme_channel": "119X",
+        "associated_airport": "SAMM",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -68.15470123291016,
+          -38.95029830932617
+        ]
+      },
+      "properties": {
+        "source_id": "91517",
+        "ident": "NEU",
+        "name": "Neuquen",
+        "navaid_type": "VOR-DME",
+        "frequency": 116.7,
+        "frequency_units": "MHz",
+        "dme_channel": "114X",
+        "associated_airport": "SAZN",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -65.61000061035156,
+          -39.282501220703125
+        ]
+      },
+      "properties": {
+        "source_id": "91910",
+        "ident": "OEL",
+        "name": "Choele Choel",
+        "navaid_type": "VOR-DME",
+        "frequency": 113.4,
+        "frequency_units": "MHz",
+        "dme_channel": "081X",
+        "associated_airport": "SA29",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -64.27279663085938,
+          -36.58369827270508
+        ]
+      },
+      "properties": {
+        "source_id": "92112",
+        "ident": "OSA",
+        "name": "Santa Rosa",
+        "navaid_type": "VOR-DME",
+        "frequency": 112.5,
+        "frequency_units": "MHz",
+        "dme_channel": "072X",
+        "associated_airport": "SAZR",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -58.61389923095703,
+          -34.61280059814453
+        ]
+      },
+      "properties": {
+        "source_id": "92259",
+        "ident": "PAL",
+        "name": "El Palomar",
+        "navaid_type": "VOR-DME",
+        "frequency": 115.2,
+        "frequency_units": "MHz",
+        "dme_channel": "099X",
+        "associated_airport": "SADP",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -60.48469924926758,
+          -31.808300018310547
+        ]
+      },
+      "properties": {
+        "source_id": "92274",
+        "ident": "PAR",
+        "name": "Parana",
+        "navaid_type": "VOR-DME",
+        "frequency": 116.8,
+        "frequency_units": "MHz",
+        "dme_channel": "115X",
+        "associated_airport": "SAAP",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -57.27560043334961,
+          -35.346099853515625
+        ]
+      },
+      "properties": {
+        "source_id": "92338",
+        "ident": "PDI",
+        "name": "Punta Indio",
+        "navaid_type": "VOR-DME",
+        "frequency": 114.1,
+        "frequency_units": "MHz",
+        "dme_channel": "088X",
+        "associated_airport": "SAAI",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -55.969200134277344,
+          -27.38559913635254
+        ]
+      },
+      "properties": {
+        "source_id": "92614",
+        "ident": "POS",
+        "name": "Posadas",
+        "navaid_type": "VOR-DME",
+        "frequency": 114.9,
+        "frequency_units": "MHz",
+        "dme_channel": "096X",
+        "associated_airport": "SARP",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -60.78139877319336,
+          -32.904998779296875
+        ]
+      },
+      "properties": {
+        "source_id": "93202",
+        "ident": "ROS",
+        "name": "Rosario",
+        "navaid_type": "VOR-DME",
+        "frequency": 117.3,
+        "frequency_units": "MHz",
+        "dme_channel": "120X",
+        "associated_airport": "SAAR",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -59.682498931884766,
+          -29.208599090576172
+        ]
+      },
+      "properties": {
+        "source_id": "93266",
+        "ident": "RTA",
+        "name": "Reconquista",
+        "navaid_type": "VOR-DME",
+        "frequency": 117.1,
+        "frequency_units": "MHz",
+        "dme_channel": "118X",
+        "associated_airport": "SATR",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -65.381103515625,
+          -33.728599548339844
+        ]
+      },
+      "properties": {
+        "source_id": "93307",
+        "ident": "RYD",
+        "name": "Villa Reynolds",
+        "navaid_type": "VOR-DME",
+        "frequency": 115.7,
+        "frequency_units": "MHz",
+        "dme_channel": "104X",
+        "associated_airport": "SAOR",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -65.48390197753906,
+          -24.8523006439209
+        ]
+      },
+      "properties": {
+        "source_id": "93368",
+        "ident": "SAL",
+        "name": "Salta",
+        "navaid_type": "VOR-DME",
+        "frequency": 116.7,
+        "frequency_units": "MHz",
+        "dme_channel": "114X",
+        "associated_airport": "SASA",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -59.05720138549805,
+          -27.4468994140625
+        ]
+      },
+      "properties": {
+        "source_id": "93632",
+        "ident": "SIS",
+        "name": "Resistencia",
+        "navaid_type": "VOR-DME",
+        "frequency": 115.1,
+        "frequency_units": "MHz",
+        "dme_channel": "098X",
+        "associated_airport": "SARE",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -67.81289672851562,
+          -49.30979919433594
+        ]
+      },
+      "properties": {
+        "source_id": "93659",
+        "ident": "SJU",
+        "name": "San Julian",
+        "navaid_type": "VOR-DME",
+        "frequency": 117.7,
+        "frequency_units": "MHz",
+        "dme_channel": "124X",
+        "associated_airport": "SAWJ",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -59.43560028076172,
+          -34.219398498535156
+        ]
+      },
+      "properties": {
+        "source_id": "93821",
+        "ident": "SNT",
+        "name": "San Antonio De Areco",
+        "navaid_type": "VOR-DME",
+        "frequency": 117.7,
+        "frequency_units": "MHz",
+        "dme_channel": "124X",
+        "associated_airport": "SAAA",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -65.18329620361328,
+          -32.373600006103516
+        ]
+      },
+      "properties": {
+        "source_id": "93917",
+        "ident": "SRC",
+        "name": "Santa Rosa De Conlara",
+        "navaid_type": "VOR-DME",
+        "frequency": 117.5,
+        "frequency_units": "MHz",
+        "dme_channel": "122X",
+        "associated_airport": "SAOS",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -65.24720001220703,
+          -43.20249938964844
+        ]
+      },
+      "properties": {
+        "source_id": "94580",
+        "ident": "TRE",
+        "name": "Trelew",
+        "navaid_type": "VOR-DME",
+        "frequency": 115.1,
+        "frequency_units": "MHz",
+        "dme_channel": "098X",
+        "associated_airport": "SAVT",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -65.1082992553711,
+          -26.845800399780273
+        ]
+      },
+      "properties": {
+        "source_id": "94665",
+        "ident": "TUC",
+        "name": "Tucuman",
+        "navaid_type": "VOR-DME",
+        "frequency": 114.1,
+        "frequency_units": "MHz",
+        "dme_channel": "088X",
+        "associated_airport": "SANT",
+        "source": "OurAirports",
+        "verification_status": "unverified",
+        "operational_status": "unknown"
+      }
+    }
+  ]
+}
