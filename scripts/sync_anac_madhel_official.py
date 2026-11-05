@@ -110,10 +110,25 @@ def main():
     base=json.loads(CATALOG.read_text(encoding="utf-8"))
     codes=sorted({str(row[14]).strip().upper() for row in base["rows"] if re.fullmatch(r"[A-Z0-9]{3}",str(row[14]).strip().upper())})
     if len(codes)<550:raise ValueError("ANAC 2026 base codes incomplete")
+    # Probe a few documented aerodromes before making hundreds of requests.
+    # ANAC installations have used both slash and no-slash variants.
+    suffix=None
+    for variant in ("/?format=json","?format=json","/"):
+        for test_code in ("ATE","ZUL","FDO"):
+            try:
+                candidate=fetch_json(ROOT+quote(test_code,safe="")+variant)
+                if isinstance(candidate,dict) and isinstance(candidate.get("data"),dict):
+                    suffix=variant
+                    break
+            except Exception:
+                continue
+        if suffix:break
+    if suffix is None:
+        raise ValueError("No documented MADHEL API route replied; abort without overwriting official snapshot")
     results=[];errors=[];missing=[]
     for index,code in enumerate(codes,1):
         try:
-            raw=fetch_json(ROOT+quote(code,safe="")+"/?format=json")
+            raw=fetch_json(ROOT+quote(code,safe="")+suffix)
             if raw is None:missing.append(code)
             else:
                 parsed=parse_record(code,raw)
