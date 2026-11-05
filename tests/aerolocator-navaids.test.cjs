@@ -48,3 +48,16 @@ test('La API rechaza los métodos de escritura',async()=>{
  assert.equal(status,405);
  assert.equal(body.ok,false);
 });
+
+test('AIP 2026 aporta solo registros documentales ausentes, con coordenadas DMS precisas',()=>{
+ const extras=official.documentaryExtras(api._test.parseNavaids(input));
+ assert.equal(extras.length,5);
+ const marambio=extras.find(x=>x.ident==='MBI');
+ assert.equal(marambio.type,'NDB');
+ assert.ok(Math.abs(marambio.lat-(-64.2555555556))<0.000001);
+ assert.equal(marambio.frequency,345);
+ assert.equal(marambio.operationalStatus,'unknown');
+ assert.equal(marambio.verification,'documentary-reference');
+ const withoutDuplicate=official.documentaryExtras([{type:'NDB',ident:'MBI'}]);
+ assert.equal(withoutDuplicate.length,4);
+});
