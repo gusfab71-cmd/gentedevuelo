@@ -1838,6 +1838,32 @@ function airstripPopup(name,kind,latitude,longitude,details={},nm=null,updated='
  item('Tráfico en padrón ANAC 2026',details.traffic);
  item('SNA según padrón ANAC 2026',details.sna);
  item('Referencia histórica ANAC (2021)',details.historical2021);
+ const madhel=details.madhel;
+ if(madhel){
+  item('MADHEL · actualización de ficha ANAC',madhel.updated||'Fecha sin informar');
+  item('MADHEL · consulta descargada',details.madhelExtractedAt||'Sin fecha');
+  item('MADHEL · clasificación documental',[
+   madhel.condition&&'condición '+madhel.condition,
+   madhel.control&&'control '+madhel.control,
+   madhel.status&&'estado '+madhel.status
+  ].filter(Boolean).join(' · '));
+  item('MADHEL · FIR',madhel.fir);
+  item('MADHEL · pistas',madhel.rwy);
+  item('MADHEL · umbrales',madhel.thr);
+  item('MADHEL · TORA/TODA/ASDA/LDA',madhel.declared_distances);
+  item('MADHEL · FATO',madhel.fato);
+  item('MADHEL · TLOF',madhel.tlof);
+  item('MADHEL · rodajes',madhel.twy);
+  item('MADHEL · plataformas',madhel.apn);
+  item('MADHEL · servicios ATS',madhel.ats);
+  item('MADHEL · radioayudas',madhel.radioaids);
+  item('MADHEL · ayudas visuales',madhel.visual_aids);
+  item('MADHEL · combustible',madhel.fuel);
+  item('MADHEL · horarios publicados',madhel.service_schedule);
+  item('MADHEL · teléfono publicado',madhel.telephone);
+  item('MADHEL · SEI',madhel.sei);
+  item('MADHEL · ATZ',madhel.atz);
+ }
  item(details.facility_kind==='heliport'?'FATO publicada':'Pistas publicadas',details.runway,kind==='community'||kind==='official'||kind==='lad');
  item('Medidas de pista / FATO (ANAC 2026)',details.runwaySpecs);
  item('Dimensiones',details.dimensions,kind!=='reference');
@@ -1853,6 +1879,19 @@ function airstripPopup(name,kind,latitude,longitude,details={},nm=null,updated='
  item('Fecha del documento',details.sourceDate);
  item('Verificación',details.verification);
  card.append(facts);
+ if(madhel&&(madhel.norms_general||madhel.norms_particular)){
+  const norms=document.createElement('details');norms.className='official-reference-panel';
+  const caption=document.createElement('summary');caption.textContent='Normas generales y particulares · MADHEL';
+  norms.append(caption);
+  const addNorm=(heading,value)=>{
+   if(!value)return;
+   const p=document.createElement('p');const strong=document.createElement('strong');
+   strong.textContent=heading+': ';p.append(strong,document.createTextNode(value));norms.append(p);
+  };
+  addNorm('Normas generales',madhel.norms_general);
+  addNorm('Normas particulares',madhel.norms_particular);
+  card.append(norms);
+ }
  if(details.hasOfficialCatalog){
   const refs=officialSourcePanel(details.icao,details.documentReference,details.sna,
    details.isLAD===true,details.correctionUrl);
@@ -1967,6 +2006,7 @@ const documentedAirstrips=[...(ANAC_CATALOG.official||[]),...(ANAC_CATALOG.lad||
 let anac2026Integration={loaded:false,total:0,published:0,quarantined:0,mergedLegacy:0,archivedLegacy:0,skippedLAD:0,error:''};
 let lad2026Integration={loaded:false,total:0,added:0,updated:0,matchedOfficial:0,error:''};
 let historical2021Integration={loaded:false,total:0,matched:0,error:''};
+let madhelIntegration={loaded:false,total:0,matched:0,rejected:0,downloadedAt:'',error:''};
 function normalizePista(value){return String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()}
 /* Padrón ANAC 2026 aportado en Shapefile, normalizado y almacenado localmente.
  * La lista documenta existencia geográfica, no permiso o aptitud operacional.
@@ -2221,6 +2261,44 @@ async function loadAnacHistorical2021(){
   console.warn('AeroLocator: referencia ANAC 2021 no incorporada:',error);
  }
 }
+async function loadMadhelOfficial(){
+ try{
+  const response=await fetch('../assets/aerolocator-anac-madhel-official.json?v=20261105madhel1',
+   {cache:'no-cache'});
+  if(!response.ok)throw Error('Snapshot oficial MADHEL todavía no disponible');
+  const doc=await response.json();
+  if(doc.schema!==1||typeof doc.source!=='string'||!doc.source.startsWith('https://datos.anac.gob.ar/')||
+   !Array.isArray(doc.records)||doc.count!==doc.records.length||doc.count<200)
+   throw Error('No se pudo comprobar la integridad del snapshot MADHEL');
+  const byLocal=new Map();
+  for(const rec of doc.records){
+   const local=String(rec.local||'').toUpperCase();
+   if(!/^[A-Z0-9]{3}$/.test(local)||byLocal.has(local))
+    throw Error('Clave local MADHEL inválida o repetida: '+local);
+   byLocal.set(local,rec);
+  }
+  let matched=0,rejected=0;
+  for(const point of documentedAirstrips){
+   if(point.category!=='official')continue;
+   const local=String(point.details?.nationalId||'').toUpperCase();
+   const record=byLocal.get(local);
+   if(!record)continue;
+   if(!Number.isFinite(record.lat)||!Number.isFinite(record.lon)||
+    nauticalMiles(point.lat,point.lon,record.lat,record.lon)>=6){rejected++;continue}
+   point.details=point.details||{};
+   const copy={...record};
+   point.details.madhel=copy;
+   point.details.madhelExtractedAt=doc.extractedAt||'';
+   point.details.madhelSource=doc.source;
+   matched++;
+  }
+  madhelIntegration={loaded:true,total:doc.count,matched,rejected,
+   downloadedAt:doc.extractedAt||'',error:''};
+ }catch(error){
+  madhelIntegration.error=String(error?.message||error);
+  console.warn('AeroLocator: sin actualización MADHEL; se mantienen las fuentes existentes:',error);
+ }
+}
 function renderDocumented(){
  const root=document.getElementById('pista-documented-list');
  root.replaceChildren();
@@ -2280,6 +2358,9 @@ function renderDocumented(){
    (historical2021Integration.loaded?
     '. '+historical2021Integration.matched+' fichas complementadas con datos ANAC históricos de 2021':
     '. Información complementaria de 2021 no disponible')+
+   (madhelIntegration.loaded?
+    '. '+madhelIntegration.matched+' fichas cruzadas con MADHEL oficial':
+    '. Copia MADHEL aún no disponible')+
    '. '+count+' puntos documentales visibles con los filtros. No certifica habilitación ni vigencia operacional.':
   'Catálogo documental anterior: '+(ANAC_CATALOG.official||[]).length+' aeródromos y '+
   (ANAC_CATALOG.lad||[]).length+' LAD. El padrón ANAC 2026 no pudo cargarse'+
@@ -3633,6 +3714,7 @@ await loadMarkerOverrides();
 await loadAnac2026Catalog();
 await loadAnacLAD2026();
 await loadAnacHistorical2021();
+await loadMadhelOfficial();
 render(); // Fuentes ANAC documentales, independientes de la conexión comunitaria.
 await load();
 // AERÓDROMOS Y PISTAS es la vista inicial: mostrar también OurAirports automáticamente.
