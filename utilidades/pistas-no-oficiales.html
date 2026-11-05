@@ -665,15 +665,20 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
  </div>
  <div id="pista-catalog-status" role="status">Catálogo oficial parcial: muestra inicial con fuentes ANAC y fecha documental. Consultá siempre información vigente.</div>
  <p class="pista-filter-note"><strong>Privado no significa no oficial.</strong> Un aeródromo documentado puede ser privado. El acceso, la disponibilidad y la aptitud operacional deben verificarse aparte.</p>
- <div class="pista-doc-links"><a href="https://ais.anac.gob.ar/madhel/" target="_blank" rel="noopener noreferrer">MADHEL · Aeródromos</a>
+ <div class="pista-doc-links"><a href="https://ais.anac.gob.ar/madhel/" target="_blank" rel="noopener noreferrer">MADHEL electrónico</a>
  <a href="https://ais.anac.gob.ar/aip" target="_blank" rel="noopener noreferrer">AIP · ANAC</a>
- <a href="https://www.argentina.gob.ar/sites/default/files/listado_lad_2026-09.pdf" target="_blank" rel="noopener noreferrer">Listado LAD · septiembre 2026</a></div>
+ <a href="https://ais.anac.gob.ar/notam" target="_blank" rel="noopener noreferrer">NOTAM · consulta</a>
+ <a href="https://ais.anac.gob.ar/sup" target="_blank" rel="noopener noreferrer">Suplementos AIP</a>
+ <a href="https://ais.anac.gob.ar/amdt" target="_blank" rel="noopener noreferrer">Enmiendas AIRAC</a>
+ <a href="https://www.argentina.gob.ar/orsna/aeropuertos-0" target="_blank" rel="noopener noreferrer">ORSNA · Aeropuertos</a>
+ <a href="https://servicios.transporte.gob.ar/gobierno_abierto/detalle.php?d=detalle&amp;t=aeropuertos" target="_blank" rel="noopener noreferrer">ANAC · histórico 2021</a>
+ <a href="https://www.argentina.gob.ar/sites/default/files/listado_lad_2026-09.pdf" target="_blank" rel="noopener noreferrer">Listado LAD 2026</a></div>
 </section>
 
     <div class="dispatch-list-block"><label>Filtrar registros visibles <input id="search" placeholder="Nombre, provincia, código OACI o número LAD"></label>
 <section class="pista-official-list" aria-labelledby="pista-official-title">
- <h2 id="pista-official-title">Registros con respaldo documental ANAC · Muestra ampliada</h2>
- <p>Referencias de distintas fechas (2021-2026). Clasificación y servicios ATS históricos pueden haber cambiado: consultar AIP, MADHEL y NOTAM actuales.</p>
+ <h2 id="pista-official-title">Aeródromos y helipuertos documentados · ANAC 2026</h2>
+ <p>El padrón oficial aporta coordenadas, pistas y elevaciones. Los registros se cotejan con fuentes anteriores sin atribuirles habilitación, ATS o condición de uso vigente. Consultar MADHEL, AIP y NOTAM actualizados.</p>
  <div id="pista-documented-list"></div>
 </section><details id="alternatives" class="notice"><summary style="cursor:pointer;font-weight:bold;padding:8px">Buscar alternativas cercanas · distancia en NM</summary><h2>Buscar posibles alternativas cercanas</h2><p>Ingresá un punto de referencia o seleccioná un lugar en el mapa. Las distancias son en línea recta y solo orientativas.</p><label>Latitud de referencia <input id="ref-lat" type="number" step="any" min="-90" max="90" placeholder="-34.8"></label> <label>Longitud de referencia <input id="ref-lon" type="number" step="any" min="-180" max="180" placeholder="-58.4"></label> <label>Radio de búsqueda <select id="radius"><option value="25">25 NM</option><option value="50" selected>50 NM</option><option value="100">100 NM</option><option value="200">200 NM</option></select></label> <button type="button" id="pick-ref">Elegir punto en mapa</button> <button type="button" id="find-near">Buscar cercanas</button> <button type="button" id="reset-near">Quitar filtro</button><p id="near-status"></p></details><h2>Aportes de la comunidad pendientes de cotejo</h2><p class="pista-filter-note">Estos aportes no aparecen en el mapa principal hasta completar su revisión cartográfica GdV.</p><div id="list"></div><details id="contribute"><summary style="cursor:pointer;padding:14px;background:#28648c;border-radius:10px;font-weight:bold">+ Agregar una pista conocida</summary><h2>Proponer una pista</h2><p>Solo integrantes registrados. Cada propuesta requiere aprobación de administración.</p><form id="form"><label>Nombre de la pista<input name="name" required maxlength="120" minlength="3"></label><label>Provincia<input name="province" required maxlength="80"></label><label>Latitud decimal<input name="latitude" type="number" step="any" min="-56" max="-21" required></label><label>Longitud decimal<input name="longitude" type="number" step="any" min="-74" max="-53" required></label><label>Orientación de pista<input name="runway" maxlength="50"></label><label>Dimensiones<input name="dimensions" maxlength="80"></label><label>Elevación<input name="elevation" maxlength="50"></label><label>Superficie<select name="surface"><option>Desconocida</option><option>Césped</option><option>Tierra</option><option>Asfalto</option><option>Ripio</option><option>Otra</option></select></label><label>Acceso<select name="permission"><option>Requiere autorización previa</option><option>Consultar al responsable</option><option>Acceso no confirmado</option></select></label><label>Frecuencia (si corresponde)<input name="frequency" maxlength="60"></label><label>Contacto autorizado para publicar<input name="contact" maxlength="150"></label><label class="wide">Obstáculos<textarea name="obstacles" maxlength="1500"></textarea></label><label class="wide">Observaciones<textarea name="notes" maxlength="2500"></textarea></label><div class="airstrip-photos wide">
  <label for="airstrip-photo-files">Fotografías de la pista (hasta 3)</label>
@@ -1831,6 +1836,7 @@ function airstripPopup(name,kind,latitude,longitude,details={},nm=null,updated='
  item('Documento citado por ANAC 2026',details.documentReference);
  item('Tráfico en padrón ANAC 2026',details.traffic);
  item('SNA según padrón ANAC 2026',details.sna);
+ item('Referencia histórica ANAC (2021)',details.historical2021);
  item(details.facility_kind==='heliport'?'FATO publicada':'Pistas publicadas',details.runway,kind==='community'||kind==='official'||kind==='lad');
  item('Medidas de pista / FATO (ANAC 2026)',details.runwaySpecs);
  item('Dimensiones',details.dimensions,kind!=='reference');
@@ -2020,6 +2026,12 @@ async function loadAnac2026Catalog(){
    const facilityClass=isHeli?'heliport':'anac_documental';
    const originalNotes=String(observations||'').trim();
    const priorClass=old&&old.facilityClass!=='unverified'&&!isHeli;
+   const historical2021=old&&old.sourceType==='registro_anac_historico'?
+    ['Fuente ANAC 09/2021',old.facilityClass&&
+     ('categoría '+String(old.facilityClass).replaceAll('_',' ')),
+     old.ats_service&&('ATS: '+old.ats_service),
+     old.legal_use&&('uso: '+old.legal_use),
+     'Datos históricos; la vigencia no está confirmada'].filter(Boolean).join(' · '):'';
    const notes=[
     'Registro geográfico ANAC de septiembre 2026; no verifica estado operativo, habilitación vigente ni permiso de utilización.',
     'Documento de referencia consignado en padrón: '+String(document||'No informado')+'.',
@@ -2028,8 +2040,9 @@ async function loadAnac2026Catalog(){
     originalNotes&&'Observaciones del padrón: '+originalNotes+'.',
     coordinateRepaired&&'Ubicación ARP recuperada de coordenadas aeronáuticas por inconsistencia del Shapefile.',
     correction&&'Corrección AIP: '+correction.reason+'. Fuente: '+correction.sourceUrl,
-    priorClass&&'Categoría de uso/ATS heredada de referencia anterior ('+
-      (old.classificationSourceDate||old.sourceDate||'sin fecha')+'); verificar situación actual.'
+    priorClass&&'Existe una referencia de clasificación anterior ('+
+      (old.classificationSourceDate||old.sourceDate||'sin fecha')+
+      ') separada del estado documental de 2026; no atribuir vigencia.'
    ].filter(Boolean).join(' ');
    imported.push({
     id:old?.id||'anac26-'+id,
@@ -2046,6 +2059,7 @@ async function loadAnac2026Catalog(){
      runway:runwayText||'No informado',
      runwaySpecs:officialRunways.display,
      surface:officialRunways.surface,
+     historical2021,
      documentReference:String(document||'').trim().toUpperCase(),
      traffic:String(traffic||'').trim(),
      sna:String(sna||'').trim().toUpperCase(),
@@ -3010,6 +3024,9 @@ function oaShowRecord(record){
  const officialChecks=[
   ['Consultar MADHEL de ANAC','https://ais.anac.gob.ar/madhel/'],
   ['Consultar AIP de ANAC','https://ais.anac.gob.ar/aip'],
+  ['Consultar NOTAM de ANAC','https://ais.anac.gob.ar/notam'],
+  ['Consultar Suplementos AIP','https://ais.anac.gob.ar/sup'],
+  ['Consultar listado LAD 2026','https://www.argentina.gob.ar/sites/default/files/listado_lad_2026-09.pdf'],
   ['Consultar listado ANAC · septiembre 2026','https://datos.transporte.gob.ar/dataset/aerodromos/archivo/4cd56378-072b-4ed8-9453-65dd341ed3e8']
  ];
  for(const [label,url] of officialChecks){
