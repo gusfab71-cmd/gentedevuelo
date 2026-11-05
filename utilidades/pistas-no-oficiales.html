@@ -630,6 +630,11 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
 .navaid-popup-links a{color:#155b91}
 @media(max-width:620px){.navaid-control-box{top:8px;right:7px;
  width:min(258px,calc(100% - 50px));max-height:35dvh;padding:9px}}
+.openaip-check-box{padding:11px;margin:12px 0;background:#132b40;border:1px solid #6085a1;border-radius:11px}
+.openaip-check-box h3{font-size:14px;margin:0 0 5px}
+.openaip-check-box p{font-size:11px;line-height:1.5;color:#d6e6f1;margin:6px 0}
+.openaip-check-box button{background:#245b79;border:1px solid #96bfd8;color:#fff;font-size:12px;padding:8px 11px;cursor:pointer}
+.openaip-check-box button:disabled{opacity:.65;cursor:wait}
 </style></head><body><header class="dispatch-nav"><div class="dispatch-nav-logo"><span class="dispatch-nav-symbol" aria-hidden="true">✈</span>
  <div><strong>GENTE DE VUELO</strong><small>AEROLOCATOR · MAPA AERONÁUTICO</small></div></div>
  <nav aria-label="Herramientas Gente de Vuelo"><a href="../index.html">Portada</a><a href="../comunidad.html#foro">Foro</a><a href="index.html">Utilidades</a>
@@ -729,7 +734,17 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
  <label class="photo-consent"><span><input id="airstrip-photo-consent" type="checkbox"> Confirmo que puedo publicar estas imágenes y que no incluyen información sensible de terceros.</span></label>
  <small>Las fotografías solo se muestran en el mapa cuando se aprueba la propuesta. Se almacenan en Cloudflare R2.</small>
  </div>
- <label class="wide"><span><input type="checkbox" name="consent" required> Confirmo que tengo autorización para divulgar esta ubicación y los datos de contacto incluidos.</span></label><button type="submit">Enviar a moderación</button></form></details><p id="message" role="status"></p><section id="admin" hidden><h2>Moderación de propuestas</h2><div id="pending"></div></section></div>
+ <label class="wide"><span><input type="checkbox" name="consent" required> Confirmo que tengo autorización para divulgar esta ubicación y los datos de contacto incluidos.</span></label><button type="submit">Enviar a moderación</button></form></details><p id="message" role="status"></p><section id="admin" hidden>
+ <h2>Administración AeroLocator</h2>
+ <div class="openaip-check-box">
+  <h3>OpenAIP · prueba de conexión</h3>
+  <p>Comprueba la clave guardada en Supabase sin mostrarla, copiarla ni descargar datos aeronáuticos.</p>
+  <button type="button" id="openaip-check-button">Comprobar conexión con OpenAIP</button>
+  <p id="openaip-check-status" role="status" aria-live="polite">Pendiente de comprobación. Solo administración.</p>
+ </div>
+ <h2>Moderación de propuestas</h2>
+ <div id="pending"></div>
+</section></div>
     <section class="official-aip-panel" aria-labelledby="official-aip-heading">
   <div>
     <span class="official-aip-eyebrow">DOCUMENTACIÓN AERONÁUTICA OFICIAL</span>
@@ -2563,7 +2578,39 @@ document.getElementById('form').addEventListener('submit',async e=>{
  }finally{airstripSending=false;if(submit)submit.disabled=false}
 });
 const {data:{user}}=await client.auth.getUser();if(user){const {data}=await client.from('site_admins').select('user_id').eq('user_id',user.id).maybeSingle();admin=!!data}
-if(admin){document.getElementById('admin').hidden=false;async function pending(){const r=await client.from('community_airstrips').select('*').eq('status','pending').order('created_at');const root=document.getElementById('pending');root.replaceChildren();for(const p of r.data||[]){const d=el('div',p.name+' · '+p.latitude+', '+p.longitude+' · '+(p.details?.province||''));d.className='entry';airstripImageGallery(d,p.details?.photos,p.name);for(const status of ['approved','rejected']){const b=el('button',status==='approved'?'Aprobar':'Rechazar');b.onclick=async()=>{const {error}=await client.from('community_airstrips').update({status}).eq('id',p.id);if(error)msg.textContent=error.message;else{await pending();await load()}};d.append(b)}root.append(d)}}await pending()}
+if(admin){
+ document.getElementById('admin').hidden=false;
+ const openaipTestButton=document.getElementById('openaip-check-button');
+ const openaipTestStatus=document.getElementById('openaip-check-status');
+ openaipTestButton.addEventListener('click',async()=>{
+  openaipTestButton.disabled=true;
+  openaipTestStatus.textContent='Verificando la conexión segura con OpenAIP…';
+  try{
+   const {data:{session},error:sessionError}=await client.auth.getSession();
+   if(sessionError||!session?.access_token){
+    openaipTestStatus.textContent='No hay sesión activa. Ingresá a Gente de Vuelo y volvé a probar.';
+    return;
+   }
+   // Supabase Functions envía el token de sesión automáticamente; jamás se expone la clave OpenAIP.
+   const {data,error}=await client.functions.invoke('aerolocator-openaip-check',{method:'GET'});
+   if(error){
+    let detail=null;
+    try{detail=await error.context?.json?.()}catch(_){/* No divulgar respuesta completa. */}
+    const kind=detail?.error;
+    if(kind==='openaip_key_not_configured')openaipTestStatus.textContent='Falta configurar OPENAIP_API_KEY en Supabase.';
+    else if(kind==='openaip_auth_or_service_error')openaipTestStatus.textContent='OpenAIP rechazó la solicitud o su servicio dio error (HTTP '+detail.providerStatus+').';
+    else if(kind==='login_required'||kind==='admin_required')openaipTestStatus.textContent='Se requiere una sesión de administrador de Gente de Vuelo.';
+    else openaipTestStatus.textContent='No se pudo validar la conexión. Consultá los registros de la función de Supabase.';
+    return;
+   }
+   if(data?.ok&&data?.configured&&data?.providerStatus===200)
+    openaipTestStatus.textContent='Conexión verificada: OpenAIP aceptó la clave. Respuesta correcta ('+(data.returnedRecords??0)+' registro(s) de prueba).';
+   else openaipTestStatus.textContent='No se pudo confirmar la conexión. Revisá la función en Supabase.';
+  }catch(_){
+   openaipTestStatus.textContent='Error de conexión al ejecutar la prueba; reintentá desde una sesión activa.';
+  }finally{openaipTestButton.disabled=false}
+ });
+ async function pending(){const r=await client.from('community_airstrips').select('*').eq('status','pending').order('created_at');const root=document.getElementById('pending');root.replaceChildren();for(const p of r.data||[]){const d=el('div',p.name+' · '+p.latitude+', '+p.longitude+' · '+(p.details?.province||''));d.className='entry';airstripImageGallery(d,p.details?.photos,p.name);for(const status of ['approved','rejected']){const b=el('button',status==='approved'?'Aprobar':'Rechazar');b.onclick=async()=>{const {error}=await client.from('community_airstrips').update({status}).eq('id',p.id);if(error)msg.textContent=error.message;else{await pending();await load()}};d.append(b)}root.append(d)}}await pending()}
 
 /* Selector de vistas cartográficas excluyentes. Otras capas quedan invisibles. */
 const viewSelect=document.getElementById('map-view-mode'),viewStatus=document.getElementById('map-view-status');
