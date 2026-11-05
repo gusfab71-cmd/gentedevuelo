@@ -143,7 +143,8 @@ window.GDV_ROUTE_PLANNER_BOOT=function(options){
  function setNotice(msg){notice.textContent=msg;notice.hidden=!msg}
  function updateButtons(){
   toggle.setAttribute('aria-pressed',String(drawing));
-  toggle.textContent=drawing?'Trazando ruta…':finished?'Datos de la ruta VFR':'Trazar ruta VFR';
+  toggle.dataset.routeState=drawing?'drawing':finished?'finished':'idle';
+  toggle.textContent=drawing?'Pausar trazado VFR':finished?'Ver datos de la ruta':'Iniciar trazado VFR';
   drawButton.disabled=drawing;
   const routeReady=points.length>=2&&finished;
   viewMapPanel.disabled=!routeReady;
