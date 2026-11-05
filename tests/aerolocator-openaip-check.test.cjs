@@ -77,3 +77,11 @@ test('Errores de autenticación se registran sin revelar JWT o API key',()=>{
  assert.match(server,/console\.warn\("aerolocator_openaip_auth_stage", authStage, kind\)/);
  assert.doesNotMatch(server,/console\.warn\([^\n]*auth\)/);
 });
+
+test('No sombrear el constructor global URL requerido para validar Auth',()=>{
+ assert.doesNotMatch(server,/\b(?:const|let|var)\s+URL\s*=/);
+ assert.match(server,/const OPENAIP_ENDPOINT = "https:\/\/api\.core\.openaip\.net\/api\/navaids/);
+ assert.match(server,/new URL\("\/auth\/v1\/user", projectUrl\)/);
+ assert.match(server,/new URL\("\/rest\/v1\/site_admins", projectUrl\)/);
+ assert.match(server,/fetch\(OPENAIP_ENDPOINT,/);
+});
