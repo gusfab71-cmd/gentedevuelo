@@ -1,14 +1,14 @@
 ANAC LAD 2026 · diagnóstico de importación fallida; NO se publicó un padrón parcial.
 warning: The `fitz` API is deprecated and will be removed in future. Use `import pymupdf` instead.
 Traceback (most recent call last):
-  File "/home/runner/work/gentedevuelo/gentedevuelo/scripts/sync_anac_lad_2026.py", line 142, in <module>
+  File "/home/runner/work/gentedevuelo/gentedevuelo/scripts/sync_anac_lad_2026.py", line 152, in <module>
     main()
-  File "/home/runner/work/gentedevuelo/gentedevuelo/scripts/sync_anac_lad_2026.py", line 123, in main
+  File "/home/runner/work/gentedevuelo/gentedevuelo/scripts/sync_anac_lad_2026.py", line 133, in main
     rows=extract(pdf)
          ^^^^^^^^^^^^
-  File "/home/runner/work/gentedevuelo/gentedevuelo/scripts/sync_anac_lad_2026.py", line 95, in extract
+  File "/home/runner/work/gentedevuelo/gentedevuelo/scripts/sync_anac_lad_2026.py", line 105, in extract
     rows.extend(extract_page(page))
                 ^^^^^^^^^^^^^^^^^^
-  File "/home/runner/work/gentedevuelo/gentedevuelo/scripts/sync_anac_lad_2026.py", line 66, in extract_page
-    raise ValueError(f"LAD row {n} page {page.number+1}: bad coordinates: {columns!r}")
-ValueError: LAD row 1 page 1: bad coordinates: ['1', 'LAD', '176', 'EL ADUAR', '10/28', '700m. x 30m.', 'TIERRA', '60 mts. 2', '83428,00S 06', '601545,00W 25 2', 'Km. al NW de INTIYACO, Provincia de SANTA FE. D 2 Km. al SSW de CARLOS TEJEDOR, Provincia de', 'RNE']
+  File "/home/runner/work/gentedevuelo/gentedevuelo/scripts/sync_anac_lad_2026.py", line 72, in extract_page
+    raise ValueError(f"LAD row {n} page {page.number+1}: coordinates unreadable: {complete!r}; {columns!r}")
+ValueError: LAD row 294 page 14: coordinates unreadable: '250 mts. 000,00S 0000,00W 114 Km. al NW de RIO GALLEGOS, Provincia de SANTA CRUZ. D 47 Km. al N de MERCEDES, Provincia de'; ['294', 'LAD', '2511', 'EA. RINCON AMIGO (secundaria)', '07/25', '650m. x 20m.', 'TIERRA', '250 mts.', '000,00S', '0000,00W 1', '114 Km. al NW de RIO GALLEGOS, Provincia de SANTA CRUZ. D 47 Km. al N de MERCEDES, Provincia de', 'DRSU']
