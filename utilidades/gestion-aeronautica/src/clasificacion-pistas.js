@@ -10,6 +10,7 @@
   private_aerodrome:Object.freeze({label:'Aeródromo privado',color:'#8367b5',short:'Privado · Autorizar acceso'}),
   lad:Object.freeze({label:'Lugar Apto Denunciado (LAD)',color:'#b58b37',short:'LAD · No es aeródromo'}),
   heliport:Object.freeze({label:'Helipuerto o helipunto',color:'#427f8d',short:'Helicópteros'}),
+  anac_documental:Object.freeze({label:'En padrón ANAC 2026 · Categoría operativa pendiente de confirmar',color:'#4978a0',short:'ANAC 2026 · Documental'}),
   unverified:Object.freeze({label:'No verificada · Solo referencia',color:'#b7433b',short:'Sin verificación'})
  });
  const OPS={vfr:'VFR declarado',ifr:'IFR documentado',both:'VFR/IFR documentado',unknown:'No verificado'};
@@ -25,6 +26,12 @@
   // El catálogo oficial embebido es editorial; una fila pública de Supabase
   // requiere además evidencias documentales del lado servidor.
   if(x.category==='lad'&&x.sourceType==='registro_lad')return 'lad';
+  if(x.category==='official'&&x.sourceType==='registro_anac_2026'&&
+   x.sourceUrl==='https://datos.transporte.gob.ar/dataset/aerodromos'&&
+   x.sourceDate==='2026-09'){
+   return ['controlled_public','uncontrolled_public','private_aerodrome','heliport'].includes(candidate)?
+    candidate:'anac_documental';
+  }
   if(x.category==='official'&&(
    x.sourceType==='publicacion_aip'||
    (x.sourceType==='registro_anac_historico'&&
@@ -41,6 +48,7 @@
    case 'controlled_public':case 'uncontrolled_public':
     return 'Categoría documental orientativa. Confirmá control ATS, horarios, AIP/MADHEL, NOTAM, reglas autorizadas y condiciones actuales antes de operar.';
    case 'private_aerodrome':return 'Aeródromo privado: se requiere autorización del responsable. Verificá habilitación, NOTAM y condiciones reales.';
+   case 'anac_documental':return 'Registro geográfico documentado en el padrón ANAC de septiembre de 2026. Su uso público o privado, servicios ATS, habilitación vigente, apertura y aptitud operativa NO se han confirmado. Verificar AIP, MADHEL y NOTAM.';
    case 'lad':return 'LAD: no es aeródromo habilitado. Consultá las restricciones reglamentarias y la autorización del propietario; no infieras aptitud operacional.';
    case 'heliport':return 'Solo infraestructura destinada a alas rotativas según su habilitación. Verificá accesibilidad, configuración, horarios y restricciones vigentes.';
    default:return 'PELIGRO · Ubicación no verificada. Solo referencia geográfica para análisis de contingencias; NO es un lugar de aterrizaje recomendado ni comprobado.';
