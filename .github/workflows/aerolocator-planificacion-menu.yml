@@ -1,0 +1,31 @@
+name: AeroLocator - planificador VFR desde selector
+on:
+  pull_request:
+    paths:
+      - 'utilidades/pistas-no-oficiales.html'
+      - 'assets/aerolocator-route-planner.js'
+      - 'assets/aerolocator-route-planner.css'
+      - 'tests/aerolocator-planificacion-menu.test.cjs'
+      - '.github/workflows/aerolocator-planificacion-menu.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'utilidades/pistas-no-oficiales.html'
+      - 'assets/aerolocator-route-planner.js'
+      - 'assets/aerolocator-route-planner.css'
+      - 'tests/aerolocator-planificacion-menu.test.cjs'
+      - '.github/workflows/aerolocator-planificacion-menu.yml'
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verificar sintaxis del planificador
+        run: node --check assets/aerolocator-route-planner.js
+      - name: Verificar acceso por selector
+        run: node --test tests/aerolocator-planificacion-menu.test.cjs
