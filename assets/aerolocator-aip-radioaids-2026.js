@@ -44,7 +44,7 @@ const documentRows=Object.freeze([
  ['VOR-DME','RCU','Río Cuarto','330532S','0641554W']
 ]);
 function decimalDms(value){
- const match=String(value).match(/^(\\d{2,3})(\\d{2})(\\d{2})([NSEW])$/);
+ const match=String(value).match(/^(\d{2,3})(\d{2})(\d{2})([NSEW])$/);
  if(!match)throw Error('Coordenadas DMS inválidas');
  const degrees=Number(match[1]),minutes=Number(match[2]),seconds=Number(match[3]);
  if(minutes>=60||seconds>=60||degrees>180)throw Error('DMS fuera de rango');
