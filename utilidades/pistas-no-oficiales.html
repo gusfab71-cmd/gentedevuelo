@@ -1832,6 +1832,7 @@ function airstripPopup(name,kind,latitude,longitude,details={},nm=null,updated='
  item('Helipuerto (emplazamiento)',details.heliport_structure);
  item('Código OACI',details.icao);
  item('Registro',details.registry);
+ item('Referencia LAD coincidente (ANAC 2026)',details.ladRegistryReference);
  item('Identificador nacional (ANAC 2026)',details.nationalId);
  item('Documento citado por ANAC 2026',details.documentReference);
  item('Tráfico en padrón ANAC 2026',details.traffic);
@@ -1964,6 +1965,7 @@ function el(tag,text){const e=document.createElement(tag);e.textContent=text;ret
 
 const documentedAirstrips=[...(ANAC_CATALOG.official||[]),...(ANAC_CATALOG.lad||[])];
 let anac2026Integration={loaded:false,total:0,published:0,quarantined:0,mergedLegacy:0,archivedLegacy:0,skippedLAD:0,error:''};
+let lad2026Integration={loaded:false,total:0,added:0,updated:0,matchedOfficial:0,error:''};
 function normalizePista(value){return String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()}
 /* Padrón ANAC 2026 aportado en Shapefile, normalizado y almacenado localmente.
  * La lista documenta existencia geográfica, no permiso o aptitud operacional.
@@ -2086,6 +2088,88 @@ async function loadAnac2026Catalog(){
  }
 }
 
+function ladComparableName(text){
+ return normalizePista(text).replace(/\b(lad|ladh|lada|ea|eo|estancia|establecimiento)\b/g,'')
+  .replace(/[^a-z0-9]/g,'');
+}
+/* El padrón LAD es una capa de lugares DENUNCIADOS; NO aeródromos habilitados.
+ * Cruce conservador por nombre y proximidad, y por número de registro para LAD antiguos.
+ * Si el archivo del importador aún no está disponible, se mantienen los 16 LAD previos.
+ */
+async function loadAnacLAD2026(){
+ try{
+  const r=await fetch('../assets/aerolocator-anac-lad-2026-ar.json?v=20261105lad1',{cache:'no-cache'});
+  if(!r.ok)throw Error('Padrón LAD no disponible (HTTP '+r.status+')');
+  const doc=await r.json();
+  if(doc.schema!==1||doc.edition!=='2026-09-28'||!Array.isArray(doc.records)||
+     doc.records.length<900||doc.count!==doc.records.length)
+   throw Error('Estructura del padrón LAD no verificada');
+  const regular=documentedAirstrips.filter(p=>p.category!=='lad');
+  const oldLAD=new Map((ANAC_CATALOG.lad||[]).map(p=>{
+   const match=String(p.details?.registry||'').match(/\d+/);
+   return [match?Number(match[0]):0,p];
+  }));
+  const seen=new Set(),additions=[];
+  let updated=0,matchedOfficial=0;
+  for(const row of doc.records){
+   if(!Number.isInteger(row.registry)||seen.has(row.registry)||
+      !['LAD','LADH','LADA'].includes(row.type)||
+      typeof row.name!=='string'||!row.name.trim()||
+      !Number.isFinite(row.lat)||!Number.isFinite(row.lon))
+    throw Error('Registro LAD incompleto o duplicado '+row.registry);
+   seen.add(row.registry);
+   const nmName=ladComparableName(row.name);
+   const matching=regular.find(point=>{
+    const distance=nauticalMiles(row.lat,row.lon,point.lat,point.lon);
+    if(distance>.12)return false;
+    const other=ladComparableName(point.name);
+    return nmName.length>=6&&other.length>=6&&
+     (nmName.includes(other)||other.includes(nmName));
+   });
+   if(matching){
+    const label=row.type+' '+row.registry;
+    matching.details=matching.details||{};
+    matching.details.ladRegistryReference=label+' · '+row.dimensions_raw+
+     ' · '+(row.surface||'Sin superficie');
+    matching.details.ladRegistrySource=doc.source;
+    matchedOfficial++;continue;
+   }
+   const old=oldLAD.get(row.registry);
+   if(old)updated++;
+   const documentKind=row.type==='LADH'?'Área para helicópteros denunciada':
+    row.type==='LADA'?'Área para aeróstatos denunciada':'Lugar apto denunciado';
+   const province=String(row.location||'').match(/Provincia de\s+(.+?)(?:\.|$)/i)?.[1]||'';
+   additions.push({
+    id:old?.id||'anac-lad-'+row.registry,
+    category:'lad',facilityClass:'lad',legal_use:'lad',
+    ats_service:'unknown',operation_rules:'unknown',access_policy:'unknown',
+    facility_kind:row.type==='LADH'?'heliport':'airstrip',
+    name:row.name,lat:row.lat,lon:row.lon,
+    sourceType:'registro_lad',sourceUrl:doc.source,
+    sourceLabel:'ANAC · Registro LAD/LADH · 28/09/2026',sourceDate:doc.edition,
+    verification:'Registro geográfico ANAC, no habilitación de aeródromo ni autorización de operación.',
+    details:{registry:row.type+' '+row.registry,documentReference:'LAD · ANAC 2026',
+     province,runway:row.type==='LADH'?'FATO denunciada':row.runway,
+     dimensions:row.dimensions_raw,surface:row.surface,
+     elevation:row.elevation_raw,
+     permission:'No confirmada. Consultar titular y restricciones ANAC',
+     notes:documentKind+'. '+row.location+' · '+row.region+
+      '. Fuente ANAC, página '+row.page+
+      '. No implica pista habilitada ni operatividad verificada.'}
+   });
+  }
+  if(seen.size!==doc.count)throw Error('Faltan números de registro LAD');
+  const all=[...regular,...additions];
+  if(new Set(all.map(p=>p.id)).size!==all.length)
+   throw Error('Identificadores duplicados al integrar LAD');
+  documentedAirstrips.splice(0,documentedAirstrips.length,...all);
+  lad2026Integration={loaded:true,total:doc.count,added:additions.length-updated,
+   updated,matchedOfficial,error:''};
+ }catch(error){
+  lad2026Integration.error=String(error?.message||error);
+  console.warn('AeroLocator: conservar LAD previo:',error);
+ }
+}
 function renderDocumented(){
  const root=document.getElementById('pista-documented-list');
  root.replaceChildren();
@@ -2137,8 +2221,12 @@ function renderDocumented(){
   anac2026Integration.quarantined+' filas con ubicación dudosa apartadas, '+
   anac2026Integration.mergedLegacy+' registros históricos enlazados, '+
   anac2026Integration.archivedLegacy+' referencias de 2021 no repetidas en 2026 apartadas del mapa, '+
-  (ANAC_CATALOG.lad||[]).length+' LAD documentados por separado. '+
-  count+' puntos documentales visibles con los filtros. No certifica habilitación ni vigencia operacional.':
+  (lad2026Integration.loaded?
+   lad2026Integration.total+' LAD/LADH (sumados '+lad2026Integration.added+
+    ', actualizados '+lad2026Integration.updated+
+    ', coincidentes con aeródromos '+lad2026Integration.matchedOfficial+')':
+   (ANAC_CATALOG.lad||[]).length+' LAD anteriores; padrón completo pendiente de importación')+
+   '. '+count+' puntos documentales visibles con los filtros. No certifica habilitación ni vigencia operacional.':
   'Catálogo documental anterior: '+(ANAC_CATALOG.official||[]).length+' aeródromos y '+
   (ANAC_CATALOG.lad||[]).length+' LAD. El padrón ANAC 2026 no pudo cargarse'+
   (anac2026Integration.error?': '+anac2026Integration.error:'')+'.';
@@ -3489,7 +3577,8 @@ routePlanner=window.GDV_ROUTE_PLANNER_BOOT?.({
 
 await loadMarkerOverrides();
 await loadAnac2026Catalog();
-render(); // El padrón ANAC se muestra aun si falla la conexión a OurAirports o Supabase.
+await loadAnacLAD2026();
+render(); // Fuentes ANAC documentales, independientes de la conexión comunitaria.
 await load();
 // AERÓDROMOS Y PISTAS es la vista inicial: mostrar también OurAirports automáticamente.
 void showOurAirports();
