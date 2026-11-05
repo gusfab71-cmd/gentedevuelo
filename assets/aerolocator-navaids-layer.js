@@ -69,13 +69,13 @@ async function readCatalog(){
   })};
  }
 }
-function boot({map,L,panel}){
+function boot({map,L,panel,readOpenAip}){
  if(!map||!L||!panel)throw Error('No se pudo iniciar la capa de radioayudas');
  const aip=root.GDV_NAVAIDS_AIP||null;
  const group=L.layerGroup();
  const flags={ndb:true,vor:true,dme:true};
  const status=panel.querySelector('#navaid-status');
- let active=false,loaded=false,loading=null,entries=[],sourceRecords=0;
+ let active=false,loaded=false,loading=null,entries=[],sourceRecords=0,anacRecords=0,openaipAdded=0,openaipMatched=0,openaipStarted=false,staleSource=false;
  function popup(item,comparison){
   const box=document.createElement('section');
   box.className='navaid-popup';
@@ -83,11 +83,20 @@ function boot({map,L,panel}){
   heading.textContent=(item.ident||'S/I')+' · '+item.type;box.append(heading);
   line(box,'Nombre',item.name||'Sin dato');
   const official=item.source==='ANAC_AIP_2026';
-  line(box,'Fuente',official?'ANAC · suplemento ENR 4.1 (19/02/2026)':'OurAirports · catálogo comunitario');
+  line(box,'Fuente',official?'ANAC · suplemento ENR 4.1 (19/02/2026)':item.source==='OpenAIP'?'OpenAIP · datos comunitarios':'OurAirports · catálogo comunitario');
   line(box,'Posición referencial',item.lat.toFixed(5)+', '+item.lon.toFixed(5));
   line(box,'Frecuencia',item.frequency==null?'No informada':item.frequency+' '+(item.unit||''));
   if(item.dmeChannel)line(box,'Canal DME',item.dmeChannel);
   if(item.airport)line(box,'Aeródromo relacionado',item.airport);
+  if(item.openaip){
+   line(box,'Cruce OpenAIP','Mismo identificador, tipo compatible y ubicación cercana (sin validación operacional)');
+   const f=item.openaip.frequency;
+   if(f?.value!=null){
+    const raw=Number(f.value);
+    const difference=item.frequency!=null&&Math.abs(Number(item.frequency)-raw)>0.001;
+    line(box,difference?'Frecuencia OpenAIP (DIFIERE)':'Frecuencia OpenAIP',String(f.value)+' · verificar unidad en AIP');
+   }
+  }
   const note=document.createElement('p');
   note.className='navaid-popup-warning';
   if(official)note.textContent='Referencia documental ANAC de febrero de 2026; NO confirma servicio actual.';
@@ -116,9 +125,43 @@ function boot({map,L,panel}){
  }
  function statusUpdate(stale=false){
   const count=paint();
-  status.textContent=count+' visibles · '+sourceRecords+
-   ' OurAirports'+(entries.length>sourceRecords?' + '+(entries.length-sourceRecords)+' ANAC documental':'')+
-   (stale?' · respaldo local':'')+'. Estado operativo sin confirmar.';
+  status.textContent=count+' visibles · '+sourceRecords+' OurAirports + '+anacRecords+' ANAC documental'+
+   (openaipMatched||openaipAdded?' + '+openaipMatched+' cotejos OpenAIP + '+openaipAdded+' referencias nuevas OpenAIP':'')+
+   (stale?' · respaldo local':'')+'. Todos requieren verificar AIP/NOTAM.';
+ }
+ async function enrichFromOpenAip(){
+  try{
+   const data=await readOpenAip();
+   if(!Array.isArray(data?.records))return;
+   for(const candidate of data.records){
+    const type=root.GDV_OPENAIP_LAYERS?.navaidType(candidate.type);
+    if(!type||!candidate.ident||!Array.isArray(candidate.coordinates))continue;
+    const existing=root.GDV_OPENAIP_LAYERS.matchNavaid(entries.map(e=>e.item),candidate);
+    if(existing>=0){
+     entries[existing].item.openaip=candidate;openaipMatched++;
+     continue;
+    }
+    const [lon,lat]=candidate.coordinates;
+    if(!Number.isFinite(lat)||!Number.isFinite(lon))continue;
+    const isNdb=type==='NDB',raw=candidate.frequency?.value;
+    const item={id:candidate.id,ident:candidate.ident,name:candidate.name,type,
+     lat,lon,frequency:typeof raw==='number'&&Number.isFinite(raw)?raw:null,
+     unit:isNdb?'kHz':'MHz',dmeChannel:candidate.channel||'',source:'OpenAIP',
+     operationalStatus:'unknown',verification:'pending'};
+    const check=aip?.compare(item)||{status:'not-compared'};
+    const marker=L.marker([lat,lon],{
+     icon:L.divIcon({className:'navaid-icon',html:iconSvg(type),iconSize:[32,32],
+      iconAnchor:[16,16],popupAnchor:[0,-13]}),keyboard:true
+    });
+    marker.bindTooltip((item.ident||'?')+' · '+item.type+' · OpenAIP sin cotejo');
+    marker.bindPopup(()=>popup(item,check),{maxWidth:330});
+    entries.push({item,marker});openaipAdded++;
+   }
+   if(active)statusUpdate(staleSource);
+  }catch(_){
+   // Catalog is optional; ANAC and OurAirports remain visible.
+   if(active)status.textContent+=' OpenAIP no disponible para este usuario o sesión.';
+  }
  }
  async function show(){
   active=true;panel.hidden=false;
@@ -133,6 +176,7 @@ function boot({map,L,panel}){
      x.lat>=-90&&x.lat<=90&&x.lon>=-180&&x.lon<=180);
     sourceRecords=records.length;
     const documentary=aip?.documentaryExtras(records)||[];
+    anacRecords=documentary.length;staleSource=Boolean(data.stale);
     entries=[];
     for(const item of [...records,...documentary]){
      const comparison=aip?.compare(item)||{status:'not-compared'};
@@ -148,7 +192,9 @@ function boot({map,L,panel}){
      entries.push({item,marker});
     }
     loaded=true;
-    if(active)statusUpdate(Boolean(data.stale));
+    if(active)statusUpdate(staleSource);
+    // OpenAIP complementa las fichas después de mostrar inmediatamente OurAirports/ANAC.
+    if(typeof readOpenAip==='function'&&!openaipStarted){openaipStarted=true;void enrichFromOpenAip()}
    }catch(_){
     if(active)status.textContent='No se pudo cargar la fuente. Volvé a seleccionar la capa para reintentar.';
    }finally{loading=null}
