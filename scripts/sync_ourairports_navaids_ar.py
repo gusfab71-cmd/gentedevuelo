@@ -3,7 +3,7 @@
 
 Run: python scripts/sync_ourairports_navaids_ar.py
 Requires network access. Does not modify the database or deploy anything.
-Output: data/aerolocator-navaids-ar.geojson
+Output: assets/aerolocator-navaids-ar.geojson
 OurAirports data is public domain; not authoritative for operational navigation.
 """
 import csv
@@ -14,13 +14,16 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 SOURCE = "https://davidmegginson.github.io/ourairports-data/navaids.csv"
-OUTPUT = Path("data/aerolocator-navaids-ar.geojson")
+OUTPUT = Path("assets/aerolocator-navaids-ar.geojson")
 TYPES = {"NDB", "NDB-DME", "VOR", "VOR-DME", "DME", "VORTAC", "TACAN"}
 
 def main():
     req = urllib.request.Request(SOURCE, headers={"User-Agent": "GenteDeVuelo-AeroLocator/1.0"})
     with urllib.request.urlopen(req, timeout=30) as response:
-        raw = response.read(8_000_000).decode("utf-8-sig")
+        data = response.read(8_000_001)
+        if len(data) > 8_000_000:
+            raise ValueError("OurAirports CSV excede el tamaño permitido")
+        raw = data.decode("utf-8-sig")
     features = []
     for row in csv.DictReader(io.StringIO(raw)):
         if row.get("iso_country") != "AR" or row.get("type") not in TYPES:
