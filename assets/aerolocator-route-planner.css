@@ -149,7 +149,6 @@
 #route-planner-panel>summary{display:none!important}
 .dispatch-map-panel.vfr-planning-selected #route-planner-panel[open]{display:block!important}
 #route-planner-toggle{display:none!important}
-.dispatch-map-panel.vfr-planning-selected #route-planner-toggle[data-route-state="drawing"],
-.dispatch-map-panel.vfr-planning-selected #route-planner-toggle[data-route-state="finished"]{
+.dispatch-map-panel.vfr-planning-selected #route-planner-toggle{
  display:inline-flex!important;align-items:center
 }
