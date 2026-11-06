@@ -1272,11 +1272,21 @@ const AIRFIELD_TYPES=window.GDV_AIRFIELD_TYPES;
 if(!AIRFIELD_TYPES)throw Error('No está disponible el catálogo de clasificación aeronáutica');
 function airfieldClass(record){return AIRFIELD_TYPES.classification(record)}
 const draftPin=runwayPin('draft');let draftMarker=null;
+/* La referencia próxima se calcula con el catálogo ya cargado; no se deduce provincia, habilitación ni aptitud. */
+function mappedReferenceNear(lat,lon){
+ let nearest=null;
+ for(const record of documentedAirstrips){
+  const a=Number(record.lat),b=Number(record.lon);
+  if(!Number.isFinite(a)||!Number.isFinite(b))continue;
+  const distance=nauticalMiles(lat,lon,a,b);
+  if(!nearest||distance<nearest.distance)nearest={name:record.name,distance};
+ }
+ return nearest&&nearest.distance<=60?nearest:null;
+}
 function proposeAt(latlng){
  if(mapViewMode!=='airfields')return;
  if(pickReference||rulerEnabled){
-  const status=document.getElementById('zone-status');
-  status.textContent='Para agregar una pista, desactivá primero la regla o el modo «Elegir punto de referencia».';
+  document.getElementById('zone-status').textContent='Desactivá primero la regla o el modo «Elegir punto de referencia».';
   return;
  }
  const lat=Number(latlng.lat),lon=Number(latlng.lng);
@@ -1284,44 +1294,51 @@ function proposeAt(latlng){
   alert('Por ahora solo se pueden proponer pistas dentro de Argentina.');return;
  }
  if(draftMarker)map.removeLayer(draftMarker);
- draftMarker=L.marker([lat,lon],{icon:draftPin,draggable:true,autoPan:true,title:'Nueva pista sin publicar: arrastrá para ajustar la posición'}).addTo(map);
+ draftMarker=L.marker([lat,lon],{icon:draftPin,draggable:true,autoPan:true,title:'Propuesta nueva: arrastrá para ajustar el punto sobre la pista'}).addTo(map);
  const card=document.createElement('form');card.className='new-runway-card';
- const title=document.createElement('h3');title.textContent='Agregar pista en este punto';
- const explanation=document.createElement('p');explanation.textContent='Indicá una referencia para reconocer el lugar. Podés arrastrar el círculo para ajustar el punto sobre la pista.';
- const coordText=document.createElement('div');coordText.className='new-runway-coords';
+ const title=document.createElement('h3');title.textContent='Aportar una pista';
+ const explanation=document.createElement('p');explanation.textContent='El mapa completa la posición. Arrastrá el marcador para ubicarlo sobre la pista.';
+ const coords=document.createElement('div');coords.className='new-runway-coords';
+ const proximity=document.createElement('div');proximity.className='quick-location-reference';
  const updateCoordinates=()=>{
-  const p=draftMarker.getLatLng();
-  coordText.textContent='Latitud '+p.lat.toFixed(6)+' · Longitud '+p.lng.toFixed(6);
+  const point=draftMarker.getLatLng();
+  coords.textContent='Posición detectada · '+point.lat.toFixed(6)+', '+point.lng.toFixed(6);
+  const closest=mappedReferenceNear(point.lat,point.lng);
+  proximity.textContent=closest?'Referencia cartográfica: '+closest.name+' a '+closest.distance.toFixed(1)+' NM. Es una referencia cercana, no el nombre ni la categoría de tu pista.':
+   'Punto fijado en el mapa. La provincia y localidad pueden agregarse después.';
+  if(closest&&closest.distance<0.2)proximity.textContent+=' Revisá si ya está registrada para evitar duplicados.';
  };
- updateCoordinates();
- const namedField=(text,tag,maxLength,placeholder,required=false)=>{
-  const label=document.createElement('label');label.textContent=text;
-  const input=document.createElement(tag);input.maxLength=maxLength;input.placeholder=placeholder;
+ const field=(title,tag,max,placeholder,required=false)=>{
+  const label=document.createElement('label');label.textContent=title;
+  const input=document.createElement(tag);input.maxLength=max;input.placeholder=placeholder;
   if(required)input.required=true;
   label.append(input);card.append(label);return input;
  };
- card.append(title,explanation,coordText);
- const name=namedField('Nombre o referencia de la pista','input',120,'Ej.: Pista junto a Ruta 2, km 75',true);
- name.minLength=3;
- const province=namedField('Provincia','input',80,'Ej.: Buenos Aires',true);
- const note=namedField('Observaciones para identificarla (opcional)','textarea',600,'Ej.: al oeste del camino de acceso');
+ card.append(title,explanation,coords,proximity);
+ const name=field('Nombre o referencia *','input',120,'Ej.: Pista junto a Ruta 2, km 75',true);name.minLength=3;
+ const province=field('Provincia (opcional)','input',80,'Ej.: Buenos Aires');
+ const note=field('Observación (opcional)','textarea',600,'Alguna referencia para reconocerla');
+ const consentLabel=document.createElement('label');consentLabel.className='quick-proposal-consent';
+ const consent=document.createElement('input');consent.type='checkbox';consent.required=true;
+ const consentText=document.createElement('span');consentText.textContent='Confirmo que puedo divulgar la ubicación y los datos que aporte.';
+ consentLabel.append(consent,consentText);card.append(consentLabel);
  const response=document.createElement('p');response.className='new-runway-message';response.setAttribute('role','status');
  const buttons=document.createElement('div');buttons.className='new-runway-actions';
- const complete=document.createElement('button');complete.type='submit';complete.textContent='Continuar con la ficha';
+ const send=document.createElement('button');send.type='submit';send.textContent='Enviar a revisión';
+ const advanced=document.createElement('button');advanced.type='button';advanced.className='new-runway-advanced';advanced.textContent='Agregar más datos';
  const cancel=document.createElement('button');cancel.type='button';cancel.className='new-runway-cancel';cancel.textContent='Cancelar';
  cancel.addEventListener('click',()=>{
   map.closePopup();
   if(draftMarker){map.removeLayer(draftMarker);draftMarker=null}
  });
- buttons.append(complete,cancel);card.append(response,buttons);
- const popup=L.popup({minWidth:260,maxWidth:330,closeButton:true,autoPan:true})
-  .setLatLng([lat,lon]).setContent(card);
+ buttons.append(send,advanced,cancel);card.append(response,buttons);
+ const popup=L.popup({minWidth:260,maxWidth:335,closeButton:true,autoPan:true}).setLatLng([lat,lon]).setContent(card);
  draftMarker.on('dragend',()=>{
   if(!draftMarker)return;
-  const p=draftMarker.getLatLng();
-  if(p.lat < -56||p.lat > -21||p.lng < -74||p.lng > -53){
-   draftMarker.setLatLng([lat,lon]);response.textContent='La posición debe estar dentro de Argentina.';
-  }else{response.textContent='Punto ajustado. Las coordenadas se copiarán a la ficha.'}
+  const point=draftMarker.getLatLng();
+  if(point.lat < -56||point.lat > -21||point.lng < -74||point.lng > -53){
+   draftMarker.setLatLng([lat,lon]);response.textContent='La ubicación debe estar dentro de Argentina.';
+  }else response.textContent='Posición ajustada y lista para enviar.';
   updateCoordinates();popup.setLatLng(draftMarker.getLatLng()).openOn(map);
  });
  draftMarker.on('click',()=>popup.setLatLng(draftMarker.getLatLng()).openOn(map));
@@ -1329,32 +1346,39 @@ function proposeAt(latlng){
   if(e.originalEvent)L.DomEvent.stop(e.originalEvent);
   popup.setLatLng(draftMarker.getLatLng()).openOn(map);
  });
- card.addEventListener('submit',e=>{
-  e.preventDefault();
-  const text=name.value.trim(),area=province.value.trim();
-  if(text.length<3||!area){response.textContent='Indicá un nombre o referencia (mínimo 3 caracteres) y la provincia.';return}
+ function passToForm(shouldSend){
+  if(!name.value.trim()||name.value.trim().length<3){response.textContent='Ingresá un nombre de al menos 3 caracteres.';name.focus();return}
   const point=draftMarker?.getLatLng();
   if(!point||point.lat < -56||point.lat > -21||point.lng < -74||point.lng > -53){
    response.textContent='La ubicación no es válida.';return;
   }
+  if(shouldSend&&!consent.checked){response.textContent='Confirmá la autorización para divulgar la ubicación.';return}
   const form=document.getElementById('form');
-  form.elements.namedItem('name').value=text;
-  form.elements.namedItem('province').value=area;
+  form.reset();
+  pendingAirstripPhotos=[];uploadedPhotoUrls=new Map();clearPhotoPreviews();
+  form.elements.namedItem('name').value=name.value.trim();
+  form.elements.namedItem('province').value=province.value.trim();
   form.elements.namedItem('latitude').value=point.lat.toFixed(6);
   form.elements.namedItem('longitude').value=point.lng.toFixed(6);
   form.elements.namedItem('notes').value=note.value.trim();
+  form.elements.namedItem('consent').checked=consent.checked;
+  const context=document.getElementById('proposal-map-context');
+  context.textContent='Coordenadas copiadas del punto que marcaste: '+point.lat.toFixed(6)+', '+point.lng.toFixed(6)+'. '+proximity.textContent;
   map.closePopup();
   setControlOpen(true);
   document.getElementById('control-catalog-menu').open=true;
   document.getElementById('contribute').open=true;
-  document.getElementById('zone-status').textContent='Punto y referencia cargados. Revisá la ficha, completá los datos y enviá la propuesta a moderación.';
+  document.getElementById('zone-status').textContent='Ubicación cargada desde el mapa. '+(shouldSend?'Se está enviando tu propuesta.':'Podés agregar datos opcionales y enviar.');
   requestAnimationFrame(()=>{
-   const target=document.getElementById('contribute');
-   target.scrollIntoView({behavior:'smooth',block:'start'});
-   form.elements.namedItem('runway').focus({preventScroll:true});
+   const target=shouldSend?document.getElementById('message'):document.getElementById('contribute');
+   target.scrollIntoView({behavior:'smooth',block:'center'});
+   if(shouldSend)form.requestSubmit();
+   else form.elements.namedItem('name').focus({preventScroll:true});
   });
- });
- popup.openOn(map);
+ }
+ card.addEventListener('submit',e=>{e.preventDefault();passToForm(true)});
+ advanced.addEventListener('click',()=>passToForm(false));
+ updateCoordinates();popup.openOn(map);
 }
 let holdTimer=null,holdStart=null,holdTriggered=false;
 const mapElement=document.getElementById('map');
