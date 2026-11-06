@@ -120,9 +120,92 @@ function boot({map,L,client,panel}){
   cache.set(kind,data);
   return data;
  }
+ /* Filtros cartográficos OpenAIP: categorías y clases ICAO conservan su estado al cambiar de vista. */
+ const filters=document.createElement('section');
+ filters.className='openaip-airspace-filters';
+ filters.setAttribute('aria-label','Filtrar espacios aéreos por categoría y clase');
+ filters.hidden=true;
+ const filterHeading=document.createElement('h4');filterHeading.textContent='Filtrar espacios aéreos';
+ const filterHelp=document.createElement('p');filterHelp.textContent='Elegí qué categorías dibujar sobre el mapa. Los filtros no modifican los datos OpenAIP.';
+ const actions=document.createElement('div');actions.className='openaip-filter-actions';
+ const allButton=document.createElement('button');allButton.type='button';allButton.textContent='Mostrar todas';
+ const noneButton=document.createElement('button');noneButton.type='button';noneButton.textContent='Ocultar todas';
+ actions.append(allButton,noneButton);
+ const typeList=document.createElement('div');typeList.className='openaip-filter-types';
+ const classLabel=document.createElement('label');classLabel.className='openaip-filter-class-label';
+ classLabel.textContent='Clase ICAO';
+ const classSelect=document.createElement('select');classSelect.setAttribute('aria-label','Filtrar por clase ICAO');
+ classLabel.append(classSelect);
+ const filterCount=document.createElement('p');filterCount.className='openaip-filter-count';filterCount.setAttribute('role','status');
+ filters.append(filterHeading,filterHelp,actions,typeList,classLabel,filterCount);
+ status.after(filters);
+ const excludedTypes=new Set();
+ let selectedClass='all',shapes=[],airspaceSource=null;
+ function categoryName(key){
+  return AIRSPACE[key]||('Tipo '+key+' (sin denominación)');
+ }
+ function className(key){
+  if(key==='unknown')return 'Sin clase informada';
+  const num=Number(key);
+  const label=Number.isInteger(num)&&CLASS_LABEL[num]!==undefined?CLASS_LABEL[num]:key;
+  return label==='Sin clasificar'?label:'Clase '+label;
+ }
+ function updateAirspaceLayers(){
+  if(active!=='airspaces'||!airspaceSource)return;
+  const group=groups.airspaces;
+  group.clearLayers();
+  let visible=0;
+  for(const item of shapes){
+   if(excludedTypes.has(item.type)||selectedClass!=='all'&&selectedClass!==item.icaoClass)continue;
+   group.addLayer(item.layer);visible++;
+  }
+  filterCount.textContent=visible+' visibles de '+shapes.length+' espacios en el lote consultado.';
+  status.textContent=visible+' visibles'+(airspaceSource.total!=null?' de '+airspaceSource.total:'')+
+   ' registros OpenAIP · CC BY-NC 4.0'+
+   (airspaceSource.partial?' · consulta parcial, quedan páginas pendientes':'')+
+   '. Categorías y clases filtradas. Verificar AIP/NOTAM.';
+ }
+ function buildAirspaceFilters(){
+  const counts=new Map(),classes=new Set();
+  for(const item of shapes){
+   counts.set(item.type,(counts.get(item.type)||0)+1);
+   classes.add(item.icaoClass);
+  }
+  typeList.replaceChildren();
+  const sorted=[...counts].sort((a,b)=>Number(a[0])-Number(b[0]));
+  for(const [key,count] of sorted){
+   const option=document.createElement('label');option.className='openaip-filter-option';
+   const checkbox=document.createElement('input');checkbox.type='checkbox';
+   checkbox.value=key;checkbox.checked=!excludedTypes.has(key);
+   checkbox.addEventListener('change',()=>{
+    if(checkbox.checked)excludedTypes.delete(key);else excludedTypes.add(key);
+    updateAirspaceLayers();
+   });
+   const text=document.createElement('span');text.textContent=categoryName(key)+' ('+count+')';
+   option.append(checkbox,text);typeList.append(option);
+  }
+  classSelect.replaceChildren(new Option('Todas las clases','all'));
+  for(const key of [...classes].sort((a,b)=>Number(a)-Number(b))){
+   classSelect.append(new Option(className(key),key));
+  }
+  if(![...classes].includes(selectedClass))selectedClass='all';
+  classSelect.value=selectedClass;
+ }
+ allButton.addEventListener('click',()=>{
+  excludedTypes.clear();
+  for(const checkbox of typeList.querySelectorAll('input[type="checkbox"]'))checkbox.checked=true;
+  updateAirspaceLayers();
+ });
+ noneButton.addEventListener('click',()=>{
+  for(const checkbox of typeList.querySelectorAll('input[type="checkbox"]')){
+   excludedTypes.add(checkbox.value);checkbox.checked=false;
+  }
+  updateAirspaceLayers();
+ });
+ classSelect.addEventListener('change',()=>{selectedClass=classSelect.value;updateAirspaceLayers()});
  function clearCurrent(){
   for(const group of Object.values(groups))if(map.hasLayer(group))map.removeLayer(group);
-  panel.hidden=true;active=null;
+  filters.hidden=true;panel.hidden=true;active=null;
  }
  async function show(kind){
   if(!groups[kind])throw Error('Capa no compatible');
@@ -136,6 +219,7 @@ function boot({map,L,client,panel}){
    if(active!==request)return;
    const group=groups[kind];group.clearLayers();
    let rendered=0;
+   if(kind==='airspaces')shapes=[];
    for(const entry of data.records){
     try{
      if(kind==='airspaces'){
@@ -146,7 +230,11 @@ function boot({map,L,client,panel}){
       const shape=L.geoJSON({type:'Feature',properties:{},geometry:entry.geometry},
        {style:{color,weight:2,dashArray:dashed,fillOpacity:0.11,fillColor:color}});
       shape.bindPopup(()=>makePopup(entry),{maxWidth:330});
-      group.addLayer(shape);rendered++;
+      shapes.push({
+       type:String(cat??'unknown'),
+       icaoClass:entry.icaoClass==null?'unknown':String(entry.icaoClass),
+       layer:shape
+      });rendered++;
      }else{
       if(!Array.isArray(entry.coordinates)||entry.coordinates.length!==2)continue;
       const [lon,lat]=entry.coordinates;
@@ -156,12 +244,18 @@ function boot({map,L,client,panel}){
       marker.bindTooltip(entry.name||'Punto VFR');
       marker.bindPopup(()=>makePopup(entry),{maxWidth:330});group.addLayer(marker);rendered++;
      }
-    }catch(_){ /* Skip malformed individual geometry, never the complete map. */ }
+    }catch(_){ /* Geometría individual inválida: omitir, sin ocultar los demás registros. */ }
    }
-   if(active===request)group.addTo(map);
-   status.textContent=rendered+' visibles'+(data.total!=null?' de '+data.total:'')+
+   if(active!==request)return;
+   if(kind==='airspaces'){
+    airspaceSource=data;buildAirspaceFilters();
+    filters.hidden=false;group.addTo(map);updateAirspaceLayers();
+   }else{
+    group.addTo(map);
+    status.textContent=rendered+' visibles'+(data.total!=null?' de '+data.total:'')+
      ' registros OpenAIP · CC BY-NC 4.0'+(data.partial?' · consulta parcial, quedan páginas pendientes':'')+
      '. Solo referencia, verificar AIP/NOTAM.';
+   }
   }catch(error){
    if(active===request)status.textContent=error.message||'No se pudo consultar OpenAIP.';
   }

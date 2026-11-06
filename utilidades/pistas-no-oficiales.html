@@ -785,6 +785,24 @@ body .dispatch-nav nav a.aerolocator-back-to-aerosuite:focus-visible{color:#1c26
  .aerolocator-toolbar .dispatch-map-toolbar-links button,
  .aerolocator-toolbar .dispatch-map-toolbar-links a{flex:1 1 auto;min-height:40px;padding:8px;font-size:11px}
 }
+
+/* Filtros por tipo y clase OpenAIP; permanece visible dentro de su panel. */
+#openaip-overview{width:min(345px,calc(100% - 48px));max-height:min(70dvh,570px);overflow-y:auto;scrollbar-color:#789aab #192c38}
+#openaip-overview .openaip-airspace-filters{margin:10px 0 8px;padding:11px;background:#203e4b;border:1px solid #81a9bc;border-radius:11px;display:grid;gap:9px}
+#openaip-overview .openaip-airspace-filters[hidden]{display:none!important}
+#openaip-overview .openaip-airspace-filters h4{font-size:13px;color:#fff1d7;margin:0;font-weight:820}
+#openaip-overview .openaip-airspace-filters>p{margin:0;color:#d7e9f3;font-size:11px;line-height:1.45}
+#openaip-overview .openaip-filter-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+#openaip-overview .openaip-filter-actions button{min-height:32px;padding:6px 7px;background:#2a5770;border:1px solid #7ca9bf;font-size:11px;font-weight:760}
+#openaip-overview .openaip-filter-types{display:grid;grid-template-columns:1fr;gap:5px;max-height:235px;overflow-y:auto;padding:1px;scrollbar-color:#8fb0c2 #223d4b}
+#openaip-overview .openaip-filter-option{display:flex;flex-direction:row;align-items:center;gap:8px;cursor:pointer;background:#193442;border:1px solid #527b8d;border-radius:7px;padding:7px 9px;color:#ecf4fa;font-size:11px;line-height:1.3}
+#openaip-overview .openaip-filter-option:hover{background:#2b5365}
+#openaip-overview .openaip-filter-option input{width:17px;height:17px;flex:none;accent-color:#e8b678;cursor:pointer}
+#openaip-overview .openaip-filter-class-label{display:grid;gap:5px;color:#e2eef5;font-size:11px;font-weight:760}
+#openaip-overview .openaip-filter-class-label select{width:100%;min-height:36px;padding:7px 9px;color:#edf7fd;background:#122b3a;border:1px solid #759fb3;font-size:12px}
+#openaip-overview .openaip-filter-count{color:#f3d9aa!important;font-weight:760;font-size:11px!important}
+#openaip-overview :is(button,select,input):focus-visible{outline:2px solid #e6c798;outline-offset:2px}
+@media(max-width:620px){#openaip-overview{width:min(290px,calc(100% - 32px));max-height:65dvh;right:7px;top:8px}}
 </style></head><body><header class="dispatch-nav"><a class="dispatch-nav-logo" href="../index.html" aria-label="AeroLocator · Developed by Gente de Vuelo">
  <img class="aerolocator-brand-icon" src="../assets/aerolocator-brand.svg" alt="" width="68" height="68" decoding="async">
  <span class="aerolocator-brand-copy"><strong class="aerolocator-brand-name">Aero<span>Locator</span></strong>
@@ -1145,7 +1163,7 @@ body .dispatch-nav nav a.aerolocator-back-to-aerosuite:focus-visible{color:#1c26
 </div><p class="map-actions" id="airfields-map-actions"><button id="explore" type="button">Revisar pistas OSM de esta zona</button> <small id="osm-status">Abre la revisión OSM para ver pistas y sus trazados.</small></p></div>
   </section>
  </div>
-</main><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="../assets/supabase-2.117.2.min.js"></script><script src="../assets/community-config.js"></script><script src="../assets/r2-media.js"></script><script src="gestion-aeronautica/src/catalogo-pistas-anac.js"></script><script src="gestion-aeronautica/src/clasificacion-pistas.js"></script><script src="../assets/aerolocator-official-sources.js?v=20261105official1"></script><script src="../assets/aerolocator-osm-review.js?v=20261105geom1"></script><script src="../assets/aerolocator-osm-review-ui.js?v=20261105geom1"></script><script src="../assets/aerolocator-wmm2025.js?v=20261104wmm1"></script><script src="../assets/aerolocator-route-planner.js?v=20261105-distancias-nm-km2"></script><script src="../assets/aerolocator-aip-radioaids-2026.js?v=20261105navaid1"></script><script src="../assets/aerolocator-openaip-layers.js?v=20261105beta1"></script><script src="../assets/aerolocator-navaids-layer.js?v=20261105openaipbeta1"></script><script>
+</main><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="../assets/supabase-2.117.2.min.js"></script><script src="../assets/community-config.js"></script><script src="../assets/r2-media.js"></script><script src="gestion-aeronautica/src/catalogo-pistas-anac.js"></script><script src="gestion-aeronautica/src/clasificacion-pistas.js"></script><script src="../assets/aerolocator-official-sources.js?v=20261105official1"></script><script src="../assets/aerolocator-osm-review.js?v=20261105geom1"></script><script src="../assets/aerolocator-osm-review-ui.js?v=20261105geom1"></script><script src="../assets/aerolocator-wmm2025.js?v=20261104wmm1"></script><script src="../assets/aerolocator-route-planner.js?v=20261105-distancias-nm-km2"></script><script src="../assets/aerolocator-aip-radioaids-2026.js?v=20261105navaid1"></script><script src="../assets/aerolocator-openaip-layers.js?v=20261106airspacefilters1"></script><script src="../assets/aerolocator-navaids-layer.js?v=20261105openaipbeta1"></script><script>
 (async()=>{
 const client=supabase.createClient(GDV_CONFIG.url,GDV_CONFIG.key);
 let routePlanner=null;

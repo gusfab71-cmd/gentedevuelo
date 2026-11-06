@@ -62,3 +62,18 @@ test('Las geometrías se tratan como referencia y sin HTML no confiable',()=>{
  assert.match(layerJS,/CC BY-NC 4\.0/);
  assert.match(layerJS,/LIMIT_PAGES=8/);
 });
+
+
+test('OpenAIP muestra filtros independientes por categoría y clase ICAO',()=>{
+ assert.match(layerJS,/filters\.className='openaip-airspace-filters'/);
+ assert.match(layerJS,/status\.after\(filters\)/);
+ assert.match(layerJS,/const excludedTypes=new Set\(\)/);
+ assert.match(layerJS,/const classSelect=document\.createElement\('select'\)/);
+ assert.match(layerJS,/allButton\.addEventListener\('click'/);
+ assert.match(layerJS,/noneButton\.addEventListener\('click'/);
+ assert.match(layerJS,/classSelect\.addEventListener\('change'/);
+ assert.match(layerJS,/if\(excludedTypes\.has\(item\.type\)/);
+ assert.match(layerJS,/filters\.hidden=false;group\.addTo\(map\);updateAirspaceLayers\(\)/);
+ assert.match(html,/aerolocator-openaip-layers\.js\?v=20261106airspacefilters1/);
+ assert.match(html,/#openaip-overview \.openaip-filter-types/);
+});
