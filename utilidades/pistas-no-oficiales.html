@@ -661,6 +661,16 @@ body .dispatch-nav nav a.aerolocator-back-to-aerosuite:focus-visible{color:#1c26
 }
 
 
+
+.airstrip-moderation-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin:9px 0 12px}
+#pending-summary{font-size:12px;line-height:1.45;color:#f5d39e;margin:0}
+#pending-refresh{padding:8px 10px;font-size:11px;font-weight:750;background:#2b5a75;border:1px solid #83abc4}
+#pending>.entry{margin:8px 0;border:1px solid #547991}
+#pending>.entry>strong{display:block;font-size:13px;color:#edf6ff;margin-bottom:5px}
+#pending>.entry>p{font-size:11px;margin:6px 0;color:#dce8f1;line-height:1.45}
+#pending>.entry>button{display:inline-flex;margin:6px 8px 0 0;padding:8px 10px;font-size:11px}
+#pending>.entry>button:first-of-type{background:#277655}
+#pending>.entry>button:last-of-type{background:#783f40}
 /* Alta rápida de pistas · el resto de la ficha técnica es opcional. */
 .pin-legend .legend-dot.community-reviewed{background:#b58b37;border-color:#fff0ca}
 .pin-legend .legend-dot.community-reviewed::after{content:"C"}
@@ -883,7 +893,8 @@ body .dispatch-nav nav a.aerolocator-back-to-aerosuite:focus-visible{color:#1c26
   <p id="openaip-check-status" role="status" aria-live="polite">Pendiente de comprobación. Solo administración.</p>
  </div>
  <h2>Moderación de propuestas</h2>
- <div id="pending"></div>
+ <div class="airstrip-moderation-head"><p id="pending-summary" role="status" aria-live="polite">Consultando propuestas pendientes…</p><button type="button" id="pending-refresh">Actualizar pendientes</button></div>
+ <div id="pending" aria-live="polite"></div>
 </section></div>
     <section class="official-aip-panel" aria-labelledby="official-aip-heading">
   <div>
@@ -2786,12 +2797,14 @@ document.getElementById('form').addEventListener('submit',async e=>{
   }
   const payload={name:String(f.get('name')).trim(),latitude:Number(f.get('latitude')),
    longitude:Number(f.get('longitude')),author_id:user.id,status:'pending',details};
-  const {error}=await client.from('community_airstrips').insert(payload);
-  if(error)throw Error('No se pudo enviar la propuesta: '+error.message);
+  const {data:saved,error}=await client.from('community_airstrips').insert(payload)
+   .select('id,status,created_at').single();
+  if(error||!saved?.id||saved.status!=='pending')throw Error('No se pudo confirmar el registro de la propuesta: '+(error?.message||'sin confirmación del servidor'));
   msg.textContent='Propuesta recibida. Estado: pendiente de revisión GdV. No se muestra como pista publicada hasta que un administrador la apruebe; la revisión no certifica habilitación aeronáutica.';
   e.target.reset();pendingAirstripPhotos=[];uploadedPhotoUrls=new Map();clearPhotoPreviews();
   if(draftMarker){map.removeLayer(draftMarker);draftMarker=null}
   await loadMyAirstripSubmissions();
+  window.dispatchEvent(new Event('gdv-airstrip-submitted'));
  }catch(error){
   msg.textContent=error.message+' La propuesta no se ha publicado; podés volver a intentar.';
  }finally{airstripSending=false;if(submit)submit.disabled=false}
@@ -2835,7 +2848,64 @@ if(admin){
    openaipTestStatus.textContent='Error de conexión al ejecutar la prueba; reintentá desde una sesión activa.';
   }finally{openaipTestButton.disabled=false}
  });
- async function pending(){const r=await client.from('community_airstrips').select('*').eq('status','pending').order('created_at');const root=document.getElementById('pending');root.replaceChildren();for(const p of r.data||[]){const d=el('div',p.name+' · '+p.latitude+', '+p.longitude+' · '+(p.details?.province||''));d.className='entry';airstripImageGallery(d,p.details?.photos,p.name);for(const status of ['approved','rejected']){const b=el('button',status==='approved'?'Aprobar':'Rechazar');b.onclick=async()=>{const {error}=await client.from('community_airstrips').update({status}).eq('id',p.id);if(error)msg.textContent=error.message;else{await pending();await load()}};d.append(b)}root.append(d)}}await pending()}
+ async function pending(){
+  const root=document.getElementById('pending');
+  const summary=document.getElementById('pending-summary');
+  const refresh=document.getElementById('pending-refresh');
+  refresh.disabled=true;summary.textContent='Buscando propuestas pendientes…';
+  try{
+   const {data,error}=await client.from('community_airstrips').select('*')
+    .eq('status','pending').order('created_at',{ascending:false});
+   if(error)throw Error(error.message);
+   root.replaceChildren();
+   const proposals=data||[];
+   summary.textContent=proposals.length===1?'1 pista pendiente de revisión GdV.':
+    proposals.length+' pistas pendientes de revisión GdV.';
+   if(!proposals.length){
+    root.append(el('p','No hay propuestas pendientes. Las enviadas correctamente figurarán aquí.'));
+    return;
+   }
+   for(const p of proposals){
+    const card=el('div','');
+    card.className='entry';
+    const heading=el('strong',p.name);
+    const loc=el('p','Ubicación '+Number(p.latitude).toFixed(6)+', '+Number(p.longitude).toFixed(6)+
+      (p.details?.province?' · '+p.details.province:''));
+    const date=new Date(p.created_at);
+    const received=el('small','Recibida '+(Number.isFinite(date.getTime())?
+      date.toLocaleString('es-AR',{timeZone:'America/Argentina/Buenos_Aires'}):'sin fecha disponible'));
+    const note=el('p','Pendiente de revisión por Gente de Vuelo. Aprobar la publicación no certifica habilitación ANAC.');
+    card.append(heading,loc,received,note);
+    airstripImageGallery(card,p.details?.photos,p.name);
+    for(const status of ['approved','rejected']){
+     const button=el('button',status==='approved'?'Aprobar publicación GdV':'Rechazar propuesta');
+     button.type='button';
+     button.addEventListener('click',async()=>{
+      button.disabled=true;
+      try{
+       const {data:updated,error:updateError}=await client.from('community_airstrips')
+        .update({status}).eq('id',p.id).eq('status','pending')
+        .select('id,status').maybeSingle();
+       if(updateError)throw Error(updateError.message);
+       if(!updated)throw Error('La propuesta cambió de estado; actualizá la lista.');
+       msg.textContent=status==='approved'?
+        'Aporte publicado por GdV. Sigue sin certificación aeronáutica ANAC.':
+        'Propuesta rechazada; no se publicó.';
+       await pending();await load();await loadMyAirstripSubmissions();
+      }catch(error){msg.textContent='No se pudo actualizar la propuesta: '+error.message;button.disabled=false}
+     });
+     card.append(button);
+    }
+    root.append(card);
+   }
+  }catch(error){
+   summary.textContent='No se pudieron cargar las propuestas pendientes.';
+   root.replaceChildren(el('p','Error al consultar moderación: '+error.message));
+  }finally{refresh.disabled=false}
+ }
+ document.getElementById('pending-refresh').addEventListener('click',()=>void pending());
+ window.addEventListener('gdv-airstrip-submitted',()=>void pending());
+ await pending()}
 
 /* Selector de vistas cartográficas excluyentes. Otras capas quedan invisibles. */
 const viewSelect=document.getElementById('map-view-mode'),viewStatus=document.getElementById('map-view-status');
