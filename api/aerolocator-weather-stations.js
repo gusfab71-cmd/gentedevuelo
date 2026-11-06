@@ -73,7 +73,7 @@ function send(res,status,body){
  return res.status(status).json(body);
 }
 async function readObservation(station){
- const url=BASE+'/api/v1/data/'+station.instrumentId+'.json?last';
+ const url=BASE+'/api/v1/data/'+station.instrumentId+'.geojson?last';
  const response=await fetch(url,{
   headers:{Accept:'application/json','User-Agent':'GenteDeVuelo-AeroLocator/1.0'},
   signal:AbortSignal.timeout(8000)
