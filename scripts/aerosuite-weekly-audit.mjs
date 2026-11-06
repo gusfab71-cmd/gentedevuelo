@@ -33,6 +33,7 @@ for(const [name,file,esm] of suites){
  results.push({name,file,status:ok?'APROBADO':'FALLÓ',exitCode:r.status,error:r.error?.message||null});
  logs.push('### '+name+'\n'+(r.stdout||'')+'\n'+(r.stderr||''));
  console.log((ok?'APROBADO':'FALLÓ')+' '+name);
+ if(!ok)console.error('EVIDENCIA DE FALLO ('+name+'):\n'+((r.stdout||'')+'\n'+(r.stderr||'')).slice(-4500));
 }
 const source=readFileSync('tests/aerosuite-laboratorio.test.mjs','utf8');
 const todo=[...source.matchAll(/\btest\.todo\s*\(/g)].length;
