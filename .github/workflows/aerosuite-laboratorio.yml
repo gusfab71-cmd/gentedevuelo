@@ -12,6 +12,7 @@ on:
       - 'assets/aerosuite-registration.js'
       - 'scripts/aerosuite-weekly-audit.mjs'
       - 'docs/laboratorio-aerosuite.md'
+      - 'supabase/laboratory/**'
       - '.github/workflows/aerosuite-laboratorio.yml'
 permissions:
   contents: read
@@ -54,7 +55,7 @@ jobs:
         run: ${{ matrix.command }}
   laboratorio_sql:
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event_name == 'pull_request'
-    name: 'Módulo: Laboratorio SQL ficticio'
+    name: 'Módulo: Laboratorio SQL y RLS ficticia'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
@@ -70,6 +71,10 @@ jobs:
         run: node --experimental-default-type=module --test tests/aerosuite-lab-public.test.mjs
       - name: Consultar controles SQL en modo solo lectura
         run: node --experimental-default-type=module scripts/aerosuite-lab-readonly-check.mjs
+      - name: Comprobar cobertura de seis portales y políticas de acceso
+        run: node --experimental-default-type=module --test tests/aerosuite-lab-role-audit.test.mjs
+      - name: Verificar informes RLS del segundo Supabase gratuito
+        run: node --experimental-default-type=module scripts/aerosuite-lab-role-audit.mjs
   resumen:
     name: Informe consolidado sin escrituras
     runs-on: ubuntu-latest
