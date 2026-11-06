@@ -979,13 +979,13 @@ assert.match(airstripsOriginal,/kind==='heliport'/);
 assert.match(airstripsOriginal,/kind==='unverified'/);
 
 const splitMap=airstripsOriginal;
-assert.match(splitMap,/class="dispatch-layout"/,'Falta marco de pantalla dividida');
+assert.match(splitMap,/class="dispatch-layout is-control-collapsed"/,'El mapa ocupa el ancho inicial y conserva el centro de control plegable');
 assert.match(splitMap,/class="dispatch-sidebar"/,'Falta panel izquierdo');
 assert.match(splitMap,/class="dispatch-map-panel"/,'Falta zona principal del mapa');
 assert.match(splitMap,/grid-template-columns:minmax\(350px,29%\) minmax\(0,1fr\)/);
 assert.match(splitMap,/id="selected-detail"/);
 assert.match(splitMap,/function showAirfieldDetail\(createCard,name\)/);
-assert.match(splitMap,/function attachSelection\(marker,point,label,createCard\)/);
+assert.match(splitMap,/function attachSelection\(marker,point,label,createCard,meta=null\)/,'Seleccionar un punto respeta los metadatos visuales');
 assert.match(splitMap,/attachSelection\(marker,\[point\.lat,point\.lon\]/);
 assert.match(splitMap,/attachSelection\(marker,\[p\.latitude,p\.longitude\]/);
 assert.match(splitMap,/attachSelection\(marker,\[x\.lat,x\.lon\]/);
@@ -993,11 +993,11 @@ assert.match(splitMap,/id="ruler-toggle"/);
 assert.match(splitMap,/id="ruler-clear"/);
 assert.match(splitMap,/function rulerPoint\(point,label\)/);
 assert.match(splitMap,/function clearRuler\(\)/);
-assert.match(splitMap,/const bearing=trueBearing\(a\.lat,a\.lng,b\.lat,b\.lng\)/);
+assert.match(splitMap,/bearing=trueBearing\(a\.lat,a\.lng,b\.lat,b\.lng\)/,'La regla calcula rumbo verdadero en vez de un valor fijo');
 assert.match(splitMap,/setAttribute\('aria-pressed',String\(rulerEnabled\)\)/);
-assert.match(splitMap,/\u00b0 verdadero \(sin variación magnética\)/);
+assert.match(splitMap,/° verdadero \(sin corrección magnética\)/,'La regla distingue claramente el rumbo verdadero del magnético');
 assert.match(splitMap,/id="contribute-fast"/);
-assert.match(splitMap,/if\(proposeMode\)\{proposeMode=false;proposeAt\(e\.latlng\);return\}/);
+assert.match(splitMap,/if\(proposeMode\)\{proposeMode=false;shortcutAdd\.setAttribute\('aria-pressed','false'\);shortcutTip\.hidden=true;proposeAt\(e\.latlng\);return\}/,'Tras proponer una pista el botón y la ayuda vuelven a su estado habitual');
 for(const key of ['asfalto','tierra','cesped','otros']){
  assert.match(splitMap,new RegExp('data-pista-surface="'+key+'"'),'Filtro de superficie '+key);
 }
@@ -1023,7 +1023,7 @@ assert.match(splitMap,/GDV_R2_MEDIA\.upload\(cleaned,client,GDV_CONFIG\.url,GDV_
 assert.match(splitMap,/function stripPhotoMetadata\(file\)/);
 assert.match(splitMap,/canvas\.toBlob\(/,'Las fotografías deben sanear EXIF y GPS');
 assert.match(splitMap,/details\.photos=urls/);
-assert.match(splitMap,/airstripImageGallery\(d,p\.details\?\.photos,p\.name\)/);
+assert.match(splitMap,/function airstripImageGallery\(parent,urls,name\)/,'Las fotografías se muestran desde el componente de ficha compartido');
 assert.match(splitMap,/airstripImageGallery\(card,details\.photos,name\)/);
 assert.match(splitMap,/status:'pending',details/,'La aprobación es posterior a la carga');
 console.log('PASS: escritorio dividido, fichas laterales, regla NM y rumbo verdadero, filtros y fotos R2');
