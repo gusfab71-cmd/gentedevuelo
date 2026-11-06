@@ -630,6 +630,69 @@ main.dispatch-main{max-width:none!important;width:100%;padding:0;margin:0}
 .navaid-popup-links a{color:#155b91}
 @media(max-width:620px){.navaid-control-box{top:8px;right:7px;
  width:min(258px,calc(100% - 50px));max-height:35dvh;padding:9px}}
+
+/* AeroLocator / OpenAIP: selector cartográfico por sectores (solo beta administradores). */
+#openaip-overview[data-openaip-kind="airspaces"]{
+ width:min(370px,calc(100% - 55px));
+ max-height:min(480px,calc(100% - 24px));
+ padding:12px 14px;
+}
+#openaip-overview .openaip-filter-header{
+ display:flex;gap:8px;justify-content:space-between;align-items:center;
+ border-top:1px solid #4c6d81;margin-top:9px;padding-top:10px;
+}
+#openaip-overview .openaip-filter-header strong{font-size:12px}
+#openaip-overview .openaip-filter-actions{display:flex;gap:5px}
+#openaip-overview .openaip-filter-actions button,
+#openaip-overview #openaip-clear-selection{
+ background:#244b67;border:1px solid #91b6cc;border-radius:6px;
+ color:#f5fbff;padding:5px 7px;cursor:pointer;font-size:11px;
+}
+#openaip-overview button:focus-visible,
+#openaip-overview input:focus-visible{outline:2px solid #f7d6a5;outline-offset:2px}
+#openaip-overview .openaip-filter-list{
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:9px;
+}
+#openaip-overview .openaip-filter-choice{
+ display:flex;align-items:center;gap:5px;min-width:0;
+ border:1px solid #54768b;background:#1b3a50;border-radius:7px;
+ padding:6px 5px;color:#ecf6ff;font-size:11px;cursor:pointer;
+}
+#openaip-overview .openaip-filter-choice input{
+ appearance:auto;accent-color:#9ec6eb;flex:0 0 auto;
+ width:14px;height:14px;margin:0;
+}
+#openaip-overview .openaip-filter-choice .openaip-filter-swatch{
+ display:inline-block;flex:0 0 17px;height:14px;border:2px solid;border-radius:3px;
+}
+#openaip-overview .openaip-filter-choice>span:nth-of-type(2){
+ overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+#openaip-overview .openaip-filter-count{
+ margin-left:auto;padding-left:3px;color:#bcd4e5;font-variant-numeric:tabular-nums;
+}
+#openaip-overview #openaip-selection-status{
+ color:#fff2d5;font-size:11px;margin-top:10px;
+}
+#openaip-overview .openaip-zoom-note{color:#b9d2e4;font-size:10px}
+.leaflet-tooltip.openaip-sector-name{
+ background:#132c42eb;color:#fff;border:1px solid #b0d2eb;
+ box-shadow:0 2px 8px #071522aa;border-radius:5px;
+ padding:3px 6px;max-width:190px;font:700 10px/1.25 system-ui,sans-serif;
+ white-space:normal;text-align:center;pointer-events:none;
+}
+.leaflet-tooltip.openaip-sector-name::before{display:none}
+.leaflet-tooltip.openaip-sector-name.is-selected{
+ color:#173047;background:#fff1d8;border-color:#ecb86c;
+}
+@media(max-width:620px){
+ #openaip-overview[data-openaip-kind="airspaces"]{
+  top:8px;right:7px;width:min(302px,calc(100% - 50px));max-height:48dvh;
+  padding:9px;
+ }
+ #openaip-overview .openaip-filter-choice{padding:5px 4px;font-size:10px}
+}
+
 .openaip-check-box{padding:11px;margin:12px 0;background:#132b40;border:1px solid #6085a1;border-radius:11px}
 .openaip-check-box h3{font-size:14px;margin:0 0 5px}
 .openaip-check-box p{font-size:11px;line-height:1.5;color:#d6e6f1;margin:6px 0}
@@ -1013,7 +1076,7 @@ body .dispatch-nav nav a.aerolocator-back-to-aerosuite:focus-visible{color:#1c26
 </div><p class="map-actions" id="airfields-map-actions"><button id="explore" type="button">Revisar pistas OSM de esta zona</button> <small id="osm-status">Abre la revisión OSM para ver pistas y sus trazados.</small></p></div>
   </section>
  </div>
-</main><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="../assets/supabase-2.117.2.min.js"></script><script src="../assets/community-config.js"></script><script src="../assets/r2-media.js"></script><script src="gestion-aeronautica/src/catalogo-pistas-anac.js"></script><script src="gestion-aeronautica/src/clasificacion-pistas.js"></script><script src="../assets/aerolocator-official-sources.js?v=20261105official1"></script><script src="../assets/aerolocator-osm-review.js?v=20261105geom1"></script><script src="../assets/aerolocator-osm-review-ui.js?v=20261105geom1"></script><script src="../assets/aerolocator-wmm2025.js?v=20261104wmm1"></script><script src="../assets/aerolocator-route-planner.js?v=20261105-distancias-nm-km2"></script><script src="../assets/aerolocator-aip-radioaids-2026.js?v=20261105navaid1"></script><script src="../assets/aerolocator-openaip-layers.js?v=20261105beta1"></script><script src="../assets/aerolocator-navaids-layer.js?v=20261105openaipbeta1"></script><script>
+</main><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="../assets/supabase-2.117.2.min.js"></script><script src="../assets/community-config.js"></script><script src="../assets/r2-media.js"></script><script src="gestion-aeronautica/src/catalogo-pistas-anac.js"></script><script src="gestion-aeronautica/src/clasificacion-pistas.js"></script><script src="../assets/aerolocator-official-sources.js?v=20261105official1"></script><script src="../assets/aerolocator-osm-review.js?v=20261105geom1"></script><script src="../assets/aerolocator-osm-review-ui.js?v=20261105geom1"></script><script src="../assets/aerolocator-wmm2025.js?v=20261104wmm1"></script><script src="../assets/aerolocator-route-planner.js?v=20261105-distancias-nm-km2"></script><script src="../assets/aerolocator-aip-radioaids-2026.js?v=20261105navaid1"></script><script src="../assets/aerolocator-openaip-layers.js?v=20261106sectores1"></script><script src="../assets/aerolocator-navaids-layer.js?v=20261105openaipbeta1"></script><script>
 (async()=>{
 const client=supabase.createClient(GDV_CONFIG.url,GDV_CONFIG.key);
 let routePlanner=null;
