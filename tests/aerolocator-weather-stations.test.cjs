@@ -6,6 +6,8 @@ const handler=require('../api/aerolocator-weather-stations.js');
 const {parseChords,catalog}=handler._test;
 const base=path.join(__dirname,'..');
 const html=fs.readFileSync(path.join(base,'utilidades/pistas-no-oficiales.html'),'utf8');
+const meteoHtml=fs.readFileSync(path.join(base,'utilidades/aerometeo.html'),'utf8');
+const meteoApp=fs.readFileSync(path.join(base,'assets/aerometeo-app.js'),'utf8');
 const ui=fs.readFileSync(path.join(base,'assets/aerolocator-weather-stations.js'),'utf8');
 
 test('Se catalogan siete ubicaciones argentinas, sin duplicaciones ni posiciones inventadas',()=>{
@@ -20,15 +22,15 @@ test('Se catalogan siete ubicaciones argentinas, sin duplicaciones ni posiciones
  assert.equal(catalog.stations.find(x=>x.id==='3dpaws-13')?.name,'Club de Planeadores Cañuelas');
 });
 
-test('AeroLocator incorpora capa independiente sin modificar el selector de otras vistas',()=>{
- assert.match(html,/aerolocator-weather-stations\.js\?v=/);
- assert.match(html,/GDV_WEATHER_STATIONS\?\.boot\(\{map,L\}\)/);
+test('AeroMeteo incorpora capa independiente sin modificar AeroLocator',()=>{
+ assert.match(meteoHtml,/aerolocator-weather-stations\.js\?v=/);
+ assert.match(meteoApp,/GDV_WEATHER_STATIONS\?\.boot\(\{map,L\}\)/);
  assert.match(ui,/weather-stations-toggle/);
  assert.match(ui,/L\.featureGroup\(\)/);
  assert.match(ui,/Estaciones meteorológicas/);
  assert.match(ui,/Ver todas las estaciones/);
  assert.match(ui,/map\.removeLayer\(layer\)/);
- assert.match(html,/const map=L\.map\('map'/);
+ assert.match(meteoApp,/const map=L\.map\('map'/);
 });
 
 test('CHORDS normaliza observación: m/s a kt y UTC a edad sin confundir unidades',()=>{
