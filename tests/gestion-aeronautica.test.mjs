@@ -642,7 +642,7 @@ for(const name of ['role_student','role_instructor','role_pilot']){
 }
 assert.match(studentFormHtml,/get\(def\.flag\)\.checked/);
 assert.match(studentFormHtml,/if\(!active\.length\)throw Error/,'Exigir al menos un perfil');
-assert.match(studentFormHtml,/verification_state:'unverified'/,'Roles declarados no deben conceder privilegios');
+assert.doesNotMatch(studentFormHtml,/verification_state\s*:/,'El formulario no debe forzar el estado de verificación; Supabase usa default unverified');
 for(const field of ['family_names','given_names','birth_country','birth_date','residence_country','residence_province','residence_city','residence_address','postal_code','mobile_phone']){
  assert.match(studentFormHtml,new RegExp('name="'+field+'"[^>]*required'),'Campo de identidad obligatorio '+field);
 }
