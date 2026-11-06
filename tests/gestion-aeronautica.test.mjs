@@ -672,7 +672,8 @@ assert.ok(schoolRow&&!schoolRow.includes("['flightops'"),'Flight Operations no f
 assert.match(html,/flightops:flightOperationsScreen/);
 assert.match(html,/function flightOperationsScreen\(\)/);
 assert.match(html,/function flightOperationsShortcut\(area\)/);
-assert.match(html,/flightOperationsShortcut\('alumno'\)/);
+assert.match(html,/alumno:\{[^\n]*\['flightops','Flight Operations · Planificación'\]/,
+ 'El alumno conserva acceso a Flight Operations desde su menú, sin exigir un botón duplicado');
 assert.match(html,/flightOperationsShortcut\('instructor'\)/);
 assert.match(html,/data-go="flightops"/);
 assert.match(html,/const context=isStudent\?'formacion':'instruccion'/);
