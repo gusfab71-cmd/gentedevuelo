@@ -36,10 +36,11 @@ function formatObservation(observation){
   pressure:observation.pressureHpa===null?'Sin dato':observation.pressureHpa+' hPa'
  };
 }
-function boot({map,L}){
+function boot({map,L,onSelected,onObservation}){
  if(!map||!L)throw Error('El mapa Leaflet no está disponible');
  const layer=L.featureGroup();
  let active=false,loading=null,records=[];
+ let observationSeq=0;
  const markers=new Map();
  const control=L.control({position:'topleft'});
  control.onAdd=()=>{
@@ -63,6 +64,8 @@ function boot({map,L}){
   }
   showAll.addEventListener('click',showEverywhere);
   function popup(station){
+   const currentRequest=++observationSeq;
+   if(typeof onSelected==='function')onSelected(station);
    const box=element('section');
    box.style.cssText='min-width:240px;max-width:290px;color:#173147;font:12px/1.5 Arial,sans-serif';
    const title=element('h3',station.name);
@@ -94,10 +97,12 @@ function boot({map,L}){
      const data=await response.json();
      if(!data.ok||data.id!==station.id)throw Error('Respuesta no válida');
      if(!data.observation){
+      if(currentRequest===observationSeq&&typeof onObservation==='function')onObservation(station,null);
       info.textContent='Sin una medición reciente verificable. Consultá los datos en la estación original.';
       return;
      }
      const observation=data.observation;
+     if(currentRequest===observationSeq&&typeof onObservation==='function')onObservation(station,observation);
      const time=new Date(observation.observedAt);
      if(!Number.isFinite(time.getTime()))throw Error('Hora de observación inválida');
      const local=new Intl.DateTimeFormat('es-AR',{timeZone:'America/Argentina/Buenos_Aires',
@@ -111,7 +116,10 @@ function boot({map,L}){
      addLine(readings,'Temperatura',values.temperature);
      addLine(readings,'Humedad',values.humidity);
      addLine(readings,'Presión',values.pressure);
-    }).catch(()=>{info.textContent='No se pudo consultar la medición. El enlace a la fuente sigue disponible.'})
+    }).catch(()=>{
+     if(currentRequest===observationSeq&&typeof onObservation==='function')onObservation(station,null);
+     info.textContent='No se pudo consultar la medición. El enlace a la fuente sigue disponible.';
+    })
     .finally(()=>clearTimeout(timer));
    return box;
   }
