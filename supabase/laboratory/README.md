@@ -10,6 +10,12 @@
 4. El panel \`Superadministrador → Centro de Monitoreo\` permite consultar el resultado en modo lectura. GitHub Actions ejecuta un control REST de estado y fecha en los eventos semanales/manuales, además de los tests de código.
 5. No hay un token \`service_role\`, contraseña, cuenta productiva ni autorización de escritura en el repositorio o el navegador.
 
+## Pruebas de acceso con seis perfiles (2026-11-06)
+
+`05_six_role_rls.sql` reemplaza la política demasiado amplia de lectura de reservas del **laboratorio ficticio**: Director y Secretaría ven reservas de su institución; el Instructor ve las asignadas; Alumno, PPA y PCA ven solo sus reservas. Un integrante ajeno no puede consultarlas. Las fichas de `members` siguen limitadas al usuario propietario. El cron semanal ejecuta ahora `aerosuite_lab.run_full_weekly()` y agrega controles de privilegios de tablas y funciones.
+
+La última corrida manual registró **35/35 controles aprobados**, entre ellos comprobaciones RLS ejecutadas efectivamente con `role=authenticated` y `request.jwt.claim.sub` ficticio. **No son pruebas de autenticación HTTP/JWT ni pruebas de los RPC de producción**. Para validar esa ruta falta crear usuarios de prueba de Supabase Auth, reproducir funciones productivas y ejecutar Playwright. GitHub ejecuta `scripts/aerosuite-lab-role-audit.mjs` en modo exclusivamente de lectura del resumen público.
+
 ## Alcance y limitaciones
 
 **Estos 10 controles son simulaciones relacionales PostgreSQL, NO pruebas de los RPC de producción.** Aún faltan replicar el esquema real de AeroSuite, activar usuarios Auth ficticios para seis roles, ejecutar sus verdaderos RPC/RLS y pruebas Playwright contra una instalación del frontend apuntada solo al proyecto de laboratorio.
