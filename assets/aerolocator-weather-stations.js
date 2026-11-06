@@ -38,7 +38,7 @@ function formatObservation(observation){
 }
 function boot({map,L}){
  if(!map||!L)throw Error('El mapa Leaflet no está disponible');
- const layer=L.layerGroup();
+ const layer=L.featureGroup();
  let active=false,loading=null,records=[];
  const control=L.control({position:'topleft'});
  control.onAdd=()=>{
