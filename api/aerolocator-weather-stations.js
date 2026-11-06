@@ -23,7 +23,7 @@ function validDate(value){
 function rowsFromChords(data){
  if(Array.isArray(data))return data;
  if(!data||typeof data!=='object')return [];
- if(data.type==='FeatureCollection'&&Array.isArray(data.features))
+ if(Array.isArray(data.features))
   return data.features.map(x=>({...x.properties,...(x.properties?.measurements||{})}));
  for(const name of ['measurements','data','records','observations','results'])
   if(Array.isArray(data[name]))return data[name];
