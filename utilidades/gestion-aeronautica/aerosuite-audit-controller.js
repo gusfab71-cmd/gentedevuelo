@@ -46,6 +46,42 @@ function paintHistory(runs){
   tr.append(date,type,status,open);body.append(tr);
  }
 }
+const HEALTH_FIELDS=[
+ ['Turnos pendientes antiguos','stale_pending'],
+ ['Turnos confirmados sin instructor','confirmed_without_instructor'],
+ ['Vuelos completados sin informe aprobado','completed_without_approved_report'],
+ ['Packs con saldo negativo','negative_pack_balance'],
+ ['Cobros duplicados por distintos métodos','double_settlement'],
+ ['Turnos solapados que requieren revisión','overlapping_institution_slots'],
+ ['Instructores superpuestos entre instituciones','instructor_cross_institution_overlap'],
+ ['Aeronaves registradas','aircraft_total'],
+ ['Aeronaves fuera de servicio','aircraft_out_of_service'],
+ ['Informes aprobados','reports_approved']
+];
+async function refreshHealth(db){
+ const button=$('refreshHealth');
+ button.disabled=true;$('healthMessage').textContent='Consultando datos agregados del laboratorio, sin modificarlos…';
+ try{
+  const lab=await db.from('aerosuite_permanent_test_lab').select('institution_id').eq('singleton',true).maybeSingle();
+  if(lab.error||!lab.data?.institution_id)throw lab.error||Error('No se encontró el laboratorio permanente.');
+  const result=await db.rpc('aerosuite_superadmin_portal_health',{p_institution_id:lab.data.institution_id});
+  if(result.error||!result.data)throw result.error||Error('No hay diagnóstico disponible.');
+  const data=result.data;
+  const body=$('healthRows');body.replaceChildren();
+  for(const [label,key] of HEALTH_FIELDS){
+   const tr=document.createElement('tr'),title=document.createElement('td'),value=document.createElement('td');
+   title.textContent=label;
+   const n=Number(data[key]);
+   value.textContent=Number.isFinite(n)?String(n):'Sin dato';
+   if(Number.isFinite(n)&&n>0&&HEALTH_FIELDS.indexOf(HEALTH_FIELDS.find(v=>v[1]===key))<7)
+    value.style.color='#ffd8a6';
+   tr.append(title,value);body.append(tr);
+  }
+  $('healthCheckedAt').textContent=dateART(data.checked_at);
+  $('healthMessage').textContent='Diagnóstico de '+String(data.institution_name||'laboratorio permanente')+'. Registros de prueba, sin interpretación operacional automática.';
+ }catch(error){$('healthMessage').textContent='No se pudo consultar el diagnóstico institucional: '+String(error?.message||'Error de servicio');}
+ finally{button.disabled=false;}
+}
 let loading=false;
 async function refresh(){
  if(loading)return;
@@ -90,7 +126,8 @@ async function start(){
   for(const item of PENDING){const li=document.createElement('li');li.textContent='NO PROBADO · '+item;list.append(li);}
   $('notCheckedCount').textContent=String(PENDING.length);
   $('refreshAudit').addEventListener('click',refresh);
-  await refresh();
+  $('refreshHealth').addEventListener('click',()=>refreshHealth(db));
+  await Promise.all([refresh(),refreshHealth(db)]);
  }catch(error){notice.textContent='No se pudo validar el acceso: '+String(error?.message||'Error de servicio');}
 }
 start();
