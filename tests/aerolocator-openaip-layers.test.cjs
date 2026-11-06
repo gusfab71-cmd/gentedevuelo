@@ -73,7 +73,16 @@ test('OpenAIP muestra filtros independientes por categoría y clase ICAO',()=>{
  assert.match(layerJS,/noneButton\.addEventListener\('click'/);
  assert.match(layerJS,/classSelect\.addEventListener\('change'/);
  assert.match(layerJS,/if\(excludedTypes\.has\(item\.type\)/);
- assert.match(layerJS,/filters\.hidden=false;group\.addTo\(map\);updateAirspaceLayers\(\)/);
- assert.match(html,/aerolocator-openaip-layers\.js\?v=20261106airspacefilters1/);
+ assert.match(layerJS,/filters\.hidden=false;filters\.open=false;group\.addTo\(map\);updateAirspaceLayers\(\)/);
+ assert.match(html,/aerolocator-openaip-layers\.js\?v=20261106compact2/);
  assert.match(html,/#openaip-overview \.openaip-filter-types/);
+});
+
+test('Panel de filtros OpenAIP plegado y accesible sin superponer controles cartográficos',()=>{
+ assert.match(layerJS,/const filters=document\.createElement\('details'\)/);
+ assert.match(layerJS,/const filterHeading=document\.createElement\('summary'\)/);
+ assert.match(layerJS,/filterBadge\.textContent=visible\+' \/ '\+shapes\.length/);
+ assert.match(html,/#openaip-overview\{[\s\S]*?max-height:calc\(100% - 105px\)/);
+ assert.match(html,/#openaip-overview \.openaip-airspace-filters>summary/);
+ assert.match(html,/aerolocator-openaip-layers\.js\?v=20261106compact2/);
 });
