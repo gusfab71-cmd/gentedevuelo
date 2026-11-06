@@ -77,6 +77,13 @@ function boot({map,L}){
    const note=element('small','Estación local: no es METAR oficial. Verificá vigencia y fuente.');
    note.style.cssText='display:block;color:#596e7b;font-size:11px;margin-top:8px';
    box.append(note);link(box,station.sourceUrl,'Consultar estación original');
+   const forecastButton=element('button','Comparar con pronóstico Open-Meteo');
+   forecastButton.type='button';
+   forecastButton.style.cssText='display:block;margin-top:9px;padding:8px 10px;border:1px solid #7da9c6;border-radius:7px;background:#285b7e;color:#fff;font-size:11px;font-weight:750;cursor:pointer;width:100%';
+   forecastButton.addEventListener('click',()=>root.GDV_OPEN_METEO_FORECAST?.showAt({
+    lat:station.lat,lon:station.lon,name:station.name
+   }));
+   box.append(forecastButton);
    const controller=new AbortController();
    // Se consulta una estación seleccionada, nunca toda la red en cada movimiento del mapa.
    const timer=setTimeout(()=>controller.abort(),10000);
