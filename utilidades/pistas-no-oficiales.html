@@ -662,6 +662,8 @@ body .dispatch-nav nav a.aerolocator-back-to-aerosuite:focus-visible{color:#1c26
 
 
 /* Alta rápida de pistas · el resto de la ficha técnica es opcional. */
+.pin-legend .legend-dot.community-reviewed{background:#b58b37;border-color:#fff0ca}
+.pin-legend .legend-dot.community-reviewed::after{content:"C"}
 #form .airstrip-fast-note{margin:0 0 4px;color:#d6ecfa;font-size:12px;line-height:1.5}
 #form .proposal-map-context{background:#183f55;border:1px solid #669bb6;border-radius:10px;padding:11px;color:#e3f3fd;font-size:12px;line-height:1.5}
 #form .airstrip-extra{grid-column:1/-1;margin:0;border:1px solid #60849c;border-radius:10px;background:#1c3549;overflow:hidden}
@@ -1124,6 +1126,7 @@ body .dispatch-nav nav a.aerolocator-back-to-aerosuite:focus-visible{color:#1c26
   <span class="legend-item"><span class="legend-dot heliport" aria-hidden="true"></span>Helipuerto</span>
   <span class="legend-item"><span class="legend-dot anac-documental" aria-hidden="true"></span>ANAC 2026 · Categoría pendiente</span>
   <span class="legend-item"><span class="legend-dot unverified" aria-hidden="true"></span>⚠ Sin verificar</span>
+  <span class="legend-item"><span class="legend-dot community-reviewed" aria-hidden="true"></span>Aporte publicado por GdV · no habilitación ANAC</span>
 
   <span class="legend-item"><span class="legend-dot oa-checked-dot" aria-hidden="true"></span>OurAirports · revisado y clasificado GdV</span>
   <span class="legend-item"><span class="legend-dot reference" aria-hidden="true"></span>OSM sin verificar</span>
@@ -1182,6 +1185,7 @@ const PIN_PALETTE={
  anac_documental:{fill:'#4978a0',edge:'#d8e7fd'},
  unverified:{fill:'#b7433b',edge:'#ffe1d9'},
  community:{fill:'#b7433b',edge:'#ffe1d9'},
+ community_reviewed:{fill:'#b58b37',edge:'#fff0cb'},
  reference:{fill:'#67727b',edge:'#f5f8fb'},
  draft:{fill:'#bc7e41',edge:'#ffe0ac'}
 };
@@ -1189,7 +1193,7 @@ const PIN_PALETTE={
  * El color expresa la categoría cartográfica, NO condiciones METAR/VFR/IFR. */
 function runwayPin(kind='unverified'){
  const tone=PIN_PALETTE[kind]||PIN_PALETTE.unverified;
- const letters={heliport:'H',lad:'L',unverified:'!',community:'!',draft:'+'};
+ const letters={heliport:'H',lad:'L',unverified:'!',community:'!',community_reviewed:'C',draft:'+'};
  const letter=letters[kind]||'';
  const symbol=letter?'<text x="14" y="18.1" text-anchor="middle" fill="#fff" font-family="Arial,sans-serif" font-weight="850" font-size="13">'+letter+'</text>':'';
  const svg='<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28" aria-hidden="true">'+
@@ -1249,7 +1253,7 @@ function syncLayerVisibility(){
  }else if(map.hasLayer(osmReviewLayer))map.removeLayer(osmReviewLayer);
  for(const [kind,group] of [['community',markers],['reference',external]]){
   // Sin marcadores cartográficos OSM ni aportes comunitarios aún sin revisión.
-  const show=false;
+  const show=kind==='community'&&mapViewMode==='airfields'&&layerVisibility.unverified;
   if(show&&!map.hasLayer(group))group.addTo(map);
   else if(!show&&map.hasLayer(group))map.removeLayer(group);
  }
@@ -2186,7 +2190,7 @@ function communityPopup(record,nm=null){
  const timestamp=record.updated_at||record.created_at;
  if(timestamp){const parsed=new Date(timestamp);if(Number.isFinite(parsed.getTime()))date=parsed.toLocaleDateString('es-AR')}
  const kind=airfieldClass(record);
- const docs=kind==='unverified'?{}:{
+ const docs=kind==='unverified'?{verification:'Aporte publicado por Gente de Vuelo, pero SIN VERIFICACIÓN AERONÁUTICA. No acredita habilitación ni aptitud operacional.'}:{
   sourceLabel:'Información documental revisada por administración',
   sourceDate:record.verified_source_date||'',
   sourceUrl:record.verified_source_url||'',
@@ -2616,7 +2620,7 @@ function render(){
  for(const p of all){
   const meta={key:'community:'+p.id,sourceKind:'community',name:p.name,lat:p.latitude,lon:p.longitude};
   const nm=reference?nauticalMiles(reference[0],reference[1],p.latitude,p.longitude):null;
-  const marker=L.marker([p.latitude,p.longitude],{icon:runwayPin(airfieldClass(p)),title:p.name})
+  const marker=L.marker([p.latitude,p.longitude],{icon:runwayPin(airfieldClass(p)==='unverified'?'community_reviewed':airfieldClass(p)),title:p.name})
    .bindPopup(communityPopup(p,nm),{maxWidth:350,minWidth:245}).addTo(markers);
   attachSelection(marker,[p.latitude,p.longitude],p.name,()=>communityPopup(p,nm),meta);
   const entry=el('article','');entry.className='entry';
@@ -2624,7 +2628,7 @@ function render(){
   const coords=el('small','Coordenadas: '+Number(p.latitude).toFixed(6)+', '+Number(p.longitude).toFixed(6));
   const track=el('p','Pista / rumbo: '+(p.details?.runway||'Sin datos')+' · Dimensiones: '+(p.details?.dimensions||'Sin datos'));
   const access=el('small',airfieldClass(p)==='unverified'?
-   '⚠ NO VERIFICADA · Solo referencia para análisis de contingencias · No es alternativo recomendado':
+   'APORTE PUBLICADO POR GDV · Sin verificación aeronáutica ANAC · No usar como destino o alternativo sin confirmar':
    'Clasificación documental: '+AIRFIELD_TYPES.CATEGORIES[airfieldClass(p)]?.label+
    ' · Acceso: '+(p.details?.permission||'Consultar responsable'));
   entry.append(title,surface,coords,track,access);
@@ -2707,12 +2711,49 @@ async function stripPhotoMetadata(file){
   return new File([blob],'pista-'+Date.now()+'.webp',{type:'image/webp'});
  }finally{bitmap.close()}
 }
+/* El autor puede ver el estado de sus propias propuestas gracias a la política RLS existente. */
+async function loadMyAirstripSubmissions(){
+ const root=document.getElementById('my-airstrips-list');
+ if(!root)return;
+ root.textContent='Consultando estado de tus pistas…';
+ try{
+  const {data:{user},error:authError}=await client.auth.getUser();
+  if(authError||!user){
+   root.textContent='Ingresá a la comunidad Gente de Vuelo para consultar tus aportes (la sesión de AeroSuite puede ser independiente).';
+   return;
+  }
+  const {data,error}=await client.from('community_airstrips')
+   .select('id,name,status,created_at')
+   .eq('author_id',user.id).order('created_at',{ascending:false}).limit(30);
+  if(error)throw Error(error.message);
+  root.replaceChildren();
+  if(!data?.length){root.textContent='Todavía no tenés propuestas de pistas con esta cuenta.';return}
+  const descriptions={
+   pending:'Pendiente de revisión del equipo GdV · aún sin publicar',
+   approved:'Publicado por GdV · NO verificado aeronáuticamente',
+   rejected:'No publicado · propuesta rechazada'
+  };
+  for(const entry of data){
+   const card=document.createElement('article');card.className='my-airstrip-entry';
+   const title=document.createElement('strong');title.textContent=entry.name;
+   const state=document.createElement('span');state.className='my-airstrip-state';
+   state.dataset.state=entry.status;
+   state.textContent=descriptions[entry.status]||'Estado: '+entry.status;
+   const date=document.createElement('span');
+   const timestamp=entry.created_at?new Date(entry.created_at):null;
+   date.textContent=timestamp&&Number.isFinite(timestamp.getTime())?'Enviada: '+timestamp.toLocaleDateString('es-AR'):'';
+   card.append(title,state,date);root.append(card);
+  }
+ }catch(error){root.textContent='No se pudo consultar el estado de tus aportes: '+error.message}
+}
+document.getElementById('my-airstrips-refresh').addEventListener('click',()=>void loadMyAirstripSubmissions());
+
 document.getElementById('form').addEventListener('submit',async e=>{
  e.preventDefault();
  if(airstripSending)return;
  const submit=e.target.querySelector('button[type=submit]');
  const {data:{user}}=await client.auth.getUser();
- if(!user){msg.textContent='Ingresá a Gente de Vuelo para enviar propuestas.';return}
+ if(!user){msg.textContent='Para enviar propuestas, ingresá con tu cuenta de la comunidad Gente de Vuelo. Estar en el portal AeroSuite no inicia necesariamente esa sesión.';return}
  if(pendingAirstripPhotos.length&&!photoConsent.checked){
   msg.textContent='Para adjuntar fotografías, confirmá que tenés autorización para publicarlas.';return;
  }
@@ -2747,14 +2788,16 @@ document.getElementById('form').addEventListener('submit',async e=>{
    longitude:Number(f.get('longitude')),author_id:user.id,status:'pending',details};
   const {error}=await client.from('community_airstrips').insert(payload);
   if(error)throw Error('No se pudo enviar la propuesta: '+error.message);
-  msg.textContent='Propuesta y '+(details.photos?.length||0)+' fotografías enviadas a moderación. Solo se publicarán después de aprobación.';
+  msg.textContent='Propuesta recibida. Estado: pendiente de revisión GdV. No se muestra como pista publicada hasta que un administrador la apruebe; la revisión no certifica habilitación aeronáutica.';
   e.target.reset();pendingAirstripPhotos=[];uploadedPhotoUrls=new Map();clearPhotoPreviews();
   if(draftMarker){map.removeLayer(draftMarker);draftMarker=null}
+  await loadMyAirstripSubmissions();
  }catch(error){
   msg.textContent=error.message+' La propuesta no se ha publicado; podés volver a intentar.';
  }finally{airstripSending=false;if(submit)submit.disabled=false}
 });
 const {data:{user}}=await client.auth.getUser();if(user){const {data}=await client.from('site_admins').select('user_id').eq('user_id',user.id).maybeSingle();admin=!!data}
+void loadMyAirstripSubmissions();
 if(admin){
  document.getElementById('admin').hidden=false;
  const openaipTestButton=document.getElementById('openaip-check-button');
