@@ -700,10 +700,10 @@ console.log('PASS: Flight Operations unificado en Alumno e Instructor sin IA y c
 
 // Pistas No Oficiales: una única fuente compartida entre Gente de Vuelo y AeroSuite.
 const airstripsOriginal=fs.readFileSync(new URL('../utilidades/pistas-no-oficiales.html',import.meta.url),'utf8');
-assert.match(airstripsOriginal,/<title>AeroLocator · Mapa de pistas y aeródromos/,'El nombre visible de la aplicación debe ser AeroLocator');
-assert.match(airstripsOriginal,/<h1>AeroLocator<\/h1>/,'AeroLocator en el centro de control');
-assert.match(airstripsOriginal,/<strong>AeroLocator · Mapa interactivo<\/strong>/,'AeroLocator en el mapa');
-assert.match(airstripsOriginal,/<small>AEROLOCATOR · MAPA AERONÁUTICO<\/small>/,'AeroLocator en la barra superior');
+assert.match(airstripsOriginal,/<title>AeroLocator · Developed by Gente de Vuelo<\/title>/,'El título identifica AeroLocator y su desarrollo');
+assert.match(airstripsOriginal,/<h1>Centro de control<\/h1>/,'El panel lateral conserva una cabecera identificable');
+assert.match(airstripsOriginal,/class="dispatch-map-panel"[^>]*aria-label="Mapa geográfico interactivo"/,'El mapa interactivo mantiene una etiqueta accesible');
+assert.match(airstripsOriginal,/class="aerolocator-brand-lockup"[^>]*alt="AeroLocator · Developed by Gente de Vuelo"/,'El encabezado conserva el logo y el crédito de AeroLocator');
 
 for(const category of ['controlled_public','uncontrolled_public','private_aerodrome','lad','heliport','unverified']){
  assert.ok(airstripsOriginal.includes(category+':'),'Debe existir categoría GdV '+category);
