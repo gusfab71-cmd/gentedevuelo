@@ -1,4 +1,5 @@
 import {MODULES,PENDING,listAuditRuns,readAuditJobs,moduleStatuses,statusOfRun,githubRunLink} from './aerosuite-audit-model.js';
+import {getLabAudit} from './aerosuite-lab-client.js';
 const $=id=>document.getElementById(id);
 function badge(parent,label,kind){
  const span=document.createElement('span');
@@ -82,6 +83,39 @@ async function refreshHealth(db){
  }catch(error){$('healthMessage').textContent='No se pudo consultar el diagnóstico institucional: '+String(error?.message||'Error de servicio');}
  finally{button.disabled=false;}
 }
+let labLoading=false;
+async function refreshSqlLab(){
+ if(labLoading)return;
+ labLoading=true;$('refreshSqlLab').disabled=true;
+ $('sqlLabMessage').textContent='Consultando el segundo proyecto gratuito, en modo solo lectura…';
+ try{
+  const result=await getLabAudit();
+  if(!result)throw Error('Todavía no existe un informe de laboratorio.');
+  const ok=result.status==='PASS_SIMULATION'&&!result.stale;
+  badge($('sqlLabStatus'),result.stale?'DESACTUALIZADO':ok?'APROBADO · SIMULACIÓN':'FALLÓ · SIMULACIÓN',
+   result.stale?'pending':ok?'ok':'fail');
+  $('sqlLabDate').textContent='Última prueba: '+dateART(result.date);
+  $('sqlLabPass').textContent=String(result.passed);
+  $('sqlLabFail').textContent=String(result.failed);
+  $('sqlLabTotal').textContent=String(result.checked);
+  const body=$('sqlLabRows');body.replaceChildren();
+  for(const item of result.cases){
+   const tr=document.createElement('tr'),name=document.createElement('td'),status=document.createElement('td');
+   name.textContent=item.name;
+   badge(status,item.pass?'CORRECTO · FICTICIO':'FALLÓ · FICTICIO',item.pass?'ok':'fail');
+   if(!item.pass&&item.error){const detail=document.createElement('p');detail.className='small';detail.textContent=item.error;status.append(detail);}
+   tr.append(name,status);body.append(tr);
+  }
+  $('sqlLabMessage').textContent=result.stale?
+    'El informe tiene más de ocho días. El plan Free puede pausar el proyecto por inactividad; verificá su estado en Supabase.':
+    'Pruebas aisladas de contratos SQL. No comprueban por sí mismas los RPC, pantallas ni permisos de la plataforma comercial.';
+ }catch(error){
+  badge($('sqlLabStatus'),'NO DISPONIBLE','pending');
+  $('sqlLabMessage').textContent='No se pudo verificar la base gratuita: '+String(error?.message||'Error de servicio');
+  $('sqlLabPass').textContent='—';$('sqlLabFail').textContent='—';$('sqlLabTotal').textContent='—';
+ }finally{labLoading=false;$('refreshSqlLab').disabled=false;}
+}
+
 let loading=false;
 async function refresh(){
  if(loading)return;
@@ -127,7 +161,8 @@ async function start(){
   $('notCheckedCount').textContent=String(PENDING.length);
   $('refreshAudit').addEventListener('click',refresh);
   $('refreshHealth').addEventListener('click',()=>refreshHealth(db));
-  await Promise.all([refresh(),refreshHealth(db)]);
+  $('refreshSqlLab').addEventListener('click',refreshSqlLab);
+  await Promise.all([refresh(),refreshHealth(db),refreshSqlLab()]);
  }catch(error){notice.textContent='No se pudo validar el acceso: '+String(error?.message||'Error de servicio');}
 }
 start();
