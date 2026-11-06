@@ -912,7 +912,8 @@ const anacCatalog=anacEnvironment.window.AEROSUITE_OFFICIAL_AIRSTRIPS;
 assert.ok(anacCatalog,'Debe estar disponible el catálogo inicial con fuentes oficiales');
 assert.equal(anacCatalog.catalogStatus,'parcial','No se puede presentar una muestra como inventario completo');
 assert.equal(anacCatalog.ladEdition,'2026-09-28');
-assert.equal(anacCatalog.official.length,2);
+assert.ok(anacCatalog.official.length>=2,'Conservar aeropuertos principales y permitir ampliar el catálogo documental');
+assert.ok(anacCatalog.official.some(x=>x.sourceType==='registro_anac_historico'),'El material ANAC 2021 queda identificado como histórico, sin atribuirle vigencia');
 assert.equal(anacCatalog.lad.length,16);
 const allDocumented=[...anacCatalog.official,...anacCatalog.lad];
 assert.equal(new Set(allDocumented.map(x=>x.id)).size,allDocumented.length,'No duplicar identificadores documentales');
@@ -946,7 +947,7 @@ assert.match(airstripsOriginal,/\.filter\(x=>layerSelected\(airfieldClass\(x\)\)
 assert.match(airstripsOriginal,/documentedMatches=documentedAirstrips/);
 assert.match(airstripsOriginal,/Fuente documental/);
 assert.match(airstripsOriginal,/no equivale a aeródromo habilitado|No son aeródromos habilitados|no son aeródromos habilitados/i);
-assert.match(airstripsOriginal,/Cobertura parcial, no inventario nacional/);
+assert.match(airstripsOriginal,/No reemplaza AIP, NOTAM, ni autorización de propietario u operador/,'El mapa debe advertir que no reemplaza fuentes oficiales');
 assert.match(airstripsOriginal,/Privado no significa no oficial/);
 assert.match(html,/AeroLocator/);
 
@@ -971,7 +972,7 @@ assert.match(airstripsOriginal,/id="filter-ats"/);
 assert.match(airstripsOriginal,/id="filter-access"/);
 assert.match(airstripsOriginal,/id="filter-rules"/);
 assert.match(airstripsOriginal,/function meetsServiceFilters\(record\)/);
-assert.match(airstripsOriginal,/Solo referencia para análisis de contingencias/);
+assert.match(airstripsOriginal,/Solo referencias geográficas para análisis de contingencias\. NO utilizar como destino o alternativo confirmado/,'Pistas no verificadas nunca se acreditan como destinos confirmados');
 assert.match(airstripsOriginal,/kind==='heliport'/);
 assert.match(airstripsOriginal,/kind==='unverified'/);
 
