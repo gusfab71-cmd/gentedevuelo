@@ -28,7 +28,7 @@ test('AeroMeteo es una aplicación separada; AeroLocator no ejecuta sus capas',(
 });
 
 test('El diseño distingue pronóstico de observación real y productos oficiales',()=>{
- assert.match(html,/Observación local/);
+ assert.match(html,/estaciones meteorológicas locales|observaciones locales/i);
  assert.match(html,/Pronóstico/);
  assert.match(html,/no garantiza mediciones actuales/);
  assert.match(html,/no implican integración|actualización automática/);
@@ -138,4 +138,36 @@ test('No hay API key secreta ni solicitudes automáticas al mover mapa',()=>{
  assert.match(app,/aerometeo-show-stations/);
  assert.match(html,/CC BY 4\.0/);
  assert.match(html,/Uso informativo y educativo/);
+});
+
+test('La pantalla de inicio sigue la maqueta aprobada sin fabricar lecturas',()=>{
+ for(const text of ['AeroMeteo','Meteorología aeronáutica para tu vuelo','Fuentes y productos',
+  'Estaciones 3D-PAWS','Pronósticos Open-Meteo','SMN','METAR / TAF',
+  'Mapa meteorológico – Argentina','Viento','Precipitación','Nubosidad','Temperatura',
+  'Observación','Pronóstico','se presentan de forma diferenciada'])
+  assert.ok(html.includes(text),text);
+ for(const id of ['am-source-stations','am-source-forecast','am-source-smn','am-source-aviation',
+  'am-detail-observation','am-detail-forecast','am-detail-aviation','am-detail-title',
+  'am-value-wind','am-value-gust','am-value-temperature','am-value-pressure',
+  'am-value-humidity','am-value-cloud','am-detail-status','am-detail-updated',
+  'am-detail-condition','am-detail-forecast-action'])
+  assert.ok(html.includes('id="'+id+'"'),id);
+ assert.match(html,/aerometeo-logo\.svg/);
+ assert.match(css,/aerometeo-hero\.svg/);
+ assert.match(css,/grid-template-columns:/);
+ assert.match(css,/@media\(max-width:650px\)/);
+ assert.match(html,/Actualización: sin datos/);
+ assert.match(html,/Sin información de observación verificable|Esperando consulta de una fuente verificable/);
+ assert.doesNotMatch(html,/(?:\d{2,3}°\s*\/\s*)?\d{1,2}\s*kt\s*<\/strong>/);
+});
+
+test('El panel no atribuye observaciones 3D-PAWS a aeropuertos sin sensor',()=>{
+ assert.match(app,/onSelected:showStation,onObservation:showObservation/);
+ assert.match(app,/onForecast:showForecastResult/);
+ assert.match(app,/Observación local ≠ METAR oficial/);
+ assert.match(app,/capa nacional cargada/);
+ assert.match(html,/No es una estación/i);
+ assert.match(app,/icao:'SABE'/); // Aeroparque, no SAAR.
+ assert.match(app,/icao:'SAAR'/); // Rosario.
+ assert.ok(!html.includes('SAAR – Aeroparque'));
 });
