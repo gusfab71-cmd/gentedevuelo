@@ -656,7 +656,7 @@ assert.match(studentFormHtml,/new Date\(\)\.toISOString\(\)/);
 assert.match(studentFormHtml,/type="checkbox" required/,'Aviso de privacidad');
 assert.match(studentFormHtml,/no aparecen en Mi Hangar/);
 assert.match(studentFormHtml,/gentedevuelo@gmail\.com/,'Responsable de tratamiento');
-assert.match(landing,/Completar mi perfil de AeroSuite/,'Registro accesible al integrante');
+assert.match(landing,/href="mi-ficha-alumno\.html">Completar perfil de AeroSuite/,'Registro accesible desde la presentación');
 console.log('PASS: un solo usuario GdV, roles declarativos Alumno Instructor Piloto, foto opcional, documentos privados');
 
 // Flight Operations: una sola aplicación para Formación e Instrucción, sin privilegios IA en el modo demo.
