@@ -1,0 +1,106 @@
+/* AeroMeteo by Gente de Vuelo · identidad Flight Operations */
+:root{color-scheme:dark;--bg:#101719;--surface:#1a2426;--raised:#202d30;--line:#516563;--ink:#f4f3ec;--muted:#bccbc7;--accent:#ffb377;--mint:#8cddc4;--blue:#95d3ff}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;min-height:100%;font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--ink)}
+button,select{font-family:inherit;cursor:pointer}
+button:focus-visible,a:focus-visible,select:focus-visible,summary:focus-visible{outline:2px solid #ffc78f;outline-offset:3px}
+a{color:#c2e5ff}
+.am-header{min-height:79px;padding:11px clamp(14px,2vw,30px);display:flex;justify-content:space-between;gap:16px;align-items:center;border-bottom:1px solid #526260;background:linear-gradient(105deg,#141d20,#24302e);box-shadow:0 5px 22px #0003;position:relative;z-index:900}
+.am-brand{display:flex;align-items:center;gap:13px;text-decoration:none;color:inherit;min-width:0}
+.am-brand-emblem{display:grid;place-items:center;flex:none;width:57px;height:57px;padding:5px;border-radius:16px;background:#1e3638;border:1px solid #587879;color:#f1f0e8}
+.am-brand-emblem svg{width:100%;height:100%}
+.am-brand-copy{display:flex;flex-direction:column;gap:3px;white-space:nowrap}
+.am-brand-copy strong{font-size:27px;letter-spacing:-.06em;line-height:1}
+.am-brand-copy strong span{color:var(--accent)}
+.am-brand-copy small{color:#c6d1cd;font-size:11px;letter-spacing:.025em}
+.am-nav{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+.am-nav a{padding:10px 13px;border:1px solid #50645e;border-radius:9px;text-decoration:none;color:#e1e9e2;font-size:12px;font-weight:750;white-space:nowrap;background:#263438}
+.am-nav a:hover{background:#34464a}
+.am-nav a.am-nav-primary{color:#17221f;border-color:#ffe0b6;background:#ffc98b}
+.am-layout{display:grid;grid-template-columns:minmax(310px,28%) minmax(0,1fr);height:calc(100dvh - 79px);min-height:560px}
+.am-layout.am-sidebar-hidden{grid-template-columns:minmax(0,1fr)}
+.am-layout.am-sidebar-hidden .am-sidebar{display:none}
+.am-sidebar{min-height:0;background:#141e20;border-right:1px solid #526461}
+.am-sidebar-inner{height:100%;overflow-y:auto;overscroll-behavior:contain;padding:18px 17px 30px;scrollbar-color:#657774 #1c292a}
+.am-intro{border:1px solid #52625e;border-radius:16px;padding:18px;background:radial-gradient(130% 120% at 100% 0%,#51402d 0%,#253135 56%,#1c282a 100%);margin-bottom:14px}
+.am-eyebrow,.am-map-kicker{font-size:10px;letter-spacing:.14em;font-weight:850;color:var(--accent)}
+.am-intro h1{font-size:clamp(21px,2vw,27px);letter-spacing:-.04em;line-height:1.2;margin:9px 0 8px}
+.am-intro p{font-size:12px;line-height:1.55;color:#d0dcd7;margin:0}
+.am-intro-chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:15px}
+.am-intro-chips span{font-size:10px;padding:6px 8px;border:1px solid #64716c;background:#1e3131;border-radius:30px;display:inline-flex;gap:6px;align-items:center}
+.am-dot{display:inline-block;width:11px;height:11px;border-radius:50%;background:#42b4d6;border:2px solid #e6faff;vertical-align:middle;flex-shrink:0}
+.am-dot-local{background:#38b8cb}
+.am-dot-edu{background:#38b99d}
+.am-dot-model{background:#d9a258}
+.am-panel{margin:12px 0;background:#1e2a2c;border:1px solid #526360;border-radius:15px;padding:16px}
+.am-panel-top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.am-panel-icon{display:grid;place-items:center;width:30px;height:30px;background:#464d44;color:#ffe2bb;border-radius:9px;font-size:12px;font-weight:850}
+.am-panel-icon-local{background:#1d5051;color:#b5f0e7}
+.am-panel-icon-model{background:#5b4437;color:#ffe4c4}
+.am-source{font-size:10px;color:#b8c8c4;font-weight:700;text-align:right}
+.am-panel h2{font-size:16px;letter-spacing:-.025em;margin:12px 0 7px}
+.am-panel-description{font-size:12px;line-height:1.5;color:#c3d0cc;margin:0 0 14px}
+.am-count{font-size:12px;font-weight:750;color:#98dfd1}
+.am-button{font-size:12px;font-weight:800;padding:11px 12px;border-radius:9px;border:1px solid #8db7b9;color:#f4fffd;background:#305662;width:100%;min-height:43px}
+.am-button:hover,.am-map-actions button:hover{filter:brightness(1.15)}
+.am-button[aria-pressed=true]{background:#26765d;border-color:#b4e1ca}
+.am-button-model{background:#dcaa74;border-color:#f8cf9d;color:#1c2421}
+.am-button-secondary{background:#273b40;color:#e2eeea;border-color:#587875}
+.am-button-row{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:8px}
+.am-label{font-size:11px;display:block;color:#d4ddd7;font-weight:750;margin-bottom:5px}
+.am-select{width:100%;min-height:43px;padding:10px;background:#112326;border:1px solid #718783;border-radius:9px;color:#f5f8f4;font-size:12px;margin-bottom:10px}
+.am-small{font-size:10px;line-height:1.5;color:#aebfbb;margin:10px 0 0}
+.am-station-details{margin-top:12px;border:1px solid #536966;border-radius:9px;overflow:hidden;background:#19272a}
+.am-station-details>summary{padding:12px;font-size:11px;font-weight:800;cursor:pointer;color:#dcf0eb}
+.am-station-list{display:grid;gap:5px;padding:6px 8px 12px;max-height:265px;overflow:auto}
+.am-station-list button{width:100%;text-align:left;padding:9px;border:1px solid #506561;border-radius:8px;background:#263d3c;color:#eef3eb;font-size:11px;line-height:1.3}
+.am-station-list button:hover{background:#365654}
+.am-station-list button small{display:block;margin-top:4px;color:#b7cdc5}
+.am-official-links{display:grid;gap:8px}
+.am-official-links a{background:#28393b;border:1px solid #586e6a;border-radius:9px;text-decoration:none;color:#e0ede9;padding:10px 11px;font-size:11px;font-weight:700}
+.am-official-links a:hover{background:#344b4c}
+.am-panel-official{border-color:#756957}
+.am-footer-note{margin-top:19px;padding:14px;border-top:1px solid #4c5c59}
+.am-footer-note strong{font-size:11px}
+.am-footer-note p{font-size:10px;color:#aebbb7;line-height:1.6;margin:6px 0}
+.am-map-section{min-height:0;min-width:0;display:flex;flex-direction:column;background:#101c20}
+.am-map-toolbar{padding:12px 17px;min-height:71px;border-bottom:1px solid #4a5e5b;display:flex;align-items:center;justify-content:space-between;gap:12px;background:#1b272a}
+.am-map-toolbar strong{display:block;font-size:15px;margin-top:4px}
+.am-map-actions{display:flex;gap:8px;flex-wrap:wrap}
+.am-map-actions button{border:1px solid #74918c;background:#314549;color:#f0f5ef;font-size:11px;font-weight:750;padding:10px;border-radius:9px}
+.am-map-canvas{position:relative;min-height:0;flex:1}
+#map{height:100%;width:100%;background:#25363e}
+.am-map-legend{position:absolute;bottom:14px;left:12px;z-index:490;display:flex;gap:9px;flex-wrap:wrap;align-items:center;background:#162930eb;border:1px solid #718d8b;border-radius:9px;padding:10px 11px;max-width:calc(100% - 25px);pointer-events:none}
+.am-map-legend span{font-size:10px;display:inline-flex;align-items:center;gap:5px;color:#f5f6f1}
+.am-map-status{min-height:45px;padding:12px 17px;font-size:11px;color:#bed0ca;background:#1a282b;border-top:1px solid #48615f;line-height:1.4}
+.leaflet-popup-content-wrapper{border-radius:12px}
+.leaflet-popup-content{margin:13px!important}
+.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#f2f7f9}
+.leaflet-control-container .leaflet-top.leaflet-left{padding-top:5px}
+.leaflet-control-container .leaflet-top.leaflet-left>div{margin-top:9px}
+@media(max-width:950px){
+ .am-layout{grid-template-columns:minmax(280px,34%) minmax(0,1fr)}
+ .am-brand-copy strong{font-size:23px}
+ .am-header{flex-wrap:wrap}
+ .am-nav a{font-size:11px}
+}
+@media(max-width:720px){
+ .am-header{padding:9px 12px;gap:8px}
+ .am-brand-emblem{width:45px;height:45px}
+ .am-brand-copy strong{font-size:22px}
+ .am-brand-copy small{font-size:9px}
+ .am-nav{width:100%;justify-content:flex-start}
+ .am-nav a{padding:7px 9px;font-size:10px}
+ .am-layout{height:auto;display:flex;flex-direction:column;min-height:100dvh}
+ .am-sidebar{height:auto;max-height:none;border-right:0;border-bottom:1px solid #536660}
+ .am-sidebar-inner{height:auto;overflow:visible;padding:12px}
+ .am-map-section{height:68dvh;min-height:470px}
+ .am-map-canvas{min-height:320px}
+ .am-map-toolbar{padding:9px 12px;min-height:64px}
+ .am-map-legend{left:5px;bottom:9px;padding:6px;gap:6px}
+ .am-map-legend span{font-size:9px}
+ .am-layout.am-sidebar-hidden{display:flex}
+ .am-layout.am-sidebar-hidden .am-map-section{height:calc(100dvh - 121px);min-height:500px}
+}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
