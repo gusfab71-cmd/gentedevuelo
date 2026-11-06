@@ -238,8 +238,8 @@ assert.match(operations,/if\(start\.getTime\(\)<=Date\.now\(\)\)/,'Solo los turn
 assert.match(operations,/start=new Date\(date\+"T"\+time\+":00-03:00"\)/,'Los turnos se calculan en hora Argentina');
 assert.match(operations,/const weekDates=\(\)=>Array\.from\(\{length:7\},\(_,i\)=>addDays\(selectedWeekStart,i\)\)/,'Las fechas de la semana siguen el lunes seleccionado en hora ART');
 assert.match(operations,/class="today-head"/,'Se resalta visualmente el día actual');
-assert.match(operations,/\+"&elegida=1";/,'Volver de la turnera conserva la elección');
-assert.match(fleet,/\+"&elegida=1";/,'Volver de Flota conserva la elección');
+assert.match(operations,/\+"&elegida=1"\+\(labLogin\?"&prueba=1":""\)/,'Volver de la turnera conserva la institución y el modo de prueba');
+assert.match(fleet,/\+"&elegida=1"\+\(labLogin\?"&prueba=1":""\)/,'Volver de Flota conserva la institución y el modo de prueba');
 const helpers=operations.match(/const artToday=\(\)=>[^\n]+\n\s*const addDays=\(value,days\)=>[^\n]+\n\s*const mondayOf=date=>[^\n]+/);
 assert.ok(helpers,'Las funciones de calendario ART deben estar presentes');
 class TestDate extends Date{static now(){return Date.parse('2026-10-28T12:50:00-03:00')}}

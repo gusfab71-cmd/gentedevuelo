@@ -202,7 +202,8 @@ for(const section of ['solucion','areas','modulos','nosotros','preguntas']){
  assert.ok(landing.includes('id="'+section+'"'),'Falta sección de presentación: '+section);
 }
 assert.match(landing,/href="portal\.html"/);
-assert.doesNotMatch(landing,/GDV_AUTH|site_admins|supabase-2\.117/,'La portada no debe pedir credenciales ni exponer el portal de prueba');
+assert.match(landing,/id="aerosuite-superadmin-link"[^>]*hidden/,'El acceso de Superadministración permanece oculto antes de verificar el rol');
+assert.match(landing,/if\(!error && data\?\.user_id===user.id\)link.hidden=false/,'El enlace se revela únicamente al propietario autenticado');
 assert.match(html,/site_admins/,'El portal operativo debe conservar control de acceso admin');
 assert.match(html,/Acceso exclusivo del administrador/);
 assert.match(html,/href="index\.html">Volver a la presentación<\/a>/);
@@ -220,7 +221,7 @@ assert.match(html,/Acceso exclusivo del administrador/);
 assert.match(html,/Datos ficticios/);
 assert.match(html,/No hay reservas multiusuario reales/);
 assert.match(html,/RAV oficial/);
-for(const label of ['Agenda y reservas','Registro de vuelo','Aeronaves y mantenimiento','Pilotos y alumnos','Contabilidad y Finanzas','Combustible y aceite','Academia y Simu PPA','Documentos y avisos'])
+for(const label of ['Agenda y reservas','Registro de vuelo','Aeronaves y mantenimiento','Pilotos y alumnos','Contabilidad y Finanzas','Combustible y aceite','Simulador de Examen PPA','Documentos y avisos'])
  assert.ok(html.includes(label),'Falta sección '+label);
 
 assert.equal(ASSESSMENTS.developing,'En práctica');
@@ -616,12 +617,12 @@ assert.match(html,/site_admins/,'El acceso admin de la demo debe mantenerse');
 
 // Registro unificado de la comunidad: Alumno, Instructor, Piloto y foto voluntaria.
 const studentFormHtml=fs.readFileSync(new URL('../utilidades/gestion-aeronautica/mi-ficha-alumno.html',import.meta.url),'utf8');
-assert.match(html,/\['ficha_alumno','Mi perfil AeroSuite · Registro ampliado'\]/);
+assert.match(html,/\['ficha_alumno','Mi perfil AeroSuite'\]/);
 assert.match(html,/ficha_alumno:studentProfileScreen/);
 assert.match(html,/function studentProfileScreen\(\)/);
 assert.match(html,/\['instructor','Panel del instructor'\],\['ficha_alumno','Mi perfil AeroSuite'\]/);
 assert.match(html,/\['inicio','Panel administrativo'\],\['ficha_alumno','Mi perfil AeroSuite'\]/);
-assert.match(html,/href="mi-ficha-alumno\.html"/);
+assert.doesNotMatch(html,/href="mi-ficha-alumno\.html"/,'El perfil se integra en el visor del portal, sin abrir una ruta paralela');
 assert.match(html,/src="mi-ficha-alumno\.html"/);
 assert.doesNotMatch(studentFormHtml,/getPublicUrl\(/,'La foto personal NO debe tener URL pública');
 assert.match(studentFormHtml,/aerosuite-student-portraits/,'Bucket privado existente');
@@ -641,7 +642,7 @@ for(const name of ['role_student','role_instructor','role_pilot']){
 }
 assert.match(studentFormHtml,/get\(def\.flag\)\.checked/);
 assert.match(studentFormHtml,/if\(!active\.length\)throw Error/,'Exigir al menos un perfil');
-assert.match(studentFormHtml,/verification_state:'unverified'/,'Roles declarados no deben conceder privilegios');
+assert.doesNotMatch(studentFormHtml,/verification_state\s*:/,'El formulario no debe forzar el estado de verificación; Supabase usa default unverified');
 for(const field of ['family_names','given_names','birth_country','birth_date','residence_country','residence_province','residence_city','residence_address','postal_code','mobile_phone']){
  assert.match(studentFormHtml,new RegExp('name="'+field+'"[^>]*required'),'Campo de identidad obligatorio '+field);
 }
@@ -655,7 +656,7 @@ assert.match(studentFormHtml,/new Date\(\)\.toISOString\(\)/);
 assert.match(studentFormHtml,/type="checkbox" required/,'Aviso de privacidad');
 assert.match(studentFormHtml,/no aparecen en Mi Hangar/);
 assert.match(studentFormHtml,/gentedevuelo@gmail\.com/,'Responsable de tratamiento');
-assert.match(landing,/Completar mi perfil de AeroSuite/,'Registro accesible al integrante');
+assert.match(landing,/href="mi-ficha-alumno\.html">Completar perfil de AeroSuite/,'Registro accesible desde la presentación');
 console.log('PASS: un solo usuario GdV, roles declarativos Alumno Instructor Piloto, foto opcional, documentos privados');
 
 // Flight Operations: una sola aplicación para Formación e Instrucción, sin privilegios IA en el modo demo.

@@ -11,7 +11,8 @@ const suites=[
  ['Matrículas y registros','tests/aerosuite-registration.test.cjs',false],
  ['Director y permisos estructurales','tests/aerosuite-director-institucional.test.mjs',false],
  ['Aislamiento de la demo de autorizaciones','tests/aerosuite-camino-demo.test.mjs',false],
- ['Lógica de mantenimiento aeronáutico','tests/aircraft-maintenance.test.cjs',false]
+ ['Lógica de mantenimiento aeronáutico','tests/aircraft-maintenance.test.cjs',false],
+ ['Monitor y permisos de auditoría','tests/aerosuite-audit-monitor.test.mjs',true]
 ];
 const pending=[
  'Autenticación real y RLS entre Director, Secretaría, Instructor, Alumno, PPA y PCA',
