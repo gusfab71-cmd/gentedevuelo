@@ -221,7 +221,7 @@ assert.match(html,/Acceso exclusivo del administrador/);
 assert.match(html,/Datos ficticios/);
 assert.match(html,/No hay reservas multiusuario reales/);
 assert.match(html,/RAV oficial/);
-for(const label of ['Agenda y reservas','Registro de vuelo','Aeronaves y mantenimiento','Pilotos y alumnos','Contabilidad y Finanzas','Combustible y aceite','Academia y Simu PPA','Documentos y avisos'])
+for(const label of ['Agenda y reservas','Registro de vuelo','Aeronaves y mantenimiento','Pilotos y alumnos','Contabilidad y Finanzas','Combustible y aceite','Simulador de Examen PPA','Documentos y avisos'])
  assert.ok(html.includes(label),'Falta sección '+label);
 
 assert.equal(ASSESSMENTS.developing,'En práctica');
