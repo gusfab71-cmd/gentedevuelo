@@ -69,7 +69,9 @@ test('La interfaz nunca expone resultados antes de verificar el superadministrad
  assert.match(js,/db\.auth\.getUser\(\)/);
  assert.match(js,/db\.from\('aerosuite_superadmins'\)\.select\('user_id'\)/);
  assert.match(js,/role\.data\.user_id!==user\.id/);
- assert.ok(js.indexOf("$('adminContent').hidden=false")<js.indexOf('await refresh()'));
+ assert.ok(js.indexOf("$('adminContent').hidden=false")<js.indexOf('await Promise.all([refresh(),refreshHealth(db)])'));
+ assert.match(js,/db\.rpc\('aerosuite_superadmin_portal_health'/,'Consulta de integridad existente y sin escritura');
+ assert.match(js,/db\.from\('aerosuite_permanent_test_lab'\)/,'El diagnóstico se limita a la institución técnica permanente');
  assert.doesNotMatch(js,/\.(?:insert|update|upsert|delete)\s*\(/);
 });
 test('Archivos ES module sintácticamente válidos',()=>{
