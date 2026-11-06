@@ -104,3 +104,9 @@ a{color:#c2e5ff}
  .am-layout.am-sidebar-hidden .am-map-section{height:calc(100dvh - 121px);min-height:500px}
 }
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+
+/* Información aeronáutica decodificada se presenta como mensaje original, sin alterar. */
+.am-aviation-box{margin-top:15px;padding:13px;border:1px solid #546d69;border-radius:12px;background:#18282a}
+.am-aviation-box h3{font-size:13px;margin:0 0 6px;color:#f2dfc8}
+.am-aviation-box .am-select{margin-top:6px;text-transform:uppercase;letter-spacing:.1em;font-weight:750}
+.am-aviation-result{max-width:100%;overflow-wrap:anywhere;white-space:pre-wrap;overflow-x:auto;word-break:break-word;color:#e9f4f1;background:#0d1d21;border:1px solid #446364;padding:11px;border-radius:8px;font:12px/1.6 ui-monospace,Consolas,monospace}
