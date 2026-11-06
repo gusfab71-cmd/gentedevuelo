@@ -133,7 +133,6 @@ console.log('PASS: FlightPrep NAV retirado de accesos independientes; integraci�
 
 // Consolidación de herramientas de Gente de Vuelo en Academia del Alumno.
 for(const [file,title] of [
- ['mantenimiento-aeronaves.html','Mantenimiento de Aeronaves'],
  ['rodaje-viento.html','Rodaje con viento'],
  ['calculo-sustentacion.html','Cálculo de Sustentación']
 ]){
@@ -144,6 +143,7 @@ for(const [file,title] of [
  assert.match(html,new RegExp("url:'\\.\\./"+file.replace('.','\\.')+"'"),
   title+' debe estar integrado en Academia');
 }
+assert.match(html,/href="\.\.\/mantenimiento-aeronaves\.html"/,'La herramienta de mantenimiento se enlaza en el área técnica, no entre las prácticas del alumno');
 assert.match(html,/function academyStudentTools\(\)/,'Debe existir área de aplicaciones prácticas en Academia');
 assert.match(html,/function academyScreen\(\)\{[\s\S]*?academyLibrary\(false\)\+academyStudentTools\(\)/,
  'Academia del Alumno debe mostrar prácticas y las fichas originales');
