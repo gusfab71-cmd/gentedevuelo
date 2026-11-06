@@ -24,7 +24,8 @@ test('Se catalogan siete ubicaciones argentinas, sin duplicaciones ni posiciones
 
 test('AeroMeteo incorpora capa independiente sin modificar AeroLocator',()=>{
  assert.match(meteoHtml,/aerolocator-weather-stations\.js\?v=/);
- assert.match(meteoApp,/GDV_WEATHER_STATIONS\?\.boot\(\{map,L\}\)/);
+ assert.match(meteoApp,/GDV_WEATHER_STATIONS\?\.boot\(\{/);
+ assert.match(meteoApp,/onSelected:showStation,onObservation:showObservation/);
  assert.match(ui,/weather-stations-toggle/);
  assert.match(ui,/L\.featureGroup\(\)/);
  assert.match(ui,/Estaciones meteorológicas/);
