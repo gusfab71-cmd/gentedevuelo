@@ -121,15 +121,20 @@ function boot({map,L,client,panel}){
   return data;
  }
  /* Filtros cartográficos OpenAIP: categorías y clases ICAO conservan su estado al cambiar de vista. */
- const filters=document.createElement('section');
+ const filters=document.createElement('details');
  filters.className='openaip-airspace-filters';
  filters.setAttribute('aria-label','Filtrar espacios aéreos por categoría y clase');
  filters.hidden=true;
- const filterHeading=document.createElement('h4');filterHeading.textContent='Filtrar espacios aéreos';
- const filterHelp=document.createElement('p');filterHelp.textContent='Elegí qué categorías dibujar sobre el mapa. Los filtros no modifican los datos OpenAIP.';
+ const filterHeading=document.createElement('summary');filterHeading.className='openaip-filter-summary';
+ const filterTitle=document.createElement('span');filterTitle.textContent='Filtrar espacios';
+ const filterBadge=document.createElement('span');filterBadge.className='openaip-filter-badge';
+ filterBadge.textContent='Elegir';
+ filterHeading.append(filterTitle,filterBadge);
+ const filterHelp=document.createElement('p');filterHelp.className='openaip-filter-help';
+ filterHelp.textContent='Tipos de espacio y clase ICAO';
  const actions=document.createElement('div');actions.className='openaip-filter-actions';
- const allButton=document.createElement('button');allButton.type='button';allButton.textContent='Mostrar todas';
- const noneButton=document.createElement('button');noneButton.type='button';noneButton.textContent='Ocultar todas';
+ const allButton=document.createElement('button');allButton.type='button';allButton.textContent='Todas';allButton.setAttribute('aria-label','Mostrar todas las categorías');
+ const noneButton=document.createElement('button');noneButton.type='button';noneButton.textContent='Ninguna';noneButton.setAttribute('aria-label','Ocultar todas las categorías');
  actions.append(allButton,noneButton);
  const typeList=document.createElement('div');typeList.className='openaip-filter-types';
  const classLabel=document.createElement('label');classLabel.className='openaip-filter-class-label';
@@ -159,7 +164,8 @@ function boot({map,L,client,panel}){
    if(excludedTypes.has(item.type)||selectedClass!=='all'&&selectedClass!==item.icaoClass)continue;
    group.addLayer(item.layer);visible++;
   }
-  filterCount.textContent=visible+' visibles de '+shapes.length+' espacios en el lote consultado.';
+  filterCount.textContent=visible+' de '+shapes.length+' espacios visibles';
+  filterBadge.textContent=visible+' / '+shapes.length;
   status.textContent=visible+' visibles'+(airspaceSource.total!=null?' de '+airspaceSource.total:'')+
    ' registros OpenAIP · CC BY-NC 4.0'+
    (airspaceSource.partial?' · consulta parcial, quedan páginas pendientes':'')+
@@ -249,7 +255,7 @@ function boot({map,L,client,panel}){
    if(active!==request)return;
    if(kind==='airspaces'){
     airspaceSource=data;buildAirspaceFilters();
-    filters.hidden=false;group.addTo(map);updateAirspaceLayers();
+    filters.hidden=false;filters.open=false;group.addTo(map);updateAirspaceLayers();
    }else{
     group.addTo(map);
     status.textContent=rendered+' visibles'+(data.total!=null?' de '+data.total:'')+
