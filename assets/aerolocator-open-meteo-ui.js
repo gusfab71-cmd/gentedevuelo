@@ -76,7 +76,7 @@ function render(parent,data,location){
  disclaimer.style.cssText='display:block;color:#566d7b;font-size:10px;margin-top:8px';
  parent.append(disclaimer);
 }
-function boot({map,L}){
+function boot({map,L,onForecast,onPending,onForecastError}){
  if(!map||!L)throw Error('AeroLocator necesita Leaflet');
  const control=L.control({position:'topleft'});
  let requestId=0;
@@ -87,6 +87,7 @@ function boot({map,L}){
      latitude<-56||latitude>-21||longitude<-75||longitude>-52)return false;
   const safeName=typeof name==='string'?name.slice(0,90):'punto seleccionado';
   const id=++requestId;
+  if(typeof onPending==='function')onPending({lat:latitude,lon:longitude,name:safeName});
   const view=node('section');
   view.style.cssText='min-width:260px;max-width:350px;max-height:55dvh;overflow-y:auto;color:#163147;font:12px/1.5 Arial,sans-serif';
   view.append(node('strong','Pronóstico Open-Meteo · '+safeName));
@@ -101,9 +102,15 @@ function boot({map,L}){
    const data=await response.json();
    if(!data.ok||data.kind!=='model_forecast'||!data.current||data.isMetar!==false)
     throw Error('Respuesta de modelo no válida');
-   if(id===requestId)render(view,data,safeName);
+   if(id===requestId){
+    render(view,data,safeName);
+    if(typeof onForecast==='function')onForecast(data,{lat:latitude,lon:longitude,name:safeName});
+   }
   }catch(_){
-   if(id===requestId)message.textContent='No hay pronóstico disponible. No se muestran valores estimados sin respaldo.';
+   if(id===requestId){
+    message.textContent='No hay pronóstico disponible. No se muestran valores estimados sin respaldo.';
+    if(typeof onForecastError==='function')onForecastError({lat:latitude,lon:longitude,name:safeName});
+   }
   }finally{clearTimeout(timer)}
   return true;
  };
