@@ -202,7 +202,8 @@ for(const section of ['solucion','areas','modulos','nosotros','preguntas']){
  assert.ok(landing.includes('id="'+section+'"'),'Falta sección de presentación: '+section);
 }
 assert.match(landing,/href="portal\.html"/);
-assert.doesNotMatch(landing,/GDV_AUTH|site_admins|supabase-2\.117/,'La portada no debe pedir credenciales ni exponer el portal de prueba');
+assert.match(landing,/id="aerosuite-superadmin-link"[^>]*hidden/,'El acceso de Superadministración permanece oculto antes de verificar el rol');
+assert.match(landing,/if\(!error && data\?\.user_id===user.id\)link.hidden=false/,'El enlace se revela únicamente al propietario autenticado');
 assert.match(html,/site_admins/,'El portal operativo debe conservar control de acceso admin');
 assert.match(html,/Acceso exclusivo del administrador/);
 assert.match(html,/href="index\.html">Volver a la presentación<\/a>/);
