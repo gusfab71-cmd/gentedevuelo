@@ -1,0 +1,50 @@
+name: AeroLocator - estaciones meteorologicas
+on:
+  pull_request:
+    paths:
+      - 'api/aerolocator-weather-stations.js'
+      - 'assets/aerolocator-weather-stations.js'
+      - 'assets/aerolocator-weather-stations-ar.json'
+      - 'utilidades/pistas-no-oficiales.html'
+      - 'tests/aerolocator-weather-stations.test.cjs'
+      - 'utilidades/aerometeo.html'
+      - 'utilidades/gestion-aeronautica/portal-escuela.html'
+      - 'assets/aerometeo.css'
+      - 'assets/aerometeo-app.js'
+      - 'assets/aerometeo-aviation-ui.js'
+      - 'api/aerolocator-open-meteo.js'
+      - 'api/aerometeo-aviation-weather.js'
+      - 'tests/aerometeo-app.test.cjs'
+      - '.github/workflows/aerolocator-weather-stations.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'api/aerolocator-weather-stations.js'
+      - 'assets/aerolocator-weather-stations.js'
+      - 'assets/aerolocator-weather-stations-ar.json'
+      - 'tests/aerolocator-weather-stations.test.cjs'
+      - 'utilidades/aerometeo.html'
+      - 'utilidades/gestion-aeronautica/portal-escuela.html'
+      - 'assets/aerometeo.css'
+      - 'assets/aerometeo-app.js'
+      - 'assets/aerometeo-aviation-ui.js'
+      - 'api/aerolocator-open-meteo.js'
+      - 'api/aerometeo-aviation-weather.js'
+      - 'tests/aerometeo-app.test.cjs'
+      - '.github/workflows/aerolocator-weather-stations.yml'
+permissions:
+  contents: read
+jobs:
+  stations:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Probar catalogo y consultas meteorologicas
+        run: |
+          node --test tests/aerolocator-weather-stations.test.cjs
+          node --test tests/aerometeo-app.test.cjs
+          node --test tests/aerolocator-navaids-layer.test.cjs
+          node --test tests/aerolocator-openaip-layers.test.cjs

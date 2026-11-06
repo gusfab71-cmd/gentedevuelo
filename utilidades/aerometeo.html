@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#061324">
+<meta name="description" content="AeroMeteo · Meteorología aeronáutica para tu vuelo. Estaciones 3D-PAWS, pronósticos Open-Meteo y fuentes del SMN, METAR y TAF.">
+<title>AeroMeteo · Developed by Gente de Vuelo</title>
+<link rel="icon" type="image/svg+xml" href="../assets/aerometeo-logo.svg">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="../assets/aerometeo.css?v=20261106landing2">
+</head>
+<body>
+<header class="am-header">
+ <a class="am-brand" href="../index.html" aria-label="AeroMeteo · Developed by Gente de Vuelo">
+  <img class="am-brand-emblem" src="../assets/aerometeo-logo.svg" alt="" width="66" height="66">
+  <span class="am-brand-copy">
+   <strong>Aero<span>Meteo</span></strong>
+   <small><span aria-hidden="true">━</span> Developed by Gente de Vuelo <span aria-hidden="true">━</span></small>
+  </span>
+ </a>
+ <nav class="am-nav" aria-label="Aplicaciones de Gente de Vuelo">
+  <a href="pistas-no-oficiales.html"><span aria-hidden="true">⌖</span> AeroLocator</a>
+  <a href="meteorologia-aeronautica.html"><span aria-hidden="true">✈</span> Flight Operations</a>
+  <a class="am-nav-primary" href="gestion-aeronautica/"><span aria-hidden="true">▤</span> Volver a AeroSuite</a>
+ </nav>
+</header>
+
+<section class="am-hero" aria-labelledby="am-hero-heading">
+ <div class="am-hero-content">
+  <h1 id="am-hero-heading">AeroMeteo</h1>
+  <p class="am-hero-subtitle">Meteorología aeronáutica para tu vuelo</p>
+  <p class="am-hero-text">Observaciones, pronósticos y productos oficiales en un entorno integrado, claro y confiable para la planificación y operación de vuelos.</p>
+ </div>
+</section>
+
+<main class="am-layout" id="aerometeo-app">
+ <aside class="am-sidebar" id="aerometeo-sidebar" aria-label="Fuentes y productos">
+  <div class="am-sidebar-inner">
+   <div class="am-sidebar-heading">
+    <span class="am-sources-icon" aria-hidden="true">▱</span>
+    <div><h2>Fuentes y productos</h2><p>Accedé rápidamente a la información meteorológica aeronáutica.</p></div>
+   </div>
+
+   <button class="am-source-card is-active" id="am-source-stations" type="button" aria-expanded="false" aria-controls="am-stations-tools">
+    <span class="am-source-icon" aria-hidden="true">◇</span>
+    <span class="am-source-copy"><strong>Estaciones 3D-PAWS</strong><small>Observaciones de estaciones meteorológicas locales.</small></span>
+    <span class="am-source-chevron" aria-hidden="true">›</span>
+   </button>
+   <section class="am-source-tools" id="am-stations-tools" hidden aria-label="Herramientas 3D-PAWS">
+    <p id="aerometeo-station-count" class="am-count" role="status">Preparando catálogo de estaciones…</p>
+    <button type="button" id="aerometeo-show-stations" class="am-button am-button-local" aria-pressed="false">Mostrar estaciones en el mapa</button>
+    <details class="am-station-details" id="aerometeo-station-details">
+     <summary>Elegir una estación</summary>
+     <div id="aerometeo-station-list" class="am-station-list"></div>
+    </details>
+    <p class="am-small">Una estación registrada no garantiza mediciones actuales.</p>
+   </section>
+
+   <button class="am-source-card" id="am-source-forecast" type="button" aria-expanded="false" aria-controls="am-forecast-tools">
+    <span class="am-source-icon" aria-hidden="true">☁</span>
+    <span class="am-source-copy"><strong>Pronósticos Open-Meteo</strong><small>Viento, lluvia, nubosidad y temperatura estimados.</small></span>
+    <span class="am-source-chevron" aria-hidden="true">›</span>
+   </button>
+   <section class="am-source-tools" id="am-forecast-tools" hidden aria-label="Herramientas Open-Meteo">
+    <label class="am-label" for="aerometeo-location">Ubicación de referencia</label>
+    <select id="aerometeo-location" class="am-select">
+     <option value="canuelas">Cañuelas · Club de Planeadores</option>
+     <option value="sauce-viejo">Sauce Viejo · Santa Fe</option>
+     <option value="rosario">Rosario · Santa Fe</option>
+     <option value="cordoba">Córdoba</option>
+     <option value="mendoza">Mendoza</option>
+     <option value="mar-del-plata">Mar del Plata</option>
+     <option value="bariloche">Bariloche</option>
+     <option value="buenos-aires">Buenos Aires</option>
+    </select>
+    <button type="button" id="aerometeo-forecast-location" class="am-button am-button-model">Consultar pronóstico</button>
+    <div class="am-button-row">
+     <button type="button" id="aerometeo-forecast-center" class="am-button am-button-secondary">Centro del mapa</button>
+     <button type="button" id="aerometeo-pick-location" class="am-button am-button-secondary" aria-pressed="false">Elegir en mapa</button>
+    </div>
+    <p class="am-small">Los pronósticos pueden cubrir lugares sin estación. No son mediciones reales.</p>
+   </section>
+
+   <button class="am-source-card" id="am-source-smn" type="button" aria-expanded="false" aria-controls="am-smn-tools">
+    <span class="am-source-icon am-smn-icon" aria-hidden="true">≋</span>
+    <span class="am-source-copy"><strong>SMN</strong><small>Productos y alertas del Servicio Meteorológico Nacional.</small></span>
+    <span class="am-source-chevron" aria-hidden="true">›</span>
+   </button>
+   <section class="am-source-tools" id="am-smn-tools" hidden aria-label="Productos meteorológicos oficiales">
+    <div class="am-official-links">
+     <a href="https://ws2.smn.gob.ar/observaciones" target="_blank" rel="noopener noreferrer">SMN · Observaciones de superficie ↗</a>
+     <a href="https://ws2.smn.gob.ar/radar" target="_blank" rel="noopener noreferrer">SMN · Radar de lluvia y tormentas ↗</a>
+     <a href="https://ws2.smn.gob.ar/modelos" target="_blank" rel="noopener noreferrer">SMN · Modelos meteorológicos ↗</a>
+     <a href="https://ws2.smn.gob.ar/pronarea" target="_blank" rel="noopener noreferrer">SMN · PRONAREA ↗</a>
+     <a href="https://ws2.smn.gob.ar/metar" target="_blank" rel="noopener noreferrer">SMN · METAR ↗</a>
+     <a href="https://ws2.smn.gob.ar/taf" target="_blank" rel="noopener noreferrer">SMN · TAF ↗</a>
+     <a href="meteorologia-aeronautica.html">Flight Operations · Planificación ↗</a>
+    </div>
+    <p class="am-small">Estos son enlaces oficiales. Su actualización automática y condiciones de reutilización están por verificarse.</p>
+   </section>
+
+   <button class="am-source-card" id="am-source-aviation" type="button" aria-expanded="false" aria-controls="am-aviation-tools">
+    <span class="am-source-icon" aria-hidden="true">✈</span>
+    <span class="am-source-copy"><strong>METAR / TAF</strong><small>Observaciones y pronósticos aeronáuticos por aeródromo.</small></span>
+    <span class="am-source-chevron" aria-hidden="true">›</span>
+   </button>
+   <section class="am-source-tools" id="am-aviation-tools" hidden aria-labelledby="aerometeo-aviation-heading">
+    <h3 id="aerometeo-aviation-heading">Consultar producto aeronáutico</h3>
+    <label class="am-label" for="aerometeo-icao">Código OACI argentino</label>
+    <input id="aerometeo-icao" class="am-select" type="text" value="SAAV" maxlength="4" pattern="SA[A-Za-z]{2}" spellcheck="false" autocomplete="off" aria-describedby="aerometeo-aviation-status">
+    <div class="am-button-row">
+     <button type="button" class="am-button am-button-secondary" id="aerometeo-metar">Consultar METAR</button>
+     <button type="button" class="am-button am-button-secondary" id="aerometeo-taf">Consultar TAF</button>
+    </div>
+    <p id="aerometeo-aviation-status" class="am-small" role="status">Ingresá, por ejemplo, SAAV o SAEZ.</p>
+    <pre id="aerometeo-aviation-result" class="am-aviation-result" hidden></pre>
+    <a id="aerometeo-aviation-source" href="https://aviationweather.gov/data/api/" target="_blank" rel="noopener noreferrer" hidden>Aviation Weather Center · NOAA/NWS ↗</a>
+    <p class="am-small">Verificar fecha de emisión y productos oficiales del SMN.</p>
+   </section>
+
+   <p class="am-sidebar-footnote">Uso informativo y educativo. Las mediciones, los pronósticos y los productos oficiales son fuentes diferentes.</p>
+  </div>
+ </aside>
+
+ <section class="am-map-section" aria-label="Mapa meteorológico de Argentina">
+  <div class="am-map-toolbar">
+   <h2> <span aria-hidden="true">⌑</span> Mapa meteorológico – Argentina</h2>
+   <div class="am-map-actions" role="group" aria-label="Variables meteorológicas">
+    <button type="button" class="is-selected" data-weather-metric="wind" aria-pressed="true">≋ Viento</button>
+    <button type="button" data-weather-metric="rain" aria-pressed="false">♢ Precipitación</button>
+    <button type="button" data-weather-metric="cloud" aria-pressed="false">☁ Nubosidad</button>
+    <button type="button" data-weather-metric="temperature" aria-pressed="false">♧ Temperatura</button>
+   </div>
+  </div>
+  <div class="am-map-canvas">
+   <div id="map" aria-label="Mapa de Argentina con ubicaciones de estaciones y aeródromos"></div>
+   <div class="am-map-float am-map-layers-note"><strong id="am-active-layer-name">Viento (kt)</strong>
+    <p id="am-layer-note">Vista de estaciones. Para consultar datos de viento, seleccioná una estación o un pronóstico.</p>
+    <div class="am-color-scale" aria-hidden="true"></div>
+    <span>Escala visual de referencia · sin capa nacional cargada</span>
+   </div>
+   <div class="am-map-legend" aria-label="Referencias">
+    <span><i class="am-dot am-dot-local"></i> Aeroclub</span>
+    <span><i class="am-dot am-dot-edu"></i> Otra estación</span>
+    <span><i class="am-dot am-dot-model"></i> Modelo</span>
+    <span class="am-legend-note">Un marcador de aeródromo no es una estación meteorológica.</span>
+   </div>
+  </div>
+  <div class="am-map-status" id="aerometeo-status" role="status" aria-live="polite">
+   Elegí un punto para consultar su meteorología; los datos no se obtienen automáticamente al mover el mapa.
+  </div>
+  <div class="am-map-bottom-actions">
+   <button type="button" id="aerometeo-toggle-panel" aria-controls="aerometeo-sidebar" aria-expanded="true">Ocultar panel</button>
+   <button type="button" id="aerometeo-country">Ver Argentina</button>
+  </div>
+ </section>
+
+ <aside class="am-detail" aria-label="Información meteorológica seleccionada">
+  <div class="am-detail-heading">
+   <span class="am-detail-location-icon" aria-hidden="true">◆</span>
+   <div><h2 id="am-detail-title">Seleccioná una ubicación</h2>
+    <p id="am-detail-location">Argentina · Estaciones y aeródromos</p></div>
+   <button id="am-favorite" type="button" aria-pressed="false" aria-label="Marcar ubicación favorita" title="Marcar como favorita para esta sesión">☆</button>
+  </div>
+  <div class="am-detail-tabs" role="group" aria-label="Origen de los datos">
+   <button type="button" data-detail-tab="observation" aria-pressed="true" class="is-selected">Observación</button>
+   <button type="button" data-detail-tab="forecast" aria-pressed="false">Pronóstico</button>
+   <button type="button" data-detail-tab="aviation" aria-pressed="false">METAR / TAF</button>
+  </div>
+  <section id="am-detail-observation" class="am-detail-tab-panel">
+   <div class="am-detail-origin"><span id="am-detail-status-dot" class="am-status-dot"></span>
+    <strong id="am-detail-status">Sin estación seleccionada</strong>
+    <small id="am-detail-updated">Actualización: sin datos</small>
+   </div>
+   <div class="am-metrics">
+    <div class="am-metric"><span>≋ Viento</span><strong id="am-value-wind">—</strong></div>
+    <div class="am-metric"><span>≈ Ráfagas</span><strong id="am-value-gust">—</strong></div>
+    <div class="am-metric"><span>♧ Temperatura</span><strong id="am-value-temperature">—</strong></div>
+    <div class="am-metric"><span>◉ Presión</span><strong id="am-value-pressure">—</strong></div>
+    <div class="am-metric"><span>♢ Humedad</span><strong id="am-value-humidity">—</strong></div>
+    <div class="am-metric"><span>☁ Nubosidad</span><strong id="am-value-cloud">—</strong></div>
+   </div>
+   <div class="am-condition-card">
+    <span aria-hidden="true">☁</span><div><small>Condición general</small>
+    <strong id="am-detail-condition">Esperando consulta de una fuente verificable</strong></div>
+   </div>
+   <p class="am-detail-footnote" id="am-detail-footnote">Las observaciones locales no equivalen a METAR oficiales.</p>
+  </section>
+  <section id="am-detail-forecast" class="am-detail-tab-panel" hidden>
+   <p class="am-detail-intro">Pronóstico numérico por ubicación · Open-Meteo.</p>
+   <div id="am-forecast-content" class="am-forecast-content">
+    <p>Seleccioná una ubicación o utilizá «Pronósticos Open-Meteo» para consultar valores estimados.</p>
+   </div>
+   <button type="button" id="am-detail-forecast-action" class="am-button am-button-model">Consultar pronóstico del punto seleccionado</button>
+  </section>
+  <section id="am-detail-aviation" class="am-detail-tab-panel" hidden>
+   <p class="am-detail-intro">Mensajes originales de METAR y TAF. La disponibilidad depende del aeródromo y de Aviation Weather Center.</p>
+   <p id="am-detail-aviation-status">Seleccioná «METAR / TAF» en el panel de fuentes e ingresá un código OACI argentino.</p>
+   <a href="https://ws2.smn.gob.ar/metar" target="_blank" rel="noopener noreferrer">Consultar METAR en el SMN ↗</a>
+  </section>
+ </aside>
+</main>
+
+<footer class="am-disclaimer">
+ <span class="am-disclaimer-icon" aria-hidden="true">ⓘ</span>
+ <p><strong>Observaciones, pronósticos y productos oficiales <em>se presentan de forma diferenciada</em></strong>, para que siempre identifiques el origen, el tipo de dato y su alcance operativo.
+ <small>Pronósticos: <a href="https://open-meteo.com/en/docs" target="_blank" rel="noopener noreferrer">Open-Meteo</a> (<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0</a>). Estaciones: <a href="https://3d-argentina.icdp.ucar.edu/instruments" target="_blank" rel="noopener noreferrer">3D Argentina</a>. Sin reemplazar productos aeronáuticos oficiales ni NOTAM.</small></p>
+</footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="../assets/aerolocator-weather-stations.js?v=20261106meteo3"></script>
+<script src="../assets/aerolocator-open-meteo-ui.js?v=20261106forecast3"></script>
+<script src="../assets/aerometeo-aviation-ui.js?v=20261106am3"></script>
+<script src="../assets/aerometeo-app.js?v=20261106landing3"></script>
+</body>
+</html>
