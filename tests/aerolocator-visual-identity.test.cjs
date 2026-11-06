@@ -50,3 +50,9 @@ test('El logo 3D aprobado se sirve localmente, sin modificar el mapa',()=>{
  assert.match(html,/body \.dispatch-nav \.aerolocator-brand-lockup/);
  assert.match(html,/aerolocator-back-to-aerosuite/);
 });
+
+test('Logo 3D a media altura y encabezado compacto',()=>{
+ assert.match(html,/body \.dispatch-nav \.aerolocator-brand-lockup\{[\s\S]*?height:55px/);
+ assert.match(html,/body \.dispatch-nav\{[\s\S]*?height:78px;min-height:78px/);
+ assert.match(html,/body \.dispatch-layout\{height:calc\(100dvh - 78px\)/);
+});
