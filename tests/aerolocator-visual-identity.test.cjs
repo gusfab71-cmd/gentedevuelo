@@ -9,9 +9,9 @@ const css=fs.readFileSync(path.join(base,'assets/aerolocator-flight-operations-t
 const logo=fs.readFileSync(path.join(base,'assets/aerolocator-brand.svg'),'utf8');
 test('AeroLocator muestra marca primero y Developed by Gente de Vuelo debajo',()=>{
  assert.match(html,/<a class="dispatch-nav-logo"[^>]*aria-label="AeroLocator · Developed by Gente de Vuelo"/);
- assert.match(html,/<img class="aerolocator-brand-icon"[^>]*aerolocator-brand\.svg"/);
- assert.match(html,/<strong class="aerolocator-brand-name">Aero<span>Locator<\/span><\/strong>/);
- assert.match(html,/<small class="aerolocator-brand-credit">Developed by Gente de Vuelo<\/small>/);
+ assert.match(html,/<img class="aerolocator-brand-lockup"[^>]*aerolocator-logo-3d\.webp\?v=20261106logo1"/);
+ assert.match(html,/<p class="aerolocator-header-motto">Toda la información aeronáutica,/);
+ assert.match(html,/al alcance de tu vuelo<\/span>/);
  assert.match(html,/<link rel="icon" type="image\/svg\+xml" href="\.\.\/assets\/aerolocator-brand\.svg">/);
 });
 test('Paleta visual de Flight Operations y tema cargado al final',()=>{
@@ -40,4 +40,13 @@ test('El nuevo tema no cambia el mapa ni oculta sus herramientas',()=>{
   assert.match(html,new RegExp('<option value="'+value+'">'));
  assert.doesNotMatch(css,/\.leaflet-(?:marker|tile|popup|control-zoom)\b/);
  assert.match(html,/client=supabase\.createClient\(GDV_CONFIG\.url,GDV_CONFIG\.key\)/);
+});
+
+test('El logo 3D aprobado se sirve localmente, sin modificar el mapa',()=>{
+ const asset=fs.readFileSync(path.join(base,'assets/aerolocator-logo-3d.webp'));
+ assert.ok(asset.length>1000);
+ assert.equal(asset.subarray(0,4).toString(),'RIFF');
+ assert.equal(asset.subarray(8,12).toString(),'WEBP');
+ assert.match(html,/body \.dispatch-nav \.aerolocator-brand-lockup/);
+ assert.match(html,/aerolocator-back-to-aerosuite/);
 });

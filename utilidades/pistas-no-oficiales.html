@@ -803,10 +803,62 @@ body .dispatch-nav nav a.aerolocator-back-to-aerosuite:focus-visible{color:#1c26
 #openaip-overview .openaip-filter-count{color:#f3d9aa!important;font-weight:760;font-size:11px!important}
 #openaip-overview :is(button,select,input):focus-visible{outline:2px solid #e6c798;outline-offset:2px}
 @media(max-width:620px){#openaip-overview{width:min(290px,calc(100% - 32px));max-height:65dvh;right:7px;top:8px}}
+</style><style>
+/* Encabezado AeroLocator: logo 3D aprobado, lema central y un único acceso a AeroSuite. */
+body .dispatch-nav{
+ display:grid;grid-template-columns:minmax(0,1fr) minmax(320px,1.25fr) minmax(135px,1fr);
+ align-items:center;gap:clamp(12px,2vw,28px);
+ min-height:132px;padding:10px clamp(14px,2vw,30px);
+ background:linear-gradient(110deg,#092338,#112f3b 58%,#122b34);
+ border-bottom:1px solid #395868;
+}
+body .dispatch-nav .dispatch-nav-logo{
+ display:flex;align-items:center;justify-self:start;gap:0;min-width:0;width:min(100%,420px);
+ padding:0;text-decoration:none;
+}
+body .dispatch-nav .aerolocator-brand-lockup{
+ display:block;width:100%;height:auto;object-fit:contain;border:0;border-radius:0;background:none;
+}
+body .dispatch-nav .aerolocator-header-motto{
+ margin:0;justify-self:center;text-align:center;
+ font-weight:750;font-size:clamp(14px,1.45vw,23px);line-height:1.38;
+ letter-spacing:.01em;color:#E8EDF5;text-wrap:balance;
+ text-shadow:0 2px 8px #081e2c;
+}
+body .dispatch-nav .aerolocator-header-motto span{display:block;color:#D4AF37}
+body .dispatch-nav nav{display:flex;justify-content:flex-end;justify-self:end;align-items:center;width:auto;gap:0}
+body .dispatch-nav nav a.aerolocator-back-to-aerosuite{
+ display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;
+ padding:10px 15px;font-size:12px;font-weight:780;color:#ffddb7;
+ background:#303530;border:1px solid #a48262;border-radius:10px;text-decoration:none;
+}
+body .dispatch-nav nav a.aerolocator-back-to-aerosuite:hover,
+body .dispatch-nav nav a.aerolocator-back-to-aerosuite:focus-visible{
+ color:#1c2626;background:#ffce99;border-color:#ffce99;
+}
+@media(max-width:959px){
+ body .dispatch-nav{grid-template-columns:minmax(0,1.1fr) minmax(185px,1fr) auto;gap:10px;min-height:104px}
+ body .dispatch-nav .aerolocator-header-motto{font-size:clamp(12px,1.7vw,17px)}
+ body .dispatch-nav nav{width:auto;overflow:visible;padding:0;flex-wrap:nowrap}
+}
+@media(max-width:620px){
+ body .dispatch-nav{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"brand action" "motto motto";min-height:0;padding:9px 10px;gap:3px 9px}
+ body .dispatch-nav .dispatch-nav-logo{grid-area:brand;width:min(100%,280px)}
+ body .dispatch-nav nav{grid-area:action;max-width:132px}
+ body .dispatch-nav nav a.aerolocator-back-to-aerosuite{font-size:10px;padding:8px;white-space:normal;text-align:center}
+ body .dispatch-nav .aerolocator-header-motto{grid-area:motto;font-size:13px;line-height:1.32;padding:2px 0 5px}
+ body .dispatch-nav .aerolocator-header-motto span{display:inline}
+}
+
+/* Mantener la superficie útil del mapa al ampliar el encabezado en escritorio. */
+@media(min-width:960px){
+ body .dispatch-layout{height:calc(100dvh - 132px);min-height:calc(100dvh - 132px)}
+ body .dispatch-map-panel.is-map-expanded{inset:0}
+}
 </style></head><body><header class="dispatch-nav"><a class="dispatch-nav-logo" href="../index.html" aria-label="AeroLocator · Developed by Gente de Vuelo">
- <img class="aerolocator-brand-icon" src="../assets/aerolocator-brand.svg" alt="" width="68" height="68" decoding="async">
- <span class="aerolocator-brand-copy"><strong class="aerolocator-brand-name">Aero<span>Locator</span></strong>
- <small class="aerolocator-brand-credit">Developed by Gente de Vuelo</small></span></a>
+ <img class="aerolocator-brand-lockup" src="../assets/aerolocator-logo-3d.webp?v=20261106logo1" alt="AeroLocator · Developed by Gente de Vuelo" width="340" height="113" decoding="async">
+ </a>
+ <p class="aerolocator-header-motto">Toda la información aeronáutica,<span> al alcance de tu vuelo</span></p>
  <nav aria-label="Volver a AeroSuite"><a class="aerolocator-back-to-aerosuite" href="gestion-aeronautica/">Volver a AeroSuite</a></nav></header><main class="dispatch-main">
  <div class="dispatch-layout is-control-collapsed" id="dispatch-layout">
   <aside class="dispatch-sidebar" id="dispatch-sidebar" aria-label="Panel de control del mapa" aria-hidden="true">
