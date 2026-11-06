@@ -957,7 +957,8 @@ const typeEnvironment={window:{}};
 vm.runInNewContext(taxonomySource,typeEnvironment,{timeout:1000});
 const aircraftTypes=typeEnvironment.window.GDV_AIRFIELD_TYPES;
 const six=['controlled_public','uncontrolled_public','private_aerodrome','lad','heliport','unverified'];
-assert.equal(Object.keys(aircraftTypes.CATEGORIES).length,6);
+assert.equal(Object.keys(aircraftTypes.CATEGORIES).length,7,'Seis tipos visibles y categoría ANAC estrictamente documental');
+assert.match(aircraftTypes.CATEGORIES.anac_documental.label,/pendiente de confirmar/,'La categoría documental no concede habilitación operativa');
 for(const code of six){
  assert.ok(aircraftTypes.CATEGORIES[code].label);
  assert.match(airstripsOriginal,new RegExp('data-pista-layer="'+code+'"'));
