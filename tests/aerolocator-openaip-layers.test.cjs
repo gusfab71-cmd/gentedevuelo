@@ -62,3 +62,31 @@ test('Las geometrías se tratan como referencia y sin HTML no confiable',()=>{
  assert.match(layerJS,/CC BY-NC 4\.0/);
  assert.match(layerJS,/LIMIT_PAGES=8/);
 });
+
+
+test('Los espacios aéreos mantienen categorías y estilos diferenciables',()=>{
+ const types={CTR:4,TMA:7,CTA:26,ATZ:13,R:1,D:2,P:3,OTHER:999};
+ for(const [category,type] of Object.entries(types))
+  assert.equal(api.airspaceCategory(type),category);
+ const colors=Object.keys(types).map(category=>api.sectorStyle(category).color);
+ assert.equal(new Set(colors).size,colors.length);
+ assert.match(api.sectorStyle('R').dashArray,/\d/);
+ assert.match(api.sectorStyle('D').dashArray,/\d/);
+ assert.equal(api.sectorStyle('P').dashArray,null);
+ assert.ok(api.sectorStyle('CTR',true).weight>api.sectorStyle('CTR').weight);
+ assert.ok(api.sectorStyle('CTR',false,true).fillOpacity<api.sectorStyle('CTR').fillOpacity);
+});
+
+test('Filtros por función, etiquetas y resaltado están aislados en OpenAIP',()=>{
+ assert.match(layerJS,/filterPanel\.id='openaip-airspace-filters'/);
+ assert.match(layerJS,/checkbox\.addEventListener\('change'/);
+ assert.match(layerJS,/enabledCategories\.has\(item\.category\)/);
+ assert.match(layerJS,/focusSector\(item\)/);
+ assert.match(layerJS,/renderLabels\(\)/);
+ assert.match(layerJS,/map\.on\('zoomend',renderLabels\)/);
+ assert.match(layerJS,/document\.createElement\('span'\)/);
+ assert.match(layerJS,/filterPanel\.hidden=kind!=='airspaces'/);
+ assert.match(layerJS,/status\.after\(filterPanel\)/);
+ assert.match(html,/openaip-sector-name/);
+ assert.match(html,/20261106sectores1/);
+});
