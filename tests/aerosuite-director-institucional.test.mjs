@@ -233,10 +233,10 @@ assert.match(school,/if\(!school\.can_access\)/,'No abre una institución bloque
 assert.match(operations,/id="thisWeek"/,'La turnera ofrece volver a esta semana');
 assert.match(operations,/id="nextWeek"/,'La turnera permite avanzar a la siguiente semana');
 assert.match(operations,/id="bookingFutureNotice"/,'Se explica cómo encontrar horarios futuros');
-assert.match(operations,/b\.textContent="Libre · Reservar"/,'Los turnos futuros quedan identificados como reservables');
+assert.match(operations,/b\.textContent=rescheduleTarget\?"Libre · Reprogramar aquí":role==="alumno"\?"Reservar":"Libre · Reservar"/,'La etiqueta distingue reserva por alumno y reprogramación');
 assert.match(operations,/if\(start\.getTime\(\)<=Date\.now\(\)\)/,'Solo los turnos que ya comenzaron se marcan como pasados');
 assert.match(operations,/start=new Date\(date\+"T"\+time\+":00-03:00"\)/,'Los turnos se calculan en hora Argentina');
-assert.match(operations,/return Array\.from\(\{length:7\},\(_,i\)=>addDays\(monday,i\)\)/,'Las semanas son independientes de la zona del navegador');
+assert.match(operations,/const weekDates=\(\)=>Array\.from\(\{length:7\},\(_,i\)=>addDays\(selectedWeekStart,i\)\)/,'Las fechas de la semana siguen el lunes seleccionado en hora ART');
 assert.match(operations,/class="today-head"/,'Se resalta visualmente el día actual');
 assert.match(operations,/\+"&elegida=1";/,'Volver de la turnera conserva la elección');
 assert.match(fleet,/\+"&elegida=1";/,'Volver de Flota conserva la elección');

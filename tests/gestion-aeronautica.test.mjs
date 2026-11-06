@@ -133,7 +133,6 @@ console.log('PASS: FlightPrep NAV retirado de accesos independientes; integraci�
 
 // Consolidación de herramientas de Gente de Vuelo en Academia del Alumno.
 for(const [file,title] of [
- ['mantenimiento-aeronaves.html','Mantenimiento de Aeronaves'],
  ['rodaje-viento.html','Rodaje con viento'],
  ['calculo-sustentacion.html','Cálculo de Sustentación']
 ]){
@@ -144,6 +143,7 @@ for(const [file,title] of [
  assert.match(html,new RegExp("url:'\\.\\./"+file.replace('.','\\.')+"'"),
   title+' debe estar integrado en Academia');
 }
+assert.match(html,/href="\.\.\/mantenimiento-aeronaves\.html"/,'La herramienta de mantenimiento se enlaza en el área técnica, no entre las prácticas del alumno');
 assert.match(html,/function academyStudentTools\(\)/,'Debe existir área de aplicaciones prácticas en Academia');
 assert.match(html,/function academyScreen\(\)\{[\s\S]*?academyLibrary\(false\)\+academyStudentTools\(\)/,
  'Academia del Alumno debe mostrar prácticas y las fichas originales');
@@ -157,8 +157,8 @@ assert.match(html,/<iframe class="academy-tool-frame" src="'\+active\.url\+'/,
 assert.match(html,/target="_blank" rel="noopener noreferrer">Abrir a pantalla completa/,
  'Conservar alternativa para abrir aplicación completa');
 assert.match(html,/data-academy-tool-close/,'El alumno puede cerrar el visor');
-assert.match(html,/La bitácora utiliza la cuenta actual de Gente de Vuelo/,
- 'El mantenimiento conserva el almacenamiento privado de la herramienta original');
+assert.match(html,/datos personales todavía NO están sincronizados/,
+ 'La integración informa que los datos técnicos personales aún no están sincronizados con la demo');
 assert.doesNotMatch(html,/AEROSUITE_THEORY_TOPICS|AEROSUITE_CRM_TOPICS|AEROSUITE_LIBRARY_FILES|libraryCollection\(/,
  'No debe conservar temarios fijos ni rutas de Teoría y CRM en la biblioteca.');
 assert.doesNotMatch(html,/href="fichas\/fuerzas-del-vuelo\.html"/,'La ficha obsoleta no debe reaparecer');
