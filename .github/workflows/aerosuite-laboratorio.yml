@@ -1,0 +1,41 @@
+name: AeroSuite - laboratorio ficticio
+on:
+  pull_request:
+    paths:
+      - 'tests/aerosuite-laboratorio.test.mjs'
+      - 'utilidades/gestion-aeronautica/src/**'
+      - 'docs/laboratorio-aerosuite.md'
+      - '.github/workflows/aerosuite-laboratorio.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  simulacion:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CI: 'true'
+      TZ: America/Argentina/Buenos_Aires
+      AUDITORIA_MODE: ficticio
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Pruebas offline de motores demo
+        shell: bash
+        run: |
+          set -o pipefail
+          node --experimental-default-type=module --test --test-reporter=tap tests/aerosuite-laboratorio.test.mjs | tee aerosuite-lab-resultados.tap
+      - name: Conservar evidencia incluso si falla
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aerosuite-laboratorio-tap
+          path: aerosuite-lab-resultados.tap
+          if-no-files-found: warn
+          retention-days: 14
