@@ -53,7 +53,7 @@ jobs:
       - name: Ejecutar control aislado de la plataforma
         run: ${{ matrix.command }}
   laboratorio_sql:
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event_name == 'pull_request'
     name: 'Módulo: Laboratorio SQL ficticio'
     runs-on: ubuntu-latest
     timeout-minutes: 5
