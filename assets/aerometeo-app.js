@@ -42,6 +42,11 @@ function create(tag,text,className){
  return el;
 }
 function boot(){
+ // Enlaces internos de retorno: nunca confiar en URL externa ni elevar permisos.
+ if(new URLSearchParams(root.location?.search||'').get('desde')==='portal-escuela'){
+  const back=document.querySelector('.am-nav-primary');
+  if(back)back.href='gestion-aeronautica/portal-escuela.html';
+ }
  const L=root.L;
  if(!L){$('aerometeo-status').textContent='No se pudo cargar Leaflet. Comprobá tu conexión.';return null}
  const map=L.map('map',{zoomControl:false,scrollWheelZoom:true,touchZoom:true,minZoom:3});
