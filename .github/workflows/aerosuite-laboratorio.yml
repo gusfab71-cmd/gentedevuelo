@@ -1,13 +1,12 @@
 name: AeroSuite - Auditoria semanal automatica
 on:
   schedule:
-    - cron: '0 12 * * 1' # lunes 09:00 Argentina, UTC-3
+    - cron: '0 12 * * 1' # lunes 09:00 ART
   workflow_dispatch:
   pull_request:
     paths:
-      - 'tests/aerosuite-laboratorio.test.mjs'
-      - 'tests/gestion-aeronautica.test.mjs'
       - 'tests/aerosuite-*.test.*'
+      - 'tests/gestion-aeronautica.test.mjs'
       - 'tests/aircraft-maintenance.test.cjs'
       - 'utilidades/gestion-aeronautica/**'
       - 'assets/aerosuite-registration.js'
@@ -16,8 +15,45 @@ on:
       - '.github/workflows/aerosuite-laboratorio.yml'
 permissions:
   contents: read
+concurrency:
+  group: aerosuite-weekly-${{ github.ref }}
+  cancel-in-progress: false
 jobs:
-  auditoria:
+  modulos:
+    name: 'Módulo: ${{ matrix.title }}'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - title: 'Turnera y formación'
+            command: 'node --experimental-default-type=module tests/gestion-aeronautica.test.mjs'
+          - title: 'Escenarios ficticios'
+            command: 'node --experimental-default-type=module --test tests/aerosuite-laboratorio.test.mjs'
+          - title: 'Mantenimiento institucional'
+            command: 'node tests/aerosuite-maintenance-integration.test.cjs'
+          - title: 'Matrículas y registros'
+            command: 'node tests/aerosuite-registration.test.cjs'
+          - title: 'Dirección y permisos'
+            command: 'node tests/aerosuite-director-institucional.test.mjs'
+          - title: 'Aislamiento de demos'
+            command: 'node tests/aerosuite-camino-demo.test.mjs'
+          - title: 'Mantenimiento aeronáutico'
+            command: 'node tests/aircraft-maintenance.test.cjs'
+          - title: 'Monitor y permisos de auditoría'
+            command: 'node --experimental-default-type=module --test tests/aerosuite-audit-monitor.test.mjs'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Ejecutar control aislado de la plataforma
+        run: ${{ matrix.command }}
+  resumen:
+    name: Informe consolidado sin escrituras
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
@@ -31,9 +67,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Ejecutar y documentar auditoria
+      - name: Consolidar pruebas, disponibilidad y cobertura pendiente
         run: node scripts/aerosuite-weekly-audit.mjs
-      - name: Adjuntar reporte incluso si falla
+      - name: Adjuntar evidencias aun si falla
         if: always()
         uses: actions/upload-artifact@v4
         with:
