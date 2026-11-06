@@ -84,11 +84,29 @@
     <h2 id="official-heading">Información oficial</h2>
     <p class="am-panel-description">Para la operación aérea, verificá información y avisos oficiales vigentes.</p>
     <div class="am-official-links">
-     <a href="https://aviationweather.gov/" target="_blank" rel="noopener noreferrer">METAR y TAF · Aviation Weather Center <span aria-hidden="true">↗</span></a>
-     <a href="https://www.smn.gob.ar/" target="_blank" rel="noopener noreferrer">Servicio Meteorológico Nacional <span aria-hidden="true">↗</span></a>
-     <a href="meteorologia-aeronautica.html">PRONAREA y planificación · Flight Operations <span aria-hidden="true">↗</span></a>
+     <a href="https://ws2.smn.gob.ar/observaciones" target="_blank" rel="noopener noreferrer">SMN · Observaciones de superficie <span aria-hidden="true">↗</span></a>
+     <a href="https://ws2.smn.gob.ar/radar" target="_blank" rel="noopener noreferrer">SMN · Radares de lluvia y tormentas <span aria-hidden="true">↗</span></a>
+     <a href="https://ws2.smn.gob.ar/modelos" target="_blank" rel="noopener noreferrer">SMN · Modelos numéricos y viento <span aria-hidden="true">↗</span></a>
+     <a href="https://ws2.smn.gob.ar/pronarea" target="_blank" rel="noopener noreferrer">SMN · PRONAREA <span aria-hidden="true">↗</span></a>
+     <a href="https://ws2.smn.gob.ar/metar" target="_blank" rel="noopener noreferrer">SMN · METAR <span aria-hidden="true">↗</span></a>
+     <a href="https://ws2.smn.gob.ar/taf" target="_blank" rel="noopener noreferrer">SMN · TAF <span aria-hidden="true">↗</span></a>
+     <a href="https://aviationweather.gov/" target="_blank" rel="noopener noreferrer">Aviation Weather Center · Consulta internacional <span aria-hidden="true">↗</span></a>
+     <a href="meteorologia-aeronautica.html">Planificación · Flight Operations <span aria-hidden="true">↗</span></a>
     </div>
-    <p class="am-small">Estos enlaces son accesos a fuentes externas; no implican integración automática de METAR, TAF o SIGMET.</p>
+    <div class="am-aviation-box" aria-labelledby="aerometeo-aviation-heading">
+     <h3 id="aerometeo-aviation-heading">Consultar METAR o TAF</h3>
+     <p class="am-small">Datos internacionales reproducidos por Aviation Weather Center. Verificá siempre la fuente y vigencia oficiales del SMN.</p>
+     <label class="am-label" for="aerometeo-icao">Código OACI argentino</label>
+     <input id="aerometeo-icao" class="am-select" type="text" value="SAAV" maxlength="4" pattern="SA[A-Za-z]{2}" spellcheck="false" autocomplete="off" aria-describedby="aerometeo-aviation-status" />
+     <div class="am-button-row">
+      <button type="button" class="am-button am-button-secondary" id="aerometeo-metar">Consultar METAR</button>
+      <button type="button" class="am-button am-button-secondary" id="aerometeo-taf">Consultar TAF</button>
+     </div>
+     <p class="am-small" id="aerometeo-aviation-status" role="status">Ingresá, por ejemplo, SAAV (Sauce Viejo) o SAEZ (Ezeiza).</p>
+     <pre id="aerometeo-aviation-result" class="am-aviation-result" hidden></pre>
+     <a id="aerometeo-aviation-source" class="am-small" href="https://aviationweather.gov/data/api/" target="_blank" rel="noopener noreferrer" hidden>Fuente: Aviation Weather Center · NOAA/NWS ↗</a>
+    </div>
+    <p class="am-small">El SMN se consulta mediante sus páginas oficiales; su actualización automática y permisos de reutilización aún están pendientes de validación.</p>
    </section>
 
    <div class="am-footer-note">
@@ -123,5 +141,6 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="../assets/aerolocator-weather-stations.js?v=20261106meteo2"></script>
 <script src="../assets/aerolocator-open-meteo-ui.js?v=20261106forecast2"></script>
+<script src="../assets/aerometeo-aviation-ui.js?v=20261106am1"></script>
 <script src="../assets/aerometeo-app.js?v=20261106am1"></script>
 </body></html>
