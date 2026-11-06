@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="es">
+<head>
+ <meta charset="utf-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+ <meta name="theme-color" content="#141d20">
+ <meta name="description" content="AeroMeteo · mapa meteorológico para la comunidad aeronáutica argentina. Estaciones locales 3D-PAWS y pronósticos de modelos Open-Meteo, por separado.">
+ <title>AeroMeteo · Developed by Gente de Vuelo</title>
+ <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+ <link rel="stylesheet" href="../assets/aerometeo.css?v=20261106am1">
+</head>
+<body>
+<header class="am-header">
+ <a class="am-brand" href="../index.html" aria-label="Gente de Vuelo · Inicio">
+  <span class="am-brand-emblem" aria-hidden="true">
+   <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="32" cy="32" r="28" stroke="currentColor" stroke-width="2" opacity=".55"/>
+    <circle cx="32" cy="32" r="20" stroke="currentColor" opacity=".28"/>
+    <path d="M12 41a19 19 0 0 1 18-22 16 16 0 0 1 31 8" stroke="#ffc28a" stroke-width="4" stroke-linecap="round"/>
+    <path d="M13 43h37m-30 9h23" stroke="#8cddc4" stroke-width="3" stroke-linecap="round"/>
+    <path d="M34 11v9m0 23v10m-23-23h11m23 0h10" stroke="currentColor" stroke-width="2" opacity=".7"/>
+   </svg>
+  </span>
+  <span class="am-brand-copy"><strong>Aero<span>Meteo</span></strong><small>Developed by Gente de Vuelo</small></span>
+ </a>
+ <nav class="am-nav" aria-label="Aplicaciones de Gente de Vuelo">
+  <a href="pistas-no-oficiales.html">AeroLocator</a>
+  <a href="meteorologia-aeronautica.html">Flight Operations</a>
+  <a class="am-nav-primary" href="gestion-aeronautica/">Volver a AeroSuite</a>
+ </nav>
+</header>
+
+<main class="am-layout" id="aerometeo-app">
+ <aside class="am-sidebar" id="aerometeo-sidebar" aria-label="Centro meteorológico">
+  <div class="am-sidebar-inner">
+   <div class="am-intro">
+    <span class="am-eyebrow">METEOROLOGÍA · ARGENTINA</span>
+    <h1>Una mirada al tiempo, antes de volar.</h1>
+    <p>Observaciones de estaciones meteorológicas y pronósticos de modelos, claramente diferenciados.</p>
+    <div class="am-intro-chips" aria-label="Fuentes">
+     <span><i class="am-dot am-dot-local"></i> Observación local</span>
+     <span><i class="am-dot am-dot-model"></i> Pronóstico</span>
+    </div>
+   </div>
+
+   <section class="am-panel" aria-labelledby="stations-heading">
+    <div class="am-panel-top"><span class="am-panel-icon am-panel-icon-local" aria-hidden="true">01</span><span class="am-source">3D Argentina / 3D-PAWS</span></div>
+    <h2 id="stations-heading">Estaciones meteorológicas</h2>
+    <p class="am-panel-description">Puntos de estaciones físicas. Elegí uno para consultar su última medición y verificar su antigüedad.</p>
+    <p class="am-count" id="aerometeo-station-count" role="status">Preparando catálogo de estaciones…</p>
+    <button type="button" id="aerometeo-show-stations" class="am-button am-button-local" aria-pressed="false">Mostrar estaciones en el mapa</button>
+    <details class="am-station-details" id="aerometeo-station-details">
+     <summary>Explorar estaciones registradas</summary>
+     <div class="am-station-list" id="aerometeo-station-list"></div>
+    </details>
+    <p class="am-small">Ubicaciones documentadas; tener una estación registrada no garantiza mediciones actuales.</p>
+   </section>
+
+   <section class="am-panel" aria-labelledby="forecast-heading">
+    <div class="am-panel-top"><span class="am-panel-icon am-panel-icon-model" aria-hidden="true">02</span><span class="am-source">Open-Meteo · Modelos</span></div>
+    <h2 id="forecast-heading">Pronósticos por ubicación</h2>
+    <p class="am-panel-description">Viento a 10 m, ráfagas, temperatura, humedad, presión, nubosidad y lluvia. Valores estimados.</p>
+    <label class="am-label" for="aerometeo-location">Ubicación de referencia</label>
+    <select id="aerometeo-location" class="am-select">
+     <option value="canuelas">Cañuelas · Club de Planeadores</option>
+     <option value="sauce-viejo">Sauce Viejo · Santa Fe</option>
+     <option value="rosario">Rosario · Santa Fe</option>
+     <option value="cordoba">Córdoba</option>
+     <option value="mendoza">Mendoza</option>
+     <option value="mar-del-plata">Mar del Plata</option>
+     <option value="bariloche">Bariloche</option>
+     <option value="buenos-aires">Buenos Aires</option>
+    </select>
+    <button type="button" id="aerometeo-forecast-location" class="am-button am-button-model">Consultar pronóstico</button>
+    <div class="am-button-row">
+     <button type="button" id="aerometeo-forecast-center" class="am-button am-button-secondary">Centro del mapa</button>
+     <button type="button" id="aerometeo-pick-location" class="am-button am-button-secondary" aria-pressed="false">Elegir en mapa</button>
+    </div>
+    <p class="am-small">Los pronósticos pueden cubrir ubicaciones que no tengan estación meteorológica.</p>
+   </section>
+
+   <section class="am-panel am-panel-official" aria-labelledby="official-heading">
+    <div class="am-panel-top"><span class="am-panel-icon" aria-hidden="true">03</span><span class="am-source">Consulta aeronáutica</span></div>
+    <h2 id="official-heading">Información oficial</h2>
+    <p class="am-panel-description">Para la operación aérea, verificá información y avisos oficiales vigentes.</p>
+    <div class="am-official-links">
+     <a href="https://aviationweather.gov/" target="_blank" rel="noopener noreferrer">METAR y TAF · Aviation Weather Center <span aria-hidden="true">↗</span></a>
+     <a href="https://www.smn.gob.ar/" target="_blank" rel="noopener noreferrer">Servicio Meteorológico Nacional <span aria-hidden="true">↗</span></a>
+     <a href="meteorologia-aeronautica.html">PRONAREA y planificación · Flight Operations <span aria-hidden="true">↗</span></a>
+    </div>
+    <p class="am-small">Estos enlaces son accesos a fuentes externas; no implican integración automática de METAR, TAF o SIGMET.</p>
+   </section>
+
+   <div class="am-footer-note">
+    <strong>Uso informativo y educativo</strong>
+    <p>La información de AeroMeteo no sustituye los productos meteorológicos aeronáuticos oficiales, los NOTAM ni la decisión del piloto al mando.</p>
+    <p>Pronóstico: <a href="https://open-meteo.com/en/docs" target="_blank" rel="noopener noreferrer">Open-Meteo</a> (<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0</a>). Red local: <a href="https://3d-argentina.icdp.ucar.edu/sites" target="_blank" rel="noopener noreferrer">3D Argentina</a>.</p>
+   </div>
+  </div>
+ </aside>
+
+ <section class="am-map-section" aria-label="Mapa meteorológico argentino">
+  <div class="am-map-toolbar">
+   <div><span class="am-map-kicker">CENTRO DE OBSERVACIÓN</span><strong>Mapa meteorológico interactivo</strong></div>
+   <div class="am-map-actions">
+    <button type="button" id="aerometeo-toggle-panel" aria-controls="aerometeo-sidebar" aria-expanded="true">Ocultar panel</button>
+    <button type="button" id="aerometeo-country">Ver Argentina</button>
+   </div>
+  </div>
+  <div class="am-map-canvas">
+   <div id="map" aria-label="Mapa de Argentina con estaciones meteorológicas y consultas de pronóstico"></div>
+   <div class="am-map-legend" aria-label="Leyenda del mapa">
+    <span><i class="am-dot am-dot-local"></i> Estación de aeroclub</span>
+    <span><i class="am-dot am-dot-edu"></i> Otra estación</span>
+    <span><i class="am-dot am-dot-model"></i> Pronóstico de modelo</span>
+   </div>
+  </div>
+  <div class="am-map-status" id="aerometeo-status" role="status" aria-live="polite">
+   Seleccioná una estación o consultá el pronóstico de una ubicación. Los datos no se obtienen automáticamente al mover el mapa.
+  </div>
+ </section>
+</main>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="../assets/aerolocator-weather-stations.js?v=20261106meteo2"></script>
+<script src="../assets/aerolocator-open-meteo-ui.js?v=20261106forecast2"></script>
+<script src="../assets/aerometeo-app.js?v=20261106am1"></script>
+</body></html>
