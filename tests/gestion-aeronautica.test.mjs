@@ -672,7 +672,8 @@ assert.ok(schoolRow&&!schoolRow.includes("['flightops'"),'Flight Operations no f
 assert.match(html,/flightops:flightOperationsScreen/);
 assert.match(html,/function flightOperationsScreen\(\)/);
 assert.match(html,/function flightOperationsShortcut\(area\)/);
-assert.match(html,/flightOperationsShortcut\('alumno'\)/);
+assert.match(html,/alumno:\{[^\n]*\['flightops','Flight Operations · Planificación'\]/,
+ 'El alumno conserva acceso a Flight Operations desde su menú, sin exigir un botón duplicado');
 assert.match(html,/flightOperationsShortcut\('instructor'\)/);
 assert.match(html,/data-go="flightops"/);
 assert.match(html,/const context=isStudent\?'formacion':'instruccion'/);
@@ -684,7 +685,8 @@ assert.match(html,/if\(currentArea!=='alumno'&&currentArea!=='instructor'\)/);
 assert.match(html,/no guarda automáticamente trabajos en el legajo del alumno/);
 assert.match(html,/Modo formativo sin IA/);
 assert.match(flightOperationsOriginal,/const aeroContext=new URLSearchParams\(window\.location\.search\)\.get\('aerosuite'\)/);
-assert.match(flightOperationsOriginal,/aeroContext==='formacion'\|\|aeroContext==='instruccion'/);
+assert.match(flightOperationsOriginal,/const trainingView=\['formacion','instruccion','piloto'\]\.includes\(aeroContext\)/,
+ 'Flight Operations incluye Formación, Instrucción y Piloto en modo sin IA');
 assert.match(flightOperationsOriginal,/dataset\.flightRole=isAdmin&&!trainingView\?'admin':'member'/);
 assert.match(flightOperationsOriginal,/if\(!isAdmin\|\|trainingView\)\{/);
 assert.match(flightOperationsOriginal,/const \{data:admin,error:roleError\}=await client\.from\('site_admins'\)/,'La IA sigue verificando acceso administrativo');
@@ -698,10 +700,10 @@ console.log('PASS: Flight Operations unificado en Alumno e Instructor sin IA y c
 
 // Pistas No Oficiales: una única fuente compartida entre Gente de Vuelo y AeroSuite.
 const airstripsOriginal=fs.readFileSync(new URL('../utilidades/pistas-no-oficiales.html',import.meta.url),'utf8');
-assert.match(airstripsOriginal,/<title>AeroLocator · Mapa de pistas y aeródromos/,'El nombre visible de la aplicación debe ser AeroLocator');
-assert.match(airstripsOriginal,/<h1>AeroLocator<\/h1>/,'AeroLocator en el centro de control');
-assert.match(airstripsOriginal,/<strong>AeroLocator · Mapa interactivo<\/strong>/,'AeroLocator en el mapa');
-assert.match(airstripsOriginal,/<small>AEROLOCATOR · MAPA AERONÁUTICO<\/small>/,'AeroLocator en la barra superior');
+assert.match(airstripsOriginal,/<title>AeroLocator · Developed by Gente de Vuelo<\/title>/,'El título identifica AeroLocator y su desarrollo');
+assert.match(airstripsOriginal,/<h1>Centro de control<\/h1>/,'El panel lateral conserva una cabecera identificable');
+assert.match(airstripsOriginal,/class="dispatch-map-panel"[^>]*aria-label="Mapa geográfico interactivo"/,'El mapa interactivo mantiene una etiqueta accesible');
+assert.match(airstripsOriginal,/class="aerolocator-brand-lockup"[^>]*alt="AeroLocator · Developed by Gente de Vuelo"/,'El encabezado conserva el logo y el crédito de AeroLocator');
 
 for(const category of ['controlled_public','uncontrolled_public','private_aerodrome','lad','heliport','unverified']){
  assert.ok(airstripsOriginal.includes(category+':'),'Debe existir categoría GdV '+category);
@@ -723,8 +725,8 @@ assert.match(airstripsOriginal,/if\(oaMatchesANAC\(record\)\)\{anacMatches\+\+;r
  'Coincidencias ANAC no crean marcadores duplicados');
 assert.match(airstripsOriginal,/<option value="pending" selected>Pendientes<\/option>/,
  'OurAirports debe abrir inicialmente con pendientes');
-assert.match(airstripsOriginal,/const show=false;/,
- 'Aportes externos no revisados no aparecen en el mapa principal');
+assert.match(airstripsOriginal,/const showOurAirports=mapViewMode==='ourairports'\|\|mapViewMode==='airfields'/,
+ 'La capa OurAirports se muestra solo en sus vistas y el mapa de pistas, no en todas las capas');
 
 const anac26=JSON.parse(fs.readFileSync(new URL('../assets/aerolocator-anac-2026-ar.json',import.meta.url),'utf8'));
 assert.equal(anac26.edition,'2026-09','El catálogo corresponde a septiembre de 2026');
@@ -802,14 +804,17 @@ assert.match(airstripsOriginal,/function runwayPin\(kind='unverified'\)/);
 assert.match(airstripsOriginal,/const PIN_PALETTE=/);
 assert.match(airstripsOriginal,/PIN_PALETTE\[kind\]/);
 assert.match(airstripsOriginal,/<svg xmlns="http:\/\/www\.w3\.org\/2000\/svg"/);
-assert.match(airstripsOriginal,/runwayPin\(airfieldClass\(p\)\)/);
+assert.match(airstripsOriginal,/runwayPin\(airfieldClass\(p\)==='unverified'\?'community_reviewed':airfieldClass\(p\)\)/,
+ 'Un registro comunitario aprobado usa marcador diferenciado');
 assert.match(airstripsOriginal,/runwayPin\('reference'\)/);
 assert.match(airstripsOriginal,/runwayPin\('draft'\)/);
 assert.match(airstripsOriginal,/function communityPopup\(record,nm=null\)/);
 assert.match(airstripsOriginal,/function referencePopup\(record,nm=null\)/);
-for(const field of ['Coordenadas','Pista / rumbo','Dimensiones','Superficie','Elevación','Acceso','Obstáculos','Frecuencia','Observaciones']){
- assert.ok(airstripsOriginal.includes("'"+field+"'"),'El pin debe mostrar '+field);
+for(const field of ['Coordenadas','Dimensiones','Superficie','Elevación','Acceso','Obstáculos','Frecuencia','Observaciones']){
+ assert.ok(airstripsOriginal.includes("'"+field+"'"),'La ficha debe mostrar '+field);
 }
+assert.match(airstripsOriginal,/el\('p','Pista \/ rumbo: '\+\(p\.details\?\.runway/,'El listado identifica pista y rumbo');
+assert.match(airstripsOriginal,/item\('MADHEL · pistas',madhel\.rwy\)/,'La ficha conserva la pista de MADHEL');
 assert.match(airstripsOriginal,/document\.createElement\('dt'\)/);
 assert.match(airstripsOriginal,/document\.createElement\('dd'\)/);
 assert.match(airstripsOriginal,/warning.classList.add\('critical'\)/);
@@ -907,7 +912,8 @@ const anacCatalog=anacEnvironment.window.AEROSUITE_OFFICIAL_AIRSTRIPS;
 assert.ok(anacCatalog,'Debe estar disponible el catálogo inicial con fuentes oficiales');
 assert.equal(anacCatalog.catalogStatus,'parcial','No se puede presentar una muestra como inventario completo');
 assert.equal(anacCatalog.ladEdition,'2026-09-28');
-assert.equal(anacCatalog.official.length,2);
+assert.ok(anacCatalog.official.length>=2,'Conservar aeropuertos principales y permitir ampliar el catálogo documental');
+assert.ok(anacCatalog.official.some(x=>x.sourceType==='registro_anac_historico'),'El material ANAC 2021 queda identificado como histórico, sin atribuirle vigencia');
 assert.equal(anacCatalog.lad.length,16);
 const allDocumented=[...anacCatalog.official,...anacCatalog.lad];
 assert.equal(new Set(allDocumented.map(x=>x.id)).size,allDocumented.length,'No duplicar identificadores documentales');
@@ -915,8 +921,9 @@ for(const item of allDocumented){
  assert.ok(['official','lad'].includes(item.category),'Categoría documental desconocida');
  assert.ok(Number.isFinite(item.lat)&&item.lat>=-56&&item.lat<=-21);
  assert.ok(Number.isFinite(item.lon)&&item.lon>=-74&&item.lon<=-53);
- assert.match(item.sourceUrl,/^https:\/\/(?:ais\.anac\.gob\.ar|www\.argentina\.gob\.ar)\//);
- assert.match(item.verification,/verific|revisi/i,'Nunca inferir aptitud o habilitación vigente');
+ assert.match(item.sourceUrl,/^https:\/\/(?:ais\.anac\.gob\.ar|www\.argentina\.gob\.ar|servicios\.transporte\.gob\.ar)\//,
+ 'La fuente de cada registro debe pertenecer a una institución oficial');
+ assert.match(item.verification,/verific|revisi|consultar AIP y NOTAM vigentes/i,'Todo dato documental debe advertir que requiere comprobación operacional');
  assert.ok(item.sourceDate,'La ficha debe indicar fecha del documento');
 }
 const ezeiza=anacCatalog.official.find(x=>x.details.icao==='SAEZ');
@@ -941,7 +948,7 @@ assert.match(airstripsOriginal,/\.filter\(x=>layerSelected\(airfieldClass\(x\)\)
 assert.match(airstripsOriginal,/documentedMatches=documentedAirstrips/);
 assert.match(airstripsOriginal,/Fuente documental/);
 assert.match(airstripsOriginal,/no equivale a aeródromo habilitado|No son aeródromos habilitados|no son aeródromos habilitados/i);
-assert.match(airstripsOriginal,/Cobertura parcial, no inventario nacional/);
+assert.match(airstripsOriginal,/No reemplaza AIP, NOTAM, ni autorización de propietario u operador/,'El mapa debe advertir que no reemplaza fuentes oficiales');
 assert.match(airstripsOriginal,/Privado no significa no oficial/);
 assert.match(html,/AeroLocator/);
 
@@ -950,7 +957,8 @@ const typeEnvironment={window:{}};
 vm.runInNewContext(taxonomySource,typeEnvironment,{timeout:1000});
 const aircraftTypes=typeEnvironment.window.GDV_AIRFIELD_TYPES;
 const six=['controlled_public','uncontrolled_public','private_aerodrome','lad','heliport','unverified'];
-assert.equal(Object.keys(aircraftTypes.CATEGORIES).length,6);
+assert.equal(Object.keys(aircraftTypes.CATEGORIES).length,7,'Seis tipos visibles y categoría ANAC estrictamente documental');
+assert.match(aircraftTypes.CATEGORIES.anac_documental.label,/pendiente de confirmar/,'La categoría documental no concede habilitación operativa');
 for(const code of six){
  assert.ok(aircraftTypes.CATEGORIES[code].label);
  assert.match(airstripsOriginal,new RegExp('data-pista-layer="'+code+'"'));
@@ -966,18 +974,18 @@ assert.match(airstripsOriginal,/id="filter-ats"/);
 assert.match(airstripsOriginal,/id="filter-access"/);
 assert.match(airstripsOriginal,/id="filter-rules"/);
 assert.match(airstripsOriginal,/function meetsServiceFilters\(record\)/);
-assert.match(airstripsOriginal,/Solo referencia para análisis de contingencias/);
+assert.match(airstripsOriginal,/Solo referencias geográficas para análisis de contingencias\. NO utilizar como destino o alternativo confirmado/,'Pistas no verificadas nunca se acreditan como destinos confirmados');
 assert.match(airstripsOriginal,/kind==='heliport'/);
 assert.match(airstripsOriginal,/kind==='unverified'/);
 
 const splitMap=airstripsOriginal;
-assert.match(splitMap,/class="dispatch-layout"/,'Falta marco de pantalla dividida');
+assert.match(splitMap,/class="dispatch-layout is-control-collapsed"/,'El mapa ocupa el ancho inicial y conserva el centro de control plegable');
 assert.match(splitMap,/class="dispatch-sidebar"/,'Falta panel izquierdo');
 assert.match(splitMap,/class="dispatch-map-panel"/,'Falta zona principal del mapa');
 assert.match(splitMap,/grid-template-columns:minmax\(350px,29%\) minmax\(0,1fr\)/);
 assert.match(splitMap,/id="selected-detail"/);
 assert.match(splitMap,/function showAirfieldDetail\(createCard,name\)/);
-assert.match(splitMap,/function attachSelection\(marker,point,label,createCard\)/);
+assert.match(splitMap,/function attachSelection\(marker,point,label,createCard,meta=null\)/,'Seleccionar un punto respeta los metadatos visuales');
 assert.match(splitMap,/attachSelection\(marker,\[point\.lat,point\.lon\]/);
 assert.match(splitMap,/attachSelection\(marker,\[p\.latitude,p\.longitude\]/);
 assert.match(splitMap,/attachSelection\(marker,\[x\.lat,x\.lon\]/);
@@ -985,18 +993,19 @@ assert.match(splitMap,/id="ruler-toggle"/);
 assert.match(splitMap,/id="ruler-clear"/);
 assert.match(splitMap,/function rulerPoint\(point,label\)/);
 assert.match(splitMap,/function clearRuler\(\)/);
-assert.match(splitMap,/const bearing=trueBearing\(a\.lat,a\.lng,b\.lat,b\.lng\)/);
+assert.match(splitMap,/bearing=trueBearing\(a\.lat,a\.lng,b\.lat,b\.lng\)/,'La regla calcula rumbo verdadero en vez de un valor fijo');
 assert.match(splitMap,/setAttribute\('aria-pressed',String\(rulerEnabled\)\)/);
-assert.match(splitMap,/\u00b0 verdadero \(sin variación magnética\)/);
+assert.match(splitMap,/° verdadero \(sin corrección magnética\)/,'La regla distingue claramente el rumbo verdadero del magnético');
 assert.match(splitMap,/id="contribute-fast"/);
-assert.match(splitMap,/if\(proposeMode\)\{proposeMode=false;proposeAt\(e\.latlng\);return\}/);
+assert.match(splitMap,/if\(proposeMode\)\{proposeMode=false;shortcutAdd\.setAttribute\('aria-pressed','false'\);shortcutTip\.hidden=true;proposeAt\(e\.latlng\);return\}/,'Tras proponer una pista el botón y la ayuda vuelven a su estado habitual');
 for(const key of ['asfalto','tierra','cesped','otros']){
  assert.match(splitMap,new RegExp('data-pista-surface="'+key+'"'),'Filtro de superficie '+key);
 }
 assert.match(splitMap,/function meetsSurfaceFilter\(record\)/);
-for(const target of ['meteorologia-aeronautica.html','gestion-aeronautica/']){
- assert.ok(splitMap.includes('href="'+target+'"'),'Falta atajo de navegación a '+target);
-}
+assert.match(splitMap,/class="aerolocator-back-to-aerosuite" href="gestion-aeronautica\/"/,
+ 'AeroLocator conserva el único acceso visible de regreso a AeroSuite');
+assert.doesNotMatch(splitMap,/href="meteorologia-aeronautica\.html"/,
+ 'El encabezado de AeroLocator no debe recuperar el menú antiguo de Flight Operations');
 const bearingSource=splitMap.slice(splitMap.indexOf('function trueBearing('),splitMap.indexOf('function clearRuler('));
 const bearingCalc=vm.runInNewContext(bearingSource+';trueBearing');
 assert.equal(bearingCalc(0,0,0,90),90);
@@ -1015,7 +1024,7 @@ assert.match(splitMap,/GDV_R2_MEDIA\.upload\(cleaned,client,GDV_CONFIG\.url,GDV_
 assert.match(splitMap,/function stripPhotoMetadata\(file\)/);
 assert.match(splitMap,/canvas\.toBlob\(/,'Las fotografías deben sanear EXIF y GPS');
 assert.match(splitMap,/details\.photos=urls/);
-assert.match(splitMap,/airstripImageGallery\(d,p\.details\?\.photos,p\.name\)/);
+assert.match(splitMap,/function airstripImageGallery\(parent,urls,name\)/,'Las fotografías se muestran desde el componente de ficha compartido');
 assert.match(splitMap,/airstripImageGallery\(card,details\.photos,name\)/);
 assert.match(splitMap,/status:'pending',details/,'La aprobación es posterior a la carga');
 console.log('PASS: escritorio dividido, fichas laterales, regla NM y rumbo verdadero, filtros y fotos R2');
