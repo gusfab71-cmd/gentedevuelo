@@ -79,6 +79,44 @@ function makePopup(record){
  addLink(links,'NOTAM','https://ais.anac.gob.ar/notam');box.append(links);
  return box;
 }
+
+/* Contraste por función del espacio: colores de esta interfaz, NO simbología oficial AIP. */
+const AIRSPACE_PALETTE=Object.freeze({
+ CTR:{label:'CTR',color:'#2F91E3',dashArray:null},
+ TMA:{label:'TMA',color:'#A88AE8',dashArray:null},
+ CTA:{label:'CTA',color:'#29B7AC',dashArray:null},
+ ATZ:{label:'ATZ',color:'#68C880',dashArray:null},
+ R:{label:'Restringida (R)',color:'#F06957',dashArray:'8 5'},
+ D:{label:'Peligrosa (D)',color:'#F0B64B',dashArray:'3 5'},
+ P:{label:'Prohibida (P)',color:'#EC4358',dashArray:null},
+ OTHER:{label:'Otros espacios',color:'#B7C7D7',dashArray:'5 4'}
+});
+const AIRSPACE_ORDER=Object.keys(AIRSPACE_PALETTE);
+function airspaceCategory(type){
+ switch(type){
+  case 4:return 'CTR';
+  case 7:return 'TMA';
+  case 26:return 'CTA';
+  case 13:return 'ATZ';
+  case 1:return 'R';
+  case 2:return 'D';
+  case 3:return 'P';
+  default:return 'OTHER';
+ }
+}
+function sectorTitle(record){
+ const category=airspaceCategory(record.type);
+ const name=(record.name||'Sector sin nombre').trim();
+ if(category==='OTHER'||new RegExp('\\b'+category+'\\b','i').test(name))return name;
+ return category+' · '+name;
+}
+function sectorStyle(category,selected=false,dimmed=false){
+ const cfg=AIRSPACE_PALETTE[category]||AIRSPACE_PALETTE.OTHER;
+ return {color:cfg.color,fillColor:cfg.color,dashArray:cfg.dashArray,
+  weight:selected?4:(category==='P'?2.7:2.1),
+  opacity:dimmed?0.29:1,fillOpacity:dimmed?0.035:(selected?0.31:0.13)};
+}
+
 function boot({map,L,client,panel}){
  if(!map||!L||!client||!panel)throw Error('OpenAIP: inicialización incompleta');
  const groups={airspaces:L.layerGroup(), 'reporting-points':L.layerGroup()};
@@ -120,14 +158,162 @@ function boot({map,L,client,panel}){
   cache.set(kind,data);
   return data;
  }
+
+ const filterPanel=document.createElement('div');
+ filterPanel.id='openaip-airspace-filters';
+ filterPanel.hidden=true;
+ const filterHeader=document.createElement('div');
+ filterHeader.className='openaip-filter-header';
+ const filterTitle=document.createElement('strong');
+ filterTitle.textContent='Mostrar espacios por tipo';
+ const filterActions=document.createElement('div');
+ filterActions.className='openaip-filter-actions';
+ const allButton=document.createElement('button');
+ allButton.type='button';allButton.textContent='Todos';
+ const noneButton=document.createElement('button');
+ noneButton.type='button';noneButton.textContent='Ninguno';
+ filterActions.append(allButton,noneButton);
+ filterHeader.append(filterTitle,filterActions);
+ const filterList=document.createElement('div');
+ filterList.className='openaip-filter-list';
+ filterList.setAttribute('role','group');
+ filterList.setAttribute('aria-label','Filtrar espacios aéreos según su función');
+ const enabledCategories=new Set(AIRSPACE_ORDER);
+ const categoryCheckboxes=new Map(),categoryCounts=new Map();
+ for(const category of AIRSPACE_ORDER){
+  const cfg=AIRSPACE_PALETTE[category],label=document.createElement('label');
+  label.className='openaip-filter-choice';
+  const checkbox=document.createElement('input');
+  checkbox.type='checkbox';checkbox.checked=true;
+  checkbox.setAttribute('aria-label',cfg.label);
+  const swatch=document.createElement('span');
+  swatch.className='openaip-filter-swatch';
+  swatch.style.borderColor=cfg.color;
+  swatch.style.backgroundColor=cfg.color+'33';
+  if(cfg.dashArray)swatch.style.borderStyle='dashed';
+  const name=document.createElement('span');
+  name.textContent=cfg.label;
+  const count=document.createElement('small');
+  count.className='openaip-filter-count';
+  count.textContent='0';
+  label.append(checkbox,swatch,name,count);
+  checkbox.addEventListener('change',()=>{
+   if(checkbox.checked)enabledCategories.add(category);
+   else enabledCategories.delete(category);
+   refreshVisibility();
+  });
+  categoryCheckboxes.set(category,checkbox);
+  categoryCounts.set(category,count);
+  filterList.append(label);
+ }
+ const selectedNote=document.createElement('p');
+ selectedNote.id='openaip-selection-status';
+ selectedNote.textContent='Tocá un sector para resaltarlo y consultar sus límites.';
+ const clearSelectionButton=document.createElement('button');
+ clearSelectionButton.type='button';
+ clearSelectionButton.id='openaip-clear-selection';
+ clearSelectionButton.textContent='Quitar selección';
+ clearSelectionButton.hidden=true;
+ const zoomNote=document.createElement('p');
+ zoomNote.className='openaip-zoom-note';
+ zoomNote.textContent='Acercá el mapa para ver etiquetas. Los colores son de esta interfaz y no reemplazan las cartas oficiales.';
+ filterPanel.append(filterHeader,filterList,selectedNote,clearSelectionButton,zoomNote);
+ status.after(filterPanel);
+ let descriptors=[],visibleDescriptors=[],selected=null,loadedData=null;
+ const nameLabels=L.layerGroup();
+
+ function refreshStyles(){
+  for(const item of visibleDescriptors){
+   item.layer.setStyle(sectorStyle(item.category,item===selected,selected!==null&&item!==selected));
+  }
+ }
+ function updateSelectionNote(){
+  selectedNote.textContent=selected
+   ?'Seleccionado: '+sectorTitle(selected.record)+'. Consultá los límites en la ficha.'
+   :'Tocá un sector para resaltarlo y consultar sus límites.';
+  clearSelectionButton.hidden=!selected;
+ }
+ function renderLabels(){
+  nameLabels.clearLayers();
+  if(active!=='airspaces'||!map.hasLayer(groups.airspaces))return;
+  const zoom=map.getZoom(),candidates=zoom>=9
+   ?visibleDescriptors
+   :selected?[selected]:[];
+  const priority={CTR:0,ATZ:1,TMA:2,CTA:3,R:4,D:5,P:6,OTHER:7};
+  const ordered=candidates.slice().sort((a,b)=>
+   (a===selected?-100:priority[a.category])-(b===selected?-100:priority[b.category]));
+  const occupied=[],bounds=map.getBounds();
+  for(const item of ordered){
+   if(occupied.length>=26)break;
+   if(zoom<9&&item!==selected)continue;
+   if(item.category==='OTHER'&&item!==selected)continue;
+   const center=item.layer.getBounds().getCenter();
+   if(!bounds.contains(center))continue;
+   const point=map.latLngToContainerPoint(center);
+   if(occupied.some(p=>Math.abs(p.x-point.x)<105&&Math.abs(p.y-point.y)<26))continue;
+   const el=document.createElement('span');el.textContent=sectorTitle(item.record);
+   const tag=L.tooltip({permanent:true,direction:'center',interactive:false,opacity:0.92,
+    className:item===selected?'openaip-sector-name is-selected':'openaip-sector-name'});
+   tag.setLatLng(center).setContent(el);
+   nameLabels.addLayer(tag);occupied.push(point);
+  }
+ }
+ function focusSector(item){
+  if(active!=='airspaces'||!enabledCategories.has(item.category))return;
+  selected=item;
+  refreshStyles();updateSelectionNote();renderLabels();
+  item.layer.eachLayer(shape=>{if(typeof shape.bringToFront==='function')shape.bringToFront()});
+ }
+ function refreshStatus(){
+  if(!loadedData||active!=='airspaces')return;
+  const count=visibleDescriptors.length;
+  status.textContent=count+' sectores visibles de '+descriptors.length+
+   ' cargados desde OpenAIP'+(loadedData.total!=null?' ('+loadedData.total+' en origen)':'')+
+   ' · CC BY-NC 4.0'+(loadedData.partial?' · consulta parcial, quedan páginas pendientes':'')+
+   '. Solo referencia: verificar AIP/NOTAM.';
+ }
+ function refreshVisibility(){
+  if(active!=='airspaces'||!loadedData)return;
+  const group=groups.airspaces;
+  if(selected&&!enabledCategories.has(selected.category)){
+   selected=null;
+   map.closePopup();
+  }
+  group.clearLayers();
+  visibleDescriptors=descriptors.filter(item=>enabledCategories.has(item.category));
+  for(const item of visibleDescriptors)group.addLayer(item.layer);
+  refreshStyles();updateSelectionNote();refreshStatus();renderLabels();
+ }
+ allButton.addEventListener('click',()=>{
+  for(const category of AIRSPACE_ORDER){enabledCategories.add(category);categoryCheckboxes.get(category).checked=true}
+  refreshVisibility();
+ });
+ noneButton.addEventListener('click',()=>{
+  enabledCategories.clear();
+  for(const checkbox of categoryCheckboxes.values())checkbox.checked=false;
+  refreshVisibility();
+ });
+ clearSelectionButton.addEventListener('click',()=>{
+  selected=null;map.closePopup();refreshStyles();updateSelectionNote();renderLabels();
+ });
+ map.on('zoomend',renderLabels);
+ map.on('moveend',renderLabels);
  function clearCurrent(){
-  for(const group of Object.values(groups))if(map.hasLayer(group))map.removeLayer(group);
-  panel.hidden=true;active=null;
+  for(const group of Object.values(groups)){
+   if(map.hasLayer(group))map.removeLayer(group);
+   group.clearLayers();
+  }
+  if(map.hasLayer(nameLabels))map.removeLayer(nameLabels);
+  nameLabels.clearLayers();
+  panel.hidden=true;filterPanel.hidden=true;
+  panel.removeAttribute('data-openaip-kind');
+  active=null;descriptors=[];visibleDescriptors=[];selected=null;loadedData=null;
  }
  async function show(kind){
   if(!groups[kind])throw Error('Capa no compatible');
   clearCurrent();
-  active=kind;panel.hidden=false;
+  active=kind;panel.hidden=false;filterPanel.hidden=kind!=='airspaces';
+  panel.setAttribute('data-openaip-kind',kind);
   panel.querySelector('h3').textContent=TITLES[kind]+' · OpenAIP';
   status.textContent='Consultando OpenAIP (Argentina)…';
   const request=kind;
@@ -136,38 +322,58 @@ function boot({map,L,client,panel}){
    if(active!==request)return;
    const group=groups[kind];group.clearLayers();
    let rendered=0;
-   for(const entry of data.records){
-    try{
-     if(kind==='airspaces'){
+   if(kind==='airspaces'){
+    loadedData=data;
+    descriptors=[];
+    const counts=Object.fromEntries(AIRSPACE_ORDER.map(category=>[category,0]));
+    for(const entry of data.records){
+     try{
       if(!entry.geometry||!['Polygon','MultiPolygon'].includes(entry.geometry.type))continue;
-      const cat=entry.type;
-      const color=[1,3].includes(cat)?'#c64c4c':cat===2?'#d89b36':'#58a0da';
-      const dashed=[1,2,8].includes(cat)?'7 6':null;
-      const shape=L.geoJSON({type:'Feature',properties:{},geometry:entry.geometry},
-       {style:{color,weight:2,dashArray:dashed,fillOpacity:0.11,fillColor:color}});
-      shape.bindPopup(()=>makePopup(entry),{maxWidth:330});
-      group.addLayer(shape);rendered++;
-     }else{
+      const category=airspaceCategory(entry.type);
+      const layer=L.geoJSON({type:'Feature',properties:{},geometry:entry.geometry},
+       {style:sectorStyle(category)});
+      const item={record:entry,category,layer};
+      layer.bindPopup(()=>makePopup(entry),{maxWidth:330});
+      const tooltipText=document.createElement('span');
+      tooltipText.textContent=sectorTitle(entry);
+      layer.bindTooltip(tooltipText,{sticky:true,direction:'top'});
+      layer.on('click',()=>focusSector(item));
+      layer.on('popupclose',()=>{
+       if(selected===item){selected=null;refreshStyles();updateSelectionNote();renderLabels()}
+      });
+      descriptors.push(item);counts[category]++;
+     }catch(_){/* Una geometría errónea nunca oculta las restantes. */}
+    }
+    for(const category of AIRSPACE_ORDER)categoryCounts.get(category).textContent=String(counts[category]);
+    group.addTo(map);nameLabels.addTo(map);
+    refreshVisibility();
+   }else{
+    for(const entry of data.records){
+     try{
       if(!Array.isArray(entry.coordinates)||entry.coordinates.length!==2)continue;
       const [lon,lat]=entry.coordinates;
       if(!Number.isFinite(lon)||!Number.isFinite(lat))continue;
       const marker=L.circleMarker([lat,lon],{radius:entry.compulsory?7:5,
        color:'#f4faff',weight:1.8,fillColor:entry.compulsory?'#227f6b':'#6e66b2',fillOpacity:0.95});
-      marker.bindTooltip(entry.name||'Punto VFR');
-      marker.bindPopup(()=>makePopup(entry),{maxWidth:330});group.addLayer(marker);rendered++;
-     }
-    }catch(_){ /* Skip malformed individual geometry, never the complete map. */ }
-   }
-   if(active===request)group.addTo(map);
-   status.textContent=rendered+' visibles'+(data.total!=null?' de '+data.total:'')+
+      const label=document.createElement('span');
+      label.textContent=entry.name||'Punto VFR';
+      marker.bindTooltip(label);
+      marker.bindPopup(()=>makePopup(entry),{maxWidth:330});
+      group.addLayer(marker);rendered++;
+     }catch(_){/* Descartar solo el registro malformado. */}
+    }
+    group.addTo(map);
+    status.textContent=rendered+' visibles'+(data.total!=null?' de '+data.total:'')+
      ' registros OpenAIP · CC BY-NC 4.0'+(data.partial?' · consulta parcial, quedan páginas pendientes':'')+
      '. Solo referencia, verificar AIP/NOTAM.';
+   }
   }catch(error){
    if(active===request)status.textContent=error.message||'No se pudo consultar OpenAIP.';
   }
  }
  return Object.freeze({show,hide:clearCurrent,readNavaids:()=>readKind('navaids'),
-  matchNavaid,navaidType,haversineNm});
+  matchNavaid,navaidType,haversineNm,airspaceCategory,sectorStyle});
+
 }
-root.GDV_OPENAIP_LAYERS=Object.freeze({boot,navaidType,matchNavaid,limitLabel,haversineNm});
+root.GDV_OPENAIP_LAYERS=Object.freeze({boot,navaidType,matchNavaid,limitLabel,haversineNm,airspaceCategory,sectorStyle});
 })(typeof window!=='undefined'?window:globalThis);
