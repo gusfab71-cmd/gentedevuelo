@@ -1,20 +1,25 @@
-name: AeroSuite - laboratorio ficticio
+name: AeroSuite - Auditoria semanal automatica
 on:
+  schedule:
+    - cron: '0 12 * * 1' # lunes 09:00 Argentina, UTC-3
+  workflow_dispatch:
   pull_request:
     paths:
       - 'tests/aerosuite-laboratorio.test.mjs'
-      - 'utilidades/gestion-aeronautica/src/**'
+      - 'tests/gestion-aeronautica.test.mjs'
+      - 'tests/aerosuite-*.test.*'
+      - 'tests/aircraft-maintenance.test.cjs'
+      - 'utilidades/gestion-aeronautica/**'
+      - 'assets/aerosuite-registration.js'
+      - 'scripts/aerosuite-weekly-audit.mjs'
       - 'docs/laboratorio-aerosuite.md'
       - '.github/workflows/aerosuite-laboratorio.yml'
-  workflow_dispatch:
-
 permissions:
   contents: read
-
 jobs:
-  simulacion:
+  auditoria:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     env:
       CI: 'true'
       TZ: America/Argentina/Buenos_Aires
@@ -26,16 +31,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Pruebas offline de motores demo
-        shell: bash
-        run: |
-          set -o pipefail
-          node --experimental-default-type=module --test --test-reporter=tap tests/aerosuite-laboratorio.test.mjs | tee aerosuite-lab-resultados.tap
-      - name: Conservar evidencia incluso si falla
+      - name: Ejecutar y documentar auditoria
+        run: node scripts/aerosuite-weekly-audit.mjs
+      - name: Adjuntar reporte incluso si falla
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: aerosuite-laboratorio-tap
-          path: aerosuite-lab-resultados.tap
+          name: aerosuite-auditoria-semanal
+          path: aerosuite-auditoria-resultados/
           if-no-files-found: warn
-          retention-days: 14
+          retention-days: 30

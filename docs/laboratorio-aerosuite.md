@@ -1,34 +1,24 @@
-# AeroSuite — Laboratorio automático con datos ficticios
-**Estado: fase 1 (pruebas offline de módulos DEMO). No demuestra que la plataforma operativa esté lista.**
+# Auditoría semanal automatizada de AeroSuite
 
-## Aislamiento
-- GitHub: desarrollo en rama independiente, sin publicar en Vercel.
-- Datos de ejemplo únicamente en memoria, sin usuarios reales, copias de tablas, accesos Supabase ni credenciales.
-- Identificadores ESCUELA-FICTICIA, ALUMNO-FICTICIO, INSTRUCTOR-FICTICIO, aeronave LV-TST.
-- El flujo GitHub Actions produce un archivo TAP y lo conserva 14 días.
-- Las pruebas nunca deben usar secretos de producción ni escribir en una base remota.
+**Estado: auditoría semanal de código y disponibilidad, sin validación E2E real todavía.**
 
-## Ejecución
-Requiere Node.js 22. Desde la raíz:
-    node --experimental-default-type=module --test tests/aerosuite-laboratorio.test.mjs
+- Programación: lunes 09:00 de Argentina (cron UTC: 12:00). GitHub puede demorar el inicio. Se puede lanzar manualmente desde Actions.
+- Ejecuta siete baterías de regresión para reservas, usuarios, reglas, mantenimiento, registro, informes, vuelos y finanzas ficticias.
+- Los 8 escenarios de laboratorio usan motores DEMO y exclusivamente datos en memoria. Los 5 escenarios faltantes siguen identificados como NO PROBADO.
+- En las ejecuciones semanales y manuales verifica por GET cuatro páginas públicas de AeroSuite, sin iniciar sesión ni modificar información.
+- Guarda en la ejecución de GitHub un resumen y archivos JSON, Markdown y salida de pruebas durante 30 días.
+- Un test fallido genera estado FALLÓ. Si todos pasan, informa PARCIAL, nunca "AeroSuite enteramente funcional".
+- No usa claves Supabase, no ejecuta SQL, no crea cobros ni reservas, no cambia Vercel.
 
-En un pull request, GitHub Actions ejecuta el flujo AeroSuite - laboratorio ficticio.
+## Iniciar manualmente
 
-## Cobertura fase 1
-- Alumno, instructor y recursos: reservas de 90 min, duplicidad y bloqueos.
-- Vuelo simulado, horas exactas y aterrizajes.
-- Informe borrador, presentación y aprobación; proyección del alumno.
-- Libro no certificado, RAV administrativo, caja y transferencia ficticias.
-- Pruebas TODO visibles para toda funcionalidad todavía no verificada.
+GitHub → Actions → AeroSuite - Auditoria semanal automatica → Run workflow.
 
-**Límite fundamental:** Los módulos JavaScript utilizados se identifican expresamente como demostración. La interfaz institucional real, RPC, RLS, Auth y mantenimiento productivos aún no están probados por este laboratorio.
+## Probar localmente
 
-## Fase 2 pendiente: laboratorio E2E real
-1. Crear un Supabase aislado con esquema completo y **sin datos personales ni copias de producción**; obtener aceptación de costos si la rama remota es de pago.
-2. Resolver la ausencia de una migración base completa: el directorio de migraciones actual amplía una base anterior y no garantiza reconstruirla desde cero.
-3. Crear usuarios y fixtures ficticios para Director, Secretaría, Instructor, Alumno, PPA y PCA.
-4. Hacer pruebas reales de RPC, permisos RLS por usuario e institución, reservas, packs, mantenimiento y pagos con rollback/reconstrucción SOLO en la base descartable.
-5. Apuntar Playwright a esa base y una versión de desarrollo; guardar capturas, trazas y errores.
-6. Separar estados: APROBADO, FALLÓ, NO PROBADO. Nunca declarar el sistema listo con pruebas únicamente DEMO.
+Con Node.js 22, desde el repositorio:
+    node scripts/aerosuite-weekly-audit.mjs
 
-**Prohibido:** ejecutar db reset contra producción, copiar registros reales, exponer service_role o certificar automáticamente aptitud aeronáutica.
+## Segunda fase necesaria
+
+Para auditar el funcionamiento integral se requiere base Supabase aislada sin datos reales, esquema reproducible, seis identidades ficticias (Director, Secretaría, Instructor, Alumno, PPA y PCA) y Playwright; deberán verificarse RPC, RLS, turnera, cobros, packs, informes, mantenimiento, permisos y conciliación de datos entre portales. La rama remota de Supabase puede tener costo y debe autorizarse por separado. No realizar reset, importaciones o certificaciones aeronáuticas en producción.
