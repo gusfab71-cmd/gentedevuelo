@@ -40,6 +40,7 @@ function boot({map,L}){
  if(!map||!L)throw Error('El mapa Leaflet no está disponible');
  const layer=L.featureGroup();
  let active=false,loading=null,records=[];
+ const markers=new Map();
  const control=L.control({position:'topleft'});
  control.onAdd=()=>{
   const host=element('div');
@@ -137,6 +138,7 @@ function boot({map,L}){
      }).bindTooltip(station.name,{direction:'top'});
      marker.on('click',()=>marker.bindPopup(popup(station),{maxWidth:320}).openPopup());
      layer.addLayer(marker);
+     markers.set(station.id,marker);
     }
     if(!records.length)throw Error('No se encontraron estaciones con coordenadas válidas');
     status.textContent=records.length+' ubicaciones · 3D-PAWS (no METAR)';
@@ -164,6 +166,15 @@ function boot({map,L}){
  };
  control.addTo(map);
  return {show(){document.getElementById('weather-stations-toggle')?.click()},
+  async showStation(id){
+   if(!active)document.getElementById('weather-stations-toggle')?.click();
+   if(loading)await loading.catch(()=>{});
+   const marker=markers.get(id);
+   if(!marker||!map.hasLayer(layer))return false;
+   map.setView(marker.getLatLng(),Math.max(8,map.getZoom()),{animate:false});
+   marker.fire('click');
+   return true;
+  },
   hide(){if(active)document.getElementById('weather-stations-toggle')?.click()},
   layer,get active(){return active}};
 }
