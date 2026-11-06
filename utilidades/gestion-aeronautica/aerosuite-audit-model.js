@@ -9,7 +9,8 @@ export const MODULES=Object.freeze([
  ['Dirección y permisos','permisos'],
  ['Aislamiento de demos','demo'],
  ['Mantenimiento aeronáutico','tecnico'],
- ['Monitor y permisos de auditoría','monitor']
+ ['Monitor y permisos de auditoría','monitor'],
+ ['Laboratorio SQL ficticio','sql-lab']
 ].map(([name,key])=>Object.freeze({name,key,job:'Módulo: '+name})));
 export const PENDING=Object.freeze([
  'Autenticación y permisos RLS reales para seis perfiles',
