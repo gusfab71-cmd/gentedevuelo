@@ -42,7 +42,7 @@ jobs:
           - title: 'Mantenimiento aeronáutico'
             command: 'node tests/aircraft-maintenance.test.cjs'
           - title: 'Monitor y permisos de auditoría'
-            command: 'node --experimental-default-type=module --test tests/aerosuite-audit-monitor.test.mjs'
+            command: 'node --experimental-default-type=module --test tests/aerosuite-audit-monitor.test.mjs && node --experimental-default-type=module --test tests/aerosuite-lab-public.test.mjs'
     steps:
       - uses: actions/checkout@v4
         with:
@@ -52,6 +52,24 @@ jobs:
           node-version: '22'
       - name: Ejecutar control aislado de la plataforma
         run: ${{ matrix.command }}
+  laboratorio_sql:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event_name == 'pull_request'
+    name: 'Módulo: Laboratorio SQL ficticio'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validar lectura del laboratorio gratuito
+        run: node --experimental-default-type=module --test tests/aerosuite-lab-public.test.mjs
+      - name: Consultar controles SQL en modo solo lectura
+        run: node --experimental-default-type=module scripts/aerosuite-lab-readonly-check.mjs
   resumen:
     name: Informe consolidado sin escrituras
     runs-on: ubuntu-latest

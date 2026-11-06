@@ -65,6 +65,20 @@ table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;p
 <p class="small">«Aprobado · código» significa que pasó la batería de regresión. No equivale a haber comprobado una operación real entre usuarios autenticados.</p>
 <div style="overflow-x:auto"><table id="modulesTable"><thead><tr><th scope="col">Área</th><th scope="col">Resultado</th></tr></thead><tbody id="moduleRows"><tr><td colspan="2">No se cargaron resultados.</td></tr></tbody></table></div>
 </section>
+<section class="panel" aria-labelledby="sqlLabTitle">
+ <div class="eyebrow">Segundo proyecto Supabase · Plan gratuito · Datos ficticios</div>
+ <h2 id="sqlLabTitle" style="margin-top:8px">Laboratorio automático de base de datos</h2>
+ <p class="small">Contratos relacionales de ensayo: reserva, duraciones, mantenimiento, autorización PPA, informes y liquidaciones. <strong>No es una copia funcional de los RPC productivos.</strong></p>
+ <div class="actions"><span id="sqlLabStatus" class="status pending">SIN CONSULTAR</span><span id="sqlLabDate" class="small">Sin fecha</span></div>
+ <div class="metric-grid" style="grid-template-columns:repeat(3,minmax(0,1fr))">
+  <div class="metric"><strong id="sqlLabPass">—</strong><span>Pruebas ficticias correctas</span></div>
+  <div class="metric"><strong id="sqlLabFail">—</strong><span>Pruebas ficticias fallidas</span></div>
+  <div class="metric"><strong id="sqlLabTotal">—</strong><span>Controles ejecutados</span></div>
+ </div>
+ <div class="actions"><button id="refreshSqlLab" type="button">Actualizar laboratorio SQL</button><a class="action-link" href="https://supabase.com/dashboard/project/djvjaxkukephniwixpra" target="_blank" rel="noopener noreferrer">Abrir laboratorio en Supabase</a></div>
+ <p class="small" id="sqlLabMessage" role="status" aria-live="polite">Cargando el informe de la base aislada…</p>
+ <div style="overflow-x:auto"><table><thead><tr><th scope="col">Escenario ficticio</th><th scope="col">Estado</th></tr></thead><tbody id="sqlLabRows"><tr><td colspan="2">Sin resultados disponibles.</td></tr></tbody></table></div>
+</section>
 <section class="panel" aria-labelledby="healthTitle">
 <h2 id="healthTitle">Diagnóstico real de integridad · Centro de Testeo Permanente</h2>
 <p class="small">Consulta de solo lectura al diagnóstico institucional protegido de Supabase. Estos indicadores muestran posibles anomalías de datos; no simulan vuelos, cobros ni operaciones.</p>

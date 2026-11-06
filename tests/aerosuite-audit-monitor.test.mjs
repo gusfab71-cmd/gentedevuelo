@@ -25,13 +25,14 @@ test('Un workflow exitoso nunca marca la plataforma integralmente aprobada',()=>
  assert.equal(statusOfRun(null).kind,'pending');
  assert.equal(PENDING.length,5);
 });
-test('Mantener las ocho áreas identificables, incluso las no ejecutadas',()=>{
- assert.equal(MODULES.length,8);
- assert.equal(moduleStatuses([]).filter(x=>x.status==='NO PROBADO').length,8);
+test('Mantener las nueve áreas identificables, incluso las no ejecutadas',()=>{
+ assert.equal(MODULES.length,9);
+ assert.equal(moduleStatuses([]).filter(x=>x.status==='NO PROBADO').length,9);
  const jobs=MODULES.map((x,i)=>({name:x.job,conclusion:i===0?'failure':'success',status:'completed'}));
  const normalized=moduleStatuses(jobs);
  assert.equal(normalized[0].status,'FALLÓ');
  assert.equal(normalized.filter(x=>x.status==='APROBADO · CÓDIGO').length,7);
+ assert.equal(normalized.filter(x=>x.status==='APROBADO · SIMULACIÓN SQL').length,1);
 });
 test('Los enlaces externos solo aceptan ejecuciones del repositorio correcto',()=>{
  assert.equal(githubRunLink(run),run.html_url);
@@ -69,8 +70,10 @@ test('La interfaz nunca expone resultados antes de verificar el superadministrad
  assert.match(js,/db\.auth\.getUser\(\)/);
  assert.match(js,/db\.from\('aerosuite_superadmins'\)\.select\('user_id'\)/);
  assert.match(js,/role\.data\.user_id!==user\.id/);
- assert.ok(js.indexOf("$('adminContent').hidden=false")<js.indexOf('await Promise.all([refresh(),refreshHealth(db)])'));
+ assert.ok(js.indexOf("$('adminContent').hidden=false")<js.indexOf('await Promise.all([refresh(),refreshHealth(db),refreshSqlLab()])'));
  assert.match(js,/db\.rpc\('aerosuite_superadmin_portal_health'/,'Consulta de integridad existente y sin escritura');
+ assert.match(js,/await Promise\.all\(\[refresh\(\),refreshHealth\(db\),refreshSqlLab\(\)\]\)/);
+ assert.match(page,/id="sqlLabStatus"/,'El laboratorio SQL aparece únicamente en el panel protegido');
  assert.match(js,/db\.from\('aerosuite_permanent_test_lab'\)/,'El diagnóstico se limita a la institución técnica permanente');
  assert.doesNotMatch(js,/\.(?:insert|update|upsert|delete)\s*\(/);
 });

@@ -9,7 +9,8 @@ export const MODULES=Object.freeze([
  ['Dirección y permisos','permisos'],
  ['Aislamiento de demos','demo'],
  ['Mantenimiento aeronáutico','tecnico'],
- ['Monitor y permisos de auditoría','monitor']
+ ['Monitor y permisos de auditoría','monitor'],
+ ['Laboratorio SQL ficticio','sql-lab']
 ].map(([name,key])=>Object.freeze({name,key,job:'Módulo: '+name})));
 export const PENDING=Object.freeze([
  'Autenticación y permisos RLS reales para seis perfiles',
@@ -39,7 +40,7 @@ export function moduleStatuses(jobs){
  return MODULES.map(module=>{
   const match=items.find(job=>job.name===module.job);
   let status='NO PROBADO';
-  if(match?.conclusion==='success')status='APROBADO · CÓDIGO';
+  if(match?.conclusion==='success')status=module.key==='sql-lab'?'APROBADO · SIMULACIÓN SQL':'APROBADO · CÓDIGO';
   else if(match?.conclusion==='failure'||match?.conclusion==='timed_out')status='FALLÓ';
   else if(match?.status==='in_progress'||match?.status==='queued')status='EN CURSO';
   else if(match?.conclusion==='cancelled')status='NO COMPLETADO';
