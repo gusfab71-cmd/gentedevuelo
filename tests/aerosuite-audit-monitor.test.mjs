@@ -70,7 +70,7 @@ test('La interfaz nunca expone resultados antes de verificar el superadministrad
  assert.match(js,/db\.auth\.getUser\(\)/);
  assert.match(js,/db\.from\('aerosuite_superadmins'\)\.select\('user_id'\)/);
  assert.match(js,/role\.data\.user_id!==user\.id/);
- assert.ok(js.indexOf("$('adminContent').hidden=false")<js.indexOf('await Promise.all([refresh(),refreshHealth(db)])'));
+ assert.ok(js.indexOf("$('adminContent').hidden=false")<js.indexOf('await Promise.all([refresh(),refreshHealth(db),refreshSqlLab()])'));
  assert.match(js,/db\.rpc\('aerosuite_superadmin_portal_health'/,'Consulta de integridad existente y sin escritura');
  assert.match(js,/await Promise\.all\(\[refresh\(\),refreshHealth\(db\),refreshSqlLab\(\)\]\)/);
  assert.match(page,/id="sqlLabStatus"/,'El laboratorio SQL aparece únicamente en el panel protegido');
