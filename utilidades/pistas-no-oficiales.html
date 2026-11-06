@@ -659,6 +659,90 @@ body .dispatch-nav nav a.aerolocator-back-to-aerosuite:focus-visible{color:#1c26
  .dispatch-nav-logo .aerolocator-brand-credit{font-size:9px}
  body .dispatch-nav nav a.aerolocator-back-to-aerosuite{font-size:11px;padding:9px 10px;white-space:normal;text-align:center}
 }
+
+/* AeroLocator · barra de herramientas 2026-11-06. Solo presentación; controles originales intactos. */
+.dispatch-map-toolbar.aerolocator-toolbar{
+ display:grid;grid-template-columns:auto minmax(235px,1fr) auto;
+ align-items:center;gap:clamp(10px,1.2vw,22px);
+ padding:11px clamp(12px,1.5vw,24px);min-height:70px;
+ background:linear-gradient(100deg,#172d36,#132630 75%,#172d36);
+ border-bottom:1px solid #426271
+}
+.aerolocator-toolbar #control-toggle{
+ display:inline-flex;align-items:center;justify-content:center;
+ min-height:42px;padding:0 15px;white-space:nowrap;
+ background:#edab67;border:1px solid #f5c98e;border-radius:9px;
+ color:#17242a;font-size:12px;font-weight:800;box-shadow:0 2px 7px #08141b35
+}
+.aerolocator-toolbar #control-toggle:hover,.aerolocator-toolbar #control-toggle:focus-visible{
+ background:#ffcc95;border-color:#ffe0af;color:#17242a
+}
+.aerolocator-toolbar #control-toggle[aria-expanded=true]{background:#ffdfa7;color:#1b2b34}
+.aerolocator-toolbar .map-view-picker{
+ display:flex;flex-direction:row;align-items:center;gap:12px;
+ min-width:0;width:100%;max-width:440px;justify-self:center;
+ padding:5px 7px 5px 13px;border-radius:10px;
+ background:#1a3542;border:1px solid #567583;color:#edf5fa
+}
+.aerolocator-toolbar .aerolocator-layer-caption{
+ display:inline-flex;align-items:center;gap:8px;white-space:nowrap;
+ font-size:12px;font-weight:800;color:#e7f3fa
+}
+.aerolocator-toolbar .aerolocator-layer-caption svg{
+ width:18px;height:18px;flex:none;fill:none;stroke:#9bd6f4;
+ stroke-width:1.8;stroke-linejoin:round;stroke-linecap:round
+}
+.aerolocator-toolbar .map-view-picker select{
+ width:100%;flex:1;min-width:145px;min-height:36px;
+ padding:6px 9px;font-size:12px;font-weight:650;
+ color:#f1f8fc;background:#122b39;border:1px solid #6c91a7;border-radius:7px
+}
+.aerolocator-toolbar .dispatch-map-toolbar-links{
+ display:flex;align-items:center;justify-content:flex-end;
+ gap:7px;min-width:0;flex-wrap:wrap
+}
+.aerolocator-toolbar .dispatch-map-toolbar-links button,
+.aerolocator-toolbar .dispatch-map-toolbar-links a{
+ display:inline-flex;align-items:center;justify-content:center;gap:6px;
+ min-height:42px;padding:0 12px;border-radius:8px;
+ border:1px solid #6d92a7;background:#244a60;color:#eef8fd;
+ font-size:12px;font-weight:750;line-height:1.2;text-decoration:none;white-space:nowrap
+}
+.aerolocator-toolbar .dispatch-map-toolbar-links button:hover,
+.aerolocator-toolbar .dispatch-map-toolbar-links button:focus-visible,
+.aerolocator-toolbar .dispatch-map-toolbar-links a:hover,
+.aerolocator-toolbar .dispatch-map-toolbar-links a:focus-visible{
+ background:#356986;border-color:#a2cbe1;color:#fff
+}
+.aerolocator-toolbar .dispatch-map-toolbar-links #map-toolbar-ruler[aria-pressed=true]{
+ background:#f4c77d;color:#183951;border-color:#f6d496
+}
+.aerolocator-toolbar .dispatch-map-toolbar-links #map-fullscreen::before{
+ content:"⛶";font-size:18px;font-weight:400;line-height:1
+}
+.aerolocator-toolbar .dispatch-map-toolbar-links a[href*="ais.anac.gob.ar/aip"]{
+ border-color:#ad8759;color:#ffd5a2;background:#29373c
+}
+.aerolocator-toolbar .dispatch-map-toolbar-links a[href*="ais.anac.gob.ar/aip"]:hover{
+ background:#57432e;border-color:#ecc08a;color:#fff0dd
+}
+.aerolocator-toolbar :is(button,select,a):focus-visible{
+ outline:2px solid #c2e7ff;outline-offset:2px
+}
+@media(max-width:1320px){
+ .dispatch-map-toolbar.aerolocator-toolbar{grid-template-columns:auto minmax(0,1fr);gap:9px 14px}
+ .aerolocator-toolbar .map-view-picker{max-width:none;justify-self:stretch}
+ .aerolocator-toolbar .dispatch-map-toolbar-links{grid-column:1/-1;justify-content:flex-end}
+}
+@media(max-width:700px){
+ .dispatch-map-toolbar.aerolocator-toolbar{grid-template-columns:minmax(0,1fr);padding:10px;gap:9px}
+ .aerolocator-toolbar #control-toggle{justify-self:start;min-height:40px}
+ .aerolocator-toolbar .map-view-picker{flex-direction:column;align-items:stretch;gap:7px;padding:10px}
+ .aerolocator-toolbar .map-view-picker select{min-height:40px;min-width:0}
+ .aerolocator-toolbar .dispatch-map-toolbar-links{grid-column:1;justify-content:stretch}
+ .aerolocator-toolbar .dispatch-map-toolbar-links button,
+ .aerolocator-toolbar .dispatch-map-toolbar-links a{flex:1 1 auto;min-height:40px;padding:8px;font-size:11px}
+}
 </style></head><body><header class="dispatch-nav"><a class="dispatch-nav-logo" href="../index.html" aria-label="AeroLocator · Developed by Gente de Vuelo">
  <img class="aerolocator-brand-icon" src="../assets/aerolocator-brand.svg" alt="" width="68" height="68" decoding="async">
  <span class="aerolocator-brand-copy"><strong class="aerolocator-brand-name">Aero<span>Locator</span></strong>
@@ -782,10 +866,11 @@ body .dispatch-nav nav a.aerolocator-back-to-aerosuite:focus-visible{color:#1c26
    </div>
   </aside>
   <section class="dispatch-map-panel" id="dispatch-map-panel" aria-label="Mapa geográfico interactivo">
-   <div class="dispatch-map-toolbar"><button type="button" id="control-toggle" aria-controls="dispatch-sidebar" aria-expanded="false" title="Mostrar u ocultar el Centro de control">☰ Mostrar centro de control</button><div><span class="dispatch-kicker">ÁREA DE NAVEGACIÓN</span>
-    <strong>AeroLocator · Mapa interactivo</strong></div>
- <label class="map-view-picker">Mostrar una capa a la vez
- <select id="map-view-mode" aria-controls="map" aria-describedby="map-view-status">
+   <div class="dispatch-map-toolbar aerolocator-toolbar" role="group" aria-label="Herramientas del mapa">
+    <button type="button" id="control-toggle" aria-controls="dispatch-sidebar" aria-expanded="false" title="Mostrar u ocultar el Centro de control">☰ Panel de control</button>
+    <label class="map-view-picker">
+     <span class="aerolocator-layer-caption"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2-9 5 9 5 9-5-9-5Zm-9 10 9 5 9-5M3 17l9 5 9-5"/></svg>Capas del mapa</span>
+     <select id="map-view-mode" aria-controls="map" aria-describedby="map-view-status">
  <option value="airfields">Aeródromos y pistas</option>
  <option value="navaids">Radioayudas · NDB / VOR / DME</option>
  <option value="openaip-airspaces">Espacios aéreos · OpenAIP (prueba)</option>
@@ -793,8 +878,11 @@ body .dispatch-nav nav a.aerolocator-back-to-aerosuite:focus-visible{color:#1c26
  <option value="ourairports">Revisión · OurAirports + OSM</option>
  <option value="sigmet">SIGMET · fenómenos</option>
  <option value="pronarea">PRONAREA · Planificador de vuelo VFR</option>
- </select></label><div class="dispatch-map-toolbar-links"><button id="map-toolbar-ruler" class="toolbar-ruler-button" type="button" title="Medir longitud de pista en metros" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.3 8.7 15.3 2.7a1 1 0 0 0-1.4 0L2.7 13.9a1 1 0 0 0 0 1.4l6 6a1 1 0 0 0 1.4 0L21.3 10a1 1 0 0 0 0-1.4Z"/><path d="m7.5 10.5 2 2m1-5 2 2m1-5 2 2m-8 8 2 2"/></svg> Medir pista</button><button id="route-planner-toggle" class="route-planner-toolbar-button" type="button" aria-controls="route-planner-panel" aria-pressed="false">Iniciar trazado VFR</button><button id="route-view-map-toolbar" class="route-go-map toolbar-map-return" type="button" aria-controls="map" disabled hidden>Volver al mapa satelital</button><button id="map-inspector-toggle" type="button" aria-controls="airspace-inspector pronarea-visual" aria-expanded="false" hidden>Ver información</button>
-    <button id="map-fullscreen" type="button">Ampliar mapa</button><a href="https://ais.anac.gob.ar/aip" target="_blank" rel="noopener noreferrer">AIP oficial ↗</a></div></div>
+ </select>
+    </label>
+    <div class="dispatch-map-toolbar-links"><button id="map-toolbar-ruler" class="toolbar-ruler-button" type="button" title="Medir longitud de pista en metros" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.3 8.7 15.3 2.7a1 1 0 0 0-1.4 0L2.7 13.9a1 1 0 0 0 0 1.4l6 6a1 1 0 0 0 1.4 0L21.3 10a1 1 0 0 0 0-1.4Z"/><path d="m7.5 10.5 2 2m1-5 2 2m1-5 2 2m-8 8 2 2"/></svg> Medir pista</button><button id="route-planner-toggle" class="route-planner-toolbar-button" type="button" aria-controls="route-planner-panel" aria-pressed="false">Iniciar trazado VFR</button><button id="route-view-map-toolbar" class="route-go-map toolbar-map-return" type="button" aria-controls="map" disabled hidden>Volver al mapa satelital</button><button id="map-inspector-toggle" type="button" aria-controls="airspace-inspector pronarea-visual" aria-expanded="false" hidden>Ver información</button>
+    <button id="map-fullscreen" type="button">Ampliar mapa</button><a href="https://ais.anac.gob.ar/aip" target="_blank" rel="noopener noreferrer">AIP oficial ↗</a></div>
+   </div>
    <div class="dispatch-map-main"><div id="basemap-selector" class="basemap-selector" aria-label="Elegir tipo de mapa"></div>
 <details id="route-planner-panel" class="route-planner-panel" aria-label="Herramientas para planificar ruta VFR">
  <summary>Herramientas de planificación VFR <small>Dibujá · Cargá PRONAREA · Arrastrá la línea blanca para corregir</small></summary>
@@ -1842,7 +1930,7 @@ function setControlOpen(open){
  controlLayout.classList.toggle('is-control-collapsed',!open);
  controlSidebar.setAttribute('aria-hidden',String(!open));
  controlToggle.setAttribute('aria-expanded',String(open));
- controlToggle.textContent=open?'☰ Ocultar centro de control':'☰ Mostrar centro de control';
+ controlToggle.textContent=open?'☰ Cerrar panel':'☰ Panel de control';
  requestAnimationFrame(()=>map.invalidateSize({animate:false}));
  setTimeout(()=>map.invalidateSize({animate:false}),150);
 }
