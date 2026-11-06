@@ -1002,9 +1002,10 @@ for(const key of ['asfalto','tierra','cesped','otros']){
  assert.match(splitMap,new RegExp('data-pista-surface="'+key+'"'),'Filtro de superficie '+key);
 }
 assert.match(splitMap,/function meetsSurfaceFilter\(record\)/);
-for(const target of ['meteorologia-aeronautica.html','gestion-aeronautica/']){
- assert.ok(splitMap.includes('href="'+target+'"'),'Falta atajo de navegación a '+target);
-}
+assert.match(splitMap,/class="aerolocator-back-to-aerosuite" href="gestion-aeronautica\/"/,
+ 'AeroLocator conserva el único acceso visible de regreso a AeroSuite');
+assert.doesNotMatch(splitMap,/href="meteorologia-aeronautica\.html"/,
+ 'El encabezado de AeroLocator no debe recuperar el menú antiguo de Flight Operations');
 const bearingSource=splitMap.slice(splitMap.indexOf('function trueBearing('),splitMap.indexOf('function clearRuler('));
 const bearingCalc=vm.runInNewContext(bearingSource+';trueBearing');
 assert.equal(bearingCalc(0,0,0,90),90);
