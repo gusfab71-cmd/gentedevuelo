@@ -922,7 +922,7 @@ for(const item of allDocumented){
  assert.ok(Number.isFinite(item.lat)&&item.lat>=-56&&item.lat<=-21);
  assert.ok(Number.isFinite(item.lon)&&item.lon>=-74&&item.lon<=-53);
  assert.match(item.sourceUrl,/^https:\/\/(?:ais\.anac\.gob\.ar|www\.argentina\.gob\.ar)\//);
- assert.match(item.verification,/verific|revisi/i,'Nunca inferir aptitud o habilitación vigente');
+ assert.match(item.verification,/verific|revisi|consultar AIP y NOTAM vigentes/i,'Todo dato documental debe advertir que requiere comprobación operacional');
  assert.ok(item.sourceDate,'La ficha debe indicar fecha del documento');
 }
 const ezeiza=anacCatalog.official.find(x=>x.details.icao==='SAEZ');
