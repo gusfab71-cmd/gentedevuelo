@@ -659,6 +659,132 @@ body .dispatch-nav nav a.aerolocator-back-to-aerosuite:focus-visible{color:#1c26
  .dispatch-nav-logo .aerolocator-brand-credit{font-size:9px}
  body .dispatch-nav nav a.aerolocator-back-to-aerosuite{font-size:11px;padding:9px 10px;white-space:normal;text-align:center}
 }
+
+
+
+.airstrip-moderation-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin:9px 0 12px}
+#pending-summary{font-size:12px;line-height:1.45;color:#f5d39e;margin:0}
+#pending-refresh{padding:8px 10px;font-size:11px;font-weight:750;background:#2b5a75;border:1px solid #83abc4}
+#pending>.entry{margin:8px 0;border:1px solid #547991}
+#pending>.entry>strong{display:block;font-size:13px;color:#edf6ff;margin-bottom:5px}
+#pending>.entry>p{font-size:11px;margin:6px 0;color:#dce8f1;line-height:1.45}
+#pending>.entry>button{display:inline-flex;margin:6px 8px 0 0;padding:8px 10px;font-size:11px}
+#pending>.entry>button:first-of-type{background:#277655}
+#pending>.entry>button:last-of-type{background:#783f40}
+/* Alta rápida de pistas · el resto de la ficha técnica es opcional. */
+.pin-legend .legend-dot.community-reviewed{background:#b58b37;border-color:#fff0ca}
+.pin-legend .legend-dot.community-reviewed::after{content:"C"}
+#form .airstrip-fast-note{margin:0 0 4px;color:#d6ecfa;font-size:12px;line-height:1.5}
+#form .proposal-map-context{background:#183f55;border:1px solid #669bb6;border-radius:10px;padding:11px;color:#e3f3fd;font-size:12px;line-height:1.5}
+#form .airstrip-extra{grid-column:1/-1;margin:0;border:1px solid #60849c;border-radius:10px;background:#1c3549;overflow:hidden}
+#form .airstrip-extra>summary{cursor:pointer;padding:12px 13px;font-weight:800;font-size:12px;color:#d6ebfa}
+#form .airstrip-extra>summary:hover{background:#29506b}
+#form .airstrip-extra-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:12px}
+#form .airstrip-extra-grid .wide{grid-column:1/-1}
+#form .airstrip-extra-grid .airstrip-photos{margin:0}
+#form .airstrip-consent{grid-column:1/-1;font-size:12px}
+.my-airstrip-submissions{margin:13px 0 3px;padding:13px;background:#162f42;border:1px solid #547993;border-radius:10px}
+.my-airstrips-heading{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.my-airstrips-heading strong{color:#eff8ff;font-size:13px}
+.my-airstrips-heading button{padding:7px 10px;background:#2a5470;border:1px solid #7395ae;font-size:11px;font-weight:750}
+#my-airstrips-list{display:grid;gap:7px;margin:10px 0;font-size:12px}
+.my-airstrip-entry{padding:9px 11px;background:#203b4e;border:1px solid #5c7e94;border-radius:8px;display:grid;gap:5px}
+.my-airstrip-entry strong{font-size:12px;color:#eff8ff;overflow-wrap:anywhere}
+.my-airstrip-entry span{font-size:11px;line-height:1.45;color:#d8e9f4}
+.my-airstrip-entry .my-airstrip-state{font-weight:800}
+.my-airstrip-entry .my-airstrip-state[data-state="pending"]{color:#f5d09c}
+.my-airstrip-entry .my-airstrip-state[data-state="approved"]{color:#acdcbf}
+.my-airstrip-entry .my-airstrip-state[data-state="rejected"]{color:#f0b4ab}
+.my-airstrip-submissions>p{margin:9px 0 0;font-size:10px;line-height:1.45;color:#c6d9e5}
+.new-runway-card .quick-location-reference{border-radius:8px;padding:7px 9px;background:#e6f2fa;border:1px solid #b6d1e1;color:#25516b;font-size:11px;line-height:1.45}
+.new-runway-card .quick-proposal-consent{display:flex;flex-direction:row;align-items:flex-start;gap:8px;line-height:1.4;font-size:11px;color:#25455b}
+.new-runway-card .quick-proposal-consent input{width:17px;height:17px;flex:none;accent-color:#267ba4;margin-top:1px}
+.new-runway-card .new-runway-actions .new-runway-advanced{background:#e2edf5;color:#234b65;border:1px solid #94b7ca}
+@media(max-width:620px){#form .airstrip-extra-grid{grid-template-columns:1fr}}
+
+/* AeroLocator · barra de herramientas 2026-11-06. Solo presentación; controles originales intactos. */
+.dispatch-map-toolbar.aerolocator-toolbar{
+ display:grid;grid-template-columns:auto minmax(235px,1fr) auto;
+ align-items:center;gap:clamp(10px,1.2vw,22px);
+ padding:11px clamp(12px,1.5vw,24px);min-height:70px;
+ background:linear-gradient(100deg,#172d36,#132630 75%,#172d36);
+ border-bottom:1px solid #426271
+}
+.aerolocator-toolbar #control-toggle{
+ display:inline-flex;align-items:center;justify-content:center;
+ min-height:42px;padding:0 15px;white-space:nowrap;
+ background:#edab67;border:1px solid #f5c98e;border-radius:9px;
+ color:#17242a;font-size:12px;font-weight:800;box-shadow:0 2px 7px #08141b35
+}
+.aerolocator-toolbar #control-toggle:hover,.aerolocator-toolbar #control-toggle:focus-visible{
+ background:#ffcc95;border-color:#ffe0af;color:#17242a
+}
+.aerolocator-toolbar #control-toggle[aria-expanded=true]{background:#ffdfa7;color:#1b2b34}
+.aerolocator-toolbar .map-view-picker{
+ display:flex;flex-direction:row;align-items:center;gap:12px;
+ min-width:0;width:100%;max-width:440px;justify-self:center;
+ padding:5px 7px 5px 13px;border-radius:10px;
+ background:#1a3542;border:1px solid #567583;color:#edf5fa
+}
+.aerolocator-toolbar .aerolocator-layer-caption{
+ display:inline-flex;align-items:center;gap:8px;white-space:nowrap;
+ font-size:12px;font-weight:800;color:#e7f3fa
+}
+.aerolocator-toolbar .aerolocator-layer-caption svg{
+ width:18px;height:18px;flex:none;fill:none;stroke:#9bd6f4;
+ stroke-width:1.8;stroke-linejoin:round;stroke-linecap:round
+}
+.aerolocator-toolbar .map-view-picker select{
+ width:100%;flex:1;min-width:145px;min-height:36px;
+ padding:6px 9px;font-size:12px;font-weight:650;
+ color:#f1f8fc;background:#122b39;border:1px solid #6c91a7;border-radius:7px
+}
+.aerolocator-toolbar .dispatch-map-toolbar-links{
+ display:flex;align-items:center;justify-content:flex-end;
+ gap:7px;min-width:0;flex-wrap:wrap
+}
+.aerolocator-toolbar .dispatch-map-toolbar-links button,
+.aerolocator-toolbar .dispatch-map-toolbar-links a{
+ display:inline-flex;align-items:center;justify-content:center;gap:6px;
+ min-height:42px;padding:0 12px;border-radius:8px;
+ border:1px solid #6d92a7;background:#244a60;color:#eef8fd;
+ font-size:12px;font-weight:750;line-height:1.2;text-decoration:none;white-space:nowrap
+}
+.aerolocator-toolbar .dispatch-map-toolbar-links button:hover,
+.aerolocator-toolbar .dispatch-map-toolbar-links button:focus-visible,
+.aerolocator-toolbar .dispatch-map-toolbar-links a:hover,
+.aerolocator-toolbar .dispatch-map-toolbar-links a:focus-visible{
+ background:#356986;border-color:#a2cbe1;color:#fff
+}
+.aerolocator-toolbar .dispatch-map-toolbar-links #map-toolbar-ruler[aria-pressed=true]{
+ background:#f4c77d;color:#183951;border-color:#f6d496
+}
+.aerolocator-toolbar .dispatch-map-toolbar-links #map-fullscreen::before{
+ content:"⛶";font-size:18px;font-weight:400;line-height:1
+}
+.aerolocator-toolbar .dispatch-map-toolbar-links a[href*="ais.anac.gob.ar/aip"]{
+ border-color:#ad8759;color:#ffd5a2;background:#29373c
+}
+.aerolocator-toolbar .dispatch-map-toolbar-links a[href*="ais.anac.gob.ar/aip"]:hover{
+ background:#57432e;border-color:#ecc08a;color:#fff0dd
+}
+.aerolocator-toolbar :is(button,select,a):focus-visible{
+ outline:2px solid #c2e7ff;outline-offset:2px
+}
+@media(max-width:1320px){
+ .dispatch-map-toolbar.aerolocator-toolbar{grid-template-columns:auto minmax(0,1fr);gap:9px 14px}
+ .aerolocator-toolbar .map-view-picker{max-width:none;justify-self:stretch}
+ .aerolocator-toolbar .dispatch-map-toolbar-links{grid-column:1/-1;justify-content:flex-end}
+}
+@media(max-width:700px){
+ .dispatch-map-toolbar.aerolocator-toolbar{grid-template-columns:minmax(0,1fr);padding:10px;gap:9px}
+ .aerolocator-toolbar #control-toggle{justify-self:start;min-height:40px}
+ .aerolocator-toolbar .map-view-picker{flex-direction:column;align-items:stretch;gap:7px;padding:10px}
+ .aerolocator-toolbar .map-view-picker select{min-height:40px;min-width:0}
+ .aerolocator-toolbar .dispatch-map-toolbar-links{grid-column:1;justify-content:stretch}
+ .aerolocator-toolbar .dispatch-map-toolbar-links button,
+ .aerolocator-toolbar .dispatch-map-toolbar-links a{flex:1 1 auto;min-height:40px;padding:8px;font-size:11px}
+}
 </style></head><body><header class="dispatch-nav"><a class="dispatch-nav-logo" href="../index.html" aria-label="AeroLocator · Developed by Gente de Vuelo">
  <img class="aerolocator-brand-icon" src="../assets/aerolocator-brand.svg" alt="" width="68" height="68" decoding="async">
  <span class="aerolocator-brand-copy"><strong class="aerolocator-brand-name">Aero<span>Locator</span></strong>
@@ -746,7 +872,7 @@ body .dispatch-nav nav a.aerolocator-back-to-aerosuite:focus-visible{color:#1c26
  <h2 id="pista-official-title">Aeródromos y helipuertos documentados · ANAC 2026</h2>
  <p>El padrón oficial aporta coordenadas, pistas y elevaciones. Los registros se cotejan con fuentes anteriores sin atribuirles habilitación, ATS o condición de uso vigente. Consultar MADHEL, AIP y NOTAM actualizados.</p>
  <div id="pista-documented-list"></div>
-</section><details id="alternatives" class="notice"><summary style="cursor:pointer;font-weight:bold;padding:8px">Buscar alternativas cercanas · distancia en NM</summary><h2>Buscar posibles alternativas cercanas</h2><p>Ingresá un punto de referencia o seleccioná un lugar en el mapa. Las distancias son en línea recta y solo orientativas.</p><label>Latitud de referencia <input id="ref-lat" type="number" step="any" min="-90" max="90" placeholder="-34.8"></label> <label>Longitud de referencia <input id="ref-lon" type="number" step="any" min="-180" max="180" placeholder="-58.4"></label> <label>Radio de búsqueda <select id="radius"><option value="25">25 NM</option><option value="50" selected>50 NM</option><option value="100">100 NM</option><option value="200">200 NM</option></select></label> <button type="button" id="pick-ref">Elegir punto en mapa</button> <button type="button" id="find-near">Buscar cercanas</button> <button type="button" id="reset-near">Quitar filtro</button><p id="near-status"></p></details><h2>Aportes de la comunidad pendientes de cotejo</h2><p class="pista-filter-note">Estos aportes no aparecen en el mapa principal hasta completar su revisión cartográfica GdV.</p><div id="list"></div><details id="contribute"><summary style="cursor:pointer;padding:14px;background:#28648c;border-radius:10px;font-weight:bold">+ Agregar una pista conocida</summary><h2>Proponer una pista</h2><p>Solo integrantes registrados. Cada propuesta requiere aprobación de administración.</p><form id="form"><label>Nombre de la pista<input name="name" required maxlength="120" minlength="3"></label><label>Provincia<input name="province" required maxlength="80"></label><label>Latitud decimal<input name="latitude" type="number" step="any" min="-56" max="-21" required></label><label>Longitud decimal<input name="longitude" type="number" step="any" min="-74" max="-53" required></label><label>Orientación de pista<input name="runway" maxlength="50"></label><label>Dimensiones<input name="dimensions" maxlength="80"></label><label>Elevación<input name="elevation" maxlength="50"></label><label>Superficie<select name="surface"><option>Desconocida</option><option>Césped</option><option>Tierra</option><option>Asfalto</option><option>Ripio</option><option>Otra</option></select></label><label>Acceso<select name="permission"><option>Requiere autorización previa</option><option>Consultar al responsable</option><option>Acceso no confirmado</option></select></label><label>Frecuencia (si corresponde)<input name="frequency" maxlength="60"></label><label>Contacto autorizado para publicar<input name="contact" maxlength="150"></label><label class="wide">Obstáculos<textarea name="obstacles" maxlength="1500"></textarea></label><label class="wide">Observaciones<textarea name="notes" maxlength="2500"></textarea></label><div class="airstrip-photos wide">
+</section><details id="alternatives" class="notice"><summary style="cursor:pointer;font-weight:bold;padding:8px">Buscar alternativas cercanas · distancia en NM</summary><h2>Buscar posibles alternativas cercanas</h2><p>Ingresá un punto de referencia o seleccioná un lugar en el mapa. Las distancias son en línea recta y solo orientativas.</p><label>Latitud de referencia <input id="ref-lat" type="number" step="any" min="-90" max="90" placeholder="-34.8"></label> <label>Longitud de referencia <input id="ref-lon" type="number" step="any" min="-180" max="180" placeholder="-58.4"></label> <label>Radio de búsqueda <select id="radius"><option value="25">25 NM</option><option value="50" selected>50 NM</option><option value="100">100 NM</option><option value="200">200 NM</option></select></label> <button type="button" id="pick-ref">Elegir punto en mapa</button> <button type="button" id="find-near">Buscar cercanas</button> <button type="button" id="reset-near">Quitar filtro</button><p id="near-status"></p></details><h2>Aportes de la comunidad pendientes de cotejo</h2><p class="pista-filter-note">Estos aportes no aparecen en el mapa principal hasta completar su revisión cartográfica GdV.</p><div id="list"></div><details id="contribute"><summary style="cursor:pointer;padding:14px;background:#28648c;border-radius:10px;font-weight:bold">+ Agregar una pista conocida</summary><h2>Proponer una pista</h2><p>Solo integrantes registrados. Cada propuesta requiere aprobación de administración.</p><form id="form"><p class="airstrip-fast-note wide">Solo necesitás un nombre y una ubicación. Si marcaste el punto en el mapa, las coordenadas se cargan automáticamente. El resto es opcional.</p><label>Nombre de la pista<input name="name" required maxlength="120" minlength="3"></label><label>Provincia (opcional)<input name="province" maxlength="80" placeholder="Podés agregarla después"></label><label>Latitud decimal<input name="latitude" type="number" step="any" min="-56" max="-21" required></label><label>Longitud decimal<input name="longitude" type="number" step="any" min="-74" max="-53" required></label><div id="proposal-map-context" class="proposal-map-context wide" role="status">Para cargar las coordenadas automáticamente, seleccioná «Aportar pista» y marcá el lugar en el mapa.</div><details class="airstrip-extra wide"><summary>Más datos técnicos y fotografías (opcionales)</summary><div class="airstrip-extra-grid"><label>Orientación de pista<input name="runway" maxlength="50"></label><label>Dimensiones<input name="dimensions" maxlength="80"></label><label>Elevación<input name="elevation" maxlength="50"></label><label>Superficie<select name="surface"><option>Desconocida</option><option>Césped</option><option>Tierra</option><option>Asfalto</option><option>Ripio</option><option>Otra</option></select></label><label>Acceso<select name="permission"><option>Requiere autorización previa</option><option>Consultar al responsable</option><option>Acceso no confirmado</option></select></label><label>Frecuencia (si corresponde)<input name="frequency" maxlength="60"></label><label>Contacto autorizado para publicar<input name="contact" maxlength="150"></label><label class="wide">Obstáculos<textarea name="obstacles" maxlength="1500"></textarea></label><label class="wide">Observaciones<textarea name="notes" maxlength="2500"></textarea></label><div class="airstrip-photos wide">
  <label for="airstrip-photo-files">Fotografías de la pista (hasta 3)</label>
  <div id="airstrip-photo-drop" class="airstrip-photo-drop" role="button" tabindex="0"
   aria-label="Arrastrar fotos o seleccionar imágenes JPG, PNG y WebP">
@@ -757,8 +883,8 @@ body .dispatch-nav nav a.aerolocator-back-to-aerosuite:focus-visible{color:#1c26
  </div>
  <label class="photo-consent"><span><input id="airstrip-photo-consent" type="checkbox"> Confirmo que puedo publicar estas imágenes y que no incluyen información sensible de terceros.</span></label>
  <small>Las fotografías solo se muestran en el mapa cuando se aprueba la propuesta. Se almacenan en Cloudflare R2.</small>
- </div>
- <label class="wide"><span><input type="checkbox" name="consent" required> Confirmo que tengo autorización para divulgar esta ubicación y los datos de contacto incluidos.</span></label><button type="submit">Enviar a moderación</button></form></details><p id="message" role="status"></p><section id="admin" hidden>
+ </div></div></details>
+ <label class="wide airstrip-consent"><span><input type="checkbox" name="consent" required> Confirmo que tengo autorización para divulgar esta ubicación y los datos de contacto incluidos.</span></label><button type="submit">Enviar a moderación</button></form><section id="my-airstrip-submissions" class="my-airstrip-submissions" aria-label="Estado de mis aportes"><div class="my-airstrips-heading"><strong>Mis pistas aportadas</strong><button type="button" id="my-airstrips-refresh">Actualizar estado</button></div><div id="my-airstrips-list" role="status" aria-live="polite">Ingresá con tu cuenta para consultar el estado de tus propuestas.</div><p>Publicado por GdV no significa pista oficialmente habilitada. Consultá AIP/ANAC y al responsable antes de operar.</p></section></details><p id="message" role="status"></p><section id="admin" hidden>
  <h2>Administración AeroLocator</h2>
  <div class="openaip-check-box">
   <h3>OpenAIP · prueba de conexión</h3>
@@ -767,7 +893,8 @@ body .dispatch-nav nav a.aerolocator-back-to-aerosuite:focus-visible{color:#1c26
   <p id="openaip-check-status" role="status" aria-live="polite">Pendiente de comprobación. Solo administración.</p>
  </div>
  <h2>Moderación de propuestas</h2>
- <div id="pending"></div>
+ <div class="airstrip-moderation-head"><p id="pending-summary" role="status" aria-live="polite">Consultando propuestas pendientes…</p><button type="button" id="pending-refresh">Actualizar pendientes</button></div>
+ <div id="pending" aria-live="polite"></div>
 </section></div>
     <section class="official-aip-panel" aria-labelledby="official-aip-heading">
   <div>
@@ -782,10 +909,11 @@ body .dispatch-nav nav a.aerolocator-back-to-aerosuite:focus-visible{color:#1c26
    </div>
   </aside>
   <section class="dispatch-map-panel" id="dispatch-map-panel" aria-label="Mapa geográfico interactivo">
-   <div class="dispatch-map-toolbar"><button type="button" id="control-toggle" aria-controls="dispatch-sidebar" aria-expanded="false" title="Mostrar u ocultar el Centro de control">☰ Mostrar centro de control</button><div><span class="dispatch-kicker">ÁREA DE NAVEGACIÓN</span>
-    <strong>AeroLocator · Mapa interactivo</strong></div>
- <label class="map-view-picker">Mostrar una capa a la vez
- <select id="map-view-mode" aria-controls="map" aria-describedby="map-view-status">
+   <div class="dispatch-map-toolbar aerolocator-toolbar" role="group" aria-label="Herramientas del mapa">
+    <button type="button" id="control-toggle" aria-controls="dispatch-sidebar" aria-expanded="false" title="Mostrar u ocultar el Centro de control">☰ Panel de control</button>
+    <label class="map-view-picker">
+     <span class="aerolocator-layer-caption"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2-9 5 9 5 9-5-9-5Zm-9 10 9 5 9-5M3 17l9 5 9-5"/></svg>Capas del mapa</span>
+     <select id="map-view-mode" aria-controls="map" aria-describedby="map-view-status">
  <option value="airfields">Aeródromos y pistas</option>
  <option value="navaids">Radioayudas · NDB / VOR / DME</option>
  <option value="openaip-airspaces">Espacios aéreos · OpenAIP (prueba)</option>
@@ -793,8 +921,11 @@ body .dispatch-nav nav a.aerolocator-back-to-aerosuite:focus-visible{color:#1c26
  <option value="ourairports">Revisión · OurAirports + OSM</option>
  <option value="sigmet">SIGMET · fenómenos</option>
  <option value="pronarea">PRONAREA · Planificador de vuelo VFR</option>
- </select></label><div class="dispatch-map-toolbar-links"><button id="map-toolbar-ruler" class="toolbar-ruler-button" type="button" title="Medir longitud de pista en metros" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.3 8.7 15.3 2.7a1 1 0 0 0-1.4 0L2.7 13.9a1 1 0 0 0 0 1.4l6 6a1 1 0 0 0 1.4 0L21.3 10a1 1 0 0 0 0-1.4Z"/><path d="m7.5 10.5 2 2m1-5 2 2m1-5 2 2m-8 8 2 2"/></svg> Medir pista</button><button id="route-planner-toggle" class="route-planner-toolbar-button" type="button" aria-controls="route-planner-panel" aria-pressed="false">Iniciar trazado VFR</button><button id="route-view-map-toolbar" class="route-go-map toolbar-map-return" type="button" aria-controls="map" disabled hidden>Volver al mapa satelital</button><button id="map-inspector-toggle" type="button" aria-controls="airspace-inspector pronarea-visual" aria-expanded="false" hidden>Ver información</button>
-    <button id="map-fullscreen" type="button">Ampliar mapa</button><a href="https://ais.anac.gob.ar/aip" target="_blank" rel="noopener noreferrer">AIP oficial ↗</a></div></div>
+ </select>
+    </label>
+    <div class="dispatch-map-toolbar-links"><button id="map-toolbar-ruler" class="toolbar-ruler-button" type="button" title="Medir longitud de pista en metros" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.3 8.7 15.3 2.7a1 1 0 0 0-1.4 0L2.7 13.9a1 1 0 0 0 0 1.4l6 6a1 1 0 0 0 1.4 0L21.3 10a1 1 0 0 0 0-1.4Z"/><path d="m7.5 10.5 2 2m1-5 2 2m1-5 2 2m-8 8 2 2"/></svg> Medir pista</button><button id="route-planner-toggle" class="route-planner-toolbar-button" type="button" aria-controls="route-planner-panel" aria-pressed="false">Iniciar trazado VFR</button><button id="route-view-map-toolbar" class="route-go-map toolbar-map-return" type="button" aria-controls="map" disabled hidden>Volver al mapa satelital</button><button id="map-inspector-toggle" type="button" aria-controls="airspace-inspector pronarea-visual" aria-expanded="false" hidden>Ver información</button>
+    <button id="map-fullscreen" type="button">Ampliar mapa</button><a href="https://ais.anac.gob.ar/aip" target="_blank" rel="noopener noreferrer">AIP oficial ↗</a></div>
+   </div>
    <div class="dispatch-map-main"><div id="basemap-selector" class="basemap-selector" aria-label="Elegir tipo de mapa"></div>
 <details id="route-planner-panel" class="route-planner-panel" aria-label="Herramientas para planificar ruta VFR">
  <summary>Herramientas de planificación VFR <small>Dibujá · Cargá PRONAREA · Arrastrá la línea blanca para corregir</small></summary>
@@ -1006,6 +1137,7 @@ body .dispatch-nav nav a.aerolocator-back-to-aerosuite:focus-visible{color:#1c26
   <span class="legend-item"><span class="legend-dot heliport" aria-hidden="true"></span>Helipuerto</span>
   <span class="legend-item"><span class="legend-dot anac-documental" aria-hidden="true"></span>ANAC 2026 · Categoría pendiente</span>
   <span class="legend-item"><span class="legend-dot unverified" aria-hidden="true"></span>⚠ Sin verificar</span>
+  <span class="legend-item"><span class="legend-dot community-reviewed" aria-hidden="true"></span>Aporte publicado por GdV · no habilitación ANAC</span>
 
   <span class="legend-item"><span class="legend-dot oa-checked-dot" aria-hidden="true"></span>OurAirports · revisado y clasificado GdV</span>
   <span class="legend-item"><span class="legend-dot reference" aria-hidden="true"></span>OSM sin verificar</span>
@@ -1064,6 +1196,7 @@ const PIN_PALETTE={
  anac_documental:{fill:'#4978a0',edge:'#d8e7fd'},
  unverified:{fill:'#b7433b',edge:'#ffe1d9'},
  community:{fill:'#b7433b',edge:'#ffe1d9'},
+ community_reviewed:{fill:'#b58b37',edge:'#fff0cb'},
  reference:{fill:'#67727b',edge:'#f5f8fb'},
  draft:{fill:'#bc7e41',edge:'#ffe0ac'}
 };
@@ -1071,7 +1204,7 @@ const PIN_PALETTE={
  * El color expresa la categoría cartográfica, NO condiciones METAR/VFR/IFR. */
 function runwayPin(kind='unverified'){
  const tone=PIN_PALETTE[kind]||PIN_PALETTE.unverified;
- const letters={heliport:'H',lad:'L',unverified:'!',community:'!',draft:'+'};
+ const letters={heliport:'H',lad:'L',unverified:'!',community:'!',community_reviewed:'C',draft:'+'};
  const letter=letters[kind]||'';
  const symbol=letter?'<text x="14" y="18.1" text-anchor="middle" fill="#fff" font-family="Arial,sans-serif" font-weight="850" font-size="13">'+letter+'</text>':'';
  const svg='<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28" aria-hidden="true">'+
@@ -1131,7 +1264,7 @@ function syncLayerVisibility(){
  }else if(map.hasLayer(osmReviewLayer))map.removeLayer(osmReviewLayer);
  for(const [kind,group] of [['community',markers],['reference',external]]){
   // Sin marcadores cartográficos OSM ni aportes comunitarios aún sin revisión.
-  const show=false;
+  const show=kind==='community'&&mapViewMode==='airfields'&&layerVisibility.unverified;
   if(show&&!map.hasLayer(group))group.addTo(map);
   else if(!show&&map.hasLayer(group))map.removeLayer(group);
  }
@@ -1154,11 +1287,21 @@ const AIRFIELD_TYPES=window.GDV_AIRFIELD_TYPES;
 if(!AIRFIELD_TYPES)throw Error('No está disponible el catálogo de clasificación aeronáutica');
 function airfieldClass(record){return AIRFIELD_TYPES.classification(record)}
 const draftPin=runwayPin('draft');let draftMarker=null;
+/* La referencia próxima se calcula con el catálogo ya cargado; no se deduce provincia, habilitación ni aptitud. */
+function mappedReferenceNear(lat,lon){
+ let nearest=null;
+ for(const record of documentedAirstrips){
+  const a=Number(record.lat),b=Number(record.lon);
+  if(!Number.isFinite(a)||!Number.isFinite(b))continue;
+  const distance=nauticalMiles(lat,lon,a,b);
+  if(!nearest||distance<nearest.distance)nearest={name:record.name,distance};
+ }
+ return nearest&&nearest.distance<=60?nearest:null;
+}
 function proposeAt(latlng){
  if(mapViewMode!=='airfields')return;
  if(pickReference||rulerEnabled){
-  const status=document.getElementById('zone-status');
-  status.textContent='Para agregar una pista, desactivá primero la regla o el modo «Elegir punto de referencia».';
+  document.getElementById('zone-status').textContent='Desactivá primero la regla o el modo «Elegir punto de referencia».';
   return;
  }
  const lat=Number(latlng.lat),lon=Number(latlng.lng);
@@ -1166,44 +1309,51 @@ function proposeAt(latlng){
   alert('Por ahora solo se pueden proponer pistas dentro de Argentina.');return;
  }
  if(draftMarker)map.removeLayer(draftMarker);
- draftMarker=L.marker([lat,lon],{icon:draftPin,draggable:true,autoPan:true,title:'Nueva pista sin publicar: arrastrá para ajustar la posición'}).addTo(map);
+ draftMarker=L.marker([lat,lon],{icon:draftPin,draggable:true,autoPan:true,title:'Propuesta nueva: arrastrá para ajustar el punto sobre la pista'}).addTo(map);
  const card=document.createElement('form');card.className='new-runway-card';
- const title=document.createElement('h3');title.textContent='Agregar pista en este punto';
- const explanation=document.createElement('p');explanation.textContent='Indicá una referencia para reconocer el lugar. Podés arrastrar el círculo para ajustar el punto sobre la pista.';
- const coordText=document.createElement('div');coordText.className='new-runway-coords';
+ const title=document.createElement('h3');title.textContent='Aportar una pista';
+ const explanation=document.createElement('p');explanation.textContent='El mapa completa la posición. Arrastrá el marcador para ubicarlo sobre la pista.';
+ const coords=document.createElement('div');coords.className='new-runway-coords';
+ const proximity=document.createElement('div');proximity.className='quick-location-reference';
  const updateCoordinates=()=>{
-  const p=draftMarker.getLatLng();
-  coordText.textContent='Latitud '+p.lat.toFixed(6)+' · Longitud '+p.lng.toFixed(6);
+  const point=draftMarker.getLatLng();
+  coords.textContent='Posición detectada · '+point.lat.toFixed(6)+', '+point.lng.toFixed(6);
+  const closest=mappedReferenceNear(point.lat,point.lng);
+  proximity.textContent=closest?'Referencia cartográfica: '+closest.name+' a '+closest.distance.toFixed(1)+' NM. Es una referencia cercana, no el nombre ni la categoría de tu pista.':
+   'Punto fijado en el mapa. La provincia y localidad pueden agregarse después.';
+  if(closest&&closest.distance<0.2)proximity.textContent+=' Revisá si ya está registrada para evitar duplicados.';
  };
- updateCoordinates();
- const namedField=(text,tag,maxLength,placeholder,required=false)=>{
-  const label=document.createElement('label');label.textContent=text;
-  const input=document.createElement(tag);input.maxLength=maxLength;input.placeholder=placeholder;
+ const field=(title,tag,max,placeholder,required=false)=>{
+  const label=document.createElement('label');label.textContent=title;
+  const input=document.createElement(tag);input.maxLength=max;input.placeholder=placeholder;
   if(required)input.required=true;
   label.append(input);card.append(label);return input;
  };
- card.append(title,explanation,coordText);
- const name=namedField('Nombre o referencia de la pista','input',120,'Ej.: Pista junto a Ruta 2, km 75',true);
- name.minLength=3;
- const province=namedField('Provincia','input',80,'Ej.: Buenos Aires',true);
- const note=namedField('Observaciones para identificarla (opcional)','textarea',600,'Ej.: al oeste del camino de acceso');
+ card.append(title,explanation,coords,proximity);
+ const name=field('Nombre o referencia *','input',120,'Ej.: Pista junto a Ruta 2, km 75',true);name.minLength=3;
+ const province=field('Provincia (opcional)','input',80,'Ej.: Buenos Aires');
+ const note=field('Observación (opcional)','textarea',600,'Alguna referencia para reconocerla');
+ const consentLabel=document.createElement('label');consentLabel.className='quick-proposal-consent';
+ const consent=document.createElement('input');consent.type='checkbox';consent.required=true;
+ const consentText=document.createElement('span');consentText.textContent='Confirmo que puedo divulgar la ubicación y los datos que aporte.';
+ consentLabel.append(consent,consentText);card.append(consentLabel);
  const response=document.createElement('p');response.className='new-runway-message';response.setAttribute('role','status');
  const buttons=document.createElement('div');buttons.className='new-runway-actions';
- const complete=document.createElement('button');complete.type='submit';complete.textContent='Continuar con la ficha';
+ const send=document.createElement('button');send.type='submit';send.textContent='Enviar a revisión';
+ const advanced=document.createElement('button');advanced.type='button';advanced.className='new-runway-advanced';advanced.textContent='Agregar más datos';
  const cancel=document.createElement('button');cancel.type='button';cancel.className='new-runway-cancel';cancel.textContent='Cancelar';
  cancel.addEventListener('click',()=>{
   map.closePopup();
   if(draftMarker){map.removeLayer(draftMarker);draftMarker=null}
  });
- buttons.append(complete,cancel);card.append(response,buttons);
- const popup=L.popup({minWidth:260,maxWidth:330,closeButton:true,autoPan:true})
-  .setLatLng([lat,lon]).setContent(card);
+ buttons.append(send,advanced,cancel);card.append(response,buttons);
+ const popup=L.popup({minWidth:260,maxWidth:335,closeButton:true,autoPan:true}).setLatLng([lat,lon]).setContent(card);
  draftMarker.on('dragend',()=>{
   if(!draftMarker)return;
-  const p=draftMarker.getLatLng();
-  if(p.lat < -56||p.lat > -21||p.lng < -74||p.lng > -53){
-   draftMarker.setLatLng([lat,lon]);response.textContent='La posición debe estar dentro de Argentina.';
-  }else{response.textContent='Punto ajustado. Las coordenadas se copiarán a la ficha.'}
+  const point=draftMarker.getLatLng();
+  if(point.lat < -56||point.lat > -21||point.lng < -74||point.lng > -53){
+   draftMarker.setLatLng([lat,lon]);response.textContent='La ubicación debe estar dentro de Argentina.';
+  }else response.textContent='Posición ajustada y lista para enviar.';
   updateCoordinates();popup.setLatLng(draftMarker.getLatLng()).openOn(map);
  });
  draftMarker.on('click',()=>popup.setLatLng(draftMarker.getLatLng()).openOn(map));
@@ -1211,32 +1361,39 @@ function proposeAt(latlng){
   if(e.originalEvent)L.DomEvent.stop(e.originalEvent);
   popup.setLatLng(draftMarker.getLatLng()).openOn(map);
  });
- card.addEventListener('submit',e=>{
-  e.preventDefault();
-  const text=name.value.trim(),area=province.value.trim();
-  if(text.length<3||!area){response.textContent='Indicá un nombre o referencia (mínimo 3 caracteres) y la provincia.';return}
+ function passToForm(shouldSend){
+  if(!name.value.trim()||name.value.trim().length<3){response.textContent='Ingresá un nombre de al menos 3 caracteres.';name.focus();return}
   const point=draftMarker?.getLatLng();
   if(!point||point.lat < -56||point.lat > -21||point.lng < -74||point.lng > -53){
    response.textContent='La ubicación no es válida.';return;
   }
+  if(shouldSend&&!consent.checked){response.textContent='Confirmá la autorización para divulgar la ubicación.';return}
   const form=document.getElementById('form');
-  form.elements.namedItem('name').value=text;
-  form.elements.namedItem('province').value=area;
+  form.reset();
+  pendingAirstripPhotos=[];uploadedPhotoUrls=new Map();clearPhotoPreviews();
+  form.elements.namedItem('name').value=name.value.trim();
+  form.elements.namedItem('province').value=province.value.trim();
   form.elements.namedItem('latitude').value=point.lat.toFixed(6);
   form.elements.namedItem('longitude').value=point.lng.toFixed(6);
   form.elements.namedItem('notes').value=note.value.trim();
+  form.elements.namedItem('consent').checked=consent.checked;
+  const context=document.getElementById('proposal-map-context');
+  context.textContent='Coordenadas copiadas del punto que marcaste: '+point.lat.toFixed(6)+', '+point.lng.toFixed(6)+'. '+proximity.textContent;
   map.closePopup();
   setControlOpen(true);
   document.getElementById('control-catalog-menu').open=true;
   document.getElementById('contribute').open=true;
-  document.getElementById('zone-status').textContent='Punto y referencia cargados. Revisá la ficha, completá los datos y enviá la propuesta a moderación.';
+  document.getElementById('zone-status').textContent='Ubicación cargada desde el mapa. '+(shouldSend?'Se está enviando tu propuesta.':'Podés agregar datos opcionales y enviar.');
   requestAnimationFrame(()=>{
-   const target=document.getElementById('contribute');
-   target.scrollIntoView({behavior:'smooth',block:'start'});
-   form.elements.namedItem('runway').focus({preventScroll:true});
+   const target=shouldSend?document.getElementById('message'):document.getElementById('contribute');
+   target.scrollIntoView({behavior:'smooth',block:'center'});
+   if(shouldSend)form.requestSubmit();
+   else form.elements.namedItem('name').focus({preventScroll:true});
   });
- });
- popup.openOn(map);
+ }
+ card.addEventListener('submit',e=>{e.preventDefault();passToForm(true)});
+ advanced.addEventListener('click',()=>passToForm(false));
+ updateCoordinates();popup.openOn(map);
 }
 let holdTimer=null,holdStart=null,holdTriggered=false;
 const mapElement=document.getElementById('map');
@@ -1842,7 +1999,7 @@ function setControlOpen(open){
  controlLayout.classList.toggle('is-control-collapsed',!open);
  controlSidebar.setAttribute('aria-hidden',String(!open));
  controlToggle.setAttribute('aria-expanded',String(open));
- controlToggle.textContent=open?'☰ Ocultar centro de control':'☰ Mostrar centro de control';
+ controlToggle.textContent=open?'☰ Cerrar panel':'☰ Panel de control';
  requestAnimationFrame(()=>map.invalidateSize({animate:false}));
  setTimeout(()=>map.invalidateSize({animate:false}),150);
 }
@@ -2044,7 +2201,7 @@ function communityPopup(record,nm=null){
  const timestamp=record.updated_at||record.created_at;
  if(timestamp){const parsed=new Date(timestamp);if(Number.isFinite(parsed.getTime()))date=parsed.toLocaleDateString('es-AR')}
  const kind=airfieldClass(record);
- const docs=kind==='unverified'?{}:{
+ const docs=kind==='unverified'?{verification:'Aporte publicado por Gente de Vuelo, pero SIN VERIFICACIÓN AERONÁUTICA. No acredita habilitación ni aptitud operacional.'}:{
   sourceLabel:'Información documental revisada por administración',
   sourceDate:record.verified_source_date||'',
   sourceUrl:record.verified_source_url||'',
@@ -2474,7 +2631,7 @@ function render(){
  for(const p of all){
   const meta={key:'community:'+p.id,sourceKind:'community',name:p.name,lat:p.latitude,lon:p.longitude};
   const nm=reference?nauticalMiles(reference[0],reference[1],p.latitude,p.longitude):null;
-  const marker=L.marker([p.latitude,p.longitude],{icon:runwayPin(airfieldClass(p)),title:p.name})
+  const marker=L.marker([p.latitude,p.longitude],{icon:runwayPin(airfieldClass(p)==='unverified'?'community_reviewed':airfieldClass(p)),title:p.name})
    .bindPopup(communityPopup(p,nm),{maxWidth:350,minWidth:245}).addTo(markers);
   attachSelection(marker,[p.latitude,p.longitude],p.name,()=>communityPopup(p,nm),meta);
   const entry=el('article','');entry.className='entry';
@@ -2482,7 +2639,7 @@ function render(){
   const coords=el('small','Coordenadas: '+Number(p.latitude).toFixed(6)+', '+Number(p.longitude).toFixed(6));
   const track=el('p','Pista / rumbo: '+(p.details?.runway||'Sin datos')+' · Dimensiones: '+(p.details?.dimensions||'Sin datos'));
   const access=el('small',airfieldClass(p)==='unverified'?
-   '⚠ NO VERIFICADA · Solo referencia para análisis de contingencias · No es alternativo recomendado':
+   'APORTE PUBLICADO POR GDV · Sin verificación aeronáutica ANAC · No usar como destino o alternativo sin confirmar':
    'Clasificación documental: '+AIRFIELD_TYPES.CATEGORIES[airfieldClass(p)]?.label+
    ' · Acceso: '+(p.details?.permission||'Consultar responsable'));
   entry.append(title,surface,coords,track,access);
@@ -2565,12 +2722,49 @@ async function stripPhotoMetadata(file){
   return new File([blob],'pista-'+Date.now()+'.webp',{type:'image/webp'});
  }finally{bitmap.close()}
 }
+/* El autor puede ver el estado de sus propias propuestas gracias a la política RLS existente. */
+async function loadMyAirstripSubmissions(){
+ const root=document.getElementById('my-airstrips-list');
+ if(!root)return;
+ root.textContent='Consultando estado de tus pistas…';
+ try{
+  const {data:{user},error:authError}=await client.auth.getUser();
+  if(authError||!user){
+   root.textContent='Ingresá a la comunidad Gente de Vuelo para consultar tus aportes (la sesión de AeroSuite puede ser independiente).';
+   return;
+  }
+  const {data,error}=await client.from('community_airstrips')
+   .select('id,name,status,created_at')
+   .eq('author_id',user.id).order('created_at',{ascending:false}).limit(30);
+  if(error)throw Error(error.message);
+  root.replaceChildren();
+  if(!data?.length){root.textContent='Todavía no tenés propuestas de pistas con esta cuenta.';return}
+  const descriptions={
+   pending:'Pendiente de revisión del equipo GdV · aún sin publicar',
+   approved:'Publicado por GdV · NO verificado aeronáuticamente',
+   rejected:'No publicado · propuesta rechazada'
+  };
+  for(const entry of data){
+   const card=document.createElement('article');card.className='my-airstrip-entry';
+   const title=document.createElement('strong');title.textContent=entry.name;
+   const state=document.createElement('span');state.className='my-airstrip-state';
+   state.dataset.state=entry.status;
+   state.textContent=descriptions[entry.status]||'Estado: '+entry.status;
+   const date=document.createElement('span');
+   const timestamp=entry.created_at?new Date(entry.created_at):null;
+   date.textContent=timestamp&&Number.isFinite(timestamp.getTime())?'Enviada: '+timestamp.toLocaleDateString('es-AR'):'';
+   card.append(title,state,date);root.append(card);
+  }
+ }catch(error){root.textContent='No se pudo consultar el estado de tus aportes: '+error.message}
+}
+document.getElementById('my-airstrips-refresh').addEventListener('click',()=>void loadMyAirstripSubmissions());
+
 document.getElementById('form').addEventListener('submit',async e=>{
  e.preventDefault();
  if(airstripSending)return;
  const submit=e.target.querySelector('button[type=submit]');
  const {data:{user}}=await client.auth.getUser();
- if(!user){msg.textContent='Ingresá a Gente de Vuelo para enviar propuestas.';return}
+ if(!user){msg.textContent='Para enviar propuestas, ingresá con tu cuenta de la comunidad Gente de Vuelo. Estar en el portal AeroSuite no inicia necesariamente esa sesión.';return}
  if(pendingAirstripPhotos.length&&!photoConsent.checked){
   msg.textContent='Para adjuntar fotografías, confirmá que tenés autorización para publicarlas.';return;
  }
@@ -2603,16 +2797,20 @@ document.getElementById('form').addEventListener('submit',async e=>{
   }
   const payload={name:String(f.get('name')).trim(),latitude:Number(f.get('latitude')),
    longitude:Number(f.get('longitude')),author_id:user.id,status:'pending',details};
-  const {error}=await client.from('community_airstrips').insert(payload);
-  if(error)throw Error('No se pudo enviar la propuesta: '+error.message);
-  msg.textContent='Propuesta y '+(details.photos?.length||0)+' fotografías enviadas a moderación. Solo se publicarán después de aprobación.';
+  const {data:saved,error}=await client.from('community_airstrips').insert(payload)
+   .select('id,status,created_at').single();
+  if(error||!saved?.id||saved.status!=='pending')throw Error('No se pudo confirmar el registro de la propuesta: '+(error?.message||'sin confirmación del servidor'));
+  msg.textContent='Propuesta recibida. Estado: pendiente de revisión GdV. No se muestra como pista publicada hasta que un administrador la apruebe; la revisión no certifica habilitación aeronáutica.';
   e.target.reset();pendingAirstripPhotos=[];uploadedPhotoUrls=new Map();clearPhotoPreviews();
   if(draftMarker){map.removeLayer(draftMarker);draftMarker=null}
+  await loadMyAirstripSubmissions();
+  window.dispatchEvent(new Event('gdv-airstrip-submitted'));
  }catch(error){
   msg.textContent=error.message+' La propuesta no se ha publicado; podés volver a intentar.';
  }finally{airstripSending=false;if(submit)submit.disabled=false}
 });
 const {data:{user}}=await client.auth.getUser();if(user){const {data}=await client.from('site_admins').select('user_id').eq('user_id',user.id).maybeSingle();admin=!!data}
+void loadMyAirstripSubmissions();
 if(admin){
  document.getElementById('admin').hidden=false;
  const openaipTestButton=document.getElementById('openaip-check-button');
@@ -2650,7 +2848,64 @@ if(admin){
    openaipTestStatus.textContent='Error de conexión al ejecutar la prueba; reintentá desde una sesión activa.';
   }finally{openaipTestButton.disabled=false}
  });
- async function pending(){const r=await client.from('community_airstrips').select('*').eq('status','pending').order('created_at');const root=document.getElementById('pending');root.replaceChildren();for(const p of r.data||[]){const d=el('div',p.name+' · '+p.latitude+', '+p.longitude+' · '+(p.details?.province||''));d.className='entry';airstripImageGallery(d,p.details?.photos,p.name);for(const status of ['approved','rejected']){const b=el('button',status==='approved'?'Aprobar':'Rechazar');b.onclick=async()=>{const {error}=await client.from('community_airstrips').update({status}).eq('id',p.id);if(error)msg.textContent=error.message;else{await pending();await load()}};d.append(b)}root.append(d)}}await pending()}
+ async function pending(){
+  const root=document.getElementById('pending');
+  const summary=document.getElementById('pending-summary');
+  const refresh=document.getElementById('pending-refresh');
+  refresh.disabled=true;summary.textContent='Buscando propuestas pendientes…';
+  try{
+   const {data,error}=await client.from('community_airstrips').select('*')
+    .eq('status','pending').order('created_at',{ascending:false});
+   if(error)throw Error(error.message);
+   root.replaceChildren();
+   const proposals=data||[];
+   summary.textContent=proposals.length===1?'1 pista pendiente de revisión GdV.':
+    proposals.length+' pistas pendientes de revisión GdV.';
+   if(!proposals.length){
+    root.append(el('p','No hay propuestas pendientes. Las enviadas correctamente figurarán aquí.'));
+    return;
+   }
+   for(const p of proposals){
+    const card=el('div','');
+    card.className='entry';
+    const heading=el('strong',p.name);
+    const loc=el('p','Ubicación '+Number(p.latitude).toFixed(6)+', '+Number(p.longitude).toFixed(6)+
+      (p.details?.province?' · '+p.details.province:''));
+    const date=new Date(p.created_at);
+    const received=el('small','Recibida '+(Number.isFinite(date.getTime())?
+      date.toLocaleString('es-AR',{timeZone:'America/Argentina/Buenos_Aires'}):'sin fecha disponible'));
+    const note=el('p','Pendiente de revisión por Gente de Vuelo. Aprobar la publicación no certifica habilitación ANAC.');
+    card.append(heading,loc,received,note);
+    airstripImageGallery(card,p.details?.photos,p.name);
+    for(const status of ['approved','rejected']){
+     const button=el('button',status==='approved'?'Aprobar publicación GdV':'Rechazar propuesta');
+     button.type='button';
+     button.addEventListener('click',async()=>{
+      button.disabled=true;
+      try{
+       const {data:updated,error:updateError}=await client.from('community_airstrips')
+        .update({status}).eq('id',p.id).eq('status','pending')
+        .select('id,status').maybeSingle();
+       if(updateError)throw Error(updateError.message);
+       if(!updated)throw Error('La propuesta cambió de estado; actualizá la lista.');
+       msg.textContent=status==='approved'?
+        'Aporte publicado por GdV. Sigue sin certificación aeronáutica ANAC.':
+        'Propuesta rechazada; no se publicó.';
+       await pending();await load();await loadMyAirstripSubmissions();
+      }catch(error){msg.textContent='No se pudo actualizar la propuesta: '+error.message;button.disabled=false}
+     });
+     card.append(button);
+    }
+    root.append(card);
+   }
+  }catch(error){
+   summary.textContent='No se pudieron cargar las propuestas pendientes.';
+   root.replaceChildren(el('p','Error al consultar moderación: '+error.message));
+  }finally{refresh.disabled=false}
+ }
+ document.getElementById('pending-refresh').addEventListener('click',()=>void pending());
+ window.addEventListener('gdv-airstrip-submitted',()=>void pending());
+ await pending()}
 
 /* Selector de vistas cartográficas excluyentes. Otras capas quedan invisibles. */
 const viewSelect=document.getElementById('map-view-mode'),viewStatus=document.getElementById('map-view-status');
