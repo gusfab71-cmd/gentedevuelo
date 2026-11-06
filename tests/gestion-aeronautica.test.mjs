@@ -622,7 +622,7 @@ assert.match(html,/ficha_alumno:studentProfileScreen/);
 assert.match(html,/function studentProfileScreen\(\)/);
 assert.match(html,/\['instructor','Panel del instructor'\],\['ficha_alumno','Mi perfil AeroSuite'\]/);
 assert.match(html,/\['inicio','Panel administrativo'\],\['ficha_alumno','Mi perfil AeroSuite'\]/);
-assert.match(html,/href="mi-ficha-alumno\.html"/);
+assert.doesNotMatch(html,/href="mi-ficha-alumno\.html"/,'El perfil se integra en el visor del portal, sin abrir una ruta paralela');
 assert.match(html,/src="mi-ficha-alumno\.html"/);
 assert.doesNotMatch(studentFormHtml,/getPublicUrl\(/,'La foto personal NO debe tener URL pública');
 assert.match(studentFormHtml,/aerosuite-student-portraits/,'Bucket privado existente');
