@@ -617,7 +617,7 @@ assert.match(html,/site_admins/,'El acceso admin de la demo debe mantenerse');
 
 // Registro unificado de la comunidad: Alumno, Instructor, Piloto y foto voluntaria.
 const studentFormHtml=fs.readFileSync(new URL('../utilidades/gestion-aeronautica/mi-ficha-alumno.html',import.meta.url),'utf8');
-assert.match(html,/\['ficha_alumno','Mi perfil AeroSuite · Registro ampliado'\]/);
+assert.match(html,/\['ficha_alumno','Mi perfil AeroSuite'\]/);
 assert.match(html,/ficha_alumno:studentProfileScreen/);
 assert.match(html,/function studentProfileScreen\(\)/);
 assert.match(html,/\['instructor','Panel del instructor'\],\['ficha_alumno','Mi perfil AeroSuite'\]/);
