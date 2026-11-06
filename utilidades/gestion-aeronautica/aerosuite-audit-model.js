@@ -56,15 +56,10 @@ async function getJson(url,fetcher){
  return response.json();
 }
 export async function listAuditRuns(fetcher=fetch){
- const collected=[];
- // El repositorio tiene otros workflows: filtrar estrictamente por ruta y rama.
- for(let page=1;page<=7&&collected.length<8;page++){
-  const data=await getJson(API_BASE+'/actions/runs?per_page=100&page='+page,fetcher);
-  const rows=Array.isArray(data.workflow_runs)?data.workflow_runs:[];
-  collected.push(...rows.filter(isMainAuditRun));
-  if(rows.length<100)break;
- }
- return collected.sort((a,b)=>Date.parse(b.created_at)-Date.parse(a.created_at)).slice(0,8);
+ // Endpoint específico del workflow: evita leer miles de tareas ajenas.
+ const payload=await getJson(API_BASE+'/actions/workflows/aerosuite-laboratorio.yml/runs?per_page=50&branch=main',fetcher);
+ const rows=Array.isArray(payload.workflow_runs)?payload.workflow_runs:[];
+ return rows.filter(isMainAuditRun).sort((a,b)=>Date.parse(b.created_at)-Date.parse(a.created_at)).slice(0,8);
 }
 export async function readAuditJobs(runId,fetcher=fetch){
  if(!Number.isSafeInteger(runId)||runId<1)throw Error('Identificador de ejecución inválido.');
