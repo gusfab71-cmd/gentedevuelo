@@ -725,8 +725,8 @@ assert.match(airstripsOriginal,/if\(oaMatchesANAC\(record\)\)\{anacMatches\+\+;r
  'Coincidencias ANAC no crean marcadores duplicados');
 assert.match(airstripsOriginal,/<option value="pending" selected>Pendientes<\/option>/,
  'OurAirports debe abrir inicialmente con pendientes');
-assert.match(airstripsOriginal,/const show=false;/,
- 'Aportes externos no revisados no aparecen en el mapa principal');
+assert.match(airstripsOriginal,/const showOurAirports=mapViewMode==='ourairports'\|\|mapViewMode==='airfields'/,
+ 'La capa OurAirports se muestra solo en sus vistas y el mapa de pistas, no en todas las capas');
 
 const anac26=JSON.parse(fs.readFileSync(new URL('../assets/aerolocator-anac-2026-ar.json',import.meta.url),'utf8'));
 assert.equal(anac26.edition,'2026-09','El catálogo corresponde a septiembre de 2026');
@@ -804,7 +804,8 @@ assert.match(airstripsOriginal,/function runwayPin\(kind='unverified'\)/);
 assert.match(airstripsOriginal,/const PIN_PALETTE=/);
 assert.match(airstripsOriginal,/PIN_PALETTE\[kind\]/);
 assert.match(airstripsOriginal,/<svg xmlns="http:\/\/www\.w3\.org\/2000\/svg"/);
-assert.match(airstripsOriginal,/runwayPin\(airfieldClass\(p\)\)/);
+assert.match(airstripsOriginal,/runwayPin\(airfieldClass\(p\)==='unverified'\?'community_reviewed':airfieldClass\(p\)\)/,
+ 'Un registro comunitario aprobado usa marcador diferenciado');
 assert.match(airstripsOriginal,/runwayPin\('reference'\)/);
 assert.match(airstripsOriginal,/runwayPin\('draft'\)/);
 assert.match(airstripsOriginal,/function communityPopup\(record,nm=null\)/);
