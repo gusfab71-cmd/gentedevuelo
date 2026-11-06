@@ -14,7 +14,15 @@
 
 **Estos 10 controles son simulaciones relacionales PostgreSQL, NO pruebas de los RPC de producción.** Aún faltan replicar el esquema real de AeroSuite, activar usuarios Auth ficticios para seis roles, ejecutar sus verdaderos RPC/RLS y pruebas Playwright contra una instalación del frontend apuntada solo al proyecto de laboratorio.
 
+La política de permisos está cerrada: cinco tablas privadas incluyen RLS explícita de denegación, y solo el resumen ficticio tiene acceso de lectura para la clave pública. La revisión de seguridad de Supabase no devolvió advertencias después de aplicar esas políticas.
+
 No hay que considerar validada ni liberar AeroSuite hasta completar esas pruebas y la revisión humana. No copiar datos personales al laboratorio ni ejecutar las migraciones de este directorio en producción. Mantener estos scripts fuera de \`supabase/migrations/\` para impedir que despliegues habituales los apliquen al sitio real.
+
+## Comprobación automática de disponibilidad
+
+El flujo `.github/workflows/aerosuite-lab-availability.yml` realiza un GET de **solo lectura** al proyecto de laboratorio todos los días a las 09:10 ART. Reduce el riesgo de suspensión por inactividad, pero **Supabase no garantiza** que el plan Free no se pause. No crea cuentas, reservas, cobros ni datos reales.
+
+El flujo semanal de AeroSuite (09:00 ART) incluye un trabajo independiente que consulta los 10 resultados ficticios del cron SQL de las 08:50 ART. Si el laboratorio está pausado o inaccesible, informa un problema, no una aprobación.
 
 ## Controles de costo
 
