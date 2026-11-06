@@ -157,8 +157,8 @@ assert.match(html,/<iframe class="academy-tool-frame" src="'\+active\.url\+'/,
 assert.match(html,/target="_blank" rel="noopener noreferrer">Abrir a pantalla completa/,
  'Conservar alternativa para abrir aplicación completa');
 assert.match(html,/data-academy-tool-close/,'El alumno puede cerrar el visor');
-assert.match(html,/La bitácora utiliza la cuenta actual de Gente de Vuelo/,
- 'El mantenimiento conserva el almacenamiento privado de la herramienta original');
+assert.match(html,/datos personales todavía NO están sincronizados/,
+ 'La integración informa que los datos técnicos personales aún no están sincronizados con la demo');
 assert.doesNotMatch(html,/AEROSUITE_THEORY_TOPICS|AEROSUITE_CRM_TOPICS|AEROSUITE_LIBRARY_FILES|libraryCollection\(/,
  'No debe conservar temarios fijos ni rutas de Teoría y CRM en la biblioteca.');
 assert.doesNotMatch(html,/href="fichas\/fuerzas-del-vuelo\.html"/,'La ficha obsoleta no debe reaparecer');
