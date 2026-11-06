@@ -65,6 +65,14 @@ table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;p
 <p class="small">«Aprobado · código» significa que pasó la batería de regresión. No equivale a haber comprobado una operación real entre usuarios autenticados.</p>
 <div style="overflow-x:auto"><table id="modulesTable"><thead><tr><th scope="col">Área</th><th scope="col">Resultado</th></tr></thead><tbody id="moduleRows"><tr><td colspan="2">No se cargaron resultados.</td></tr></tbody></table></div>
 </section>
+<section class="panel" aria-labelledby="healthTitle">
+<h2 id="healthTitle">Diagnóstico real de integridad · Centro de Testeo Permanente</h2>
+<p class="small">Consulta de solo lectura al diagnóstico institucional protegido de Supabase. Estos indicadores muestran posibles anomalías de datos; no simulan vuelos, cobros ni operaciones.</p>
+<div class="actions"><button id="refreshHealth" type="button">Actualizar diagnóstico de Supabase</button><span id="healthCheckedAt" class="small">Sin consultar</span></div>
+<p id="healthMessage" class="small" role="status" aria-live="polite">Pendiente de consulta.</p>
+<div style="overflow-x:auto"><table id="healthTable"><thead><tr><th scope="col">Indicador</th><th scope="col">Registros</th></tr></thead><tbody id="healthRows"><tr><td colspan="2">Sin datos verificados.</td></tr></tbody></table></div>
+<p class="small">Los recuentos pueden incluir registros históricos de prueba. No representan automáticamente fallos ni certifican aptitud aeronáutica.</p>
+</section>
 <section class="panel" aria-labelledby="pendingTitle">
 <h2 id="pendingTitle">Pruebas integrales pendientes</h2>
 <p class="small">Estas verificaciones requieren un Supabase de pruebas independiente y automatización de navegador. Nunca se marcarán como aprobadas solo por responder la página web.</p>
