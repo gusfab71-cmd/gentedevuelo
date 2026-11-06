@@ -810,9 +810,11 @@ assert.match(airstripsOriginal,/runwayPin\('reference'\)/);
 assert.match(airstripsOriginal,/runwayPin\('draft'\)/);
 assert.match(airstripsOriginal,/function communityPopup\(record,nm=null\)/);
 assert.match(airstripsOriginal,/function referencePopup\(record,nm=null\)/);
-for(const field of ['Coordenadas','Pista / rumbo','Dimensiones','Superficie','Elevación','Acceso','Obstáculos','Frecuencia','Observaciones']){
- assert.ok(airstripsOriginal.includes("'"+field+"'"),'El pin debe mostrar '+field);
+for(const field of ['Coordenadas','Dimensiones','Superficie','Elevación','Acceso','Obstáculos','Frecuencia','Observaciones']){
+ assert.ok(airstripsOriginal.includes("'"+field+"'"),'La ficha debe mostrar '+field);
 }
+assert.match(airstripsOriginal,/el\('p','Pista \/ rumbo: '\+\(p\.details\?\.runway/,'El listado identifica pista y rumbo');
+assert.match(airstripsOriginal,/item\('MADHEL · pistas',madhel\.rwy\)/,'La ficha conserva la pista de MADHEL');
 assert.match(airstripsOriginal,/document\.createElement\('dt'\)/);
 assert.match(airstripsOriginal,/document\.createElement\('dd'\)/);
 assert.match(airstripsOriginal,/warning.classList.add\('critical'\)/);
