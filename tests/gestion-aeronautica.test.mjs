@@ -685,7 +685,8 @@ assert.match(html,/if\(currentArea!=='alumno'&&currentArea!=='instructor'\)/);
 assert.match(html,/no guarda automáticamente trabajos en el legajo del alumno/);
 assert.match(html,/Modo formativo sin IA/);
 assert.match(flightOperationsOriginal,/const aeroContext=new URLSearchParams\(window\.location\.search\)\.get\('aerosuite'\)/);
-assert.match(flightOperationsOriginal,/aeroContext==='formacion'\|\|aeroContext==='instruccion'/);
+assert.match(flightOperationsOriginal,/const trainingView=\['formacion','instruccion','piloto'\]\.includes\(aeroContext\)/,
+ 'Flight Operations incluye Formación, Instrucción y Piloto en modo sin IA');
 assert.match(flightOperationsOriginal,/dataset\.flightRole=isAdmin&&!trainingView\?'admin':'member'/);
 assert.match(flightOperationsOriginal,/if\(!isAdmin\|\|trainingView\)\{/);
 assert.match(flightOperationsOriginal,/const \{data:admin,error:roleError\}=await client\.from\('site_admins'\)/,'La IA sigue verificando acceso administrativo');
