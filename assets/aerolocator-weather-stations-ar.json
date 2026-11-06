@@ -1,0 +1,85 @@
+{
+  "version": "2026-11-06",
+  "source": "3D Argentina / UCAR - CHORDS",
+  "sourceUrl": "https://3d-argentina.icdp.ucar.edu/sites",
+  "note": "Ubicaciones de estaciones, no acreditacion meteorologica ni datos METAR. Las coordenadas de Cañuelas corresponden a la referencia publicada por el club.",
+  "stations": [
+    {
+      "id": "3dpaws-13",
+      "instrumentId": 13,
+      "name": "Club de Planeadores Cañuelas",
+      "lat": -35.114533,
+      "lon": -58.72725,
+      "location": "Cañuelas, Buenos Aires",
+      "category": "aeroclub",
+      "positionSource": "Club de Planeadores Cañuelas",
+      "sourceUrl": "https://3d-argentina.icdp.ucar.edu/instruments/13"
+    },
+    {
+      "id": "3dpaws-7",
+      "instrumentId": 7,
+      "name": "Club de Planeadores Albatros",
+      "lat": -34.4691766,
+      "lon": -59.423483,
+      "location": "San Andrés de Giles, Buenos Aires",
+      "category": "aeroclub",
+      "positionSource": "3D Argentina",
+      "sourceUrl": "https://3d-argentina.icdp.ucar.edu/instruments/7"
+    },
+    {
+      "id": "3dpaws-2",
+      "instrumentId": 2,
+      "name": "Club de Planeadores Adolfo Gonzales Chaves",
+      "lat": -38.03345,
+      "lon": -60.13485,
+      "location": "Adolfo Gonzales Chaves, Buenos Aires",
+      "category": "aeroclub",
+      "positionSource": "3D Argentina",
+      "sourceUrl": "https://3d-argentina.icdp.ucar.edu/instruments/2"
+    },
+    {
+      "id": "3dpaws-1",
+      "instrumentId": 1,
+      "name": "SMN - Campo de observación Dorrego",
+      "lat": -34.564445,
+      "lon": -58.417095,
+      "location": "Ciudad de Buenos Aires",
+      "category": "meteorologica",
+      "positionSource": "3D Argentina",
+      "sourceUrl": "https://3d-argentina.icdp.ucar.edu/instruments/1"
+    },
+    {
+      "id": "3dpaws-3",
+      "instrumentId": 3,
+      "name": "Ciudad Universitaria",
+      "lat": -34.5464678,
+      "lon": -58.4395292,
+      "location": "Ciudad de Buenos Aires",
+      "category": "meteorologica",
+      "positionSource": "3D Argentina",
+      "sourceUrl": "https://3d-argentina.icdp.ucar.edu/instruments/3"
+    },
+    {
+      "id": "3dpaws-9",
+      "instrumentId": 9,
+      "name": "Escuela Técnica 13 Ing. José Luis Delpini",
+      "lat": -34.679289265,
+      "lon": -58.467446318,
+      "location": "Provincia de Buenos Aires",
+      "category": "educativa",
+      "positionSource": "3D Argentina",
+      "sourceUrl": "https://3d-argentina.icdp.ucar.edu/instruments/9"
+    },
+    {
+      "id": "3dpaws-10",
+      "instrumentId": 10,
+      "name": "EEST 5 - Temperley",
+      "lat": -34.7147352,
+      "lon": -58.3870437,
+      "location": "Temperley, Buenos Aires",
+      "category": "educativa",
+      "positionSource": "3D Argentina",
+      "sourceUrl": "https://3d-argentina.icdp.ucar.edu/instruments/10"
+    }
+  ]
+}
