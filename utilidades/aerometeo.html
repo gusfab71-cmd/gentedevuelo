@@ -8,7 +8,7 @@
 <title>AeroMeteo · Developed by Gente de Vuelo</title>
 <link rel="icon" type="image/svg+xml" href="../assets/aerometeo-logo.svg">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="../assets/aerometeo.css?v=20261107mapspace1">
+<link rel="stylesheet" href="../assets/aerometeo.css?v=20261107radarlegend1">
 </head>
 <body>
 <header class="am-header">
@@ -91,6 +91,11 @@
     <button type="button" id="am-radar-next" aria-label="Imagen de radar siguiente" disabled>▶</button>
     <input type="range" id="am-radar-frame" aria-label="Seleccionar hora histórica del radar" min="0" max="0" value="0" step="1" disabled>
     <strong id="am-radar-time">Sin imágenes</strong>
+   </div>
+   <div class="am-radar-legend" aria-label="Escala orientativa de intensidad de ecos radar, de débil a intenso; no equivale a lluvia acumulada">
+    <span>Débil</span>
+    <span class="am-radar-legend-scale" role="img" aria-label="Cian y azul: ecos débiles a moderados. Amarillo, naranja y rojo: ecos más intensos."></span>
+    <span>Intenso</span>
    </div>
    <p class="am-radar-disclaimer">Fuente: <a href="https://www.rainviewer.com/" target="_blank" rel="noopener noreferrer">RainViewer</a> (datos radar, uso educativo en prueba). Solo pasado, no pronóstico ni alerta. Cobertura variable: la ausencia de ecos no prueba ausencia de precipitación. Verificá <a href="https://www.argentina.gob.ar/smn" target="_blank" rel="noopener noreferrer">SMN</a>, SIGMET y NOTAM.</p>
   </section>
