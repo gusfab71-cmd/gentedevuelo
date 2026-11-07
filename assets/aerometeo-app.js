@@ -63,6 +63,7 @@ function boot(){
  let selectedPoint=null,selectedStation=null,currentForecast=null;
  let lastStationId=null,lastObservedAt=null,lastMetric='wind',clickToForecast=false;
  let forecastRequest=0;
+ let observationRequest=0;
  const status=$('aerometeo-status');
  const stationButton=$('aerometeo-show-stations');
  const stationCount=$('aerometeo-station-count');
@@ -123,6 +124,9 @@ function boot(){
   favorite.textContent=active?'☆':'★';
  });
  function clearObservation(note='No se recibió ninguna observación'){
+  observationRequest++;
+  const raw=$('am-observation-metar-raw');
+  if(raw){raw.hidden=true;raw.textContent='';}
   for(const id of ['wind','gust','temperature','pressure','humidity','cloud'])
    $text('am-value-'+id,EMPTY);
   $text('am-detail-status',note);
@@ -175,6 +179,61 @@ function boot(){
   setStatus((stale?'Atención: medición antigua de ':'Observación local de ')+station.name+
    '. Referencia '+localTime(observation.observedAt)+'.');
  }
+ async function loadMetarObservation(point){
+  const icao=typeof point?.icao==='string'?point.icao.trim().toUpperCase():'';
+  if(!/^SA[A-Z]{2}$/.test(icao))return;
+  const id=++observationRequest;
+  $text('am-detail-status','Consultando METAR '+icao+'…');
+  $text('am-detail-updated','Pendiente de observación aeronáutica');
+  $text('am-detail-footnote','La ubicación seleccionada no es estación 3D-PAWS. Buscando un METAR original y verificando su fecha.');
+  const controller=new AbortController();
+  const timeout=setTimeout(()=>controller.abort(),12000);
+  try{
+   const url='/api/aerometeo-aviation-weather?'+new URLSearchParams({icao,type:'metar'});
+   const response=await fetch(url,{signal:controller.signal,headers:{Accept:'application/json'}});
+   if(!response.ok)throw Error('Servicio aeronáutico no disponible');
+   const data=await response.json();
+   if(id!==observationRequest||selectedPoint?.icao!==icao)return;
+   if(data.ok!==true||data.icao!==icao||data.type!=='metar')throw Error('Respuesta de METAR inválida');
+   if(!data.found||typeof data.raw!=='string'){
+    $text('am-detail-status','Sin METAR disponible · '+icao);
+    $text('am-detail-updated','No se encontró un mensaje para esta consulta');
+    $text('am-detail-footnote','Sin observación verificable en Aviation Weather Center. Consultá el METAR oficial del SMN; no se reemplaza con el pronóstico.');
+    return;
+   }
+   const raw=$('am-observation-metar-raw');
+   if(raw){raw.textContent=data.raw;raw.hidden=false;}
+   const ts=Date.parse(data.issuedAt||'');
+   const old=data.stale!==false||!Number.isFinite(ts)||Math.abs(Date.now()-ts)>180*60000;
+   $('am-detail-status-dot').classList.toggle('is-stale',old);
+   $('am-detail-status-dot').classList.toggle('is-live',!old);
+   $text('am-detail-updated','Emisión: '+localTime(data.issuedAt)+' · '+icao);
+   if(old){
+    $text('am-detail-status','METAR DESACTUALIZADO O NO VERIFICADO · '+icao);
+    $text('am-detail-condition','El mensaje está desactualizado: no usar como observación actual');
+    $text('am-detail-footnote','Se conserva el texto original como referencia histórica. Confirmá emisión y vigencia en el SMN.');
+    return;
+   }
+   const parsed=root.GDV_AEROMETEO_METAR?.decode(data.raw);
+   if(!parsed)throw Error('Decodificador METAR no disponible');
+   const wind=parsed.windKt===null?EMPTY:
+    (parsed.windDirection===null?'':String(parsed.windDirection)+(typeof parsed.windDirection==='number'?'°':'')+' / ')+safeNumber(parsed.windKt,' kt');
+   $text('am-value-wind',wind);
+   $text('am-value-gust',safeNumber(parsed.gustKt,' kt'));
+   $text('am-value-temperature',safeNumber(parsed.temperatureC,' °C'));
+   $text('am-value-pressure',safeNumber(parsed.pressureHpa,' hPa'));
+   $text('am-value-humidity',EMPTY);
+   $text('am-value-cloud',parsed.cloudLabel||EMPTY);
+   $text('am-detail-status','METAR aeronáutico · '+icao);
+   $text('am-detail-condition','Último METAR disponible; verificar vigencia antes del vuelo');
+   $text('am-detail-footnote','Fuente: Aviation Weather Center (NOAA/NWS). Grupos METAR decodificados parcialmente; nubes en grupos OACI, no porcentaje. Humedad sin dato. Verificá el mensaje original y el SMN.');
+  }catch(_){
+   if(id!==observationRequest||selectedPoint?.icao!==icao)return;
+   $text('am-detail-status','METAR no disponible · '+icao);
+   $text('am-detail-updated','Consulta sin resultado verificable');
+   $text('am-detail-footnote','No pudimos recuperar el METAR. Las estimaciones de Open-Meteo no sustituyen observaciones; consultá el SMN.');
+  }finally{clearTimeout(timeout)}
+ }
  function showForecastPending(point){
   forecastRequest++;
   selectedPoint={...point};
@@ -183,6 +242,7 @@ function boot(){
    Math.abs(selectedStation.lon-point.lon)<.001;
   if(!sameStation){
    selectedStation=null;lastStationId=null;clearObservation('Sin estación meteorológica física en este punto');
+   if(/^SA[A-Z]{2}$/.test(point.icao||''))void loadMetarObservation(point);
   }
   currentForecast=null;
   setLocation(point.name,(sameStation?'Comparación con estación 3D-PAWS':'Punto de pronóstico')+' · Argentina');
