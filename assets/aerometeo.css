@@ -413,3 +413,27 @@ a:focus-visible,button:focus-visible,summary:focus-visible,input:focus-visible,s
  .am-map-base-selector>strong{flex:1 1 100%;font-size:11px}
  .am-map-base-selector button{flex:1 1 auto;padding:8px 7px;min-height:37px;font-size:11px}
 }
+
+/* Radar dentro de Fuentes y productos: la altura del mapa Leaflet permanece fija.
+   Los controles se despliegan en la columna izquierda (desplazable). */
+.am-sidebar .am-radar-card{margin-bottom:10px}
+.am-sidebar .am-radar-card.is-selected{border-color:var(--am-gold)}
+.am-sidebar .am-radar-panel{
+ display:grid;gap:9px;width:100%;max-height:min(58dvh,480px);
+ overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;
+ margin:-3px 0 12px;padding:11px 9px;border:1px solid #61849d;border-radius:10px;
+ background:#123044;
+}
+.am-sidebar .am-radar-panel[hidden]{display:none!important}
+.am-sidebar .am-radar-line{display:flex;flex-wrap:wrap;min-width:0;gap:7px}
+.am-sidebar .am-radar-line>strong{flex:1 1 100%}
+.am-sidebar .am-radar-line>span{flex:1 1 100%}
+.am-sidebar .am-radar-player{display:grid;grid-template-columns:1fr 1.6fr 1fr;gap:7px}
+.am-sidebar .am-radar-player button{min-width:0;min-height:35px;padding:6px 4px}
+.am-sidebar .am-radar-player input[type=range]{grid-column:1/-1;min-width:0;width:100%}
+.am-sidebar .am-radar-player>strong{grid-column:1/-1;white-space:normal}
+.am-sidebar .am-radar-disclaimer{overflow-wrap:anywhere}
+@media(max-width:650px){
+ .am-sidebar .am-radar-panel{max-height:none;overflow-y:visible}
+ .am-sidebar .am-radar-player button{min-height:40px}
+}
