@@ -111,27 +111,98 @@
   container.append(disclaimer);
  }
  function bootAeroLocator({map,L,readRouteState}){
-  const toggle=$('terrain-aerolocator-toggle'),readout=$('terrain-aerolocator-readout');
+  const toggle=$('terrain-aerolocator-toggle');
   if(!map||!toggle||!L)return;
   const overlay=ignLayer(L);
+
+  // Tarjeta flotante dentro del mapa: no ocupa lugar en la barra superior.
+  const card=document.createElement('section');
+  card.id='terrain-aerolocator-card';
+  card.className='terrain-float-card';
+  card.setAttribute('aria-label','Elevación aproximada del terreno');
+  card.hidden=true;
+  const header=document.createElement('div');
+  header.className='terrain-card-header';
+  const heading=document.createElement('div');
+  const kicker=document.createElement('span');
+  kicker.className='terrain-card-kicker';
+  kicker.textContent='CONSULTA DEL TERRENO';
+  const title=document.createElement('strong');
+  title.className='terrain-card-title';
+  title.textContent='Elevación aproximada';
+  heading.append(kicker,title);
+  const close=document.createElement('button');
+  close.type='button';
+  close.className='terrain-card-close';
+  close.textContent='×';
+  close.setAttribute('aria-label','Cerrar consulta de elevación');
+  header.append(heading,close);
+  const coordinates=document.createElement('p');
+  coordinates.className='terrain-card-coordinates';
+  const values=document.createElement('div');
+  values.className='terrain-card-values';
+  const meters=document.createElement('div'),feet=document.createElement('div');
+  const meterLabel=document.createElement('span'),feetLabel=document.createElement('span');
+  meterLabel.textContent='METROS AMSL';
+  feetLabel.textContent='PIES AMSL';
+  const meterValue=document.createElement('strong'),feetValue=document.createElement('strong');
+  meterValue.className='terrain-card-number';
+  feetValue.className='terrain-card-number';
+  meters.append(meterLabel,meterValue);
+  feet.append(feetLabel,feetValue);
+  values.append(meters,feet);
+  const cardStatus=document.createElement('p');
+  cardStatus.className='terrain-card-status';
+  cardStatus.setAttribute('role','status');
+  cardStatus.setAttribute('aria-live','polite');
+  const note=document.createElement('p');
+  note.className='terrain-card-note';
+  note.textContent='Alturas SRTM 30 m (NASA/USGS) · mapa topográfico IGN. Sin obstáculos; no sirve para determinar altitudes mínimas de vuelo.';
+  card.append(header,coordinates,values,cardStatus,note);
+  map.getContainer().append(card);
+  L.DomEvent.disableClickPropagation(card);
+  L.DomEvent.disableScrollPropagation(card);
+
+  let sequence=0;
+  close.addEventListener('click',()=>{
+   sequence++;
+   card.hidden=true;
+  });
+  function present(point,message,elevation){
+   coordinates.textContent=point?point.lat.toFixed(5)+'°, '+point.lng.toFixed(5)+'°':'';
+   const available=Number.isFinite(elevation);
+   values.hidden=!available;
+   meterValue.textContent=available?format(elevation):'—';
+   feetValue.textContent=available?format(elevation*FT):'—';
+   cardStatus.textContent=message||'';
+   card.hidden=false;
+  }
   toggle.checked=false;
   toggle.addEventListener('change',()=>{
-   if(toggle.checked){overlay.addTo(map);status(readout,'Capa topográfica IGN activada. Hacé clic en el mapa para consultar la altura puntual (SRTM).');}
-   else{map.removeLayer(overlay);if(readout)readout.hidden=true;}
+   sequence++;
+   if(toggle.checked){
+    overlay.addTo(map);
+    // La tarjeta se abre únicamente tras consultar una ubicación.
+   }else{
+    map.removeLayer(overlay);
+    card.hidden=true;
+   }
   });
-  let sequence=0;
   map.on('click',async event=>{
    if(!toggle.checked||readRouteState?.()?.drawing||!valid(event.latlng))return;
    const id=++sequence;
-   status(readout,'Consultando altura aproximada en '+event.latlng.lat.toFixed(4)+', '+event.latlng.lng.toFixed(4)+'…');
+   present(event.latlng,'Consultando la altura del terreno…',null);
    try{
     const response=await elevations([event.latlng]);
     if(id!==sequence||!toggle.checked)return;
     const value=response.points[0]?.elevation_m;
-    status(readout,Number.isFinite(value)?'Elevación SRTM: '+format(value)+' m / '+format(value*FT)+' ft AMSL · No incluye obstáculos.':'Sin dato de elevación para este punto.');
-   }catch(err){if(id===sequence)status(readout,err.message);}
+    if(Number.isFinite(value))present(event.latlng,'Fuente numérica: SRTM 30 m · Elevación aproximada.',value);
+    else present(event.latlng,'No hay elevación disponible para este punto.',null);
+   }catch(err){
+    if(id===sequence&&toggle.checked)present(event.latlng,err.message||'Error en la consulta de elevación.',null);
+   }
   });
-  return {overlay};
+  return {overlay,card};
  }
  function bootFlightOperations(){
   const details=$('flight-terrain-panel'),mapEl=$('flight-terrain-map'),toggle=$('flight-terrain-toggle'),message=$('flight-terrain-status'),plot=$('flight-terrain-profile');
