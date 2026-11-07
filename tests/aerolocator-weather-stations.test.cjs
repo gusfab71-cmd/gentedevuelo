@@ -22,10 +22,10 @@ test('Se catalogan siete ubicaciones argentinas, sin duplicaciones ni posiciones
  assert.equal(catalog.stations.find(x=>x.id==='3dpaws-13')?.name,'Club de Planeadores Cañuelas');
 });
 
-test('AeroMeteo incorpora capa independiente sin modificar AeroLocator',()=>{
- assert.match(meteoHtml,/aerolocator-weather-stations\.js\?v=/);
- assert.match(meteoApp,/GDV_WEATHER_STATIONS\?\.boot\(\{/);
- assert.match(meteoApp,/onSelected:showStation,onObservation:showObservation/);
+test('AeroMeteo retira la capa sin acceso, conservando solo su módulo aislado',()=>{
+ assert.doesNotMatch(meteoHtml,/aerolocator-weather-stations\.js\?v=/);
+ assert.doesNotMatch(meteoApp,/GDV_WEATHER_STATIONS/);
+ assert.doesNotMatch(meteoApp,/onSelected:showStation,onObservation:showObservation/);
  assert.match(ui,/weather-stations-toggle/);
  assert.match(ui,/L\.featureGroup\(\)/);
  assert.match(ui,/Estaciones meteorológicas/);
