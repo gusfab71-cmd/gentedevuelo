@@ -317,3 +317,10 @@ a:focus-visible,button:focus-visible,summary:focus-visible,input:focus-visible,s
 }
 .am-official-links .am-official-main:hover{background:#356676;border-color:#d0fff1}
 .am-smn-alternative{margin-top:10px;text-align:center;line-height:1.3}
+
+/* Aeropuertos provinciales: en vista país hay un marcador discreto por jurisdicción.
+   La etiqueta OACI se muestra solo al acercar el mapa. */
+.am-airport-marker.am-airport-compact{width:26px!important;height:26px!important;justify-content:center;gap:0}
+.am-airport-compact .am-airport-icon{width:24px;height:24px;flex:0 0 24px;font-size:12px;border-width:1px}
+#am-airports-status{color:#bfe7da;font-size:10px;font-weight:700;line-height:1.4;margin:10px 0 0}
+#aerometeo-province{border-color:#7299b0}
