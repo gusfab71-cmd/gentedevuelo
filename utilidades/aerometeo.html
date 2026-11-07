@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#061324">
-<meta name="description" content="AeroMeteo · Meteorología aeronáutica para tu vuelo. Estaciones 3D-PAWS, pronósticos Open-Meteo y fuentes del SMN, METAR y TAF.">
+<meta name="description" content="AeroMeteo · Meteorología aeronáutica para tu vuelo. pronósticos Open-Meteo, METAR/TAF y fuentes del SMN.">
 <title>AeroMeteo · Developed by Gente de Vuelo</title>
 <link rel="icon" type="image/svg+xml" href="../assets/aerometeo-logo.svg">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
@@ -42,22 +42,7 @@
     <div><h2>Fuentes y productos</h2><p>Accedé rápidamente a la información meteorológica aeronáutica.</p></div>
    </div>
 
-   <button class="am-source-card is-active" id="am-source-stations" type="button" aria-expanded="false" aria-controls="am-stations-tools">
-    <span class="am-source-icon" aria-hidden="true">◇</span>
-    <span class="am-source-copy"><strong>Estaciones 3D-PAWS</strong><small>Observaciones de estaciones meteorológicas locales.</small></span>
-    <span class="am-source-chevron" aria-hidden="true">›</span>
-   </button>
-   <section class="am-source-tools" id="am-stations-tools" hidden aria-label="Herramientas 3D-PAWS">
-    <p id="aerometeo-station-count" class="am-count" role="status">Preparando catálogo de estaciones…</p>
-    <button type="button" id="aerometeo-show-stations" class="am-button am-button-local" aria-pressed="false">Mostrar estaciones en el mapa</button>
-    <details class="am-station-details" id="aerometeo-station-details">
-     <summary>Elegir una estación</summary>
-     <div id="aerometeo-station-list" class="am-station-list"></div>
-    </details>
-    <p class="am-small">Una estación registrada no garantiza mediciones actuales.</p>
-   </section>
-
-   <button class="am-source-card" id="am-source-forecast" type="button" aria-expanded="false" aria-controls="am-forecast-tools">
+   <button class="am-source-card is-active" id="am-source-forecast" type="button" aria-expanded="false" aria-controls="am-forecast-tools">
     <span class="am-source-icon" aria-hidden="true">☁</span>
     <span class="am-source-copy"><strong>Pronósticos Open-Meteo</strong><small>Viento, lluvia, nubosidad y temperatura estimados.</small></span>
     <span class="am-source-chevron" aria-hidden="true">›</span>
@@ -144,10 +129,8 @@
     <span>Escala visual de referencia · sin capa nacional cargada</span>
    </div>
    <div class="am-map-legend" aria-label="Referencias">
-    <span><i class="am-dot am-dot-local"></i> Aeroclub</span>
-    <span><i class="am-dot am-dot-edu"></i> Otra estación</span>
-    <span><i class="am-dot am-dot-model"></i> Modelo</span>
-    <span class="am-legend-note">Un marcador de aeródromo no es una estación meteorológica.</span>
+    <span><i class="am-dot am-dot-model"></i> Pronóstico del punto</span>
+    <span class="am-legend-note">✈ Aeródromo de referencia: consultá el METAR para observaciones.</span>
    </div>
   </div>
   <div class="am-map-status" id="aerometeo-status" role="status" aria-live="polite">
@@ -163,17 +146,17 @@
   <div class="am-detail-heading">
    <span class="am-detail-location-icon" aria-hidden="true">◆</span>
    <div><h2 id="am-detail-title">Seleccioná una ubicación</h2>
-    <p id="am-detail-location">Argentina · Estaciones y aeródromos</p></div>
+    <p id="am-detail-location">Argentina · Aeródromos de referencia</p></div>
    <button id="am-favorite" type="button" aria-pressed="false" aria-label="Marcar ubicación favorita" title="Marcar como favorita para esta sesión">☆</button>
   </div>
   <div class="am-detail-tabs" role="group" aria-label="Origen de los datos">
-   <button type="button" data-detail-tab="observation" aria-pressed="true" class="is-selected">Observación</button>
+   <button type="button" data-detail-tab="observation" aria-pressed="true" class="is-selected">Observación METAR</button>
    <button type="button" data-detail-tab="forecast" aria-pressed="false">Pronóstico</button>
    <button type="button" data-detail-tab="aviation" aria-pressed="false">METAR / TAF</button>
   </div>
   <section id="am-detail-observation" class="am-detail-tab-panel">
    <div class="am-detail-origin"><span id="am-detail-status-dot" class="am-status-dot"></span>
-    <strong id="am-detail-status">Sin estación seleccionada</strong>
+    <strong id="am-detail-status">Seleccioná un aeródromo con METAR</strong>
     <small id="am-detail-updated">Actualización: sin datos</small>
    </div>
    <div class="am-metrics">
@@ -186,10 +169,10 @@
    </div>
    <div class="am-condition-card">
     <span aria-hidden="true">☁</span><div><small>Condición general</small>
-    <strong id="am-detail-condition">Esperando consulta de una fuente verificable</strong></div>
+    <strong id="am-detail-condition">Sin observación aeronáutica verificada</strong></div>
    </div>
    <pre id="am-observation-metar-raw" class="am-observation-metar" hidden aria-label="Mensaje METAR original de la ubicación seleccionada"></pre>
-   <p class="am-detail-footnote" id="am-detail-footnote">Las observaciones locales no equivalen a METAR oficiales.</p>
+   <p class="am-detail-footnote" id="am-detail-footnote">La observación se obtiene de un METAR cuando está disponible. Un pronóstico de modelo no reemplaza una observación.</p>
   </section>
   <section id="am-detail-forecast" class="am-detail-tab-panel" hidden>
    <p class="am-detail-intro">Pronóstico numérico por ubicación · Open-Meteo.</p>
@@ -209,11 +192,10 @@
 <footer class="am-disclaimer">
  <span class="am-disclaimer-icon" aria-hidden="true">ⓘ</span>
  <p><strong>Observaciones, pronósticos y productos oficiales <em>se presentan de forma diferenciada</em></strong>, para que siempre identifiques el origen, el tipo de dato y su alcance operativo.
- <small>Pronósticos: <a href="https://open-meteo.com/en/docs" target="_blank" rel="noopener noreferrer">Open-Meteo</a> (<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0</a>). Estaciones: <a href="https://3d-argentina.icdp.ucar.edu/instruments" target="_blank" rel="noopener noreferrer">3D Argentina</a>. Sin reemplazar productos aeronáuticos oficiales ni NOTAM.</small></p>
+ <small>Pronósticos: <a href="https://open-meteo.com/en/docs" target="_blank" rel="noopener noreferrer">Open-Meteo</a> (<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0</a>). Observaciones METAR: Aviation Weather Center (NOAA/NWS), cuando están disponibles. Sin reemplazar productos aeronáuticos oficiales ni NOTAM.</small></p>
 </footer>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="../assets/aerolocator-weather-stations.js?v=20261106meteo3"></script>
 <script src="../assets/aerolocator-open-meteo-ui.js?v=20261107dock1"></script>
 <script src="../assets/aerometeo-aviation-ui.js?v=20261106am3"></script>
 <script src="../assets/aerometeo-metar-summary.js?v=20261107obs1"></script>
