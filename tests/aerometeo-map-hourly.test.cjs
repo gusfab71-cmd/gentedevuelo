@@ -26,7 +26,7 @@ test('Mapa más grande: botón de ampliación, retorno y actualización Leaflet'
 
 test('Tarjetas y controles existentes preservados',()=>{
  for(const id of ['aerometeo-toggle-panel','aerometeo-country','am-detail-title',
-  'am-source-forecast','am-source-aviation','aerometeo-forecast-location'])
+  'am-source-forecast','am-detail-aviation','aerometeo-forecast-location'])
   assert.ok(html.includes('id="'+id+'"'),id);
  assert.doesNotMatch(app,/GDV_WEATHER_STATIONS/);
  assert.match(app,/GDV_OPEN_METEO_FORECAST/);
@@ -102,8 +102,9 @@ test('SMN deja de ocupar un menú pero siguen disponibles sus referencias oficia
  assert.match(html,/href="https:\/\/www\.argentina\.gob\.ar\/smn"/);
  assert.match(html,/href="https:\/\/ws2\.smn\.gob\.ar\/pronarea"/);
  assert.match(html,/enlaces externos sujetos a disponibilidad/);
- assert.match(html,/id="am-source-aviation"/);
- assert.match(app,/selectSource\('aviation',true\)/);
+ assert.doesNotMatch(html,/id="am-source-aviation"/);
+ assert.match(html,/id="am-detail-aviation"/);
+ assert.doesNotMatch(app,/selectSource\('aviation',true\)/);
  assert.doesNotMatch(app,/aerometeo-smn-alternative/);
 });
 test('La portada informativa compacta mantiene las piezas aprobadas',()=>{
@@ -133,7 +134,7 @@ test('El mapa aprovecha el espacio al eliminar la barra de variables y la franja
  assert.doesNotMatch(css,/\.am-map-actions|\.am-map-variable-summary/);
  assert.match(css,/\.am-map-canvas\{flex:1 1 auto;min-height:0\}/);
  assert.match(css,/\.am-map-toolbar\{flex-wrap:nowrap\}/);
- assert.match(html,/aerometeo\.css\?v=20261107radarlegend1/);
+ assert.match(html,/aerometeo\.css\?v=20261107explain1/);
  assert.match(app,/dockContainer:document\.querySelector\('\.am-map-canvas'\)/);
 });
 
@@ -153,5 +154,5 @@ test('La vista cartográfica es visible sin desplegar el control oculto de Leafl
  assert.match(app,/button\.setAttribute\('aria-pressed',String\(active\)\)/);
  assert.match(css,/\.am-map-base-selector\{/);
  assert.match(css,/\.am-map-base-selector button\.is-selected/);
- assert.match(html,/aerometeo\.css\?v=20261107radarlegend1/);
+ assert.match(html,/aerometeo\.css\?v=20261107explain1/);
 });
