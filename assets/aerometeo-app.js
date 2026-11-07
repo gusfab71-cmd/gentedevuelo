@@ -103,28 +103,19 @@ function boot(){
   });
  }
  function selectSource(source,expand=true){
-  for(const key of ['forecast','aviation']){
-   const card=$('am-source-'+key),panel=$('am-'+key+'-tools');
-   const open=key===source&&expand;
-   card?.classList.toggle('is-active',key===source);
-   if(card)card.setAttribute('aria-expanded',String(open));
-   if(panel)panel.hidden=!open;
-  }
+  const card=$('am-source-forecast'),panel=$('am-forecast-tools');
+  const open=source==='forecast'&&expand;
+  card?.classList.toggle('is-active',source==='forecast');
+  if(card)card.setAttribute('aria-expanded',String(open));
+  if(panel)panel.hidden=!open;
  }
- for(const key of ['forecast','aviation']){
-  $('am-source-'+key)?.addEventListener('click',()=>{
-   const wasOpen=$('am-source-'+key).getAttribute('aria-expanded')==='true';
-   selectSource(key,!wasOpen);
-   if(key==='aviation')showTab('aviation');
-   else if(key==='forecast')showTab('forecast');
-  });
- }
+ $('am-source-forecast')?.addEventListener('click',()=>{
+  const wasOpen=$('am-source-forecast').getAttribute('aria-expanded')==='true';
+  selectSource('forecast',!wasOpen);
+  showTab('forecast');
+ });
  for(const button of document.querySelectorAll('[data-detail-tab]')){
-  button.addEventListener('click',()=>{
-   const tab=button.dataset.detailTab;
-   showTab(tab);
-   if(tab==='aviation')selectSource('aviation',true);
-  });
+  button.addEventListener('click',()=>showTab(button.dataset.detailTab));
  }
  function setLocation(name,subtitle){
   $text('am-detail-title',name);
@@ -157,6 +148,20 @@ function boot(){
   const pre=$('am-auto-'+type+'-raw');
   if(pre){pre.textContent=raw;pre.hidden=!raw;}
   if(type==='taf')$text('am-auto-taf-validity',validity);
+  // Cada interpretación corresponde exclusivamente al mensaje recibido.
+  // Al cambiar de aeropuerto se limpian los textos inmediatamente.
+  const explanation=$('am-auto-'+type+'-explanation');
+  const list=$('am-auto-'+type+'-explanation-lines');
+  if(explanation&&list){
+   list.replaceChildren();
+   const lines=raw?root.GDV_AEROMETEO_MESSAGES?.explain(raw,type):null;
+   if(Array.isArray(lines)&&lines.length){
+    for(const sentence of lines.slice(0,9))list.append(create('li',sentence));
+    explanation.hidden=false;
+   }else{
+    explanation.hidden=true;
+   }
+  }
  }
  function resetAutomaticReports(point){
   tafRequest++; // Invalida cualquier TAF anterior, aun si el usuario elige un punto sin ICAO.
@@ -406,7 +411,6 @@ function boot(){
     (place.province?' · '+place.province:'')+' · ubicación de referencia',{direction:'top'});
    marker.on('click',()=>{
     selectedPoint={...place};
-    $('aerometeo-icao').value=safeICAO;
     if(place.province&&provinceFilter){
      provinceFilter.value=place.province;
      fillAirportSelect(safeICAO);
@@ -522,7 +526,6 @@ function boot(){
  const forecastAt=place=>{
   if(!forecast)return setStatus('Pronóstico no disponible.');
   selectedPoint=place;
-  if(place.icao)$('aerometeo-icao').value=place.icao;
   void forecast.showAt(place);
   focusMap();
  };
@@ -557,17 +560,6 @@ function boot(){
   map.getContainer().style.cursor='';
   forecastAt({name:'punto del mapa',lat:event.latlng.lat,lon:event.latlng.lng});
  });
- $('am-detail-aviation').addEventListener('click',()=>{
-  selectSource('aviation',true);
- });
- // Reflejar el estado del producto AWC en su pestaña, sin simular lecturas.
- if(root.MutationObserver){
-  const src=$('aerometeo-aviation-status');
-  const observer=new MutationObserver(()=>{
-   $text('am-detail-aviation-status',src.textContent);
-  });
-  observer.observe(src,{childList:true,subtree:true,characterData:true});
- }
  const layout=$('aerometeo-app'),togglePanel=$('aerometeo-toggle-panel');
  const expandMapButton=$('aerometeo-expand-map');
  function setExpandedMap(expanded){
