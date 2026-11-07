@@ -47,10 +47,18 @@ function normalizeAwc(data,type,icao,now=Date.now()){
  const issuedAt=chooseTime(type==='metar'?(record.obsTime||record.reportTime):
   (record.issueTime||record.reportTime||record.validTimeFrom));
  const ageMinutes=issuedAt?Math.floor((now-Date.parse(issuedAt))/60000):null;
- const stale=ageMinutes===null||ageMinutes< -15||(type==='metar'?ageMinutes>180:ageMinutes>1440);
+ // El TAF lleva período propio. Se leen los campos normalizados del AWC si están disponibles;
+ // una emisión reciente NO prueba que el TAF siga vigente.
+ const validFrom=type==='taf'?chooseTime(record.validTimeFrom||record.validFrom):null;
+ const validTo=type==='taf'?chooseTime(record.validTimeTo||record.validTo):null;
+ const validNow=type==='taf'&&validFrom&&validTo
+  ?now>=Date.parse(validFrom)&&now<=Date.parse(validTo):null;
+ const stale=ageMinutes===null||ageMinutes< -15||(type==='metar'?ageMinutes>180:ageMinutes>1440)||
+  (type==='taf'&&validTo!==null&&now>Date.parse(validTo));
  return {
   found:true,raw:message,issuedAt,ageMinutes,stale,
-  note:stale?'Fecha de emisión ausente o posiblemente desactualizada. Revisar producto en SMN y fuente original.':
+  validFrom,validTo,validNow,
+  note:stale?'Fecha de emisión ausente, antigua o TAF vencido. Revisar producto en SMN y fuente original.':
    'Mensaje aeronáutico obtenido del Aviation Weather Center; verificar vigencia y producto original.'
  };
 }
