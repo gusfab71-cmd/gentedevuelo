@@ -17,20 +17,20 @@ test('AeroMeteo es una aplicación separada; AeroLocator no ejecuta sus capas',(
  assert.match(html,/id="map"/);
  assert.match(html,/assets\/aerometeo-app\.js/);
  assert.match(html,/assets\/aerometeo\.css/);
- assert.match(html,/aerolocator-weather-stations\.js/);
+ assert.doesNotMatch(html,/aerolocator-weather-stations\.js/);
  assert.match(html,/aerolocator-open-meteo-ui\.js/);
  assert.match(locator,/href="aerometeo\.html"/);
  assert.doesNotMatch(locator,/GDV_WEATHER_STATIONS\?\.boot/);
  assert.doesNotMatch(locator,/GDV_OPEN_METEO_FORECAST\?\.boot/);
  assert.match(css,/\.am-layout/);
- assert.match(app,/showStation/);
+ assert.match(app,/loadMetarObservation/);
  assert.match(app,/map\.on\('click'/);
 });
 
 test('El diseño distingue pronóstico de observación real y productos oficiales',()=>{
- assert.match(html,/estaciones meteorológicas locales|observaciones locales/i);
+ assert.match(html,/Observación METAR|Observaciones METAR/i);
  assert.match(html,/Pronóstico/);
- assert.match(html,/no garantiza mediciones actuales/);
+ assert.match(html,/Un pronóstico de modelo no reemplaza una observación/i);
  assert.match(html,/no implican integración|actualización automática/);
  assert.match(html,/no se obtienen automáticamente al mover el mapa/);
  assert.match(aviationUi,/posiblemente DESACTUALIZADO/);
@@ -142,11 +142,11 @@ test('No hay API key secreta ni solicitudes automáticas al mover mapa',()=>{
 
 test('La pantalla de inicio sigue la maqueta aprobada sin fabricar lecturas',()=>{
  for(const text of ['AeroMeteo','Meteorología aeronáutica para tu vuelo','Fuentes y productos',
-  'Estaciones 3D-PAWS','Pronósticos Open-Meteo','SMN','METAR / TAF',
+  'Pronósticos Open-Meteo','SMN','METAR / TAF',
   'Mapa meteorológico – Argentina','Viento','Precipitación','Nubosidad','Temperatura',
   'Observación','Pronóstico','se presentan de forma diferenciada'])
   assert.ok(html.includes(text),text);
- for(const id of ['am-source-stations','am-source-forecast','am-source-smn','am-source-aviation',
+ for(const id of ['am-source-forecast','am-source-smn','am-source-aviation',
   'am-detail-observation','am-detail-forecast','am-detail-aviation','am-detail-title',
   'am-value-wind','am-value-gust','am-value-temperature','am-value-pressure',
   'am-value-humidity','am-value-cloud','am-detail-status','am-detail-updated',
@@ -157,12 +157,14 @@ test('La pantalla de inicio sigue la maqueta aprobada sin fabricar lecturas',()=
  assert.match(css,/grid-template-columns:/);
  assert.match(css,/@media\(max-width:650px\)/);
  assert.match(html,/Actualización: sin datos/);
- assert.match(html,/Sin información de observación verificable|Esperando consulta de una fuente verificable/);
+ assert.match(html,/Sin observación aeronáutica verificada/);
  assert.doesNotMatch(html,/(?:\d{2,3}°\s*\/\s*)?\d{1,2}\s*kt\s*<\/strong>/);
 });
 
-test('El panel no atribuye observaciones 3D-PAWS a aeropuertos sin sensor',()=>{
- assert.match(app,/onSelected:showStation,onObservation:showObservation/);
+test('El panel no atribuye lecturas de estaciones 3D-PAWS a aeropuertos sin un METAR válido',()=>{
+ assert.doesNotMatch(app,/GDV_WEATHER_STATIONS/);
+ assert.match(app,/loadMetarObservation\(point\)/);
+ assert.match(app,/data\.icao!==icao/);
  assert.match(app,/onForecast:showForecastResult/);
  assert.match(app,/Observación local ≠ METAR oficial/);
  assert.match(app,/capa nacional cargada/);
