@@ -8,7 +8,7 @@
 <title>AeroMeteo · Developed by Gente de Vuelo</title>
 <link rel="icon" type="image/svg+xml" href="../assets/aerometeo-logo.svg">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="../assets/aerometeo.css?v=20261107radarlegend1">
+<link rel="stylesheet" href="../assets/aerometeo.css?v=20261107explain1">
 </head>
 <body>
 <header class="am-header">
@@ -99,25 +99,6 @@
    </div>
    <p class="am-radar-disclaimer">Fuente: <a href="https://www.rainviewer.com/" target="_blank" rel="noopener noreferrer">RainViewer</a> (datos radar, uso educativo en prueba). Solo pasado, no pronóstico ni alerta. Cobertura variable: la ausencia de ecos no prueba ausencia de precipitación. Verificá <a href="https://www.argentina.gob.ar/smn" target="_blank" rel="noopener noreferrer">SMN</a>, SIGMET y NOTAM.</p>
   </section>
-   <button class="am-source-card" id="am-source-aviation" type="button" aria-expanded="false" aria-controls="am-aviation-tools">
-    <span class="am-source-icon" aria-hidden="true">✈</span>
-    <span class="am-source-copy"><strong>METAR / TAF</strong><small>Observaciones y pronósticos aeronáuticos por aeródromo.</small></span>
-    <span class="am-source-chevron" aria-hidden="true">›</span>
-   </button>
-   <section class="am-source-tools" id="am-aviation-tools" hidden aria-labelledby="aerometeo-aviation-heading">
-    <h3 id="aerometeo-aviation-heading">Consultar producto aeronáutico</h3>
-    <label class="am-label" for="aerometeo-icao">Código OACI argentino</label>
-    <input id="aerometeo-icao" class="am-select" type="text" value="SAAV" maxlength="4" pattern="SA[A-Za-z]{2}" spellcheck="false" autocomplete="off" aria-describedby="aerometeo-aviation-status">
-    <div class="am-button-row">
-     <button type="button" class="am-button am-button-secondary" id="aerometeo-metar">Consultar METAR</button>
-     <button type="button" class="am-button am-button-secondary" id="aerometeo-taf">Consultar TAF</button>
-    </div>
-    <p id="aerometeo-aviation-status" class="am-small" role="status">Ingresá, por ejemplo, SAAV o SAEZ.</p>
-    <pre id="aerometeo-aviation-result" class="am-aviation-result" hidden></pre>
-    <a id="aerometeo-aviation-source" href="https://aviationweather.gov/data/api/" target="_blank" rel="noopener noreferrer" hidden>Aviation Weather Center · NOAA/NWS ↗</a>
-    <p class="am-small">Verificar fecha de emisión y productos oficiales del SMN.</p>
-   </section>
-
    <p class="am-sidebar-footnote">Uso informativo y educativo. Las observaciones y los pronósticos son fuentes diferentes. Referencias oficiales: <a href="https://www.argentina.gob.ar/smn" target="_blank" rel="noopener noreferrer">SMN</a> · <a href="https://ws2.smn.gob.ar/pronarea" target="_blank" rel="noopener noreferrer">PRONAREA</a> (enlaces externos sujetos a disponibilidad).</p>
   </div>
  </aside>
@@ -199,6 +180,11 @@
      <p id="am-auto-metar-status" role="status">Seleccioná un aeropuerto con código OACI.</p>
      <small id="am-auto-metar-date"></small>
      <pre id="am-auto-metar-raw" hidden aria-label="Mensaje METAR original"></pre>
+     <div id="am-auto-metar-explanation" class="am-report-explanation" hidden>
+      <strong>¿Qué significa este METAR?</strong>
+      <ul id="am-auto-metar-explanation-lines"></ul>
+      <small>Interpretación automática parcial. El mensaje original prevalece; verificá su fecha y el SMN antes de volar.</small>
+     </div>
     </section>
     <section class="am-automatic-product" aria-label="TAF del aeropuerto">
      <h3>TAF · Pronóstico aeronáutico</h3>
@@ -206,10 +192,15 @@
      <small id="am-auto-taf-date"></small>
      <p id="am-auto-taf-validity"></p>
      <pre id="am-auto-taf-raw" hidden aria-label="Mensaje TAF original"></pre>
+     <div id="am-auto-taf-explanation" class="am-report-explanation" hidden>
+      <strong>¿Qué significa este TAF?</strong>
+      <ul id="am-auto-taf-explanation-lines"></ul>
+      <small>Interpretación automática parcial. Los períodos y las horas se expresan en UTC; no reemplaza el reporte original ni su vigencia.</small>
+     </div>
     </section>
    </div>
    <p class="am-detail-footnote">Los mensajes pueden faltar o estar desactualizados. Los horarios de emisión y validez se muestran cuando la fuente los aporta; verificá AIP, SMN y NOTAM antes de volar.</p>
-   <p id="am-detail-aviation-status">También podés buscar manualmente un código OACI en «METAR / TAF», dentro de Fuentes y productos.</p>
+   <p id="am-detail-aviation-status">Seleccioná un aeropuerto en el mapa para consultar automáticamente sus METAR y TAF, cuando estén disponibles.</p>
    <a href="https://www.argentina.gob.ar/smn" target="_blank" rel="noopener noreferrer">Portal oficial del SMN ↗</a>
   </section>
  </aside>
@@ -223,10 +214,10 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="../assets/aerolocator-open-meteo-ui.js?v=20261107dock1"></script>
-<script src="../assets/aerometeo-aviation-ui.js?v=20261106am3"></script>
+<script src="../assets/aerometeo-messages-es.js?v=20261107explain1"></script>
 <script src="../assets/aerometeo-metar-summary.js?v=20261107obs1"></script>
 <script src="../assets/aerometeo-hourly-chart.js?v=20261107hourly1"></script>
 <script src="../assets/aerometeo-radar.js?v=20261107radar1"></script>
-<script src="../assets/aerometeo-app.js?v=20261107mapspace1"></script>
+<script src="../assets/aerometeo-app.js?v=20261107explain1"></script>
 </body>
 </html>
