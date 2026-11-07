@@ -31,7 +31,7 @@ test('Tarjetas y controles existentes preservados',()=>{
  assert.doesNotMatch(app,/GDV_WEATHER_STATIONS/);
  assert.match(app,/GDV_OPEN_METEO_FORECAST/);
  assert.doesNotMatch(app,/map\.on\('moveend'/);
- assert.doesNotMatch(app,/map\.on\('zoomend'/);
+ assert.match(app,/map\.on\('zoomend',refreshAirportMarkers\)/);
 });
 
 test('Curva utiliza únicamente muestras horarias realmente recibidas',()=>{
