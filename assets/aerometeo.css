@@ -283,3 +283,29 @@ a:focus-visible,button:focus-visible,summary:focus-visible,input:focus-visible,s
 @media(max-width:650px){
  .am-forecast-dock{top:8px;right:8px;max-height:calc(100% - 16px);width:min(320px,calc(100% - 16px))}
 }
+
+/* Portada compacta aprobada: reducir a ~la mitad la franja de presentación
+   sin cambiar tipografía, ilustración, paleta ni contenido. */
+.am-hero{
+ height:100px;min-height:0;padding:7px clamp(20px,3vw,58px);
+ background-position:center 53%;
+}
+.am-hero-content{
+ max-width:950px;padding-left:15px;border-left-width:4px;
+}
+.am-hero h1{font-size:clamp(27px,2.5vw,36px);line-height:1.05;margin:0 0 2px}
+.am-hero-subtitle{font-size:clamp(15px,1.35vw,19px);line-height:1.15;margin:0 0 3px}
+.am-hero-text{font-size:clamp(10px,.9vw,12px);line-height:1.25;max-width:900px}
+@media(max-width:950px){
+ .am-hero{height:auto;min-height:94px;padding:9px 18px}
+ .am-hero h1{font-size:30px}
+ .am-hero-subtitle{font-size:16px}
+ .am-hero-text{font-size:10px;line-height:1.25}
+}
+@media(max-width:650px){
+ .am-hero{height:auto;min-height:0;padding:10px 13px;background-position:58% center}
+ .am-hero-content{padding-left:11px;border-left-width:3px}
+ .am-hero h1{font-size:27px}
+ .am-hero-subtitle{font-size:15px}
+ .am-hero-text{font-size:10px;line-height:1.28;max-width:100%}
+}
