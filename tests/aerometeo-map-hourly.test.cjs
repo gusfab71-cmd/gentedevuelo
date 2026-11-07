@@ -134,7 +134,7 @@ test('El mapa aprovecha el espacio al eliminar la barra de variables y la franja
  assert.doesNotMatch(css,/\.am-map-actions|\.am-map-variable-summary/);
  assert.match(css,/\.am-map-canvas\{flex:1 1 auto;min-height:0\}/);
  assert.match(css,/\.am-map-toolbar\{flex-wrap:nowrap\}/);
- assert.match(html,/aerometeo\.css\?v=20261107explain1/);
+ assert.match(html,/aerometeo\.css\?v=20261107compactcard1/);
  assert.match(app,/dockContainer:document\.querySelector\('\.am-map-canvas'\)/);
 });
 
@@ -154,5 +154,5 @@ test('La vista cartográfica es visible sin desplegar el control oculto de Leafl
  assert.match(app,/button\.setAttribute\('aria-pressed',String\(active\)\)/);
  assert.match(css,/\.am-map-base-selector\{/);
  assert.match(css,/\.am-map-base-selector button\.is-selected/);
- assert.match(html,/aerometeo\.css\?v=20261107explain1/);
+ assert.match(html,/aerometeo\.css\?v=20261107compactcard1/);
 });
