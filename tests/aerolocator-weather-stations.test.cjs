@@ -91,3 +91,28 @@ test('La interfaz no inventa observaciones y declara claramente que no son METAR
  assert.match(ui,/Desactualizada|DESACTUALIZADA/);
  assert.doesNotMatch(ui,/api\.open-meteo\.com/);
 });
+
+test('La estación Cañuelas distingue HTTP 403 de un dato meteorológico faltante',async()=>{
+ const prior=global.fetch;
+ let requested='';
+ global.fetch=async url=>{
+  requested=String(url);
+  return {ok:false,status:403};
+ };
+ try{
+  const output={code:0,body:null,setHeader(){},status(code){this.code=code;return this},json(data){this.body=data;return this}};
+  await handler({method:'GET',query:{id:'3dpaws-13'}},output);
+  assert.equal(output.code,200);
+  assert.equal(output.body.id,'3dpaws-13');
+  assert.equal(output.body.available,false);
+  assert.equal(output.body.observation,null);
+  assert.equal(output.body.issue,'provider_access_denied');
+  assert.match(output.body.note,/denegó la descarga/);
+  assert.equal(requested,'https://3d-argentina.icdp.ucar.edu/api/v1/data/13.geojson?last');
+ }finally{
+  global.fetch=prior;
+ }
+ assert.match(ui,/data\.issue==='provider_access_denied'/);
+ assert.match(meteoApp,/issue==='provider_access_denied'/);
+ assert.match(meteoApp,/No se sustituyen lecturas por modelos/);
+});
