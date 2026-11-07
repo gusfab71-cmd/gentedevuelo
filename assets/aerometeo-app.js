@@ -348,6 +348,8 @@ function boot(){
   onForecastError:forecastError,
   dockContainer:document.querySelector('.am-map-canvas')
  })||null;
+ // Radar independiente de la vista del pronóstico y de las variables meteorológicas.
+ const radar=root.GDV_AEROMETEO_RADAR?.boot({map,L})||null;
  // AeroMeteo oculta el control duplicado de Open-Meteo: usa el panel propio.
  const control=$('open-meteo-map-forecast')?.closest('.leaflet-control');
  if(control)control.style.display='none';
@@ -591,7 +593,7 @@ function boot(){
  });
  // Arranque: se muestran ubicaciones, pero jamás datos meteorológicos ficticios.
  setStatus('Ubicaciones aeronáuticas de referencia. Elegí un aeródromo o punto: el pronóstico se consulta a demanda; las observaciones METAR dependen de disponibilidad.');
- return {map,forecast,showTab,selectSource};
+ return {map,forecast,radar,showTab,selectSource};
 }
 root.GDV_AEROMETEO={boot,PLACES,ARGENTINA,safeNumber,localTime};
 if(typeof module==='object'&&module.exports)module.exports={boot,PLACES,ARGENTINA,safeNumber,localTime};
