@@ -74,3 +74,66 @@ test('despliegue automático de Vercel queda limitado a main',()=>{
  assert.equal(config.git.deploymentEnabled['*'],false);
  assert.equal(config.git.deploymentEnabled.main,true);
 });
+
+test('AeroLocator presenta cotas en tarjeta flotante y permite cerrarla u ocultarla',async()=>{
+ const fakeElement=tag=>({
+  tagName:tag,children:[],listeners:{},attributes:{},hidden:false,checked:false,textContent:'',
+  append(...nodes){this.children.push(...nodes)},
+  setAttribute(key,value){this.attributes[key]=value},
+  addEventListener(name,callback){this.listeners[name]=callback}
+ });
+ const toggle=fakeElement('input');
+ const container=fakeElement('div');
+ const handlers={};
+ let layerAdded=false,layerRemoved=false;
+ const L={
+  tileLayer:()=>({addTo(){layerAdded=true}}),
+  DomEvent:{disableClickPropagation(){},disableScrollPropagation(){}}
+ };
+ const map={
+  getContainer:()=>container,
+  on(event,handler){handlers[event]=handler},
+  removeLayer(){layerRemoved=true}
+ };
+ const document={
+  getElementById(id){return id==='terrain-aerolocator-toggle'?toggle:null},
+  createElement:fakeElement
+ };
+ const fetch=async()=>({ok:true,json:async()=>({points:[{lat:-32.85,lng:-69.2,elevation_m:4230}]})});
+ const window={};
+ vm.runInNewContext(js,{window,document,fetch});
+ const controller=window.GDV_TERRAIN.bootAeroLocator({map,L,readRouteState:()=>({drawing:false})});
+ assert.ok(controller);
+ const card=controller.card;
+ assert.equal(card.id,'terrain-aerolocator-card');
+ assert.equal(card.hidden,true,'La tarjeta no debe mostrarse al cargar la página');
+ assert.equal(toggle.checked,false,'La capa debe iniciar apagada');
+ toggle.checked=true;
+ toggle.listeners.change();
+ assert.equal(layerAdded,true);
+ await handlers.click({latlng:{lat:-32.85,lng:-69.2}});
+ assert.equal(card.hidden,false);
+ const texts=[];
+ function gather(node){texts.push(node.textContent);for(const child of node.children||[])gather(child)}
+ gather(card);
+ assert.ok(texts.some(value=>value.includes('4.230')),'Debe informar 4.230 metros');
+ assert.ok(texts.some(value=>value.includes('13.878')),'Debe informar 13.878 pies');
+ assert.ok(texts.some(value=>value.includes('SRTM')),'Debe informar procedencia numérica');
+ const close=card.children[0].children[1];
+ close.listeners.click();
+ assert.equal(card.hidden,true,'El botón cerrar debe ocultar la tarjeta');
+ await handlers.click({latlng:{lat:-32.85,lng:-69.2}});
+ assert.equal(card.hidden,false);
+ toggle.checked=false;
+ toggle.listeners.change();
+ assert.equal(card.hidden,true,'Al apagar la capa se cierra la tarjeta');
+ assert.equal(layerRemoved,true);
+});
+test('la tarjeta es responsive y no aparece en la barra superior',()=>{
+ const css=read('assets/terrain-relief.css');
+ assert.match(css,/\.terrain-float-card\s*\{/);
+ assert.match(css,/\.terrain-float-card\[hidden\]/);
+ assert.match(css,/@media\(max-width:760px\)/);
+ assert.match(aero,/aria-describedby="terrain-aerolocator-card"/);
+ assert.doesNotMatch(aero,/terrain-aerolocator-readout/);
+});
