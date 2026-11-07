@@ -433,3 +433,19 @@ a:focus-visible,button:focus-visible,summary:focus-visible,input:focus-visible,s
  .am-map-toolbar h2{white-space:normal}
  .am-hourly-metric-picker select{flex:1 1 130px}
 }
+
+/* Leyenda mínima de ecos radar: escala Universal Blue (RainViewer color=2).
+   Representa reflectividad relativa, no mm de lluvia ni alerta de tormentas. */
+.am-sidebar .am-radar-legend{
+ display:flex;align-items:center;gap:6px;min-width:0;
+ color:#c6dae7;font-size:9px;line-height:1.2;
+}
+.am-sidebar .am-radar-legend span:first-child,
+.am-sidebar .am-radar-legend span:last-child{flex:0 0 auto}
+.am-sidebar .am-radar-legend-scale{
+ display:block;flex:1 1 auto;min-width:36px;height:7px;border-radius:8px;
+ background:linear-gradient(90deg,
+  #88ddee 0%,#00a3e0 19%,#005588 38%,
+  #ffee00 58%,#ffaa00 76%,#ff4400 89%,#e62800 100%);
+ border:1px solid #ffffff29;
+}
