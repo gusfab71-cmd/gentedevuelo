@@ -135,7 +135,7 @@ test('No hay API key secreta ni solicitudes automáticas al mover mapa',()=>{
  assert.doesNotMatch(app,/map\.on\('moveend'/);
  assert.doesNotMatch(app,/map\.on\('zoomend'/);
  assert.match(app,/aerometeo-forecast-center/);
- assert.match(app,/aerometeo-show-stations/);
+ assert.doesNotMatch(app,/aerometeo-show-stations/);
  assert.match(html,/CC BY 4\.0/);
  assert.match(html,/Uso informativo y educativo/);
 });
@@ -166,9 +166,9 @@ test('El panel no atribuye lecturas de estaciones 3D-PAWS a aeropuertos sin un M
  assert.match(app,/loadMetarObservation\(point\)/);
  assert.match(app,/data\.icao!==icao/);
  assert.match(app,/onForecast:showForecastResult/);
- assert.match(app,/Observación local ≠ METAR oficial/);
+ assert.match(app,/no se reemplaza con el pronóstico/);
  assert.match(app,/capa nacional cargada/);
- assert.match(html,/No es una estación/i);
+ assert.match(html,/No son mediciones reales/i);
  assert.match(app,/icao:'SABE'/); // Aeroparque, no SAAR.
  assert.match(app,/icao:'SAAR'/); // Rosario.
  assert.ok(!html.includes('SAAR – Aeroparque'));
