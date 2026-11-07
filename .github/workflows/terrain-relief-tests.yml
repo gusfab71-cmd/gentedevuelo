@@ -1,0 +1,37 @@
+name: Relieve IGN y perfil de terreno
+on:
+  pull_request:
+    paths:
+      - 'api/terrain-elevation.js'
+      - 'assets/terrain-relief.js'
+      - 'assets/terrain-relief.css'
+      - 'utilidades/pistas-no-oficiales.html'
+      - 'utilidades/meteorologia-aeronautica.html'
+      - 'tests/terrain-relief.test.cjs'
+      - '.github/workflows/terrain-relief-tests.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'api/terrain-elevation.js'
+      - 'assets/terrain-relief.js'
+      - 'assets/terrain-relief.css'
+      - 'utilidades/pistas-no-oficiales.html'
+      - 'utilidades/meteorologia-aeronautica.html'
+      - 'tests/terrain-relief.test.cjs'
+      - '.github/workflows/terrain-relief-tests.yml'
+permissions:
+  contents: read
+jobs:
+  terrain-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validar sintaxis
+        run: |
+          node --check assets/terrain-relief.js
+          node --check api/terrain-elevation.js
+      - name: Validar capa, perfil y API
+        run: node --test tests/terrain-relief.test.cjs
