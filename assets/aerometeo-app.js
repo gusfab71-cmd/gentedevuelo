@@ -269,23 +269,139 @@ function boot(){
  // AeroMeteo oculta el control duplicado de Open-Meteo: usa el panel propio.
  const control=$('open-meteo-map-forecast')?.closest('.leaflet-control');
  if(control)control.style.display='none';
- // Los puntos OACI representan ubicaciones de referencia; la observación requiere un METAR disponible.
- const airportMarker=(place)=>{
-  const icon=L.divIcon({
-   className:'am-airport-marker',
-   html:'<span class="am-airport-icon">✈</span><span class="am-airport-code">'+place.icao+'</span>',
-   iconSize:[71,27],iconAnchor:[12,14]
+ // Los marcadores indican aeropuertos de REFERENCIA, no disponibilidad de METAR ni estado operativo.
+ // Archivo local derivado de OurAirports; consultar AIP/NOTAM antes de volar.
+ const airportPlaces={...PLACES};
+ let catalogAirports=[];
+ const provinceFilter=$('aerometeo-province');
+ const airportsStatus=$('am-airports-status');
+ function refreshAirportMarkers(){
+  airportGroup.clearLayers();
+  const zoom=map.getZoom();
+  const points=catalogAirports.length?catalogAirports:Object.values(PLACES).filter(p=>p.icao);
+  const visible=zoom>=7?points:points.filter(p=>p.primary!==false);
+  for(const place of visible){
+   const showCode=zoom>=6;
+   const safeICAO=/^SA[A-Z]{2}$/.test(place.icao||'')?place.icao:'';
+   if(!safeICAO)continue;
+   const icon=L.divIcon({
+    className:'am-airport-marker'+(showCode?'':' am-airport-compact'),
+    html:'<span class="am-airport-icon">✈</span>'+(showCode?'<span class="am-airport-code">'+safeICAO+'</span>':''),
+    iconSize:showCode?[71,27]:[26,26],iconAnchor:showCode?[12,14]:[13,13]
+   });
+   const marker=L.marker([place.lat,place.lon],{icon,title:safeICAO+' · '+place.name});
+   marker.bindTooltip(safeICAO+' · '+place.name+
+    (place.province?' · '+place.province:'')+' · ubicación de referencia',{direction:'top'});
+   marker.on('click',()=>{
+    selectedPoint={...place};
+    $('aerometeo-icao').value=safeICAO;
+    if(place.province&&provinceFilter){
+     provinceFilter.value=place.province;
+     fillAirportSelect(safeICAO);
+    }
+    void forecast?.showAt(place);
+   });
+   marker.addTo(airportGroup);
+  }
+  if(airportsStatus&&catalogAirports.length){
+   airportsStatus.textContent=catalogAirports.length+' aeropuertos de referencia en 23 provincias y CABA · '+visible.length+
+    ' marcadores visibles. Acercá el mapa para ver más.';
+  }
+ }
+ function fillAirportSelect(selected){
+  if(!catalogAirports.length)return;
+  const old=selected||locations.value;
+  locations.replaceChildren();
+  const visibleProvince=provinceFilter?.value||'';
+  const grouped=new Map();
+  for(const place of catalogAirports){
+   if(visibleProvince&&visibleProvince!==place.province)continue;
+   if(!grouped.has(place.province))grouped.set(place.province,[]);
+   grouped.get(place.province).push(place);
+  }
+  for(const [province,places] of grouped){
+   const group=document.createElement('optgroup');
+   group.label=province;
+   for(const place of places){
+    const option=document.createElement('option');
+    option.value=place.icao;
+    option.textContent=place.name+' · '+place.icao;
+    group.append(option);
+   }
+   locations.append(group);
+  }
+  if(!visibleProvince){
+   const others=document.createElement('optgroup');
+   others.label='Otros puntos de referencia';
+   const canuelas=document.createElement('option');
+   canuelas.value='canuelas';
+   canuelas.textContent='Cañuelas (sin METAR propio)';
+   others.append(canuelas);locations.append(others);
+  }
+  if(Array.from(locations.options).some(option=>option.value===old)){
+   locations.value=old;
+  }else if(Array.from(locations.options).some(option=>option.value==='SABE')){
+   locations.value='SABE';
+  }else if(locations.options.length){
+   locations.selectedIndex=0;
+  }
+ }
+ provinceFilter?.addEventListener('change',()=>{
+  fillAirportSelect();
+  const province=provinceFilter.value;
+  if(!province)return;
+  const points=catalogAirports.filter(place=>place.province===province);
+  if(points.length===1)map.setView([points[0].lat,points[0].lon],7,{animate:false});
+  else if(points.length>1)map.fitBounds(L.latLngBounds(points.map(p=>[p.lat,p.lon])),{
+   padding:[45,45],maxZoom:8,animate:false
   });
-  const marker=L.marker([place.lat,place.lon],{icon,title:place.icao+' · '+place.name});
-  marker.bindTooltip(place.icao+' · '+place.name+' · ubicación de referencia',{direction:'top'});
-  marker.on('click',()=>{
-   selectedPoint={...place};
-   $('aerometeo-icao').value=place.icao;
-   void forecast?.showAt(place);
-  });
-  return marker;
- };
- for(const place of Object.values(PLACES))if(place.icao)airportMarker(place).addTo(airportGroup);
+ });
+ async function loadProvincialAirports(){
+  try{
+   const response=await fetch('../assets/aerometeo-airports-provinces.json',{cache:'force-cache'});
+   if(!response.ok)throw Error('Catálogo sin acceso');
+   const data=await response.json();
+   if(!Array.isArray(data.records)||data.jurisdictions!==24||data.primaryCount!==24)
+    throw Error('Catálogo incompleto');
+   const seen=new Set(),provinces=new Set(),primary=new Set(),accepted=[];
+   for(const entry of data.records){
+    if(!/^SA[A-Z]{2}$/.test(entry?.icao||'')||seen.has(entry.icao)||
+       typeof entry.label!=='string'||!entry.label.trim()||
+       typeof entry.province!=='string'||!entry.province.trim()||
+       !Number.isFinite(entry.lat)||!Number.isFinite(entry.lon)||
+       entry.lat< -56||entry.lat> -21||entry.lon< -75||entry.lon> -52||
+       typeof entry.primary!=='boolean')throw Error('Aeropuerto inválido en catálogo');
+    seen.add(entry.icao);provinces.add(entry.province);
+    if(entry.primary)primary.add(entry.province);
+    accepted.push({
+     icao:entry.icao,name:entry.label,province:entry.province,
+     lat:entry.lat,lon:entry.lon,primary:entry.primary
+    });
+   }
+   if(provinces.size!==24||primary.size!==24||accepted.length!==data.count)throw Error('Cobertura provincial incompleta');
+   catalogAirports=accepted;
+   for(const p of accepted)airportPlaces[p.icao]=p;
+   provinceFilter.replaceChildren();
+   const all=document.createElement('option');
+   all.value='';all.textContent='Todas las provincias y CABA';
+   provinceFilter.append(all);
+   const provinceNames=[...provinces].sort((a,b)=>a.localeCompare(b,'es'));
+   for(const province of provinceNames){
+    const option=document.createElement('option');
+    option.value=province;option.textContent=province;
+    provinceFilter.append(option);
+   }
+   fillAirportSelect('SABE');
+   refreshAirportMarkers();
+  }catch(_error){
+   airportGroup.clearLayers();
+   refreshAirportMarkers();
+   if(airportsStatus)airportsStatus.textContent='No se pudo cargar el catálogo provincial. Se muestran solo los aeropuertos de referencia originales; los pronósticos siguen funcionando por coordenadas.';
+  }
+ }
+ map.on('zoomend',refreshAirportMarkers);
+ refreshAirportMarkers();
+ void loadProvincialAirports();
  const focusMap=()=>{
   map.invalidateSize({animate:false});
   if(window.matchMedia('(max-width:650px)').matches)
@@ -299,7 +415,7 @@ function boot(){
   focusMap();
  };
  $('aerometeo-forecast-location').addEventListener('click',()=>{
-  const place=PLACES[locations.value];
+  const place=airportPlaces[locations.value];
   if(!place)return setStatus('Ubicación no reconocida.');
   map.setView([place.lat,place.lon],Math.max(7,map.getZoom()),{animate:false});
   forecastAt(place);
@@ -309,7 +425,7 @@ function boot(){
   forecastAt({name:'centro del mapa',lat:center.lat,lon:center.lng});
  });
  $('am-detail-forecast-action').addEventListener('click',()=>{
-  if(!selectedPoint)return setStatus('Seleccioná primero un punto del mapa o una estación.');
+  if(!selectedPoint)return setStatus('Seleccioná primero un aeropuerto o un punto del mapa.');
   forecastAt(selectedPoint);
  });
  selection.addEventListener('click',()=>{
