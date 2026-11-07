@@ -48,12 +48,16 @@ test('Curva utiliza únicamente muestras horarias realmente recibidas',()=>{
  assert.equal(hourly.series({forecast:[{time:'invalida',windKt:20}]},'wind').length,0);
 });
 
-test('Conmutar Viento, Lluvia, Nubes y Temperatura actualiza el gráfico sin fingir capas nacionales',()=>{
+test('Las variables del gráfico horario se eligen solo en la tarjeta de pronóstico',()=>{
+ assert.match(app,/const metricPicker=create\('div',undefined,'am-hourly-metric-picker'\)/);
+ assert.match(app,/metricSelect\.id='am-hourly-metric'/);
+ assert.match(app,/for\(const \[key,item\] of Object\.entries\(METRICS\)\)/);
+ assert.match(app,/metricSelect\.addEventListener\('change'/);
  assert.match(app,/GDV_AEROMETEO_HOURLY\?\.render\(hourlyChart,data,lastMetric\)/);
- assert.match(app,/GDV_AEROMETEO_HOURLY\?\.render\(chartTarget,currentForecast,lastMetric\)/);
- assert.match(app,/No existe una capa nacional cargada/);
  assert.match(html,/aerometeo-hourly-chart\.js/);
- assert.match(css,/\.am-hourly-chart svg/);
+ assert.match(css,/\.am-hourly-metric-picker/);
+ assert.doesNotMatch(html,/data-weather-metric|am-active-layer-name|am-layer-note/);
+ assert.doesNotMatch(app,/data-weather-metric|am-active-layer-name|am-layer-note/);
 });
 
 test('El gráfico identifica el modelo y no lo presenta como METAR u observación',()=>{
@@ -118,24 +122,18 @@ test('AeroMeteo no muestra estaciones 3D-PAWS sin permiso de descarga',()=>{
  assert.match(app,/loadMetarObservation/);
 });
 
-test('La tarjeta de la variable seleccionada nunca queda tapada por el pronóstico',()=>{
- const mapStart=html.indexOf('<div class="am-map-canvas">');
- const mapEnd=html.indexOf('<div class="am-map-status"',mapStart);
- assert.ok(mapStart>=0&&mapEnd>mapStart);
- const mapRegion=html.slice(mapStart,mapEnd);
- const summary=mapRegion.indexOf('<div class="am-map-variable-summary"');
- const canvasClose=mapRegion.indexOf('</div>\n  <div class="am-map-variable-summary"');
- assert.ok(canvasClose>0,'La tarjeta queda fuera del contenedor Leaflet');
- assert.ok(summary>canvasClose,'La tarjeta debe mostrarse inmediatamente debajo del mapa');
- assert.match(mapRegion,/id="am-active-layer-name"/);
- assert.match(mapRegion,/id="am-layer-note"/);
- assert.doesNotMatch(mapRegion,/am-map-float/);
- assert.match(css,/\.am-map-variable-summary\{/);
- assert.match(css,/\.am-map-variable-summary\s*\{[\s\S]*?flex:0 0 auto/);
- assert.doesNotMatch(css,/\.am-map-float\{/);
- assert.doesNotMatch(html,/am-color-scale/);
- assert.match(html,/aerometeo\.css\?v=20261107radarside1/);
- // Dock de pronóstico sigue dentro del mapa, por lo que no puede invadir la barra.
+test('El mapa aprovecha el espacio al eliminar la barra de variables y la franja inferior',()=>{
+ const mapStart=html.indexOf('<section class="am-map-section"');
+ const canvasStart=html.indexOf('<div class="am-map-canvas">',mapStart);
+ const statusStart=html.indexOf('<div class="am-map-status"',canvasStart);
+ assert.ok(mapStart>=0&&canvasStart>mapStart&&statusStart>canvasStart);
+ const mapRegion=html.slice(mapStart,statusStart);
+ assert.doesNotMatch(mapRegion,/data-weather-metric|am-map-actions|am-map-variable-summary/);
+ assert.doesNotMatch(html,/am-active-layer-name|am-layer-note|am-color-scale/);
+ assert.doesNotMatch(css,/\.am-map-actions|\.am-map-variable-summary/);
+ assert.match(css,/\.am-map-canvas\{flex:1 1 auto;min-height:0\}/);
+ assert.match(css,/\.am-map-toolbar\{flex-wrap:nowrap\}/);
+ assert.match(html,/aerometeo\.css\?v=20261107mapspace1/);
  assert.match(app,/dockContainer:document\.querySelector\('\.am-map-canvas'\)/);
 });
 
