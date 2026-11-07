@@ -95,9 +95,11 @@ const landing=fs.readFileSync(new URL('../utilidades/gestion-aeronautica/index.h
 const html=fs.readFileSync(new URL('../utilidades/gestion-aeronautica/portal.html',import.meta.url),'utf8');
 // La portada institucional es pública; el portal real conserva la barrera administrativa.
 assert.match(landing,/<title>AeroSuite .* Gente de Vuelo<\/title>/);
-assert.match(landing,/id="aerosuite-superadmin-link"[^>]*href="superadministrador\.html"[^>]*hidden/,'El acceso a Superadministración debe estar oculto por defecto en la presentación');
-assert.match(landing,/from\('aerosuite_superadmins'\)\.select\('user_id'\)/,'Solo el rol específico puede mostrar el botón de Superadministración');
-assert.match(landing,/data\?\.user_id===user\.id\)link\.hidden=false/,'La presentación debe confirmar el usuario autorizado antes de mostrar el botón');
+const privateAdmin=fs.readFileSync(new URL('../utilidades/gestion-aeronautica/superadministrador.html',import.meta.url),'utf8');
+assert.doesNotMatch(landing,/id="aerosuite-superadmin-link"|href="superadministrador\.html"/,'La presentación no debe mostrar enlaces administrativos');
+assert.match(privateAdmin,/id="adminContent" hidden/,'El panel privado debe permanecer oculto hasta autorizar al propietario');
+assert.match(privateAdmin,/from\('aerosuite_superadmins'\)\.select\('user_id'\)/,'El panel conserva la verificación del rol privado');
+assert.match(privateAdmin,/href="portal\.html">Abrir demostración privada/,'La demo se abre solo desde el panel privado');
 
 // Utilidades: AeroSuite operativo solo para el administrador, no para usuarios públicos.
 const utilitiesPage=fs.readFileSync(new URL('../utilidades/index.html',import.meta.url),'utf8');
@@ -174,7 +176,7 @@ assert.match(gdvHomepage,/toolsNav\.hidden = !!window\.gdvLegacyAdmin/,'Ocultar 
 assert.match(gdvHomepage,/#menuDesplegable \[hidden\]\{display:none!important\}/,'Respetar visibilidad del acceso');
 assert.match(gdvHomepage,/\.from\("site_admins"\)\.select\("user_id"\)\.eq\("user_id", user\.id\)\.maybeSingle\(\)/,'El menú comprueba administrador en Supabase');
 assert.doesNotMatch(gdvHomepage,/<a href="utilidades\/">Utilidades<\/a>/,'No mantener etiqueta anterior en la barra principal');
-assert.match(landing,/<a class="btn btn-ghost btn-small" href="portal\.html">Ingresar a la demo/,'La presentación permite ingresar a la demo');
+assert.doesNotMatch(landing,/href="portal\.html"|Ingresar a la demo/,'La demo no aparece en la presentación pública');
 assert.match(html,/if\(roleError\|\|!data\)throw Error\('Acceso exclusivo del administrador\.'\)/,'El portal privado no debe perder la protección administrativa');
 assert.doesNotMatch(gdvHomepage,/id="gdv-aerosuite-menu-link" href="utilidades\/gestion-aeronautica\/portal\.html"/,'La portada no debe saltar la presentación');
 console.log('PASS: portada Gente de Vuelo muestra AeroSuite solamente al administrador, preserva herramientas públicas');
@@ -195,15 +197,14 @@ assert.match(landing,/\.hero-visual:after\{[^}]*linear-gradient\(180deg,#061827c
 assert.doesNotMatch(landing,/\.photo-bottom\{z-index:1;position:relative;padding:30px\}/,'El título no debe tapar el avión en la zona baja');
 console.log('PASS: portada AeroSuite avión en pista y texto elevado');
 
-for(const name of ['Bienven','Quiénes somos','Tres áreas','Área del Alumno','Instructor','Gestión Administrativa','Preguntas frecuentes']){
+for(const name of ['Bienven','Quiénes somos','Un solo sistema','Área del Alumno','Instructor','Gestión Administrativa','Preguntas frecuentes']){
  assert.ok(landing.includes(name),'Falta sección pública de AeroSuite: '+name);
 }
 for(const section of ['solucion','areas','modulos','nosotros','preguntas']){
  assert.ok(landing.includes('id="'+section+'"'),'Falta sección de presentación: '+section);
 }
-assert.match(landing,/href="portal\.html"/);
-assert.match(landing,/id="aerosuite-superadmin-link"[^>]*hidden/,'El acceso de Superadministración permanece oculto antes de verificar el rol');
-assert.match(landing,/if\(!error && data\?\.user_id===user.id\)link.hidden=false/,'El enlace se revela únicamente al propietario autenticado');
+assert.doesNotMatch(landing,/href="portal\.html"|id="aerosuite-superadmin-link"/,'La portada pública no debe ofrecer accesos de administrador');
+assert.match(privateAdmin,/id="adminContent" hidden/,'El acceso de Superadministración permanece privado');
 assert.match(html,/site_admins/,'El portal operativo debe conservar control de acceso admin');
 assert.match(html,/Acceso exclusivo del administrador/);
 assert.match(html,/href="index\.html">Volver a la presentación<\/a>/);
@@ -656,7 +657,9 @@ assert.match(studentFormHtml,/new Date\(\)\.toISOString\(\)/);
 assert.match(studentFormHtml,/type="checkbox" required/,'Aviso de privacidad');
 assert.match(studentFormHtml,/no aparecen en Mi Hangar/);
 assert.match(studentFormHtml,/gentedevuelo@gmail\.com/,'Responsable de tratamiento');
-assert.match(landing,/href="mi-ficha-alumno\.html">Completar perfil de AeroSuite/,'Registro accesible desde la presentación');
+const institutionalPortal=fs.readFileSync(new URL('../utilidades/gestion-aeronautica/portal-escuela.html',import.meta.url),'utf8');
+assert.match(institutionalPortal,/href="mi-ficha-alumno\.html"/,'La ficha sigue accesible desde el portal institucional');
+assert.doesNotMatch(landing,/href="mi-ficha-alumno\.html"/,'Completar perfil no debe anunciarse en portada pública');
 console.log('PASS: un solo usuario GdV, roles declarativos Alumno Instructor Piloto, foto opcional, documentos privados');
 
 // Flight Operations: una sola aplicación para Formación e Instrucción, sin privilegios IA en el modo demo.
