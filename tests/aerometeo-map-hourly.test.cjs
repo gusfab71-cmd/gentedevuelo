@@ -97,7 +97,7 @@ test('SMN: enlace institucional alternativo y acceso interno METAR/TAF',()=>{
  assert.match(html,/class="am-official-main"/);
  assert.match(html,/id="aerometeo-smn-alternative"/);
  assert.match(html,/fuente NOAA\/AWC/);
- assert.match(html,/tempor[áa]neamente inaccesibles/);
+ assert.match(html,/temporalmente inaccesibles/);
  assert.match(html,/href="https:\/\/ws2\.smn\.gob\.ar\/pronarea"/);
  assert.match(html,/href="https:\/\/ws2\.smn\.gob\.ar\/metar"/);
  assert.match(html,/href="https:\/\/ws2\.smn\.gob\.ar\/taf"/);
