@@ -60,14 +60,11 @@ function boot(){
  });
  L.control.layers({'Satélite':satellite,'Calles y caminos':street},null,{position:'bottomright',collapsed:true}).addTo(map);
 
- let selectedPoint=null,selectedStation=null,currentForecast=null;
- let lastStationId=null,lastObservedAt=null,lastMetric='wind',clickToForecast=false;
+ let selectedPoint=null,currentForecast=null;
+ let lastMetric='wind',clickToForecast=false;
  let forecastRequest=0;
  let observationRequest=0;
  const status=$('aerometeo-status');
- const stationButton=$('aerometeo-show-stations');
- const stationCount=$('aerometeo-station-count');
- const stationList=$('aerometeo-station-list');
  const selection=$('aerometeo-pick-location');
  const locations=$('aerometeo-location');
  const favorite=$('am-favorite');
@@ -89,7 +86,7 @@ function boot(){
   });
  }
  function selectSource(source,expand=true){
-  for(const key of ['stations','forecast','smn','aviation']){
+  for(const key of ['forecast','smn','aviation']){
    const card=$('am-source-'+key),panel=$('am-'+key+'-tools');
    const open=key===source&&expand;
    card?.classList.toggle('is-active',key===source);
@@ -103,7 +100,6 @@ function boot(){
    selectSource(key,!wasOpen);
    if(key==='aviation')showTab('aviation');
    else if(key==='forecast')showTab('forecast');
-   else if(key==='stations')showTab('observation');
   });
  }
  // El sitio del SMN puede ser inaccesible: ofrecer nuestra consulta AWC sin inventar observaciones.
@@ -138,60 +134,8 @@ function boot(){
   $text('am-detail-status',note);
   $text('am-detail-updated','Actualización: sin datos');
   $text('am-detail-condition','Sin información de observación verificable');
-  $text('am-detail-footnote','Observación local ≠ METAR oficial. Comprobar fecha y procedencia.');
+  $text('am-detail-footnote','Cuando existe un METAR original para el aeródromo, se presenta aquí con su fecha; no se reemplaza con modelos.');
   $('am-detail-status-dot').classList.remove('is-live','is-stale');
-  lastObservedAt=null;
- }
- function showStation(station){
-  selectedStation=station;
-  lastStationId=station.id;
-  selectedPoint={lat:station.lat,lon:station.lon,name:station.name};
-  currentForecast=null;
-  forecastMarkers.clearLayers();
-  setLocation(station.name,station.location+' · 3D-PAWS · Instrumento '+station.instrumentId);
-  clearObservation('Consultando estación 3D-PAWS…');
-  showTab('observation');
-  selectSource('stations',false);
-  setStatus('Estación '+station.name+': recuperando última medición local; no es METAR.');
- }
- function showObservation(station,observation,diagnostic){
-  if(station.id!==lastStationId)return;
-  if(!observation){
-   const issue=diagnostic?.issue;
-   const detail=issue==='provider_access_denied'
-    ?'Fuente 3D-PAWS: acceso a mediciones restringido (HTTP 401/403).'
-    :issue==='provider_unavailable'
-     ?'No se pudo conectar con la fuente 3D-PAWS.'
-     :'No hay una medición con fecha y valores verificables.';
-   clearObservation(detail);
-   $text('am-detail-updated','Consulta: '+(diagnostic?.checkedAt?localTime(diagnostic.checkedAt):'sin fecha confirmada'));
-   $text('am-detail-footnote','El punto indica una estación documentada, no disponibilidad de datos. '+detail+' Podés consultar el enlace de la estación original. No se sustituyen lecturas por modelos.');
-   setStatus(station.name+': '+detail);
-   return;
-  }
-  const stale=observation.status!=='recent';
-  const validTime=new Date(observation.observedAt);
-  if(!Number.isFinite(validTime.getTime())){
-   clearObservation('Hora de medición inválida');
-   return;
-  }
-  lastObservedAt=observation.observedAt;
-  $('am-detail-status-dot').classList.toggle('is-stale',stale);
-  $('am-detail-status-dot').classList.toggle('is-live',!stale);
-  $text('am-detail-status',stale?'Medición DESACTUALIZADA · 3D-PAWS':'Observación local · 3D-PAWS');
-  $text('am-detail-updated','Registrada: '+localTime(observation.observedAt)+' · hace '+observation.ageMinutes+' min');
-  const wind=observation.windDirection===null?'':safeNumber(observation.windDirection,'°');
-  const speed=safeNumber(observation.windKt,' kt');
-  $text('am-value-wind',[wind,speed].filter(x=>x&&x!==EMPTY).join(' / ')||EMPTY);
-  $text('am-value-gust',safeNumber(observation.gustKt,' kt'));
-  $text('am-value-temperature',safeNumber(observation.temperatureC,' °C'));
-  $text('am-value-pressure',safeNumber(observation.pressureHpa,' hPa'));
-  $text('am-value-humidity',safeNumber(observation.humidityPct,' %'));
-  $text('am-value-cloud','No medida');
-  $text('am-detail-condition',stale?'Observación antigua: no utilizar como condición actual':'Última observación disponible de la estación');
-  $text('am-detail-footnote','Fuente: 3D Argentina / 3D-PAWS. No es METAR oficial; verificar licencia y vigencia.');
-  setStatus((stale?'Atención: medición antigua de ':'Observación local de ')+station.name+
-   '. Referencia '+localTime(observation.observedAt)+'.');
  }
  async function loadMetarObservation(point){
   const icao=typeof point?.icao==='string'?point.icao.trim().toUpperCase():'';
@@ -199,7 +143,7 @@ function boot(){
   const id=++observationRequest;
   $text('am-detail-status','Consultando METAR '+icao+'…');
   $text('am-detail-updated','Pendiente de observación aeronáutica');
-  $text('am-detail-footnote','La ubicación seleccionada no es estación 3D-PAWS. Buscando un METAR original y verificando su fecha.');
+  $text('am-detail-footnote','Buscando un METAR original y verificando su fecha de emisión.');
   const controller=new AbortController();
   const timeout=setTimeout(()=>controller.abort(),12000);
   try{
@@ -251,15 +195,10 @@ function boot(){
  function showForecastPending(point){
   forecastRequest++;
   selectedPoint={...point};
-  // Conservar observaciones de estación solo cuando el pronóstico coincide con esa estación.
-  const sameStation=selectedStation&&Math.abs(selectedStation.lat-point.lat)<.001&&
-   Math.abs(selectedStation.lon-point.lon)<.001;
-  if(!sameStation){
-   selectedStation=null;lastStationId=null;clearObservation('Sin estación meteorológica física en este punto');
-   if(/^SA[A-Z]{2}$/.test(point.icao||''))void loadMetarObservation(point);
-  }
+  clearObservation('Sin observación METAR disponible para el punto seleccionado');
+  if(/^SA[A-Z]{2}$/.test(point.icao||''))void loadMetarObservation(point);
   currentForecast=null;
-  setLocation(point.name,(sameStation?'Comparación con estación 3D-PAWS':'Punto de pronóstico')+' · Argentina');
+  setLocation(point.name,'Punto de pronóstico · Argentina');
   showTab('forecast');
   const box=$('am-forecast-content');
   box.replaceChildren(create('p','Consultando el modelo meteorológico…'));
@@ -322,56 +261,15 @@ function boot(){
   $('am-forecast-content').replaceChildren(create('p','La fuente no devolvió un pronóstico verificable. No se muestran cifras.'));
   setStatus('Pronóstico no disponible para '+point.name+'. Revisar la conexión.');
  }
- const weather=root.GDV_WEATHER_STATIONS?.boot({
-  map,L,onSelected:showStation,onObservation:showObservation
- })||null;
  const forecast=root.GDV_OPEN_METEO_FORECAST?.boot({
   map,L,onPending:showForecastPending,onForecast:showForecastResult,
   onForecastError:forecastError,
   dockContainer:document.querySelector('.am-map-canvas')
  })||null;
- const syncStations=()=>{
-  const active=Boolean(weather?.active);
-  stationButton.setAttribute('aria-pressed',String(active));
-  stationButton.textContent=active?'Ocultar estaciones en el mapa':'Mostrar estaciones en el mapa';
- };
- // Controles secundarios Leaflet permanecen operativos internamente pero el
- // dashboard usa sus propias tarjetas; se evita duplicar controles sobre el mapa.
- for(const id of ['weather-stations-toggle','open-meteo-map-forecast']){
-  const control=$(id)?.closest('.leaflet-control');
-  if(control)control.style.display='none';
- }
- stationButton.addEventListener('click',()=>{
-  if(!weather)return setStatus('Módulo 3D-PAWS no disponible.');
-  if(weather.active)weather.hide();else weather.show();
-  syncStations();
-  setStatus('Actualizando la visibilidad de las ubicaciones 3D-PAWS. Seleccioná una para consultar su lectura.');
- });
- async function readStations(){
-  try{
-   const response=await fetch('../assets/aerolocator-weather-stations-ar.json',{cache:'no-store'});
-   if(!response.ok)throw Error('No disponible');
-   const json=await response.json(),records=Array.isArray(json.stations)?json.stations.filter(s=>
-    typeof s.id==='string'&&typeof s.name==='string'&&Number.isFinite(s.lat)&&Number.isFinite(s.lon)):[];
-   if(!records.length)throw Error('Sin estaciones');
-   stationCount.textContent=records.length+' estaciones documentadas · 3D-PAWS';
-   stationList.replaceChildren();
-   for(const station of records){
-    const button=create('button',station.name);
-    button.type='button';button.append(create('small',station.location+' · instrumento '+station.instrumentId));
-    button.addEventListener('click',async()=>{
-     $('aerometeo-station-details').open=false;
-     if(!weather)return setStatus('No se pudo abrir la capa de estaciones.');
-     const shown=await weather.showStation(station.id);
-     if(shown){syncStations();focusMap()}
-     else setStatus('No se pudo abrir la estación '+station.name);
-    });
-    stationList.append(button);
-   }
-  }catch(_){stationCount.textContent='No se pudo recuperar el inventario de estaciones.'}
- }
- void readStations();
- // Los puntos OACI representan ubicaciones para consultar: NO son estaciones 3D-PAWS.
+ // AeroMeteo oculta el control duplicado de Open-Meteo: usa el panel propio.
+ const control=$('open-meteo-map-forecast')?.closest('.leaflet-control');
+ if(control)control.style.display='none';
+ // Los puntos OACI representan ubicaciones de referencia; la observación requiere un METAR disponible.
  const airportMarker=(place)=>{
   const icon=L.divIcon({
    className:'am-airport-marker',
@@ -494,9 +392,8 @@ function boot(){
   setStatus('Mapa general de Argentina. Seleccioná una estación, un aeródromo o un punto de pronóstico.');
  });
  // Arranque: se muestran ubicaciones, pero jamás datos meteorológicos ficticios.
- if(weather){weather.show();syncStations()}
- setStatus('Ubicaciones aeronáuticas y estaciones documentadas. Elegí un punto: los valores se consultan bajo demanda.');
- return {map,weather,forecast,showTab,selectSource};
+ setStatus('Ubicaciones aeronáuticas de referencia. Elegí un aeródromo o punto: el pronóstico se consulta a demanda; las observaciones METAR dependen de disponibilidad.');
+ return {map,forecast,showTab,selectSource};
 }
 root.GDV_AEROMETEO={boot,PLACES,ARGENTINA,safeNumber,localTime};
 if(typeof module==='object'&&module.exports)module.exports={boot,PLACES,ARGENTINA,safeNumber,localTime};
