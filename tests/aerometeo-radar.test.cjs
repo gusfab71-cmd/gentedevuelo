@@ -51,6 +51,14 @@ test('Radar es una capa independiente, fuera del visor de pronósticos y sin com
  assert.match(app,/GDV_AEROMETEO_RADAR\?\.boot\(\{map,L\}\)/);
  assert.match(css,/\.am-radar-panel\[hidden\]/);
  assert.match(css,/\.am-radar-disclaimer/);
+ assert.match(html,/class="am-radar-legend"/);
+ assert.match(html,/role="img" aria-label="Cian y azul: ecos débiles a moderados/);
+ assert.match(html,/Débil<\/span>/);
+ assert.match(html,/Intenso<\/span>/);
+ assert.match(css,/\.am-sidebar \.am-radar-legend\{/);
+ assert.match(css,/\.am-sidebar \.am-radar-legend-scale\{/);
+ assert.match(css,/height:7px/);
+ assert.match(css,/linear-gradient\(90deg/);
  const radarStart=html.indexOf('<section id="am-radar-panel"');
  const sidebarStart=html.indexOf('<aside class="am-sidebar"');
  const sidebarEnd=html.indexOf('</aside>',sidebarStart);
@@ -63,7 +71,7 @@ test('Radar es una capa independiente, fuera del visor de pronósticos y sin com
  assert.ok(html.indexOf('id="aerometeo-radar-toggle"')<sidebarEnd);
  assert.match(css,/\.am-sidebar \.am-radar-panel\s*\{/);
  assert.match(css,/\.am-sidebar \.am-radar-player\{/);
- assert.match(html,/aerometeo\.css\?v=20261107mapspace1/);
+ assert.match(html,/aerometeo\.css\?v=20261107radarlegend1/);
  assert.match(html,/solo pasado, no pronóstico ni alerta/i);
  assert.match(html,/RainViewer/);
  assert.match(html,/SMN/);
