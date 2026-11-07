@@ -102,7 +102,7 @@ function boot({map,L,onSelected,onObservation}){
        ?'La fuente 3D-PAWS no autoriza descargar sus lecturas (HTTP 401/403). La estación está registrada, pero no tenemos mediciones disponibles.'
        :data.issue==='provider_unavailable'
         ?'No se pudo conectar a la fuente 3D-PAWS. Podés consultar la estación original.'
-        :'La fuente no entregó mediciones con fecha y valores verificables. No se muestran pronósticos como observaciones.';
+        :'Sin una medición reciente verificable: la fuente no entregó datos con fecha y valores válidos. No se muestran pronósticos como observaciones.';
       return;
      }
      const observation=data.observation;
