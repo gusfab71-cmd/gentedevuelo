@@ -661,9 +661,9 @@ let ravRecords=[],ravFormOpen=false;
 const trainingInstitution={institutionType:'non_ciac',reviewMode:'chief'};
 // Tres areas visual y funcionalmente aisladas dentro de la demostracion.
 const AREA_DEFS=Object.freeze({
- alumno:{title:'Área del Alumno',subtitle:'Formación, progreso, reservas y biblioteca aeronáutica.',home:'ficha_alumno',tabs:[['alumno','Mis Reservas y Formación'],['academia','Mi Academia Aeronáutica'],['piloto','Mi actividad personal · Demo'],['flightops','Flight Operations · Planificación'],['pistas','AeroLocator'],['ficha_alumno','Mi perfil y datos personales']]},
- instructor:{title:'Instructor y Jefe de Instructores',subtitle:'Evaluaciones, clases, seguimiento de alumnos y supervisión pedagógica.',home:'instructor',tabs:[['instructor','Panel del instructor'],['ficha_alumno','Mi perfil AeroSuite'],['direccion','Jefatura de instructores'],['personas','Seguimiento, fichas y RAV'],['flightops','Flight Operations · Instrucción'],['pistas','AeroLocator']]},
- administracion:{title:'Gestión Administrativa de Escuela',subtitle:'Agenda, operaciones, flota, personal, recursos y contabilidad.',home:'inicio',tabs:[['inicio','Panel administrativo'],['ficha_alumno','Mi perfil AeroSuite'],['reservas','Agenda y reservas'],['vuelos','Registro de vuelos'],['flota','Aeronaves y mantenimiento'],['pistas','AeroLocator'],['admin_personas','Personal y usuarios'],['admin_academia','Gestionar biblioteca'],['finanzas','Contabilidad y Finanzas'],['stock','Combustible y aceite'],['documentos','Documentos y avisos']]}
+ alumno:{title:'Área del Alumno',subtitle:'Formación, progreso, reservas y biblioteca aeronáutica.',home:'ficha_alumno',tabs:[['alumno','Mis Reservas y Formación'],['academia','Mi Academia Aeronáutica'],['piloto','Mi actividad personal · Demo'],['flightops','Flight Operations · Planificación'],['aerometeo','AeroMeteo'],['pistas','AeroLocator'],['ficha_alumno','Mi perfil y datos personales']]},
+ instructor:{title:'Instructor y Jefe de Instructores',subtitle:'Evaluaciones, clases, seguimiento de alumnos y supervisión pedagógica.',home:'instructor',tabs:[['instructor','Panel del instructor'],['ficha_alumno','Mi perfil AeroSuite'],['direccion','Jefatura de instructores'],['personas','Seguimiento, fichas y RAV'],['flightops','Flight Operations · Instrucción'],['aerometeo','AeroMeteo'],['pistas','AeroLocator']]},
+ administracion:{title:'Gestión Administrativa de Escuela',subtitle:'Agenda, operaciones, flota, personal, recursos y contabilidad.',home:'inicio',tabs:[['inicio','Panel administrativo'],['ficha_alumno','Mi perfil AeroSuite'],['reservas','Agenda y reservas'],['vuelos','Registro de vuelos'],['flota','Aeronaves y mantenimiento'],['aerometeo','AeroMeteo'],['pistas','AeroLocator'],['admin_personas','Personal y usuarios'],['admin_academia','Gestionar biblioteca'],['finanzas','Contabilidad y Finanzas'],['stock','Combustible y aceite'],['documentos','Documentos y avisos']]}
 });
 let currentArea=null;
 function areaPortalMarkup(){
@@ -741,7 +741,7 @@ function render(){
  $('sidebar').innerHTML=area.tabs.map(([key,label])=>'<button type="button" data-tab="'+key+'" class="'+(key===tab?'active':'')+'">'+label+'</button>').join('');
  $('sidebar').querySelectorAll('button').forEach(button=>button.addEventListener('click',()=>switchTab(button.dataset.tab)));
  $('areaBack').onclick=backToAreaPortal;
- const sections={inicio:dashboard,alumno:studentPortal,ficha_alumno:studentProfileScreen,piloto:privatePilotPortal,instructor:instructorPortal,direccion:directorPortal,reservas:calendar,vuelos:flightScreen,flota:fleetScreen,personas:memberScreen,admin_personas:adminPeopleScreen,admin_academia:adminAcademyScreen,finanzas:financeScreen,stock:stockScreen,academia:academyScreen,pistas:airstripsScreen,flightops:flightOperationsScreen,documentos:documentsScreen};
+ const sections={inicio:dashboard,alumno:studentPortal,ficha_alumno:studentProfileScreen,piloto:privatePilotPortal,instructor:instructorPortal,direccion:directorPortal,reservas:calendar,vuelos:flightScreen,flota:fleetScreen,personas:memberScreen,admin_personas:adminPeopleScreen,admin_academia:adminAcademyScreen,finanzas:financeScreen,stock:stockScreen,academia:academyScreen,pistas:airstripsScreen,flightops:flightOperationsScreen,aerometeo:aeroMeteoScreen,documentos:documentsScreen};
  if(!area.tabs.some(([key])=>key===tab))tab=area.home;
  $('screen').innerHTML=sections[tab]();wire();
 }
@@ -1602,6 +1602,15 @@ function flightOperationsScreen(){
   '</section>'+
   '<section class="aerosuite-flightops-framebox" aria-label="Flight Operations integrado">'+
   '<iframe class="aerosuite-flightops-frame" title="Flight Operations · '+safe(label)+' · Sin inteligencia artificial" src="'+url+'" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe></section>';
+}
+function aeroMeteoScreen(){
+ const url='../aerometeo.html';
+ return '<section class="panel" aria-label="AeroMeteo · Meteorología aeronáutica">'+
+  '<span class="eyebrow">Gente de Vuelo · Herramienta compartida</span>'+
+  '<h2>AeroMeteo</h2>'+
+  '<p>Mapa meteorológico, estaciones 3D-PAWS, pronósticos Open-Meteo y consultas SMN, METAR y TAF. Las observaciones y los pronósticos se identifican por separado; ninguna consulta sustituye la información aeronáutica oficial vigente.</p>'+
+  '<div class="toolbar"><a class="action" href="'+url+'" target="_blank" rel="noopener noreferrer">Abrir AeroMeteo a pantalla completa ↗</a></div>'+
+  '</section>';
 }
 function airstripsScreen(){
  const roleLabel=currentArea==='alumno'?'Área del Alumno':currentArea==='instructor'?'Área del Instructor y Jefatura':'Gestión Administrativa';
