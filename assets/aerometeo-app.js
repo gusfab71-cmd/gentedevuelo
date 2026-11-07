@@ -148,11 +148,19 @@ function boot(){
   selectSource('stations',false);
   setStatus('Estación '+station.name+': recuperando última medición local; no es METAR.');
  }
- function showObservation(station,observation){
+ function showObservation(station,observation,diagnostic){
   if(station.id!==lastStationId)return;
   if(!observation){
-   clearObservation('No se pudo verificar una medición de esta estación');
-   setStatus('La estación '+station.name+' no entregó una observación verificable. Consultá la fuente original.');
+   const issue=diagnostic?.issue;
+   const detail=issue==='provider_access_denied'
+    ?'Fuente 3D-PAWS: acceso a mediciones restringido (HTTP 401/403).'
+    :issue==='provider_unavailable'
+     ?'No se pudo conectar con la fuente 3D-PAWS.'
+     :'No hay una medición con fecha y valores verificables.';
+   clearObservation(detail);
+   $text('am-detail-updated','Consulta: '+(diagnostic?.checkedAt?localTime(diagnostic.checkedAt):'sin fecha confirmada'));
+   $text('am-detail-footnote','El punto indica una estación documentada, no disponibilidad de datos. '+detail+' Podés consultar el enlace de la estación original. No se sustituyen lecturas por modelos.');
+   setStatus(station.name+': '+detail);
    return;
   }
   const stale=observation.status!=='recent';
