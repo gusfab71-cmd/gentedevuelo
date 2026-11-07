@@ -58,7 +58,23 @@ function boot(){
  const street=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
   maxZoom:18,attribution:'© OpenStreetMap contributors'
  });
- L.control.layers({'Satélite':satellite,'Calles y caminos':street},null,{position:'bottomright',collapsed:true}).addTo(map);
+ // Selector de cartografía visible sobre el mapa; sustituye el ícono pequeño de Leaflet.
+ const baseButtons={satellite:$('am-basemap-satellite'),streets:$('am-basemap-streets')};
+ function selectBaseMap(kind){
+  const useSatellite=kind==='satellite';
+  const target=useSatellite?satellite:street;
+  const other=useSatellite?street:satellite;
+  if(!map.hasLayer(target))target.addTo(map);
+  if(map.hasLayer(other))map.removeLayer(other);
+  for(const [name,button] of Object.entries(baseButtons)){
+   if(!button)continue;
+   const active=name===(useSatellite?'satellite':'streets');
+   button.classList.toggle('is-selected',active);
+   button.setAttribute('aria-pressed',String(active));
+  }
+ }
+ baseButtons.satellite?.addEventListener('click',()=>selectBaseMap('satellite'));
+ baseButtons.streets?.addEventListener('click',()=>selectBaseMap('streets'));
 
  let selectedPoint=null,currentForecast=null;
  let lastMetric='wind',clickToForecast=false;
@@ -87,7 +103,7 @@ function boot(){
   });
  }
  function selectSource(source,expand=true){
-  for(const key of ['forecast','smn','aviation']){
+  for(const key of ['forecast','aviation']){
    const card=$('am-source-'+key),panel=$('am-'+key+'-tools');
    const open=key===source&&expand;
    card?.classList.toggle('is-active',key===source);
@@ -95,7 +111,7 @@ function boot(){
    if(panel)panel.hidden=!open;
   }
  }
- for(const key of ['stations','forecast','smn','aviation']){
+ for(const key of ['forecast','aviation']){
   $('am-source-'+key)?.addEventListener('click',()=>{
    const wasOpen=$('am-source-'+key).getAttribute('aria-expanded')==='true';
    selectSource(key,!wasOpen);
@@ -103,12 +119,6 @@ function boot(){
    else if(key==='forecast')showTab('forecast');
   });
  }
- // El sitio del SMN puede ser inaccesible: ofrecer nuestra consulta AWC sin inventar observaciones.
- $('aerometeo-smn-alternative')?.addEventListener('click',()=>{
-  selectSource('aviation',true);
-  showTab('aviation');
-  $('aerometeo-icao')?.focus();
- });
  for(const button of document.querySelectorAll('[data-detail-tab]')){
   button.addEventListener('click',()=>{
    const tab=button.dataset.detailTab;
