@@ -382,6 +382,24 @@ function boot(){
   observer.observe(src,{childList:true,subtree:true,characterData:true});
  }
  const layout=$('aerometeo-app'),togglePanel=$('aerometeo-toggle-panel');
+ const expandMapButton=$('aerometeo-expand-map');
+ function setExpandedMap(expanded){
+  layout.classList.toggle('am-map-expanded',expanded);
+  expandMapButton?.setAttribute('aria-pressed',String(expanded));
+  if(expandMapButton)expandMapButton.textContent=expanded?'⛶ Volver a vista completa':'⛶ Ampliar mapa';
+  requestAnimationFrame(()=>{
+   map.invalidateSize({animate:false});
+   if(map._popup?.update)map._popup.update();
+  });
+ }
+ expandMapButton?.addEventListener('click',()=>{
+  setExpandedMap(!layout.classList.contains('am-map-expanded'));
+ });
+ root.addEventListener('keydown',event=>{
+  if(event.key==='Escape'&&layout.classList.contains('am-map-expanded')){
+   setExpandedMap(false);
+  }
+ });
  togglePanel.addEventListener('click',()=>{
   const hidden=layout.classList.toggle('am-sidebar-hidden');
   togglePanel.setAttribute('aria-expanded',String(!hidden));
