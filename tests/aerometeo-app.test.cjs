@@ -42,7 +42,7 @@ test('Se retira la tarjeta SMN y se mantienen referencias oficiales discretas',(
  assert.doesNotMatch(html,/id="am-smn-tools"/);
  assert.match(html,/href="https:\/\/www\.argentina\.gob\.ar\/smn"/);
  assert.match(html,/href="https:\/\/ws2\.smn\.gob\.ar\/pronarea"/);
- assert.match(html,/https:\/\/aviationweather\.gov\//);
+ assert.match(html,/Aviation Weather Center/);
  assert.doesNotMatch(app,/aerometeo-smn-alternative/);
 });
 
