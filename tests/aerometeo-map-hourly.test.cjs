@@ -134,7 +134,7 @@ test('La tarjeta de la variable seleccionada nunca queda tapada por el pronósti
  assert.match(css,/\.am-map-variable-summary\s*\{[\s\S]*?flex:0 0 auto/);
  assert.doesNotMatch(css,/\.am-map-float\{/);
  assert.doesNotMatch(html,/am-color-scale/);
- assert.match(html,/aerometeo\.css\?v=20261107basepicker1/);
+ assert.match(html,/aerometeo\.css\?v=20261107radarside1/);
  // Dock de pronóstico sigue dentro del mapa, por lo que no puede invadir la barra.
  assert.match(app,/dockContainer:document\.querySelector\('\.am-map-canvas'\)/);
 });
