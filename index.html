@@ -4924,6 +4924,7 @@ img, video { max-width: 100%; }
     </summary>
     <div class="cuenta-opciones" id="opcionesCuenta">
       <a href="comunidad.html#hangar">Mi Hangar</a><a href="comunidad.html#perfil">Editar perfil</a><a href="comunidad.html#preferencias-correo">Correos y avisos</a>
+      <a href="utilidades/gestion-aeronautica/superadministrador.html" id="gdvAeroSuitePrivateAdminLink" hidden>Panel privado AeroSuite</a>
       <a href="comunidad.html#almacenamiento" id="gdvStorageLink" hidden>Almacenamiento</a>
        <a href="moderacion.html#video-portada" id="gdvStolAdminLink" hidden>Foto o video de portada</a>
        <a href="index.html?editar-tarjetas=1#inicio" id="gdvCardsEditLink" hidden>Editar tarjetas de portada</a>
@@ -6624,6 +6625,21 @@ document.getElementById("hangarLicense").textContent = perfil?.aviation_license 
   const toolsNav = document.getElementById("gdv-tools-menu-link");
   if (aeroSuiteNav) aeroSuiteNav.hidden = !window.gdvLegacyAdmin;
   if (toolsNav) toolsNav.hidden = !!window.gdvLegacyAdmin;
+  // El acceso privado se presenta solamente al Superadministrador autenticado.
+  // El panel de destino vuelve a verificar el rol; ocultar este enlace no es una medida de seguridad por sí sola.
+  const aeroSuitePrivateAdminLink = document.getElementById("gdvAeroSuitePrivateAdminLink");
+  if (aeroSuitePrivateAdminLink) {
+    aeroSuitePrivateAdminLink.hidden = true;
+    if (user) {
+      try {
+        const { data: aeroSuiteOwner, error: aeroSuiteOwnerError } = await supabaseClient
+          .from("aerosuite_superadmins").select("user_id").eq("user_id", user.id).maybeSingle();
+        aeroSuitePrivateAdminLink.hidden = !!aeroSuiteOwnerError || aeroSuiteOwner?.user_id !== user.id;
+      } catch (_) {
+        aeroSuitePrivateAdminLink.hidden = true;
+      }
+    }
+  }
   const storageLink = document.getElementById("gdvStorageLink");
   if (storageLink) storageLink.hidden = !window.gdvLegacyAdmin;
   const videoAdminLink = document.getElementById("gdvStolAdminLink");

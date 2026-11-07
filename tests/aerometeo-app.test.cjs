@@ -173,18 +173,26 @@ test('El panel no atribuye observaciones 3D-PAWS a aeropuertos sin sensor',()=>{
 });
 
 
-test('AeroMeteo aparece para Alumno, Instructor y Piloto PPA/PCA sin otorgar permisos nuevos',()=>{
+test('AeroMeteo aparece en el portal institucional para todos los roles sin otorgar permisos nuevos',()=>{
  const portal=fs.readFileSync(path.join(base,'utilidades/gestion-aeronautica/portal-escuela.html'),'utf8');
  const link=portal.match(/<a[^>]+id="aerosuiteAeroMeteoLink"[^>]+>[\s\S]*?<\/a>/);
  assert.ok(link,'Existe tarjeta AeroMeteo en el portal institucional');
- assert.match(link[0],/data-visible-role="alumno instructor piloto"/);
+ assert.match(link[0],/data-visible-role="administrador secretaria instructor alumno piloto"/);
  assert.match(link[0],/href="\.\.\/aerometeo\.html\?desde=portal-escuela"/);
  assert.match(link[0],/target="_blank"/);
  assert.match(link[0],/rel="noopener noreferrer"/);
  assert.match(link[0],/\shidden>/);
- assert.doesNotMatch(link[0],/data-module=|data-visible-role="[^"]*administrador|data-visible-role="[^"]*secretaria/);
+ assert.doesNotMatch(link[0],/data-module=/);
  assert.match(portal,/card\.hidden=!card\.dataset\.visibleRole\.split\(\/\\s\+\/\)\.includes\(school\.my_role\)/);
  assert.match(portal,/if\(!school\.can_access\)/);
  assert.match(app,/get\('desde'\)==='portal-escuela'/);
  assert.match(app,/back\.href='gestion-aeronautica\/portal-escuela\.html'/);
+});
+
+test('AeroMeteo aparece también en la demo de Alumno, Instructor y Administración',()=>{
+ const demo=fs.readFileSync(path.join(base,'utilidades/gestion-aeronautica/portal.html'),'utf8');
+ assert.equal((demo.match(/\['aerometeo','AeroMeteo'\]/g)||[]).length,3);
+ assert.match(demo,/aerometeo:aeroMeteoScreen/);
+ assert.match(demo,/function aeroMeteoScreen\(\)/);
+ assert.match(demo,/href="'\+url\+'" target="_blank" rel="noopener noreferrer">Abrir AeroMeteo/);
 });
