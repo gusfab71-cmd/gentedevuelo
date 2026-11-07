@@ -8,7 +8,7 @@
 <title>AeroMeteo · Developed by Gente de Vuelo</title>
 <link rel="icon" type="image/svg+xml" href="../assets/aerometeo-logo.svg">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="../assets/aerometeo.css?v=20261107mapbar1">
+<link rel="stylesheet" href="../assets/aerometeo.css?v=20261107radar1">
 </head>
 <body>
 <header class="am-header">
@@ -125,7 +125,23 @@
     <button type="button" data-weather-metric="temperature" aria-pressed="false">♧ Temperatura</button>
    </div>
    <button type="button" id="aerometeo-expand-map" class="am-map-expand" aria-pressed="false" aria-controls="map" title="Dar más espacio al mapa y a las tarjetas meteorológicas">⛶ Ampliar mapa</button>
+   <button type="button" id="aerometeo-radar-toggle" class="am-radar-toggle" aria-controls="am-radar-panel" aria-expanded="false" aria-pressed="false" title="Capa de radar de precipitación histórica (no son alertas de tormenta)">◉ Radar de lluvia</button>
   </div>
+  <section id="am-radar-panel" class="am-radar-panel" aria-label="Controles de radar meteorológico histórico" hidden>
+   <div class="am-radar-line">
+    <strong>Radar de precipitación · imágenes históricas</strong>
+    <span id="am-radar-status" role="status" aria-live="polite">Activá el radar para consultar la última secuencia.</span>
+    <button type="button" id="am-radar-refresh" title="Actualizar imágenes disponibles">Actualizar</button>
+   </div>
+   <div class="am-radar-line am-radar-player">
+    <button type="button" id="am-radar-prev" aria-label="Imagen de radar anterior" disabled>◀</button>
+    <button type="button" id="am-radar-play" aria-label="Reproducir imágenes históricas" disabled>▶ Reproducir</button>
+    <button type="button" id="am-radar-next" aria-label="Imagen de radar siguiente" disabled>▶</button>
+    <input type="range" id="am-radar-frame" aria-label="Seleccionar hora histórica del radar" min="0" max="0" value="0" step="1" disabled>
+    <strong id="am-radar-time">Sin imágenes</strong>
+   </div>
+   <p class="am-radar-disclaimer">Fuente: <a href="https://www.rainviewer.com/" target="_blank" rel="noopener noreferrer">RainViewer</a> (datos radar, uso educativo en prueba). Solo pasado, no pronóstico ni alerta. Cobertura variable: la ausencia de ecos no prueba ausencia de precipitación. Verificá <a href="https://www.argentina.gob.ar/smn" target="_blank" rel="noopener noreferrer">SMN</a>, SIGMET y NOTAM.</p>
+  </section>
   <div class="am-map-canvas">
    <div id="map" aria-label="Mapa de Argentina con ubicaciones de estaciones y aeródromos"></div>
    <div class="am-map-legend" aria-label="Referencias">
@@ -224,6 +240,7 @@
 <script src="../assets/aerometeo-aviation-ui.js?v=20261106am3"></script>
 <script src="../assets/aerometeo-metar-summary.js?v=20261107obs1"></script>
 <script src="../assets/aerometeo-hourly-chart.js?v=20261107hourly1"></script>
-<script src="../assets/aerometeo-app.js?v=20261107aviationauto1"></script>
+<script src="../assets/aerometeo-radar.js?v=20261107radar1"></script>
+<script src="../assets/aerometeo-app.js?v=20261107radar1"></script>
 </body>
 </html>
