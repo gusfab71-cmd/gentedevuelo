@@ -133,7 +133,7 @@ test('METAR y TAF preservan texto original, fecha y advertencia de antigüedad',
 test('No hay API key secreta ni solicitudes automáticas al mover mapa',()=>{
  for(const code of [app,aviationUi])assert.doesNotMatch(code,/apiKey\s*[:=]/i);
  assert.doesNotMatch(app,/map\.on\('moveend'/);
- assert.doesNotMatch(app,/map\.on\('zoomend'/);
+ assert.match(app,/map\.on\('zoomend',refreshAirportMarkers\)/);
  assert.match(app,/aerometeo-forecast-center/);
  assert.doesNotMatch(app,/aerometeo-show-stations/);
  assert.match(html,/CC BY 4\.0/);
@@ -168,7 +168,7 @@ test('El panel no atribuye lecturas de estaciones 3D-PAWS a aeropuertos sin un M
  assert.match(app,/onForecast:showForecastResult/);
  assert.match(app,/no se reemplaza con el pronóstico/);
  assert.match(app,/capa nacional cargada/);
- assert.match(html,/No son mediciones reales/i);
+ assert.match(html,/no garantizan operación ni METAR/i);
  assert.match(app,/icao:'SABE'/); // Aeroparque, no SAAR.
  assert.match(app,/icao:'SAAR'/); // Rosario.
  assert.ok(!html.includes('SAAR – Aeroparque'));
