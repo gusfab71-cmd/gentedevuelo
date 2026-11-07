@@ -106,6 +106,12 @@ function boot(){
    else if(key==='stations')showTab('observation');
   });
  }
+ // El sitio del SMN puede ser inaccesible: ofrecer nuestra consulta AWC sin inventar observaciones.
+ $('aerometeo-smn-alternative')?.addEventListener('click',()=>{
+  selectSource('aviation',true);
+  showTab('aviation');
+  $('aerometeo-icao')?.focus();
+ });
  for(const button of document.querySelectorAll('[data-detail-tab]')){
   button.addEventListener('click',()=>{
    const tab=button.dataset.detailTab;
