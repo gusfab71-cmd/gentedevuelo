@@ -349,3 +349,39 @@ a:focus-visible,button:focus-visible,summary:focus-visible,input:focus-visible,s
  max-height:260px;overflow-y:auto;padding:10px;border:1px solid #4b7789;background:#091d2c;
  color:#f0f5f8;border-radius:8px;margin:9px 0 0}
 .am-automatic-product pre[hidden]{display:none!important}
+
+/* Capa radar histórica independiente: controles fuera del mapa y de las tarjetas.
+   La integración RainViewer permanece en preview hasta revisar su licencia comercial. */
+.am-radar-toggle{
+ flex:0 0 auto;min-height:35px;padding:7px 11px;
+ border:1px solid #5c8798;border-radius:8px;background:#173449;color:#d8f2fd;
+ font-size:11px;font-weight:800;white-space:nowrap;cursor:pointer;
+}
+.am-radar-toggle:hover,.am-radar-toggle:focus-visible,.am-radar-toggle.is-selected{
+ border-color:#e6b568;background:#574525;color:#fff3d1
+}
+.am-radar-panel{
+ display:grid;gap:7px;flex:0 0 auto;padding:10px;
+ background:#0f2c3e;color:#d8eff5;border-bottom:1px solid #608496;
+ font-size:11px;
+}
+.am-radar-panel[hidden]{display:none!important}
+.am-radar-line{display:flex;align-items:center;flex-wrap:wrap;gap:7px;min-width:0}
+.am-radar-line strong{font-size:11px;color:#fff0ca}
+.am-radar-line>span{flex:1 1 140px;min-width:0;overflow-wrap:anywhere}
+.am-radar-line button{
+ min-height:31px;padding:5px 10px;border:1px solid #7699b5;
+ border-radius:7px;background:#204860;color:#f3faff;font-size:10px;font-weight:750;
+}
+.am-radar-line button:hover:not(:disabled){background:#306681}
+.am-radar-line button:disabled{opacity:.45;cursor:not-allowed}
+.am-radar-player input[type=range]{flex:1 1 130px;min-width:80px;accent-color:#e8b058}
+.am-radar-player>strong{font-variant-numeric:tabular-nums;font-size:10px;white-space:nowrap}
+.am-radar-disclaimer{font-size:10px!important;line-height:1.4!important;margin:1px 0 0!important;color:#bed9e4!important}
+.am-radar-disclaimer a{color:#f3cb82;text-decoration:underline}
+@media(max-width:650px){
+ .am-radar-toggle{flex:1 1 100%;min-height:35px}
+ .am-radar-panel{padding:9px 8px}
+ .am-radar-player>strong{flex:1 1 100%}
+ .am-radar-line button{padding:5px 8px}
+}
