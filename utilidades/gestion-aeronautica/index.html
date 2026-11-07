@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#0a1827">
-<meta name="description" content="AeroSuite, un proyecto de Gente de Vuelo: formación de alumnos, instrucción y gestión aeronáutica integradas para escuelas de vuelo y aeroclubes.">
+<meta name="description" content="AeroSuite by Gente de Vuelo: formación, instrucción, flota y gestión institucional integradas para escuelas de vuelo, aeródromos y aeroclubes.">
 <title>AeroSuite · Enseñar, volar y gestionar | By Gente de Vuelo</title>
 <link rel="preload" as="image" href="../../portada-manana-tres-palas.webp">
 <style>
@@ -71,33 +71,31 @@ p{color:#c2d3df;line-height:1.73;font-size:15px}
 .photo-pills span{font-size:10px;border:1px solid #9cc3db6f;background:#183951d9;padding:7px 10px;border-radius:9px;color:#f5faff;text-shadow:none}
 .intro-strip{padding:24px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);background:#12283cc0}
 .intro-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
-.intro-item{display:flex;gap:15px;align-items:center}
-.intro-number{color:#a3c9eb;font-weight:850;font-size:24px;letter-spacing:-.06em;flex-shrink:0}
+.intro-item{display:flex;align-items:center;border-left:2px solid #729fc7;padding-left:17px;min-height:51px}
 .intro-item strong{display:block;font-size:13px;margin-bottom:4px}
 .intro-item span{font-size:12px;color:#aebfce}
 .section-toned{background:#102337;border-top:1px solid #223c52;border-bottom:1px solid #223c52}
 .why-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
 .why-card{border:1px solid var(--border);border-radius:18px;padding:28px;background:linear-gradient(150deg,#1a354e,#12283c);min-height:198px}
-.why-card .why-icon{width:42px;height:42px;border:1px solid #6185a9;background:#284764;color:#b1d9f7;display:grid;place-items:center;border-radius:11px;margin-bottom:21px;font-size:18px;font-weight:850}
+.why-card::before{content:"";display:block;width:42px;height:3px;background:linear-gradient(90deg,#8ec9f4,#e8c38e);border-radius:8px;margin-bottom:23px}
 .why-card p{font-size:13px;max-width:460px;margin:0}
 .areas-grid{display:grid;grid-template-columns:1.13fr 1fr 1fr;gap:16px}
 .area-card{border:1px solid #4b6580;border-radius:21px;padding:31px 26px 28px;min-height:320px;background:linear-gradient(148deg,#1d344b,#142537);display:flex;flex-direction:column}
 .area-card.primary{background:linear-gradient(144deg,#26598a,#15324e);border-color:#7aa7cf;box-shadow:0 14px 38px #00132453}
 .area-card.instructor{border-color:#4a8689}
-.area-card .area-no{font-size:11px;letter-spacing:.12em;color:#bfd4e5;font-weight:800;margin-bottom:50px}
+.area-card .area-label{font-size:11px;letter-spacing:.12em;color:#bfd4e5;font-weight:800;margin-bottom:50px}
 .area-card h3{font-size:25px;line-height:1.18}
 .area-card p{font-size:13px;margin:0 0 20px}
 .area-card .area-caption{margin-top:auto;padding-top:18px;border-top:1px solid #6888a15c;font-size:11px;letter-spacing:.05em;font-weight:750;color:#b9dafa}
 .module-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
 .module-card{border:1px solid var(--border);background:#182b3c;border-radius:16px;padding:25px 22px;display:flex;flex-direction:column;gap:14px;min-height:215px}
-.module-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
-.module-no{font-size:22px;color:#88b4e2;font-weight:850;letter-spacing:-.06em}
+.module-top{display:flex;align-items:center;justify-content:flex-end;gap:8px}
 .module-status{font-size:10px;color:#c7dcef;letter-spacing:.04em;border:1px solid #4b6f89;background:#1d3c54;padding:6px 9px;border-radius:999px}
 .module-card h3{font-size:17px;margin:0}
 .module-card p{font-size:13px;margin:0}
-.workflow{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;counter-reset:steps}
+.workflow{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
 .step{padding:27px;border:1px solid var(--border);border-radius:17px;background:#182d40}
-.step::before{counter-increment:steps;content:"0" counter(steps);color:#a3c8ef;font-size:32px;font-weight:900;letter-spacing:-.08em;display:block;margin-bottom:20px}
+.step::before{content:"";display:block;width:36px;height:3px;border-radius:8px;background:#8ebde8;margin-bottom:23px}
 .step p{font-size:13px;margin:0}
 .about-grid{display:grid;grid-template-columns:1fr 1fr;gap:46px;align-items:center}
 .about-visual{border:1px solid #45637c;border-radius:25px;background:radial-gradient(ellipse at 30% 20%,#34699a7a,transparent 50%),linear-gradient(140deg,#173550,#0c1e30);padding:35px;min-height:340px;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden}
@@ -118,16 +116,21 @@ p{color:#c2d3df;line-height:1.73;font-size:15px}
 .final-cta h2{max-width:560px;margin:8px 0 13px}
 .final-cta p{margin:0;max-width:575px}
 .final-buttons{display:grid;gap:10px;min-width:225px}
+.access-section{border-top:1px solid var(--border);border-bottom:1px solid var(--border);background:#0d2032}
+.access-inner{padding:20px 0;display:flex;justify-content:space-between;align-items:center;gap:18px}
+.access-copy strong{display:block;color:#f0f7fe;font-size:14px;margin-bottom:4px}
+.access-copy span{color:#b1c9db;font-size:12px;line-height:1.5}
+.access-actions{display:flex;gap:10px;flex-wrap:wrap}
 footer{margin-top:90px;border-top:1px solid var(--border);background:#071523;padding:35px 0 39px}
 .footer-inner{display:flex;align-items:center;justify-content:space-between;gap:24px;font-size:12px;color:#9fb6c9}
 .footer-inner a:hover{color:white}
 .footer-links{display:flex;gap:18px;flex-wrap:wrap}
 @media(max-width:1080px){.nav-links{gap:14px}.nav-links a:nth-child(4){display:none}.hero-grid{gap:20px}.hero-visual{min-height:470px}.area-card{padding:24px 20px}.area-card h3{font-size:21px}}
-@media(max-width:890px){.container{width:min(1190px,calc(100% - 36px))}.nav-inner{flex-wrap:wrap;padding:13px 0;min-height:70px}.nav-links{order:3;width:100%;overflow-x:auto;padding:4px 0 3px}.nav-links a:nth-child(4){display:inline}.nav-cta{margin-left:auto}.hero-grid{grid-template-columns:1fr}.hero{padding:54px 0}.hero-copy>p{max-width:670px}.hero-visual{min-height:430px;max-height:530px}.areas-grid{grid-template-columns:repeat(2,1fr)}.area-card.primary{grid-column:1/-1;min-height:250px}.area-card .area-no{margin-bottom:35px}.module-grid{grid-template-columns:repeat(2,1fr)}.about-grid{gap:25px}}
-@media(max-width:640px){.nav-inner{gap:12px}.brand-name{font-size:20px}.brand-mark{width:41px;height:41px}.nav-links{gap:17px;font-size:11px;scrollbar-width:none}.nav-cta{gap:6px}.nav-cta .btn{padding:9px 11px;min-height:39px;font-size:11px}.hero{padding:43px 0 43px}.hero-visual{min-height:390px}.hero-visual .photo-bottom{top:80px;padding:0 20px}.photo-bottom h2{font-size:clamp(21px,5vw,24px)}.photo-caption{padding:32px 20px 15px;font-size:11px}.photo-top{top:17px;left:18px;right:18px}.intro-grid{grid-template-columns:1fr;gap:18px}.section{padding:64px 0}.why-grid,.areas-grid,.module-grid,.workflow,.about-grid,.faq-grid{grid-template-columns:1fr}.area-card.primary{grid-column:auto}.area-card{min-height:230px}.area-card .area-no{margin-bottom:29px}.why-card{min-height:unset;padding:23px}.module-card{min-height:170px}.about-visual{min-height:295px}.faq-grid{gap:15px}.final-cta{padding:30px 23px;display:block}.final-buttons{margin-top:22px}.footer-inner{align-items:start;flex-direction:column}.hero-copy>p{font-size:15px}}
+@media(max-width:890px){.container{width:min(1190px,calc(100% - 36px))}.nav-inner{flex-wrap:wrap;padding:13px 0;min-height:70px}.nav-links{order:3;width:100%;overflow-x:auto;padding:4px 0 3px}.nav-links a:nth-child(4){display:inline}.nav-cta{margin-left:auto}.hero-grid{grid-template-columns:1fr}.hero{padding:54px 0}.hero-copy>p{max-width:670px}.hero-visual{min-height:430px;max-height:530px}.areas-grid{grid-template-columns:repeat(2,1fr)}.area-card.primary{grid-column:1/-1;min-height:250px}.area-card .area-label{margin-bottom:35px}.module-grid{grid-template-columns:repeat(2,1fr)}.about-grid{gap:25px}}
+@media(max-width:640px){.access-inner{align-items:stretch;flex-direction:column}.access-actions .btn{flex:1}.nav-inner{gap:12px}.brand-name{font-size:20px}.brand-mark{width:41px;height:41px}.nav-links{gap:17px;font-size:11px;scrollbar-width:none}.nav-cta{gap:6px}.nav-cta .btn{padding:9px 11px;min-height:39px;font-size:11px}.hero{padding:43px 0 43px}.hero-visual{min-height:390px}.hero-visual .photo-bottom{top:80px;padding:0 20px}.photo-bottom h2{font-size:clamp(21px,5vw,24px)}.photo-caption{padding:32px 20px 15px;font-size:11px}.photo-top{top:17px;left:18px;right:18px}.intro-grid{grid-template-columns:1fr;gap:18px}.section{padding:64px 0}.why-grid,.areas-grid,.module-grid,.workflow,.about-grid,.faq-grid{grid-template-columns:1fr}.area-card.primary{grid-column:auto}.area-card{min-height:230px}.area-card .area-label{margin-bottom:29px}.why-card{min-height:unset;padding:23px}.module-card{min-height:170px}.about-visual{min-height:295px}.faq-grid{gap:15px}.final-cta{padding:30px 23px;display:block}.final-buttons{margin-top:22px}.footer-inner{align-items:start;flex-direction:column}.hero-copy>p{font-size:15px}}
 @media(max-width:470px){.nav-cta #aerosuite-superadmin-link:not([hidden]){grid-column:1/-1}}
 @media(prefers-reduced-motion:reduce){:root{scroll-behavior:auto}.btn,.area-card{transition:none}.btn:hover{transform:none}}
-@media(max-width:470px){.nav-cta{order:2;width:100%;margin-left:0;display:grid;grid-template-columns:1fr 1fr}.nav-cta .btn{white-space:normal;text-align:center;padding:8px 6px;font-size:10px}.nav-links{order:3}}
+@media(max-width:470px){.nav-cta{order:2;margin-left:auto;display:flex}.nav-cta .btn{white-space:normal;text-align:center;padding:8px 12px;font-size:11px}.nav-links{order:3}}
 </style>
 <script src="../../assets/supabase-2.117.2.min.js"></script>
 <script src="../../assets/community-config.js"></script>
@@ -145,22 +148,21 @@ footer{margin-top:90px;border-top:1px solid var(--border);background:#071523;pad
     <nav class="nav-links" aria-label="Navegación de la presentación">
       <a href="#solucion">La solución</a><a href="#areas">Tres áreas</a><a href="#modulos">Funcionalidades</a><a href="#nosotros">Quiénes somos</a><a href="#preguntas">Preguntas</a>
     </nav>
-    <div class="nav-cta"><a class="btn btn-small nav-home" href="../../index.html" aria-label="Volver al inicio de Gente de Vuelo">⌂ Inicio Gente de Vuelo</a><a class="btn btn-ghost btn-small" href="portal.html">Ingresar a la demo <span aria-hidden="true">↗</span></a><a id="aerosuite-superadmin-link" class="btn btn-ghost btn-small" href="superadministrador.html" hidden aria-label="Abrir Superadministrador AeroSuite">Superadministrador</a></div>
+    <div class="nav-cta"><a class="btn btn-small nav-home" href="../../index.html" aria-label="Volver al inicio de Gente de Vuelo">⌂ Inicio Gente de Vuelo</a></div>
   </div>
 </header>
 <main id="contenido">
   <section class="hero" id="inicio">
     <div class="container hero-grid">
       <div class="hero-copy">
-        <span class="eyebrow">Bienvenidos a AeroSuite · Proyecto en desarrollo</span>
+        <span class="eyebrow">AeroSuite · Gestión aeronáutica integrada</span>
         <h1>Una nueva forma de <em>enseñar, volar y gestionar.</em></h1>
         <p>AeroSuite nace para conectar lo que sucede en el aula, en la cabina y en la administración. Una propuesta de gestión para escuelas de vuelo y aeroclubes, con el alumno como protagonista.</p>
         <div class="hero-actions">
           <a class="btn btn-primary" href="#solucion">Conocer AeroSuite <span aria-hidden="true">→</span></a>
-          <a class="btn btn-ghost" href="portal.html">Explorar el prototipo <span aria-hidden="true">↗</span></a>
-          <a class="btn btn-ghost" href="mi-ficha-alumno.html">Completar perfil de AeroSuite <span aria-hidden="true">↗</span></a>
+          <a class="btn btn-ghost" href="portal.html">Conocer la demostración <span aria-hidden="true">↗</span></a>
         </div>
-        <div class="hero-note">Misma cuenta de Gente de Vuelo · Registro ampliado para Alumno, Instructor o Piloto disponible · Prototipo institucional exclusivo de administración</div>
+        <div class="hero-note">Acceso con cuenta de Gente de Vuelo · Perfiles y permisos específicos para cada función · Entorno de demostración institucional</div>
       </div>
       <div class="hero-visual" aria-label="Fotografía aeronáutica y visión de AeroSuite">
         <img class="hero-photo" src="../../portada-manana-tres-palas.webp" alt="Avión de hélice en la portada de Gente de Vuelo" width="980" height="760" fetchpriority="high">
@@ -174,11 +176,17 @@ footer{margin-top:90px;border-top:1px solid var(--border);background:#071523;pad
       </div>
     </div>
   </section>
+  <section class="access-section" aria-label="Accesos de AeroSuite">
+    <div class="container access-inner">
+      <div class="access-copy"><strong>Accesos de AeroSuite</strong><span>Demostración institucional y herramientas de administración para usuarios autorizados.</span></div>
+      <div class="access-actions"><a class="btn btn-ghost btn-small" href="portal.html">Ingresar a la demostración <span aria-hidden="true">↗</span></a><a id="aerosuite-superadmin-link" class="btn btn-ghost btn-small" href="superadministrador.html" hidden aria-label="Abrir Superadministrador AeroSuite">Superadministrador</a></div>
+    </div>
+  </section>
   <div class="intro-strip" aria-label="Principios de AeroSuite">
     <div class="container intro-grid">
-      <div class="intro-item"><span class="intro-number">01</span><div><strong>El alumno en el centro</strong><span>Aprendizaje, seguimiento y progreso.</span></div></div>
-      <div class="intro-item"><span class="intro-number">02</span><div><strong>Trabajo integrado</strong><span>Información relacionada entre funciones.</span></div></div>
-      <div class="intro-item"><span class="intro-number">03</span><div><strong>Gestión con criterio</strong><span>Orden, trazabilidad y visión institucional.</span></div></div>
+      <div class="intro-item"><div><strong>El alumno en el centro</strong><span>Aprendizaje, seguimiento y progreso.</span></div></div>
+      <div class="intro-item"><div><strong>Trabajo integrado</strong><span>Información relacionada entre funciones.</span></div></div>
+      <div class="intro-item"><div><strong>Gestión con criterio</strong><span>Orden, trazabilidad y visión institucional.</span></div></div>
     </div>
   </div>
   <section class="section" id="solucion">
@@ -189,10 +197,10 @@ footer{margin-top:90px;border-top:1px solid var(--border);background:#071523;pad
         <p>Una escuela de vuelo es mucho más que una agenda de aeronaves. La formación, los instructores, la flota y las obligaciones del aeródromo necesitan una organización coherente.</p>
       </div>
       <div class="why-grid">
-        <article class="why-card"><span class="why-icon">01</span><h3>Una visión de la formación</h3><p>Reunir reservas, horas, actividades y evaluaciones permite entender el recorrido del alumno, sin depender de múltiples planillas y mensajes.</p></article>
-        <article class="why-card"><span class="why-icon">02</span><h3>Coordinación de instructores</h3><p>Facilitar el registro de clases, las devoluciones y la supervisión pedagógica para construir un seguimiento más ordenado.</p></article>
-        <article class="why-card"><span class="why-icon">03</span><h3>Control operativo y financiero</h3><p>Consultar la actividad de la flota, la disponibilidad, los gastos generales y las necesidades de la escuela o el aeródromo desde el área administrativa.</p></article>
-        <article class="why-card"><span class="why-icon">04</span><h3>Simplicidad sin perder rigor</h3><p>Experiencias diferenciadas por función, con información relacionada entre sí. Cada persona encuentra las herramientas que necesita, no una pantalla sobrecargada.</p></article>
+        <article class="why-card"><h3>Una visión de la formación</h3><p>Reunir reservas, horas, actividades y evaluaciones permite entender el recorrido del alumno, sin depender de múltiples planillas y mensajes.</p></article>
+        <article class="why-card"><h3>Coordinación de instructores</h3><p>Facilitar el registro de clases, las devoluciones y la supervisión pedagógica para construir un seguimiento más ordenado.</p></article>
+        <article class="why-card"><h3>Control operativo y financiero</h3><p>Consultar la actividad de la flota, la disponibilidad, los gastos generales y las necesidades de la escuela o el aeródromo desde el área administrativa.</p></article>
+        <article class="why-card"><h3>Simplicidad sin perder rigor</h3><p>Experiencias diferenciadas por función, con información relacionada entre sí. Cada persona encuentra las herramientas que necesita, no una pantalla sobrecargada.</p></article>
       </div>
     </div>
   </section>
@@ -203,29 +211,29 @@ footer{margin-top:90px;border-top:1px solid var(--border);background:#071523;pad
         <p>Un portal de ingreso y tres espacios de trabajo independientes en su interfaz. La información se relaciona internamente, con permisos y privacidad como requisitos del desarrollo operativo.</p>
       </div>
       <div class="areas-grid">
-        <article class="area-card primary"><div class="area-no">01 / FORMACIÓN</div><h3>Área del Alumno</h3><p>Mi evolución, clases y reservas, historial de vuelo, Academia Aeronáutica con materiales de estudio configurables, y seguimiento de la formación. Pensada para consultar con facilidad desde el teléfono.</p><div class="area-caption">EL CORAZÓN DE AEROSUITE</div></article>
-        <article class="area-card instructor"><div class="area-no">02 / INSTRUCCIÓN</div><h3>Instructor y Jefe de Instructores</h3><p>Agenda docente, alumnos asignados, evaluaciones, fichas de evolución y supervisión pedagógica.</p><div class="area-caption">ENSEÑAR · EVALUAR · ACOMPAÑAR</div></article>
-        <article class="area-card"><div class="area-no">03 / INSTITUCIÓN</div><h3>Gestión Administrativa</h3><p>Reservas, vuelos, flota, mantenimiento, legajos institucionales, gastos y caja chica.</p><div class="area-caption">OPERACIÓN · RECURSOS · CONTROL</div></article>
+        <article class="area-card primary"><div class="area-label">FORMACIÓN</div><h3>Área del Alumno</h3><p>Mi evolución, clases y reservas, historial de vuelo, Academia Aeronáutica con materiales de estudio configurables, y seguimiento de la formación. Pensada para consultar con facilidad desde el teléfono.</p><div class="area-caption">EL CORAZÓN DE AEROSUITE</div></article>
+        <article class="area-card instructor"><div class="area-label">INSTRUCCIÓN</div><h3>Instructor y Jefe de Instructores</h3><p>Agenda docente, alumnos asignados, evaluaciones, fichas de evolución y supervisión pedagógica.</p><div class="area-caption">ENSEÑAR · EVALUAR · ACOMPAÑAR</div></article>
+        <article class="area-card"><div class="area-label">INSTITUCIÓN</div><h3>Gestión Administrativa</h3><p>Reservas, vuelos, flota, mantenimiento, legajos institucionales, gastos y caja chica.</p><div class="area-caption">OPERACIÓN · RECURSOS · CONTROL</div></article>
       </div>
     </div>
   </section>
   <section class="section" id="modulos">
     <div class="container">
-      <div class="section-head"><span class="eyebrow">Funciones en evolución</span><h2>Herramientas para la actividad real de una institución.</h2>
+      <div class="section-head"><span class="eyebrow">Funcionalidades de AeroSuite</span><h2>Herramientas para la actividad real de una institución.</h2>
       <p>AeroSuite se desarrolla por etapas. Algunas funciones ya pueden explorarse en un entorno de prueba, y otras requieren integración, permisos y validación antes de estar disponibles para una escuela.</p></div>
       <div class="module-grid">
-        <article class="module-card"><div class="module-top"><span class="module-no">01</span><span class="module-status">Demo</span></div><h3>Agenda y reservas</h3><p>Planificación de turnos, recursos, instructores y detección de conflictos de horarios.</p></article>
-        <article class="module-card"><div class="module-top"><span class="module-no">02</span><span class="module-status">Demo</span></div><h3>Seguimiento de formación</h3><p>Registro de clases, actividades, horas y fichas pedagógicas supervisadas.</p></article>
-        <article class="module-card"><div class="module-top"><span class="module-no">03</span><span class="module-status">Biblioteca de prueba</span></div><h3>Academia aeronáutica</h3><p>Archivos didácticos independientes, con publicación y gestión a cargo de la institución.</p></article>
-        <article class="module-card"><div class="module-top"><span class="module-no">04</span><span class="module-status">Demo</span></div><h3>Registro de vuelos</h3><p>Historial de actividad y horas, separado de las certificaciones y registros oficiales.</p></article>
-        <article class="module-card"><div class="module-top"><span class="module-no">05</span><span class="module-status">Integración pendiente</span></div><h3>Flota y mantenimiento</h3><p>Visibilidad operativa y futura integración con registros de mantenimiento aeronáutico.</p></article>
-        <article class="module-card"><div class="module-top"><span class="module-no">06</span><span class="module-status">Demo</span></div><h3>Contabilidad y caja chica</h3><p>Ingresos, gastos generales, servicios e impuestos, discriminados entre escuela y aeródromo.</p></article>
-        <article class="module-card"><div class="module-top"><span class="module-no">07</span><span class="module-status">Fuentes ANAC y comunidad</span></div>
+        <article class="module-card"><div class="module-top"><span class="module-status">Demo</span></div><h3>Agenda y reservas</h3><p>Planificación de turnos, recursos, instructores y detección de conflictos de horarios.</p></article>
+        <article class="module-card"><div class="module-top"><span class="module-status">Demo</span></div><h3>Seguimiento de formación</h3><p>Registro de clases, actividades, horas y fichas pedagógicas supervisadas.</p></article>
+        <article class="module-card"><div class="module-top"><span class="module-status">Biblioteca de prueba</span></div><h3>Academia aeronáutica</h3><p>Archivos didácticos independientes, con publicación y gestión a cargo de la institución.</p></article>
+        <article class="module-card"><div class="module-top"><span class="module-status">Demo</span></div><h3>Registro de vuelos</h3><p>Historial de actividad y horas, separado de las certificaciones y registros oficiales.</p></article>
+        <article class="module-card"><div class="module-top"><span class="module-status">Integración pendiente</span></div><h3>Flota y mantenimiento</h3><p>Visibilidad operativa y futura integración con registros de mantenimiento aeronáutico.</p></article>
+        <article class="module-card"><div class="module-top"><span class="module-status">Demo</span></div><h3>Contabilidad y caja chica</h3><p>Ingresos, gastos generales, servicios e impuestos, discriminados entre escuela y aeródromo.</p></article>
+        <article class="module-card"><div class="module-top"><span class="module-status">Fuentes ANAC y comunidad</span></div>
           <h3>AeroLocator</h3>
           <p>Mapa con fuentes diferenciadas: aeródromos documentados en AIP, Lugares Aptos Denunciados (LAD), pistas comunitarias y OpenStreetMap. La muestra ANAC es parcial y ninguna referencia garantiza aptitud o autorización para operar.</p>
           <a class="btn btn-ghost btn-small" href="../pistas-no-oficiales.html" target="_blank" rel="noopener noreferrer" style="margin-top:auto">Conocer el mapa <span aria-hidden="true">↗</span></a>
         </article>
-        <article class="module-card"><div class="module-top"><span class="module-no">08</span><span class="module-status">Formación e instrucción</span></div>
+        <article class="module-card"><div class="module-top"><span class="module-status">Formación e instrucción</span></div>
           <h3>Flight Operations · Planificador de vuelo</h3>
           <p>Planificación, navegación por piernas, METAR, TAF, SIGMET, PRONAREA y cálculos de vuelo. La misma aplicación para alumnos e instructores, integrada en modo formativo sin IA.</p>
           <a class="btn btn-ghost btn-small" href="../meteorologia-aeronautica.html?aerosuite=formacion" target="_blank" rel="noopener noreferrer" style="margin-top:auto">Explorar Flight Operations <span aria-hidden="true">↗</span></a>
@@ -264,24 +272,24 @@ footer{margin-top:90px;border-top:1px solid var(--border);background:#071523;pad
     <div class="container faq-grid">
       <div><span class="eyebrow">Información clara</span><h2>Preguntas frecuentes.</h2><p>Una plataforma confiable también comunica con precisión qué está disponible y qué falta construir.</p></div>
       <div class="faq-list">
-        <details><summary>¿AeroSuite ya puede utilizarse en una escuela de vuelo?</summary><p>Actualmente es un proyecto en desarrollo. Se puede explorar un prototipo privado con datos de demostración, pero no debe utilizarse aún como sistema operativo o contable real de una institución.</p></details>
+        <details><summary>¿Puedo conocer AeroSuite antes de contratarlo?</summary><p>Sí. Hay un entorno privado de demostración para conocer sus pantallas y procesos. Su disponibilidad no implica una habilitación para operar o llevar la contabilidad real de una institución.</p></details>
         <details><summary>¿Qué diferencias hay entre las tres áreas?</summary><p>Cada área dispone de una interfaz propia. El alumno consulta su formación; el instructor registra y supervisa actividades pedagógicas; y la administración trabaja con la operación de la escuela. Los datos se relacionan internamente cuando corresponde.</p></details>
-        <details><summary>¿Los alumnos pueden modificar las fichas de Academia?</summary><p>No. El modelo previsto deja la publicación y actualización de materiales en manos de administración. El alumno dispone de una biblioteca de consulta, sin herramientas de carga o reemplazo.</p></details>
+        <details><summary>¿Los alumnos pueden modificar las fichas de Academia?</summary><p>No. La publicación y actualización de materiales corresponde al Director y a los instructores autorizados. El alumno dispone de una biblioteca de consulta, sin herramientas de carga o reemplazo.</p></details>
         <details><summary>¿Las pistas no oficiales pueden usarse como aeródromos alternativos?</summary><p>La herramienta sirve para exploración y formación, pero no confirma que una pista sea operativamente apta. Verificá documentación aeronáutica oficial, NOTAM, condiciones reales, obstáculos y autorización de uso. Las propuestas comunitarias requieren moderación antes de publicarse.</p></details>
-        <details><summary>¿Las evaluaciones o registros reemplazan documentos oficiales?</summary><p>No. Las fichas, libros auxiliares y borradores de RAV del prototipo no constituyen certificaciones ni sustituyen documentación o procedimientos exigidos por las autoridades aeronáuticas.</p></details>
+        <details><summary>¿Las evaluaciones o registros reemplazan documentos oficiales?</summary><p>No. Las fichas, libros auxiliares y borradores de RAV del entorno de demostración no constituyen certificaciones ni sustituyen documentación o procedimientos exigidos por las autoridades aeronáuticas.</p></details>
         <details><summary>¿Cómo puedo aportar ideas o consultar por el proyecto?</summary><p>Podés escribir a Gente de Vuelo para compartir necesidades de tu escuela, aeroclub o actividad de instrucción. Las funcionalidades definitivas y futuras modalidades de uso aún están en evaluación.</p></details>
       </div>
     </div>
   </section>
   <section class="container" aria-label="Contacto e ingreso">
     <div class="final-cta">
-      <div><span class="eyebrow">Seguimos construyendo AeroSuite</span><h2>Una herramienta pensada con la aviación en mente.</h2><p>Conocé el prototipo o compartí las necesidades de tu escuela de vuelo o aeroclub para ayudar a orientar el desarrollo.</p></div>
-      <div class="final-buttons"><a class="btn btn-primary" href="portal.html">Ingresar al prototipo <span aria-hidden="true">↗</span></a><a class="btn btn-ghost" href="mailto:gentedevuelo@gmail.com?subject=Consulta%20sobre%20AeroSuite">Contactar a Gente de Vuelo <span aria-hidden="true">→</span></a></div>
+      <div><span class="eyebrow">AeroSuite para tu institución</span><h2>Una herramienta pensada para enseñar, volar y gestionar.</h2><p>Conocé el entorno de demostración y conversá con nosotros sobre las necesidades de tu escuela de vuelo o aeroclub.</p></div>
+      <div class="final-buttons"><a class="btn btn-primary" href="portal.html">Acceder a AeroSuite <span aria-hidden="true">↗</span></a><a class="btn btn-ghost" href="mailto:gentedevuelo@gmail.com?subject=Consulta%20sobre%20AeroSuite">Contactar a Gente de Vuelo <span aria-hidden="true">→</span></a></div>
     </div>
   </section>
 </main>
 <footer><div class="container footer-inner">
-  <div>© 2026 AeroSuite · By Gente de Vuelo<br><span style="color:#758fa5">Proyecto en desarrollo. Sin servicios comerciales habilitados.</span></div>
+  <div>© 2026 AeroSuite · By Gente de Vuelo<br><span style="color:#758fa5">Entorno institucional en demostración. Servicios comerciales sujetos a habilitación.</span></div>
   <div class="footer-links"><a href="index.html">Inicio</a><a href="#nosotros">Quiénes somos</a><a href="portal.html">Portal privado</a><a href="../../index.html">Gente de Vuelo</a></div>
 </div></footer>
 <script>
