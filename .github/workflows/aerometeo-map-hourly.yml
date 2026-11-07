@@ -5,6 +5,8 @@ on:
       - 'assets/aerometeo*'
       - 'utilidades/aerometeo.html'
       - 'tests/aerometeo-map-hourly.test.cjs'
+      - 'tests/aerometeo-automatic-metar-taf.test.cjs'
+      - 'api/aerometeo-aviation-weather.js'
       - '.github/workflows/aerometeo-map-hourly.yml'
   push:
     branches: [main]
@@ -12,6 +14,8 @@ on:
       - 'assets/aerometeo*'
       - 'utilidades/aerometeo.html'
       - 'tests/aerometeo-map-hourly.test.cjs'
+      - 'tests/aerometeo-automatic-metar-taf.test.cjs'
+      - 'api/aerometeo-aviation-weather.js'
       - '.github/workflows/aerometeo-map-hourly.yml'
 permissions:
   contents: read
@@ -31,3 +35,4 @@ jobs:
         run: |
           node --test tests/aerometeo-map-hourly.test.cjs
           node --test tests/aerometeo-airports-provinces.test.cjs
+          node --test tests/aerometeo-automatic-metar-taf.test.cjs
