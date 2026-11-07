@@ -1,0 +1,37 @@
+/* Relieve IGN · capa independiente, desactivada de inicio.
+   Componentes acotados para no alterar los selectores ni mapas existentes. */
+.terrain-layer-control{
+ display:inline-flex;align-items:center;gap:8px;flex:0 0 auto;
+ padding:7px 10px;border:1px solid #77949f;border-radius:10px;
+ background:#1b3543;color:#f0f6f6;font-size:12px;font-weight:700;cursor:pointer;
+}
+.terrain-layer-control input[type=checkbox]{
+ width:17px;height:17px;min-width:17px;margin:0;padding:0;accent-color:#eeb67d;
+}
+.terrain-readout{display:block;max-width:280px;color:#deebef;font-size:11px;line-height:1.35;}
+.terrain-readout[hidden]{display:none!important;}
+.flight-terrain{
+ margin:18px 0;padding:12px 15px;border:1px solid #627776;border-radius:14px;
+ background:#1b292d;color:#eef4f1;
+}
+.flight-terrain>summary{cursor:pointer;font-weight:800;color:#f1c49a;line-height:1.5;}
+.flight-terrain-panel{display:grid;gap:10px;padding:12px 0 3px;}
+.flight-terrain-controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.flight-terrain-controls button{
+ border-radius:9px;border:1px solid #97a69f;background:#283a3a;
+ color:#f5f8f2;padding:9px 12px;font-size:12px;font-weight:700;
+}
+.flight-terrain-controls button:disabled{opacity:.6;}
+#flight-terrain-map{height:320px;min-height:280px;border:1px solid #607b7e;border-radius:12px;overflow:hidden;z-index:0;}
+#flight-terrain-profile{border:1px solid #526666;border-radius:10px;background:#162428;padding:10px;}
+#flight-terrain-profile:empty{display:none;}
+#flight-terrain-profile svg{display:block;width:100%;max-height:275px;}
+#flight-terrain-profile p{font-size:12px;line-height:1.5;color:#dce8df;}
+.terrain-disclaimer,.flight-terrain-note{font-size:12px!important;line-height:1.5;color:#c5d1cc!important;}
+#flight-terrain-status{font-size:12px;color:#cce0db;}
+@media(max-width:760px){
+ .terrain-layer-control{flex:1 1 auto;justify-content:center;}
+ .terrain-readout{max-width:100%;flex:1 1 100%;}
+ #flight-terrain-map{height:280px;}
+ .flight-terrain{padding:10px 11px;}
+}
