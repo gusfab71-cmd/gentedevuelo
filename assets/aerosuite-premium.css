@@ -1,0 +1,57 @@
+/* AeroSuite · Identidad institucional premium.
+   Capa de presentación. No altera permisos, datos, formularios ni funciones. */
+:root{
+ --aerosuite-deep:#071321;
+ --aerosuite-ink:#f2f6fa;
+ --aerosuite-metal:#dce6ef;
+ --aerosuite-gold:#e7b66b;
+ --aerosuite-gold-soft:#f5d5a2;
+ --aerosuite-outline:rgba(201,215,227,.31);
+ color-scheme:dark;
+}
+html{scrollbar-color:#60788e #0c1e30}
+body{
+ color:var(--aerosuite-ink);
+ background:radial-gradient(ellipse at 88% 0%,#25446048,transparent 46%),linear-gradient(155deg,#081623 0%,#12283b 53%,#081725 100%)!important;
+}
+header:not(.maint-header){
+ border-bottom:1px solid #ba92566b!important;
+ background:linear-gradient(115deg,#061321f7,#10283ff2 62%,#0a1829f7)!important;
+ box-shadow:inset 0 -1px 0 #ffe8bb12,0 9px 25px #02091435;
+}
+header .brand,header .maint-identity{
+ letter-spacing:-.035em;
+ text-shadow:0 1px 12px #020a164d;
+}
+header .brand span,header .brand b{color:var(--aerosuite-gold-soft)}
+header .brand small,header .maint-identity small{letter-spacing:.075em}
+body h1,body h2,body h3{letter-spacing:-.025em}
+main .panel,main .tile,main .card,main .module-card,main .info-card,
+main .stat-card,main .summary-card,main .feature-card{
+ border-color:var(--aerosuite-outline);
+ box-shadow:inset 0 1px 0 #ffffff0d,0 12px 32px #0109162a;
+}
+main .tile:hover,main .card:hover,main .feature-card:hover{
+ border-color:#dcba83;
+ box-shadow:inset 0 1px 0 #fff2,0 14px 30px #01091645;
+}
+main a:not(.brand),header nav a{transition:border-color .16s ease,background-color .16s ease,color .16s ease}
+main a:focus-visible,main button:focus-visible,main input:focus-visible,
+main select:focus-visible,main textarea:focus-visible{
+ outline:2px solid var(--aerosuite-gold)!important;
+ outline-offset:3px;
+}
+header nav a:focus-visible{outline:2px solid var(--aerosuite-gold);outline-offset:3px}
+.maint-header{border-bottom:1px solid #b38b5280!important}
+.maint-identity .maint-mark{
+ color:#1a2633;
+ background:linear-gradient(135deg,#f9dfae,#c18d4b);
+ border:1px solid #ffe4b3;
+ box-shadow:0 6px 18px #0005;
+}
+body :is(.eyebrow,.kicker,.label):not(.badge){letter-spacing:.09em}
+@media(prefers-reduced-motion:reduce){main a,header nav a{transition:none}}
+@media print{
+ body{background:white!important;color:black!important}
+ header:not(.maint-header){box-shadow:none}
+}
