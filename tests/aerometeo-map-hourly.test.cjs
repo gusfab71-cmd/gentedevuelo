@@ -153,5 +153,5 @@ test('La vista cartográfica es visible sin desplegar el control oculto de Leafl
  assert.match(app,/button\.setAttribute\('aria-pressed',String\(active\)\)/);
  assert.match(css,/\.am-map-base-selector\{/);
  assert.match(css,/\.am-map-base-selector button\.is-selected/);
- assert.match(html,/aerometeo\.css\?v=20261107radarside1/);
+ assert.match(html,/aerometeo\.css\?v=20261107mapspace1/);
 });
