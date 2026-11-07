@@ -59,8 +59,8 @@ test('La fecha y vigencia de TAF se leen de AWC y no se infieren de la emisión'
  assert.equal(active.found,true);
  assert.equal(active.stale,false);
  assert.equal(active.validNow,true);
- assert.equal(active.validFrom,rec.validTimeFrom);
- assert.equal(active.validTo,rec.validTimeTo);
+ assert.equal(active.validFrom,new Date(rec.validTimeFrom).toISOString());
+ assert.equal(active.validTo,new Date(rec.validTimeTo).toISOString());
  const future=api._test.normalizeAwc([{...rec,validTimeFrom:'2026-11-08T00:00:00Z'}],'taf','SAEZ',now);
  assert.equal(future.validNow,false);
  const old=api._test.normalizeAwc([rec],'taf','SAEZ',Date.parse('2026-11-09T01:00:00Z'));
