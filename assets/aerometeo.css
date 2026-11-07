@@ -449,3 +449,21 @@ a:focus-visible,button:focus-visible,summary:focus-visible,input:focus-visible,s
   #ffee00 58%,#ffaa00 76%,#ff4400 89%,#e62800 100%);
  border:1px solid #ffffff29;
 }
+
+/* Interpretaciones en lenguaje sencillo bajo el METAR y el TAF originales.
+   Nunca ocultan el reporte crudo ni se presentan como evaluación aeronáutica. */
+.am-report-explanation{
+ margin-top:10px;padding:10px 10px 9px;
+ border:1px solid #597d93;border-radius:9px;
+ background:#0b293b;color:#e4f2fa;
+}
+.am-report-explanation[hidden]{display:none!important}
+.am-report-explanation>strong{
+ display:block;font-size:12px;color:#ffda9a;margin-bottom:7px;
+}
+.am-report-explanation ul{margin:0;padding-left:18px}
+.am-report-explanation li{font-size:11px;line-height:1.52;padding:1px 0 5px;overflow-wrap:anywhere}
+.am-report-explanation small{
+ display:block;font-size:10px;line-height:1.45;color:#b6c9d5;
+ margin-top:7px;border-top:1px solid #3a5b70;padding-top:7px;
+}
