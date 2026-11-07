@@ -8,7 +8,7 @@
 <title>AeroMeteo · Developed by Gente de Vuelo</title>
 <link rel="icon" type="image/svg+xml" href="../assets/aerometeo-logo.svg">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="../assets/aerometeo.css?v=20261107radar1">
+<link rel="stylesheet" href="../assets/aerometeo.css?v=20261107basepicker1">
 </head>
 <body>
 <header class="am-header">
@@ -72,26 +72,6 @@
     <p class="am-small">A escala país se muestra un aeropuerto principal por jurisdicción. Acercate para ver otros aeropuertos. Los marcadores son referencias y no garantizan operación ni METAR. Consultá el AIP vigente.</p>
    </section>
 
-   <button class="am-source-card" id="am-source-smn" type="button" aria-expanded="false" aria-controls="am-smn-tools">
-    <span class="am-source-icon am-smn-icon" aria-hidden="true">≋</span>
-    <span class="am-source-copy"><strong>SMN</strong><small>Productos y alertas del Servicio Meteorológico Nacional.</small></span>
-    <span class="am-source-chevron" aria-hidden="true">›</span>
-   </button>
-   <section class="am-source-tools" id="am-smn-tools" hidden aria-label="Productos meteorológicos oficiales">
-    <div class="am-official-links">
-     <a class="am-official-main" href="https://www.argentina.gob.ar/smn" target="_blank" rel="noopener noreferrer">Abrir portal oficial del SMN · Argentina.gob.ar ↗</a>
-     <a href="https://ws2.smn.gob.ar/observaciones" target="_blank" rel="noopener noreferrer">SMN · Observaciones de superficie ↗</a>
-     <a href="https://ws2.smn.gob.ar/radar" target="_blank" rel="noopener noreferrer">SMN · Radar de lluvia y tormentas ↗</a>
-     <a href="https://ws2.smn.gob.ar/modelos" target="_blank" rel="noopener noreferrer">SMN · Modelos meteorológicos ↗</a>
-     <a href="https://ws2.smn.gob.ar/pronarea" target="_blank" rel="noopener noreferrer">SMN · PRONAREA ↗</a>
-     <a href="https://ws2.smn.gob.ar/metar" target="_blank" rel="noopener noreferrer">SMN · METAR ↗</a>
-     <a href="https://ws2.smn.gob.ar/taf" target="_blank" rel="noopener noreferrer">SMN · TAF ↗</a>
-     <a href="meteorologia-aeronautica.html">Flight Operations · Planificación ↗</a>
-    </div>
-    <button class="am-button am-button-secondary am-smn-alternative" type="button" id="aerometeo-smn-alternative">Consultar METAR / TAF aquí (fuente NOAA/AWC)</button>
-    <p class="am-small">Algunas páginas directas del SMN pueden estar temporalmente inaccesibles. El portal institucional alternativo abre Argentina.gob.ar; los enlaces específicos siguen siendo del SMN y dependen de su disponibilidad. La consulta METAR/TAF de AeroMeteo usa otra fuente y no reemplaza al SMN ni la documentación aeronáutica oficial. La actualización automática de los productos propios del SMN sigue pendiente de verificación.</p>
-   </section>
-
    <button class="am-source-card" id="am-source-aviation" type="button" aria-expanded="false" aria-controls="am-aviation-tools">
     <span class="am-source-icon" aria-hidden="true">✈</span>
     <span class="am-source-copy"><strong>METAR / TAF</strong><small>Observaciones y pronósticos aeronáuticos por aeródromo.</small></span>
@@ -111,7 +91,7 @@
     <p class="am-small">Verificar fecha de emisión y productos oficiales del SMN.</p>
    </section>
 
-   <p class="am-sidebar-footnote">Uso informativo y educativo. Las mediciones, los pronósticos y los productos oficiales son fuentes diferentes.</p>
+   <p class="am-sidebar-footnote">Uso informativo y educativo. Las observaciones y los pronósticos son fuentes diferentes. Referencias oficiales: <a href="https://www.argentina.gob.ar/smn" target="_blank" rel="noopener noreferrer">SMN</a> · <a href="https://ws2.smn.gob.ar/pronarea" target="_blank" rel="noopener noreferrer">PRONAREA</a> (enlaces externos sujetos a disponibilidad).</p>
   </div>
  </aside>
 
@@ -126,6 +106,11 @@
    </div>
    <button type="button" id="aerometeo-expand-map" class="am-map-expand" aria-pressed="false" aria-controls="map" title="Dar más espacio al mapa y a las tarjetas meteorológicas">⛶ Ampliar mapa</button>
    <button type="button" id="aerometeo-radar-toggle" class="am-radar-toggle" aria-controls="am-radar-panel" aria-expanded="false" aria-pressed="false" title="Capa de radar de precipitación histórica (no son alertas de tormenta)">◉ Radar de lluvia</button>
+  </div>
+  <div class="am-map-base-selector" role="group" aria-label="Vista del mapa">
+   <strong>Vista del mapa</strong>
+   <button type="button" id="am-basemap-satellite" class="is-selected" aria-pressed="true" aria-controls="map" title="Ver imágenes satelitales del mapa">Satélite</button>
+   <button type="button" id="am-basemap-streets" aria-pressed="false" aria-controls="map" title="Ver mapa de calles y caminos">Calles y caminos</button>
   </div>
   <section id="am-radar-panel" class="am-radar-panel" aria-label="Controles de radar meteorológico histórico" hidden>
    <div class="am-radar-line">
@@ -241,6 +226,6 @@
 <script src="../assets/aerometeo-metar-summary.js?v=20261107obs1"></script>
 <script src="../assets/aerometeo-hourly-chart.js?v=20261107hourly1"></script>
 <script src="../assets/aerometeo-radar.js?v=20261107radar1"></script>
-<script src="../assets/aerometeo-app.js?v=20261107radar1"></script>
+<script src="../assets/aerometeo-app.js?v=20261107basepicker1"></script>
 </body>
 </html>
