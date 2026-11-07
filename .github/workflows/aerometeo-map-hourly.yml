@@ -27,5 +27,7 @@ jobs:
         run: |
           node --check assets/aerometeo-app.js
           node --check assets/aerometeo-hourly-chart.js
-      - name: Probar mapa y pronóstico horario
-        run: node --test tests/aerometeo-map-hourly.test.cjs
+      - name: Probar mapa, pronóstico horario y aeropuertos provinciales
+        run: |
+          node --test tests/aerometeo-map-hourly.test.cjs
+          node --test tests/aerometeo-airports-provinces.test.cjs
