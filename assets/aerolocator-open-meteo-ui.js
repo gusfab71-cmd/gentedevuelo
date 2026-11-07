@@ -76,24 +76,52 @@ function render(parent,data,location){
  disclaimer.style.cssText='display:block;color:#566d7b;font-size:10px;margin-top:8px';
  parent.append(disclaimer);
 }
-function boot({map,L,onForecast,onPending,onForecastError}){
+function boot({map,L,onForecast,onPending,onForecastError,dockContainer=null}){
  if(!map||!L)throw Error('AeroLocator necesita Leaflet');
  const control=L.control({position:'topleft'});
  let requestId=0;
- const popup=L.popup({maxWidth:390,autoPan:true});
- const showAt=async({lat,lon,name}={})=>{
+ // AeroMeteo dispone de un panel fijo dentro del mapa. AeroLocator conserva su popup original.
+ const popup=dockContainer?null:L.popup({maxWidth:390,autoPan:true});
+ let dock=null,dockBody=null;
+ if(dockContainer){
+  dock=node('section');
+  dock.className='am-forecast-dock';
+  dock.hidden=true;
+  dock.setAttribute('aria-label','Pronóstico del punto consultado');
+  const header=node('div');header.className='am-forecast-dock-heading';
+  header.append(node('strong','Pronóstico del punto seleccionado'));
+  const close=node('button','×');close.type='button';
+  close.className='am-forecast-dock-close';
+  close.setAttribute('aria-label','Cerrar tarjeta meteorológica del mapa');
+  close.addEventListener('click',()=>{dock.hidden=true;});
+  header.append(close);
+  dockBody=node('div');
+  dockBody.className='am-forecast-dock-content';
+  dock.append(header,dockBody);
+  dockContainer.append(dock);
+  L.DomEvent.disableClickPropagation(dock);
+  L.DomEvent.disableScrollPropagation(dock);
+ }
+ const showAt=async({lat,lon,name,icao}={})=>{
   const latitude=Number(lat),longitude=Number(lon);
   if(!Number.isFinite(latitude)||!Number.isFinite(longitude)||
      latitude<-56||latitude>-21||longitude<-75||longitude>-52)return false;
   const safeName=typeof name==='string'?name.slice(0,90):'punto seleccionado';
+  const safeIcao=typeof icao==='string'&&/^SA[A-Z]{2}$/.test(icao.toUpperCase())?icao.toUpperCase():null;
+  const selected={lat:latitude,lon:longitude,name:safeName,...(safeIcao?{icao:safeIcao}:{})};
   const id=++requestId;
-  if(typeof onPending==='function')onPending({lat:latitude,lon:longitude,name:safeName});
-  const view=node('section');
-  view.style.cssText='min-width:260px;max-width:350px;max-height:55dvh;overflow-y:auto;color:#163147;font:12px/1.5 Arial,sans-serif';
-  view.append(node('strong','Pronóstico Open-Meteo · '+safeName));
+  if(typeof onPending==='function')onPending(selected);
+  const view=dock?dockBody:node('section');
+  view.replaceChildren();
+  if(dock){
+   dock.hidden=false;
+  }else{
+   view.style.cssText='min-width:260px;max-width:350px;max-height:55dvh;overflow-y:auto;color:#163147;font:12px/1.5 Arial,sans-serif';
+   view.append(node('strong','Pronóstico Open-Meteo · '+safeName));
+  }
   const message=node('p','Consultando modelos meteorológicos…');
   view.append(message);
-  popup.setLatLng([latitude,longitude]).setContent(view).openOn(map);
+  if(popup)popup.setLatLng([latitude,longitude]).setContent(view).openOn(map);
   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),12000);
   try{
    const query=new URLSearchParams({lat:latitude.toFixed(5),lon:longitude.toFixed(5)});
@@ -104,12 +132,12 @@ function boot({map,L,onForecast,onPending,onForecastError}){
     throw Error('Respuesta de modelo no válida');
    if(id===requestId){
     render(view,data,safeName);
-    if(typeof onForecast==='function')onForecast(data,{lat:latitude,lon:longitude,name:safeName});
+    if(typeof onForecast==='function')onForecast(data,selected);
    }
   }catch(_){
    if(id===requestId){
     message.textContent='No hay pronóstico disponible. No se muestran valores estimados sin respaldo.';
-    if(typeof onForecastError==='function')onForecastError({lat:latitude,lon:longitude,name:safeName});
+    if(typeof onForecastError==='function')onForecastError(selected);
    }
   }finally{clearTimeout(timer)}
   return true;
@@ -132,7 +160,7 @@ function boot({map,L,onForecast,onPending,onForecastError}){
   return host;
  };
  control.addTo(map);
- return {showAt,render};
+ return {showAt,render,dock};
 }
 root.GDV_OPEN_METEO_FORECAST={boot,render,wind,localTime};
 if(typeof module==='object'&&module.exports)module.exports={boot,render,wind,localTime};
