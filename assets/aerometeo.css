@@ -71,28 +71,12 @@ a:focus-visible,button:focus-visible,summary:focus-visible,input:focus-visible,s
 .am-map-toolbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;min-height:53px;padding:7px 10px;border-bottom:1px solid #516a81;background:#0b1c30}
 .am-map-toolbar h2{font-size:clamp(12px,1.2vw,17px);letter-spacing:-.025em;margin:0;white-space:nowrap}
 .am-map-toolbar h2 span{color:var(--am-gold);font-size:25px;vertical-align:-3px}
-.am-map-actions{display:flex;gap:4px;flex-wrap:wrap}
-.am-map-actions button{padding:7px 7px;background:#1b3045;border:1px solid #5c7490;border-radius:7px;color:#e7eff7;font-size:10px;min-height:30px}
-.am-map-actions button.is-selected,.am-map-actions button:hover{color:#111b25;background:var(--am-gold);border-color:#ffc86b;box-shadow:0 0 9px #e4a3272b}
 .am-map-canvas{position:relative;min-height:0;flex:1}
 #map{height:100%;width:100%;background:#102739}
 .am-map-legend{position:absolute;left:9px;bottom:9px;z-index:499;background:#0b1a2de9;border:1px solid #6a8ca1;border-radius:9px;padding:7px 9px;display:flex;gap:8px;flex-wrap:wrap;pointer-events:none}
 .am-map-legend span{font-size:9px;white-space:nowrap}
 .am-dot{display:inline-block;width:10px;height:10px;border:2px solid white;border-radius:50%;vertical-align:-1px;margin-right:3px}
 .am-dot-local{background:#24bdde}.am-dot-edu{background:#34b897}.am-dot-model{background:#f7ad32}
-/* Barra informativa fuera del mapa: el pronóstico puede abrirse sin taparla.
-   No se dibuja escala de colores porque no hay una capa nacional cargada. */
-.am-map-variable-summary{
- display:flex;align-items:center;gap:9px;flex-wrap:wrap;flex:0 0 auto;
- min-height:36px;padding:7px 11px;background:#0e2b3d;
- border-top:1px solid #587589;border-bottom:1px solid #405d73;
- color:#d9eaf4;font-size:10px;line-height:1.45;
-}
-.am-map-variable-summary strong{
- flex:0 0 auto;padding:3px 8px;border:1px solid #bc9258;border-radius:6px;
- color:#f9db9b;background:#304052;font-size:10px;font-weight:800;
-}
-.am-map-variable-summary p{margin:0;min-width:180px;flex:1;overflow-wrap:anywhere}
 .am-map-status{min-height:35px;background:#12263d;padding:9px 11px;font-size:10px;line-height:1.4;color:#c5d7e6}
 .am-map-bottom-actions{padding:5px 10px;display:flex;gap:7px;background:#102338}
 .am-map-bottom-actions button{font-size:10px;padding:5px 9px;background:#263f5a;border:1px solid #5b748c;border-radius:6px;color:#f6fbff}
@@ -141,14 +125,12 @@ a:focus-visible,button:focus-visible,summary:focus-visible,input:focus-visible,s
 .leaflet-container a.leaflet-popup-close-button{font-size:21px}
 @media(min-width:1800px){
  .am-layout{grid-template-columns:minmax(310px,22fr) minmax(620px,46fr) minmax(370px,32fr)}
- .am-map-actions button{font-size:12px;padding:8px 11px}
  .am-metric{min-height:95px}
  .am-source-card{min-height:93px}
 }
 @media(max-width:1160px){
  .am-layout{grid-template-columns:minmax(225px,25fr) minmax(330px,43fr) minmax(255px,32fr)}
  .am-nav a{padding:9px;font-size:11px}
- .am-map-actions button{font-size:9px}
  .am-source-copy strong{font-size:12px}
  .am-source-copy small{font-size:10px}
 }
@@ -181,10 +163,6 @@ a:focus-visible,button:focus-visible,summary:focus-visible,input:focus-visible,s
  .am-source-card{min-height:66px}
  .am-map-section{height:530px;min-height:530px;flex:none}
  .am-map-toolbar{align-items:flex-start}
- .am-map-actions{width:100%;justify-content:space-between}
- .am-map-actions button{flex:1;padding:7px 5px;font-size:9px}
- .am-map-variable-summary{align-items:flex-start;gap:6px;padding:7px 9px}
- .am-map-variable-summary p{flex-basis:100%;min-width:0}
  .am-map-legend{max-width:45%}
  .am-detail{min-height:360px;max-height:none;overflow:visible}
  .am-detail-heading h2{font-size:17px}
@@ -436,4 +414,22 @@ a:focus-visible,button:focus-visible,summary:focus-visible,input:focus-visible,s
 @media(max-width:650px){
  .am-sidebar .am-radar-panel{max-height:none;overflow-y:visible}
  .am-sidebar .am-radar-player button{min-height:40px}
+}
+
+/* El panel del mapa queda sin bandas redundantes. La cartografía se expande
+   usando todo el espacio flexible liberado, también en dispositivos móviles. */
+.am-map-canvas{flex:1 1 auto;min-height:0}
+.am-map-toolbar{flex-wrap:nowrap}
+.am-map-toolbar .am-map-expand{margin-left:auto}
+/* El selector de la evolución horaria vive solo junto al gráfico del pronóstico. */
+.am-hourly-metric-picker{
+ display:flex;align-items:center;justify-content:space-between;
+ flex-wrap:wrap;gap:7px;margin:12px 0 5px;
+}
+.am-hourly-metric-picker label{font-size:11px;font-weight:800;color:#dfedf7}
+.am-hourly-metric-picker select{width:auto;min-width:125px;max-width:100%;font-size:11px}
+@media(max-width:650px){
+ .am-map-toolbar{align-items:center}
+ .am-map-toolbar h2{white-space:normal}
+ .am-hourly-metric-picker select{flex:1 1 130px}
 }
