@@ -76,6 +76,54 @@ function render(parent,data,location){
  disclaimer.style.cssText='display:block;color:#566d7b;font-size:10px;margin-top:8px';
  parent.append(disclaimer);
 }
+/* AeroMeteo: tarjeta compacta de consulta puntual.
+ * AeroLocator continúa utilizando render() completo, sin cambios de diseño.
+ */
+function renderCompact(parent,data,location){
+ parent.replaceChildren();
+ const title=node('h3',location);
+ title.className='am-compact-location';parent.append(title);
+ const subtitle=node('p','Estimación Open-Meteo · No es METAR');
+ subtitle.className='am-compact-source';parent.append(subtitle);
+ const when=node('p','Modelo: '+localTime(data.current.time)+' ART');
+ when.className='am-compact-time';parent.append(when);
+ const grid=node('div');grid.className='am-compact-metrics';
+ function metric(label,value){
+  const item=node('div');item.className='am-compact-metric';
+  const name=node('span',label),result=node('strong',value);
+  item.append(name,result);grid.append(item);
+ }
+ metric('Viento',wind(data.current));
+ metric('Temperatura',number(data.current.temperatureC,' °C'));
+ metric('Ráfagas',number(data.current.gustKt,' kt'));
+ metric('Precipitación',number(data.current.precipitationMm,' mm'));
+ parent.append(grid);
+ const more=node('details');more.className='am-compact-extra';
+ more.append(node('summary','Más datos y próximas horas'));
+ const others=node('div');others.className='am-compact-other-metrics';
+ paragraph(others,'Humedad',number(data.current.humidityPct,' %'));
+ paragraph(others,'Nubosidad',number(data.current.cloudPct,' %'));
+ paragraph(others,'Presión a nivel del mar',number(data.current.pressureHpa,' hPa'));
+ more.append(others);
+ if(Array.isArray(data.forecast)&&data.forecast.length){
+  const forecastTitle=node('strong','Próximas '+data.forecast.length+' horas');
+  forecastTitle.className='am-compact-forecast-title';
+  more.append(forecastTitle);
+  for(const row of data.forecast.slice(0,6)){
+   const line=node('p',localTime(row.time)+' · Viento '+wind(row)+
+    ' · Lluvia '+number(row.precipitationMm,' mm'));
+   line.className='am-compact-hour';more.append(line);
+  }
+ }
+ parent.append(more);
+ const foot=node('p');
+ foot.className='am-compact-footnote';
+ const source=node('a','Fuente: Open-Meteo');
+ source.href='https://open-meteo.com/en/docs';source.target='_blank';
+ source.rel='noopener noreferrer';
+ foot.append(source,node('span',' · Pronóstico orientativo; verificar información aeronáutica oficial.'));
+ parent.append(foot);
+}
 function boot({map,L,onForecast,onPending,onForecastError,dockContainer=null}){
  if(!map||!L)throw Error('AeroLocator necesita Leaflet');
  const control=L.control({position:'topleft'});
@@ -131,7 +179,8 @@ function boot({map,L,onForecast,onPending,onForecastError,dockContainer=null}){
    if(!data.ok||data.kind!=='model_forecast'||!data.current||data.isMetar!==false)
     throw Error('Respuesta de modelo no válida');
    if(id===requestId){
-    render(view,data,safeName);
+    if(dock)renderCompact(view,data,safeName);
+    else render(view,data,safeName);
     if(typeof onForecast==='function')onForecast(data,selected);
    }
   }catch(_){
@@ -162,6 +211,6 @@ function boot({map,L,onForecast,onPending,onForecastError,dockContainer=null}){
  control.addTo(map);
  return {showAt,render,dock};
 }
-root.GDV_OPEN_METEO_FORECAST={boot,render,wind,localTime};
-if(typeof module==='object'&&module.exports)module.exports={boot,render,wind,localTime};
+root.GDV_OPEN_METEO_FORECAST={boot,render,renderCompact,wind,localTime};
+if(typeof module==='object'&&module.exports)module.exports={boot,render,renderCompact,wind,localTime};
 })(typeof window!=='undefined'?window:globalThis);
