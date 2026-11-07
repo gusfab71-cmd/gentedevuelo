@@ -100,6 +100,8 @@ assert.doesNotMatch(landing,/id="aerosuite-superadmin-link"|href="superadministr
 assert.match(privateAdmin,/id="adminContent" hidden/,'El panel privado debe permanecer oculto hasta autorizar al propietario');
 assert.match(privateAdmin,/from\('aerosuite_superadmins'\)\.select\('user_id'\)/,'El panel conserva la verificación del rol privado');
 assert.match(privateAdmin,/href="portal\.html">Abrir demostración privada/,'La demo se abre solo desde el panel privado');
+assert.match(privateAdmin,/href="centro-pruebas-operativas\.html">Centro de Testeo Permanente/,'El laboratorio se abre desde el panel privado');
+assert.match(privateAdmin,/href="centro-monitoreo-aerosuite\.html">Auditorías automáticas/,'Las auditorías automáticas deben estar en el panel privado');
 
 // Utilidades: AeroSuite operativo solo para el administrador, no para usuarios públicos.
 const utilitiesPage=fs.readFileSync(new URL('../utilidades/index.html',import.meta.url),'utf8');
@@ -170,6 +172,9 @@ console.log('PASS: Academia del Alumno contiene mantenimiento, rodaje y sustenta
 // Portada Gente de Vuelo: un mismo espacio de menú, AeroSuite exclusivo del administrador.
 const gdvHomepage=fs.readFileSync(new URL('../index.html',import.meta.url),'utf8');
 assert.match(gdvHomepage,/id="gdv-aerosuite-menu-link" href="utilidades\/gestion-aeronautica\/" hidden/,'AeroSuite debe abrir la presentación y permanecer oculto para no administradores');
+assert.match(gdvHomepage,/href="utilidades\/gestion-aeronautica\/superadministrador\.html" id="gdvAeroSuitePrivateAdminLink" hidden/,'El acceso a Superadministración permanece oculto por defecto en Mi cuenta');
+assert.match(gdvHomepage,/\.from\("aerosuite_superadmins"\)\.select\("user_id"\)\.eq\("user_id", user\.id\)\.maybeSingle\(\)/,'El menú verifica el rol de Superadministrador');
+assert.match(gdvHomepage,/aeroSuitePrivateAdminLink\.hidden = !!aeroSuiteOwnerError \|\| aeroSuiteOwner\?\.user_id !== user\.id/,'El acceso solo se muestra tras verificar al propietario');
 assert.match(gdvHomepage,/id="gdv-tools-menu-link" href="utilidades\/">Herramientas<\/a>/,'Las herramientas públicas deben conservar acceso');
 assert.match(gdvHomepage,/aeroSuiteNav\.hidden = !window\.gdvLegacyAdmin/,'Solo el administrador ve AeroSuite');
 assert.match(gdvHomepage,/toolsNav\.hidden = !!window\.gdvLegacyAdmin/,'Ocultar el enlace anterior al administrador');
