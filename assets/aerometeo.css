@@ -244,3 +244,42 @@ a:focus-visible,button:focus-visible,summary:focus-visible,input:focus-visible,s
 .am-hourly-chart svg{display:block;width:100%;min-width:410px;max-height:300px;background:#102534;border-radius:8px}
 .am-hourly-summary{font-size:11px!important;line-height:1.45;margin:9px 0 5px!important;color:#f3f7e9!important}
 .am-hourly-note,.am-hourly-empty{font-size:10px!important;line-height:1.45;margin:5px 0 0!important;color:#c4d7e0!important}
+
+/* Tarjeta METEO anclada al contenedor del mapa (no al pin Leaflet).
+ * Su encabezado siempre entra y los detalles hacen scroll dentro de ella. */
+.am-forecast-dock{
+ position:absolute;top:10px;right:10px;z-index:650;
+ display:flex;flex-direction:column;
+ width:min(350px,calc(100% - 20px));
+ max-height:calc(100% - 20px);min-height:0;
+ color:#163147;background:#eff6fa;border:1px solid #9ebac9;border-radius:12px;
+ box-shadow:0 12px 34px #0009;pointer-events:auto;overflow:hidden;
+ font:12px/1.5 system-ui,-apple-system,Segoe UI,Arial,sans-serif;
+}
+.am-forecast-dock[hidden]{display:none!important}
+.am-forecast-dock-heading{
+ flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;
+ border-bottom:1px solid #bacdda;background:#143b55;color:#fff;padding:10px 12px;
+}
+.am-forecast-dock-heading strong{font-size:13px;line-height:1.25}
+.am-forecast-dock-close{
+ flex:none;width:29px;height:29px;border:1px solid #b5d4e3;border-radius:7px;
+ background:#285775;color:#fff;font-size:20px;line-height:1;
+}
+.am-forecast-dock-content{
+ overflow-y:auto;overscroll-behavior:contain;min-height:0;
+ padding:10px 12px;background:#f2f7fa;color:#163147;
+ scrollbar-color:#749fb7 #f2f7fa;
+}
+.am-forecast-dock-content details{margin-top:9px}
+.am-forecast-dock-content summary{cursor:pointer}
+.am-forecast-dock-content a{color:#155580}
+.am-observation-metar{
+ margin-top:11px;border:1px solid #496780;border-radius:9px;
+ background:#10273d;padding:10px;white-space:pre-wrap;overflow-wrap:anywhere;
+ font:11px/1.55 ui-monospace,Consolas,monospace;color:#e7f3ff;
+}
+.am-observation-metar[hidden]{display:none!important}
+@media(max-width:650px){
+ .am-forecast-dock{top:8px;right:8px;max-height:calc(100% - 16px);width:min(320px,calc(100% - 16px))}
+}
