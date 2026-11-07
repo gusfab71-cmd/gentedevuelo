@@ -8,7 +8,7 @@
 <title>AeroMeteo · Developed by Gente de Vuelo</title>
 <link rel="icon" type="image/svg+xml" href="../assets/aerometeo-logo.svg">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="../assets/aerometeo.css?v=20261107basepicker1">
+<link rel="stylesheet" href="../assets/aerometeo.css?v=20261107radarside1">
 </head>
 <body>
 <header class="am-header">
@@ -72,6 +72,28 @@
     <p class="am-small">A escala país se muestra un aeropuerto principal por jurisdicción. Acercate para ver otros aeropuertos. Los marcadores son referencias y no garantizan operación ni METAR. Consultá el AIP vigente.</p>
    </section>
 
+   <button type="button" id="aerometeo-radar-toggle" class="am-source-card am-radar-card"
+    aria-controls="am-radar-panel" aria-expanded="false" aria-pressed="false"
+    title="Mostrar capa histórica de radar, sin modificar el tamaño del mapa">
+    <span class="am-source-icon" aria-hidden="true">◉</span>
+    <span class="am-source-copy"><strong>Radar de lluvia</strong><small>Precipitaciones históricas y animación.</small></span>
+    <span class="am-source-chevron" aria-hidden="true">›</span>
+   </button>
+  <section id="am-radar-panel" class="am-radar-panel" aria-label="Controles de radar meteorológico histórico" hidden>
+   <div class="am-radar-line">
+    <strong>Radar de precipitación · imágenes históricas</strong>
+    <span id="am-radar-status" role="status" aria-live="polite">Activá el radar para consultar la última secuencia.</span>
+    <button type="button" id="am-radar-refresh" title="Actualizar imágenes disponibles">Actualizar</button>
+   </div>
+   <div class="am-radar-line am-radar-player">
+    <button type="button" id="am-radar-prev" aria-label="Imagen de radar anterior" disabled>◀</button>
+    <button type="button" id="am-radar-play" aria-label="Reproducir imágenes históricas" disabled>▶ Reproducir</button>
+    <button type="button" id="am-radar-next" aria-label="Imagen de radar siguiente" disabled>▶</button>
+    <input type="range" id="am-radar-frame" aria-label="Seleccionar hora histórica del radar" min="0" max="0" value="0" step="1" disabled>
+    <strong id="am-radar-time">Sin imágenes</strong>
+   </div>
+   <p class="am-radar-disclaimer">Fuente: <a href="https://www.rainviewer.com/" target="_blank" rel="noopener noreferrer">RainViewer</a> (datos radar, uso educativo en prueba). Solo pasado, no pronóstico ni alerta. Cobertura variable: la ausencia de ecos no prueba ausencia de precipitación. Verificá <a href="https://www.argentina.gob.ar/smn" target="_blank" rel="noopener noreferrer">SMN</a>, SIGMET y NOTAM.</p>
+  </section>
    <button class="am-source-card" id="am-source-aviation" type="button" aria-expanded="false" aria-controls="am-aviation-tools">
     <span class="am-source-icon" aria-hidden="true">✈</span>
     <span class="am-source-copy"><strong>METAR / TAF</strong><small>Observaciones y pronósticos aeronáuticos por aeródromo.</small></span>
@@ -105,28 +127,12 @@
     <button type="button" data-weather-metric="temperature" aria-pressed="false">♧ Temperatura</button>
    </div>
    <button type="button" id="aerometeo-expand-map" class="am-map-expand" aria-pressed="false" aria-controls="map" title="Dar más espacio al mapa y a las tarjetas meteorológicas">⛶ Ampliar mapa</button>
-   <button type="button" id="aerometeo-radar-toggle" class="am-radar-toggle" aria-controls="am-radar-panel" aria-expanded="false" aria-pressed="false" title="Capa de radar de precipitación histórica (no son alertas de tormenta)">◉ Radar de lluvia</button>
   </div>
   <div class="am-map-base-selector" role="group" aria-label="Vista del mapa">
    <strong>Vista del mapa</strong>
    <button type="button" id="am-basemap-satellite" class="is-selected" aria-pressed="true" aria-controls="map" title="Ver imágenes satelitales del mapa">Satélite</button>
    <button type="button" id="am-basemap-streets" aria-pressed="false" aria-controls="map" title="Ver mapa de calles y caminos">Calles y caminos</button>
   </div>
-  <section id="am-radar-panel" class="am-radar-panel" aria-label="Controles de radar meteorológico histórico" hidden>
-   <div class="am-radar-line">
-    <strong>Radar de precipitación · imágenes históricas</strong>
-    <span id="am-radar-status" role="status" aria-live="polite">Activá el radar para consultar la última secuencia.</span>
-    <button type="button" id="am-radar-refresh" title="Actualizar imágenes disponibles">Actualizar</button>
-   </div>
-   <div class="am-radar-line am-radar-player">
-    <button type="button" id="am-radar-prev" aria-label="Imagen de radar anterior" disabled>◀</button>
-    <button type="button" id="am-radar-play" aria-label="Reproducir imágenes históricas" disabled>▶ Reproducir</button>
-    <button type="button" id="am-radar-next" aria-label="Imagen de radar siguiente" disabled>▶</button>
-    <input type="range" id="am-radar-frame" aria-label="Seleccionar hora histórica del radar" min="0" max="0" value="0" step="1" disabled>
-    <strong id="am-radar-time">Sin imágenes</strong>
-   </div>
-   <p class="am-radar-disclaimer">Fuente: <a href="https://www.rainviewer.com/" target="_blank" rel="noopener noreferrer">RainViewer</a> (datos radar, uso educativo en prueba). Solo pasado, no pronóstico ni alerta. Cobertura variable: la ausencia de ecos no prueba ausencia de precipitación. Verificá <a href="https://www.argentina.gob.ar/smn" target="_blank" rel="noopener noreferrer">SMN</a>, SIGMET y NOTAM.</p>
-  </section>
   <div class="am-map-canvas">
    <div id="map" aria-label="Mapa de Argentina con ubicaciones de estaciones y aeródromos"></div>
    <div class="am-map-legend" aria-label="Referencias">
