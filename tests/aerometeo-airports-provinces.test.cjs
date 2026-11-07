@@ -50,7 +50,8 @@ test('Panel provincial, fuente y acceso por OACI preservados',()=>{
  assert.match(app,/aerometeo-airports-provinces\.json/);
  assert.match(app,/L\.latLngBounds/);
  assert.match(app,/airportPlaces\[locations\.value\]/);
- assert.match(app,/if\(place\.icao\)\$\('aerometeo-icao'\)\.value=place\.icao/);
+ assert.match(app,/void loadMetarObservation\(point\)/);
+ assert.match(app,/void loadTafObservation\(point\)/);
  assert.match(app,/forecast\?\.showAt\(place\)/);
  assert.match(app,/map\.on\('zoomend',refreshAirportMarkers\)/);
  assert.match(app,/const visible=zoom>=7\?points:points\.filter\(p=>p\.primary!==false\)/);
