@@ -1,0 +1,31 @@
+name: AeroMeteo - mapa ampliado y evolución horaria
+on:
+  pull_request:
+    paths:
+      - 'assets/aerometeo*'
+      - 'utilidades/aerometeo.html'
+      - 'tests/aerometeo-map-hourly.test.cjs'
+      - '.github/workflows/aerometeo-map-hourly.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'assets/aerometeo*'
+      - 'utilidades/aerometeo.html'
+      - 'tests/aerometeo-map-hourly.test.cjs'
+      - '.github/workflows/aerometeo-map-hourly.yml'
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verificar sintaxis de los módulos
+        run: |
+          node --check assets/aerometeo-app.js
+          node --check assets/aerometeo-hourly-chart.js
+      - name: Probar mapa y pronóstico horario
+        run: node --test tests/aerometeo-map-hourly.test.cjs
