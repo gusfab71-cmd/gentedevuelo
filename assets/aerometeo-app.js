@@ -318,10 +318,30 @@ function boot(){
   forecastLine(grid,'Nubosidad',safeNumber(current.cloudPct,' %'));
   forecastLine(grid,'Precipitación',safeNumber(current.precipitationMm,' mm'));
   box.append(grid);
+  const metricPicker=create('div',undefined,'am-hourly-metric-picker');
+  const metricLabel=create('label','Evolución horaria · variable');
+  metricLabel.htmlFor='am-hourly-metric';
+  const metricSelect=create('select');
+  metricSelect.id='am-hourly-metric';
+  metricSelect.className='am-select';
+  metricSelect.setAttribute('aria-label','Variable del gráfico de evolución horaria');
+  for(const [key,item] of Object.entries(METRICS)){
+   const opt=create('option',item.title);
+   opt.value=key;
+   metricSelect.append(opt);
+  }
+  metricSelect.value=lastMetric;
+  metricPicker.append(metricLabel,metricSelect);
+  box.append(metricPicker);
   const hourlyChart=create('section',undefined,'am-hourly-chart');
   hourlyChart.id='am-hourly-chart';
   box.append(hourlyChart);
   root.GDV_AEROMETEO_HOURLY?.render(hourlyChart,data,lastMetric);
+  metricSelect.addEventListener('change',()=>{
+   if(!METRICS[metricSelect.value])return;
+   lastMetric=metricSelect.value;
+   root.GDV_AEROMETEO_HOURLY?.render(hourlyChart,data,lastMetric);
+  });
   if(Array.isArray(data.forecast)&&data.forecast.length){
    const details=create('details');
    const summary=create('summary','Evolución horaria ('+data.forecast.length+' pronósticos)');
@@ -336,13 +356,11 @@ function boot(){
   const source=create('a','Modelo Open-Meteo · CC BY 4.0 ↗');
   source.href='https://open-meteo.com/en/docs';source.target='_blank';source.rel='noopener noreferrer';
   box.append(source);
-  // El punto indica dónde se consultó un modelo: no inventa un campo interpolado.
-  const value=current[METRICS[lastMetric].valueKey];
+  // Este marcador representa solo la ubicación consultada, nunca una capa meteorológica.
   const forecastMarker=L.circleMarker([point.lat,point.lon],{
    radius:15,color:'#ffbb37',weight:2,fillColor:'#e7a52e',fillOpacity:.30
-  }).bindTooltip(point.name+' · '+METRICS[lastMetric].label+' '+safeNumber(value,METRICS[lastMetric].unit));
+  }).bindTooltip(point.name+' · Pronóstico puntual Open-Meteo, no observación');
   forecastMarker.addTo(forecastMarkers);
-  $text('am-layer-note','Consulta puntual de modelo en '+point.name+'. No se está mostrando una capa nacional.');
   // El resultado numérico no debe devolver al usuario a Pronóstico si ya abrió METAR/TAF.
   setStatus('Pronóstico consultado para '+point.name+' a las '+localTime(current.time)+'. No es METAR ni medición.');
  }
@@ -539,28 +557,6 @@ function boot(){
   map.getContainer().style.cursor='';
   forecastAt({name:'punto del mapa',lat:event.latlng.lat,lon:event.latlng.lng});
  });
- for(const button of document.querySelectorAll('[data-weather-metric]')){
-  button.addEventListener('click',()=>{
-   lastMetric=button.dataset.weatherMetric;
-   if(!METRICS[lastMetric])return;
-   document.querySelectorAll('[data-weather-metric]').forEach(item=>{
-    const active=item===button;
-    item.classList.toggle('is-selected',active);
-    item.setAttribute('aria-pressed',String(active));
-   });
-   $text('am-active-layer-name',METRICS[lastMetric].title);
-   if(currentForecast){
-    const chartTarget=$('am-hourly-chart');
-    if(chartTarget)root.GDV_AEROMETEO_HOURLY?.render(chartTarget,currentForecast,lastMetric);
-   }
-   const x=currentForecast?.current?.[METRICS[lastMetric].valueKey];
-   $text('am-layer-note',currentForecast?
-    'Dato puntual de '+selectedPoint.name+': '+safeNumber(x,METRICS[lastMetric].unit)+
-    '. No existe una capa nacional cargada.':
-    'Elegí una estación o consultá Open-Meteo para '+METRICS[lastMetric].label+
-    '. No hay una capa nacional cargada.');
-  });
- }
  $('am-detail-aviation').addEventListener('click',()=>{
   selectSource('aviation',true);
  });
