@@ -324,3 +324,19 @@ a:focus-visible,button:focus-visible,summary:focus-visible,input:focus-visible,s
 .am-airport-compact .am-airport-icon{width:24px;height:24px;flex:0 0 24px;font-size:12px;border-width:1px}
 #am-airports-status{color:#bfe7da;font-size:10px;font-weight:700;line-height:1.4;margin:10px 0 0}
 #aerometeo-province{border-color:#7299b0}
+
+/* METAR/TAF automáticos: estados compactos visibles aun con Pronóstico activo. */
+.am-auto-flight-strip{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:-3px 0 12px;}
+.am-auto-flight-strip>span{display:flex;align-items:center;gap:5px;min-width:0;padding:6px 7px;
+ border:1px solid #527285;background:#183449;border-radius:8px;font-size:10px;line-height:1.3}
+.am-auto-flight-strip strong{color:#f7d8a4;font-size:10px}
+.am-auto-flight-strip span{color:#e1eff4;overflow-wrap:anywhere}
+.am-automatic-products{display:grid;gap:12px;margin:9px 0 15px}
+.am-automatic-product{min-width:0;padding:11px;border:1px solid #4f768a;border-radius:10px;background:#152c41}
+.am-automatic-product h3{font-size:13px;line-height:1.3;color:#ffe0ab;margin:0 0 8px}
+.am-automatic-product p{font-size:11px;line-height:1.45;margin:4px 0;color:#dceaf2;overflow-wrap:anywhere}
+.am-automatic-product small{font-size:10px;line-height:1.4;display:block;color:#adcad9;margin:5px 0}
+.am-automatic-product pre{white-space:pre-wrap;overflow-wrap:anywhere;font:11px/1.5 ui-monospace,Consolas,monospace;
+ max-height:260px;overflow-y:auto;padding:10px;border:1px solid #4b7789;background:#091d2c;
+ color:#f0f5f8;border-radius:8px;margin:9px 0 0}
+.am-automatic-product pre[hidden]{display:none!important}
