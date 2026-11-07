@@ -26,7 +26,7 @@ test('Mapa más grande: botón de ampliación, retorno y actualización Leaflet'
 
 test('Tarjetas y controles existentes preservados',()=>{
  for(const id of ['aerometeo-toggle-panel','aerometeo-country','am-detail-title',
-  'am-source-stations','am-source-forecast','am-source-aviation','aerometeo-forecast-location'])
+  'am-source-forecast','am-source-aviation','aerometeo-forecast-location'])
   assert.ok(html.includes('id="'+id+'"'),id);
  assert.match(app,/GDV_WEATHER_STATIONS/);
  assert.match(app,/GDV_OPEN_METEO_FORECAST/);
@@ -112,4 +112,12 @@ test('La portada informativa compacta mantiene las piezas aprobadas',()=>{
  assert.match(html,/Meteorología aeronáutica para tu vuelo/);
  assert.match(html,/AeroMeteo/);
  assert.match(css,/aerometeo-hero\.svg/);
+});
+
+test('AeroMeteo no muestra estaciones 3D-PAWS sin permiso de descarga',()=>{
+ assert.doesNotMatch(html,/Estaciones 3D-PAWS/);
+ assert.doesNotMatch(html,/aerolocator-weather-stations\.js/);
+ assert.doesNotMatch(app,/GDV_WEATHER_STATIONS/);
+ assert.match(html,/Observación METAR/);
+ assert.match(app,/loadMetarObservation/);
 });
