@@ -31,20 +31,19 @@ test('El diseño distingue pronóstico de observación real y productos oficiale
  assert.match(html,/Observación METAR|Observaciones METAR/i);
  assert.match(html,/Pronóstico/);
  assert.match(html,/Un pronóstico de modelo no reemplaza una observación/i);
- assert.match(html,/no implican integración|actualización automática/);
+ assert.match(html,/enlaces externos sujetos a disponibilidad/);
  assert.match(html,/no se obtienen automáticamente al mover el mapa/);
  assert.match(aviationUi,/posiblemente DESACTUALIZADO/);
  assert.match(app,/No es observación real ni METAR/);
 });
 
-test('El SMN tiene fuentes contrastadas: observaciones, radar, modelos, PRONAREA, METAR y TAF',()=>{
- for(const uri of [
-  'https://ws2.smn.gob.ar/observaciones','https://ws2.smn.gob.ar/radar',
-  'https://ws2.smn.gob.ar/modelos','https://ws2.smn.gob.ar/pronarea',
-  'https://ws2.smn.gob.ar/metar','https://ws2.smn.gob.ar/taf'
- ])assert.ok(html.includes(uri),uri);
+test('Se retira la tarjeta SMN y se mantienen referencias oficiales discretas',()=>{
+ assert.doesNotMatch(html,/id="am-source-smn"/);
+ assert.doesNotMatch(html,/id="am-smn-tools"/);
+ assert.match(html,/href="https:\/\/www\.argentina\.gob\.ar\/smn"/);
+ assert.match(html,/href="https:\/\/ws2\.smn\.gob\.ar\/pronarea"/);
  assert.match(html,/https:\/\/aviationweather\.gov\//);
- assert.doesNotMatch(html,/estaciones.*SMN.*tiempo real automáticamente/i);
+ assert.doesNotMatch(app,/aerometeo-smn-alternative/);
 });
 
 test('Open-Meteo verifica coordenadas, entrada y limita el ámbito argentino',async()=>{
@@ -146,7 +145,7 @@ test('La pantalla de inicio sigue la maqueta aprobada sin fabricar lecturas',()=
   'Mapa meteorológico – Argentina','Viento','Precipitación','Nubosidad','Temperatura',
   'Observación','Pronóstico','se presentan de forma diferenciada'])
   assert.ok(html.includes(text),text);
- for(const id of ['am-source-forecast','am-source-smn','am-source-aviation',
+ for(const id of ['am-source-forecast','am-source-aviation',
   'am-detail-observation','am-detail-forecast','am-detail-aviation','am-detail-title',
   'am-value-wind','am-value-gust','am-value-temperature','am-value-pressure',
   'am-value-humidity','am-value-cloud','am-detail-status','am-detail-updated',
