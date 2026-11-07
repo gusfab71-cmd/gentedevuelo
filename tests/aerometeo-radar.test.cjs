@@ -52,8 +52,18 @@ test('Radar es una capa independiente, fuera del visor de pronósticos y sin com
  assert.match(css,/\.am-radar-panel\[hidden\]/);
  assert.match(css,/\.am-radar-disclaimer/);
  const radarStart=html.indexOf('<section id="am-radar-panel"');
+ const sidebarStart=html.indexOf('<aside class="am-sidebar"');
+ const sidebarEnd=html.indexOf('</aside>',sidebarStart);
+ const mapStart=html.indexOf('<section class="am-map-section"');
  const canvasStart=html.indexOf('<div class="am-map-canvas">');
- assert.ok(radarStart>=0&&radarStart<canvasStart,'Controles independientes arriba del mapa');
+ assert.ok(radarStart>sidebarStart&&radarStart<sidebarEnd,
+  'Los controles deben ocupar la columna izquierda, no el espacio del mapa');
+ assert.ok(sidebarEnd<mapStart&&mapStart<canvasStart,
+  'La sección del mapa permanece independiente del panel de radar');
+ assert.ok(html.indexOf('id="aerometeo-radar-toggle"')<sidebarEnd);
+ assert.match(css,/\.am-sidebar \.am-radar-panel\s*\{/);
+ assert.match(css,/\.am-sidebar \.am-radar-player\{/);
+ assert.match(html,/aerometeo\.css\?v=20261107radarside1/);
  assert.match(html,/solo pasado, no pronóstico ni alerta/i);
  assert.match(html,/RainViewer/);
  assert.match(html,/SMN/);
