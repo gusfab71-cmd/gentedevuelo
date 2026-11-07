@@ -142,7 +142,7 @@ test('No hay API key secreta ni solicitudes automáticas al mover mapa',()=>{
 test('La pantalla de inicio sigue la maqueta aprobada sin fabricar lecturas',()=>{
  for(const text of ['AeroMeteo','Meteorología aeronáutica para tu vuelo','Fuentes y productos',
   'Pronósticos Open-Meteo','SMN','METAR / TAF',
-  'Mapa meteorológico – Argentina','Viento','Precipitación','Nubosidad','Temperatura',
+  'Mapa meteorológico – Argentina','Viento','Nubosidad','Temperatura',
   'Observación','Pronóstico','se presentan de forma diferenciada'])
   assert.ok(html.includes(text),text);
  for(const id of ['am-source-forecast','am-source-aviation',
@@ -166,7 +166,9 @@ test('El panel no atribuye lecturas de estaciones 3D-PAWS a aeropuertos sin un M
  assert.match(app,/data\.icao!==icao/);
  assert.match(app,/onForecast:showForecastResult/);
  assert.match(app,/no se reemplaza con el pronóstico/);
- assert.match(app,/capa nacional cargada/);
+ assert.match(app,/nunca una capa meteorológica/);
+ assert.match(app,/metricSelect\.id='am-hourly-metric'/);
+ assert.doesNotMatch(html,/data-weather-metric|am-map-variable-summary/);
  assert.match(html,/no garantizan operación ni METAR/i);
  assert.match(app,/icao:'SABE'/); // Aeroparque, no SAAR.
  assert.match(app,/icao:'SAAR'/); // Rosario.
