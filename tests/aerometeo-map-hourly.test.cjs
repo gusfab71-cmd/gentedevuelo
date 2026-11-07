@@ -92,19 +92,15 @@ test('El visualizador produce SVG accesible sin requerir gráficos externos',()=
  }finally{global.document=previous;}
 });
 
-test('SMN: enlace institucional alternativo y acceso interno METAR/TAF',()=>{
+test('SMN deja de ocupar un menú pero siguen disponibles sus referencias oficiales',()=>{
+ assert.doesNotMatch(html,/id="am-source-smn"/);
+ assert.doesNotMatch(html,/id="am-smn-tools"/);
  assert.match(html,/href="https:\/\/www\.argentina\.gob\.ar\/smn"/);
- assert.match(html,/class="am-official-main"/);
- assert.match(html,/id="aerometeo-smn-alternative"/);
- assert.match(html,/fuente NOAA\/AWC/);
- assert.match(html,/temporalmente inaccesibles/);
  assert.match(html,/href="https:\/\/ws2\.smn\.gob\.ar\/pronarea"/);
- assert.match(html,/href="https:\/\/ws2\.smn\.gob\.ar\/metar"/);
- assert.match(html,/href="https:\/\/ws2\.smn\.gob\.ar\/taf"/);
- assert.match(app,/'aerometeo-smn-alternative'\)\?\.addEventListener\('click'/);
+ assert.match(html,/enlaces externos sujetos a disponibilidad/);
+ assert.match(html,/id="am-source-aviation"/);
  assert.match(app,/selectSource\('aviation',true\)/);
- assert.match(app,/showTab\('aviation'\)/);
- assert.match(css,/\.am-official-links \.am-official-main/);
+ assert.doesNotMatch(app,/aerometeo-smn-alternative/);
 });
 test('La portada informativa compacta mantiene las piezas aprobadas',()=>{
  assert.match(css,/\.am-hero\{\s*height:100px/);
@@ -141,4 +137,23 @@ test('La tarjeta de la variable seleccionada nunca queda tapada por el pronósti
  assert.match(html,/aerometeo\.css\?v=20261107radar1/);
  // Dock de pronóstico sigue dentro del mapa, por lo que no puede invadir la barra.
  assert.match(app,/dockContainer:document\.querySelector\('\.am-map-canvas'\)/);
+});
+
+test('La vista cartográfica es visible sin desplegar el control oculto de Leaflet',()=>{
+ const toolbar=html.indexOf('<div class="am-map-toolbar">');
+ const canvas=html.indexOf('<div class="am-map-canvas">');
+ const controls=html.indexOf('<div class="am-map-base-selector"');
+ assert.ok(toolbar>=0&&controls>toolbar&&canvas>controls);
+ assert.match(html,/id="am-basemap-satellite"[^>]*aria-pressed="true"/);
+ assert.match(html,/id="am-basemap-streets"[^>]*aria-pressed="false"/);
+ assert.match(html,/Satélite<\/button>/);
+ assert.match(html,/Calles y caminos<\/button>/);
+ assert.doesNotMatch(app,/L\.control\.layers\(/);
+ assert.match(app,/function selectBaseMap\(kind\)/);
+ assert.match(app,/map\.hasLayer\(target\)/);
+ assert.match(app,/map\.removeLayer\(other\)/);
+ assert.match(app,/button\.setAttribute\('aria-pressed',String\(active\)\)/);
+ assert.match(css,/\.am-map-base-selector\{/);
+ assert.match(css,/\.am-map-base-selector button\.is-selected/);
+ assert.match(html,/aerometeo\.css\?v=20261107basepicker1/);
 });
