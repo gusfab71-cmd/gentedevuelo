@@ -121,3 +121,24 @@ test('AeroMeteo no muestra estaciones 3D-PAWS sin permiso de descarga',()=>{
  assert.match(html,/Observación METAR/);
  assert.match(app,/loadMetarObservation/);
 });
+
+test('La tarjeta de la variable seleccionada nunca queda tapada por el pronóstico',()=>{
+ const mapStart=html.indexOf('<div class="am-map-canvas">');
+ const mapEnd=html.indexOf('<div class="am-map-status"',mapStart);
+ assert.ok(mapStart>=0&&mapEnd>mapStart);
+ const mapRegion=html.slice(mapStart,mapEnd);
+ const summary=mapRegion.indexOf('<div class="am-map-variable-summary"');
+ const canvasClose=mapRegion.indexOf('</div>\n  <div class="am-map-variable-summary"');
+ assert.ok(canvasClose>0,'La tarjeta queda fuera del contenedor Leaflet');
+ assert.ok(summary>canvasClose,'La tarjeta debe mostrarse inmediatamente debajo del mapa');
+ assert.match(mapRegion,/id="am-active-layer-name"/);
+ assert.match(mapRegion,/id="am-layer-note"/);
+ assert.doesNotMatch(mapRegion,/am-map-float/);
+ assert.match(css,/\.am-map-variable-summary\{/);
+ assert.match(css,/\.am-map-variable-summary\s*\{[\s\S]*?flex:0 0 auto/);
+ assert.doesNotMatch(css,/\.am-map-float\{/);
+ assert.doesNotMatch(html,/am-color-scale/);
+ assert.match(html,/aerometeo\.css\?v=20261107mapbar1/);
+ // Dock de pronóstico sigue dentro del mapa, por lo que no puede invadir la barra.
+ assert.match(app,/dockContainer:document\.querySelector\('\.am-map-canvas'\)/);
+});
