@@ -78,7 +78,11 @@ async function readObservation(station){
   headers:{Accept:'application/json','User-Agent':'GenteDeVuelo-AeroLocator/1.0'},
   signal:AbortSignal.timeout(8000)
  });
- if(!response.ok)throw Error('La fuente no entrego datos');
+ if(response.status===401||response.status===403){
+  const error=Error('La fuente no autoriza consultas automáticas de sus mediciones');
+  error.publicReason='provider_access_denied';throw error;
+ }
+ if(!response.ok){const error=Error('La fuente no entregó datos');error.publicReason='provider_unavailable';throw error;}
  const declaredSize=Number(response.headers.get('content-length')||0);
  if(declaredSize>800000)throw Error('Respuesta demasiado grande');
  const body=await response.text();
@@ -93,14 +97,20 @@ async function handler(req,res){
  const prior=cache.get(station.id);
  if(prior&&Date.now()-prior.checkedAt<TTL_MS)
   return send(res,200,prior.body);
- let observation=null,available=false;
- try{observation=await readObservation(station);available=observation!==null}
- catch(_){/* No exhibir cifras sin verificarlas; mantener enlace a la fuente. */}
+ let observation=null,available=false,issue=null;
+ try{observation=await readObservation(station);available=observation!==null;
+     if(!available)issue='no_verified_measurement';}
+ catch(error){issue=error?.publicReason==='provider_access_denied'?'provider_access_denied':'provider_unavailable';}
+ const note=available
+  ?'Observación local, no METAR oficial. Verificar antigüedad y condiciones del aeródromo.'
+  :issue==='provider_access_denied'
+   ?'La fuente 3D-PAWS denegó la descarga de mediciones (HTTP 401/403). La estación puede figurar en el catálogo sin permitir acceso a sus datos.'
+   :issue==='provider_unavailable'
+    ?'No se pudo conectar a la fuente 3D-PAWS. Consultá la estación original y reintentá más tarde.'
+    :'La fuente respondió pero no se pudo verificar una lectura con fecha y valores válidos.';
  const body={ok:true,id:station.id,source:'3D-PAWS / CHORDS',
   sourceUrl:station.sourceUrl,checkedAt:new Date().toISOString(),
-  observation,available,note:available
-   ?'Observación local, no METAR oficial. Verificar antigüedad y condiciones del aeródromo.'
-   :'No se pudo confirmar una lectura válida. Consultar la estación original; no se sustituyen datos por pronósticos.'};
+  observation,available,issue,note};
  cache.set(station.id,{checkedAt:Date.now(),body});
  return send(res,200,body);
 }
