@@ -253,7 +253,8 @@ function boot(){
  })||null;
  const forecast=root.GDV_OPEN_METEO_FORECAST?.boot({
   map,L,onPending:showForecastPending,onForecast:showForecastResult,
-  onForecastError:forecastError
+  onForecastError:forecastError,
+  dockContainer:document.querySelector('.am-map-canvas')
  })||null;
  const syncStations=()=>{
   const active=Boolean(weather?.active);
