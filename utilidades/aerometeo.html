@@ -8,7 +8,7 @@
 <title>AeroMeteo · Developed by Gente de Vuelo</title>
 <link rel="icon" type="image/svg+xml" href="../assets/aerometeo-logo.svg">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="../assets/aerometeo.css?v=20261107radarside1">
+<link rel="stylesheet" href="../assets/aerometeo.css?v=20261107mapspace1">
 </head>
 <body>
 <header class="am-header">
@@ -120,12 +120,6 @@
  <section class="am-map-section" aria-label="Mapa meteorológico de Argentina">
   <div class="am-map-toolbar">
    <h2> <span aria-hidden="true">⌑</span> Mapa meteorológico – Argentina</h2>
-   <div class="am-map-actions" role="group" aria-label="Variables meteorológicas">
-    <button type="button" class="is-selected" data-weather-metric="wind" aria-pressed="true">≋ Viento</button>
-    <button type="button" data-weather-metric="rain" aria-pressed="false">♢ Precipitación</button>
-    <button type="button" data-weather-metric="cloud" aria-pressed="false">☁ Nubosidad</button>
-    <button type="button" data-weather-metric="temperature" aria-pressed="false">♧ Temperatura</button>
-   </div>
    <button type="button" id="aerometeo-expand-map" class="am-map-expand" aria-pressed="false" aria-controls="map" title="Dar más espacio al mapa y a las tarjetas meteorológicas">⛶ Ampliar mapa</button>
   </div>
   <div class="am-map-base-selector" role="group" aria-label="Vista del mapa">
@@ -139,10 +133,6 @@
     <span><i class="am-dot am-dot-model"></i> Pronóstico del punto</span>
     <span class="am-legend-note">✈ Aeródromo de referencia: consultá el METAR para observaciones.</span>
    </div>
-  </div>
-  <div class="am-map-variable-summary" aria-label="Variable meteorológica seleccionada">
-   <strong id="am-active-layer-name">Viento (kt)</strong>
-   <p id="am-layer-note">Seleccioná un aeropuerto o punto para consultar el pronóstico. No hay una capa nacional de viento cargada.</p>
   </div>
   <div class="am-map-status" id="aerometeo-status" role="status" aria-live="polite">
    Elegí un punto para consultar su meteorología; los datos no se obtienen automáticamente al mover el mapa.
@@ -232,6 +222,6 @@
 <script src="../assets/aerometeo-metar-summary.js?v=20261107obs1"></script>
 <script src="../assets/aerometeo-hourly-chart.js?v=20261107hourly1"></script>
 <script src="../assets/aerometeo-radar.js?v=20261107radar1"></script>
-<script src="../assets/aerometeo-app.js?v=20261107basepicker1"></script>
+<script src="../assets/aerometeo-app.js?v=20261107mapspace1"></script>
 </body>
 </html>
