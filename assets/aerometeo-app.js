@@ -213,6 +213,10 @@ function boot(){
   forecastLine(grid,'Nubosidad',safeNumber(current.cloudPct,' %'));
   forecastLine(grid,'Precipitación',safeNumber(current.precipitationMm,' mm'));
   box.append(grid);
+  const hourlyChart=create('section',undefined,'am-hourly-chart');
+  hourlyChart.id='am-hourly-chart';
+  box.append(hourlyChart);
+  root.GDV_AEROMETEO_HOURLY?.render(hourlyChart,data,lastMetric);
   if(Array.isArray(data.forecast)&&data.forecast.length){
    const details=create('details');
    const summary=create('summary','Evolución horaria ('+data.forecast.length+' pronósticos)');
@@ -362,6 +366,10 @@ function boot(){
     item.setAttribute('aria-pressed',String(active));
    });
    $text('am-active-layer-name',METRICS[lastMetric].title);
+   if(currentForecast){
+    const chartTarget=$('am-hourly-chart');
+    if(chartTarget)root.GDV_AEROMETEO_HOURLY?.render(chartTarget,currentForecast,lastMetric);
+   }
    const x=currentForecast?.current?.[METRICS[lastMetric].valueKey];
    $text('am-layer-note',currentForecast?
     'Dato puntual de '+selectedPoint.name+': '+safeNumber(x,METRICS[lastMetric].unit)+
