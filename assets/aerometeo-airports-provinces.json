@@ -1,0 +1,473 @@
+{
+  "schema": "aerometeo-airports-provinces-v1",
+  "updated": "2026-11-07",
+  "source": "OurAirports Argentina · archivo local de AeroLocator",
+  "sourceUrl": "https://ourairports.com/countries/AR/",
+  "reference": "https://ais.anac.gob.ar/aip",
+  "notice": "Selección de aeropuertos/aeródromos de referencia; no garantiza operación, vigencia, disponibilidad de METAR/TAF ni servicios comerciales. Confirmar AIP/NOTAM.",
+  "jurisdictions": 24,
+  "primaryCount": 24,
+  "count": 46,
+  "records": [
+    {
+      "icao": "SABE",
+      "label": "Buenos Aires · Aeroparque",
+      "province": "Ciudad Autónoma de Buenos Aires",
+      "region": "AR-C",
+      "lat": -34.559419,
+      "lon": -58.415536,
+      "primary": true,
+      "scheduled": true
+    },
+    {
+      "icao": "SAEZ",
+      "label": "Ezeiza · Ministro Pistarini",
+      "province": "Buenos Aires",
+      "region": "AR-B",
+      "lat": -34.8222,
+      "lon": -58.5358,
+      "primary": true,
+      "scheduled": true
+    },
+    {
+      "icao": "SAZM",
+      "label": "Mar del Plata",
+      "province": "Buenos Aires",
+      "region": "AR-B",
+      "lat": -37.9342,
+      "lon": -57.5733,
+      "primary": false,
+      "scheduled": true
+    },
+    {
+      "icao": "SAZB",
+      "label": "Bahía Blanca",
+      "province": "Buenos Aires",
+      "region": "AR-B",
+      "lat": -38.725,
+      "lon": -62.1693,
+      "primary": false,
+      "scheduled": true
+    },
+    {
+      "icao": "SADF",
+      "label": "San Fernando",
+      "province": "Buenos Aires",
+      "region": "AR-B",
+      "lat": -34.4532,
+      "lon": -58.5896,
+      "primary": false,
+      "scheduled": false
+    },
+    {
+      "icao": "SANC",
+      "label": "Catamarca",
+      "province": "Catamarca",
+      "region": "AR-K",
+      "lat": -28.593117,
+      "lon": -65.7512,
+      "primary": true,
+      "scheduled": true
+    },
+    {
+      "icao": "SARE",
+      "label": "Resistencia",
+      "province": "Chaco",
+      "region": "AR-H",
+      "lat": -27.44991,
+      "lon": -59.056125,
+      "primary": true,
+      "scheduled": true
+    },
+    {
+      "icao": "SAVC",
+      "label": "Comodoro Rivadavia",
+      "province": "Chubut",
+      "region": "AR-U",
+      "lat": -45.786941,
+      "lon": -67.463355,
+      "primary": true,
+      "scheduled": true
+    },
+    {
+      "icao": "SAVT",
+      "label": "Trelew",
+      "province": "Chubut",
+      "region": "AR-U",
+      "lat": -43.2105,
+      "lon": -65.2703,
+      "primary": false,
+      "scheduled": true
+    },
+    {
+      "icao": "SAVE",
+      "label": "Esquel",
+      "province": "Chubut",
+      "region": "AR-U",
+      "lat": -42.908001,
+      "lon": -71.139503,
+      "primary": false,
+      "scheduled": true
+    },
+    {
+      "icao": "SAVY",
+      "label": "Puerto Madryn",
+      "province": "Chubut",
+      "region": "AR-U",
+      "lat": -42.7592,
+      "lon": -65.1027,
+      "primary": false,
+      "scheduled": true
+    },
+    {
+      "icao": "SACO",
+      "label": "Córdoba · Taravella",
+      "province": "Córdoba",
+      "region": "AR-X",
+      "lat": -31.312346,
+      "lon": -64.208329,
+      "primary": true,
+      "scheduled": true
+    },
+    {
+      "icao": "SAOC",
+      "label": "Río Cuarto",
+      "province": "Córdoba",
+      "region": "AR-X",
+      "lat": -33.085098,
+      "lon": -64.261299,
+      "primary": false,
+      "scheduled": false
+    },
+    {
+      "icao": "SARC",
+      "label": "Corrientes",
+      "province": "Corrientes",
+      "region": "AR-W",
+      "lat": -27.4455,
+      "lon": -58.7619,
+      "primary": true,
+      "scheduled": true
+    },
+    {
+      "icao": "SARL",
+      "label": "Paso de los Libres",
+      "province": "Corrientes",
+      "region": "AR-W",
+      "lat": -29.6894,
+      "lon": -57.1521,
+      "primary": false,
+      "scheduled": false
+    },
+    {
+      "icao": "SAAP",
+      "label": "Paraná",
+      "province": "Entre Ríos",
+      "region": "AR-E",
+      "lat": -31.7948,
+      "lon": -60.4804,
+      "primary": true,
+      "scheduled": true
+    },
+    {
+      "icao": "SAAC",
+      "label": "Concordia",
+      "province": "Entre Ríos",
+      "region": "AR-E",
+      "lat": -31.2969,
+      "lon": -57.9966,
+      "primary": false,
+      "scheduled": false
+    },
+    {
+      "icao": "SARF",
+      "label": "Formosa",
+      "province": "Formosa",
+      "region": "AR-P",
+      "lat": -26.2127,
+      "lon": -58.2281,
+      "primary": true,
+      "scheduled": true
+    },
+    {
+      "icao": "SASJ",
+      "label": "Jujuy",
+      "province": "Jujuy",
+      "region": "AR-Y",
+      "lat": -24.392799,
+      "lon": -65.097801,
+      "primary": true,
+      "scheduled": true
+    },
+    {
+      "icao": "SAZR",
+      "label": "Santa Rosa",
+      "province": "La Pampa",
+      "region": "AR-L",
+      "lat": -36.588299,
+      "lon": -64.275703,
+      "primary": true,
+      "scheduled": true
+    },
+    {
+      "icao": "SAZG",
+      "label": "General Pico",
+      "province": "La Pampa",
+      "region": "AR-L",
+      "lat": -35.696201,
+      "lon": -63.758301,
+      "primary": false,
+      "scheduled": false
+    },
+    {
+      "icao": "SANL",
+      "label": "La Rioja",
+      "province": "La Rioja",
+      "region": "AR-F",
+      "lat": -29.381599,
+      "lon": -66.795799,
+      "primary": true,
+      "scheduled": true
+    },
+    {
+      "icao": "SAME",
+      "label": "Mendoza · El Plumerillo",
+      "province": "Mendoza",
+      "region": "AR-M",
+      "lat": -32.831699,
+      "lon": -68.7929,
+      "primary": true,
+      "scheduled": true
+    },
+    {
+      "icao": "SAMR",
+      "label": "San Rafael",
+      "province": "Mendoza",
+      "region": "AR-M",
+      "lat": -34.588299,
+      "lon": -68.4039,
+      "primary": false,
+      "scheduled": true
+    },
+    {
+      "icao": "SAMM",
+      "label": "Malargüe",
+      "province": "Mendoza",
+      "region": "AR-M",
+      "lat": -35.493599,
+      "lon": -69.574303,
+      "primary": false,
+      "scheduled": false
+    },
+    {
+      "icao": "SARI",
+      "label": "Puerto Iguazú",
+      "province": "Misiones",
+      "region": "AR-N",
+      "lat": -25.737301,
+      "lon": -54.4734,
+      "primary": true,
+      "scheduled": true
+    },
+    {
+      "icao": "SARP",
+      "label": "Posadas",
+      "province": "Misiones",
+      "region": "AR-N",
+      "lat": -27.3858,
+      "lon": -55.9707,
+      "primary": false,
+      "scheduled": true
+    },
+    {
+      "icao": "SAZN",
+      "label": "Neuquén",
+      "province": "Neuquén",
+      "region": "AR-Q",
+      "lat": -38.949001,
+      "lon": -68.155701,
+      "primary": true,
+      "scheduled": true
+    },
+    {
+      "icao": "SAZY",
+      "label": "San Martín de los Andes · Chapelco",
+      "province": "Neuquén",
+      "region": "AR-Q",
+      "lat": -40.075401,
+      "lon": -71.137299,
+      "primary": false,
+      "scheduled": true
+    },
+    {
+      "icao": "SAZS",
+      "label": "Bariloche",
+      "province": "Río Negro",
+      "region": "AR-R",
+      "lat": -41.151199,
+      "lon": -71.157501,
+      "primary": true,
+      "scheduled": true
+    },
+    {
+      "icao": "SAVV",
+      "label": "Viedma",
+      "province": "Río Negro",
+      "region": "AR-R",
+      "lat": -40.8692,
+      "lon": -63.0004,
+      "primary": false,
+      "scheduled": true
+    },
+    {
+      "icao": "SASA",
+      "label": "Salta",
+      "province": "Salta",
+      "region": "AR-A",
+      "lat": -24.856001,
+      "lon": -65.486198,
+      "primary": true,
+      "scheduled": true
+    },
+    {
+      "icao": "SASO",
+      "label": "Orán",
+      "province": "Salta",
+      "region": "AR-A",
+      "lat": -23.1528,
+      "lon": -64.329201,
+      "primary": false,
+      "scheduled": false
+    },
+    {
+      "icao": "SANU",
+      "label": "San Juan",
+      "province": "San Juan",
+      "region": "AR-J",
+      "lat": -31.571501,
+      "lon": -68.418198,
+      "primary": true,
+      "scheduled": true
+    },
+    {
+      "icao": "SAOU",
+      "label": "San Luis",
+      "province": "San Luis",
+      "region": "AR-D",
+      "lat": -33.273201,
+      "lon": -66.3564,
+      "primary": true,
+      "scheduled": true
+    },
+    {
+      "icao": "SAOS",
+      "label": "Valle del Conlara",
+      "province": "San Luis",
+      "region": "AR-D",
+      "lat": -32.384701,
+      "lon": -65.186501,
+      "primary": false,
+      "scheduled": false
+    },
+    {
+      "icao": "SAWG",
+      "label": "Río Gallegos",
+      "province": "Santa Cruz",
+      "region": "AR-Z",
+      "lat": -51.608791,
+      "lon": -69.308948,
+      "primary": true,
+      "scheduled": true
+    },
+    {
+      "icao": "SAWC",
+      "label": "El Calafate",
+      "province": "Santa Cruz",
+      "region": "AR-Z",
+      "lat": -50.280267,
+      "lon": -72.053401,
+      "primary": false,
+      "scheduled": true
+    },
+    {
+      "icao": "SAWJ",
+      "label": "San Julián",
+      "province": "Santa Cruz",
+      "region": "AR-Z",
+      "lat": -49.306816,
+      "lon": -67.802596,
+      "primary": false,
+      "scheduled": false
+    },
+    {
+      "icao": "SAAR",
+      "label": "Rosario",
+      "province": "Santa Fe",
+      "region": "AR-S",
+      "lat": -32.9036,
+      "lon": -60.785,
+      "primary": true,
+      "scheduled": true
+    },
+    {
+      "icao": "SAAV",
+      "label": "Sauce Viejo · Santa Fe",
+      "province": "Santa Fe",
+      "region": "AR-S",
+      "lat": -31.7117,
+      "lon": -60.8117,
+      "primary": false,
+      "scheduled": true
+    },
+    {
+      "icao": "SANE",
+      "label": "Santiago del Estero",
+      "province": "Santiago del Estero",
+      "region": "AR-G",
+      "lat": -27.765556,
+      "lon": -64.309998,
+      "primary": true,
+      "scheduled": true
+    },
+    {
+      "icao": "SANR",
+      "label": "Termas de Río Hondo",
+      "province": "Santiago del Estero",
+      "region": "AR-G",
+      "lat": -27.4966,
+      "lon": -64.93595,
+      "primary": false,
+      "scheduled": true
+    },
+    {
+      "icao": "SAWH",
+      "label": "Ushuaia",
+      "province": "Tierra del Fuego",
+      "region": "AR-V",
+      "lat": -54.8433,
+      "lon": -68.2958,
+      "primary": true,
+      "scheduled": true
+    },
+    {
+      "icao": "SAWE",
+      "label": "Río Grande",
+      "province": "Tierra del Fuego",
+      "region": "AR-V",
+      "lat": -53.7777,
+      "lon": -67.7494,
+      "primary": false,
+      "scheduled": true
+    },
+    {
+      "icao": "SANT",
+      "label": "Tucumán",
+      "province": "Tucumán",
+      "region": "AR-T",
+      "lat": -26.837397,
+      "lon": -65.104195,
+      "primary": true,
+      "scheduled": true
+    }
+  ]
+}
