@@ -64,6 +64,7 @@ function boot(){
  let lastMetric='wind',clickToForecast=false;
  let forecastRequest=0;
  let observationRequest=0;
+ let tafRequest=0;
  const status=$('aerometeo-status');
  const selection=$('aerometeo-pick-location');
  const locations=$('aerometeo-location');
@@ -137,10 +138,76 @@ function boot(){
   $text('am-detail-footnote','Cuando existe un METAR original para el aeródromo, se presenta aquí con su fecha; no se reemplaza con modelos.');
   $('am-detail-status-dot').classList.remove('is-live','is-stale');
  }
+ // La franja de estado se mantiene visible aun cuando la pestaña Pronóstico está activa.
+ // Los datos originales se muestran exclusivamente para el código OACI consultado.
+ function showAutomaticReport(type,{status,badge,date='',raw='',validity=''}){
+  $text('am-auto-'+type+'-status',status);
+  $text('am-auto-'+type+'-badge',badge);
+  $text('am-auto-'+type+'-date',date);
+  const pre=$('am-auto-'+type+'-raw');
+  if(pre){pre.textContent=raw;pre.hidden=!raw;}
+  if(type==='taf')$text('am-auto-taf-validity',validity);
+ }
+ function resetAutomaticReports(point){
+  tafRequest++; // Invalida cualquier TAF anterior, aun si el usuario elige un punto sin ICAO.
+  const hasIcao=typeof point?.icao==='string'&&/^SA[A-Z]{2}$/.test(point.icao);
+  for(const type of ['metar','taf']){
+   showAutomaticReport(type,{
+    status:hasIcao?'Pendiente de consulta para '+point.icao+'.':
+     'Punto sin código OACI asociado: no se consulta un METAR ni TAF de otro aeródromo.',
+    badge:hasIcao?'Pendiente':'Sin OACI'
+   });
+  }
+ }
+ async function loadTafObservation(point){
+  const icao=typeof point?.icao==='string'?point.icao.toUpperCase():'';
+  if(!/^SA[A-Z]{2}$/.test(icao))return;
+  const id=++tafRequest;
+  showAutomaticReport('taf',{status:'Consultando TAF '+icao+'…',badge:'Consultando'});
+  const controller=new AbortController();
+  const timer=setTimeout(()=>controller.abort(),12000);
+  try{
+   const url='/api/aerometeo-aviation-weather?'+new URLSearchParams({icao,type:'taf'});
+   const response=await fetch(url,{signal:controller.signal,headers:{Accept:'application/json'}});
+   if(!response.ok)throw Error('Servicio aeronáutico no disponible');
+   const data=await response.json();
+   if(id!==tafRequest||selectedPoint?.icao!==icao)return;
+   if(data.ok!==true||data.type!=='taf'||data.icao!==icao)throw Error('Respuesta TAF inválida');
+   if(!data.found||typeof data.raw!=='string'||!data.raw.trim()){
+    showAutomaticReport('taf',{
+     status:'No se encontró TAF disponible para '+icao+'. Este aeropuerto puede no emitirlo.',
+     badge:'Sin TAF'
+    });
+    return;
+   }
+   const issued=data.issuedAt?'Emisión: '+localTime(data.issuedAt):
+    'La fuente no aporta una emisión verificable.';
+   const hasPeriod=Boolean(data.validFrom&&data.validTo);
+   const period=hasPeriod?
+    'Período informado: '+localTime(data.validFrom)+' a '+localTime(data.validTo)+'.':
+    'Período de validez no verificado en la respuesta: revisar grupos de fecha del TAF original.';
+   const expired=hasPeriod&&Date.now()>Date.parse(data.validTo);
+   const future=hasPeriod&&Date.now()<Date.parse(data.validFrom);
+   const condition=expired?'TAF vencido':future?'TAF aún fuera de período':
+    data.stale?'Emisión antigua o sin fecha verificable':
+     data.validNow===true?'TAF dentro del período informado':
+      'TAF recibido; validez a verificar';
+   showAutomaticReport('taf',{
+    status:condition+' · '+icao+'. Confirmá vigencia en SMN/ANAC.',
+    badge:expired||data.stale?'Revisar vigencia':'Recibido',
+    date:issued,validity:period,raw:data.raw
+   });
+  }catch(_error){
+   if(id!==tafRequest||selectedPoint?.icao!==icao)return;
+   showAutomaticReport('taf',{status:'No fue posible recuperar el TAF de '+icao+'. Consultá el SMN.',
+    badge:'Error'});
+  }finally{clearTimeout(timer);}
+ }
  async function loadMetarObservation(point){
   const icao=typeof point?.icao==='string'?point.icao.trim().toUpperCase():'';
   if(!/^SA[A-Z]{2}$/.test(icao))return;
   const id=++observationRequest;
+  showAutomaticReport('metar',{status:'Consultando METAR '+icao+'…',badge:'Consultando'});
   $text('am-detail-status','Consultando METAR '+icao+'…');
   $text('am-detail-updated','Pendiente de observación aeronáutica');
   $text('am-detail-footnote','Buscando un METAR original y verificando su fecha de emisión.');
@@ -154,6 +221,8 @@ function boot(){
    if(id!==observationRequest||selectedPoint?.icao!==icao)return;
    if(data.ok!==true||data.icao!==icao||data.type!=='metar')throw Error('Respuesta de METAR inválida');
    if(!data.found||typeof data.raw!=='string'){
+    showAutomaticReport('metar',{status:'No se encontró METAR para '+icao+
+     '. No se reemplaza por pronósticos.',badge:'Sin METAR'});
     $text('am-detail-status','Sin METAR disponible · '+icao);
     $text('am-detail-updated','No se encontró un mensaje para esta consulta');
     $text('am-detail-footnote','Sin observación verificable en Aviation Weather Center. Consultá el METAR oficial del SMN; no se reemplaza con el pronóstico.');
@@ -166,6 +235,12 @@ function boot(){
    $('am-detail-status-dot').classList.toggle('is-stale',old);
    $('am-detail-status-dot').classList.toggle('is-live',!old);
    $text('am-detail-updated','Emisión: '+localTime(data.issuedAt)+' · '+icao);
+   showAutomaticReport('metar',{
+    status:(old?'METAR desactualizado o sin fecha verificable':'Último METAR disponible')+
+     ' · '+icao+'. Verificá vigencia antes de volar.',
+    badge:old?'Revisar vigencia':'Recibido',
+    date:'Emisión: '+localTime(data.issuedAt),raw:data.raw
+   });
    if(old){
     $text('am-detail-status','METAR DESACTUALIZADO O NO VERIFICADO · '+icao);
     $text('am-detail-condition','El mensaje está desactualizado: no usar como observación actual');
@@ -187,6 +262,8 @@ function boot(){
    $text('am-detail-footnote','Fuente: Aviation Weather Center (NOAA/NWS). Grupos METAR decodificados parcialmente; nubes en grupos OACI, no porcentaje. Humedad sin dato. Verificá el mensaje original y el SMN.');
   }catch(_){
    if(id!==observationRequest||selectedPoint?.icao!==icao)return;
+   showAutomaticReport('metar',{status:'No fue posible consultar el METAR de '+icao+
+    '. Consultá el SMN.',badge:'Error'});
    $text('am-detail-status','METAR no disponible · '+icao);
    $text('am-detail-updated','Consulta sin resultado verificable');
    $text('am-detail-footnote','No pudimos recuperar el METAR. Las estimaciones de Open-Meteo no sustituyen observaciones; consultá el SMN.');
@@ -196,7 +273,12 @@ function boot(){
   forecastRequest++;
   selectedPoint={...point};
   clearObservation('Sin observación METAR disponible para el punto seleccionado');
-  if(/^SA[A-Z]{2}$/.test(point.icao||''))void loadMetarObservation(point);
+  resetAutomaticReports(point);
+  if(/^SA[A-Z]{2}$/.test(point.icao||'')){
+   // Solo el aeropuerto elegido; jamás hacemos 46 consultas de golpe.
+   void loadMetarObservation(point);
+   void loadTafObservation(point);
+  }
   currentForecast=null;
   setLocation(point.name,'Punto de pronóstico · Argentina');
   showTab('forecast');
@@ -251,7 +333,7 @@ function boot(){
   }).bindTooltip(point.name+' · '+METRICS[lastMetric].label+' '+safeNumber(value,METRICS[lastMetric].unit));
   forecastMarker.addTo(forecastMarkers);
   $text('am-layer-note','Consulta puntual de modelo en '+point.name+'. No se está mostrando una capa nacional.');
-  showTab('forecast');
+  // El resultado numérico no debe devolver al usuario a Pronóstico si ya abrió METAR/TAF.
   setStatus('Pronóstico consultado para '+point.name+' a las '+localTime(current.time)+'. No es METAR ni medición.');
  }
  function forecastError(point){
