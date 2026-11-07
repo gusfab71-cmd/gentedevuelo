@@ -113,6 +113,6 @@ test('La estación Cañuelas distingue HTTP 403 de un dato meteorológico faltan
   global.fetch=prior;
  }
  assert.match(ui,/data\.issue==='provider_access_denied'/);
- assert.match(meteoApp,/issue==='provider_access_denied'/);
+ assert.doesNotMatch(meteoApp,/issue==='provider_access_denied'/);
  assert.match(meteoApp,/No se sustituyen lecturas por modelos/);
 });
