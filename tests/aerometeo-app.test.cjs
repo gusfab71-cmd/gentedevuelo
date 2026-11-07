@@ -6,7 +6,7 @@ const base=path.join(__dirname,'..');
 const html=fs.readFileSync(path.join(base,'utilidades/aerometeo.html'),'utf8');
 const app=fs.readFileSync(path.join(base,'assets/aerometeo-app.js'),'utf8');
 const css=fs.readFileSync(path.join(base,'assets/aerometeo.css'),'utf8');
-const aviationUi=fs.readFileSync(path.join(base,'assets/aerometeo-aviation-ui.js'),'utf8');
+const messages=require('../assets/aerometeo-messages-es.js');
 const locator=fs.readFileSync(path.join(base,'utilidades/pistas-no-oficiales.html'),'utf8');
 const forecast=require('../api/aerolocator-open-meteo.js');
 const aviation=require('../api/aerometeo-aviation-weather.js');
@@ -33,7 +33,7 @@ test('El diseño distingue pronóstico de observación real y productos oficiale
  assert.match(html,/Un pronóstico de modelo no reemplaza una observación/i);
  assert.match(html,/enlaces externos sujetos a disponibilidad/);
  assert.match(html,/no se obtienen automáticamente al mover el mapa/);
- assert.match(aviationUi,/posiblemente DESACTUALIZADO/);
+ assert.match(app,/METAR desactualizado o sin fecha verificable/);
  assert.match(app,/No es observación real ni METAR/);
 });
 
@@ -130,7 +130,7 @@ test('METAR y TAF preservan texto original, fecha y advertencia de antigüedad',
 });
 
 test('No hay API key secreta ni solicitudes automáticas al mover mapa',()=>{
- for(const code of [app,aviationUi])assert.doesNotMatch(code,/apiKey\s*[:=]/i);
+ for(const code of [app,fs.readFileSync(path.join(base,'assets/aerometeo-messages-es.js'),'utf8')])assert.doesNotMatch(code,/apiKey\s*[:=]/i);
  assert.doesNotMatch(app,/map\.on\('moveend'/);
  assert.match(app,/map\.on\('zoomend',refreshAirportMarkers\)/);
  assert.match(app,/aerometeo-forecast-center/);
@@ -145,7 +145,7 @@ test('La pantalla de inicio sigue la maqueta aprobada sin fabricar lecturas',()=
   'Mapa meteorológico – Argentina','Viento','Nubosidad','Temperatura',
   'Observación','Pronóstico','se presentan de forma diferenciada'])
   assert.ok(html.includes(text),text);
- for(const id of ['am-source-forecast','am-source-aviation',
+ for(const id of ['am-source-forecast',
   'am-detail-observation','am-detail-forecast','am-detail-aviation','am-detail-title',
   'am-value-wind','am-value-gust','am-value-temperature','am-value-pressure',
   'am-value-humidity','am-value-cloud','am-detail-status','am-detail-updated',
@@ -173,6 +173,10 @@ test('El panel no atribuye lecturas de estaciones 3D-PAWS a aeropuertos sin un M
  assert.match(app,/icao:'SABE'/); // Aeroparque, no SAAR.
  assert.match(app,/icao:'SAAR'/); // Rosario.
  assert.ok(!html.includes('SAAR – Aeroparque'));
+ assert.doesNotMatch(html,/id="am-source-aviation"|id="am-aviation-tools"/);
+ assert.match(html,/id="am-auto-metar-explanation"/);
+ assert.match(html,/id="am-auto-taf-explanation"/);
+ assert.ok(messages.explain('METAR SAEZ 071900Z 16008KT 9999 FEW025 20\/11 Q1018','metar').length>0);
 });
 
 
