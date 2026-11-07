@@ -48,7 +48,11 @@
     <span class="am-source-chevron" aria-hidden="true">›</span>
    </button>
    <section class="am-source-tools" id="am-forecast-tools" hidden aria-label="Herramientas Open-Meteo">
-    <label class="am-label" for="aerometeo-location">Ubicación de referencia</label>
+    <label class="am-label" for="aerometeo-province">Provincia</label>
+    <select id="aerometeo-province" class="am-select" aria-controls="aerometeo-location">
+     <option value="">Todas las provincias y CABA</option>
+    </select>
+    <label class="am-label" for="aerometeo-location">Aeropuerto o punto de referencia</label>
     <select id="aerometeo-location" class="am-select">
      <option value="canuelas">Cañuelas · Club de Planeadores</option>
      <option value="sauce-viejo">Sauce Viejo · Santa Fe</option>
@@ -64,7 +68,8 @@
      <button type="button" id="aerometeo-forecast-center" class="am-button am-button-secondary">Centro del mapa</button>
      <button type="button" id="aerometeo-pick-location" class="am-button am-button-secondary" aria-pressed="false">Elegir en mapa</button>
     </div>
-    <p class="am-small">Los pronósticos pueden cubrir lugares sin estación. No son mediciones reales.</p>
+    <p id="am-airports-status" class="am-small" role="status" aria-live="polite">Cargando aeropuertos provinciales…</p>
+    <p class="am-small">A escala país se muestra un aeropuerto principal por jurisdicción. Acercate para ver otros aeropuertos. Los marcadores son referencias y no garantizan operación ni METAR. Consultá el AIP vigente.</p>
    </section>
 
    <button class="am-source-card" id="am-source-smn" type="button" aria-expanded="false" aria-controls="am-smn-tools">
@@ -200,6 +205,6 @@
 <script src="../assets/aerometeo-aviation-ui.js?v=20261106am3"></script>
 <script src="../assets/aerometeo-metar-summary.js?v=20261107obs1"></script>
 <script src="../assets/aerometeo-hourly-chart.js?v=20261107hourly1"></script>
-<script src="../assets/aerometeo-app.js?v=20261107obsfix2"></script>
+<script src="../assets/aerometeo-app.js?v=20261107provincias1"></script>
 </body>
 </html>
