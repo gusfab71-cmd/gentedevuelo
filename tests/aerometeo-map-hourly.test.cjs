@@ -91,3 +91,25 @@ test('El visualizador produce SVG accesible sin requerir gráficos externos',()=
   assert.match(empty.children[1].textContent,/suficientes horarios/);
  }finally{global.document=previous;}
 });
+
+test('SMN: enlace institucional alternativo y acceso interno METAR/TAF',()=>{
+ assert.match(html,/href="https:\/\/www\.argentina\.gob\.ar\/smn"/);
+ assert.match(html,/class="am-official-main"/);
+ assert.match(html,/id="aerometeo-smn-alternative"/);
+ assert.match(html,/fuente NOAA\/AWC/);
+ assert.match(html,/tempor[áa]neamente inaccesibles/);
+ assert.match(html,/href="https:\/\/ws2\.smn\.gob\.ar\/pronarea"/);
+ assert.match(html,/href="https:\/\/ws2\.smn\.gob\.ar\/metar"/);
+ assert.match(html,/href="https:\/\/ws2\.smn\.gob\.ar\/taf"/);
+ assert.match(app,/'aerometeo-smn-alternative'\)\?\.addEventListener\('click'/);
+ assert.match(app,/selectSource\('aviation',true\)/);
+ assert.match(app,/showTab\('aviation'\)/);
+ assert.match(css,/\.am-official-links \.am-official-main/);
+});
+test('La portada informativa compacta mantiene las piezas aprobadas',()=>{
+ assert.match(css,/\.am-hero\{\s*height:100px/);
+ assert.match(css,/\.am-hero h1\{font-size:clamp\(27px,2\.5vw,36px\)/);
+ assert.match(html,/Meteorología aeronáutica para tu vuelo/);
+ assert.match(html,/AeroMeteo/);
+ assert.match(css,/aerometeo-hero\.svg/);
+});
