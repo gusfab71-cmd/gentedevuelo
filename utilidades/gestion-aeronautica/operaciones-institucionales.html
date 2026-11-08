@@ -930,7 +930,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
  const testRole=params.get("rol")||"";
  const labLogin=params.get("prueba")==="1"&&["administrador","secretaria","instructor","alumno","piloto"].includes(testRole);
  const db=supabase.createClient(GDV_CONFIG.url,GDV_CONFIG.key,{auth:{storageKey:labLogin?"aerosuite-laboratorio-"+testRole+"-v1-auth":"aerosuite-institucional-v2-auth",persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
- let user,school,role,manager,isParticipant=false,pilotVerified=false,pilotHours=null,bookings=[],people=[],reports=[],finance={packs:[],movements:[]},bookingConfirmations=new Map(),settledWeek=new Map(),rescheduleTarget=null,selectedRescheduleSlot=null;
+ let user,school,role,manager,isParticipant=false,pilotVerified=false,pilotHours=null,bookings=[],people=[],reports=[],finance={packs:[],movements:[]},bookingConfirmations=new Map(),settledWeek=new Map(),pilotDispatchStatuses=new Map(),rescheduleTarget=null,selectedRescheduleSlot=null;
  if(!inst){stat.textContent="Entrá desde el portal de tu institución.";return;}
  try{
   const me=await db.auth.getUser();user=me.data&&me.data.user;
@@ -1425,6 +1425,20 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     }
    }
    await publishedAgenda.load();
+   // Estado del predespacho SOLO: información dinámica, no despacho ni autorización ANAC.
+   pilotDispatchStatuses=new Map();
+   const soloBookings=bookings.filter(b=>b.booking_id&&b.status==="confirmed"&&
+     (manager||role==="piloto"&&b.my_booking)&&
+     publishedAgenda.getReservationForBooking(b.booking_id)?.with_instructor===false&&
+     new Date(b.starts_at).getTime()>Date.now()-3600000).slice(0,30);
+   await Promise.all(soloBookings.map(async b=>{
+    try{
+     const status=await rpc("aerosuite_pilot_dispatch_status",{p_institution_id:inst,p_booking_id:b.booking_id});
+     pilotDispatchStatuses.set(b.booking_id,status);
+    }catch(e){
+     pilotDispatchStatuses.set(b.booking_id,{ready:false,reasons:["status_unavailable"]});
+    }
+   }));
    renderBookings();renderReportFormChoices();renderFinanceBookingChoices();
    const lastSlotStart=new Date(dates[6]+"T"+times[times.length-1]+":00-03:00").getTime();
    $("bookingFutureNotice").textContent=lastSlotStart<=Date.now()?
@@ -1555,6 +1569,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     const studentLabel=String(reservationMeta?.student_name||"").trim()||b.student_email||"Alumno sin identificar";
     const aircraftLabel=reservationSlot?.resource||b.aircraft||"A definir";
     const withoutInstructor=reservationMeta?.with_instructor===false;
+    const preflight=withoutInstructor&&b.booking_id?pilotDispatchStatuses.get(b.booking_id):null;
     if(paid)card.classList.add("settled");
     else if(b.status==="pending"||b.status==="confirmed")card.classList.add(b.status);
     const sensitive=!isParticipant||b.my_booking;
@@ -1626,6 +1641,23 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
       : "Confirmado por: información no disponible";
      card.append(p);
     }
+    if(b.status==="confirmed"&&withoutInstructor&&(manager||role==="piloto"&&b.my_booking)){
+     const msg=document.createElement("p");msg.className="warn";msg.setAttribute("role","status");
+     const reasonNames={
+      authorization_not_verified:"Verificación institucional revocada o pendiente",
+      cma_or_declared_expiries_invalid:"CMA o documentación declarada inválida para la fecha",
+      aircraft_unavailable:"Aeronave fuera de servicio",
+      outside_preflight_window:"La revisión corresponde al día de vuelo, desde 4 horas antes",
+      maintenance_due_or_unconfigured:"Controles de mantenimiento vencidos o no configurados",
+      technical_initial_hours_pending:"Horas técnicas iniciales sin revisar",
+      status_unavailable:"No se pudo verificar el estado actual"
+     };
+     const reasons=(preflight?.reasons||[]).map(code=>reasonNames[code]||String(code));
+     msg.textContent=preflight?.ready?
+      "Control documental previo vigente temporalmente. NO constituye autorización de vuelo ni despacho técnico.":
+      "NO DESPACHAR sin control actualizado de Dirección/Secretaría. "+(reasons.join(" · ")||"Falta revisión documental reciente.");
+     card.append(msg);
+    }
     const actions=document.createElement("div");actions.className="actions";
     function btn(text,action,cls){const el=document.createElement("button");el.type="button";el.textContent=text;el.className=cls||"";el.disabled=!school.can_write;el.onclick=action;actions.append(el);}
     if(b.booking_id&&b.status==="pending"&&(manager||(role==="instructor"&&!withoutInstructor&&
@@ -1655,6 +1687,25 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
        await takeAction("confirm",b,{p_instructor_id:instructorId,p_aircraft:""});
       },"primary");
      }
+    }
+    if(manager&&school.can_write&&b.booking_id&&withoutInstructor&&b.status==="confirmed"&&new Date(b.starts_at).getTime()>Date.now()-3600000){
+     btn("Revisar documentación antes de salida",async()=>{
+      const reference=prompt("Referencia de control de documentos originales, estado de aeronave y registro institucional (8 a 250 caracteres):");
+      if(reference===null)return;
+      if(reference.trim().length<8||reference.trim().length>250){
+       stat.textContent="Indicá referencia de 8 a 250 caracteres.";return;
+      }
+      if(!confirm("Se registrará una comprobación documental temporal, NO una autorización de vuelo. ¿Continuar?"))return;
+      try{
+       const decision=await rpc("aerosuite_pilot_dispatch_review",{
+        p_institution_id:inst,p_booking_id:b.booking_id,p_reference:reference.trim()
+       });
+       stat.textContent=decision.checked?
+        "Revisión documental vigente hasta 15 minutos. No constituye habilitación para operar ni sustituye el despacho de la escuela.":
+        "NO DESPACHAR: revisión rechazada por controles incompletos o vencidos. Consultá Dirección/Mantenimiento.";
+       await loadWeek();
+      }catch(e){stat.textContent="Error al comprobar predespacho: "+safeError(e);}
+     },"primary");
     }
     const associatedReport=b.booking_id?reports.find(r=>r.booking_id===b.booking_id):null;
     const canChangeBooking=!!b.booking_id&&!associatedReport&&!paid&&new Date(b.starts_at).getTime()>Date.now();
