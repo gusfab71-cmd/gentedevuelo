@@ -149,23 +149,7 @@ begin
        where annual.value->>'id'=ie.value->>'planId' and annual.value->>'ac'=v_a->>'id'
         and coalesce(annual.value->>'archived','false')<>'true'
         and annual.value->>'kind'='anual' and annual.value->>'applies'='yes'))
-    order by case when coalesce(ie.value->>'h','')~'^[0-9]{1,7}(\.[0-9]{1,3})?
-  if v_count=0 and not exists(select 1 from jsonb_array_elements(coalesce(v_payload->'ip','[]'::jsonb)) p
-     where p.value->>'ac'=v_a->>'id' and coalesce(p.value->>'archived','false')<>'true') then
-   v_alerts:=v_alerts||jsonb_build_array(jsonb_build_object(
-    'level','notice','code','no_controls','component','f',
-    'message','Todavía no hay controles e inspecciones configurados; verificar el programa de mantenimiento y las libretas.'));
-  end if;
-  v_total:=v_total+jsonb_array_length(v_alerts);
-  v_set:=v_set||jsonb_build_array(jsonb_build_object(
-   'registration',v_f.registration,'model',v_f.model,'availability',v_f.availability,
-   'current_airframe_hours',v_hours,'alerts',v_alerts,'configured_controls',v_count,
-   'initial_hours_pending',v_initial));
- end loop;
- return jsonb_build_object('aircraft',v_set,'total_alerts',v_total,
-  'disclaimer','Avisos auxiliares basados solo en registros cargados. No certifican aeronavegabilidad ni autorizan el vuelo.');
-end $function$
-
+    order by case when coalesce(ie.value->>'h','')~'^[0-9]{1,7}(\.[0-9]{1,3})?$'
       then (ie.value->>'h')::numeric else -1 end desc,
      ie.value->>'date' desc limit 1;
    else
@@ -191,41 +175,9 @@ end $function$
       'message','Inspección '||v_plan_title||': revisar resultado y referencia de constancia.'));
     continue;
    end if;
-   v_last:=case when coalesce(v_record->>'h','')~'^[0-9]{1,7}(\.[0-9]{1,3})?
-  if v_count=0 and not exists(select 1 from jsonb_array_elements(coalesce(v_payload->'ip','[]'::jsonb)) p
-     where p.value->>'ac'=v_a->>'id' and coalesce(p.value->>'archived','false')<>'true') then
-   v_alerts:=v_alerts||jsonb_build_array(jsonb_build_object(
-    'level','notice','code','no_controls','component','f',
-    'message','Todavía no hay controles e inspecciones configurados; verificar el programa de mantenimiento y las libretas.'));
-  end if;
-  v_total:=v_total+jsonb_array_length(v_alerts);
-  v_set:=v_set||jsonb_build_array(jsonb_build_object(
-   'registration',v_f.registration,'model',v_f.model,'availability',v_f.availability,
-   'current_airframe_hours',v_hours,'alerts',v_alerts,'configured_controls',v_count,
-   'initial_hours_pending',v_initial));
- end loop;
- return jsonb_build_object('aircraft',v_set,'total_alerts',v_total,
-  'disclaimer','Avisos auxiliares basados solo en registros cargados. No certifican aeronavegabilidad ni autorizan el vuelo.');
-end $function$
-
+   v_last:=case when coalesce(v_record->>'h','')~'^[0-9]{1,7}(\.[0-9]{1,3})?$'
      then (v_record->>'h')::numeric else null end;
-   v_iv:=case when coalesce(v_plan->>'hours','')~'^[0-9]{1,7}(\.[0-9]{1,3})?
-  if v_count=0 and not exists(select 1 from jsonb_array_elements(coalesce(v_payload->'ip','[]'::jsonb)) p
-     where p.value->>'ac'=v_a->>'id' and coalesce(p.value->>'archived','false')<>'true') then
-   v_alerts:=v_alerts||jsonb_build_array(jsonb_build_object(
-    'level','notice','code','no_controls','component','f',
-    'message','Todavía no hay controles e inspecciones configurados; verificar el programa de mantenimiento y las libretas.'));
-  end if;
-  v_total:=v_total+jsonb_array_length(v_alerts);
-  v_set:=v_set||jsonb_build_array(jsonb_build_object(
-   'registration',v_f.registration,'model',v_f.model,'availability',v_f.availability,
-   'current_airframe_hours',v_hours,'alerts',v_alerts,'configured_controls',v_count,
-   'initial_hours_pending',v_initial));
- end loop;
- return jsonb_build_object('aircraft',v_set,'total_alerts',v_total,
-  'disclaimer','Avisos auxiliares basados solo en registros cargados. No certifican aeronavegabilidad ni autorizan el vuelo.');
-end $function$
-
+   v_iv:=case when coalesce(v_plan->>'hours','')~'^[0-9]{1,7}(\.[0-9]{1,3})?$'
      then (v_plan->>'hours')::numeric else null end;
    if coalesce(v_iv,0)>0 then
     if v_last is null or v_hours is null then
@@ -243,42 +195,10 @@ end $function$
      end if;
     end if;
    end if;
-   v_months:=case when coalesce(v_plan->>'months','')~'^[0-9]{1,4}
-  if v_count=0 and not exists(select 1 from jsonb_array_elements(coalesce(v_payload->'ip','[]'::jsonb)) p
-     where p.value->>'ac'=v_a->>'id' and coalesce(p.value->>'archived','false')<>'true') then
-   v_alerts:=v_alerts||jsonb_build_array(jsonb_build_object(
-    'level','notice','code','no_controls','component','f',
-    'message','Todavía no hay controles e inspecciones configurados; verificar el programa de mantenimiento y las libretas.'));
-  end if;
-  v_total:=v_total+jsonb_array_length(v_alerts);
-  v_set:=v_set||jsonb_build_array(jsonb_build_object(
-   'registration',v_f.registration,'model',v_f.model,'availability',v_f.availability,
-   'current_airframe_hours',v_hours,'alerts',v_alerts,'configured_controls',v_count,
-   'initial_hours_pending',v_initial));
- end loop;
- return jsonb_build_object('aircraft',v_set,'total_alerts',v_total,
-  'disclaimer','Avisos auxiliares basados solo en registros cargados. No certifican aeronavegabilidad ni autorizan el vuelo.');
-end $function$
-
+   v_months:=case when coalesce(v_plan->>'months','')~'^[0-9]{1,4}$'
     then (v_plan->>'months')::int else 0 end;
    v_date_text:=coalesce(v_record->>'date','');
-   if v_months>0 and v_date_text~'^\d{4}-\d{2}-\d{2}
-  if v_count=0 and not exists(select 1 from jsonb_array_elements(coalesce(v_payload->'ip','[]'::jsonb)) p
-     where p.value->>'ac'=v_a->>'id' and coalesce(p.value->>'archived','false')<>'true') then
-   v_alerts:=v_alerts||jsonb_build_array(jsonb_build_object(
-    'level','notice','code','no_controls','component','f',
-    'message','Todavía no hay controles e inspecciones configurados; verificar el programa de mantenimiento y las libretas.'));
-  end if;
-  v_total:=v_total+jsonb_array_length(v_alerts);
-  v_set:=v_set||jsonb_build_array(jsonb_build_object(
-   'registration',v_f.registration,'model',v_f.model,'availability',v_f.availability,
-   'current_airframe_hours',v_hours,'alerts',v_alerts,'configured_controls',v_count,
-   'initial_hours_pending',v_initial));
- end loop;
- return jsonb_build_object('aircraft',v_set,'total_alerts',v_total,
-  'disclaimer','Avisos auxiliares basados solo en registros cargados. No certifican aeronavegabilidad ni autorizan el vuelo.');
-end $function$
- then
+   if v_months>0 and v_date_text~'^\d{4}-\d{2}-\d{2}$' then
     -- Ajustar el último día del mes, tal como hace la ficha visual.
     v_date_due:=(date_trunc('month',v_date_text::date)::date+
       make_interval(months=>v_months))::date+
@@ -326,43 +246,11 @@ end $function$
    end if;
    v_cp:=coalesce(v_ad->>'cp','f');
    v_current:=case when v_cp='f' then v_hours
-     when v_cp in ('m','p') and coalesce(v_a#>>array['cp',v_cp,'h'],'')~'^[0-9]{1,7}(\.[0-9]{1,3})?
-  if v_count=0 and not exists(select 1 from jsonb_array_elements(coalesce(v_payload->'ip','[]'::jsonb)) p
-     where p.value->>'ac'=v_a->>'id' and coalesce(p.value->>'archived','false')<>'true') then
-   v_alerts:=v_alerts||jsonb_build_array(jsonb_build_object(
-    'level','notice','code','no_controls','component','f',
-    'message','Todavía no hay controles e inspecciones configurados; verificar el programa de mantenimiento y las libretas.'));
-  end if;
-  v_total:=v_total+jsonb_array_length(v_alerts);
-  v_set:=v_set||jsonb_build_array(jsonb_build_object(
-   'registration',v_f.registration,'model',v_f.model,'availability',v_f.availability,
-   'current_airframe_hours',v_hours,'alerts',v_alerts,'configured_controls',v_count,
-   'initial_hours_pending',v_initial));
- end loop;
- return jsonb_build_object('aircraft',v_set,'total_alerts',v_total,
-  'disclaimer','Avisos auxiliares basados solo en registros cargados. No certifican aeronavegabilidad ni autorizan el vuelo.');
-end $function$
-
+     when v_cp in ('m','p') and coalesce(v_a#>>array['cp',v_cp,'h'],'')~'^[0-9]{1,7}(\.[0-9]{1,3})?$'
        and not v_initial then (v_a#>>array['cp',v_cp,'h'])::numeric
      else null end;
    v_date_text:=coalesce(v_ad->>'nextDate','');
-   if v_date_text~'^\d{4}-\d{2}-\d{2}
-  if v_count=0 and not exists(select 1 from jsonb_array_elements(coalesce(v_payload->'ip','[]'::jsonb)) p
-     where p.value->>'ac'=v_a->>'id' and coalesce(p.value->>'archived','false')<>'true') then
-   v_alerts:=v_alerts||jsonb_build_array(jsonb_build_object(
-    'level','notice','code','no_controls','component','f',
-    'message','Todavía no hay controles e inspecciones configurados; verificar el programa de mantenimiento y las libretas.'));
-  end if;
-  v_total:=v_total+jsonb_array_length(v_alerts);
-  v_set:=v_set||jsonb_build_array(jsonb_build_object(
-   'registration',v_f.registration,'model',v_f.model,'availability',v_f.availability,
-   'current_airframe_hours',v_hours,'alerts',v_alerts,'configured_controls',v_count,
-   'initial_hours_pending',v_initial));
- end loop;
- return jsonb_build_object('aircraft',v_set,'total_alerts',v_total,
-  'disclaimer','Avisos auxiliares basados solo en registros cargados. No certifican aeronavegabilidad ni autorizan el vuelo.');
-end $function$
- then
+   if v_date_text~'^\d{4}-\d{2}-\d{2}$' then
     v_date_due:=v_date_text::date;
     if v_date_due<=current_date+45 then
      v_alerts:=v_alerts||jsonb_build_array(jsonb_build_object(
@@ -371,23 +259,7 @@ end $function$
       'message','DA '||v_name||': próximo vencimiento por fecha '||v_date_due||'.'));
     end if;
    end if;
-   v_due_hours:=case when coalesce(v_ad->>'nextH','')~'^[0-9]{1,7}(\.[0-9]{1,3})?
-  if v_count=0 and not exists(select 1 from jsonb_array_elements(coalesce(v_payload->'ip','[]'::jsonb)) p
-     where p.value->>'ac'=v_a->>'id' and coalesce(p.value->>'archived','false')<>'true') then
-   v_alerts:=v_alerts||jsonb_build_array(jsonb_build_object(
-    'level','notice','code','no_controls','component','f',
-    'message','Todavía no hay controles e inspecciones configurados; verificar el programa de mantenimiento y las libretas.'));
-  end if;
-  v_total:=v_total+jsonb_array_length(v_alerts);
-  v_set:=v_set||jsonb_build_array(jsonb_build_object(
-   'registration',v_f.registration,'model',v_f.model,'availability',v_f.availability,
-   'current_airframe_hours',v_hours,'alerts',v_alerts,'configured_controls',v_count,
-   'initial_hours_pending',v_initial));
- end loop;
- return jsonb_build_object('aircraft',v_set,'total_alerts',v_total,
-  'disclaimer','Avisos auxiliares basados solo en registros cargados. No certifican aeronavegabilidad ni autorizan el vuelo.');
-end $function$
-
+   v_due_hours:=case when coalesce(v_ad->>'nextH','')~'^[0-9]{1,7}(\.[0-9]{1,3})?$'
       then (v_ad->>'nextH')::numeric else null end;
    if v_due_hours is not null then
     if v_current is null then
