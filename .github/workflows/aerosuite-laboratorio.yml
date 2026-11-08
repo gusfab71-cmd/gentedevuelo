@@ -35,6 +35,8 @@ jobs:
             command: 'node tests/aerosuite-maintenance-integration.test.cjs'
           - title: 'Matrículas y registros'
             command: 'node tests/aerosuite-registration.test.cjs'
+          - title: 'Contratos de acceso por rol'
+            command: 'node --test tests/aerosuite-role-portal-contract.test.cjs'
           - title: 'Dirección y permisos'
             command: 'node tests/aerosuite-director-institucional.test.mjs'
           - title: 'Aislamiento de demos'
