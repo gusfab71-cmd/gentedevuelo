@@ -17,7 +17,7 @@ if [[ "${AEROSUITE_BACKUP_CONFIRM:-}" != "COPIA-CIFRADA-MANUAL" ]]; then
   exit 2
 fi
 
-for cmd in pg_dump pg_restore age aws sha256sum stat mktemp date; do
+for cmd in pg_dump pg_restore age aws sha256sum stat mktemp date grep; do
   if ! command -v "$cmd" >/dev/null 2>&1; then
     printf 'Falta herramienta obligatoria: %s\n' "$cmd" >&2
     exit 2
@@ -29,7 +29,7 @@ tmp_dir="$(mktemp -d)"
 cleanup(){
   # Los datos de PostgreSQL sin cifrar nunca se suben ni se retienen en el runner.
   if [[ -d "$tmp_dir" ]]; then
-    rm -f "$tmp_dir/database.dump" "$tmp_dir/database.dump.age"
+    rm -f "$tmp_dir/database.dump" "$tmp_dir/database.dump.age" "$tmp_dir/database.toc"
     rmdir "$tmp_dir" 2>/dev/null || true
   fi
 }
@@ -39,13 +39,18 @@ cipher="$tmp_dir/database.dump.age"
 
 printf '%s\n' "Generando volcado lógico con conexión cifrada y permisos de sólo exportación."
 pg_dump --dbname="$AEROSUITE_BACKUP_DB_URL" --format=custom \
-  --no-owner --no-privileges --file="$archive"
+  --no-owner --file="$archive"
 if [[ ! -s "$archive" ]]; then
   echo "Volcado vacío: no se realizará ninguna carga." >&2
   exit 1
 fi
 # Prueba únicamente la legibilidad del índice; NO equivale a una restauración.
-pg_restore --list "$archive" >/dev/null
+pg_restore --list "$archive" > "$tmp_dir/database.toc"
+# Una copia sin las tablas de AeroSuite no es aceptable como recuperación del proyecto.
+if ! grep -Eq 'TABLE DATA[[:space:]]+public[[:space:]]+aerosuite_' "$tmp_dir/database.toc"; then
+  echo "Faltan entradas de datos AeroSuite en el índice del respaldo." >&2
+  exit 1
+fi
 age -r "$AEROSUITE_BACKUP_AGE_RECIPIENT" -o "$cipher" "$archive"
 if [[ ! -s "$cipher" ]]; then
   echo "Error de cifrado; se cancela el traslado." >&2
