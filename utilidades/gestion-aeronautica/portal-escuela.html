@@ -102,6 +102,7 @@ input[type=email]{width:100%;background:#122737;border:1px solid #7394aa;border-
   <div class="metrics">
    <a class="tile operational-link" data-visible-role="administrador secretaria" data-module="turnera" href="#"><h3>Turnera y reservas</h3><p>Solicitudes pendientes, confirmaciones y cancelaciones.</p><span class="pill ready">Operativa</span></a>
    <a class="tile operational-link" data-visible-role="administrador secretaria" data-module="informes" href="#"><h3>Informes de instrucción</h3><p>Revisar devoluciones, horas, combustible y aceite.</p><span class="pill ready">Operativa</span></a>
+   <a class="tile" id="ravInstitutionLink" data-visible-role="administrador secretaria" href="#" style="text-decoration:none;color:inherit"><h3>RAV institucional</h3><p>Preparar borradores desde informes aprobados, enviarlos a Dirección y conservar la revisión documental.</p><span class="pill ready">Revisión interna · No certificado</span></a>
    <a class="tile operational-link" data-visible-role="administrador secretaria" data-module="cobros" href="#"><h3>Cobro de vuelos</h3><p>Registrar efectivo o descontar horas del pack al finalizar cada vuelo.</p><span class="pill ready">Operativa</span></a>
     <a class="tile operational-link" data-visible-role="administrador secretaria" data-module="contaduria" href="#"><h3>Contaduría</h3><p>Compra y anulación de packs, ingresos, egresos, caja chica e historial económico.</p><span class="pill ready">Operativa</span></a>
    <a class="tile" data-visible-role="administrador" id="directorDailyCloseLink" href="#" style="text-decoration:none;color:inherit;border-color:#d7b66f">
@@ -257,6 +258,8 @@ try{
   if(labLogin)flightUrl.searchParams.set('prueba','1');
   el('aerosuiteFlightOperationsLink').href=flightUrl.href;
  }
+ if(el('ravInstitutionLink'))el('ravInstitutionLink').href='rav-institucional.html?institucion='+
+   encodeURIComponent(school.institution_id)+'&rol='+encodeURIComponent(school.my_role)+(labLogin?'&prueba=1':'');
  for(const link of document.querySelectorAll('.operational-link[data-module]')){
    link.href=(link.dataset.module==='flota'?'flota-institucional.html':'operaciones-institucionales.html')+'?institucion='+encodeURIComponent(school.institution_id)+'&rol='+encodeURIComponent(school.my_role)+(labLogin?'&prueba=1':'')+(link.dataset.module==='flota'?'':'#'+encodeURIComponent(link.dataset.module));
   }
