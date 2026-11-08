@@ -1453,14 +1453,18 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     const tr=document.createElement("tr"),th=document.createElement("th");th.textContent=time+"–"+(()=>{const [h,mi]=time.split(":").map(Number);const n=h*60+mi+90;return String(Math.floor(n/60)%24).padStart(2,"0")+":"+String(n%60).padStart(2,"0")})();tr.append(th);
     for(const date of dates){
      const td=document.createElement("td"),b=document.createElement("button"),start=new Date(date+"T"+time+":00-03:00");
-     const booking=bookings.find(x=>x.status!=="cancelled"&&new Date(x.starts_at).getTime()===start.getTime());
+     const simultaneousBookings=bookings.filter(x=>x.status!=="cancelled"&&new Date(x.starts_at).getTime()===start.getTime());
+     // Si hay vuelos paralelos, mostrar primero el propio; nunca ocultar su estado.
+     const booking=simultaneousBookings.find(x=>x.my_booking)||
+      simultaneousBookings.find(x=>x.instructor_id===user.id)||simultaneousBookings[0];
      b.type="button";b.className="slot"+(booking?" busy":"")+(booking&&booking.my_booking?" mine":"")+(date===today?" today-slot":"");
      if(booking){
       const paid=manager&&!!booking.booking_id&&settledWeek.has(booking.booking_id);
       if(paid)b.classList.add("settled");
       else if((!isParticipant||booking.my_booking)&&["pending","confirmed"].includes(booking.status))b.classList.add(booking.status);
       // El alumno ve su estado directamente. Las reservas ajenas permanecen neutras y sin detalles.
-      b.textContent=paid?"Saldado":isParticipant?
+      b.textContent=manager&&simultaneousBookings.length>1?
+       simultaneousBookings.length+" vuelos paralelos":paid?"Saldado":isParticipant?
        (booking.my_booking?
         (booking.status==="pending"?"Pendiente":
          booking.status==="confirmed"?"Confirmado":
@@ -1479,17 +1483,18 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
       }
       if(["administrador","secretaria","instructor"].includes(role)){
        const student=booking.student_email||"Alumno sin identificar";
-       const small=document.createElement("small");small.textContent="Alumno: "+student;b.append(small);
+       const small=document.createElement("small");small.textContent=simultaneousBookings.length>1?
+        "Ver los "+simultaneousBookings.length+" vuelos en la lista":("Alumno: "+student);b.append(small);
        b.title=(paid?"Saldado · ":"")+(statuses[booking.status]||"Reservado")+" · Alumno: "+student+(booking.instructor_email?" · Instructor: "+booking.instructor_email:"");
        b.setAttribute("aria-label",b.title);
       }
       b.onclick=()=>{
-       const card=document.getElementById("booking-"+(booking.booking_id||""));
-       if(!card)return;
+       const visible=simultaneousBookings.filter(x=>x.booking_id&&(manager||x.my_booking||x.instructor_id===user.id));
+       const cards=visible.map(x=>document.getElementById("booking-"+x.booking_id)).filter(Boolean);
+       if(!cards.length)return;
        document.querySelectorAll("#bookingList .list-item.is-target").forEach(x=>x.classList.remove("is-target"));
-       card.classList.add("is-target");
-       if(card.tagName==="DETAILS")card.open=true;
-       card.scrollIntoView({behavior:"smooth",block:"center"});
+       for(const card of cards){card.classList.add("is-target");if(card.tagName==="DETAILS")card.open=true;}
+       cards[0].scrollIntoView({behavior:"smooth",block:"center"});
       };
       if(!booking.booking_id)b.onclick=()=>stat.textContent="Turno ocupado. Seleccioná uno libre.";
      }else{
