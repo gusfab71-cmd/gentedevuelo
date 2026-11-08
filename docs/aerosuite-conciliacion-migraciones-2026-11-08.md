@@ -1,25 +1,22 @@
 # AeroSuite — conciliación del historial de migraciones
-**Auditoría:** 08/11/2026 · **Alcance:** comparación de GitHub PR #77 con `supabase_migrations.schema_migrations` del proyecto principal, sin ejecutar migraciones SQL.
+**Auditoría:** 08/11/2026 · **Destino:** rama aislada PR #77 · **Sin ejecutar SQL ni alterar el historial de Supabase**.
 
-## Método verificable
-Se comparó el identificador **Git blob SHA-1 del contenido exacto** de cada `supabase/migrations/*.sql` contra el SHA calculado a partir de `statements[1]` en el historial real de Supabase. En este proyecto las 294 migraciones registradas almacenaban un único bloque SQL; la fórmula se contrastó con una migración conocida. **No se normalizó texto ni se infirió igualdad por nombres, similitud o longitud.**
+## Método y evidencia
+Se compararon los **SHA de blobs Git** de `supabase/migrations/*.sql` con los SHA calculados directamente sobre `statements[1]` de `supabase_migrations.schema_migrations` usando el formato Git `blob <bytes>\0<contenido>`. Se comprobó con un archivo conocido y, antes de mover nada, se exigió coincidencia exacta de bytes. Se revisaron asimismo las referencias a archivos en tests, documentación, scripts y workflows.
 
 ## Resultado
-- **114 archivos** de migración versionados en la rama, **294 migraciones** registradas como aplicadas en Supabase.
-- **75 archivos byte por byte idénticos a migraciones ya aplicadas** tenían número o nombre local distinto al registrado: **10 corregidos en un commit previo y 65 alineados en la misma rama en una segunda revisión**, moviendo los blobs sin modificar ni una línea del SQL.
-- Una vez alineados estos 75, **77 de los 114 archivos** coinciden exactamente en versión y contenido con una migración aplicada.
-- **37 archivos** siguen sin una contraparte exactamente igual en el historial remoto. Entre ellos, **12 tienen la misma versión que una migración aplicada, pero el contenido no coincide**. Los otros 25 requieren determinar si corresponden a cambios no aplicados, archivos reconstruidos o equivalentes semánticos.
-- No se reescribió ningún registro de `supabase_migrations.schema_migrations`, no se ejecutó ningún SQL de estas 75 migraciones y no se modificaron tablas ni datos de producción.
-- La acción `Pruebas Gestión Aeronáutica` ahora observa `supabase/migrations/**` en vez de rutas antiguas específicas; los cambios futuros en cualquier migración deben activar su batería de pruebas.
+- **114 migraciones SQL** en GitHub frente a **294 entradas** del historial aplicado de Supabase.
+- **75 archivos con contenido byte a byte idéntico** a migraciones aplicadas se habían guardado con otro número o nombre: se movieron para que coincidan con el historial efectivo (10 en una primera corrección, 65 en una segunda), sin alterar un solo byte de SQL.
+- En **4 archivos adicionales con la misma versión**, la comparación sin comentarios ni cambios de formato devolvió el mismo contenido funcional y la secuencia de literales SQL resultó idéntica: se restauró en GitHub el SQL exacto que figura aplicado. No se ejecutó SQL nuevamente.
+- **81/114 archivos** ahora coinciden simultáneamente en número de versión, nombre y bytes del SQL.
+- **33 archivos** siguen sin correspondencia exacta de bytes: **8 tienen la misma versión que una entrada de Supabase pero difieren en contenido relevante o estructura**; los otros **25** requieren investigación adicional. La ausencia de coincidencia NO demuestra automáticamente que no estén aplicados.
+- El workflow de Gestión Aeronáutica se corrigió para observar **`supabase/migrations/**`**, en lugar de rutas específicas obsoletas, tanto para PR como para `main`.
 
-## Límite y regla segura
-**El historial no está plenamente reconciliado. NO ejecutar `supabase db push`, `supabase migration up`, ni un lote automático contra el proyecto principal hasta resolver los 37 casos no coincidentes y contar con un respaldo/restauración verificados.** Tener la misma versión no garantiza tener el mismo SQL aplicado. No cambiar las 12 colisiones de contenido ni inventar migraciones aplicadas sin revisar las instrucciones originales y su estado efectivo.
+## No hacer hasta resolver los 33 casos
+1. NO ejecutar `supabase db push`, `supabase migration up` ni aplicación en lote de SQL sobre el proyecto principal.
+2. Clasificar las 33 diferencias restantes contra las definiciones efectivas de tablas, funciones, políticas e índices; no equiparar SQL por nombre, longitud ni similitud.
+3. Crear migraciones nuevas y revisables solo para cambios que de verdad falten. No reescribir `supabase_migrations.schema_migrations` para fingir que se aplicaron.
+4. Ensayar una restauración real de PostgreSQL, archivos de Supabase Storage y objetos Cloudflare R2 en entorno segregado antes del alta de cualquier escuela.
+5. Completar E2E con navegador autenticado, identidades separadas PPA/PCA, concurrencia de dos clientes, retorno a servicio documentado y Preview Vercel de frontend/backend compatibles.
 
-Antes de continuar:
-1. Clasificar los 37 archivos restantes por función y comparar el esquema efectivo, sus dependencias y restricciones.
-2. Para los 12 con versión idéntica y SQL diferente, revisar diffs reales y decidir una nueva migración correctiva cuando sea necesario; jamás sobrescribir la historia aplicada.
-3. Generar y ensayar restauración real fuera de producción, incluida Supabase Storage y Cloudflare R2.
-4. Completar pruebas E2E con sesiones JWT reales, dos clientes concurrentes, rol Piloto PPA y PCA separados, respaldo documental de retorno a servicio y Preview Vercel controlada.
-5. Aprobar primera institución real solo tras evidencias de todos los puntos. Sigue habiendo cero escuelas reales.
-
-**Estado:** reparación de identificadores exactos de GitHub completada para 75 migraciones; **habilitación de despliegue de base y puesta en marcha real: BLOQUEADAS**.
+**Seguridad operativa:** este control no elimina las advertencias de Supabase Auth ni sustituye auditoría de operaciones con JWT. La rama permanece sin fusión a producción y no se autoriza la primera institución real.

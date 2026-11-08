@@ -1,4 +1,4 @@
--- El cierre diario es exclusivo de Director/Administrador. Función autorizada por institución.
+-- El cierre diario es exclusivo de Dirección. La cobranza operativa permanece en Secretaría.
 CREATE OR REPLACE FUNCTION aerosuite_internal.aerosuite_daily_close_snapshot(p_institution_id uuid, p_day date)
  RETURNS jsonb
  LANGUAGE plpgsql
