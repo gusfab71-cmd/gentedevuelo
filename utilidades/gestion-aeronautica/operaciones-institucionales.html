@@ -2,7 +2,7 @@
 <html lang="es"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
-<title>AeroSuite · Operaciones institucionales</title>
+<title>FlyPro · Operaciones institucionales</title>
 <style>
 :root{font-family:Inter,system-ui,Arial,sans-serif;color:#ecf5fb;background:#0f1d2b;color-scheme:dark}
 *{box-sizing:border-box}[hidden]{display:none!important}body{margin:0;background:linear-gradient(145deg,#0d1b28,#173347);min-height:100vh}
@@ -240,7 +240,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
 @media(max-width:1050px){.finance-workspaces{grid-template-columns:repeat(2,minmax(0,1fr))}.finance-workspaces>.panel:last-child{grid-column:1/-1}.finance-overview .finance-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.finance-lists{grid-template-columns:1fr}}
 @media(max-width:630px){.finance-workspaces{grid-template-columns:1fr}.finance-workspaces>.panel:last-child{grid-column:auto}.finance-overview .finance-kpis{grid-template-columns:1fr 1fr}.finance-overview .finance-meta{grid-template-columns:1fr}.finance-workspaces .formgrid{grid-template-columns:1fr}.finance-kpi .finance-kpi-value{font-size:20px}}
 
-/* Paleta de turnera AeroSuite: tonos sobrios y consistentes con el detalle. */
+/* Paleta de turnera FlyPro: tonos sobrios y consistentes con el detalle. */
 #turnera{--turno-libre:#326A5B;--turno-libre-borde:#7AB29B;--turno-pendiente:#F5DFA1;--turno-pendiente-borde:#FCEBBE;--turno-confirmado:#91AABB;--turno-confirmado-borde:#C5D5DE;--turno-saldado:#C9A66E;--turno-saldado-borde:#E4CAA1}
 #turnera .slot{border-radius:9px;transition:filter .15s ease,box-shadow .15s ease;line-height:1.35}
 #turnera .slot.available{background:linear-gradient(140deg,#3D7967,var(--turno-libre));border:1.5px solid var(--turno-libre-borde);color:#F5FFF8;font-weight:800}
@@ -316,7 +316,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
 #contaduria #moneyReportsPanel{margin:15px 0;padding:14px;border:1px solid #547791;border-radius:10px}
 @media(max-width:630px){#cobros #flightSettlementPanel .formgrid,#contaduria .contaduria-pack-sale .formgrid,#contaduria #schoolExpensePanel .formgrid{grid-template-columns:1fr}#cobros #flightSettlementPanel{padding:14px}}
 
-/* Cobro de vuelos: formulario simplificado y coherente con AeroSuite. */
+/* Cobro de vuelos: formulario simplificado y coherente con FlyPro. */
 #cobros #flightSettlementPanel{max-width:820px;padding:20px}
 #cobros #flightSettlementPanel>h3{font-size:20px;margin:0 0 5px;color:#f1f6fa}
 #cobros #flightSettlementPanel>.settlement-intro{margin:0 0 15px;line-height:1.45;color:#cbdae5}
@@ -392,14 +392,14 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
 <script src="../../assets/supabase-2.117.2.min.js"></script><script src="../../assets/community-config.js"></script>
 <script src="../../assets/aerosuite-registration.js"></script><script src="aerosuite-agenda-publicada.js"></script>
 </head><body>
-<header><a class="brand" href="index.html">Aero<span>Suite</span><small>BY GENTE DE VUELO</small></a><nav><a id="backPortal" href="portal-escuela.html">Volver al portal</a><a href="../../index.html">Gente de Vuelo</a></nav></header>
+<header><a class="brand" href="index.html">Fly<span>Pro</span><small>BY GENTE DE VUELO</small></a><nav><a id="backPortal" href="portal-escuela.html">Volver al portal</a><a href="../../index.html">Gente de Vuelo</a></nav></header>
 <main>
  <span class="eyebrow">Gestión institucional segura · Primera etapa</span>
  <h1 id="pageTitle">Operaciones de la escuela</h1>
  <div class="status" id="message" role="status" aria-live="polite">Verificando los permisos de tu institución…</div>
  <div id="workArea" hidden>
   <div class="row between"><div><h2 id="schoolTitle">—</h2><div class="muted" id="roleText"></div></div><button id="reloadAll" type="button">Actualizar información</button></div>
-  <div class="tabs" role="tablist" aria-label="Áreas de AeroSuite" id="tabs">
+  <div class="tabs" role="tablist" aria-label="Áreas de FlyPro" id="tabs">
    <button data-tab="turnera" class="active" type="button">Turnera semanal y reprogramaciones</button>
    <button data-tab="informes" type="button">Informes de instrucción</button>
    <button data-tab="cobros" type="button" id="cobrosTab" hidden>Cobro de vuelos</button>
@@ -502,7 +502,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    <p id="financeHelp">Consultá tus horas de vuelo y devoluciones.</p>
    <div id="studentFlightHours" hidden aria-live="polite"><section class="panel" id="studentPackArea" style="margin:0 0 16px"><span class="eyebrow">Horas prepagas</span><h3>Packs de horas</h3><div class="cards" id="studentPackSummary"></div><div class="list" id="studentPackList"></div></section>
     <div class="cards" id="flightHoursCards"></div>
-    <p class="hint">Los minutos reales se suman sin redondeos. AeroSuite muestra HH:MM y su equivalente en horas centesimales con dos decimales. El total se calcula desde los minutos originales, nunca sumando equivalencias redondeadas.</p>
+    <p class="hint">Los minutos reales se suman sin redondeos. FlyPro muestra HH:MM y su equivalente en horas centesimales con dos decimales. El total se calcula desde los minutos originales, nunca sumando equivalencias redondeadas.</p>
     <div id="labStudentHours" class="list" hidden></div>
     <h3>Vuelos realizados</h3>
     <div class="list" id="flightHoursHistory"></div>
@@ -1024,7 +1024,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    $("financeTab").textContent=role==="piloto"?"Actividad y RAV":"Horas de vuelo";
    $("financeEyebrow").textContent="Actividad de vuelo";
    $("financeTitle").textContent=role==="piloto"?"Mi actividad de vuelo y RAV":"Horas de vuelo";
-   $("financeHelp").textContent=role==="piloto"?"Vuelos particulares registrados al cobrar en esta institución; este resumen no sustituye tu Libro de Vuelo.":"Consultá cuánto volaste en la última práctica y tus horas acumuladas registradas en AeroSuite.";
+   $("financeHelp").textContent=role==="piloto"?"Vuelos particulares registrados al cobrar en esta institución; este resumen no sustituye tu Libro de Vuelo.":"Consultá cuánto volaste en la última práctica y tus horas acumuladas registradas en FlyPro.";
    $("studentFlightHours").hidden=false;
    $("pilotRavPanel").hidden=role!=="piloto";
    $("packsArea").hidden=true;
@@ -2460,10 +2460,10 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     '<div class="sheet-simulation-banner">SIMULACIÓN DEL CENTRO DE TESTEO · NO REPRESENTA UN VUELO REAL NI SUMA HORAS</div>':"";
    const heading=simulation?"Informe de práctica · Prueba":"Informe de práctica de vuelo";
    const verified=simulation?"APROBADO · PRUEBA":"INFORME VALIDADO";
-   const footer=simulation?"Solo para comprobar el funcionamiento de AeroSuite. Datos no computables.":
+   const footer=simulation?"Solo para comprobar el funcionamiento de FlyPro. Datos no computables.":
     "Informe institucional disponible para consulta del alumno.";
    return '<div class="sheet-head">'+
-    '<div><div class="sheet-brand">Aero<span>Suite</span><small>BY GENTE DE VUELO</small></div>'+
+    '<div><div class="sheet-brand">Fly<span>Pro</span><small>BY GENTE DE VUELO</small></div>'+
     '<div class="sheet-kicker">Formación aeronáutica / Registro de instrucción</div>'+
     '<h3>'+esc(heading)+'</h3><p>'+esc(school.institution_name||"Institución aeronáutica")+'</p></div>'+
     '<span class="sheet-status">'+esc(verified)+'</span></div>'+
@@ -2541,7 +2541,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    if(!flights.length){
     const last=document.createElement("div"),total=document.createElement("div");
     last.className=total.className="card";
-    last.innerHTML="<strong>Último vuelo</strong><p>Todavía no tenés vuelos validados en AeroSuite.</p>";
+    last.innerHTML="<strong>Último vuelo</strong><p>Todavía no tenés vuelos validados en FlyPro.</p>";
     total.innerHTML="<strong>Total acumulado</strong><h3>0 h 00 min</h3><p>Registro HH:MM: 0:00</p>";
     cards.append(last,total);
     history.textContent="Los vuelos se mostrarán cuando el instructor entregue el informe y Dirección lo valide.";
@@ -2553,7 +2553,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    last.className=total.className="card";
    last.innerHTML="<strong>Último vuelo · "+esc(reportFlightStamp(latest))+"</strong>"+
     "<h3>"+esc(flightDuration(lastMinutes))+"</h3><p>"+esc(flightHoursMinutes(lastMinutes))+" (HH:MM) · "+esc(flightHoursCentesimal(lastMinutes))+" h centesimales</p>";
-   total.innerHTML="<strong>Total acumulado en AeroSuite</strong>"+
+   total.innerHTML="<strong>Total acumulado en FlyPro</strong>"+
     "<h3>"+esc(flightDuration(totalMinutes))+"</h3>"+
     "<p>"+esc(flightHoursMinutes(totalMinutes))+" (HH:MM) · "+esc(flightHoursCentesimal(totalMinutes))+" h centesimales · "+flights.length+
     " "+(flights.length===1?"vuelo":"vuelos")+" validados</p>";
@@ -4019,7 +4019,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     ]);
     const csv="\uFEFF"+[titles,...records].map(row=>row.map(sanitizeCSV).join(";")).join("\r\n");
     const url=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8;"}));
-    const link=document.createElement("a");link.href=url;link.download="AeroSuite-movimientos-"+month+".csv";
+    const link=document.createElement("a");link.href=url;link.download="FlyPro-movimientos-"+month+".csv";
     document.body.append(link);link.click();link.remove();
     setTimeout(()=>URL.revokeObjectURL(url),1000);
     status.textContent="Descargado: "+entries.length+" movimientos de "+month+
