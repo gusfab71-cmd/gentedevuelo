@@ -317,7 +317,7 @@ begin
  end loop;
  return jsonb_build_object('aircraft',v_set,'total_alerts',v_total,
   'disclaimer','Avisos auxiliares basados solo en registros cargados. No certifican aeronavegabilidad ni autorizan el vuelo.');
-end $function$
+end $function$;
 
 
 -- Barrera transaccional en toda publicación de vuelos:
