@@ -21,6 +21,8 @@ on:
       - 'tests/aerosuite-reconciliation-readonly.test.cjs'
       - 'tests/aerosuite-backup-manual-contract.test.cjs'
       - 'tests/aerosuite-external-worker-safety.test.cjs'
+      - 'tests/gdv-community-delete-aerosuite-guard.test.cjs'
+      - 'docs/gdv-guard-baja-comunidad-cuentas-aerosuite-2026-11-08.sql'
       - 'supabase/migrations/**'
       - 'supabase/functions/aerosuite-external-email-worker/index.ts'
       - '.github/workflows/aerosuite-backup-manual.yml'
@@ -48,6 +50,8 @@ on:
       - 'tests/aerosuite-reconciliation-readonly.test.cjs'
       - 'tests/aerosuite-backup-manual-contract.test.cjs'
       - 'tests/aerosuite-external-worker-safety.test.cjs'
+      - 'tests/gdv-community-delete-aerosuite-guard.test.cjs'
+      - 'docs/gdv-guard-baja-comunidad-cuentas-aerosuite-2026-11-08.sql'
       - 'supabase/migrations/**'
       - 'supabase/functions/aerosuite-external-email-worker/index.ts'
       - '.github/workflows/aerosuite-backup-manual.yml'
@@ -76,5 +80,6 @@ jobs:
       - run: node --test tests/aerosuite-finance-serialization.test.cjs
       - run: node --test tests/aerosuite-backup-manual-contract.test.cjs
       - run: node --test tests/aerosuite-external-worker-safety.test.cjs
+      - run: node --test tests/gdv-community-delete-aerosuite-guard.test.cjs
       - run: bash -n scripts/aerosuite-backup-encrypted.sh
       - run: node tests/airstrip-metar.test.cjs
