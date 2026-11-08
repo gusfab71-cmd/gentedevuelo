@@ -15,13 +15,13 @@
     location.replace(destination.href);
     return;
   }
-  // El perfil AeroSuite se reutiliza desde el portal institucional sin exigir
+  // El perfil FlyPro se reutiliza desde el portal institucional sin exigir
   // una sesión distinta de la comunidad. Solo esta ruta permite el modo institucional.
   const institutionalParams=new URLSearchParams(location.search);
   const institutionalUuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
     .test(institutionalParams.get('institucion')||'');
   const onInstitutionalProfile=location.pathname.endsWith('/utilidades/gestion-aeronautica/mi-ficha-alumno.html') && institutionalUuid;
-  // El simulador PPA institucional reutiliza la sesión de Alumno de AeroSuite, nunca la sesión comunitaria.
+  // El simulador PPA institucional reutiliza la sesión de Alumno de FlyPro, nunca la sesión comunitaria.
   const onInstitutionalPpa=location.pathname.endsWith('/simulador-ppa/index.html') &&
     institutionalUuid && institutionalParams.get('rol')==='alumno';
   // Flight Operations para Instructor y Piloto: verificar la membresía en servidor,

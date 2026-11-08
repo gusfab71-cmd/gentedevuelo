@@ -2,7 +2,7 @@
 <html lang="es"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
-<title>AeroSuite · Control de portales por rol</title>
+<title>FlyPro · Control de portales por rol</title>
 <style>
 :root{font-family:Inter,system-ui,Arial,sans-serif;color:#eef7fb;background:#101d2b;color-scheme:dark}
 *{box-sizing:border-box}[hidden]{display:none!important}
@@ -66,7 +66,7 @@ td:first-child{color:#bcd6e6;font-weight:700}
 <script src="../../assets/auth-guard.js?v=20261013registro2"></script>
 </head><body>
 <header>
-<a class="brand" href="superadministrador.html">Aero<span>Suite</span><small>CONTROL DE PORTALES · SUPERADMINISTRACIÓN</small></a>
+<a class="brand" href="superadministrador.html">Fly<span>Pro</span><small>CONTROL DE PORTALES · SUPERADMINISTRACIÓN</small></a>
 <nav><a href="superadministrador.html">Volver a Superadministración</a><a href="../../index.html">Gente de Vuelo</a></nav>
 </header>
 <main>
@@ -293,7 +293,7 @@ try{
  if(auth.error||!auth.data?.user)throw Error('Necesitás una sesión de Gente de Vuelo.');
  const superadmin=await db.from('aerosuite_superadmins').select('user_id').eq('user_id',auth.data.user.id).maybeSingle();
  if(superadmin.error)throw superadmin.error;
- if(!superadmin.data)throw Error('Acceso denegado: esta cuenta no es Superadministrador de AeroSuite.');
+ if(!superadmin.data)throw Error('Acceso denegado: esta cuenta no es Superadministrador de FlyPro.');
  const list=await db.from('aerosuite_institutions').select('id,name,kind').order('name').limit(500);
  if(list.error)throw list.error;
  institutions=list.data||[];

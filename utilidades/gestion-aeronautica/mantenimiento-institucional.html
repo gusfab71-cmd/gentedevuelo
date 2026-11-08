@@ -4,8 +4,8 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title>AeroSuite · Mantenimiento institucional</title>
-<meta name="description" content="Registro institucional de mantenimiento para flota AeroSuite.">
+<title>FlyPro · Mantenimiento institucional</title>
+<meta name="description" content="Registro institucional de mantenimiento para flota FlyPro.">
 <meta name="theme-color" content="#101719">
 
 <script src="https://cdn.tailwindcss.com"></script>
@@ -171,12 +171,12 @@ body:not(.maint-focus-mode) .maint-section-title{display:none}
 <body class="min-h-screen">
 <header class="maint-header">
   <div class="maint-topline">
-    <a href="portal-escuela.html" id="maintIdentity" class="maint-identity"><span class="maint-mark">AS</span><span>AEROSUITE<small>Mantenimiento institucional</small></span></a>
+    <a href="portal-escuela.html" id="maintIdentity" class="maint-identity"><span class="maint-mark">FP</span><span>FLYPRO<small>Mantenimiento institucional</small></span></a>
     <div class="maint-links"><a id="backToFleet" href="flota-institucional.html">Disponibilidad de flotas y mantenimiento</a><a id="backToDirector" href="portal-escuela.html">Portal institucional</a></div>
   </div>
   <div class="maint-hero">
     <div class="maint-hero-main">
-      <div class="maint-eyebrow">AEROSUITE / MANTENIMIENTO INSTITUCIONAL</div>
+      <div class="maint-eyebrow">FLYPRO / MANTENIMIENTO INSTITUCIONAL</div>
       <h1>AIRCRAFT <em>MAINTENANCE</em></h1>
       <p>Inspecciones, componentes, bitácora, discrepancias, intervenciones y vencimientos relacionados con la flota de la institución.</p>
       <span class="maint-tag">Registro auxiliar · RAAC 43 y 91</span>
@@ -234,7 +234,7 @@ function reconcileFleet(){
    existing.reg=registration;existing.type=plane.model||existing.type||"Modelo pendiente";existing.archived=false;
   }else{
    const a={id:plane.id,reg:registration,type:plane.model||"Modelo pendiente",h:0,c:0,hpm:0,cpm:0,archived:false,needs_initial_hours:true,
-    technical:{source:"Flota AeroSuite"},operation:{use:"unknown",compensation:"unknown",operator:institutionName,program:"",updated:today()}};
+    technical:{source:"Flota FlyPro"},operation:{use:"unknown",compensation:"unknown",operator:institutionName,program:"",updated:today()}};
    CP(a);S.ac.push(a);
   }
  }
@@ -500,7 +500,7 @@ async function addAc(){
   if(!a)throw Error('La aeronave se registró en Flota, pero su ficha no pudo recuperarse. Recargá.');
   S.sel=a.id;S.tab='k';CP(a);
   a.technical={...(a.technical||{}),manufacturer:values.manufacturer,year:values.year,
-   serial:values.serial,base:values.base,source:values.source||'Flota AeroSuite'};
+   serial:values.serial,base:values.base,source:values.source||'Flota FlyPro'};
   if(values.em)a.cp.m.mod=values.em;
   if(values.es)a.cp.m.ser=values.es;
   if(values.pm)a.cp.p.mod=values.pm;

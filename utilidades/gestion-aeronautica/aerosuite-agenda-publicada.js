@@ -8,7 +8,7 @@ window.AeroSuiteAgenda={
   '<span class="eyebrow">Disponibilidad de la escuela · Publicación y reservas</span>',
   '<section id="agendaManager" hidden>',
   '<h3>Publicar turnos para toda la semana</h3>',
-  '<p class="hint">Seleccioná los recursos disponibles. AeroSuite publicará automáticamente los horarios de 08:30 a 17:30, de lunes a domingo, en turnos de 90 minutos. Podrás suspender o agregar horarios durante la semana.</p>',
+  '<p class="hint">Seleccioná los recursos disponibles. FlyPro publicará automáticamente los horarios de 08:30 a 17:30, de lunes a domingo, en turnos de 90 minutos. Podrás suspender o agregar horarios durante la semana.</p>',
   '<p id="agendaWeekLabel" class="hint"></p>',
   '<form id="agendaBulkForm"><div class="formgrid">',
   '<label>Actividad<select id="agendaBulkType"><option value="flight">Vuelo de instrucción</option><option value="simulator">Vuelo virtual / simulador</option><option value="theory">Teoría</option></select></label>',
@@ -883,7 +883,7 @@ window.AeroSuiteAgenda={
    };
    $("agendaWhatsApp").onclick=async()=>{
     if(!slots.some(s=>s.published)){msg("Primero publicá horarios.");return;}
-    const text="Turnos disponibles en AeroSuite para la semana del "+c.weekDates()[0]+
+    const text="Turnos disponibles en FlyPro para la semana del "+c.weekDates()[0]+
      ". Ingresá a tu portal para reservar vuelo, simulador o teoría: https://gentedevuelo.com/utilidades/gestion-aeronautica/portal-escuela.html";
     try{await navigator.clipboard.writeText(text);msg("Aviso copiado para compartir en WhatsApp.");}
     catch(e){prompt("Copiá el aviso:",text);}

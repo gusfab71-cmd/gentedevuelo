@@ -112,22 +112,22 @@ Deno.serve(async(req:Request)=>{
    return reply(origin,503,{error:"El servicio de identidad devolvió un tipo de enlace no compatible. No se envió el correo."});
  const link="https://gentedevuelo.com/utilidades/gestion-aeronautica/ingreso-escuela.html?institucion="+encodeURIComponent(id)+
    "&rol="+encodeURIComponent(role)+"#token_hash="+encodeURIComponent(tokenHash)+"&type="+encodeURIComponent(verificationType);
- const subject="Invitación a AeroSuite · "+String(org.name).slice(0,80);
+ const subject="Invitación a FlyPro · "+String(org.name).slice(0,80);
  const safeName=esc(String(org.name));
  const safeLabel=esc(roleLabels[role]);
  const html='<!doctype html><html lang="es"><body style="margin:0;padding:25px;background:#f1f5fa;font:15px Arial,sans-serif;color:#243347">'
  +'<div style="max-width:580px;margin:auto;background:#fff;border:1px solid #d8e3eb;border-radius:14px;overflow:hidden">'
- +'<div style="padding:28px;background:#152d47;color:#fff"><strong style="font-size:25px">AeroSuite</strong><div style="font-size:11px;letter-spacing:2px;color:#9bd2f1;margin-top:7px">BY GENTE DE VUELO</div></div>'
+ +'<div style="padding:28px;background:#152d47;color:#fff"><strong style="font-size:25px">FlyPro</strong><div style="font-size:11px;letter-spacing:2px;color:#9bd2f1;margin-top:7px">BY GENTE DE VUELO</div></div>'
  +'<div style="padding:28px"><h1 style="font-size:23px;margin:0 0 15px">Invitación institucional</h1>'
- +'<p>Fuiste invitado para crear una cuenta en <strong>AeroSuite de Gente de Vuelo</strong> como <strong>'+safeLabel+'</strong> de <strong>'+safeName+'</strong>.</p>'
+ +'<p>Fuiste invitado para crear una cuenta en <strong>FlyPro de Gente de Vuelo</strong> como <strong>'+safeLabel+'</strong> de <strong>'+safeName+'</strong>.</p>'
  +'<p>El botón confirma que sos el destinatario de esta invitación. Después podrás crear tu contraseña e ingresar directamente al portal sin un segundo correo ni volver a escribir usuario y clave.</p>'
- +'<p style="margin:26px 0"><a href="'+link+'" style="background:#255a85;color:#fff;text-decoration:none;padding:13px 20px;border-radius:9px;font-weight:700">Ingresar a AeroSuite</a></p>'
+ +'<p style="margin:26px 0"><a href="'+link+'" style="background:#255a85;color:#fff;text-decoration:none;padding:13px 20px;border-radius:9px;font-weight:700">Ingresar a FlyPro</a></p>'
  +'<p>El enlace es personal, de un solo uso y de duración limitada. Si vence, solicitá una nueva invitación. El permiso institucional tiene una vigencia máxima de 7 días.</p>'
  +'<p style="font-size:12px;color:#637686">Nunca solicitaremos tu DNI como contraseña. No compartas claves ni códigos de acceso.</p>'
- +'</div><div style="padding:17px 28px;background:#edf3f9;color:#657787;font-size:12px">AeroSuite · By Gente de Vuelo</div></div></body></html>';
- const plain="Invitación institucional AeroSuite\n\nFuiste invitado para crear una cuenta en AeroSuite de Gente de Vuelo como "+roleLabels[role]+
-   " de "+org.name+".\n\nIngresá directamente a AeroSuite: "+link+
-   "\n\nEl enlace es personal y verifica tu correo en un paso. Desde AeroSuite podrás establecer la contraseña e ingresar sin un segundo correo."+
+ +'</div><div style="padding:17px 28px;background:#edf3f9;color:#657787;font-size:12px">FlyPro · By Gente de Vuelo</div></div></body></html>';
+ const plain="Invitación institucional FlyPro\n\nFuiste invitado para crear una cuenta en FlyPro de Gente de Vuelo como "+roleLabels[role]+
+   " de "+org.name+".\n\nIngresá directamente a FlyPro: "+link+
+   "\n\nEl enlace es personal y verifica tu correo en un paso. Desde FlyPro podrás establecer la contraseña e ingresar sin un segundo correo."+
    "\n\nEl enlace es de un solo uso y puede vencer antes que la invitación institucional (7 días). Si vence, solicitá que te lo reenvíen. Nunca uses tu DNI como contraseña.";
  try{
   const remote=await fetch("https://api.resend.com/emails",{method:"POST",

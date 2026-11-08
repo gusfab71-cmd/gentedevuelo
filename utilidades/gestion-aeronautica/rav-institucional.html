@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
-<title>AeroSuite · RAV institucional</title>
+<title>FlyPro · RAV institucional</title>
 <style>
 :root{font:15px/1.5 Inter,system-ui,Arial,sans-serif;color:#edf6fc;color-scheme:dark}
 *{box-sizing:border-box}body{margin:0;background:linear-gradient(125deg,#0d1b28,#173346);min-height:100vh}
@@ -35,7 +35,7 @@ table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:10px;bord
 <script src="../../assets/community-config.js"></script>
 </head>
 <body>
-<header><a class="brand" href="index.html">Aero<span>Suite</span><small>BY GENTE DE VUELO</small></a><nav><a id="backLink" href="portal-escuela.html">Volver a la escuela</a></nav></header>
+<header><a class="brand" href="index.html">Fly<span>Pro</span><small>BY GENTE DE VUELO</small></a><nav><a id="backLink" href="portal-escuela.html">Volver a la escuela</a></nav></header>
 <main>
 <div class="eyebrow">Academia institucional · Documentación de instrucción</div>
 <h1>RAV institucional</h1>
@@ -82,7 +82,7 @@ let client,school,overview={documents:[],candidates:[],students:[]},edit=null,bu
 const say=(message,error=false)=>{$('message').textContent=message;$('message').style.borderColor=error?'#e7a3a3':'#7296ad'};
 try{
  if(!inst||!['administrador','secretaria'].includes(requestedRole))throw Error('Ingresá desde el portal institucional con permiso de Dirección o Secretaría.');
- if(!window.supabase||!window.GDV_CONFIG?.url||!window.GDV_CONFIG?.key)throw Error('No se pudo iniciar la conexión con AeroSuite.');
+ if(!window.supabase||!window.GDV_CONFIG?.url||!window.GDV_CONFIG?.key)throw Error('No se pudo iniciar la conexión con FlyPro.');
  client=supabase.createClient(GDV_CONFIG.url,GDV_CONFIG.key,{auth:{storageKey:labLogin?'aerosuite-laboratorio-'+requestedRole+'-v1-auth':'aerosuite-institucional-v2-auth',persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
  const user=await client.auth.getUser();
  if(user.error||!user.data?.user)throw Error('No hay sesión activa de la escuela.');

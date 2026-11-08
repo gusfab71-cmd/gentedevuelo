@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
-<title>AeroSuite · Camino demo de autorización institucional</title>
+<title>FlyPro · Camino demo de autorización institucional</title>
 <style>
 :root{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;color:#edf5fa;background:#0f1d2a;color-scheme:dark}
 *{box-sizing:border-box}[hidden]{display:none!important}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 70% 8%,#3152705a,transparent 45%),linear-gradient(145deg,#101f2d,#0b1522)}
@@ -86,7 +86,7 @@ input,select{min-height:44px;padding:10px 12px;border:1px solid #6b8ca4;border-r
   </aside>
   <div class="panel">
    <section data-screen="0">
-    <span class="overline">Etapa 1 · Administración de AeroSuite</span>
+    <span class="overline">Etapa 1 · Administración de FlyPro</span>
     <h2>Alta de una escuela ficticia</h2>
     <p class="lead">Completá un registro de ejemplo. Los campos no se envían a ninguna base de datos.</p>
     <form id="schoolForm">
@@ -120,10 +120,10 @@ input,select{min-height:44px;padding:10px 12px;border:1px solid #6b8ca4;border-r
     <h2>Así recibiría el correo la escuela</h2>
     <p class="lead">Vista previa del mensaje. El botón de abajo solo avanza la demostración: no se conecta con Gmail ni con Supabase Auth.</p>
     <div class="preview-email" aria-label="Ejemplo de correo">
-     <div class="preview-small">AeroSuite · By Gente de Vuelo</div>
+     <div class="preview-small">FlyPro · By Gente de Vuelo</div>
      <div class="preview-title">Invitación para administrar tu institución</div>
      <p>Hola, <strong id="emailContact">—</strong>:</p>
-     <p>Tu institución <strong id="emailSchool">—</strong> fue autorizada para explorar AeroSuite con una prueba gratuita de 30 días.</p>
+     <p>Tu institución <strong id="emailSchool">—</strong> fue autorizada para explorar FlyPro con una prueba gratuita de 30 días.</p>
      <p>Para activar la cuenta deberás verificar tu correo y establecer una contraseña personal. No compartiremos claves ni utilizaremos una contraseña general.</p>
      <span class="preview-button">Aceptar invitación</span>
      <p class="preview-small">Ejemplo de botón sin enlace operativo. En producción se emitiría un vínculo personal de un solo uso y vigencia limitada.</p>
@@ -181,7 +181,7 @@ input,select{min-height:44px;padding:10px 12px;border:1px solid #6b8ca4;border-r
   if(error||!user){authNotice.textContent='Acceso restringido. Iniciá sesión en Gente de Vuelo como administrador.';return}
   const permission=await client.from('aerosuite_superadmins').select('user_id').eq('user_id',user.id).maybeSingle();
   if(permission.error)throw permission.error;
-  if(!permission.data||permission.data.user_id!==user.id){authNotice.textContent='Acceso denegado. Solo el Superadministrador AeroSuite puede ejecutar la demostración.';return}
+  if(!permission.data||permission.data.user_id!==user.id){authNotice.textContent='Acceso denegado. Solo el Superadministrador FlyPro puede ejecutar la demostración.';return}
   authNotice.textContent='Superadministrador autenticado. Recorrido de ejemplo: ningún paso guarda datos ni envía correos.';
   demoBox.hidden=false;
  }catch(error){authNotice.textContent='No se pudo validar el permiso: '+(error?.message||'Error de autenticación');return}

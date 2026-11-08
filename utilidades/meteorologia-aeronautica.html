@@ -1962,7 +1962,7 @@ el('copy-report').addEventListener('click',async()=>{
   const notice=document.getElementById('gdv-meteo-gate');
   const status=document.getElementById('gdv-meteo-gate-state');
   const byId=id=>document.getElementById(id);
-  // AeroSuite solo utiliza estos parámetros para QUITAR capacidades (modo formativo),
+  // FlyPro solo utiliza estos parámetros para QUITAR capacidades (modo formativo),
   // nunca para otorgar permisos; las funciones privilegiadas conservan su validación de servidor.
   const aeroContext=new URLSearchParams(window.location.search).get('aerosuite');
   const trainingView=['formacion','instruccion','piloto'].includes(aeroContext);
@@ -1985,12 +1985,12 @@ el('copy-report').addEventListener('click',async()=>{
         .select('user_id').eq('user_id',identity.user.id).maybeSingle();
       isAdmin=!roleError&&!!admin;
     }catch(_){isAdmin=false;}
-    // Incluso quien administra AeroSuite ve la interfaz SIN IA al probar Alumno/Instructor.
+    // Incluso quien administra FlyPro ve la interfaz SIN IA al probar Alumno/Instructor.
     document.documentElement.dataset.flightRole=isAdmin&&!trainingView?'admin':'member';
     if(trainingView){
       const eyebrow=page.querySelector('.hero .eyebrow');
-      if(eyebrow)eyebrow.textContent=aeroContext==='formacion'?'AeroSuite · Formación del Alumno':
-        aeroContext==='piloto'?'AeroSuite · Portal del Piloto':'AeroSuite · Instrucción y Jefatura';
+      if(eyebrow)eyebrow.textContent=aeroContext==='formacion'?'FlyPro · Formación del Alumno':
+        aeroContext==='piloto'?'FlyPro · Portal del Piloto':'FlyPro · Instrucción y Jefatura';
       const introduction=page.querySelector('.hero .ops-intro');
       if(introduction)introduction.textContent='Herramienta compartida para práctica y enseñanza de planificación de vuelo. Verificá siempre boletines, datos y condiciones con fuentes oficiales.';
     }
@@ -2016,7 +2016,7 @@ el('copy-report').addEventListener('click',async()=>{
         if(kicker)kicker.textContent='PLANILLA FINAL · SIN IA';
         if(heading)heading.textContent='Planificación lista para imprimir';
         if(intro)intro.textContent='Revisá los datos y cálculos de las etapas anteriores. Podés imprimir o guardar tu planificación en PDF sin utilizar inteligencia artificial.';
-        if(note)note.textContent=trainingView?'La IA está deshabilitada en el modo de Formación e Instrucción de AeroSuite.':'Las consultas con IA permanecen habilitadas exclusivamente para la administración.';
+        if(note)note.textContent=trainingView?'La IA está deshabilitada en el modo de Formación e Instrucción de FlyPro.':'Las consultas con IA permanecen habilitadas exclusivamente para la administración.';
         report.querySelector('label.flight-ai-consent')?.setAttribute('hidden','');
         report.querySelector('.actions')?.setAttribute('hidden','');
         byId('flight-essential-result')?.setAttribute('hidden','');
