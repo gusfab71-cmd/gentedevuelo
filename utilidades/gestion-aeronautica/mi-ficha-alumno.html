@@ -106,10 +106,23 @@ button:disabled{cursor:wait;opacity:.56}
       <label class="field">Aeródromo base (opcional)<input name="instructor_airfield" maxlength="120"></label>
     </div></div>
     <div id="pilotExtra" class="aerosuite-role-details" hidden><div class="field-grid">
-      <label class="field">Licencia de piloto (declarada) <span class="required">*</span><input name="pilot_license_type" list="pilotLicenseTypes" maxlength="100" placeholder="Ej.: Piloto Privado de Avión (PPA)" autocomplete="off"><datalist id="pilotLicenseTypes"><option value="Piloto Privado de Avión (PPA)"></option><option value="Piloto Comercial de Avión (PCA)"></option></datalist></label>
+      <label class="field">Licencia de piloto (declarada) <span class="required">*</span><select name="pilot_license_type"><option value="">Seleccionar licencia</option><option value="Piloto Privado de Avión (PPA)">PPA · Piloto Privado de Avión</option><option value="Piloto Comercial de Avión (PCA)">PCA · Piloto Comercial de Avión</option></select></label>
       <label class="field">Número de licencia <span class="required">*</span><input name="pilot_license_number" maxlength="65"></label>
       <label class="field">Aeródromo base (opcional)<input name="pilot_airfield" maxlength="120"></label>
       <label class="field">Horas de vuelo (opcional)<input name="pilot_hours" type="number" min="0" max="200000" step="0.1"></label>
+    </div>
+    <div id="pilotDocumentation">
+     <h3>Documentación aeronáutica y vencimientos</h3>
+     <p class="panel-subtitle">Datos declarados por el piloto. No acreditan vigencia ni permiten volar sin instructor. Secretaría o Dirección deben verificar la documentación original.</p>
+     <div class="field-grid">
+      <label class="field">Certificado médico aeronáutico (tipo; necesario para vuelo sin instructor)<input name="pilot_medical_certificate_type" maxlength="80" placeholder="Ej.: CMA"></label>
+      <label class="field">Vencimiento de la CMA (necesario para vuelo sin instructor)<input name="pilot_medical_expires_on" type="date"></label>
+      <label class="field">Vencimiento de licencia (si corresponde)<input name="pilot_license_expires_on" type="date"></label>
+      <label class="field">Habilitaciones declaradas (opcional)<input name="pilot_ratings_declared" maxlength="400" placeholder="Ej.: Monomotor terrestre"></label>
+      <label class="field">Vencimiento de habilitaciones (si corresponde)<input name="pilot_ratings_expires_on" type="date"></label>
+     </div>
+     <p id="pilotCredentialsAvailability" class="privacy" role="status" aria-live="polite"></p>
+     <p id="pilotExpiryNotice" class="notice" role="status" aria-live="polite" hidden></p>
     </div></div>
    </section>
    <section class="panel">
@@ -215,6 +228,7 @@ button:disabled{cursor:wait;opacity:.56}
   if(emailLabel)emailLabel.firstChild.textContent='Correo de acceso a AeroSuite';
  }
  let user=null,profile=null,documentIds=[],portraitBlobUrl='',newPortrait=null,busy=false;
+ let pilotCredentialsEnabled=false;
  const fields=['given_names','family_names','birth_country','birth_date','residence_country','residence_province','residence_city','residence_address','postal_code','mobile_phone','landline_phone','other_phone'];
  const status=(text,error=false)=>{$('studentStatus').textContent=text;$('studentStatus').className='status '+(error?'error':'ok')};
  const get=(name)=>document.querySelector('#studentForm [name="'+name+'"]');
@@ -228,6 +242,35 @@ button:disabled{cursor:wait;opacity:.56}
   {key:'pilot',flag:'role_pilot',panel:'pilotExtra',fields:['pilot_license_type','pilot_license_number','pilot_airfield','pilot_hours']}
  ];
  const roleInputs=new Set(roleDefs.flatMap(def=>def.fields));
+ const pilotDocFields=['pilot_medical_certificate_type','pilot_medical_expires_on','pilot_license_expires_on','pilot_ratings_declared','pilot_ratings_expires_on'];
+ const pilotCredentialColumns=['medical_certificate_type','medical_expires_on','license_expires_on','ratings_declared','ratings_expires_on'];
+ function showPilotExpiry(){
+  const notice=$('pilotExpiryNotice');
+  if(!get('role_pilot').checked||!pilotCredentialsEnabled){notice.hidden=true;return;}
+  if(!get('pilot_medical_certificate_type').value.trim()||!get('pilot_medical_expires_on').value){
+   notice.hidden=false;
+   notice.textContent='Para volar sin instructor necesitás declarar el tipo y la fecha de vencimiento de la CMA, y Secretaría debe verificar el documento original.';
+   return;
+  }
+  const today=new Date();today.setHours(0,0,0,0);
+  let expired=false,soon=false,known=0;
+  for(const name of ['pilot_medical_expires_on','pilot_license_expires_on','pilot_ratings_expires_on']){
+   const value=get(name).value;
+   if(!value)continue;
+   const deadline=new Date(value+'T00:00:00');
+   if(!Number.isFinite(deadline.getTime()))continue;
+   known++;
+   const days=Math.ceil((deadline.getTime()-today.getTime())/86400000);
+   if(days<0)expired=true;
+   else if(days<=30)soon=true;
+  }
+  notice.hidden=false;
+  notice.textContent=expired?'Atención: hay vencimientos declarados anteriores a hoy. Consultá a Secretaría antes de volar.':
+   soon?'Atención: hay documentación declarada que vence dentro de 30 días. Coordiná la revisión con Secretaría.':
+   known?'Sin vencimientos próximos entre las fechas declaradas. Esto NO acredita habilitación para volar.':
+   'Todavía no se declararon vencimientos. Esto no implica que la documentación esté vigente.';
+ }
+ for(const name of pilotDocFields)get(name).addEventListener('change',showPilotExpiry);
  function syncRoleFields(){
   for(const def of roleDefs){
    if(institutionalProfile)get(def.flag).checked=def.key===institutionalProfile;
@@ -239,6 +282,8 @@ button:disabled{cursor:wait;opacity:.56}
     input.required=enabled&&['student_training_goal','instructor_license_type','instructor_license_number','pilot_license_type','pilot_license_number'].includes(name);
    }
   }
+  for(const name of pilotDocFields)get(name).disabled=!get('role_pilot').checked||!pilotCredentialsEnabled;
+  showPilotExpiry();
  }
  for(const def of roleDefs)get(def.flag).addEventListener('change',syncRoleFields);
  syncRoleFields();
@@ -265,10 +310,39 @@ button:disabled{cursor:wait;opacity:.56}
    if(row.role==='pilot'){
     for(const [field,col] of [['pilot_license_type','license_type'],['pilot_license_number','license_number'],
       ['pilot_airfield','home_airfield'],['pilot_hours','flight_hours']]){
-     get(field).value=row[col]??'';
+     const input=get(field),value=String(row[col]??'');
+     if(field==='pilot_license_type'&&value&&!Array.from(input.options).some(option=>option.value===value)){
+      input.add(new Option('Licencia anterior declarada: '+value,value));
+     }
+     input.value=value;
     }
    }
   }
+ }
+ async function loadPilotCredentials(){
+  for(const field of pilotDocFields)get(field).value='';
+  const {data,error}=await client.from('aerosuite_pilot_credentials')
+   .select(pilotCredentialColumns.join(',')).eq('user_id',user.id).maybeSingle();
+  if(error){
+   if(['PGRST205','42P01'].includes(error.code)||/schema cache|relation .* does not exist/i.test(error.message||'')){
+    pilotCredentialsEnabled=false;
+    $('pilotCredentialsAvailability').textContent='El registro de vencimientos se habilitará con la actualización de Supabase. Por ahora podés guardar el tipo y número de licencia normalmente.';
+    syncRoleFields();return;
+   }
+   throw Error('No se pudieron consultar los vencimientos privados: '+error.message);
+  }
+  pilotCredentialsEnabled=true;
+  for(let i=0;i<pilotDocFields.length;i++)get(pilotDocFields[i]).value=data?.[pilotCredentialColumns[i]]??'';
+  $('pilotCredentialsAvailability').textContent='Documentación declarada, no certificada. La CMA vigente es necesaria para vuelos sin instructor. Si modificás los datos, la escuela deberá volver a verificarlos.';
+  syncRoleFields();
+ }
+ async function savePilotCredentials(){
+  if(!pilotCredentialsEnabled||!get('role_pilot').checked)return;
+  const payload={user_id:user.id,updated_at:new Date().toISOString()};
+  for(let i=0;i<pilotDocFields.length;i++)payload[pilotCredentialColumns[i]]=get(pilotDocFields[i]).value.trim()||null;
+  const {error}=await client.from('aerosuite_pilot_credentials').upsert(payload,{onConflict:'user_id'});
+  if(error)throw Error('La ficha principal se guardó, pero los vencimientos aeronáuticos no: '+error.message);
+  $('pilotCredentialsAvailability').textContent='Datos guardados. Si la escuela los había verificado, cualquier modificación obliga a una nueva comprobación de Secretaría.';
  }
  function rolePayload(def){
   const payload={user_id:user.id,role:def.key,updated_at:new Date().toISOString()};
@@ -364,6 +438,7 @@ button:disabled{cursor:wait;opacity:.56}
   profile=data;
   if(data)fill(data);
   await loadRoles();
+  await loadPilotCredentials();
   await loadDocuments();
   await loadPortrait();
   status(data?'Se cargaron los datos guardados de tu ficha privada.':'Podés completar tu ficha personal y guardar el primer documento.');
@@ -477,6 +552,7 @@ button:disabled{cursor:wait;opacity:.56}
    }
    status('Guardando perfiles declarados…');
    await saveRoles();
+   await savePilotCredentials();
    if(newPortrait){
     status('Guardando fotografía privada…');
     const blob=await processPortrait(newPortrait);
@@ -492,7 +568,7 @@ button:disabled{cursor:wait;opacity:.56}
    profile=updated;
    await loadDocuments();
    for(const name of ['document_type','document_number','expires_on'])get(name).value='';
-   status('Tu ficha personal de AeroSuite se guardó correctamente. La fotografía es opcional.');
+   status('Tu ficha personal se guardó correctamente. '+(get('role_pilot').checked&&!pilotCredentialsEnabled?'Los vencimientos aeronáuticos todavía no pueden guardarse. ':'')+'La fotografía es opcional.');
   }catch(error){status('No se pudo completar el guardado: '+error.message,true)}
   finally{busy=false;$('saveStudent').disabled=false}
  });

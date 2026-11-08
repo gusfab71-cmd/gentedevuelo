@@ -97,8 +97,12 @@ function boot({map,L,onSelected,onObservation}){
      const data=await response.json();
      if(!data.ok||data.id!==station.id)throw Error('Respuesta no válida');
      if(!data.observation){
-      if(currentRequest===observationSeq&&typeof onObservation==='function')onObservation(station,null);
-      info.textContent='Sin una medición reciente verificable. Consultá los datos en la estación original.';
+      if(currentRequest===observationSeq&&typeof onObservation==='function')onObservation(station,null,data);
+      info.textContent=data.issue==='provider_access_denied'
+       ?'La fuente 3D-PAWS no autoriza descargar sus lecturas (HTTP 401/403). La estación está registrada, pero no tenemos mediciones disponibles.'
+       :data.issue==='provider_unavailable'
+        ?'No se pudo conectar a la fuente 3D-PAWS. Podés consultar la estación original.'
+        :'Sin una medición reciente verificable: la fuente no entregó datos con fecha y valores válidos. No se muestran pronósticos como observaciones.';
       return;
      }
      const observation=data.observation;

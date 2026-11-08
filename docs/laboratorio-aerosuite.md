@@ -22,3 +22,11 @@ Con Node.js 22, desde el repositorio:
 ## Segunda fase necesaria
 
 Para auditar el funcionamiento integral se requiere base Supabase aislada sin datos reales, esquema reproducible, seis identidades ficticias (Director, Secretaría, Instructor, Alumno, PPA y PCA) y Playwright; deberán verificarse RPC, RLS, turnera, cobros, packs, informes, mantenimiento, permisos y conciliación de datos entre portales. La rama remota de Supabase puede tener costo y debe autorizarse por separado. No realizar reset, importaciones o certificaciones aeronáuticas en producción.
+
+## Auditoría real de RLS (solo lectura)
+
+El **8 de noviembre de 2026** se revisaron las 44 tablas `aerosuite_*` de Supabase y se simularon, en transacciones `READ ONLY`, las cinco identidades técnicas del Centro de Testeo Permanente. Las 44 tablas tenían RLS habilitada, ninguna concedía SELECT directo a `anon`, y se confirmó el aislamiento de membresías y las autorizaciones de Academia y del control económico por rol.
+
+**Alcance:** validación de base de datos y funciones de acceso; sigue **pendiente** la prueba E2E con sesiones reales de navegador, JWT, pagos y reservas ficticias. No se realizaron escrituras ni cambios en Supabase.
+
+Informe, evidencia y advertencias pendientes: [Auditoría RLS de AeroSuite · 08/11/2026](aerosuite-auditoria-rls-2026-11-08.md).

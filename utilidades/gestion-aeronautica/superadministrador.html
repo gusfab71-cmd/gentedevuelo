@@ -117,7 +117,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
  <div class="eyebrow">Solo para Superadministración · no visible en la presentación pública</div>
  <h2 id="ownerToolsTitle">Herramientas privadas de desarrollo</h2>
  <p>Desde aquí podés acceder a las funciones de prueba sin cambiar la presentación que ven los visitantes de AeroSuite.</p>
- <div class="actions"><a class="button" href="portal.html">Abrir demostración privada</a><a class="button" href="centro-pruebas-operativas.html">Centro de Testeo Permanente</a><a class="button" href="centro-monitoreo-aerosuite.html">Auditorías automáticas</a></div>
+ <div class="actions"><a class="button" href="portal.html">Abrir demostración privada</a><a class="button" href="centro-pruebas-operativas.html">Centro de Testeo Permanente</a><a class="button" href="centro-monitoreo-aerosuite.html">Auditorías automáticas</a><a class="button" href="superadmin-cuentas.html">Control global de cuentas</a></div>
 </section>
 <section class="panel" aria-labelledby="permanentLabTitle" style="border-color:#d9b66f;background:#223d50">
  <div class="eyebrow">Entorno técnico independiente · No es cliente</div>
@@ -180,7 +180,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
 </div>
 <section class="panel" aria-labelledby="registrationsTitle" id="registros-aerosuite">
  <h2 id="registrationsTitle">Padrón global de registros (consulta secundaria)</h2>
- <p class="muted">Control central de directores, Secretarías, instructores y alumnos por institución. La invitación aparece al generarse; la creación de la cuenta, verificación del correo y habilitación se actualizan desde Supabase. Una cuenta existente puede recibir una invitación sin volver a registrarse.</p>
+ <p class="muted">Control central de directores, Secretarías, instructores, alumnos y pilotos por institución. La invitación aparece al generarse; la creación de la cuenta, verificación del correo y habilitación se actualizan desde Supabase. Una cuenta existente puede recibir una invitación sin volver a registrarse.</p>
  <div class="registration-metrics" aria-label="Estado de registros">
   <div><strong id="allRegistrationCount">0</strong><span>Registros e invitaciones</span></div>
   <div><strong id="accountRegistrationCount">0</strong><span>Con cuenta verificada</span></div>
@@ -190,7 +190,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
  <div class="registration-filters">
   <label>Buscar correo o institución <input id="registrationSearch" type="search" placeholder="Buscar registro" autocomplete="off"></label>
   <label>Institución <select id="registrationInstitution"><option value="">Todas</option></select></label>
-  <label>Rol <select id="registrationRole"><option value="">Todos los roles</option><option value="administrador">Director</option><option value="secretaria">Secretaría</option><option value="instructor">Instructor</option><option value="alumno">Alumno</option><option value="operaciones">Operaciones</option><option value="tesoreria">Tesorería</option></select></label>
+  <label>Rol <select id="registrationRole"><option value="">Todos los roles</option><option value="administrador">Director</option><option value="secretaria">Secretaría</option><option value="instructor">Instructor</option><option value="alumno">Alumno</option><option value="piloto">Piloto</option><option value="operaciones">Operaciones</option><option value="tesoreria">Tesorería</option></select></label>
   <label>Estado <select id="registrationStatus"><option value="">Todos los estados</option><option value="habilitada">Habilitados</option><option value="cuenta_verificada">Cuenta verificada</option><option value="cuenta_creada">Cuenta creada</option><option value="invitacion_enviada">Correo enviado</option><option value="invitacion_creada">Invitación preparada</option><option value="vencida">Vencidas</option><option value="revocada">Revocadas</option><option value="desvinculada">Desvinculadas</option></select></label>
  </div>
  <div class="actions registration-actions"><button id="refreshRegistrations" type="button">Actualizar registros</button></div>
@@ -237,7 +237,7 @@ const registrationState={
   invitacion_enviada:'Invitación enviada',invitacion_creada:'Invitación preparada',
   vencida:'Invitación vencida',revocada:'Invitación cancelada',desvinculada:'Acceso desvinculado'
 };
-const personRole={administrador:'Director',secretaria:'Secretaría',instructor:'Instructor',alumno:'Alumno',operaciones:'Operaciones',tesoreria:'Tesorería'};
+const personRole={administrador:'Director',secretaria:'Secretaría',instructor:'Instructor',alumno:'Alumno',piloto:'Piloto',operaciones:'Operaciones',tesoreria:'Tesorería'};
 const registrationSearch=byId('registrationSearch'),registrationInstitution=byId('registrationInstitution');
 const registrationRole=byId('registrationRole'),registrationStatus=byId('registrationStatus');
 const registrationFeedback=byId('registrationFeedback'),registrationList=byId('registrationList');
@@ -341,7 +341,7 @@ async function showInstitutionRoster(orgId,details,contents){
   if(!details.isConnected||!details.open)return;
   if(data?.institution_id!==orgId||!Array.isArray(data.members))throw Error('El servidor no devolvió el padrón solicitado.');
   contents.replaceChildren();
-  const groups=[['administrador','Dirección'],['secretaria','Secretaría'],['instructor','Instructores'],['alumno','Alumnos'],['operaciones','Operaciones'],['tesoreria','Tesorería']];
+  const groups=[['administrador','Dirección'],['secretaria','Secretaría'],['instructor','Instructores'],['alumno','Alumnos'],['piloto','Pilotos PPA y comerciales'],['operaciones','Operaciones'],['tesoreria','Tesorería']];
   for(const [role,title] of groups){
    const members=data.members.filter(x=>x.role===role);
    if(!members.length)continue;
@@ -447,7 +447,10 @@ async function reload(){
   const rosterTotals=countsByInstitution.get(row.id)||{instructors:0,students:0,instructor_invitations:0,student_invitations:0};
   addDetail('Instructores activos',String(rosterTotals.instructors));
   addDetail('Alumnos activos',String(rosterTotals.students));
-  addDetail('Invitaciones pendientes','Instructores: '+rosterTotals.instructor_invitations+' · Alumnos: '+rosterTotals.student_invitations);
+  const linkedPilots=registrationRows.filter(r=>r.institution_id===row.id&&r.kind==='integrante'&&r.role==='piloto').length;
+  const invitedPilots=registrationRows.filter(r=>r.institution_id===row.id&&r.kind==='invitacion'&&r.role==='piloto'&&!r.accepted_at&&!r.revoked_at&&r.registration_status!=='vencida').length;
+  addDetail('Pilotos vinculados',String(linkedPilots));
+  addDetail('Invitaciones pendientes','Instructores: '+rosterTotals.instructor_invitations+' · Alumnos: '+rosterTotals.student_invitations+' · Pilotos: '+invitedPilots);
   addDetail('Plan',planText[row.plan]||row.plan);
   addDetail('Modalidad',row.is_test?'Pruebas · reinicio automático':'Normal · cuentas protegidas');
   const expiry=row.status==='trial'?row.trial_ends_at:row.status==='active'?row.license_ends_at:null;
@@ -456,7 +459,7 @@ async function reload(){
     addDetail('Fin de cortesía',dateOnly(new Date(Date.parse(row.trial_ends_at)+15*86400000).toISOString()));
   card.append(details);
   const roster=document.createElement('details');roster.className='institution-roster';
-  const summary=document.createElement('summary');summary.textContent='Ver nombres y correos del personal';
+  const summary=document.createElement('summary');summary.textContent='Ver integrantes y correos por rol';
   const rosterContents=document.createElement('div');rosterContents.className='institution-roster-contents';
   roster.append(summary,rosterContents);
   roster.addEventListener('toggle',()=>{if(roster.open)showInstitutionRoster(row.id,roster,rosterContents);});

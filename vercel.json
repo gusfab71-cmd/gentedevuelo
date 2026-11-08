@@ -146,8 +146,9 @@
   ],
   "git": {
     "deploymentEnabled": {
-      "*": false,
-      "main": true
+      "**": false,
+      "main": true,
+      "feat/aerometeo-hourly-visual-20261107": false
     }
   }
 }

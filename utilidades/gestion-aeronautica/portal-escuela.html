@@ -102,6 +102,9 @@ input[type=email]{width:100%;background:#122737;border:1px solid #7394aa;border-
   <div class="metrics">
    <a class="tile operational-link" data-visible-role="administrador secretaria" data-module="turnera" href="#"><h3>Turnera y reservas</h3><p>Solicitudes pendientes, confirmaciones y cancelaciones.</p><span class="pill ready">Operativa</span></a>
    <a class="tile operational-link" data-visible-role="administrador secretaria" data-module="informes" href="#"><h3>Informes de instrucción</h3><p>Revisar devoluciones, horas, combustible y aceite.</p><span class="pill ready">Operativa</span></a>
+   <a class="tile" id="ravInstitutionLink" data-visible-role="administrador secretaria" href="#" style="text-decoration:none;color:inherit"><h3>RAV institucional</h3><p>Preparar borradores desde informes aprobados, enviarlos a Dirección y conservar la revisión documental.</p><span class="pill ready">Revisión interna · No certificado</span></a>
+   <a class="tile" id="aerosuiteInboxLink" data-visible-role="administrador secretaria instructor alumno piloto" href="#" style="text-decoration:none;color:inherit"><h3>Avisos internos</h3><p>Reservas, cambios de turnos e informes. Avisos privados para tu cuenta institucional.</p><span class="pill ready">Campana interna · Sin correos ni WhatsApp</span></a>
+   <a class="tile" id="aerosuiteReconcileLink" data-visible-role="administrador secretaria" href="#" style="text-decoration:none;color:inherit"><h3>Conciliación de vuelos</h3><p>Controlar informes, caja, matrículas y turnos pendientes de revisión, sin alterar registros.</p><span class="pill ready">Auditoría · Solo consulta</span></a>
    <a class="tile operational-link" data-visible-role="administrador secretaria" data-module="cobros" href="#"><h3>Cobro de vuelos</h3><p>Registrar efectivo o descontar horas del pack al finalizar cada vuelo.</p><span class="pill ready">Operativa</span></a>
     <a class="tile operational-link" data-visible-role="administrador secretaria" data-module="contaduria" href="#"><h3>Contaduría</h3><p>Compra y anulación de packs, ingresos, egresos, caja chica e historial económico.</p><span class="pill ready">Operativa</span></a>
    <a class="tile" data-visible-role="administrador" id="directorDailyCloseLink" href="#" style="text-decoration:none;color:inherit;border-color:#d7b66f">
@@ -153,6 +156,12 @@ input[type=email]{width:100%;background:#122737;border:1px solid #7394aa;border-
     <p>Podés desvincular integrantes autorizados o cancelar invitaciones pendientes. En instituciones de prueba se limpia además la cuenta técnica exclusiva, para poder registrar nuevamente el mismo correo. <strong>Las cuentas de Gente de Vuelo y los accesos a otras instituciones se conservan.</strong></p>
     <div id="peopleFeedback" class="people-feedback" role="status" aria-live="polite"></div>
     <div id="peopleList" class="people-list"></div>
+    <details id="pilotRosterPanel" class="panel" style="margin-top:16px">
+     <summary style="cursor:pointer;font-weight:800">Pilotos PPA/PCA · Estado documental</summary>
+     <p class="caption">Fechas declaradas por cada piloto; las verificaciones institucionales se muestran separadas. Ningún dato declarado habilita vuelos automáticamente.</p>
+     <div id="pilotRosterFeedback" class="people-feedback" role="status" aria-live="polite"></div>
+     <div id="pilotRosterList" class="people-list"></div>
+    </details>
     <div class="actions" style="margin-top:15px"><button id="reloadPeople" type="button">Actualizar integrantes</button></div>
   </section>
 <div class="status" id="portalFooter">Turnera, informes de instrucción y Contaduría cuentan con funciones institucionales. El seguimiento técnico de mantenimiento y la Academia Aeronáutica todavía requieren integración específica.</div>
@@ -251,6 +260,16 @@ try{
   if(labLogin)flightUrl.searchParams.set('prueba','1');
   el('aerosuiteFlightOperationsLink').href=flightUrl.href;
  }
+ if(el('ravInstitutionLink'))el('ravInstitutionLink').href='rav-institucional.html?institucion='+
+   encodeURIComponent(school.institution_id)+'&rol='+encodeURIComponent(school.my_role)+(labLogin?'&prueba=1':'');
+ if(el('aerosuiteInboxLink')){
+  el('aerosuiteInboxLink').href='avisos-institucionales.html?institucion='+
+   encodeURIComponent(school.institution_id)+'&rol='+encodeURIComponent(school.my_role)+(labLogin?'&prueba=1':'');
+ }
+ if(el('aerosuiteReconcileLink')){
+  el('aerosuiteReconcileLink').href='conciliacion-institucional.html?institucion='+
+   encodeURIComponent(school.institution_id)+'&rol='+encodeURIComponent(school.my_role)+(labLogin?'&prueba=1':'');
+ }
  for(const link of document.querySelectorAll('.operational-link[data-module]')){
    link.href=(link.dataset.module==='flota'?'flota-institucional.html':'operaciones-institucionales.html')+'?institucion='+encodeURIComponent(school.institution_id)+'&rol='+encodeURIComponent(school.my_role)+(labLogin?'&prueba=1':'')+(link.dataset.module==='flota'?'':'#'+encodeURIComponent(link.dataset.module));
   }
@@ -316,6 +335,81 @@ try{
    const roles={secretaria:'Secretaría',instructor:'Instructor',alumno:'Alumno',piloto:'Piloto PPA / Comercial'};
    el('secretaryInviteOption').hidden=!isDirector;
    el('inviteHeading').textContent=isDirector?'Invitar Secretaría, instructores, alumnos y pilotos':'Invitar instructores, alumnos y pilotos';
+   const pilotRosterList=el('pilotRosterList'),pilotRosterFeedback=el('pilotRosterFeedback');
+   function pilotExpiry(label,date){
+    if(!date)return label+': sin fecha declarada';
+    const today=new Date();today.setHours(0,0,0,0);
+    const deadline=new Date(String(date).slice(0,10)+'T00:00:00');
+    if(!Number.isFinite(deadline.getTime()))return label+': fecha no válida';
+    const days=Math.ceil((deadline.getTime()-today.getTime())/86400000);
+    return label+': '+String(date).slice(0,10)+(days<0?' · Vencido':days<=30?' · Vence dentro de 30 días':' · Declarado');
+   }
+   async function loadPilotRoster(){
+    pilotRosterList.replaceChildren();
+    pilotRosterFeedback.textContent='Consultando legajos de pilotos…';
+    try{
+     const {data,error}=await client.rpc('aerosuite_pilot_candidates',{p_institution_id:school.institution_id});
+     if(error)throw error;
+     if(!Array.isArray(data))throw Error('Respuesta de legajos inválida.');
+     for(const pilot of data){
+      const card=document.createElement('div');card.className='person-card';
+      const meta=document.createElement('div');meta.className='person-meta';
+      const heading=document.createElement('strong');
+      heading.textContent=(pilot.name||pilot.email||'Piloto')+' · '+(pilot.license_type||'Licencia no declarada');
+      meta.append(heading);
+      const suffix=String(pilot.license_number||'').slice(-4);
+      for(const line of [
+       'Licencia: '+(suffix?'terminación '+suffix:'número no informado'),
+       pilot.school_verified?'Verificación institucional registrada':'Licencia pendiente de verificación institucional',
+       pilot.documentation_current?'CMA y vencimientos declarados vigentes hoy':'Sin CMA vigente comprobable o con vencimientos declarados: no autorizar vuelo solo',
+       pilotExpiry('Certificado médico',pilot.medical_expires_on),
+       pilotExpiry('Licencia',pilot.license_expires_on),
+       pilotExpiry('Habilitaciones',pilot.ratings_expires_on),
+       'Habilitaciones declaradas: '+(pilot.ratings_declared||'No informadas')
+      ]){
+       const detail=document.createElement('small');detail.textContent=line;meta.append(detail);
+      }
+      card.append(meta);
+      if(school.can_write){
+       const controls=document.createElement('div');controls.className='actions';
+       const action=document.createElement('button');action.type='button';
+       const approve=!pilot.school_verified;
+       action.textContent=approve?'Verificar documentos originales':'Revocar verificación';
+       action.addEventListener('click',async()=>{
+        if(approve && !pilot.documentation_current){
+         pilotRosterFeedback.textContent='No se puede verificar: completá la CMA vigente y corregí vencimientos en la ficha personal del piloto.';
+         return;
+        }
+        if(approve && !confirm('Confirmá únicamente si cotejaste los documentos originales. Esta verificación institucional NO certifica licencia ni reemplaza controles previos al vuelo. ¿Continuar?'))return;
+        const reference=prompt(approve?'Referencia del control documental efectuado por la escuela (mínimo 8 caracteres):':'Motivo o referencia de revocación (mínimo 8 caracteres):');
+        if(reference===null)return;
+        if(reference.trim().length<8||reference.trim().length>250){
+         pilotRosterFeedback.textContent='Indicá una referencia documental de 8 a 250 caracteres.';
+         return;
+        }
+        action.disabled=true;
+        try{
+         const {error}=await client.rpc('aerosuite_pilot_verify',{
+          p_institution_id:school.institution_id,p_user_id:pilot.user_id,
+          p_approved:approve,p_reference:reference.trim()
+         });
+         if(error)throw error;
+         await loadPilotRoster();
+         pilotRosterFeedback.textContent=approve?'Documentación cotejada y verificación institucional registrada.':'Verificación institucional revocada.';
+        }catch(error){
+         pilotRosterFeedback.textContent='No se pudo '+(approve?'verificar':'revocar')+': '+(error?.message||'Error del servidor');
+         action.disabled=false;
+        }
+       });
+       controls.append(action);card.append(controls);
+      }
+      pilotRosterList.append(card);
+     }
+     if(!data.length){const empty=document.createElement('p');empty.className='caption';empty.textContent='Todavía no hay pilotos vinculados a esta institución.';pilotRosterList.append(empty);}
+     pilotRosterFeedback.textContent='Se muestran '+data.length+' pilotos vinculados. Los vencimientos no son verificaciones oficiales.';
+    }catch(err){pilotRosterFeedback.textContent='No fue posible consultar los legajos de pilotos: '+(err?.message||'Error de servidor');}
+   }
+   el('pilotRosterPanel').addEventListener('toggle',()=>{if(el('pilotRosterPanel').open)loadPilotRoster();});
    async function loadPeople(){
      listFeedback.textContent='Consultando integrantes de tu institución…';
      list.replaceChildren();
@@ -370,7 +464,7 @@ try{
        listFeedback.textContent='Se muestran '+entries.length+' integrantes o invitaciones de esta escuela.';
      }catch(err){listFeedback.textContent='No se pudo consultar el personal: '+(err?.message||'Error desconocido');}
    }
-   el('reloadPeople').addEventListener('click',loadPeople);
+   el('reloadPeople').addEventListener('click',async()=>{await loadPeople();if(el('pilotRosterPanel').open)await loadPilotRoster();});
    await loadPeople();
  }
  if(isManager&&school.can_write){

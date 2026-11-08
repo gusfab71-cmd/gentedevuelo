@@ -10,6 +10,27 @@ on:
       - 'api/airstrip-metar.js'
       - 'tests/airstrip-metar.test.cjs'
       - 'tests/gestion-aeronautica.test.mjs'
+      - 'tests/aerosuite-rav-institutional.test.cjs'
+      - 'tests/aerosuite-pilot-documentation.test.cjs'
+      - 'tests/aerosuite-pilot-dispatch.test.cjs'
+      - 'tests/aerosuite-parallel-aircraft-booking.test.cjs'
+      - 'tests/aerosuite-license-readonly.test.cjs'
+      - 'tests/aerosuite-security-institution-cleanup.test.cjs'
+      - 'tests/aerosuite-published-slot-maintenance-edit.test.cjs'
+      - 'tests/aerosuite-academy-rls-perf.test.cjs'
+      - 'docs/aerosuite-fix-rls-index-performance-2026-11-08.sql'
+      - 'docs/aerosuite-fix-mantenimiento-turnos-publicados-2026-11-08.sql'
+      - 'tests/aerosuite-notifications-inbox.test.cjs'
+      - 'tests/aerosuite-external-email-optin.test.cjs'
+      - 'tests/aerosuite-reconciliation-readonly.test.cjs'
+      - 'tests/aerosuite-backup-manual-contract.test.cjs'
+      - 'tests/aerosuite-external-worker-safety.test.cjs'
+      - 'tests/gdv-community-delete-aerosuite-guard.test.cjs'
+      - 'docs/gdv-guard-baja-comunidad-cuentas-aerosuite-2026-11-08.sql'
+      - 'supabase/migrations/**'
+      - 'supabase/functions/aerosuite-external-email-worker/index.ts'
+      - '.github/workflows/aerosuite-backup-manual.yml'
+      - 'scripts/aerosuite-backup-encrypted.sh'
       - '.github/workflows/gestion-aeronautica-tests.yml'
   push:
     branches: [main]
@@ -22,6 +43,27 @@ on:
       - 'api/airstrip-metar.js'
       - 'tests/airstrip-metar.test.cjs'
       - 'tests/gestion-aeronautica.test.mjs'
+      - 'tests/aerosuite-rav-institutional.test.cjs'
+      - 'tests/aerosuite-pilot-documentation.test.cjs'
+      - 'tests/aerosuite-pilot-dispatch.test.cjs'
+      - 'tests/aerosuite-parallel-aircraft-booking.test.cjs'
+      - 'tests/aerosuite-license-readonly.test.cjs'
+      - 'tests/aerosuite-security-institution-cleanup.test.cjs'
+      - 'tests/aerosuite-published-slot-maintenance-edit.test.cjs'
+      - 'tests/aerosuite-academy-rls-perf.test.cjs'
+      - 'docs/aerosuite-fix-rls-index-performance-2026-11-08.sql'
+      - 'docs/aerosuite-fix-mantenimiento-turnos-publicados-2026-11-08.sql'
+      - 'tests/aerosuite-notifications-inbox.test.cjs'
+      - 'tests/aerosuite-external-email-optin.test.cjs'
+      - 'tests/aerosuite-reconciliation-readonly.test.cjs'
+      - 'tests/aerosuite-backup-manual-contract.test.cjs'
+      - 'tests/aerosuite-external-worker-safety.test.cjs'
+      - 'tests/gdv-community-delete-aerosuite-guard.test.cjs'
+      - 'docs/gdv-guard-baja-comunidad-cuentas-aerosuite-2026-11-08.sql'
+      - 'supabase/migrations/**'
+      - 'supabase/functions/aerosuite-external-email-worker/index.ts'
+      - '.github/workflows/aerosuite-backup-manual.yml'
+      - 'scripts/aerosuite-backup-encrypted.sh'
       - '.github/workflows/gestion-aeronautica-tests.yml'
 permissions:
   contents: read
@@ -34,4 +76,20 @@ jobs:
         with:
           node-version: '22'
       - run: node --experimental-default-type=module tests/gestion-aeronautica.test.mjs
+      - run: node --test tests/aerosuite-rav-institutional.test.cjs
+      - run: node --test tests/aerosuite-pilot-documentation.test.cjs
+      - run: node --test tests/aerosuite-pilot-dispatch.test.cjs
+      - run: node --test tests/aerosuite-parallel-aircraft-booking.test.cjs
+      - run: node --test tests/aerosuite-license-readonly.test.cjs
+      - run: node --test tests/aerosuite-security-institution-cleanup.test.cjs
+      - run: node --test tests/aerosuite-published-slot-maintenance-edit.test.cjs
+      - run: node --test tests/aerosuite-academy-rls-perf.test.cjs
+      - run: node --test tests/aerosuite-notifications-inbox.test.cjs
+      - run: node --test tests/aerosuite-external-email-optin.test.cjs
+      - run: node --test tests/aerosuite-reconciliation-readonly.test.cjs
+      - run: node --test tests/aerosuite-finance-serialization.test.cjs
+      - run: node --test tests/aerosuite-backup-manual-contract.test.cjs
+      - run: node --test tests/aerosuite-external-worker-safety.test.cjs
+      - run: node --test tests/gdv-community-delete-aerosuite-guard.test.cjs
+      - run: bash -n scripts/aerosuite-backup-encrypted.sh
       - run: node tests/airstrip-metar.test.cjs

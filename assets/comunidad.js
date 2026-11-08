@@ -100,20 +100,31 @@ function account(){
    link('Notificaciones','#notificaciones','')+
    link('Mi Hangar','#hangar','')+
    link('Correos y avisos','#preferencias-correo','');
- const adminLinks=
-   (isAeroSuiteSuperadmin?link('Panel privado AeroSuite','utilidades/gestion-aeronautica/superadministrador.html',''):'')+
-   (isAdmin?link(isOwnerAdmin?'Moderación':'Panel de moderador','#moderacion',''):'')+
-   (isOwnerAdmin?link('Comunicados','#gestion/comunicados',''):'')+
-   (isOwnerAdmin?link('Almacenamiento','#almacenamiento',''):'')+
-   (isOwnerAdmin?'<a href="utilidades/mantenimiento-admin.html">Historiales de mantenimiento</a>':'')+
-   (isOwnerAdmin?'<a href="pronarea-admin.html">PRONAREA FIR Ezeiza</a>':'')+
-   (isOwnerAdmin?'<a href="moderacion.html#conocimiento-robert">Conocimiento de Robert Shimoda</a>':'')+
-   (isOwnerAdmin?link('Revisión de AeroChat','#revision-privados',''):'')+
-   (isOwnerAdmin?link('Video de portada','moderacion.html#video-portada',''):'')+
-   (isOwnerAdmin?link('Editar tarjetas de portada','index.html?editar-tarjetas=1#inicio',''):'')+
-   (isOwnerAdmin?link('Mover logo y textos','index.html?editar-marca=1#inicio',''):'')+
+ // Accesos de administración agrupados por producto, sin modificar permisos.
+ const adminSection=label=>'<span class="account-admin-section-title">'+label+'</span>';
+ const aeroSuiteLinks=isAeroSuiteSuperadmin?
+   adminSection('AeroSuite · Superadministración')+
+   link('Instituciones y licencias','utilidades/gestion-aeronautica/superadministrador.html','')+
+   link('Control global de cuentas','utilidades/gestion-aeronautica/superadmin-cuentas.html','')+
+   link('Padrón institucional','utilidades/gestion-aeronautica/superadministrador.html#registros-aerosuite','')+
+   link('Centro de Testeo Permanente','utilidades/gestion-aeronautica/centro-pruebas-operativas.html','')+
+   link('Auditorías automáticas','utilidades/gestion-aeronautica/centro-monitoreo-aerosuite.html',''):'';
+ const communityAdminLinks=isAdmin?
+   adminSection('Gente de Vuelo · Comunidad')+
+   link(isOwnerAdmin?'Moderación de la comunidad':'Panel de moderador','#moderacion','')+
+   (isOwnerAdmin?link('Registros incompletos','moderacion.html#registros-incompletos',''):'')+
    (isOwnerAdmin?link('Registro manual','moderacion.html#registro-manual',''):'')+
-   (isOwnerAdmin?link('Registros incompletos','moderacion.html#registros-incompletos',''):'');
+   (isOwnerAdmin?link('Comunicados','#gestion/comunicados',''):'')+
+   (isOwnerAdmin?link('Revisión de AeroChat','#revision-privados',''):''):'';
+ const siteAdminLinks=isOwnerAdmin?
+   adminSection('Herramientas y contenido del sitio')+
+   link('Almacenamiento','#almacenamiento','')+
+   '<a href="utilidades/mantenimiento-admin.html">Historiales de mantenimiento</a>'+
+   '<a href="moderacion.html#conocimiento-robert">Conocimiento de Robert Shimoda</a>'+
+   link('Video de portada','moderacion.html#video-portada','')+
+   link('Editar tarjetas de portada','index.html?editar-tarjetas=1#inicio','')+
+   link('Mover logo y textos','index.html?editar-marca=1#inicio',''):'';
+ const adminLinks=aeroSuiteLinks+communityAdminLinks+siteAdminLinks;
  const group=(label,links,section)=>`<details class="account-submenu" data-account-group="${section}">
    <summary>${label}<span class="account-submenu-chevron" aria-hidden="true"></span></summary>
    <div class="account-submenu-links">${links}</div>

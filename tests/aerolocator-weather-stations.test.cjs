@@ -22,10 +22,10 @@ test('Se catalogan siete ubicaciones argentinas, sin duplicaciones ni posiciones
  assert.equal(catalog.stations.find(x=>x.id==='3dpaws-13')?.name,'Club de Planeadores Cañuelas');
 });
 
-test('AeroMeteo incorpora capa independiente sin modificar AeroLocator',()=>{
- assert.match(meteoHtml,/aerolocator-weather-stations\.js\?v=/);
- assert.match(meteoApp,/GDV_WEATHER_STATIONS\?\.boot\(\{/);
- assert.match(meteoApp,/onSelected:showStation,onObservation:showObservation/);
+test('AeroMeteo retira la capa sin acceso, conservando solo su módulo aislado',()=>{
+ assert.doesNotMatch(meteoHtml,/aerolocator-weather-stations\.js\?v=/);
+ assert.doesNotMatch(meteoApp,/GDV_WEATHER_STATIONS/);
+ assert.doesNotMatch(meteoApp,/onSelected:showStation,onObservation:showObservation/);
  assert.match(ui,/weather-stations-toggle/);
  assert.match(ui,/L\.featureGroup\(\)/);
  assert.match(ui,/Estaciones meteorológicas/);
@@ -90,4 +90,29 @@ test('La interfaz no inventa observaciones y declara claramente que no son METAR
  assert.match(ui,/Consultando la última observación/);
  assert.match(ui,/Desactualizada|DESACTUALIZADA/);
  assert.doesNotMatch(ui,/api\.open-meteo\.com/);
+});
+
+test('La estación Cañuelas distingue HTTP 403 de un dato meteorológico faltante',async()=>{
+ const prior=global.fetch;
+ let requested='';
+ global.fetch=async url=>{
+  requested=String(url);
+  return {ok:false,status:403};
+ };
+ try{
+  const output={code:0,body:null,setHeader(){},status(code){this.code=code;return this},json(data){this.body=data;return this}};
+  await handler({method:'GET',query:{id:'3dpaws-13'}},output);
+  assert.equal(output.code,200);
+  assert.equal(output.body.id,'3dpaws-13');
+  assert.equal(output.body.available,false);
+  assert.equal(output.body.observation,null);
+  assert.equal(output.body.issue,'provider_access_denied');
+  assert.match(output.body.note,/denegó la descarga/);
+  assert.equal(requested,'https://3d-argentina.icdp.ucar.edu/api/v1/data/13.geojson?last');
+ }finally{
+  global.fetch=prior;
+ }
+ assert.match(ui,/data\.issue==='provider_access_denied'/);
+ assert.doesNotMatch(meteoApp,/issue==='provider_access_denied'/);
+ assert.match(meteoApp,/no se reemplaza con el pronóstico/i);
 });

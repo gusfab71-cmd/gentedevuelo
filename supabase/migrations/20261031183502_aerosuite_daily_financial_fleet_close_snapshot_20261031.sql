@@ -1,10 +1,10 @@
--- Cierre de caja y flota por jornada ART. Definición final restringida a Dirección.
-CREATE OR REPLACE FUNCTION aerosuite_internal.aerosuite_daily_close_snapshot(p_institution_id uuid, p_day date)
- RETURNS jsonb
- LANGUAGE plpgsql
- STABLE SECURITY DEFINER
- SET search_path TO ''
-AS $function$
+
+-- Resumen verificable del cierre diario de operaciones, por fecha local ART.
+-- El reporte separa cobros de paquetes (dinero) de consumos de paquetes (solo horas).
+-- Horas de flota aprobadas y provisionales se presentan por separado sin duplicarlas.
+create or replace function aerosuite_internal.aerosuite_daily_close_snapshot(
+ p_institution_id uuid,p_day date)
+returns jsonb language plpgsql stable security definer set search_path='' as $fn$
 declare v_actor uuid:=auth.uid();v_mode text;v_start timestamptz;v_end timestamptz;
  v_money jsonb;v_lines jsonb;v_fleet jsonb;v_unknown jsonb;
  v_pack jsonb;v_close_time timestamptz:=now();
@@ -12,9 +12,9 @@ begin
  select private.aerosuite_access_mode(i.status,i.trial_ends_at,i.license_ends_at,now())
  into v_mode from public.aerosuite_institutions i
  join public.aerosuite_institution_members m on m.institution_id=i.id
- where i.id=p_institution_id and m.user_id=v_actor and m.role='administrador';
+ where i.id=p_institution_id and m.user_id=v_actor and m.role in ('administrador','secretaria');
  if v_actor is null or v_mode is null or v_mode='blocked' then
-  raise exception 'Solo Dirección puede consultar el cierre diario.' using errcode='42501';
+  raise exception 'Solo Secretaría o Dirección pueden consultar el cierre diario.' using errcode='42501';
  end if;
  if p_day is null or p_day>(now() at time zone 'America/Argentina/Buenos_Aires')::date
  or p_day<date '2020-01-01' then
@@ -109,17 +109,17 @@ begin
   'finances',v_money,'movements',v_lines,'pack_consumptions',v_pack,
   'fleet',v_fleet,'not_registered_aircraft',v_unknown,
   'note','Cierre operativo: ingresos y egresos efectivamente registrados. No es ganancia ni saldo bancario. Horas validadas: informes aprobados; provisionales: vuelos liquidados pendientes de informe aprobado. Actividad del día basada en turno ART; Libro de Vuelo UTC.');
-end $function$
-;
+end $fn$;
 
-CREATE OR REPLACE FUNCTION public.aerosuite_daily_close_snapshot(p_institution_id uuid, p_day date)
- RETURNS jsonb
- LANGUAGE sql
- STABLE
- SET search_path TO ''
-AS $function$
+create or replace function public.aerosuite_daily_close_snapshot(p_institution_id uuid,p_day date)
+returns jsonb language sql stable set search_path='' as $fn$
  select aerosuite_internal.aerosuite_daily_close_snapshot(p_institution_id,p_day)
-$function$
-;
-revoke all on function public.aerosuite_daily_close_snapshot(uuid,date),aerosuite_internal.aerosuite_daily_close_snapshot(uuid,date) from public,anon;
-grant execute on function public.aerosuite_daily_close_snapshot(uuid,date),aerosuite_internal.aerosuite_daily_close_snapshot(uuid,date) to authenticated;
+$fn$;
+revoke all on function
+ aerosuite_internal.aerosuite_daily_close_snapshot(uuid,date),
+ public.aerosuite_daily_close_snapshot(uuid,date)
+ from public,anon;
+grant execute on function
+ aerosuite_internal.aerosuite_daily_close_snapshot(uuid,date),
+ public.aerosuite_daily_close_snapshot(uuid,date)
+ to authenticated;

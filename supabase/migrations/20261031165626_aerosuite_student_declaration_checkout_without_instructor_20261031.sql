@@ -1,7 +1,55 @@
--- AeroSuite · Cobro de horas informado por el alumno, sin informe previo del instructor.
--- Esquema: funciones internas privilegiadas con autorización explícita por institución.
--- Se conserva el wrapper expuesto, los locks para prevenir doble cobro, y el cotejo posterior.
--- Aplicado originalmente en Supabase con la versión 20261031165626.
+-- Liquidación por declaración del alumno; validación posterior separada.
+CREATE OR REPLACE FUNCTION aerosuite_internal.aerosuite_frontdesk_flight_list(p_institution_id uuid)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ STABLE SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+DECLARE v_actor uuid:=auth.uid();v_role text;v_mode text;v_eligible jsonb;v_reviews jsonb;
+BEGIN
+ SELECT m.role,private.aerosuite_access_mode(i.status,i.trial_ends_at,i.license_ends_at,now())
+ INTO v_role,v_mode
+ FROM public.aerosuite_institution_members m JOIN public.aerosuite_institutions i ON i.id=m.institution_id
+ WHERE m.user_id=v_actor AND m.institution_id=p_institution_id AND m.role IN('administrador','secretaria');
+ IF v_actor IS NULL OR v_role IS NULL OR v_mode='blocked' THEN
+  RAISE EXCEPTION 'Sin permisos para controlar los cobros de vuelos.' USING errcode='42501';
+ END IF;
+ SELECT coalesce(jsonb_agg(jsonb_build_object(
+  'booking_id',b.id,'student_id',b.student_id,'student_email',u.email,
+  'instructor_email',iu.email,'aircraft',b.aircraft,'starts_at',b.starts_at,'booking_status',b.status,
+  'report_status',r.status,'report_minutes',r.flight_minutes)
+ ORDER BY b.starts_at DESC),'[]'::jsonb) INTO v_eligible
+ FROM public.aerosuite_flight_bookings b
+ LEFT JOIN auth.users u ON u.id=b.student_id
+ LEFT JOIN auth.users iu ON iu.id=b.instructor_id
+ LEFT JOIN public.aerosuite_flight_reports r ON r.booking_id=b.id AND r.institution_id=p_institution_id
+ WHERE b.institution_id=p_institution_id
+ AND b.status IN('pending','confirmed','completed')
+ AND b.starts_at<=now() AND b.starts_at>=now()-interval '90 days'
+ AND (r.status IS NULL OR r.status<>'voided')
+ AND NOT EXISTS(SELECT 1 FROM public.aerosuite_flight_checkouts c WHERE c.booking_id=b.id)
+ AND NOT EXISTS(SELECT 1 FROM public.aerosuite_money_movements m WHERE m.booking_id=b.id AND m.movement_type='hour_payment')
+ AND NOT EXISTS(SELECT 1 FROM public.aerosuite_pack_usages k WHERE k.booking_id=b.id);
+ SELECT coalesce(jsonb_agg(jsonb_build_object(
+ 'checkout_id',v.id,'booking_id',v.booking_id,'book_minutes',v.book_minutes,
+ 'payment_method',v.method,'logbook_confirmed',v.logbook_confirmed,'recorded_at',v.recorded_at,'recorded_by_email',au.email,
+ 'student_email',su.email,'report_status',r.status,'report_minutes',r.flight_minutes,
+ 'report_revision',r.revision,'reviewed_at',v.checked_at,
+ 'status', CASE WHEN r.id IS NULL THEN 'awaiting_report'
+    WHEN r.status<>'approved' THEN CASE WHEN v.book_minutes<>r.flight_minutes THEN 'difference' ELSE 'awaiting_approval' END
+    WHEN v.book_minutes<>r.flight_minutes THEN 'difference'
+    WHEN v.checked_report_revision=r.revision AND v.checked_at IS NOT NULL THEN 'reviewed'
+    ELSE 'awaiting_review' END)
+ ORDER BY v.recorded_at DESC),'[]'::jsonb) INTO v_reviews
+ FROM (SELECT * FROM public.aerosuite_flight_checkouts
+  WHERE institution_id=p_institution_id ORDER BY recorded_at DESC LIMIT 200) v
+ LEFT JOIN auth.users au ON au.id=v.recorded_by
+ LEFT JOIN auth.users su ON su.id=v.student_id
+ LEFT JOIN public.aerosuite_flight_reports r ON r.booking_id=v.booking_id AND r.institution_id=p_institution_id;
+ RETURN jsonb_build_object('eligible',v_eligible,'reviews',v_reviews);
+END $function$
+;
+
 CREATE OR REPLACE FUNCTION aerosuite_internal.aerosuite_checkout_flight_at_desk(p_institution_id uuid, p_booking_id uuid, p_book_minutes integer, p_mode text, p_pack_id uuid DEFAULT NULL::uuid, p_amount numeric DEFAULT NULL::numeric, p_currency text DEFAULT 'ARS'::text, p_bank_ref text DEFAULT ''::text, p_fiscal_ref text DEFAULT ''::text, p_note text DEFAULT ''::text, p_request_id uuid DEFAULT NULL::uuid, p_book_confirmed boolean DEFAULT false)
  RETURNS jsonb
  LANGUAGE plpgsql
@@ -106,56 +154,5 @@ BEGIN
   'minutes',p_book_minutes,'method',p_mode,'logbook_confirmed',coalesce(p_book_confirmed,false),
   'report_pending',v_report.id IS NULL OR v_report.status<>'approved',
   'difference',CASE WHEN v_report.id IS NOT NULL THEN v_report.flight_minutes-p_book_minutes ELSE NULL END);
-END $function$
-;
-
-CREATE OR REPLACE FUNCTION aerosuite_internal.aerosuite_frontdesk_flight_list(p_institution_id uuid)
- RETURNS jsonb
- LANGUAGE plpgsql
- STABLE SECURITY DEFINER
- SET search_path TO ''
-AS $function$
-DECLARE v_actor uuid:=auth.uid();v_role text;v_mode text;v_eligible jsonb;v_reviews jsonb;
-BEGIN
- SELECT m.role,private.aerosuite_access_mode(i.status,i.trial_ends_at,i.license_ends_at,now())
- INTO v_role,v_mode
- FROM public.aerosuite_institution_members m JOIN public.aerosuite_institutions i ON i.id=m.institution_id
- WHERE m.user_id=v_actor AND m.institution_id=p_institution_id AND m.role IN('administrador','secretaria');
- IF v_actor IS NULL OR v_role IS NULL OR v_mode='blocked' THEN
-  RAISE EXCEPTION 'Sin permisos para controlar los cobros de vuelos.' USING errcode='42501';
- END IF;
- SELECT coalesce(jsonb_agg(jsonb_build_object(
-  'booking_id',b.id,'student_id',b.student_id,'student_email',u.email,
-  'instructor_email',iu.email,'aircraft',b.aircraft,'starts_at',b.starts_at,'booking_status',b.status,
-  'report_status',r.status,'report_minutes',r.flight_minutes)
- ORDER BY b.starts_at DESC),'[]'::jsonb) INTO v_eligible
- FROM public.aerosuite_flight_bookings b
- LEFT JOIN auth.users u ON u.id=b.student_id
- LEFT JOIN auth.users iu ON iu.id=b.instructor_id
- LEFT JOIN public.aerosuite_flight_reports r ON r.booking_id=b.id AND r.institution_id=p_institution_id
- WHERE b.institution_id=p_institution_id
- AND b.status IN('pending','confirmed','completed')
- AND b.starts_at<=now() AND b.starts_at>=now()-interval '90 days'
- AND (r.status IS NULL OR r.status<>'voided')
- AND NOT EXISTS(SELECT 1 FROM public.aerosuite_flight_checkouts c WHERE c.booking_id=b.id)
- AND NOT EXISTS(SELECT 1 FROM public.aerosuite_money_movements m WHERE m.booking_id=b.id AND m.movement_type='hour_payment')
- AND NOT EXISTS(SELECT 1 FROM public.aerosuite_pack_usages k WHERE k.booking_id=b.id);
- SELECT coalesce(jsonb_agg(jsonb_build_object(
- 'checkout_id',v.id,'booking_id',v.booking_id,'book_minutes',v.book_minutes,
- 'payment_method',v.method,'logbook_confirmed',v.logbook_confirmed,'recorded_at',v.recorded_at,'recorded_by_email',au.email,
- 'student_email',su.email,'report_status',r.status,'report_minutes',r.flight_minutes,
- 'report_revision',r.revision,'reviewed_at',v.checked_at,
- 'status', CASE WHEN r.id IS NULL THEN 'awaiting_report'
-    WHEN r.status<>'approved' THEN CASE WHEN v.book_minutes<>r.flight_minutes THEN 'difference' ELSE 'awaiting_approval' END
-    WHEN v.book_minutes<>r.flight_minutes THEN 'difference'
-    WHEN v.checked_report_revision=r.revision AND v.checked_at IS NOT NULL THEN 'reviewed'
-    ELSE 'awaiting_review' END)
- ORDER BY v.recorded_at DESC),'[]'::jsonb) INTO v_reviews
- FROM (SELECT * FROM public.aerosuite_flight_checkouts
-  WHERE institution_id=p_institution_id ORDER BY recorded_at DESC LIMIT 200) v
- LEFT JOIN auth.users au ON au.id=v.recorded_by
- LEFT JOIN auth.users su ON su.id=v.student_id
- LEFT JOIN public.aerosuite_flight_reports r ON r.booking_id=v.booking_id AND r.institution_id=p_institution_id;
- RETURN jsonb_build_object('eligible',v_eligible,'reviews',v_reviews);
 END $function$
 ;

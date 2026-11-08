@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="es"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>AeroSuite · Avisos institucionales</title>
+<style>
+:root{color-scheme:dark;font:15px/1.5 Inter,system-ui,Arial,sans-serif;color:#edf6fd}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:linear-gradient(140deg,#102333,#1c394f);color:#eaf4fa}
+header{padding:18px max(18px,calc((100vw - 1040px)/2));background:#152c3d;border-bottom:1px solid #5c7990;display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between}
+.brand{color:#fff;text-decoration:none;font-weight:850;font-size:23px}.brand span{color:#e6c08e}.brand small{display:block;color:#adcad9;font-size:10px;letter-spacing:.13em}
+a{color:#bee1f8}
+main{max-width:1040px;margin:auto;padding:24px 17px 64px}
+h1{font-size:clamp(25px,4vw,35px);margin:2px 0 6px}
+p{color:#c5d7e1}
+.eyebrow{color:#e6c18f;letter-spacing:.12em;text-transform:uppercase;font-size:11px;font-weight:800}
+.panel{padding:19px;border:1px solid #577b92;background:#203a4f;border-radius:13px;margin-top:17px}
+.heading,.entry-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
+button{color:#f1f9ff;border:1px solid #91acbd;border-radius:9px;background:#2a5167;padding:10px 14px;font:inherit;cursor:pointer}
+button:disabled{opacity:.5;cursor:not-allowed}button:hover:enabled{background:#386980}
+button:focus-visible,a:focus-visible{outline:3px solid #f4c987;outline-offset:2px}
+.entry{border:1px solid #5d7d90;border-radius:10px;padding:15px;margin:12px 0;background:#173348}
+.entry.unread{border-left:4px solid #e9c48d}
+.entry h2{font-size:17px;margin:0}
+.entry p{margin:7px 0}
+.entry .muted{font-size:12px;color:#b6ccda}
+#status{border:1px solid #698aa0;border-radius:10px;padding:12px 15px;background:#244458;margin:16px 0}
+#count{font-size:14px;color:#e8c38b;font-weight:750}
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px}
+</style>
+<script src="../../assets/supabase-2.117.2.min.js"></script>
+<script src="../../assets/community-config.js"></script>
+</head>
+<body>
+<header><a class="brand" href="index.html">Aero<span>Suite</span><small>BY GENTE DE VUELO</small></a><a id="back" href="portal-escuela.html">Volver a la escuela</a></header>
+<main><div class="eyebrow">Comunicaciones · Institución</div>
+<h1>Avisos internos</h1>
+<p>Reservas, cambios de turnos e informes de vuelo. Cada persona consulta únicamente sus avisos en la escuela a la que pertenece.</p>
+<p id="status" role="status" aria-live="polite">Verificando tu cuenta…</p>
+<section id="inbox" class="panel" hidden>
+<div class="heading"><div><strong id="count">Avisos de tu escuela</strong><p class="muted">Estos avisos funcionan dentro de AeroSuite. No se envían automáticamente por correo ni WhatsApp.</p></div>
+<button id="refresh" type="button">Actualizar avisos</button></div>
+<div id="items"></div></section>
+<section id="emailSettings" class="panel" hidden>
+<h2>Preferencia personal de correo</h2>
+<p id="emailStatus">Consultando preferencia…</p>
+<p>El servicio de correo para avisos de AeroSuite aún no está habilitado. Aceptar aquí solamente registra tu preferencia para cuando se configure y compruebe el sistema. No autoriza publicidad ni mensajes de otras escuelas.</p>
+<div class="actions"><button id="emailConsent" type="button">Autorizar futuros avisos de mi escuela por correo</button></div>
+</section>
+</main>
+<script>
+(async()=>{
+'use strict';
+const $=id=>document.getElementById(id);
+const params=new URLSearchParams(location.search);
+const institution=params.get('institucion')||'',role=params.get('rol')||'';
+const allowedRoles=['administrador','secretaria','instructor','alumno','piloto'];
+const labLogin=params.get('prueba')==='1'&&allowedRoles.includes(role);
+const back=new URL('portal-escuela.html',location.href);
+for(const key of ['institucion','rol','prueba'])if(params.has(key))back.searchParams.set(key,params.get(key));
+$('back').href=back.href;
+const say=(message,error=false)=>{$('status').textContent=message;$('status').style.borderColor=error?'#e4a4a4':'#698aa0'};
+try{
+ if(!institution||!allowedRoles.includes(role))throw Error('Ingresá desde el portal de tu escuela.');
+ if(!window.supabase||!window.GDV_CONFIG?.url||!window.GDV_CONFIG?.key)throw Error('Conexión no disponible.');
+ const client=supabase.createClient(GDV_CONFIG.url,GDV_CONFIG.key,{
+  auth:{storageKey:labLogin?'aerosuite-laboratorio-'+role+'-v1-auth':'aerosuite-institucional-v2-auth',persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}
+ });
+ const user=await client.auth.getUser();
+ if(user.error||!user.data?.user)throw Error('No hay una sesión institucional activa.');
+ const access=await client.rpc('aerosuite_my_institution_access_v2');
+ if(access.error)throw access.error;
+ const school=(access.data||[]).find(x=>x.institution_id===institution&&x.my_role===role&&x.can_access);
+ if(!school)throw Error('No tenés permiso para ver los avisos de esta escuela.');
+ $('inbox').hidden=false;
+ $('emailSettings').hidden=false;
+ const rpc=async(name,args)=>{const res=await client.rpc(name,args);if(res.error)throw res.error;return res.data};
+ let emailPreference=null;
+ async function loadEmailPreference(){
+  const data=await rpc('aerosuite_my_email_preference',{p_institution_id:institution,p_opt_in:null});
+  emailPreference=data.email_opt_in===true;
+  $('emailStatus').textContent='Consentimiento de correo: '+(emailPreference?'registrado':'no otorgado')+
+   '. Servicio de envío externo: DESHABILITADO.';
+  $('emailConsent').textContent=emailPreference?'Retirar consentimiento de correo':'Autorizar futuros avisos de mi escuela por correo';
+  $('emailConsent').disabled=!emailPreference&&!school.can_write;
+ }
+ $('emailConsent').addEventListener('click',async()=>{
+  if(!emailPreference&&!confirm('Solo se guardará tu consentimiento para avisos operativos de esta escuela. El envío externo permanece desactivado. ¿Confirmás?'))return;
+  $('emailConsent').disabled=true;
+  try{
+   await rpc('aerosuite_my_email_preference',{p_institution_id:institution,p_opt_in:!emailPreference});
+   await loadEmailPreference();
+   say('Preferencia de correo actualizada. No se envió ningún mensaje externo.');
+  }catch(e){say('No se pudo guardar la preferencia: '+(e.message||'Error'),true);$('emailConsent').disabled=false;}
+ });
+ const formatDate=x=>{const d=new Date(x);return Number.isFinite(d.valueOf())?
+  new Intl.DateTimeFormat('es-AR',{timeZone:'America/Argentina/Buenos_Aires',dateStyle:'short',timeStyle:'short',hourCycle:'h23'}).format(d):'Fecha no disponible'};
+ async function load(){
+  $('refresh').disabled=true;
+  try{
+   const data=await rpc('aerosuite_notification_inbox_list',{p_institution_id:institution,p_limit:100});
+   $('count').textContent=Number(data.unread||0)+' sin leer · Avisos de '+school.institution_name;
+   const root=$('items');root.replaceChildren();
+   const items=data.items||[];
+   if(!items.length){const p=document.createElement('p');p.textContent='Todavía no hay avisos para tu cuenta.';root.append(p);}
+   for(const n of items){
+    const card=document.createElement('article');card.className='entry'+(n.read_at?'':' unread');
+    const head=document.createElement('div');head.className='entry-head';
+    const title=document.createElement('h2');title.textContent=n.title||'Aviso institucional';
+    const when=document.createElement('span');when.className='muted';when.textContent=formatDate(n.created_at);
+    head.append(title,when);
+    const desc=document.createElement('p');desc.textContent=n.detail||'Consultá tu portal.';
+    const actions=document.createElement('div');actions.className='actions';
+    const link=document.createElement('a');
+    link.href='operaciones-institucionales.html?institucion='+encodeURIComponent(institution)+'&rol='+encodeURIComponent(role)+
+      (labLogin?'&prueba=1':'')+'#'+(n.source_type==='report'?'informes':'turnera');
+    link.textContent='Ver en operaciones';
+    actions.append(link);
+    if(!n.read_at&&school.can_write){
+     const button=document.createElement('button');button.type='button';button.textContent='Marcar como leído';
+     button.addEventListener('click',async()=>{
+      button.disabled=true;
+      try{await rpc('aerosuite_notification_mark_read',{p_institution_id:institution,p_ids:[n.id]});await load();say('Aviso marcado como leído.');}
+      catch(e){say('No se pudo actualizar: '+(e.message||'Error'),true);button.disabled=false;}
+     });
+     actions.append(button);
+    }
+    card.append(head,desc,actions);root.append(card);
+   }
+   say('Avisos consultados. Solo se muestran los asignados a tu cuenta.');
+  }catch(e){say('No se pudieron cargar los avisos: '+(e.message||'Error del servidor'),true);}
+  finally{$('refresh').disabled=false}
+ }
+ $('refresh').addEventListener('click',load);
+ await load();
+ try{await loadEmailPreference()}catch(e){$('emailStatus').textContent='No se pudo consultar la preferencia: '+(e.message||'Error');$('emailConsent').disabled=true}
+}catch(e){say('Acceso no disponible: '+(e.message||'Error'),true)}
+})();
+</script>
+</body></html>

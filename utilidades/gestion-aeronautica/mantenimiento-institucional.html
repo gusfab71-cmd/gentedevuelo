@@ -215,6 +215,7 @@ let showAircraftForm=false;
 
 let db=null,currentUser=null,hangarAircraft='',saveQueue=Promise.resolve();
 const instParams=new URLSearchParams(location.search),institutionId=instParams.get("institucion");
+const requestedAircraftRegistration=AeroSuiteRegistration.normalize(instParams.get("matricula")||"");
 const testRole=instParams.get("rol")||"administrador";
 const testMode=instParams.get("prueba")==="1"&&["administrador","secretaria"].includes(testRole);
 let institutionName="",institutionRole="",registeredFleet=[],registeredSimulators=[],maintenanceAdvisories=[],maintRevision=0,maintWritable=false,maintConflict=false;
@@ -374,6 +375,10 @@ async function loadApp(){
    S={...S,...maintenance.data.payload};for(const key of ["inv","mv","fuel","simLogs"])S[key]||=[];
   }
   reconcileFleet();
+  // El enlace desde Flota solo selecciona una matrícula existente en esta institución.
+  // Nunca habilita operaciones ni altera permisos.
+  const requestedAircraft=S.ac.find(a=>!a.archived&&AeroSuiteRegistration.normalize(a.reg)===requestedAircraftRegistration);
+  if(requestedAircraft)S.sel=requestedAircraft.id;
   if(!S.ac.some(a=>a.id===S.sel&&!a.archived))S.sel=S.ac.find(a=>!a.archived)?.id||null;
   R();
   showStatus(maintWritable?"Registro de mantenimiento de "+institutionName+" vinculado con "+

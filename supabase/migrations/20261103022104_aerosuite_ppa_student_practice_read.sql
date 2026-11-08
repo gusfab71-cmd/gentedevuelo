@@ -1,8 +1,6 @@
--- Academia del Alumno: práctica educativa PPA mientras el banco se revisa.
--- Permite SELECT solo a usuarios autenticados con rol Alumno en una
--- institución AeroSuite cuya licencia todavía permite acceder.
--- No se abre el banco a anon, instructores, pilotos, secretaría ni dirección.
--- La política ppa_admin_read existente continúa vigente.
+-- Acceso exclusivamente de lectura al banco PPA para Alumnos con una institución habilitada.
+-- La política preexistente ppa_admin_read de Gente de Vuelo se conserva.
+-- Se reutiliza aerosuite_my_institution_access_v2, que valida sesión, rol y licencia.
 create policy ppa_aerosuite_student_practice_read
 on public.gdv_ppa_questions
 for select to authenticated

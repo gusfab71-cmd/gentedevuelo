@@ -1,0 +1,26 @@
+name: AeroMeteo - comprobación en vivo de fuentes
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'scripts/aerometeo-live-sources.mjs'
+      - 'api/aerometeo-sigmet.js'
+      - 'api/aerometeo-phenomena-point.js'
+      - '.github/workflows/aerometeo-live-sources.yml'
+permissions:
+  contents: read
+concurrency:
+  group: aerometeo-live-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  proveedor:
+    name: Consulta de contrato AWC y Open-Meteo
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verificar conectividad y formato de respuestas (solo lectura)
+        run: node scripts/aerometeo-live-sources.mjs

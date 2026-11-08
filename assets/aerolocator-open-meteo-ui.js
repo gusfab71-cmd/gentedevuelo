@@ -76,24 +76,100 @@ function render(parent,data,location){
  disclaimer.style.cssText='display:block;color:#566d7b;font-size:10px;margin-top:8px';
  parent.append(disclaimer);
 }
-function boot({map,L,onForecast,onPending,onForecastError}){
+/* AeroMeteo: tarjeta compacta de consulta puntual.
+ * AeroLocator continúa utilizando render() completo, sin cambios de diseño.
+ */
+function renderCompact(parent,data,location){
+ parent.replaceChildren();
+ const title=node('h3',location);
+ title.className='am-compact-location';parent.append(title);
+ const subtitle=node('p','Estimación Open-Meteo · No es METAR');
+ subtitle.className='am-compact-source';parent.append(subtitle);
+ const when=node('p','Modelo: '+localTime(data.current.time)+' ART');
+ when.className='am-compact-time';parent.append(when);
+ const grid=node('div');grid.className='am-compact-metrics';
+ function metric(label,value){
+  const item=node('div');item.className='am-compact-metric';
+  const name=node('span',label),result=node('strong',value);
+  item.append(name,result);grid.append(item);
+ }
+ metric('Viento',wind(data.current));
+ metric('Temperatura',number(data.current.temperatureC,' °C'));
+ metric('Ráfagas',number(data.current.gustKt,' kt'));
+ metric('Precipitación',number(data.current.precipitationMm,' mm'));
+ parent.append(grid);
+ const more=node('details');more.className='am-compact-extra';
+ more.append(node('summary','Más datos y próximas horas'));
+ const others=node('div');others.className='am-compact-other-metrics';
+ paragraph(others,'Humedad',number(data.current.humidityPct,' %'));
+ paragraph(others,'Nubosidad',number(data.current.cloudPct,' %'));
+ paragraph(others,'Presión a nivel del mar',number(data.current.pressureHpa,' hPa'));
+ more.append(others);
+ if(Array.isArray(data.forecast)&&data.forecast.length){
+  const forecastTitle=node('strong','Próximas '+data.forecast.length+' horas');
+  forecastTitle.className='am-compact-forecast-title';
+  more.append(forecastTitle);
+  for(const row of data.forecast.slice(0,6)){
+   const line=node('p',localTime(row.time)+' · Viento '+wind(row)+
+    ' · Lluvia '+number(row.precipitationMm,' mm'));
+   line.className='am-compact-hour';more.append(line);
+  }
+ }
+ parent.append(more);
+ const foot=node('p');
+ foot.className='am-compact-footnote';
+ const source=node('a','Fuente: Open-Meteo');
+ source.href='https://open-meteo.com/en/docs';source.target='_blank';
+ source.rel='noopener noreferrer';
+ foot.append(source,node('span',' · Pronóstico orientativo; verificar información aeronáutica oficial.'));
+ parent.append(foot);
+}
+function boot({map,L,onForecast,onPending,onForecastError,dockContainer=null}){
  if(!map||!L)throw Error('AeroLocator necesita Leaflet');
  const control=L.control({position:'topleft'});
  let requestId=0;
- const popup=L.popup({maxWidth:390,autoPan:true});
- const showAt=async({lat,lon,name}={})=>{
+ // AeroMeteo dispone de un panel fijo dentro del mapa. AeroLocator conserva su popup original.
+ const popup=dockContainer?null:L.popup({maxWidth:390,autoPan:true});
+ let dock=null,dockBody=null;
+ if(dockContainer){
+  dock=node('section');
+  dock.className='am-forecast-dock';
+  dock.hidden=true;
+  dock.setAttribute('aria-label','Pronóstico del punto consultado');
+  const header=node('div');header.className='am-forecast-dock-heading';
+  header.append(node('strong','Pronóstico del punto seleccionado'));
+  const close=node('button','×');close.type='button';
+  close.className='am-forecast-dock-close';
+  close.setAttribute('aria-label','Cerrar tarjeta meteorológica del mapa');
+  close.addEventListener('click',()=>{dock.hidden=true;});
+  header.append(close);
+  dockBody=node('div');
+  dockBody.className='am-forecast-dock-content';
+  dock.append(header,dockBody);
+  dockContainer.append(dock);
+  L.DomEvent.disableClickPropagation(dock);
+  L.DomEvent.disableScrollPropagation(dock);
+ }
+ const showAt=async({lat,lon,name,icao}={})=>{
   const latitude=Number(lat),longitude=Number(lon);
   if(!Number.isFinite(latitude)||!Number.isFinite(longitude)||
      latitude<-56||latitude>-21||longitude<-75||longitude>-52)return false;
   const safeName=typeof name==='string'?name.slice(0,90):'punto seleccionado';
+  const safeIcao=typeof icao==='string'&&/^SA[A-Z]{2}$/.test(icao.toUpperCase())?icao.toUpperCase():null;
+  const selected={lat:latitude,lon:longitude,name:safeName,...(safeIcao?{icao:safeIcao}:{})};
   const id=++requestId;
-  if(typeof onPending==='function')onPending({lat:latitude,lon:longitude,name:safeName});
-  const view=node('section');
-  view.style.cssText='min-width:260px;max-width:350px;max-height:55dvh;overflow-y:auto;color:#163147;font:12px/1.5 Arial,sans-serif';
-  view.append(node('strong','Pronóstico Open-Meteo · '+safeName));
+  if(typeof onPending==='function')onPending(selected);
+  const view=dock?dockBody:node('section');
+  view.replaceChildren();
+  if(dock){
+   dock.hidden=false;
+  }else{
+   view.style.cssText='min-width:260px;max-width:350px;max-height:55dvh;overflow-y:auto;color:#163147;font:12px/1.5 Arial,sans-serif';
+   view.append(node('strong','Pronóstico Open-Meteo · '+safeName));
+  }
   const message=node('p','Consultando modelos meteorológicos…');
   view.append(message);
-  popup.setLatLng([latitude,longitude]).setContent(view).openOn(map);
+  if(popup)popup.setLatLng([latitude,longitude]).setContent(view).openOn(map);
   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),12000);
   try{
    const query=new URLSearchParams({lat:latitude.toFixed(5),lon:longitude.toFixed(5)});
@@ -103,13 +179,14 @@ function boot({map,L,onForecast,onPending,onForecastError}){
    if(!data.ok||data.kind!=='model_forecast'||!data.current||data.isMetar!==false)
     throw Error('Respuesta de modelo no válida');
    if(id===requestId){
-    render(view,data,safeName);
-    if(typeof onForecast==='function')onForecast(data,{lat:latitude,lon:longitude,name:safeName});
+    if(dock)renderCompact(view,data,safeName);
+    else render(view,data,safeName);
+    if(typeof onForecast==='function')onForecast(data,selected);
    }
   }catch(_){
    if(id===requestId){
     message.textContent='No hay pronóstico disponible. No se muestran valores estimados sin respaldo.';
-    if(typeof onForecastError==='function')onForecastError({lat:latitude,lon:longitude,name:safeName});
+    if(typeof onForecastError==='function')onForecastError(selected);
    }
   }finally{clearTimeout(timer)}
   return true;
@@ -132,8 +209,8 @@ function boot({map,L,onForecast,onPending,onForecastError}){
   return host;
  };
  control.addTo(map);
- return {showAt,render};
+ return {showAt,render,dock};
 }
-root.GDV_OPEN_METEO_FORECAST={boot,render,wind,localTime};
-if(typeof module==='object'&&module.exports)module.exports={boot,render,wind,localTime};
+root.GDV_OPEN_METEO_FORECAST={boot,render,renderCompact,wind,localTime};
+if(typeof module==='object'&&module.exports)module.exports={boot,render,renderCompact,wind,localTime};
 })(typeof window!=='undefined'?window:globalThis);

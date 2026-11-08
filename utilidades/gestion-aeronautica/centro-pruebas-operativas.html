@@ -53,10 +53,10 @@ textarea{font:inherit;color:#fff;background:#102738;border:1px solid #63879b;bor
 <p id="institutionInfo" class="muted">Se consulta la institución existente: no se crea una nueva.</p>
 <div class="grid">
 <div class="tile"><strong>Director de AeroSuite</strong><span>Administrar turnera, asignaciones, aeronaves, informes y contaduría.</span><br><a id="director" target="_blank" rel="noopener">Abrir Director de AeroSuite</a></div>
-<div class="tile"><strong>Secretaría de AeroSuite</strong><span>Mismas funciones administrativas si existe una cuenta de Secretaría habilitada. No se usa la clave del Director.</span><br><a id="secretaria" target="_blank" rel="noopener">Abrir Secretaría de AeroSuite</a></div>
+<div class="tile"><strong>Secretaría de AeroSuite</strong><span>Gestionar turnos, cobros, packs y caja diaria, según los permisos de Secretaría. Identidad independiente del Director.</span><br><a id="secretaria" target="_blank" rel="noopener">Abrir Secretaría de AeroSuite</a></div>
 <div class="tile"><strong>Instructor de AeroSuite</strong><span>Ver turnos asignados, confirmar solicitudes y cargar informes.</span><br><a id="instructor" target="_blank" rel="noopener">Abrir Instructor de AeroSuite</a></div>
-<div class="tile"><strong>Alumno de AeroSuite</strong><span>Solicitar turnos, revisar devoluciones y saldos de packs.</span><br><a id="alumno" target="_blank" rel="noopener">Abrir Alumno de AeroSuite</a></div>
-<div class="tile"><strong>Piloto PPA / PCA de AeroSuite</strong><span>Probar ficha personal, reservas sin instructor (sujetas a habilitación), horas de vuelo, AeroLocator y Flight Operations.</span><br><a id="piloto" target="_blank" rel="noopener">Abrir Piloto PPA / PCA</a></div>
+<div class="tile"><strong>Alumno de AeroSuite</strong><span>Solicitar turnos, consultar sus horas de vuelo y revisar los informes y devoluciones de instrucción, sin acceso a Contaduría.</span><br><a id="alumno" target="_blank" rel="noopener">Abrir Alumno de AeroSuite</a></div>
+<div class="tile"><strong>Piloto PPA / PCA de AeroSuite</strong><span>Probar ficha personal, RAV, horas de vuelo y navegación. PPA puede requerir instructor; PCA opera sin instructor por defecto, según habilitaciones.</span><br><a id="piloto" target="_blank" rel="noopener">Abrir Piloto PPA / PCA</a></div>
 </div>
 <div class="notice warn" id="roleReadiness" role="status">Comprobando las cuentas disponibles para el laboratorio...</div>
 <p class="muted">Cada enlace abre el ingreso institucional real. Cada rol tiene su identidad técnica, sesión y permisos propios, sin invitación; los cinco alias llegan a la misma casilla Gmail.</p>
@@ -105,8 +105,8 @@ const names=[
  ['informe','Informe de vuelo','Tras una reserva válida, Instructor carga el informe con horas y observaciones.'],
  ['aprobacion','Aprobación de Dirección','Director verifica, aprueba y consulta el informe.'],
  ['contaduria','Cobro o pack','Director o Secretaría registra una operación ficticia de cobro o pack y comprueba su reflejo en Contaduría.'],
- ['alumno_resultado','Resultado para Alumno de AeroSuite','Alumno comprueba informe aprobado, historial y saldo actualizado.'],
- ['piloto','Portal PPA / PCA','Ingresar con piloto técnico, completar ficha PPA/PCA y verificar turnera sin instructor, horas de vuelo, AeroLocator y Flight Operations.'],
+ ['alumno_resultado','Resultado para Alumno de AeroSuite','Alumno comprueba informe aprobado y horas registradas, sin acceder a Contaduría.'],
+ ['piloto','Portal PPA / PCA','Ingresar con piloto técnico, comprobar PPA con instructor cuando corresponda, PCA sin instructor por defecto, RAV, horas y herramientas aeronáuticas.'],
  ['integridad','Diagnóstico sin anomalías','Actualizar indicadores y revisar que no haya inconsistencias.']
 ];
 const $=id=>document.getElementById(id);const status=$('status');let testId=null;
@@ -118,7 +118,27 @@ function url(role){return 'ingreso-escuela.html?institucion='+encodeURIComponent
 function time(v){return v?new Date(v).toLocaleString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',hourCycle:'h23',timeZone:'America/Argentina/Buenos_Aires'}).replace(',','')+' ART':'—';}
 function outcomes(steps){const vals=names.map(x=>steps?.[x[0]]?.status||'pending');return {ok:vals.filter(x=>x==='passed').length,failed:vals.filter(x=>x==='failed').length,blocked:vals.filter(x=>x==='blocked').length,pending:vals.filter(x=>x==='pending').length};}
 function summary(t){const o=outcomes(t.steps);return o.ok+' correctos · '+o.failed+' fallidos · '+o.blocked+' bloqueados · '+o.pending+' pendientes';}
-function safeNumber(n){return Number.isFinite(Number(n))?Number(n).toLocaleString('es-AR'):'—';}
+const INTEGRITY_RULES=Object.freeze([
+ 'stale_pending','confirmed_without_instructor','completed_without_approved_report',
+ 'negative_pack_balance','double_settlement','overlapping_institution_slots',
+ 'instructor_cross_institution_overlap'
+]);
+function validateHealthSnapshot(snapshot,institutionId,now=Date.now()){
+ if(!snapshot||snapshot.institution_id!==institutionId)
+  throw Error('Diagnóstico de otra institución o respuesta incompleta');
+ const checked=Date.parse(snapshot.checked_at);
+ if(!Number.isFinite(checked)||checked>now+60000||now-checked>5*60000)
+  throw Error('Diagnóstico vencido o sin fecha verificable');
+ let anomalies=0;
+ for(const rule of INTEGRITY_RULES){
+  const value=snapshot[rule];
+  if(typeof value!=='number'||!Number.isSafeInteger(value)||value<0)
+   throw Error('Diagnóstico incompleto: falta un indicador de integridad');
+  anomalies+=value;
+ }
+ return anomalies;
+}
+function safeNumber(n){return typeof n==='number'&&Number.isFinite(n)?n.toLocaleString('es-AR'):'—';}
 function renderLabAccounts(){
  const pending=roles.filter(role=>!labAccounts[role]);
  for(const role of roles){
@@ -185,27 +205,33 @@ async function provisionAllRoles(){
 }
 async function reloadHealth(){
  $('refresh').disabled=true;
+ health={}; // Nunca reutilizar el diagnóstico de una consulta anterior.
  try{
   const r=await db.rpc('aerosuite_superadmin_portal_health',{p_institution_id:testId});
   if(r.error)throw r.error;
-  if(r.data?.institution_id!==testId)throw Error('Diagnóstico de otra institución');
-  health=r.data;
+  const anomalies=validateHealthSnapshot(r.data,testId);
   await refreshLabAccounts();
+  health=r.data;
   const data=[['Directores',health.directors],['Secretarías',health.secretaries],['Instructores',health.instructors],['Alumnos',health.students],['Aeronaves',health.aircraft_available],['Pendientes',health.bookings_pending],['Confirmados',health.bookings_confirmed],['Realizados',health.bookings_completed],['Informes aprobados',health.reports_approved],['Packs',health.packs_total],['Movimientos de caja',health.money_movements_total]];
   $('metrics').replaceChildren();
   for(const [label,value] of data){const div=document.createElement('div');div.className='metric';const strong=document.createElement('strong');strong.textContent=safeNumber(value);const span=document.createElement('span');span.textContent=label;div.append(strong,span);$('metrics').append(div);}
-  const rules=['stale_pending','confirmed_without_instructor','completed_without_approved_report','negative_pack_balance','double_settlement','overlapping_institution_slots','instructor_cross_institution_overlap'];
-  const anomalies=rules.reduce((a,x)=>a+Number(health[x]||0),0);
   const el=$('healthStatus');el.classList.toggle('warn',anomalies>0);
   el.textContent=(anomalies?'Atención: '+anomalies+' anomalías detectadas.':'Siete reglas de integridad: sin anomalías detectadas.')+' Consulta: '+time(health.checked_at)+'. Los resultados de interfaz deben verificarse manualmente.';
- }catch(e){$('healthStatus').classList.add('warn');$('healthStatus').textContent='Error de diagnóstico: '+(e.message||e);}
- finally{$('refresh').disabled=false;}
+  return true;
+ }catch(e){
+  health={};$('metrics').replaceChildren();
+  $('healthStatus').classList.add('warn');
+  $('healthStatus').textContent='Diagnóstico no verificado: '+(e.message||e)+'. No se permite cerrar una prueba con datos anteriores.';
+  return false;
+ }finally{$('refresh').disabled=false;}
 }
 function renderRun(){
  const editing=active&&active.status==='in_progress';
  $('steps').hidden=!editing;$('runEditor').hidden=!editing;
  $('start').disabled=Boolean(editing);
- setText('runStatus',editing?'Prueba iniciada '+time(active.started_at)+' · '+summary(active):'No hay prueba en curso. Seleccioná «Iniciar nueva prueba» para documentar una verificación.');
+ setText('runStatus',editing?'Prueba iniciada '+time(active.started_at)+' · '+summary(active):
+  active?.status==='finished'?'Prueba cerrada '+time(active.finished_at)+' · '+summary(active):
+  'No hay prueba en curso. Seleccioná «Iniciar nueva prueba» para documentar una verificación.');
  if(!editing)return;
  $('steps').replaceChildren();
  for(const [key,title,description] of names){
@@ -226,7 +252,7 @@ async function save(finish){
  $('save').disabled=true;$('finish').disabled=true;
  try{
   const next={steps:active.steps,notes:$('notes').value.slice(0,2500),updated_at:new Date().toISOString()};
-  if(finish){await reloadHealth();if(!health.checked_at)throw Error('No hay diagnóstico final disponible.');next.final_snapshot=health;next.finished_at=new Date().toISOString();next.status='finished';}
+  if(finish){if(!await reloadHealth())throw Error('No hay diagnóstico final vigente y completo.');next.final_snapshot=health;next.finished_at=new Date().toISOString();next.status='finished';}
   const r=await db.from('aerosuite_test_runs').update(next).eq('id',active.id).eq('institution_id',testId).select().single();
   if(r.error)throw r.error;
   active=r.data;renderRun();if(!finish)setText('runStatus','Avance guardado en Supabase · '+summary(active));await reloadHistory();
@@ -278,9 +304,23 @@ try{
  $('showTestPassword').onchange=()=>{const type=$('showTestPassword').checked?'text':'password';$('testPassword').type=type;$('testPasswordConfirm').type=type;};
  $('save').onclick=()=>save(false);$('finish').onclick=()=>save(true);
  $('start').onclick=async()=>{
-  $('start').disabled=true;setText('runStatus','Creando sesión de pruebas…');
+  $('start').disabled=true;setText('runStatus','Comprobando sesiones de prueba abiertas…');
   try{
-   await reloadHealth();if(!health.checked_at)throw Error('No se pudo obtener el diagnóstico inicial.');
+   // Antes de insertar, recuperar la sesión abierta más reciente de este laboratorio.
+   // Evita crear otra desde la interfaz cuando quedó una verificación sin terminar.
+   const previous=await db.from('aerosuite_test_runs').select('id')
+    .eq('institution_id',testId).eq('status','in_progress')
+    .order('started_at',{ascending:false}).limit(1);
+   if(previous.error)throw previous.error;
+   if(previous.data?.length){
+    const found=await db.from('aerosuite_test_runs').select('*')
+     .eq('institution_id',testId).eq('id',previous.data[0].id).single();
+    if(found.error)throw found.error;
+    active=found.data;renderRun();
+    setText('runStatus','Se recuperó una prueba abierta '+time(active.started_at)+' · '+summary(active)+'. Cerrala antes de iniciar otra.');
+    await reloadHistory();return;
+   }
+   if(!await reloadHealth())throw Error('No se pudo obtener el diagnóstico inicial vigente y completo.');
    const r=await db.from('aerosuite_test_runs').insert({institution_id:testId,started_by:user.id,baseline:health}).select().single();
    if(r.error)throw r.error;active=r.data;renderRun();await reloadHistory();
   }catch(e){setText('runStatus','No se pudo iniciar la prueba: '+(e.message||e));$('start').disabled=false;}

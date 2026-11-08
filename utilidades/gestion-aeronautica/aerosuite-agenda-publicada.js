@@ -12,7 +12,7 @@ window.AeroSuiteAgenda={
   '<p id="agendaWeekLabel" class="hint"></p>',
   '<form id="agendaBulkForm"><div class="formgrid">',
   '<label>Actividad<select id="agendaBulkType"><option value="flight">Vuelo de instrucción</option><option value="simulator">Vuelo virtual / simulador</option><option value="theory">Teoría</option></select></label>',
-  '<div class="agenda-resource-pick" id="agendaBulkFlight"><strong>Aeronaves disponibles</strong><div id="agendaBulkAircraft"></div><p class="hint">Se toman de Flota. Las que están fuera de servicio no pueden publicarse. Antes de publicar se muestran los avisos de Mantenimiento.</p></div>',
+  '<div class="agenda-resource-pick" id="agendaBulkFlight"><strong>Aeronaves disponibles</strong><div id="agendaBulkAircraft"></div><p class="hint">Se toman de Flota. Las que están fuera de servicio o tienen un vencimiento técnico detectado no se publican desde esta pantalla. Los avisos no sustituyen las libretas ni certifican aeronavegabilidad.</p></div>',
   '<div class="agenda-resource-pick" id="agendaBulkSim" hidden><strong>Simuladores disponibles</strong><div id="agendaBulkSimulators"></div><p class="hint">Se toman de Disponibilidad de flotas y mantenimiento. Los que están fuera de servicio no pueden publicarse.</p></div>',
   '<label id="agendaBulkNamesLabel" hidden>Clase o materia<input id="agendaBulkNames" maxlength="600" placeholder="Ej.: Teoría"></label>',
   '<label id="agendaBulkCapacityLabel" hidden>Cupos por turno<input id="agendaBulkCapacity" type="number" min="1" max="50" value="12"></label>',
@@ -152,6 +152,16 @@ window.AeroSuiteAgenda={
     return false;
    }
    const warnings=entries.flatMap(a=>(a.alerts||[]).map(w=>({registration:a.registration,...w})));
+   // Una advertencia de vencimiento conocido no puede confirmarse de todos modos.
+   // El bloqueo autoritativo del servidor es una etapa separada.
+   const due=warnings.filter(w=>w.level==="due");
+   if(due.length){
+    const detail=due.slice(0,5).map(w=>w.registration+": "+w.message).join(" · ");
+    msg("No se publicaron los horarios: existe mantenimiento con vencimiento registrado. "+detail+
+      (due.length>5?" · Consultá los demás avisos en Mantenimiento.":"")+
+      " Dirección o Secretaría deben revisar las constancias antes de volver a publicar.");
+    return false;
+   }
    const lines=warnings.slice(0,12).map(w=>
     (w.level==="due"?"VENCIDO / REVISAR":w.level==="soon"?"PRÓXIMO":"DATOS PENDIENTES")+
     " · "+w.registration+": "+w.message);

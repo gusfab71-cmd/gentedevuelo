@@ -71,20 +71,12 @@ a:focus-visible,button:focus-visible,summary:focus-visible,input:focus-visible,s
 .am-map-toolbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;min-height:53px;padding:7px 10px;border-bottom:1px solid #516a81;background:#0b1c30}
 .am-map-toolbar h2{font-size:clamp(12px,1.2vw,17px);letter-spacing:-.025em;margin:0;white-space:nowrap}
 .am-map-toolbar h2 span{color:var(--am-gold);font-size:25px;vertical-align:-3px}
-.am-map-actions{display:flex;gap:4px;flex-wrap:wrap}
-.am-map-actions button{padding:7px 7px;background:#1b3045;border:1px solid #5c7490;border-radius:7px;color:#e7eff7;font-size:10px;min-height:30px}
-.am-map-actions button.is-selected,.am-map-actions button:hover{color:#111b25;background:var(--am-gold);border-color:#ffc86b;box-shadow:0 0 9px #e4a3272b}
 .am-map-canvas{position:relative;min-height:0;flex:1}
 #map{height:100%;width:100%;background:#102739}
 .am-map-legend{position:absolute;left:9px;bottom:9px;z-index:499;background:#0b1a2de9;border:1px solid #6a8ca1;border-radius:9px;padding:7px 9px;display:flex;gap:8px;flex-wrap:wrap;pointer-events:none}
 .am-map-legend span{font-size:9px;white-space:nowrap}
 .am-dot{display:inline-block;width:10px;height:10px;border:2px solid white;border-radius:50%;vertical-align:-1px;margin-right:3px}
 .am-dot-local{background:#24bdde}.am-dot-edu{background:#34b897}.am-dot-model{background:#f7ad32}
-.am-map-float{position:absolute;right:8px;bottom:9px;z-index:499;max-width:228px;background:#091b2ce8;border:1px solid #5c7794;border-radius:9px;padding:9px 10px;pointer-events:none}
-.am-map-float strong{font-size:11px}
-.am-map-float p{font-size:9px;color:#d9e3ed;line-height:1.3;margin:4px 0}
-.am-map-float span{font-size:8px;color:#a7bcd2}
-.am-color-scale{height:9px;margin:5px 0;background:linear-gradient(90deg,#113d95,#0089e2,#00a68a,#d2e939,#f3b02d,#ea4a2e,#c50e60);border-radius:6px}
 .am-map-status{min-height:35px;background:#12263d;padding:9px 11px;font-size:10px;line-height:1.4;color:#c5d7e6}
 .am-map-bottom-actions{padding:5px 10px;display:flex;gap:7px;background:#102338}
 .am-map-bottom-actions button{font-size:10px;padding:5px 9px;background:#263f5a;border:1px solid #5b748c;border-radius:6px;color:#f6fbff}
@@ -133,14 +125,12 @@ a:focus-visible,button:focus-visible,summary:focus-visible,input:focus-visible,s
 .leaflet-container a.leaflet-popup-close-button{font-size:21px}
 @media(min-width:1800px){
  .am-layout{grid-template-columns:minmax(310px,22fr) minmax(620px,46fr) minmax(370px,32fr)}
- .am-map-actions button{font-size:12px;padding:8px 11px}
  .am-metric{min-height:95px}
  .am-source-card{min-height:93px}
 }
 @media(max-width:1160px){
  .am-layout{grid-template-columns:minmax(225px,25fr) minmax(330px,43fr) minmax(255px,32fr)}
  .am-nav a{padding:9px;font-size:11px}
- .am-map-actions button{font-size:9px}
  .am-source-copy strong{font-size:12px}
  .am-source-copy small{font-size:10px}
 }
@@ -173,9 +163,6 @@ a:focus-visible,button:focus-visible,summary:focus-visible,input:focus-visible,s
  .am-source-card{min-height:66px}
  .am-map-section{height:530px;min-height:530px;flex:none}
  .am-map-toolbar{align-items:flex-start}
- .am-map-actions{width:100%;justify-content:space-between}
- .am-map-actions button{flex:1;padding:7px 5px;font-size:9px}
- .am-map-float{max-width:165px}
  .am-map-legend{max-width:45%}
  .am-detail{min-height:360px;max-height:none;overflow:visible}
  .am-detail-heading h2{font-size:17px}
@@ -201,3 +188,363 @@ a:focus-visible,button:focus-visible,summary:focus-visible,input:focus-visible,s
 .am-layout.am-sidebar-hidden .am-sidebar{display:none}
 @media(max-width:950px){.am-layout.am-sidebar-hidden{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:650px){.am-layout.am-sidebar-hidden{display:flex}.am-layout.am-sidebar-hidden .am-detail{min-height:360px}}
+
+/* 2026-11-07 · Mapa meteorológico protagonista: evita recortar las tarjetas.
+ * A ancho reducido las fichas pasan debajo del mapa, no lo comprimen. */
+.am-layout{height:auto;min-height:0;grid-template-columns:minmax(230px,20fr) minmax(490px,57fr) minmax(265px,23fr)}
+.am-layout>.am-sidebar,.am-layout>.am-map-section,.am-layout>.am-detail{height:clamp(640px,78dvh,920px)}
+.am-map-expand{flex:none;min-height:35px;padding:7px 11px;border-radius:8px;border:1px solid #d9aa62;background:#3a2c1e;color:#ffe1ae;font-size:11px;font-weight:800;white-space:nowrap}
+.am-map-expand:hover,.am-map-expand:focus-visible{background:#63472a;border-color:#ffe0af;color:#fff6e6}
+.am-map-section .leaflet-popup-content{max-height:min(60dvh,590px);overflow:auto}
+.am-map-section .leaflet-popup-content-wrapper{max-width:calc(100vw - 30px)}
+@media(max-width:1400px) and (min-width:651px){
+ .am-layout{display:grid;grid-template-columns:minmax(220px,270px) minmax(0,1fr);grid-template-rows:auto auto;align-items:stretch;height:auto;min-height:0}
+ .am-layout>.am-sidebar{grid-column:1;grid-row:1 / 3;height:auto;min-height:0}
+ .am-layout>.am-map-section{grid-column:2;grid-row:1;height:clamp(560px,76dvh,920px)}
+ .am-layout>.am-detail{grid-column:2;grid-row:2;height:auto;min-height:320px;max-height:none;overflow:visible}
+}
+@media(max-width:650px){
+ .am-layout{display:flex;flex-direction:column;min-height:0;height:auto}
+ .am-layout>.am-sidebar,.am-layout>.am-detail{height:auto}
+ .am-layout>.am-map-section{height:clamp(530px,77dvh,850px);min-height:530px;flex:none}
+ .am-map-expand{min-height:36px;padding:6px 9px;font-size:11px}
+}
+/* En vista ampliada Leaflet conserva su mapa y los popups; solo cambia el layout. */
+.am-layout.am-map-expanded{display:block;min-height:0;height:auto;max-width:none}
+.am-layout.am-map-expanded>.am-sidebar,.am-layout.am-map-expanded>.am-detail{display:none!important}
+.am-layout.am-map-expanded>.am-map-section{display:flex;width:100%;height:clamp(680px,86dvh,1100px);min-height:0;max-height:none}
+.am-layout.am-map-expanded .am-map-expand{background:#dfaa39;border-color:#ffe0ab;color:#101c29}
+.am-layout.am-map-expanded .leaflet-popup-content{max-height:min(70dvh,720px)}
+@media(max-width:650px){
+ .am-layout.am-map-expanded>.am-map-section{height:max(620px,85dvh)}
+}
+
+/* Gráfico horario: solamente muestras reales del modelo Open-Meteo consultado. */
+.am-hourly-chart{
+ margin-top:13px;padding:12px 10px 9px;border:1px solid #56798b;border-radius:12px;
+ background:linear-gradient(135deg,#142d3b,#112333);overflow-x:auto;overscroll-behavior-inline:contain;
+ scrollbar-color:#7598ae #163044;
+}
+.am-hourly-heading{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:5px 12px;margin:0 0 8px}
+.am-hourly-heading strong{font-size:13px;line-height:1.3;color:#ffe0ad}
+.am-hourly-heading span{font-size:9px;font-weight:800;letter-spacing:.08em;color:#a9cbd3}
+.am-hourly-chart svg{display:block;width:100%;min-width:410px;max-height:300px;background:#102534;border-radius:8px}
+.am-hourly-summary{font-size:11px!important;line-height:1.45;margin:9px 0 5px!important;color:#f3f7e9!important}
+.am-hourly-note,.am-hourly-empty{font-size:10px!important;line-height:1.45;margin:5px 0 0!important;color:#c4d7e0!important}
+
+/* Tarjeta METEO anclada al contenedor del mapa (no al pin Leaflet).
+ * Su encabezado siempre entra y los detalles hacen scroll dentro de ella. */
+.am-forecast-dock{
+ position:absolute;top:10px;right:10px;z-index:650;
+ display:flex;flex-direction:column;
+ width:min(350px,calc(100% - 20px));
+ max-height:calc(100% - 20px);min-height:0;
+ color:#163147;background:#eff6fa;border:1px solid #9ebac9;border-radius:12px;
+ box-shadow:0 12px 34px #0009;pointer-events:auto;overflow:hidden;
+ font:12px/1.5 system-ui,-apple-system,Segoe UI,Arial,sans-serif;
+}
+.am-forecast-dock[hidden]{display:none!important}
+.am-forecast-dock-heading{
+ flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;
+ border-bottom:1px solid #bacdda;background:#143b55;color:#fff;padding:10px 12px;
+}
+.am-forecast-dock-heading strong{font-size:13px;line-height:1.25}
+.am-forecast-dock-close{
+ flex:none;width:29px;height:29px;border:1px solid #b5d4e3;border-radius:7px;
+ background:#285775;color:#fff;font-size:20px;line-height:1;
+}
+.am-forecast-dock-content{
+ overflow-y:auto;overscroll-behavior:contain;min-height:0;
+ padding:10px 12px;background:#f2f7fa;color:#163147;
+ scrollbar-color:#749fb7 #f2f7fa;
+}
+.am-forecast-dock-content details{margin-top:9px}
+.am-forecast-dock-content summary{cursor:pointer}
+.am-forecast-dock-content a{color:#155580}
+.am-observation-metar{
+ margin-top:11px;border:1px solid #496780;border-radius:9px;
+ background:#10273d;padding:10px;white-space:pre-wrap;overflow-wrap:anywhere;
+ font:11px/1.55 ui-monospace,Consolas,monospace;color:#e7f3ff;
+}
+.am-observation-metar[hidden]{display:none!important}
+@media(max-width:650px){
+ .am-forecast-dock{top:8px;right:8px;max-height:calc(100% - 16px);width:min(320px,calc(100% - 16px))}
+}
+
+/* Portada compacta aprobada: reducir a ~la mitad la franja de presentación
+   sin cambiar tipografía, ilustración, paleta ni contenido. */
+.am-hero{
+ height:100px;min-height:0;padding:7px clamp(20px,3vw,58px);
+ background-position:center 53%;
+}
+.am-hero-content{
+ max-width:950px;padding-left:15px;border-left-width:4px;
+}
+.am-hero h1{font-size:clamp(27px,2.5vw,36px);line-height:1.05;margin:0 0 2px}
+.am-hero-subtitle{font-size:clamp(15px,1.35vw,19px);line-height:1.15;margin:0 0 3px}
+.am-hero-text{font-size:clamp(10px,.9vw,12px);line-height:1.25;max-width:900px}
+@media(max-width:950px){
+ .am-hero{height:auto;min-height:94px;padding:9px 18px}
+ .am-hero h1{font-size:30px}
+ .am-hero-subtitle{font-size:16px}
+ .am-hero-text{font-size:10px;line-height:1.25}
+}
+@media(max-width:650px){
+ .am-hero{height:auto;min-height:0;padding:10px 13px;background-position:58% center}
+ .am-hero-content{padding-left:11px;border-left-width:3px}
+ .am-hero h1{font-size:27px}
+ .am-hero-subtitle{font-size:15px}
+ .am-hero-text{font-size:10px;line-height:1.28;max-width:100%}
+}
+
+/* SMN: portal institucional accesible como alternativa a ws2.smn.gob.ar. */
+.am-official-links .am-official-main{
+ background:#244c57;border-color:#9bd0bf;color:#effff8;
+ font-size:11px;font-weight:800;min-height:42px;display:flex;align-items:center;
+}
+.am-official-links .am-official-main:hover{background:#356676;border-color:#d0fff1}
+.am-smn-alternative{margin-top:10px;text-align:center;line-height:1.3}
+
+/* Aeropuertos provinciales: en vista país hay un marcador discreto por jurisdicción.
+   La etiqueta OACI se muestra solo al acercar el mapa. */
+.am-airport-marker.am-airport-compact{width:26px!important;height:26px!important;justify-content:center;gap:0}
+.am-airport-compact .am-airport-icon{width:24px;height:24px;flex:0 0 24px;font-size:12px;border-width:1px}
+#am-airports-status{color:#bfe7da;font-size:10px;font-weight:700;line-height:1.4;margin:10px 0 0}
+#aerometeo-province{border-color:#7299b0}
+
+/* METAR/TAF automáticos: estados compactos visibles aun con Pronóstico activo. */
+.am-auto-flight-strip{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:-3px 0 12px;}
+.am-auto-flight-strip>span{display:flex;align-items:center;gap:5px;min-width:0;padding:6px 7px;
+ border:1px solid #527285;background:#183449;border-radius:8px;font-size:10px;line-height:1.3}
+.am-auto-flight-strip strong{color:#f7d8a4;font-size:10px}
+.am-auto-flight-strip span{color:#e1eff4;overflow-wrap:anywhere}
+.am-automatic-products{display:grid;gap:12px;margin:9px 0 15px}
+.am-automatic-product{min-width:0;padding:11px;border:1px solid #4f768a;border-radius:10px;background:#152c41}
+.am-automatic-product h3{font-size:13px;line-height:1.3;color:#ffe0ab;margin:0 0 8px}
+.am-automatic-product p{font-size:11px;line-height:1.45;margin:4px 0;color:#dceaf2;overflow-wrap:anywhere}
+.am-automatic-product small{font-size:10px;line-height:1.4;display:block;color:#adcad9;margin:5px 0}
+.am-automatic-product pre{white-space:pre-wrap;overflow-wrap:anywhere;font:11px/1.5 ui-monospace,Consolas,monospace;
+ max-height:260px;overflow-y:auto;padding:10px;border:1px solid #4b7789;background:#091d2c;
+ color:#f0f5f8;border-radius:8px;margin:9px 0 0}
+.am-automatic-product pre[hidden]{display:none!important}
+
+/* Capa radar histórica independiente: controles fuera del mapa y de las tarjetas.
+   La integración RainViewer permanece en preview hasta revisar su licencia comercial. */
+.am-radar-toggle{
+ flex:0 0 auto;min-height:35px;padding:7px 11px;
+ border:1px solid #5c8798;border-radius:8px;background:#173449;color:#d8f2fd;
+ font-size:11px;font-weight:800;white-space:nowrap;cursor:pointer;
+}
+.am-radar-toggle:hover,.am-radar-toggle:focus-visible,.am-radar-toggle.is-selected{
+ border-color:#e6b568;background:#574525;color:#fff3d1
+}
+.am-radar-panel{
+ display:grid;gap:7px;flex:0 0 auto;padding:10px;
+ background:#0f2c3e;color:#d8eff5;border-bottom:1px solid #608496;
+ font-size:11px;
+}
+.am-radar-panel[hidden]{display:none!important}
+.am-radar-line{display:flex;align-items:center;flex-wrap:wrap;gap:7px;min-width:0}
+.am-radar-line strong{font-size:11px;color:#fff0ca}
+.am-radar-line>span{flex:1 1 140px;min-width:0;overflow-wrap:anywhere}
+.am-radar-line button{
+ min-height:31px;padding:5px 10px;border:1px solid #7699b5;
+ border-radius:7px;background:#204860;color:#f3faff;font-size:10px;font-weight:750;
+}
+.am-radar-line button:hover:not(:disabled){background:#306681}
+.am-radar-line button:disabled{opacity:.45;cursor:not-allowed}
+.am-radar-player input[type=range]{flex:1 1 130px;min-width:80px;accent-color:#e8b058}
+.am-radar-player>strong{font-variant-numeric:tabular-nums;font-size:10px;white-space:nowrap}
+.am-radar-disclaimer{font-size:10px!important;line-height:1.4!important;margin:1px 0 0!important;color:#bed9e4!important}
+.am-radar-disclaimer a{color:#f3cb82;text-decoration:underline}
+@media(max-width:650px){
+ .am-radar-toggle{flex:1 1 100%;min-height:35px}
+ .am-radar-panel{padding:9px 8px}
+ .am-radar-player>strong{flex:1 1 100%}
+ .am-radar-line button{padding:5px 8px}
+}
+
+/* Selector de mapa base siempre visible: reemplaza la pequeña caja Leaflet inferior derecha. */
+.am-map-base-selector{
+ display:flex;flex:0 0 auto;justify-content:flex-start;align-items:center;
+ gap:8px;flex-wrap:wrap;padding:7px 11px;border-bottom:1px solid #4c7086;
+ background:#133246;color:#e5f5ff;
+}
+.am-map-base-selector>strong{
+ font-size:12px;font-weight:800;color:#f9e3b8;letter-spacing:.015em;
+ margin-right:4px;
+}
+.am-map-base-selector button{
+ min-height:38px;padding:8px 15px;border:1px solid #7599ae;border-radius:9px;
+ background:#234a64;color:#f1f8fe;font-size:12px;font-weight:800;
+ cursor:pointer;white-space:nowrap;
+}
+.am-map-base-selector button:hover,
+.am-map-base-selector button:focus-visible{
+ border-color:#ffe2a1;background:#345d76;outline:2px solid #e8bf70;outline-offset:1px;
+}
+.am-map-base-selector button.is-selected{
+ color:#172434;background:#efb651;border-color:#ffd68a;box-shadow:inset 0 1px 0 #fff9;
+}
+@media(max-width:650px){
+ .am-map-base-selector{gap:6px;padding:7px 8px}
+ .am-map-base-selector>strong{flex:1 1 100%;font-size:11px}
+ .am-map-base-selector button{flex:1 1 auto;padding:8px 7px;min-height:37px;font-size:11px}
+}
+
+/* Radar dentro de Fuentes y productos: la altura del mapa Leaflet permanece fija.
+   Los controles se despliegan en la columna izquierda (desplazable). */
+.am-sidebar .am-radar-card{margin-bottom:10px}
+.am-sidebar .am-radar-card.is-selected{border-color:var(--am-gold)}
+.am-sidebar .am-radar-panel{
+ display:grid;gap:9px;width:100%;max-height:min(58dvh,480px);
+ overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;
+ margin:-3px 0 12px;padding:11px 9px;border:1px solid #61849d;border-radius:10px;
+ background:#123044;
+}
+.am-sidebar .am-radar-panel[hidden]{display:none!important}
+.am-sidebar .am-radar-line{display:flex;flex-wrap:wrap;min-width:0;gap:7px}
+.am-sidebar .am-radar-line>strong{flex:1 1 100%}
+.am-sidebar .am-radar-line>span{flex:1 1 100%}
+.am-sidebar .am-radar-player{display:grid;grid-template-columns:1fr 1.6fr 1fr;gap:7px}
+.am-sidebar .am-radar-player button{min-width:0;min-height:35px;padding:6px 4px}
+.am-sidebar .am-radar-player input[type=range]{grid-column:1/-1;min-width:0;width:100%}
+.am-sidebar .am-radar-player>strong{grid-column:1/-1;white-space:normal}
+.am-sidebar .am-radar-disclaimer{overflow-wrap:anywhere}
+@media(max-width:650px){
+ .am-sidebar .am-radar-panel{max-height:none;overflow-y:visible}
+ .am-sidebar .am-radar-player button{min-height:40px}
+}
+
+/* El panel del mapa queda sin bandas redundantes. La cartografía se expande
+   usando todo el espacio flexible liberado, también en dispositivos móviles. */
+.am-map-canvas{flex:1 1 auto;min-height:0}
+.am-map-toolbar{flex-wrap:nowrap}
+.am-map-toolbar .am-map-expand{margin-left:auto}
+/* El selector de la evolución horaria vive solo junto al gráfico del pronóstico. */
+.am-hourly-metric-picker{
+ display:flex;align-items:center;justify-content:space-between;
+ flex-wrap:wrap;gap:7px;margin:12px 0 5px;
+}
+.am-hourly-metric-picker label{font-size:11px;font-weight:800;color:#dfedf7}
+.am-hourly-metric-picker select{width:auto;min-width:125px;max-width:100%;font-size:11px}
+@media(max-width:650px){
+ .am-map-toolbar{align-items:center}
+ .am-map-toolbar h2{white-space:normal}
+ .am-hourly-metric-picker select{flex:1 1 130px}
+}
+
+/* Leyenda mínima de ecos radar: escala Universal Blue (RainViewer color=2).
+   Representa reflectividad relativa, no mm de lluvia ni alerta de tormentas. */
+.am-sidebar .am-radar-legend{
+ display:flex;align-items:center;gap:6px;min-width:0;
+ color:#c6dae7;font-size:9px;line-height:1.2;
+}
+.am-sidebar .am-radar-legend span:first-child,
+.am-sidebar .am-radar-legend span:last-child{flex:0 0 auto}
+.am-sidebar .am-radar-legend-scale{
+ display:block;flex:1 1 auto;min-width:36px;height:7px;border-radius:8px;
+ background:linear-gradient(90deg,
+  #88ddee 0%,#00a3e0 19%,#005588 38%,
+  #ffee00 58%,#ffaa00 76%,#ff4400 89%,#e62800 100%);
+ border:1px solid #ffffff29;
+}
+
+/* Interpretaciones en lenguaje sencillo bajo el METAR y el TAF originales.
+   Nunca ocultan el reporte crudo ni se presentan como evaluación aeronáutica. */
+.am-report-explanation{
+ margin-top:10px;padding:10px 10px 9px;
+ border:1px solid #597d93;border-radius:9px;
+ background:#0b293b;color:#e4f2fa;
+}
+.am-report-explanation[hidden]{display:none!important}
+.am-report-explanation>strong{
+ display:block;font-size:12px;color:#ffda9a;margin-bottom:7px;
+}
+.am-report-explanation ul{margin:0;padding-left:18px}
+.am-report-explanation li{font-size:11px;line-height:1.52;padding:1px 0 5px;overflow-wrap:anywhere}
+.am-report-explanation small{
+ display:block;font-size:10px;line-height:1.45;color:#b6c9d5;
+ margin-top:7px;border-top:1px solid #3a5b70;padding-top:7px;
+}
+
+/* Tarjeta flotante compacta SOLO de AeroMeteo. No altera el popup de AeroLocator.
+   La información secundaria es plegable: no tapa el mapa mientras se navega. */
+.am-forecast-dock{
+ width:min(278px,calc(100% - 18px));top:8px;right:8px;
+ border-radius:11px;border-color:#668fa5;
+ box-shadow:0 9px 22px #06182790;
+ font:11px/1.4 system-ui,-apple-system,Segoe UI,Arial,sans-serif;
+}
+.am-forecast-dock-heading{padding:6px 10px;gap:7px}
+.am-forecast-dock-heading strong{font-size:11px;letter-spacing:.01em}
+.am-forecast-dock-close{width:25px;height:25px;font-size:18px}
+.am-forecast-dock-content{padding:9px 10px 10px}
+.am-compact-location{font-size:14px;line-height:1.2;color:#123c54;margin:0 0 3px;font-weight:800}
+.am-compact-source{font-size:10px;line-height:1.3;color:#856323;margin:0 0 3px}
+.am-compact-time{font-size:9px;line-height:1.35;color:#5f7685;margin:0 0 8px}
+.am-compact-metrics{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.am-compact-metric{min-width:0;background:#e2edf3;border:1px solid #c5d8e4;border-radius:7px;padding:7px}
+.am-compact-metric span{display:block;font-size:9px;color:#536d7c;line-height:1.2;margin-bottom:3px}
+.am-compact-metric strong{display:block;font-size:12px;line-height:1.25;color:#123247;overflow-wrap:anywhere}
+.am-compact-extra{border-top:1px solid #cbdce6;margin-top:9px;padding-top:8px}
+.am-compact-extra summary{color:#215b78;font-size:10px;font-weight:750;cursor:pointer;list-style-position:inside}
+.am-compact-extra summary:focus-visible{outline:2px solid #1671a0;outline-offset:2px}
+.am-compact-other-metrics{margin-top:6px}
+.am-compact-other-metrics>div{gap:5px!important;padding:4px 0!important;font-size:10px!important}
+.am-compact-forecast-title{display:block;margin:9px 0 4px;font-size:10px;color:#173e59}
+.am-compact-hour{border-top:1px solid #d3e2eb;font-size:10px;line-height:1.4;margin:0;padding:5px 0}
+.am-compact-footnote{font-size:9px;line-height:1.35;color:#627783;margin:9px 0 0}
+.am-compact-footnote a{color:#185a87}
+@media(max-width:650px){
+ .am-forecast-dock{width:min(264px,calc(100% - 16px));max-height:calc(100% - 16px)}
+ .am-forecast-dock-content{padding:7px 8px}
+}
+
+/* Fenómenos: menú plegable, sólo en barra lateral, no reduce altura de mapa. */
+.am-sidebar .am-phenomena-panel{
+ display:grid;gap:9px;min-width:0;
+ margin:-3px 0 12px;padding:11px 10px;border:1px solid #668a9e;
+ border-radius:10px;background:#132e41;
+ color:#e1eff6;
+}
+.am-sidebar .am-phenomena-panel[hidden]{display:none!important}
+.am-phenomena-intro,.am-phenomena-disclaimer{
+ margin:0;font-size:10px;line-height:1.5;color:#c0d5e4;
+}
+.am-phenomena-options{display:grid;gap:5px}
+.am-phenomena-options label{
+ display:flex;align-items:center;flex-wrap:wrap;column-gap:7px;row-gap:0;
+ min-height:34px;border:1px solid #44657c;background:#17394d;
+ border-radius:7px;padding:5px 8px;font-size:11px;font-weight:750;cursor:pointer;
+}
+.am-phenomena-options label:has(input:checked){border-color:#d6ac65;background:#314459}
+.am-phenomena-options input{accent-color:#efb95b;min-height:16px;min-width:16px}
+.am-phenomena-options small{
+ color:#aec8d9;font-size:9px;flex:1 1 100%;margin-left:23px;font-weight:400;
+}
+.am-phenomena-buttons{display:flex;gap:6px;flex-wrap:wrap}
+.am-phenomena-buttons button{
+ flex:1 1 90px;min-height:34px;background:#274b61;
+ border:1px solid #83a4b5;border-radius:7px;color:#f1f8fc;
+ font-size:10px;font-weight:760;padding:7px 6px;cursor:pointer;
+}
+.am-phenomena-buttons button:hover:not(:disabled){background:#3e657c}
+.am-phenomena-buttons button:disabled{opacity:.5;cursor:wait}
+.am-phenomena-buttons button[aria-pressed=true]{border-color:#efc17e;background:#654d33}
+.am-phenomena-status{margin:0;font-size:10px;line-height:1.4;color:#d1e3ee}
+.am-phenomena-status small{display:block;margin-top:4px;font-size:9px;color:#a8bfce}
+.am-phenomena-point-result{
+ padding:9px;border:1px solid #69acaa;border-radius:7px;
+ background:#113e49;color:#f0f8f9;font-size:10px;line-height:1.48;
+}
+.am-phenomena-point-result[hidden]{display:none!important}
+.am-phenomena-point-result strong{display:block;color:#a5eddf;font-size:11px}
+.am-phenomena-point-result p{margin:4px 0}
+.am-phenomena-point-result small{display:block;color:#b4d5d9;margin-top:7px}
+.am-phenomena-disclaimer a{color:#fedba5}
+.am-phenomena-picking{cursor:crosshair!important}
+@media(max-width:650px){
+ .am-sidebar .am-phenomena-panel{padding:9px 8px}
+ .am-phenomena-buttons button{min-height:39px}
+}

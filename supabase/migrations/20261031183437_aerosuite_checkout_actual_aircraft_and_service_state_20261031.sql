@@ -1,17 +1,70 @@
--- Matrícula real al cierre y datos de fuera de servicio. Reproducible en el orden de migraciones.
-alter table public.aerosuite_flight_checkouts add column if not exists aircraft_registration text not null default '';
+
+-- 2026-10-31 · Registro de matrícula efectiva al cerrar el vuelo y situación de flota.
+alter table public.aerosuite_flight_checkouts
+ add column if not exists aircraft_registration text not null default '';
 alter table public.aerosuite_aircraft_registry
  add column if not exists status_changed_on date,
  add column if not exists out_of_service_since date,
  add column if not exists out_of_service_reason text not null default '',
  add column if not exists service_location text not null default '';
-create index if not exists aerosuite_checkouts_aircraft_by_institution on public.aerosuite_flight_checkouts(institution_id,aircraft_registration);
-CREATE OR REPLACE FUNCTION aerosuite_internal.aerosuite_aircraft_service_update(p_institution_id uuid, p_aircraft_id uuid, p_availability text, p_from_date date, p_reason text, p_location text)
- RETURNS jsonb
- LANGUAGE plpgsql
- SECURITY DEFINER
- SET search_path TO ''
-AS $function$
+create index if not exists aerosuite_checkouts_aircraft_by_institution
+ on public.aerosuite_flight_checkouts(institution_id,aircraft_registration);
+
+create or replace function aerosuite_internal.aerosuite_checkout_flight_with_aircraft(
+ p_institution_id uuid,p_booking_id uuid,p_book_minutes integer,p_mode text,p_aircraft_registration text,
+ p_pack_id uuid default null,p_amount numeric default null,p_currency text default 'ARS',
+ p_bank_ref text default '',p_fiscal_ref text default '',p_note text default '',
+ p_request_id uuid default null,p_book_confirmed boolean default false)
+returns jsonb language plpgsql security definer set search_path='' as $fn$
+declare v_reg text:=upper(btrim(coalesce(p_aircraft_registration,'')));
+ v_existing text;v_log text;v_out jsonb;
+begin
+ if length(v_reg) not between 3 and 18 or v_reg !~ '^[A-Z0-9][A-Z0-9 -]{2,17}$' then
+  raise exception 'Indicá una matrícula válida (ej.: LV-ABC) para el vuelo realizado.' using errcode='22023';
+ end if;
+ select c.aircraft_registration into v_existing
+ from public.aerosuite_flight_checkouts c
+ where c.institution_id=p_institution_id and c.booking_id=p_booking_id;
+ if found and v_existing<>'' and v_existing<>v_reg then
+  raise exception 'Este vuelo ya fue liquidado con otra matrícula. Revisá con Dirección.' using errcode='22023';
+ end if;
+ select upper(btrim(coalesce(r.logbook_entry->>'aircraft_registration',''))) into v_log
+ from public.aerosuite_flight_reports r
+ where r.institution_id=p_institution_id and r.booking_id=p_booking_id and r.status='approved';
+ if coalesce(v_log,'')<>'' and v_log<>v_reg then
+  raise exception 'La matrícula no coincide con el Libro de Vuelo aprobado.' using errcode='22023';
+ end if;
+ -- Cierre financiero existente: autorización, serialización, saldo de pack, antidualidad.
+ v_out:=aerosuite_internal.aerosuite_checkout_flight_at_desk(
+  p_institution_id,p_booking_id,p_book_minutes,p_mode,p_pack_id,p_amount,p_currency,
+  p_bank_ref,p_fiscal_ref,p_note,p_request_id,p_book_confirmed
+ );
+ update public.aerosuite_flight_checkouts c set aircraft_registration=v_reg
+ where c.institution_id=p_institution_id and c.booking_id=p_booking_id
+ and (c.aircraft_registration='' or c.aircraft_registration=v_reg);
+ if not found then raise exception 'No fue posible asociar la aeronave al cierre de vuelo.';end if;
+ update public.aerosuite_flight_bookings b
+ set aircraft=v_reg,updated_by=auth.uid(),updated_at=now()
+ where b.id=p_booking_id and b.institution_id=p_institution_id and b.status<>'cancelled'
+ and coalesce(b.aircraft,'')<>v_reg;
+ return v_out||jsonb_build_object('aircraft_registration',v_reg);
+end $fn$;
+
+create or replace function public.aerosuite_checkout_flight_with_aircraft(
+ p_institution_id uuid,p_booking_id uuid,p_book_minutes integer,p_mode text,p_aircraft_registration text,
+ p_pack_id uuid default null,p_amount numeric default null,p_currency text default 'ARS',
+ p_bank_ref text default '',p_fiscal_ref text default '',p_note text default '',
+ p_request_id uuid default null,p_book_confirmed boolean default false)
+returns jsonb language sql set search_path='' as $fn$
+ select aerosuite_internal.aerosuite_checkout_flight_with_aircraft(
+  p_institution_id,p_booking_id,p_book_minutes,p_mode,p_aircraft_registration,
+  p_pack_id,p_amount,p_currency,p_bank_ref,p_fiscal_ref,p_note,p_request_id,p_book_confirmed)
+$fn$;
+
+create or replace function aerosuite_internal.aerosuite_aircraft_service_update(
+ p_institution_id uuid,p_aircraft_id uuid,p_availability text,p_from_date date,
+ p_reason text,p_location text)
+returns jsonb language plpgsql security definer set search_path='' as $fn$
 declare v_actor uuid:=auth.uid();v_mode text;
  v_old public.aerosuite_aircraft_registry%rowtype;
 begin
@@ -46,71 +99,25 @@ begin
   select p_institution_id,p_aircraft_id,v_actor,to_jsonb(v_old),to_jsonb(a)
   from public.aerosuite_aircraft_registry a where a.id=p_aircraft_id;
  return jsonb_build_object('ok',true,'aircraft_id',p_aircraft_id,'availability',p_availability);
-end $function$
-;
+end $fn$;
 
-CREATE OR REPLACE FUNCTION public.aerosuite_aircraft_service_update(p_institution_id uuid, p_aircraft_id uuid, p_availability text, p_from_date date, p_reason text, p_location text)
- RETURNS jsonb
- LANGUAGE sql
- SET search_path TO ''
-AS $function$
+create or replace function public.aerosuite_aircraft_service_update(
+ p_institution_id uuid,p_aircraft_id uuid,p_availability text,p_from_date date,
+ p_reason text,p_location text)
+returns jsonb language sql set search_path='' as $fn$
  select aerosuite_internal.aerosuite_aircraft_service_update(
   p_institution_id,p_aircraft_id,p_availability,p_from_date,p_reason,p_location)
-$function$
-;
+$fn$;
 
-CREATE OR REPLACE FUNCTION aerosuite_internal.aerosuite_checkout_flight_with_aircraft(p_institution_id uuid, p_booking_id uuid, p_book_minutes integer, p_mode text, p_aircraft_registration text, p_pack_id uuid DEFAULT NULL::uuid, p_amount numeric DEFAULT NULL::numeric, p_currency text DEFAULT 'ARS'::text, p_bank_ref text DEFAULT ''::text, p_fiscal_ref text DEFAULT ''::text, p_note text DEFAULT ''::text, p_request_id uuid DEFAULT NULL::uuid, p_book_confirmed boolean DEFAULT false)
- RETURNS jsonb
- LANGUAGE plpgsql
- SECURITY DEFINER
- SET search_path TO ''
-AS $function$
-declare v_reg text:=upper(btrim(coalesce(p_aircraft_registration,'')));
- v_existing text;v_log text;v_out jsonb;
-begin
- if length(v_reg) not between 3 and 18 or v_reg !~ '^[A-Z0-9][A-Z0-9 -]{2,17}$' then
-  raise exception 'Indicá una matrícula válida (ej.: LV-ABC) para el vuelo realizado.' using errcode='22023';
- end if;
- select c.aircraft_registration into v_existing
- from public.aerosuite_flight_checkouts c
- where c.institution_id=p_institution_id and c.booking_id=p_booking_id;
- if found and v_existing<>'' and v_existing<>v_reg then
-  raise exception 'Este vuelo ya fue liquidado con otra matrícula. Revisá con Dirección.' using errcode='22023';
- end if;
- select upper(btrim(coalesce(r.logbook_entry->>'aircraft_registration',''))) into v_log
- from public.aerosuite_flight_reports r
- where r.institution_id=p_institution_id and r.booking_id=p_booking_id and r.status='approved';
- if coalesce(v_log,'')<>'' and v_log<>v_reg then
-  raise exception 'La matrícula no coincide con el Libro de Vuelo aprobado.' using errcode='22023';
- end if;
- -- Cierre financiero existente: autorización, serialización, saldo de pack, antidualidad.
- v_out:=aerosuite_internal.aerosuite_checkout_flight_at_desk(
-  p_institution_id,p_booking_id,p_book_minutes,p_mode,p_pack_id,p_amount,p_currency,
-  p_bank_ref,p_fiscal_ref,p_note,p_request_id,p_book_confirmed
- );
- update public.aerosuite_flight_checkouts c set aircraft_registration=v_reg
- where c.institution_id=p_institution_id and c.booking_id=p_booking_id
- and (c.aircraft_registration='' or c.aircraft_registration=v_reg);
- if not found then raise exception 'No fue posible asociar la aeronave al cierre de vuelo.';end if;
- update public.aerosuite_flight_bookings b
- set aircraft=v_reg,updated_by=auth.uid(),updated_at=now()
- where b.id=p_booking_id and b.institution_id=p_institution_id and b.status<>'cancelled'
- and coalesce(b.aircraft,'')<>v_reg;
- return v_out||jsonb_build_object('aircraft_registration',v_reg);
-end $function$
-;
-
-CREATE OR REPLACE FUNCTION public.aerosuite_checkout_flight_with_aircraft(p_institution_id uuid, p_booking_id uuid, p_book_minutes integer, p_mode text, p_aircraft_registration text, p_pack_id uuid DEFAULT NULL::uuid, p_amount numeric DEFAULT NULL::numeric, p_currency text DEFAULT 'ARS'::text, p_bank_ref text DEFAULT ''::text, p_fiscal_ref text DEFAULT ''::text, p_note text DEFAULT ''::text, p_request_id uuid DEFAULT NULL::uuid, p_book_confirmed boolean DEFAULT false)
- RETURNS jsonb
- LANGUAGE sql
- SET search_path TO ''
-AS $function$
- select aerosuite_internal.aerosuite_checkout_flight_with_aircraft(
-  p_institution_id,p_booking_id,p_book_minutes,p_mode,p_aircraft_registration,
-  p_pack_id,p_amount,p_currency,p_bank_ref,p_fiscal_ref,p_note,p_request_id,p_book_confirmed)
-$function$
-;
-revoke all on function public.aerosuite_aircraft_service_update(uuid,uuid,text,date,text,text),public.aerosuite_checkout_flight_with_aircraft(uuid,uuid,integer,text,text,uuid,numeric,text,text,text,text,uuid,boolean) from public,anon;
-revoke all on function aerosuite_internal.aerosuite_aircraft_service_update(uuid,uuid,text,date,text,text),aerosuite_internal.aerosuite_checkout_flight_with_aircraft(uuid,uuid,integer,text,text,uuid,numeric,text,text,text,text,uuid,boolean) from public,anon;
-grant execute on function public.aerosuite_aircraft_service_update(uuid,uuid,text,date,text,text),public.aerosuite_checkout_flight_with_aircraft(uuid,uuid,integer,text,text,uuid,numeric,text,text,text,text,uuid,boolean) to authenticated;
-grant execute on function aerosuite_internal.aerosuite_aircraft_service_update(uuid,uuid,text,date,text,text),aerosuite_internal.aerosuite_checkout_flight_with_aircraft(uuid,uuid,integer,text,text,uuid,numeric,text,text,text,text,uuid,boolean) to authenticated;
+revoke all on function
+ aerosuite_internal.aerosuite_checkout_flight_with_aircraft(uuid,uuid,integer,text,text,uuid,numeric,text,text,text,text,uuid,boolean),
+ aerosuite_internal.aerosuite_aircraft_service_update(uuid,uuid,text,date,text,text),
+ public.aerosuite_checkout_flight_with_aircraft(uuid,uuid,integer,text,text,uuid,numeric,text,text,text,text,uuid,boolean),
+ public.aerosuite_aircraft_service_update(uuid,uuid,text,date,text,text)
+ from public,anon;
+grant execute on function
+ aerosuite_internal.aerosuite_checkout_flight_with_aircraft(uuid,uuid,integer,text,text,uuid,numeric,text,text,text,text,uuid,boolean),
+ aerosuite_internal.aerosuite_aircraft_service_update(uuid,uuid,text,date,text,text),
+ public.aerosuite_checkout_flight_with_aircraft(uuid,uuid,integer,text,text,uuid,numeric,text,text,text,text,uuid,boolean),
+ public.aerosuite_aircraft_service_update(uuid,uuid,text,date,text,text)
+ to authenticated;

@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>AeroSuite · RAV institucional</title>
+<style>
+:root{font:15px/1.5 Inter,system-ui,Arial,sans-serif;color:#edf6fc;color-scheme:dark}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(125deg,#0d1b28,#173346);min-height:100vh}
+header{padding:18px max(20px,calc((100vw - 1190px)/2));background:#142b3d;border-bottom:1px solid #56778e;display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap}
+.brand{color:#fff;font-size:22px;font-weight:850;text-decoration:none}.brand span{color:#e8c18d}.brand small{display:block;font-size:10px;letter-spacing:.15em;color:#afccdd}
+a{color:#c5e6f9}button{cursor:pointer;font:inherit;color:#eaf6ff;background:#29485d;border:1px solid #87a6bc;border-radius:9px;padding:10px 14px}
+button:disabled{opacity:.45;cursor:not-allowed}button:hover:enabled{background:#35647d}input,select,textarea{font:inherit;color:#fff;background:#152a3a;border:1px solid #7594a9;border-radius:9px;padding:10px;width:100%}input[type=checkbox]{width:auto;accent-color:#edd099}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,a:focus-visible{outline:3px solid #f0c885;outline-offset:2px}
+main{max-width:1190px;padding:27px 19px 70px;margin:auto}h1{font-size:clamp(24px,4vw,35px);margin:4px 0 5px}h2{font-size:21px;margin:0 0 13px}h3{font-size:16px;margin:0 0 9px}p{color:#c8d9e5}
+.eyebrow{text-transform:uppercase;letter-spacing:.13em;font-size:11px;color:#f0ca92;font-weight:800}
+.panel{padding:21px;background:#1b3447;border:1px solid #587c94;border-radius:15px;margin:17px 0}
+.alert{border:1px solid #b99b6b;border-radius:11px;background:#40382d;color:#f8e3bc;padding:13px 17px;line-height:1.55}
+.status{padding:12px 15px;border:1px solid #53758b;background:#213e51;border-radius:9px;margin:15px 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:13px}
+.fields{display:grid;grid-template-columns:minmax(220px,2fr) repeat(2,minmax(170px,1fr));gap:12px;margin:14px 0}
+label{font-size:13px;font-weight:650}label>input,label>select,label>textarea{display:block;margin-top:6px}
+.actions{display:flex;flex-wrap:wrap;gap:9px;margin:12px 0 4px}
+.muted{color:#a9c3d2;font-size:13px}.count{font-weight:750;color:#e9c48d}
+.flight{display:flex;align-items:center;gap:12px;border-top:1px solid #42647b;padding:10px 5px}.flight label{display:flex;align-items:center;gap:10px;width:100%;cursor:pointer}
+.item{border:1px solid #53758f;border-radius:12px;background:#203e51;padding:16px;margin:12px 0}
+.head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.state{font-size:12px;font-weight:800;color:#f2d7aa}
+table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:10px;border-bottom:1px solid #50758c;text-align:left;vertical-align:top}
+[data-hide]{display:none!important}
+@media(max-width:700px){.fields{grid-template-columns:1fr}.panel{padding:15px}}
+@media print{body{background:#fff;color:#111}header,.no-print,#formCard,#listCard,#message{display:none!important}main{max-width:none;padding:0}.print-only{display:block!important}#printCard{border:0;background:white;color:#111}#printCard p{color:#222}#printCard th,#printCard td{border-bottom:1px solid #999}}
+</style>
+<script src="../../assets/supabase-2.117.2.min.js"></script>
+<script src="../../assets/community-config.js"></script>
+</head>
+<body>
+<header><a class="brand" href="index.html">Aero<span>Suite</span><small>BY GENTE DE VUELO</small></a><nav><a id="backLink" href="portal-escuela.html">Volver a la escuela</a></nav></header>
+<main>
+<div class="eyebrow">Academia institucional · Documentación de instrucción</div>
+<h1>RAV institucional</h1>
+<p>Preparación, revisión documental y trazabilidad de vuelos de instrucción aprobados.</p>
+<div class="alert"><strong>NO CERTIFICADO.</strong> Este módulo conserva borradores y revisiones internas. No firma, certifica, presenta ni registra documentación ante ANAC; el profesional y la institución habilitados deben verificar los requisitos oficiales.</div>
+<div id="message" class="status" role="status" aria-live="polite">Verificando tu cuenta e institución…</div>
+<div id="content" hidden>
+<section id="formCard" class="panel">
+<div class="head"><div><h2 id="formTitle">Nuevo borrador RAV</h2><p class="muted">Solo se admiten vuelos completados con informe y Libro de Vuelo aprobados. Los minutos se toman del registro original; nunca se vuelven a sumar al Libro.</p></div><button type="button" id="clearForm">Nuevo borrador</button></div>
+<form id="ravForm">
+<div class="fields">
+<label>Alumno<select id="student" required></select></label>
+<label>Desde<input id="from" type="date" required></label>
+<label>Hasta<input id="to" type="date" required></label>
+</div>
+<div class="head"><h3>Vuelos disponibles para incluir</h3><span class="count" id="selectionCount">0 seleccionados</span></div>
+<div id="candidateList" class="muted">Cargando informes aprobados…</div>
+<div class="actions"><button id="saveDraft" type="submit">Guardar borrador institucional</button><button id="cancelEdit" type="button" hidden>Cancelar edición</button></div>
+</form>
+</section>
+<section id="listCard" class="panel">
+<div class="head"><h2>Borradores y revisiones</h2><button id="refresh" type="button">Actualizar</button></div>
+<div id="documents">Cargando documentos…</div>
+</section>
+<section id="printCard" class="panel" hidden>
+<h2 id="printHeading">RAV · Revisión interna</h2>
+<p><strong>Documento interno sin firma ni certificación.</strong> No constituye un RAV formal presentado ni validado ante ANAC.</p>
+<div id="printContent"></div>
+</section>
+</div>
+</main>
+<script>
+(async()=>{
+'use strict';
+const $=id=>document.getElementById(id);
+const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','"':'&quot;',"'":'&#39;'}[c]));
+const params=new URLSearchParams(location.search);
+const inst=params.get('institucion'),requestedRole=params.get('rol')||'';
+const labLogin=params.get('prueba')==='1'&&['administrador','secretaria'].includes(requestedRole);
+const back=new URL('portal-escuela.html',location.href);
+for(const k of ['institucion','rol','prueba'])if(params.has(k))back.searchParams.set(k,params.get(k));
+$('backLink').href=back.href;
+let client,school,overview={documents:[],candidates:[],students:[]},edit=null,busy=false;
+const say=(message,error=false)=>{$('message').textContent=message;$('message').style.borderColor=error?'#e7a3a3':'#7296ad'};
+try{
+ if(!inst||!['administrador','secretaria'].includes(requestedRole))throw Error('Ingresá desde el portal institucional con permiso de Dirección o Secretaría.');
+ if(!window.supabase||!window.GDV_CONFIG?.url||!window.GDV_CONFIG?.key)throw Error('No se pudo iniciar la conexión con AeroSuite.');
+ client=supabase.createClient(GDV_CONFIG.url,GDV_CONFIG.key,{auth:{storageKey:labLogin?'aerosuite-laboratorio-'+requestedRole+'-v1-auth':'aerosuite-institucional-v2-auth',persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+ const user=await client.auth.getUser();
+ if(user.error||!user.data?.user)throw Error('No hay sesión activa de la escuela.');
+ const access=await client.rpc('aerosuite_my_institution_access_v2');
+ if(access.error)throw access.error;
+ school=(access.data||[]).find(x=>x.institution_id===inst&&x.can_access&&x.my_role===requestedRole);
+ if(!school)throw Error('La cuenta no tiene acceso a esta institución o rol.');
+ $('content').hidden=false;
+ const readOnly=!school.can_write;
+ if(readOnly){$('formCard').hidden=true;say('Modo lectura: podés consultar los RAV existentes, pero no modificarlos.');}
+ else say('Institución: '+school.institution_name+' · '+(requestedRole==='administrador'?'Dirección':'Secretaría')+'.');
+ const fmtDate=d=>{if(!d)return '—';const s=String(d).slice(0,10);return /^\d{4}-\d{2}-\d{2}$/.test(s)?s.split('-').reverse().join('/'):s};
+ const rpc=async(name,args)=>{const r=await client.rpc(name,args);if(r.error)throw r.error;return r.data};
+ async function load(){
+  overview=await rpc('aerosuite_rav_overview',{p_institution_id:inst});
+  renderForm();renderDocs();
+ }
+ function renderForm(){
+  const students=overview.students||[];
+  const selected=edit?.student_id||$('student').value||students[0]?.id;
+  $('student').innerHTML=students.map(s=>'<option value="'+esc(s.id)+'">'+esc(s.name)+'</option>').join('');
+  if(selected)$('student').value=selected;
+  $('student').disabled=Boolean(edit);
+  const today=new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Argentina/Buenos_Aires',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+  $('to').max=today;
+  const start=$('from').value||edit?.period_from||today.slice(0,7)+'-01';
+  const end=$('to').value||edit?.period_to||today;
+  $('from').value=start;$('to').value=end;
+  $('formTitle').textContent=edit?'Corregir borrador devuelto · revisión '+edit.revision:'Nuevo borrador RAV';
+  $('saveDraft').textContent=edit?'Guardar correcciones':'Guardar borrador institucional';
+  $('cancelEdit').hidden=!edit;
+  const student=$('student').value,from=$('from').value,to=$('to').value;
+  const usedInEdit=(edit?.flights||[]).map(f=>({
+    report_id:f.report_id,student_id:edit.student_id,flight_date:f.flight_date,
+    minutes:f.minutes,registration:f.snapshot?.logbook_entry?.aircraft_registration,
+    landings:f.snapshot?.logbook_entry?.landings_count??f.snapshot?.logbook_entry?.flight_count
+  }));
+  const all=new Map([...(overview.candidates||[]),...usedInEdit].map(x=>[x.report_id,x]));
+  const choices=[...all.values()].filter(x=>x.student_id===student&&x.flight_date>=from&&x.flight_date<=to)
+    .sort((a,b)=>a.flight_date.localeCompare(b.flight_date));
+  const selectedIds=new Set(edit?.flights?.map(f=>f.report_id)||[]);
+  $('candidateList').innerHTML=choices.length?choices.map(x=>
+   '<div class="flight"><label><input type="checkbox" name="report" value="'+esc(x.report_id)+'" '+(selectedIds.has(x.report_id)?'checked':'')+'>'+
+   '<span>'+esc(fmtDate(x.flight_date))+' · '+esc(x.registration||'Matrícula pendiente')+
+   ' · '+esc(x.minutes)+' minutos · '+esc(x.landings||'—')+' aterrizajes</span></label></div>').join('') :
+   '<p>No hay vuelos aprobados elegibles para este alumno y período. Revisá primero los informes de instrucción.</p>';
+  updateCount();
+ }
+ function updateCount(){
+  const checked=$('ravForm').querySelectorAll('input[name=report]:checked');
+  const minutes=[...checked].reduce((sum,c)=>{
+   const candidate=(overview.candidates||[]).find(x=>x.report_id===c.value)||
+    (edit?.flights||[]).find(x=>x.report_id===c.value);
+   return sum+Number(candidate?.minutes||0);
+  },0);
+  $('selectionCount').textContent=checked.length+' vuelo(s) · '+minutes+' minutos';
+ }
+ function renderDocs(){
+  const root=$('documents');const docs=overview.documents||[];
+  if(!docs.length){root.textContent='No hay borradores institucionales. Seleccioná un alumno y sus vuelos aprobados.';return;}
+  root.innerHTML=docs.map(d=>{
+   const actions=[];
+   if(!readOnly&&['draft','returned'].includes(d.status)){
+    actions.push('<button data-action="edit" data-id="'+esc(d.id)+'">Modificar borrador</button>');
+    actions.push('<button data-action="submit" data-id="'+esc(d.id)+'">Enviar a Dirección</button>');
+   }
+   if(!readOnly&&requestedRole==='administrador'&&d.status==='submitted'){
+    actions.push('<button data-action="review" data-id="'+esc(d.id)+'">Revisar internamente</button>');
+    actions.push('<button data-action="return" data-id="'+esc(d.id)+'">Devolver</button>');
+   }
+   actions.push('<button data-action="print" data-id="'+esc(d.id)+'">Ver / imprimir no certificado</button>');
+   const total=(d.flights||[]).reduce((n,f)=>n+Number(f.minutes||0),0);
+   const states={draft:'Borrador',submitted:'Pendiente de Dirección',returned:'Devuelto con observaciones',reviewed:'Revisado internamente · NO CERTIFICADO'};
+   return '<article class="item"><div class="head"><div><h3>'+esc(d.student_name||'Alumno')+' · '+esc(fmtDate(d.period_from))+' al '+esc(fmtDate(d.period_to))+'</h3>'+
+    '<div class="state">'+esc(states[d.status]||d.status)+' · rev. '+esc(d.revision)+'</div></div>'+
+    '<span class="muted">'+esc((d.flights||[]).length)+' vuelos · '+esc(total)+' min</span></div>'+
+    (d.observations?'<p>Observaciones: '+esc(d.observations)+'</p>':'')+
+    '<div class="actions no-print">'+actions.join('')+'</div></article>';
+  }).join('');
+ }
+ async function perform(action,id){
+  const doc=(overview.documents||[]).find(d=>d.id===id);if(!doc)return;
+  if(action==='edit'){
+   edit=doc;$('from').value=doc.period_from;$('to').value=doc.period_to;$('formCard').hidden=false;renderForm();window.scrollTo({top:$('formCard').offsetTop-20,behavior:'smooth'});return;
+  }
+  if(action==='print'){
+   const minutes=(doc.flights||[]).reduce((v,f)=>v+Number(f.minutes||0),0);
+   $('printHeading').textContent='RAV · '+(doc.status==='reviewed'?'Revisión interna': 'Borrador')+' · NO CERTIFICADO';
+   $('printContent').innerHTML='<p>Alumno: '+esc(doc.student_name)+' · Período: '+esc(fmtDate(doc.period_from))+' al '+esc(fmtDate(doc.period_to))+
+    ' · Versión '+esc(doc.revision)+'</p>'+
+    '<table><thead><tr><th>Fecha</th><th>Matrícula</th><th>Horas (minutos)</th><th>Aterrizajes</th></tr></thead><tbody>'+
+    (doc.flights||[]).map(f=>'<tr><td>'+esc(fmtDate(f.flight_date))+'</td>'+
+     '<td>'+esc(f.snapshot?.logbook_entry?.aircraft_registration||'—')+'</td><td>'+esc(f.minutes)+'</td>'+
+     '<td>'+esc(f.snapshot?.logbook_entry?.landings_count??f.snapshot?.logbook_entry?.flight_count??'—')+'</td></tr>').join('')+
+    '</tbody></table><p><strong>Total: '+esc(minutes)+' minutos</strong> · '+esc((minutes/60).toFixed(2))+' horas decimales de referencia.</p>'+
+    '<p>Revisión interna: '+esc(doc.status)+' · Observaciones: '+esc(doc.observations||'sin observaciones')+'</p>'+
+    '<p>Documento informativo institucional. SIN firma, SIN certificación, SIN presentación ANAC.</p>';
+   $('printCard').hidden=false;window.print();return;
+  }
+  let observations='';
+  if(action==='return'){
+   observations=prompt('Motivo de devolución (mínimo 8 caracteres):')??'';
+   if(observations.length<8)return say('Escribí un motivo de al menos 8 caracteres.',true);
+  }
+  if(action==='review'&&!confirm('Registrar REVISIÓN INTERNA SIN CERTIFICACIÓN ni firma. ¿Confirmás?'))return;
+  if(action==='submit'&&!confirm('Enviar este borrador a Dirección para revisión documental interna. ¿Continuar?'))return;
+  await mutate({p_action:action,p_rav_id:id,p_expected_revision:doc.revision,p_observations:observations});
+ }
+ async function mutate(args){
+  if(busy)return;busy=true;
+  document.querySelectorAll('button').forEach(b=>{if(b.id!=='backLink')b.disabled=true});
+  try{
+   const res=await rpc('aerosuite_rav_manage',{p_institution_id:inst,...args});
+   edit=null;await load();
+   say('Operación guardada: '+res.status+' · revisión '+res.revision+' · sin certificación.');
+  }catch(error){say('No se pudo registrar: '+(error.message||'Error de servidor'),true);}
+  finally{busy=false;document.querySelectorAll('button').forEach(b=>b.disabled=false)}
+ }
+ $('ravForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  const reportIds=[...$('ravForm').querySelectorAll('input[name=report]:checked')].map(x=>x.value);
+  if(!reportIds.length)return say('Seleccioná al menos un vuelo aprobado.',true);
+  const args={p_action:edit?'revise':'create',p_student_id:edit?null:$('student').value,
+   p_rav_id:edit?.id||null,p_expected_revision:edit?.revision||null,
+   p_report_ids:reportIds,p_from:$('from').value,p_to:$('to').value};
+  mutate(args);
+ });
+ $('candidateList').addEventListener('change',updateCount);
+ for(const id of ['student','from','to'])$(id).addEventListener('change',renderForm);
+ $('clearForm').addEventListener('click',()=>{edit=null;$('from').value='';$('to').value='';renderForm()});
+ $('cancelEdit').addEventListener('click',()=>{edit=null;renderForm()});
+ $('documents').addEventListener('click',e=>{
+  const b=e.target.closest('button[data-action]');if(!b||busy)return;
+  perform(b.dataset.action,b.dataset.id).catch(err=>say('Error: '+err.message,true));
+ });
+ $('refresh').addEventListener('click',()=>load().then(()=>say('Información actualizada.')).catch(err=>say(err.message,true)));
+ await load();
+}catch(e){say('Acceso no disponible: '+(e.message||'Error de autorización'),true);}
+})();
+</script>
+</body>
+</html>

@@ -1,4 +1,3 @@
--- Additional null-license permission hardening for reads and writes.
 CREATE OR REPLACE FUNCTION aerosuite_internal.aerosuite_institution_maintenance_get(p_institution_id uuid)
  RETURNS jsonb
  LANGUAGE plpgsql
@@ -26,7 +25,6 @@ begin
   v_role in('administrador','secretaria') and v_mode in('trial','grace','active'));
 end $function$
 ;
-
 CREATE OR REPLACE FUNCTION aerosuite_internal.aerosuite_institution_maintenance_save(p_institution_id uuid, p_payload jsonb, p_expected_revision bigint)
  RETURNS jsonb
  LANGUAGE plpgsql
