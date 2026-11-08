@@ -184,7 +184,7 @@ assert.match(superadmin,/id="institutionSearch"/,'Buscar instituciones por nombr
 assert.match(superadmin,/id="institutionKind"/,'Filtro escuela, aeroclub y aeródromo');
 assert.match(superadmin,/id="institutionFilterCount"/,'Se muestra el total filtrado de instituciones');
 assert.match(superadmin,/className='institution-roster'/,'Cada institución tiene su padrón particular');
-assert.match(superadmin,/Ver nombres y correos del personal/,'Los nombres y correos se pueden desplegar');
+assert.match(superadmin,/Ver integrantes y correos por rol/,'Los nombres y correos se pueden desplegar');
 assert.match(superadmin,/aerosuite_superadmin_institution_roster/,'Los datos personales se consultan por RPC protegida');
 assert.match(superadmin,/p_institution_id:orgId/,'No se mezclan instituciones en la consulta de integrantes');
 assert.match(superadmin,/person\.profile_name/,'Se muestra nombre del perfil si existe');
