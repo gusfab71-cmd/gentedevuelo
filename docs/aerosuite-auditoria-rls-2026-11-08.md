@@ -44,6 +44,20 @@ La autorización depende de la membresía de la institución, la modalidad de li
 
 La ausencia de acceso directo a `aerosuite_institutions` para integrantes comunes es **deliberada**: el portal consulta `aerosuite_my_institution_access_v2()`, que filtra por `auth.uid()` y devuelve solo la pertenencia autorizada.
 
+## Resultado efectivo por rol: control económico (lectura)
+
+Se invocó en una transacción de **solo lectura** `aerosuite_internal.aerosuite_fixed_expense_access(institution_id,false)` usando el contexto `authenticated` de cada identidad técnica. La función no escribió datos; su ejecución correcta o la denegación SQL `42501` determinaron el resultado.
+
+| Rol técnico | Lectura de control económico |
+|---|---|
+| Dirección / Administrador | Permitida |
+| Secretaría | Permitida |
+| Instructor | Denegada (42501) |
+| Alumno | Denegada (42501) |
+| Piloto PPA/PCA | Denegada (42501) |
+
+Esta prueba confirma **solo la barrera de autorización de la función de acceso**; no ejecuta cobros, no verifica que cada RPC financiera delegue correctamente en ella y no cubre operaciones de escritura.
+
 ## Hallazgos adicionales
 
 - **Invitaciones:** `aerosuite_accept_invitation_role()` exige correo confirmado, coincidencia exacta de institución/correo/rol, invitación no revocada ni caducada, y licencia institucional válida. Cambiar `rol` en una URL no basta para adquirir permisos.
