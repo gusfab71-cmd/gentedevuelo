@@ -1,4 +1,4 @@
-/* AeroSuite — formato único de matrículas.
+/* FlyPro — formato único de matrículas.
  * Ejemplos: lvert, lv-ert, LV ERT -> LV-ERT; lq123 -> LQ-123.
  * No modifica automáticamente matrículas internacionales de otra estructura.
  */
