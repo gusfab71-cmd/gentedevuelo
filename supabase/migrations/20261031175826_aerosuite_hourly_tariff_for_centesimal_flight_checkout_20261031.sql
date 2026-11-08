@@ -1,5 +1,5 @@
 
--- Exported from live Supabase functions for reproducible version control.
+-- Tarifa horaria institucional: registro consultable solo mediante RPC autorizada.
 create table if not exists public.aerosuite_hourly_tariffs (
  institution_id uuid primary key references public.aerosuite_institutions(id) on delete cascade,
  amount numeric(14,2) not null check (amount>0 and amount<=1000000000000),
@@ -9,12 +9,9 @@ create table if not exists public.aerosuite_hourly_tariffs (
 );
 alter table public.aerosuite_hourly_tariffs enable row level security;
 revoke all on public.aerosuite_hourly_tariffs from public,anon,authenticated;
-CREATE OR REPLACE FUNCTION aerosuite_internal.aerosuite_hourly_tariff_get(p_institution_id uuid)
- RETURNS jsonb
- LANGUAGE plpgsql
- STABLE SECURITY DEFINER
- SET search_path TO ''
-AS $function$
+
+create or replace function aerosuite_internal.aerosuite_hourly_tariff_get(p_institution_id uuid)
+returns jsonb language plpgsql stable security definer set search_path='' as $fn$
 declare v_actor uuid:=auth.uid();v_role text;v_mode text;v_rate public.aerosuite_hourly_tariffs%rowtype;
 begin
  select m.role,private.aerosuite_access_mode(i.status,i.trial_ends_at,i.license_ends_at,now()) into v_role,v_mode
@@ -26,15 +23,10 @@ begin
  select * into v_rate from public.aerosuite_hourly_tariffs where institution_id=p_institution_id;
  if not found then return jsonb_build_object('configured',false,'amount',null,'currency','ARS');end if;
  return jsonb_build_object('configured',true,'amount',v_rate.amount,'currency',v_rate.currency,'updated_at',v_rate.updated_at);
-end $function$
-;
+end $fn$;
 
-CREATE OR REPLACE FUNCTION aerosuite_internal.aerosuite_hourly_tariff_set(p_institution_id uuid, p_amount numeric, p_currency text)
- RETURNS jsonb
- LANGUAGE plpgsql
- SECURITY DEFINER
- SET search_path TO ''
-AS $function$
+create or replace function aerosuite_internal.aerosuite_hourly_tariff_set(p_institution_id uuid,p_amount numeric,p_currency text)
+returns jsonb language plpgsql security definer set search_path='' as $fn$
 declare v_actor uuid:=auth.uid();v_role text;v_mode text;
 begin
  select m.role,private.aerosuite_access_mode(i.status,i.trial_ends_at,i.license_ends_at,now()) into v_role,v_mode
@@ -50,26 +42,17 @@ begin
  values(p_institution_id,p_amount,p_currency,now(),v_actor)
  on conflict(institution_id) do update set amount=excluded.amount,currency=excluded.currency,updated_at=now(),updated_by=v_actor;
  return jsonb_build_object('ok',true,'amount',p_amount,'currency',p_currency);
-end $function$
-;
+end $fn$;
 
-CREATE OR REPLACE FUNCTION public.aerosuite_hourly_tariff_get(p_institution_id uuid)
- RETURNS jsonb
- LANGUAGE sql
- STABLE
- SET search_path TO ''
-AS $function$
+create or replace function public.aerosuite_hourly_tariff_get(p_institution_id uuid)
+returns jsonb language sql stable set search_path='' as $fn$
  select aerosuite_internal.aerosuite_hourly_tariff_get(p_institution_id)
-$function$
-;
-
-CREATE OR REPLACE FUNCTION public.aerosuite_hourly_tariff_set(p_institution_id uuid, p_amount numeric, p_currency text)
- RETURNS jsonb
- LANGUAGE sql
- SET search_path TO ''
-AS $function$
+$fn$;
+create or replace function public.aerosuite_hourly_tariff_set(p_institution_id uuid,p_amount numeric,p_currency text)
+returns jsonb language sql set search_path='' as $fn$
  select aerosuite_internal.aerosuite_hourly_tariff_set(p_institution_id,p_amount,p_currency)
-$function$
-;
-revoke all on function public.aerosuite_hourly_tariff_get(uuid),public.aerosuite_hourly_tariff_set(uuid,numeric,text) from public,anon;
-grant execute on function public.aerosuite_hourly_tariff_get(uuid),public.aerosuite_hourly_tariff_set(uuid,numeric,text) to authenticated;
+$fn$;
+revoke all on function public.aerosuite_hourly_tariff_get(uuid),public.aerosuite_hourly_tariff_set(uuid,numeric,text)
+ from public,anon;
+grant execute on function public.aerosuite_hourly_tariff_get(uuid),public.aerosuite_hourly_tariff_set(uuid,numeric,text)
+ to authenticated;
