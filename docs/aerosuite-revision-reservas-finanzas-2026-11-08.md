@@ -1,44 +1,46 @@
-# AeroSuite — revisión de reservas sin instructor, liquidaciones y packs
-**Fecha:** 8 de noviembre de 2026
-**Entorno observado:** Supabase principal Gente de Vuelo (solo lectura de definiciones, índices y disparadores).
-**Estado:** auditoría parcial y propuesta de hardening NO APLICADA. El laboratorio separado y la producción no se alteraron. No hubo sesiones JWT, reservas ni transacciones económicas.
+# AeroSuite — auditoría de reservas sin instructor, liquidaciones y packs
+**Actualizado:** 8 de noviembre de 2026. **Entornos:** Supabase principal (lectura y una migración correctiva sin datos) y segundo proyecto Supabase aislado (datos ficticios eliminados).
 
-## Hallazgo H-01 — titular de la autorización en la reserva sin instructor
-**Prioridad:** alta para corregir antes de nuevas pruebas comerciales.
+## H-01 — Identidad del piloto en una reserva sin instructor
+**Estado: corregido en la función efectiva; falta E2E autenticado.**
 
-La función efectiva `public.aerosuite_reserve_with_instructor(p_institution_id, p_slot_id, p_student_id, p_with_instructor)` verifica la licencia en `aerosuite_pilot_authorizations` usando `coalesce(p_student_id,auth.uid())`.
+El hallazgo histórico detectaba que la autorización se consultaba con `coalesce(p_student_id,auth.uid())` mientras que la reserva delegada usaba siempre `auth.uid()` para Alumno/Piloto. La inspección de la **función actualmente desplegada** `public.aerosuite_reserve_with_instructor` ya NO contiene ese cálculo: obtiene el titular efectivo `v_pilot` como `p_student_id` para Dirección/Secretaría y como `v_actor=auth.uid()` para otros roles, y compara autorizaciones y documentación de ese titular.
 
-La función delegada `public.aerosuite_availability_reserve(...)`, en cambio, determina el titular efectivo según el rol:
-- Dirección / Secretaría: `p_student_id`.
-- Alumno / Piloto: siempre `auth.uid()`, sin usar `p_student_id`.
+Esto reduce el riesgo de usar el UUID de otro piloto para crear solicitudes sin instructor. La confirmación sin instructor vuelve a verificar autorización. **No se ha ejecutado aún un ataque simulado real con JWT y sesiones del navegador.** La propuesta histórica `docs/aerosuite-propuesta-reserva-sin-instructor-2026-11-08.sql` se conserva como antecedente, pero **ya no debe presentarse como solución pendiente sin comprobar previamente la definición efectiva**.
 
-**Consecuencia potencial:** un Alumno autenticado que conozca el UUID de un piloto validado podría suministrarlo como parámetro y generar para sí una **solicitud pendiente** sin instructor aunque él mismo no tenga la autorización. **No se ha probado una explotación** en navegador o con JWT.
+## H-02 — Condición de carrera entre los caminos heredados de cobro y pack
+**Estado: corregido en Supabase principal; resta prueba E2E de ambos métodos concurrentes.**
 
-**Límite mitigador comprobado:** la función de confirmación `public.aerosuite_confirm_without_instructor` comprueba nuevamente el rol administrativo, la matrícula/turno y `aerosuite_pilot_authorizations` para `v_booking.student_id` (titular real), por lo que el análisis **no demuestra** que el vuelo se pueda confirmar indebidamente.
+La función anterior `public.aerosuite_finance_action` consultaba la reserva **sin `FOR UPDATE`** en `pack_use` y `hour_payment`. Los índices únicos son independientes entre las tablas de pagos y uso de packs, por lo que **no excluían por sí solos** un cobro por cada vía en paralelo.
 
-**Propuesta sin aplicar:** `docs/aerosuite-propuesta-reserva-sin-instructor-2026-11-08.sql`. Selecciona explícitamente el titular efectivo, niega la modalidad sin instructor a `alumno` y conserva la validación original de piloto autorizado y el control de acceso al llamar al RPC delegado.
+Se aplicó la migración Supabase `20261108160626_aerosuite_serialize_legacy_flight_settlements`, que bloquea siempre la **misma fila de reserva** con `SELECT ... FOR UPDATE` antes de ingresar a ambos caminos. No cambió las reglas de aprobación, rol, saldo, tarifas, matrícula ni el registro histórico. La definición correctiva queda versionada en:
+- `supabase/migrations/20261108160626_aerosuite_serialize_legacy_flight_settlements.sql`
+- `docs/aerosuite-fix-serializacion-cobros-2026-11-08.sql`
+- `tests/aerosuite-finance-serialization.test.cjs`
 
-**Regresión incorporada:** `tests/aerosuite-pilot-booking-hardening.test.cjs`, integrada al workflow `AeroSuite - Auditoria semanal automatica`. Es un **control de contrato de la propuesta**, NO prueba del comportamiento de Supabase en producción.
+Las baterías CI aprobaron el contrato de código tras la corrección del propio test. La implementación en SQL está verificada por metadatos y migración aplicada; **no se afirma que un test concurrente real del RPC productivo haya aprobado**.
 
-## Controles económicos examinados
-- `aerosuite_money_movements` tiene índice único parcial para `booking_id` cuando `movement_type='hour_payment'`.
-- `aerosuite_pack_usages` tiene índice único para `booking_id`.
-- `aerosuite_flight_checkouts` tiene índice único en `booking_id`, además de los identificadores de cobro/movimiento.
-- `aerosuite_student_debts` tiene índice único parcial para `booking_id` no nulo.
-- Existe el disparador `aerosuite_no_void_pack_usage` que ejecuta `aerosuite_internal.aerosuite_guard_void_pack_usage()`: rechaza uso de packs anulados.
-- `aerosuite_instructor_fee_pay` comprueba rol administrativo, licencia activa y vuelo liquidado, bloquea la reserva con `FOR UPDATE` y rechaza un segundo pago del mismo vuelo.
+## Ensayos ejecutados en el laboratorio Supabase aislado
+- `aerosuite_lab.run_full_weekly()` en transacción con `ROLLBACK`: **35/35 aprobados**; las cantidades de miembros, reservas, reportes, cobros y resúmenes no cambiaron.
+- Dos reservas simultáneas de la **misma aeronave y horario**, alumnos e instructores distintos: una aceptada, otra rechazada por `lab_aircraft_overlap`, una sola fila final.
+- Dos liquidaciones simultáneas de diferentes vuelos con **un pack de 90 minutos**: una aceptada, otra rechazada por saldo insuficiente; un único uso.
+- En la prueba cruzada de efectivo vs. pack para una misma reserva, la infraestructura bloqueó una de las llamadas. Los asientos resultantes eran coherentes, **pero esa prueba no es concluyente**.
+- Se eliminaron datos ficticios nuevos y se comprobaron los recuentos de limpieza.
 
-**Sin certificar:** la exclusión recíproca bajo concurrencia de los caminos heredados `aerosuite_finance_action(...,'pack_use',...)` y `aerosuite_finance_action(...,'hour_payment',...)` requiere ensayos transaccionales en una base aislada. Los índices antes indicados operan sobre tablas distintas y no son por sí solos prueba de que ambos métodos no puedan liquidar simultáneamente un mismo vuelo.
+El laboratorio tiene siete tablas simplificadas y funciones de simulación. **No es un clon completo de las RPC ni del esquema de producción.**
 
-## Informes y licencias
-- `aerosuite_submit_flight_report_with_logbook` delega la validación en `aerosuite_report_action`, que comprueba identidad, miembro de institución, estado de licencia, instructor asignado, horarios y estado de informe.
-- Los controles estáticos y la existencia de índices no sustituyen pruebas por roles con sesiones reales.
+## Permisos verificados sin escrituras
+- Supabase principal: 53 tablas públicas `aerosuite_*`, las **53 con RLS**.
+- Alertas de mantenimiento: Dirección, Secretaría e Instructor autorizados; Alumno y Piloto denegados (42501).
+- Conciliación económica: Dirección y Secretaría autorizados; Alumno, Instructor y Piloto denegados (42501).
+- Son simulaciones de `authenticated` y `auth.uid()` en transacciones `READ ONLY`, **no pruebas de JWT firmado desde navegador**.
 
-## Próximos pasos de validación
-1. Ejecutar el SQL propuesto **solo en una base aislada que reproduzca el esquema**; luego realizar pruebas reales de roles con JWT de laboratorio.
-2. Probar Alumno + UUID de Piloto validado (debe rechazarse), Piloto validado propio (debe permitirse pedir), Piloto no verificado (rechazarse), Dirección/Secretaría para Piloto validado (permitirse), y confirmación sin instructor solo por gestión (requiere referencia).
-3. Comprobar cobro por efectivo/packs en paralelo y conciliación, sin usar clientes reales.
-4. Crear una migración formal mediante herramienta Supabase CLI y someterla a revisión, **solo después** de aprobar la propuesta y pasar las pruebas aisladas.
-5. Antes de cualquier publicación: revisión de Vercel Preview, con despliegue de producción pendiente de autorización independiente.
+## Puertas obligatorias para primera institución real
+1. Preview Vercel de la misma revisión frontend/backend; sesiones reales de cada rol y validación visual (bloqueado por cuota de despliegue).
+2. Prueba de dos clientes con reservas de dos aeronaves y reprogramaciones en el circuito productivo aislado, junto con efectivo vs. pack concurrentes usando RPC efectivas y JWT.
+3. Revisión de RAV formal, informes, retención documental y retorno a servicio respaldado por documentación técnica; el control administrativo no certifica aeronavegabilidad.
+4. Respaldo cifrado de PostgreSQL, Supabase Storage y R2; restauración probada en instancia segregada; el workflow de backup actual **no se ha ejecutado con credenciales ni destino configurado**.
+5. Revisión de advertencias SECDEF y protección contra contraseñas filtradas; las advertencias no equivalen sin más a vulnerabilidades explotables.
+6. Autorización explícita del responsable para el alta de la primera escuela y para la publicación final; ningún dato sintético debe copiarse a esa institución.
 
-**Sin cambios de datos, permisos, funciones o esquemas en Supabase. Sin merge ni publicación en Vercel.**
+**No se publicaron cambios en Vercel ni se fusionó el PR #77.** La migración de serialización sí fue aplicada al backend y está documentada.
