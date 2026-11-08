@@ -2,7 +2,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import {createClient} from "npm:@supabase/supabase-js@2.57.0";
 
 /**
- * PREPARADO, NO DESPLEGADO: correo de eventos institucionales AeroSuite.
+ * PREPARADO, NO DESPLEGADO: correo de eventos institucionales FlyPro.
  * Debe habilitarse explícitamente con secretos, consentimiento del destinatario
  * e interruptor institucional. Nunca utiliza la cola de correo comunitario GDV.
  * No tiene Cron ni activación en el frontend.
@@ -91,10 +91,10 @@ Deno.serve(async req=>{
     await finish("cancelled","Destinatario o configuración no autorizado");
     continue;
    }
-   const title=String(notification.data!.title||"Aviso de AeroSuite").slice(0,120);
+   const title=String(notification.data!.title||"Aviso de FlyPro").slice(0,120);
    const detail=String(notification.data!.detail||"Consultá el portal institucional.").slice(0,320);
    const body=[
-     "Aviso institucional de AeroSuite",title,detail,
+     "Aviso institucional de FlyPro",title,detail,
      "Accedé a tu escuela con tu cuenta: https://gentedevuelo.com/utilidades/gestion-aeronautica/portal-escuela.html",
      "Podés retirar el consentimiento de correo desde la sección Avisos internos del portal."
    ].join("\n\n");
