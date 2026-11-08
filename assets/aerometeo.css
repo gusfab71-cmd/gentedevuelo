@@ -500,3 +500,51 @@ a:focus-visible,button:focus-visible,summary:focus-visible,input:focus-visible,s
  .am-forecast-dock{width:min(264px,calc(100% - 16px));max-height:calc(100% - 16px)}
  .am-forecast-dock-content{padding:7px 8px}
 }
+
+/* Fenómenos: menú plegable, sólo en barra lateral, no reduce altura de mapa. */
+.am-sidebar .am-phenomena-panel{
+ display:grid;gap:9px;min-width:0;
+ margin:-3px 0 12px;padding:11px 10px;border:1px solid #668a9e;
+ border-radius:10px;background:#132e41;
+ color:#e1eff6;
+}
+.am-sidebar .am-phenomena-panel[hidden]{display:none!important}
+.am-phenomena-intro,.am-phenomena-disclaimer{
+ margin:0;font-size:10px;line-height:1.5;color:#c0d5e4;
+}
+.am-phenomena-options{display:grid;gap:5px}
+.am-phenomena-options label{
+ display:flex;align-items:center;flex-wrap:wrap;column-gap:7px;row-gap:0;
+ min-height:34px;border:1px solid #44657c;background:#17394d;
+ border-radius:7px;padding:5px 8px;font-size:11px;font-weight:750;cursor:pointer;
+}
+.am-phenomena-options label:has(input:checked){border-color:#d6ac65;background:#314459}
+.am-phenomena-options input{accent-color:#efb95b;min-height:16px;min-width:16px}
+.am-phenomena-options small{
+ color:#aec8d9;font-size:9px;flex:1 1 100%;margin-left:23px;font-weight:400;
+}
+.am-phenomena-buttons{display:flex;gap:6px;flex-wrap:wrap}
+.am-phenomena-buttons button{
+ flex:1 1 90px;min-height:34px;background:#274b61;
+ border:1px solid #83a4b5;border-radius:7px;color:#f1f8fc;
+ font-size:10px;font-weight:760;padding:7px 6px;cursor:pointer;
+}
+.am-phenomena-buttons button:hover:not(:disabled){background:#3e657c}
+.am-phenomena-buttons button:disabled{opacity:.5;cursor:wait}
+.am-phenomena-buttons button[aria-pressed=true]{border-color:#efc17e;background:#654d33}
+.am-phenomena-status{margin:0;font-size:10px;line-height:1.4;color:#d1e3ee}
+.am-phenomena-status small{display:block;margin-top:4px;font-size:9px;color:#a8bfce}
+.am-phenomena-point-result{
+ padding:9px;border:1px solid #69acaa;border-radius:7px;
+ background:#113e49;color:#f0f8f9;font-size:10px;line-height:1.48;
+}
+.am-phenomena-point-result[hidden]{display:none!important}
+.am-phenomena-point-result strong{display:block;color:#a5eddf;font-size:11px}
+.am-phenomena-point-result p{margin:4px 0}
+.am-phenomena-point-result small{display:block;color:#b4d5d9;margin-top:7px}
+.am-phenomena-disclaimer a{color:#fedba5}
+.am-phenomena-picking{cursor:crosshair!important}
+@media(max-width:650px){
+ .am-sidebar .am-phenomena-panel{padding:9px 8px}
+ .am-phenomena-buttons button{min-height:39px}
+}
