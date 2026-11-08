@@ -3,7 +3,7 @@ const fs=require('node:fs');
 const path=require('node:path');
 const assert=require('node:assert/strict');
 const {test}=require('node:test');
-const sql=fs.readFileSync(path.join(__dirname,'../supabase/migrations/20261108065000_aerosuite_parallel_aircraft_booking_guard.sql'),'utf8');
+const sql=fs.readFileSync(path.join(__dirname,'../supabase/migrations/20261108055841_aerosuite_parallel_aircraft_booking_overlap_guard_20261108.sql'),'utf8');
 test('Elimina la exclusividad institucional por fecha y limita la unicidad a la aeronave',()=>{
  assert.match(sql,/DROP INDEX IF EXISTS public\.aerosuite_flight_booking_slot_unique/);
  assert.match(sql,/CREATE UNIQUE INDEX IF NOT EXISTS aerosuite_flight_booking_aircraft_start_unique/);

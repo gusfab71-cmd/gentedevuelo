@@ -5,7 +5,7 @@ const vm=require('node:vm');
 const assert=require('node:assert/strict');
 const {test}=require('node:test');
 const base=path.join(__dirname,'..');
-const sql=fs.readFileSync(path.join(base,'supabase/migrations/20261108062000_aerosuite_pilot_preflight_documentary_gate.sql'),'utf8');
+const sql=fs.readFileSync(path.join(base,'supabase/migrations/20261108055418_aerosuite_pilot_preflight_documentary_gate_20261108.sql'),'utf8');
 const page=fs.readFileSync(path.join(base,'utilidades/gestion-aeronautica/operaciones-institucionales.html'),'utf8');
 
 test('La revisión de predespacho es un documento de auditoría, no una autorización de salida',()=>{

@@ -53,4 +53,4 @@
 - Un vuelo aprobado de prueba pendiente de liquidar: verificar si es prueba abierta, cobro posterior o dato a cancelar auditadamente.
 - RAV formal pendiente de validación de requisitos externos y firma auténtica; mantener solo revisión interna.
 
-**Anexo técnico:** migraciones `20261108062000_aerosuite_pilot_preflight_documentary_gate.sql` y `20261108065000_aerosuite_parallel_aircraft_booking_guard.sql` en esta rama.
+**Anexo técnico:** migraciones `20261108055418_aerosuite_pilot_preflight_documentary_gate_20261108.sql` y `20261108055841_aerosuite_parallel_aircraft_booking_overlap_guard_20261108.sql` en esta rama.

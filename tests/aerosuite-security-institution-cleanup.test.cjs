@@ -4,8 +4,8 @@ const path=require('node:path');
 const assert=require('node:assert/strict');
 const {test}=require('node:test');
 const root=path.join(__dirname,'..');
-const fix=fs.readFileSync(path.join(root,'supabase/migrations/20261108073000_aerosuite_institution_delete_pilot_authorizations_storage_guard.sql'),'utf8');
-const revoke=fs.readFileSync(path.join(root,'supabase/migrations/20261108071500_revoke_anonymous_security_definer_triggers.sql'),'utf8');
+const fix=fs.readFileSync(path.join(root,'supabase/migrations/20261108061844_aerosuite_safe_school_deletion_pilots_storage_20261108.sql'),'utf8');
+const revoke=fs.readFileSync(path.join(root,'supabase/migrations/20261108061137_aerosuite_privileged_trigger_execute_restriction_20261108.sql'),'utf8');
 test('Eliminar institución requiere confirmación y cuenta superadmin',()=>{
  assert.match(fix,/public\.aerosuite_superadmins/);
  assert.match(fix,/p_confirm_name<>v_row\.name/);

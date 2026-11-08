@@ -5,7 +5,7 @@ const vm=require('node:vm');
 const assert=require('node:assert/strict');
 const {test}=require('node:test');
 const root=path.join(__dirname,'..');
-const sql=fs.readFileSync(path.join(root,'supabase/migrations/20261108053000_aerosuite_rav_institutional_drafts.sql'),'utf8');
+const sql=fs.readFileSync(path.join(root,'supabase/migrations/20261108052751_aerosuite_rav_institutional_drafts_review_no_certification_20261108.sql'),'utf8');
 const page=fs.readFileSync(path.join(root,'utilidades/gestion-aeronautica/rav-institucional.html'),'utf8');
 const portal=fs.readFileSync(path.join(root,'utilidades/gestion-aeronautica/portal-escuela.html'),'utf8');
 

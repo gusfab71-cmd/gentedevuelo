@@ -5,7 +5,7 @@ const vm=require('node:vm');
 const assert=require('node:assert/strict');
 const {test}=require('node:test');
 const root=path.join(__dirname,'..');
-const sql=fs.readFileSync(path.join(root,'supabase/migrations/20261108081500_aerosuite_external_email_optin_queue_disabled.sql'),'utf8');
+const sql=fs.readFileSync(path.join(root,'supabase/migrations/20261108063842_aerosuite_external_email_queue_consent_disabled_20261108.sql'),'utf8');
 const html=fs.readFileSync(path.join(root,'utilidades/gestion-aeronautica/avisos-institucionales.html'),'utf8');
 
 test('El envío externo comienza desactivado y no hay llamadas a proveedor',()=>{
