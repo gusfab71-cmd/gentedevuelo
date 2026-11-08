@@ -1,10 +1,8 @@
--- Marcación de reservas saldadas (exclusiva de Dirección/Secretaría).
-CREATE OR REPLACE FUNCTION aerosuite_internal.aerosuite_settled_bookings_week(p_institution_id uuid, p_date_from date, p_date_to date)
- RETURNS jsonb
- LANGUAGE plpgsql
- STABLE SECURITY DEFINER
- SET search_path TO ''
-AS $function$
+-- Vista de vuelos saldados para la turnera semanal. Solo Dirección y Secretaría.
+create or replace function aerosuite_internal.aerosuite_settled_bookings_week(
+ p_institution_id uuid,p_date_from date,p_date_to date)
+returns jsonb
+language plpgsql stable security definer set search_path='' as $fn$
 declare v_actor uuid:=auth.uid();v_mode text;v_list jsonb;
 begin
  select private.aerosuite_access_mode(i.status,i.trial_ends_at,i.license_ends_at,now()) into v_mode
@@ -42,17 +40,12 @@ begin
      where k.booking_id=b.id and k.institution_id=p_institution_id)
  );
  return v_list;
-end $function$
-;
+end $fn$;
 
-CREATE OR REPLACE FUNCTION public.aerosuite_settled_bookings_week(p_institution_id uuid, p_date_from date, p_date_to date)
- RETURNS jsonb
- LANGUAGE sql
- STABLE
- SET search_path TO ''
-AS $function$
+create or replace function public.aerosuite_settled_bookings_week(
+ p_institution_id uuid,p_date_from date,p_date_to date)
+returns jsonb language sql stable set search_path='' as $fn$
  select aerosuite_internal.aerosuite_settled_bookings_week(p_institution_id,p_date_from,p_date_to)
-$function$
-;
+$fn$;
 revoke all on function public.aerosuite_settled_bookings_week(uuid,date,date) from public,anon;
 grant execute on function public.aerosuite_settled_bookings_week(uuid,date,date) to authenticated;
