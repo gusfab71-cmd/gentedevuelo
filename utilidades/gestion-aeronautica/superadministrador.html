@@ -180,7 +180,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
 </div>
 <section class="panel" aria-labelledby="registrationsTitle" id="registros-aerosuite">
  <h2 id="registrationsTitle">Padrón global de registros (consulta secundaria)</h2>
- <p class="muted">Control central de directores, Secretarías, instructores y alumnos por institución. La invitación aparece al generarse; la creación de la cuenta, verificación del correo y habilitación se actualizan desde Supabase. Una cuenta existente puede recibir una invitación sin volver a registrarse.</p>
+ <p class="muted">Control central de directores, Secretarías, instructores, alumnos y pilotos por institución. La invitación aparece al generarse; la creación de la cuenta, verificación del correo y habilitación se actualizan desde Supabase. Una cuenta existente puede recibir una invitación sin volver a registrarse.</p>
  <div class="registration-metrics" aria-label="Estado de registros">
   <div><strong id="allRegistrationCount">0</strong><span>Registros e invitaciones</span></div>
   <div><strong id="accountRegistrationCount">0</strong><span>Con cuenta verificada</span></div>
@@ -341,7 +341,7 @@ async function showInstitutionRoster(orgId,details,contents){
   if(!details.isConnected||!details.open)return;
   if(data?.institution_id!==orgId||!Array.isArray(data.members))throw Error('El servidor no devolvió el padrón solicitado.');
   contents.replaceChildren();
-  const groups=[['administrador','Dirección'],['secretaria','Secretaría'],['instructor','Instructores'],['alumno','Alumnos'],['operaciones','Operaciones'],['tesoreria','Tesorería']];
+  const groups=[['administrador','Dirección'],['secretaria','Secretaría'],['instructor','Instructores'],['alumno','Alumnos'],['piloto','Pilotos PPA y comerciales'],['operaciones','Operaciones'],['tesoreria','Tesorería']];
   for(const [role,title] of groups){
    const members=data.members.filter(x=>x.role===role);
    if(!members.length)continue;
@@ -447,7 +447,10 @@ async function reload(){
   const rosterTotals=countsByInstitution.get(row.id)||{instructors:0,students:0,instructor_invitations:0,student_invitations:0};
   addDetail('Instructores activos',String(rosterTotals.instructors));
   addDetail('Alumnos activos',String(rosterTotals.students));
-  addDetail('Invitaciones pendientes','Instructores: '+rosterTotals.instructor_invitations+' · Alumnos: '+rosterTotals.student_invitations);
+  const linkedPilots=registrationRows.filter(r=>r.institution_id===row.id&&r.kind==='integrante'&&r.role==='piloto').length;
+  const invitedPilots=registrationRows.filter(r=>r.institution_id===row.id&&r.kind==='invitacion'&&r.role==='piloto'&&!r.accepted_at&&!r.revoked_at&&r.registration_status!=='vencida').length;
+  addDetail('Pilotos vinculados',String(linkedPilots));
+  addDetail('Invitaciones pendientes','Instructores: '+rosterTotals.instructor_invitations+' · Alumnos: '+rosterTotals.student_invitations+' · Pilotos: '+invitedPilots);
   addDetail('Plan',planText[row.plan]||row.plan);
   addDetail('Modalidad',row.is_test?'Pruebas · reinicio automático':'Normal · cuentas protegidas');
   const expiry=row.status==='trial'?row.trial_ends_at:row.status==='active'?row.license_ends_at:null;
@@ -456,7 +459,7 @@ async function reload(){
     addDetail('Fin de cortesía',dateOnly(new Date(Date.parse(row.trial_ends_at)+15*86400000).toISOString()));
   card.append(details);
   const roster=document.createElement('details');roster.className='institution-roster';
-  const summary=document.createElement('summary');summary.textContent='Ver nombres y correos del personal';
+  const summary=document.createElement('summary');summary.textContent='Ver integrantes y correos por rol';
   const rosterContents=document.createElement('div');rosterContents.className='institution-roster-contents';
   roster.append(summary,rosterContents);
   roster.addEventListener('toggle',()=>{if(roster.open)showInstitutionRoster(row.id,roster,rosterContents);});
