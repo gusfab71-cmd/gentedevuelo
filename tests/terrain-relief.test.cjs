@@ -71,7 +71,7 @@ test('API solo invoca el proveedor fijo y conserva 2 cotas recibidas',async()=>{
 });
 test('despliegue automático de Vercel queda limitado a main',()=>{
  const config=JSON.parse(read('vercel.json'));
- assert.equal(config.git.deploymentEnabled['*'],false);
+ assert.equal(config.git.deploymentEnabled['**'] ?? config.git.deploymentEnabled['*'],false);
  assert.equal(config.git.deploymentEnabled.main,true);
 });
 
