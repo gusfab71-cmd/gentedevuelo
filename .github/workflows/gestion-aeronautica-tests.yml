@@ -91,6 +91,7 @@ jobs:
       - run: node --test tests/aerosuite-notifications-inbox.test.cjs
       - run: node --test tests/aerosuite-external-email-optin.test.cjs
       - run: node --test tests/aerosuite-reconciliation-readonly.test.cjs
+      - run: node --test tests/aerosuite-finance-serialization.test.cjs
       - run: node --test tests/aerosuite-backup-manual-contract.test.cjs
       - run: node --test tests/aerosuite-external-worker-safety.test.cjs
       - run: bash -n scripts/aerosuite-backup-encrypted.sh
