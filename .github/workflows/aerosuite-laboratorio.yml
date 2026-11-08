@@ -43,6 +43,8 @@ jobs:
             command: 'node --test tests/aerosuite-superadmin-global-roster-contract.test.cjs'
           - title: 'Control global de cuentas'
             command: 'node --test tests/gdv-superadmin-global-accounts-contract.test.cjs'
+          - title: 'Suspensión de cuentas y auditoría'
+            command: 'node --test tests/gdv-superadmin-account-control-contract.test.cjs'
           - title: 'Menu de Administracion'
             command: 'node --test tests/gdv-account-admin-menu-contract.test.cjs'
           - title: 'Dirección y permisos'
