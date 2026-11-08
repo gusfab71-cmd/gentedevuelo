@@ -15,6 +15,9 @@ on:
       - 'tests/aerosuite-pilot-dispatch.test.cjs'
       - 'tests/aerosuite-parallel-aircraft-booking.test.cjs'
       - 'tests/aerosuite-license-readonly.test.cjs'
+      - 'tests/aerosuite-security-institution-cleanup.test.cjs'
+      - 'supabase/migrations/20261108071500_revoke_anonymous_security_definer_triggers.sql'
+      - 'supabase/migrations/20261108073000_aerosuite_institution_delete_pilot_authorizations_storage_guard.sql'
       - 'supabase/migrations/20261108070500_aerosuite_trial_expires_direct_readonly.sql'
       - 'supabase/migrations/20261108065000_aerosuite_parallel_aircraft_booking_guard.sql'
       - 'supabase/migrations/20261108062000_aerosuite_pilot_preflight_documentary_gate.sql'
@@ -37,6 +40,9 @@ on:
       - 'tests/aerosuite-pilot-dispatch.test.cjs'
       - 'tests/aerosuite-parallel-aircraft-booking.test.cjs'
       - 'tests/aerosuite-license-readonly.test.cjs'
+      - 'tests/aerosuite-security-institution-cleanup.test.cjs'
+      - 'supabase/migrations/20261108071500_revoke_anonymous_security_definer_triggers.sql'
+      - 'supabase/migrations/20261108073000_aerosuite_institution_delete_pilot_authorizations_storage_guard.sql'
       - 'supabase/migrations/20261108070500_aerosuite_trial_expires_direct_readonly.sql'
       - 'supabase/migrations/20261108065000_aerosuite_parallel_aircraft_booking_guard.sql'
       - 'supabase/migrations/20261108062000_aerosuite_pilot_preflight_documentary_gate.sql'
@@ -59,4 +65,5 @@ jobs:
       - run: node --test tests/aerosuite-pilot-dispatch.test.cjs
       - run: node --test tests/aerosuite-parallel-aircraft-booking.test.cjs
       - run: node --test tests/aerosuite-license-readonly.test.cjs
+      - run: node --test tests/aerosuite-security-institution-cleanup.test.cjs
       - run: node tests/airstrip-metar.test.cjs
