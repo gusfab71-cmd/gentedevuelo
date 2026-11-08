@@ -27,7 +27,7 @@ test('No se sube archivo sin cifrar, ni se imprime contenido ni se realizan rest
  assert.match(shell,/aws --endpoint-url "\$AEROSUITE_BACKUP_S3_ENDPOINT" s3 cp/);
  assert.match(shell,/\$cipher" "s3:\/\/\$AEROSUITE_BACKUP_BUCKET/);
  assert.doesNotMatch(shell,/aws[^\n]*s3 cp[^\n]*\$archive/);
- assert.match(shell,/pg_restore --list/);
+ assert.ok(shell.includes('pg_restore --list "$archive" > "$tmp_dir/database.toc"'));
  assert.doesNotMatch(shell,/pg_restore --dbname|\bDROP DATABASE\b|\bTRUNCATE\b/i);
  assert.match(shell,/trap cleanup EXIT INT TERM/);
  assert.match(shell,/head-object/);
@@ -36,8 +36,8 @@ test('Respaldo conserva ACL de PostgreSQL y comprueba tablas AeroSuite en el ín
  assert.match(shell,/pg_dump --dbname=/);
  assert.match(shell,/--format=custom/);
  assert.doesNotMatch(shell,/--no-privileges|--no-acl/i);
- assert.match(shell,/pg_restore --list "\\$archive" > "\\$tmp_dir\\/database\.toc"/);
- assert.match(shell,/TABLE DATA\[\[:space:\]\]\+public\[\[:space:\]\]\+aerosuite_/);
+ assert.ok(shell.includes('pg_restore --list "$archive" > "$tmp_dir/database.toc"'));
+ assert.ok(shell.includes('TABLE DATA[[:space:]]+public[[:space:]]+aerosuite_'));
  assert.match(shell,/Faltan entradas de datos AeroSuite/);
  assert.match(shell,/rm -f[^\n]*database\.toc/);
 });
