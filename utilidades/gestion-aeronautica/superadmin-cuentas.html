@@ -34,6 +34,7 @@ input:focus-visible,select:focus-visible,button:focus-visible,a:focus-visible{ou
 .account-flags{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .account-actions{display:flex;gap:8px;margin-top:12px}
 .account-actions button{padding:8px 12px}
+.account-action-error{color:#ffd2b6;background:#57342e;border:1px solid #9c6254;padding:10px 12px;border-radius:8px;font-size:12px;margin:9px 0 0}
 dialog{background:#173348;color:#eef7ff;border:1px solid #7e9eaf;border-radius:14px;max-width:min(610px,calc(100vw - 32px));width:100%;padding:20px;box-shadow:0 22px 60px #000b}
 dialog::backdrop{background:#06121bbd}
 dialog .dialog-head{display:flex;gap:12px;justify-content:space-between;align-items:flex-start}
@@ -199,6 +200,8 @@ dialog .action-summary{margin:11px 0;padding:11px;background:#234458;border-radi
  async function inspectAccount(account,button){
   if(managing)return;
   managing=true;button.disabled=true;
+  const oldError=button.closest('.account')?.querySelector('.account-action-error');
+  if(oldError)oldError.remove();
   const previous=button.textContent;button.textContent='Consultando…';
   try{
    const state=await controlApi('inspect',account);
@@ -253,7 +256,10 @@ dialog .action-summary{margin:11px 0;padding:11px;background:#234458;border-radi
    controlBody.append(remove,link);
    controlDialog.showModal();
   }catch(err){
-   status.textContent='No se pudo inspeccionar la cuenta: '+(err?.message||'Error de conexión')+'. No se realizaron modificaciones.';
+   const msg='No se pudo consultar la cuenta: '+(err?.message||'Error de conexión')+'. No se hicieron cambios.';
+   status.textContent=msg;
+   const card=button.closest('.account');
+   if(card){const note=make('p',msg,'account-action-error');note.setAttribute('role','alert');card.append(note);}
   }finally{managing=false;button.disabled=false;button.textContent=previous;}
  }
  byId('accounts').addEventListener('click',event=>{
