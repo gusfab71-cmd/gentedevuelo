@@ -179,7 +179,7 @@ BEGIN
   JOIN public.aerosuite_institutions i ON i.id=m.institution_id
   WHERE m.institution_id=p_institution_id AND m.user_id=v_actor
    AND m.role IN ('administrador','secretaria','instructor','alumno','piloto')
-   AND private.aerosuite_access_mode(i.status,i.trial_ends_at,i.license_ends_at,now())<>'blocked'
+   AND private.aerosuite_access_mode(i.status,i.trial_ends_at,i.license_ends_at,now()) IN ('trial','active')
  ) THEN RAISE EXCEPTION 'No tenés permiso para modificar estos avisos.' USING errcode='42501';END IF;
  v_ids:=coalesce(p_ids,array[]::uuid[]);
  IF cardinality(v_ids)>100 OR array_position(v_ids,NULL) IS NOT NULL THEN
