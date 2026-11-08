@@ -14,6 +14,15 @@ button{background:#e9c993;color:#193041;border:1px solid #e9c993;border-radius:9
 .action-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}.action-row button{flex:0 1 auto}.button-danger{color:#fff;background:#803b3b;border-color:#a45b5b}.button-secondary{color:#e8f5fb;background:#28465a;border-color:#6991a9}
 .change-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:13px;padding:16px;margin-top:14px;background:#0e2637;border:1px solid #6c94a8;border-radius:10px}.change-form h3,.change-form .full{grid-column:1/-1}.change-form h3{margin:0}.change-form select,.change-form textarea{width:100%;background:#0e2535;border:1px solid #7794a9;border-radius:9px;padding:11px;color:#fff;font:inherit}.change-form textarea{resize:vertical;min-height:78px}.change-form .small-note{font-size:12px;color:#c8dae6;margin:0}.archived-card{border-style:dashed}.archived-card h3{margin:0 0 8px}
 #archivedSection summary{cursor:pointer;font-weight:750;color:#e9c993;padding:6px 0}
+.maintenance-flag{border:1px solid #6f8490;border-left:4px solid #9db1ba;background:#223e50;padding:11px 12px;margin:12px 0;border-radius:9px;font-size:12px;line-height:1.5}
+.maintenance-flag strong{display:block;font-size:12px;margin-bottom:5px}
+.maintenance-flag p{margin:4px 0;font-size:12px}
+.maintenance-flag.due{background:#432d32;border-color:#ba7374;border-left-color:#f19494}
+.maintenance-flag.soon{background:#493b2b;border-color:#bb9561;border-left-color:#f0bb6e}
+.maintenance-flag.notice{background:#253d4a;border-color:#6a8b9d;border-left-color:#a6c0cf}
+.maintenance-flag.ok{background:#203e39;border-color:#548b81;border-left-color:#83b9a8}
+.maintenance-flag.unavailable{background:#392f34;border-color:#a07c7d;border-left-color:#e1a1a1}
+.maintenance-flag a{display:inline-block;margin-top:5px;font-weight:750}
 @media(max-width:550px){main{padding:14px 12px 36px}.panel{padding:14px}.action-row button{width:100%}.change-form{grid-template-columns:1fr}}
 </style><script src="../../assets/supabase-2.117.2.min.js"></script><script src="../../assets/community-config.js"></script><script src="../../assets/aerosuite-registration.js"></script></head>
 <body><header><a class="brand" href="index.html">Aero<span>Suite</span></a><nav><a id="back" href="portal-escuela.html">Volver al portal</a></nav></header>
@@ -73,10 +82,11 @@ button{background:#e9c993;color:#193041;border:1px solid #e9c993;border-radius:9
    encodeURIComponent(inst)+"&rol="+encodeURIComponent(school.my_role)+(labLogin?"&prueba=1":"");
   async function action(args){const r=await db.rpc("aerosuite_aircraft_action",{p_institution_id:inst,...args});if(r.error)throw r.error;return r.data;}
   async function load(message=""){
-   const [r,mt,sim]=await Promise.all([
+   const [r,mt,sim,alerts]=await Promise.all([
     db.rpc("aerosuite_aircraft_list",{p_institution_id:inst}),
     db.rpc("aerosuite_institution_maintenance_get",{p_institution_id:inst}),
-    db.rpc("aerosuite_simulator_list",{p_institution_id:inst})
+    db.rpc("aerosuite_simulator_list",{p_institution_id:inst}),
+    db.rpc("aerosuite_maintenance_alerts",{p_institution_id:inst})
    ]);
    if(r.error)throw r.error;
    if(sim.error)throw sim.error;
@@ -86,11 +96,18 @@ button{background:#e9c993;color:#193041;border:1px solid #e9c993;border-radius:9
    const inspections=Array.isArray(maintenance.ip)?maintenance.ip:[];
    const controls=Array.isArray(maintenance.ct)?maintenance.ct:[];
    const services=Array.isArray(maintenance.sv)?maintenance.sv:[];
+   const maintenanceAlertRows=alerts.error?[]:Array.isArray(alerts.data?.aircraft)?alerts.data.aircraft:[];
+   const maintenanceAlertMap=new Map(maintenanceAlertRows.map(row=>[String(row.registration||"").toUpperCase(),row]));
+   const dueAircraft=maintenanceAlertRows.filter(row=>row.alerts?.some(item=>item.level==="due")).length;
+   const soonAircraft=maintenanceAlertRows.filter(row=>!row.alerts?.some(item=>item.level==="due")&&row.alerts?.some(item=>item.level==="soon")).length;
+   const incompleteAircraft=maintenanceAlertRows.filter(row=>!row.alerts?.some(item=>item.level==="due"||item.level==="soon")&&row.alerts?.some(item=>item.level==="notice")).length;
    $("maintenanceSummary").textContent=mt.error?
     "Los datos de flota están disponibles. No se pudo consultar mantenimiento: "+mt.error.message:
     "Seguimiento institucional: "+planes.length+" aeronave(s) con ficha técnica · "+
     problems.filter(x=>x.status!=="closed").length+" novedad(es) abierta(s) · "+
-    inspections.filter(x=>!x.archived).length+" inspección(es) configurada(s)."+
+    inspections.filter(x=>!x.archived).length+" inspección(es) configurada(s). "+
+    (alerts.error?"No se pudieron consultar alertas técnicas: revisar cada ficha antes de publicar. ":
+      "Avisos: "+dueAircraft+" aeronave(s) para revisar vencimiento, "+soonAircraft+" con controles próximos, "+incompleteAircraft+" con seguimiento incompleto. ")+
     (mt.data?.updated_at?" Última modificación: "+new Date(mt.data.updated_at).toLocaleString("es-AR",{
       timeZone:"America/Argentina/Buenos_Aires",hourCycle:"h23",dateStyle:"short",timeStyle:"short"})+" ART.":"");
    const list=$("list");list.replaceChildren();
@@ -112,6 +129,35 @@ button{background:#e9c993;color:#193041;border:1px solid #e9c993;border-radius:9
      (a.aircraft_class==="monomotor"?"Monomotor":a.aircraft_class==="multimotor"?"Multimotor":"Pendiente de registrar")+
      " · Potencia: "+(a.engine_power_hp!=null?a.engine_power_hp+" HP":"Pendiente de registrar");
     box.append(powerReadout);
+    const advisory=maintenanceAlertMap.get(String(a.registration||"").toUpperCase());
+    const flag=document.createElement("div");flag.className="maintenance-flag";
+    const heading=document.createElement("strong");
+    const warningItems=Array.isArray(advisory?.alerts)?advisory.alerts:[];
+    const hasDue=warningItems.some(x=>x.level==="due"),hasSoon=warningItems.some(x=>x.level==="soon"),hasNotice=warningItems.some(x=>x.level==="notice");
+    const unresolved=alerts.error||!advisory;
+    const technicalLevel=unresolved?"unavailable":hasDue?"due":hasSoon?"soon":hasNotice?"notice":"ok";
+    flag.classList.add(technicalLevel);
+    heading.textContent=unresolved?"MANTENIMIENTO · SIN CONSULTA DE ALERTAS":
+      hasDue?"MANTENIMIENTO · REVISAR VENCIMIENTO":
+      hasSoon?"MANTENIMIENTO · CONTROL PRÓXIMO":
+      hasNotice?"MANTENIMIENTO · DATOS PENDIENTES":"MANTENIMIENTO · SIN ALERTAS CALCULABLES";
+    flag.append(heading);
+    for(const item of warningItems.slice(0,3)){
+     const p=document.createElement("p");p.textContent="• "+String(item.message||"Control por revisar");flag.append(p);
+    }
+    if(unresolved||!warningItems.length){
+     const p=document.createElement("p");p.textContent=alerts.error?"Error al consultar avisos: "+(alerts.error.message||"Sin detalle"):
+      unresolved?"La matrícula no apareció en el seguimiento técnico. Verificá el vínculo desde Mantenimiento.":
+      "Sin alertas con los controles cargados. Esto NO acredita aeronavegabilidad ni reemplaza las libretas, inspecciones y DA.";
+     flag.append(p);
+    }
+    if(manager){
+     const link=document.createElement("a");
+     link.href=$("maintenanceLink").href+"&matricula="+encodeURIComponent(a.registration);
+     link.textContent="Abrir ficha de mantenimiento de "+a.registration;
+     flag.append(link);
+    }
+    box.append(flag);
     const maintenanceAirframe=planes.find(x=>String(x.reg||"").toUpperCase()===String(a.registration||"").toUpperCase());
     if(maintenanceAirframe){
      const serviceIds=new Set(services.filter(x=>x.ac===maintenanceAirframe.id).map(x=>x.id));
