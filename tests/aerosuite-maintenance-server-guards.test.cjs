@@ -28,13 +28,14 @@ test('Inspecciones: aplicabilidad, anual aprobada, 100 h, rechazada y sin consta
  assert.match(sql,/'code','inspection_hours'/);
  assert.match(sql,/'code','inspection_calendar'/);
  assert.match(sql,/least\(extract\(day from v_date_text::date\)::int/);
+ assert.match(sql,/America\/Argentina\/Buenos_Aires/);
 });
 test('DA: sin evidencia son avisos, límites fechados o en horas pasan a due',()=>{
  assert.match(sql,/'code','ad_applicability'/);
  assert.match(sql,/'code','ad_missing_record'/);
  assert.match(sql,/'code','ad_calendar'/);
  assert.match(sql,/'code','ad_hours'/);
- assert.match(sql,/'level',case when v_date_due<=current_date then 'due' else 'soon' end/);
+ assert.match(sql,/'level',case when v_date_due<=v_today then 'due' else 'soon' end/);
  assert.match(sql,/'level',case when v_remaining<=0 then 'due' else 'soon' end/);
 });
 test('Novedades abiertas se notifican sin presumir automáticamente no aeronavegabilidad',()=>{
