@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="es"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>AeroSuite · Conciliación institucional</title>
+<style>
+:root{font:15px/1.5 Inter,system-ui,Arial,sans-serif;color:#edf6fc;color-scheme:dark}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:linear-gradient(145deg,#102435,#1a3b51)}
+header{padding:18px max(18px,calc((100vw - 1040px)/2));background:#172e41;border-bottom:1px solid #5a7c94;display:flex;align-items:center;gap:16px;justify-content:space-between;flex-wrap:wrap}
+.brand{font-size:22px;font-weight:850;color:#fff;text-decoration:none}.brand span{color:#e9c391}.brand small{display:block;font-size:10px;color:#bed2df;letter-spacing:.12em}
+a{color:#cae8fa}
+main{max-width:1040px;padding:25px 17px 70px;margin:auto}
+.eyebrow{color:#f1c98e;font-weight:800;font-size:11px;letter-spacing:.12em;text-transform:uppercase}
+h1{font-size:clamp(25px,4vw,36px);margin:4px 0 7px}p{color:#c7d9e5}
+.panel{border:1px solid #5d7c92;background:#1b3447;border-radius:14px;padding:20px;margin:15px 0}
+.head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+button{font:inherit;background:#2d536a;border:1px solid #98b5c7;border-radius:9px;color:white;padding:9px 13px;cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}
+button:focus-visible,a:focus-visible{outline:3px solid #f1ca8f;outline-offset:2px}
+#status{padding:12px 14px;border-radius:9px;border:1px solid #5c7f98;background:#23475a}
+.item{padding:16px;border:1px solid #648396;background:#223f51;border-radius:11px;margin:12px 0}
+.item h2{font-size:17px;margin:0}.item p{margin:7px 0}.detail{font-size:13px;color:#c3d6e0;overflow-wrap:anywhere}
+strong{color:#f0cc94}.count{font-weight:800;color:#f1c998}
+</style>
+<script src="../../assets/supabase-2.117.2.min.js"></script>
+<script src="../../assets/community-config.js"></script>
+</head><body>
+<header><a class="brand" href="index.html">Aero<span>Suite</span><small>BY GENTE DE VUELO</small></a><a id="back" href="portal-escuela.html">Volver a la escuela</a></header>
+<main>
+<div class="eyebrow">Contaduría · Control institucional</div>
+<h1>Conciliación y registros pendientes</h1>
+<p>Esta pantalla identifica antecedentes que requieren cotejo documental. No crea deudas, no modifica cobros y no suma horas de vuelo.</p>
+<p id="status" role="status" aria-live="polite">Verificando sesión y permisos…</p>
+<section id="results" class="panel" hidden>
+<div class="head"><h2 id="count">Pendientes de revisión</h2><button id="refresh" type="button">Actualizar revisión</button></div>
+<div id="items"></div>
+<p><strong>Importante:</strong> un turno sin informe no demuestra que el vuelo se haya realizado. Consultá primero los respaldos de Secretaría y del instructor.</p>
+<a id="operations" href="#">Volver a operaciones y contaduría</a>
+</section>
+</main>
+<script>
+(async()=>{
+'use strict';
+const $=id=>document.getElementById(id),params=new URLSearchParams(location.search);
+const inst=params.get('institucion')||'',role=params.get('rol')||'';
+const labLogin=params.get('prueba')==='1'&&['administrador','secretaria'].includes(role);
+const back=new URL('portal-escuela.html',location.href);
+for(const k of ['institucion','rol','prueba'])if(params.has(k))back.searchParams.set(k,params.get(k));
+$('back').href=back.href;
+$('operations').href='operaciones-institucionales.html?institucion='+encodeURIComponent(inst)+'&rol='+encodeURIComponent(role)+(labLogin?'&prueba=1':'')+'#contaduria';
+const say=(s,error=false)=>{$('status').textContent=s;$('status').style.borderColor=error?'#e6aaa5':'#65869d'};
+try{
+ if(!inst||!['administrador','secretaria'].includes(role))throw Error('Ingresá desde Dirección o Secretaría.');
+ if(!window.supabase||!window.GDV_CONFIG?.url||!window.GDV_CONFIG?.key)throw Error('Conexión Supabase no disponible.');
+ const db=supabase.createClient(GDV_CONFIG.url,GDV_CONFIG.key,{
+  auth:{storageKey:labLogin?'aerosuite-laboratorio-'+role+'-v1-auth':'aerosuite-institucional-v2-auth',persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}
+ });
+ const identity=await db.auth.getUser();if(identity.error||!identity.data?.user)throw Error('No hay sesión institucional.');
+ const access=await db.rpc('aerosuite_my_institution_access_v2');if(access.error)throw access.error;
+ const school=(access.data||[]).find(x=>x.institution_id===inst&&x.my_role===role&&x.can_access);
+ if(!school)throw Error('Sin permiso de gestión para esta institución.');
+ $('results').hidden=false;
+ const fmtDate=x=>{const d=new Date(x);return Number.isFinite(d.valueOf())?
+  new Intl.DateTimeFormat('es-AR',{timeZone:'America/Argentina/Buenos_Aires',dateStyle:'short',timeStyle:'short',hourCycle:'h23'}).format(d):'Fecha no disponible'};
+ async function load(){
+  $('refresh').disabled=true;
+  try{
+   const r=await db.rpc('aerosuite_reconciliation_open_items',{p_institution_id:inst,p_limit:200});
+   if(r.error)throw r.error;
+   const data=r.data||{},list=data.items||[];
+   $('count').textContent=Number(data.total||0)+' observación(es) para cotejar'+(data.read_only?' · Modo consulta':'');
+   const root=$('items');root.replaceChildren();
+   if(!list.length){const p=document.createElement('p');p.textContent='No se detectaron excepciones con los controles actuales.';root.append(p);}
+   for(const x of list){
+    const row=document.createElement('article');row.className='item';
+    const h=document.createElement('h2');h.textContent=x.description||x.issue;
+    const ctx=document.createElement('p');ctx.className='detail';
+    ctx.textContent='Turno: '+String(x.booking_id||'—')+' · '+fmtDate(x.starts_at)+
+     ' · Matrícula: '+(x.registration||'sin confirmar')+
+     (x.minutes!==null&&x.minutes!==undefined?' · Minutos registrados: '+x.minutes:'');
+    const action=document.createElement('p');action.textContent=x.instruction||'Confrontar registros originales.';
+    row.append(h,ctx,action);root.append(row);
+   }
+   say('Conciliación de '+school.institution_name+' consultada. No se modificó ninguna operación.');
+  }catch(e){say('Error de conciliación: '+(e.message||'Error de servidor'),true);}
+  finally{$('refresh').disabled=false}
+ }
+ $('refresh').addEventListener('click',load);await load();
+}catch(e){say('No disponible: '+(e.message||'Error'),true)}
+})();
+</script>
+</body></html>
