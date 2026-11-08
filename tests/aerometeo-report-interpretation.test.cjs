@@ -77,6 +77,6 @@ test('La tarjeta Open-Meteo compacta solo afecta AeroMeteo, no AeroLocator',()=>
  assert.match(css,/\.am-forecast-dock\{\s*width:min\(278px/);
  assert.match(css,/\.am-compact-metrics\{display:grid/);
  assert.match(html,/aerolocator-open-meteo-ui\.js\?v=20261107compactcard1/);
- assert.match(html,/aerometeo\.css\?v=20261107compactcard1/);
- assert.match(html,/aerometeo-app\.js\?v=20261107explain1/);
+ assert.match(html,/aerometeo\.css\?v=20261108phenomena1/);
+ assert.match(html,/aerometeo-app\.js\?v=20261108phenomena1/);
 });
