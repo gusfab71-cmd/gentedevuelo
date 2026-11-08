@@ -4924,7 +4924,7 @@ img, video { max-width: 100%; }
     </summary>
     <div class="cuenta-opciones" id="opcionesCuenta">
       <a href="comunidad.html#hangar">Mi Hangar</a><a href="comunidad.html#perfil">Editar perfil</a><a href="comunidad.html#preferencias-correo">Correos y avisos</a>
-      <a href="utilidades/gestion-aeronautica/superadministrador.html" id="gdvAeroSuitePrivateAdminLink" hidden>Panel privado AeroSuite</a>
+      <a href="utilidades/gestion-aeronautica/superadministrador.html" id="gdvAeroSuitePrivateAdminLink" hidden>Panel privado FlyPro</a>
       <a href="comunidad.html#almacenamiento" id="gdvStorageLink" hidden>Almacenamiento</a>
        <a href="moderacion.html#video-portada" id="gdvStolAdminLink" hidden>Foto o video de portada</a>
        <a href="index.html?editar-tarjetas=1#inicio" id="gdvCardsEditLink" hidden>Editar tarjetas de portada</a>
@@ -4947,7 +4947,7 @@ img, video { max-width: 100%; }
   </button>
 
   <div class="menu-desplegable" id="menuDesplegable">
-    <a href="comunidad.html#hangar" id="gdv-hangar-link">Mi Hangar</a><a href="comunidad.html#foro">Foro</a><a href="aerochat.html">AeroChat</a><a href="comunidad.html#galeria">Galería</a><a href="#tienda-seccion">AeroShop</a><a href="comunidad.html#integrantes" class="gdv-online-link"><span class="gdv-online-label">Integrantes</span><span class="gdv-online-badge" data-gdv-online-badge hidden aria-live="off"><i class="gdv-online-dot" aria-hidden="true"></i><span data-gdv-online-number></span><span class="gdv-online-status">conectados</span></span></a><a id="gdv-tools-menu-link" href="utilidades/">Herramientas</a><a id="gdv-aerosuite-menu-link" href="utilidades/gestion-aeronautica/" hidden aria-label="AeroSuite, acceso exclusivo del administrador">AeroSuite</a><a href="comunidad.html#contacto">Contacto</a>
+    <a href="comunidad.html#hangar" id="gdv-hangar-link">Mi Hangar</a><a href="comunidad.html#foro">Foro</a><a href="aerochat.html">AeroChat</a><a href="comunidad.html#galeria">Galería</a><a href="#tienda-seccion">AeroShop</a><a href="comunidad.html#integrantes" class="gdv-online-link"><span class="gdv-online-label">Integrantes</span><span class="gdv-online-badge" data-gdv-online-badge hidden aria-live="off"><i class="gdv-online-dot" aria-hidden="true"></i><span data-gdv-online-number></span><span class="gdv-online-status">conectados</span></span></a><a id="gdv-tools-menu-link" href="utilidades/">Herramientas</a><a id="gdv-aerosuite-menu-link" href="utilidades/gestion-aeronautica/" hidden aria-label="FlyPro, acceso exclusivo del administrador"><span style="color:#e7eef7">Fly</span><span style="color:#54b7ff">Pro</span></a><a href="comunidad.html#contacto">Contacto</a>
   </div>
 
 </nav>
@@ -6194,7 +6194,7 @@ img, video { max-width: 100%; }
     <article class="gdv-about-feature"><h3>AeroChat</h3><p>Una sala de conversación en vivo para encontrarse con otros integrantes, intercambiar ideas y mantener la camaradería aeronáutica.</p></article>
     <article class="gdv-about-feature"><h3>Travesías y Agenda Aeronáutica</h3><p>Relatos de vuelos y recorridos, junto con un espacio para difundir encuentros, actividades y eventos de interés para la comunidad.</p></article>
     <article class="gdv-about-feature"><h3>Rincón de Robert Shimoda</h3><p>Consejos, historias, curiosidades y publicaciones que invitan a descubrir, aprender y conversar sobre el fascinante mundo del vuelo.</p></article>
-    <article class="gdv-about-feature"><h3>Utilidades e información aeronáutica</h3><p>Herramientas como AeroLocator, cálculo de sustentación y rodaje con viento, además de Flight Operations para planificación, meteorología y navegación en AeroSuite.</p></article>
+    <article class="gdv-about-feature"><h3>Utilidades e información aeronáutica</h3><p>Herramientas como AeroLocator, cálculo de sustentación y rodaje con viento, además de Flight Operations para planificación, meteorología y navegación en FlyPro.</p></article>
     <article class="gdv-about-feature"><h3>CompraVenta y Subasta Inversa</h3><p>Un sector para publicar avisos de venta o búsqueda de artículos vinculados a la aviación y facilitar el contacto entre interesados.</p></article>
     <article class="gdv-about-feature"><h3>AeroShop e Instituciones Amigas</h3><p>Espacios para conocer ofertas y aportes de comercios aeronáuticos, aeroclubes, escuelas de vuelo y otras instituciones vinculadas al sector.</p></article>
   </div>
@@ -6619,7 +6619,7 @@ document.getElementById("hangarLicense").textContent = perfil?.aviation_license 
       window.gdvLegacyAdmin = true;
     }
   }
-  // AeroSuite sustituye a «Utilidades» en el menú del administrador.
+  // FlyPro sustituye a «Utilidades» en el menú del administrador.
   // Para la comunidad se mantiene el acceso a herramientas públicas.
   const aeroSuiteNav = document.getElementById("gdv-aerosuite-menu-link");
   const toolsNav = document.getElementById("gdv-tools-menu-link");

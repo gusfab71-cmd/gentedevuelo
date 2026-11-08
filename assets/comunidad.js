@@ -103,7 +103,7 @@ function account(){
  // Accesos de administración agrupados por producto, sin modificar permisos.
  const adminSection=label=>'<span class="account-admin-section-title">'+label+'</span>';
  const aeroSuiteLinks=isAeroSuiteSuperadmin?
-   adminSection('AeroSuite · Superadministración')+
+   adminSection('<span style="color:#e7eef7">Fly</span><span style="color:#57baff">Pro</span> · Superadministración')+
    link('Instituciones y licencias','utilidades/gestion-aeronautica/superadministrador.html','')+
    link('Control global de cuentas','utilidades/gestion-aeronautica/superadmin-cuentas.html','')+
    link('Padrón institucional','utilidades/gestion-aeronautica/superadministrador.html#registros-aerosuite','')+
