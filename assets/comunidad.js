@@ -120,7 +120,6 @@ function account(){
    adminSection('Herramientas y contenido del sitio')+
    link('Almacenamiento','#almacenamiento','')+
    '<a href="utilidades/mantenimiento-admin.html">Historiales de mantenimiento</a>'+
-   '<a href="pronarea-admin.html">PRONAREA FIR Ezeiza</a>'+
    '<a href="moderacion.html#conocimiento-robert">Conocimiento de Robert Shimoda</a>'+
    link('Video de portada','moderacion.html#video-portada','')+
    link('Editar tarjetas de portada','index.html?editar-tarjetas=1#inicio','')+
