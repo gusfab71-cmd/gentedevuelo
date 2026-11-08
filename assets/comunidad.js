@@ -102,6 +102,8 @@ function account(){
    link('Correos y avisos','#preferencias-correo','');
  const adminLinks=
    (isAeroSuiteSuperadmin?link('Panel privado AeroSuite','utilidades/gestion-aeronautica/superadministrador.html',''):'')+
+   (isAeroSuiteSuperadmin?link('Laboratorio AeroSuite','utilidades/gestion-aeronautica/centro-pruebas-operativas.html',''):'')+
+   (isAeroSuiteSuperadmin?link('Pruebas automáticas AeroSuite','utilidades/gestion-aeronautica/centro-monitoreo-aerosuite.html',''):'')+
    (isAdmin?link(isOwnerAdmin?'Moderación':'Panel de moderador','#moderacion',''):'')+
    (isOwnerAdmin?link('Comunicados','#gestion/comunicados',''):'')+
    (isOwnerAdmin?link('Almacenamiento','#almacenamiento',''):'')+
