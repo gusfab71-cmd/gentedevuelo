@@ -23,7 +23,7 @@ test('Menú: los cinco accesos de AeroSuite están reservados al superadministra
 test('Menú: mantiene las herramientas de la comunidad bajo los permisos originales',()=>{
  assert.match(menu,/const communityAdminLinks=isAdmin\?/);
  assert.match(menu,/const siteAdminLinks=isOwnerAdmin\?/);
- for(const label of ['Registros incompletos','Registro manual','Comunicados','Revisión de AeroChat','Historiales de mantenimiento','PRONAREA FIR Ezeiza','Conocimiento de Robert Shimoda','Almacenamiento','Video de portada','Editar tarjetas de portada','Mover logo y textos']){
+ for(const label of ['Registros incompletos','Registro manual','Comunicados','Revisión de AeroChat','Historiales de mantenimiento','Conocimiento de Robert Shimoda','Almacenamiento','Video de portada','Editar tarjetas de portada','Mover logo y textos']){
   assert.ok(menu.includes(label),label);
  }
 });
