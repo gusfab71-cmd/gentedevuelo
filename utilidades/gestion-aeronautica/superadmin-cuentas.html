@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>AeroSuite · Control global de cuentas</title>
+<style>
+:root{font-family:Inter,system-ui,Arial,sans-serif;color:#eff7fc;background:#0f202e;color-scheme:dark}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:linear-gradient(155deg,#122b3d,#0e1b29)}
+[hidden]{display:none!important}a{color:#c7e7ff}
+header{background:#182f42;border-bottom:1px solid #56778b;padding:17px max(18px,calc((100vw - 1160px)/2));display:flex;gap:12px;justify-content:space-between;align-items:center;flex-wrap:wrap}
+.brand{font-weight:850;font-size:18px;color:#f1d09d;text-decoration:none}
+header nav{display:flex;gap:18px;font-size:13px}
+main{max-width:1160px;margin:auto;padding:28px 18px 65px}
+h1{font-size:clamp(26px,4vw,40px);margin:8px 0 12px}
+h2{font-size:17px}
+p{line-height:1.55;color:#bfd1dc}
+.eyebrow{color:#f0ce99;letter-spacing:.12em;font-size:11px;font-weight:850;text-transform:uppercase}
+.panel{background:#1a3446;border:1px solid #4f768c;border-radius:15px;padding:20px;margin:17px 0}
+.notice{border-left:3px solid #f0c984;padding:12px 16px;background:#203748;color:#e0eef6;font-size:13px;line-height:1.6}
+.controls{display:grid;grid-template-columns:minmax(200px,2fr) minmax(170px,1fr);gap:12px;margin:18px 0}
+label{display:grid;gap:6px;color:#e0eff8;font-size:13px}
+input,select,button{font:inherit;font-size:13px;padding:11px;border-radius:9px;background:#10293b;color:white;border:1px solid #658ca3}
+button{cursor:pointer;background:#325973;font-weight:800}
+button:disabled{opacity:.48;cursor:not-allowed}
+input:focus-visible,select:focus-visible,button:focus-visible,a:focus-visible{outline:2px solid #f3d18d;outline-offset:3px}
+.account-list{display:grid;gap:11px}
+.account{border:1px solid #587e91;background:#122d41;border-radius:11px;padding:15px}
+.account-head{display:flex;gap:14px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}
+.account h3{font-size:15px;word-break:break-all;margin:0}
+.account small{color:#b5cbd8;line-height:1.6}
+.account .status{font-size:11px;border:1px solid #809cab;border-radius:20px;padding:5px 9px;color:#e9f4fc}
+.info{margin-top:8px;display:flex;gap:8px 22px;flex-wrap:wrap;font-size:12px;line-height:1.55;color:#c3d7e4}
+.page-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:18px}
+.page-actions .buttons{display:flex;gap:9px}
+.muted{font-size:12px;color:#b6cbda}
+@media(max-width:620px){.controls{grid-template-columns:1fr}}
+</style>
+<script src="../../assets/supabase-2.117.2.min.js"></script>
+<script src="../../assets/community-config.js"></script>
+<script src="../../assets/auth-guard.js?v=20261013registro2"></script>
+</head>
+<body>
+<header>
+ <a class="brand" href="superadministrador.html">AeroSuite · Superadministración</a>
+ <nav><a href="superadministrador.html#registros-aerosuite">Padrón institucional</a><a href="../../moderacion.html">Moderación Gente de Vuelo</a></nav>
+</header>
+<main>
+ <div class="eyebrow">Acceso privado del Superadministrador</div>
+ <h1>Control global de cuentas</h1>
+ <p>Registro único de cuentas de Gente de Vuelo y AeroSuite. Permite revisar altas, verificación del correo, pertenencia a la comunidad y accesos institucionales.</p>
+ <div id="status" class="notice" role="status" aria-live="polite">Verificando acceso de Superadministración…</div>
+ <div id="adminContent" hidden>
+  <section class="panel">
+   <h2>Revisión de cuentas</h2>
+   <p class="muted">Una cuenta sin invitación a AeroSuite puede ser perfectamente legítima en Gente de Vuelo. «Sin vínculo detectado» exige revisión manual; nunca implica eliminación automática.</p>
+   <div class="controls">
+    <label>Buscar en esta página
+     <input id="search" type="search" placeholder="Correo, usuario o institución" autocomplete="off">
+    </label>
+    <label>Estado
+     <select id="kind">
+      <option value="">Todos</option>
+      <option value="Sin vínculo detectado · revisar">Sin vínculo detectado</option>
+      <option value="Correo sin verificar">Correo sin verificar</option>
+      <option value="Comunidad Gente de Vuelo">Comunidad</option>
+      <option value="Acceso institucional">AeroSuite</option>
+      <option value="Comunidad + institución">Comunidad y AeroSuite</option>
+      <option value="Invitación pendiente">Invitación pendiente</option>
+      <option value="Administración protegida">Administración protegida</option>
+     </select>
+    </label>
+   </div>
+   <div id="count" class="muted" role="status"></div>
+   <div id="accounts" class="account-list"></div>
+   <div class="page-actions">
+    <span class="muted" id="pagination">Página 1</span>
+    <div class="buttons"><button id="previous" type="button">Anterior</button><button id="next" type="button">Siguiente</button><button id="refresh" type="button">Actualizar</button></div>
+   </div>
+  </section>
+  <div class="notice">
+   <strong>Eliminación de cuentas:</strong> este panel es de consulta. La baja institucional se gestiona en el Padrón de AeroSuite; la moderación comunitaria dispone de herramientas propias. La eliminación global definitiva requiere un procedimiento adicional que preserve los libros de vuelo, informes, contabilidad y auditorías.
+  </div>
+ </div>
+</main>
+<script>
+'use strict';
+(async()=>{
+ const byId=id=>document.getElementById(id);
+ const status=byId('status'),content=byId('adminContent');
+ const pageSize=200;let page=0,all=[],db,loading=false;
+ const make=(tag,text,cls)=>{
+  const x=document.createElement(tag);if(text!==undefined)x.textContent=text;
+  if(cls)x.className=cls;return x;
+ };
+ const pretty=date=>{
+  if(!date)return '—';
+  const d=new Date(date);
+  return Number.isNaN(d.getTime())?'—':new Intl.DateTimeFormat('es-AR',{dateStyle:'medium',timeStyle:'short'}).format(d);
+ };
+ const show=()=>{
+  const term=byId('search').value.trim().toLowerCase(),kind=byId('kind').value;
+  const selected=all.filter(x=>(!kind||x.review_status===kind)&&(!term||
+   [x.email,x.username,...(x.institutions||[]),...(x.institutional_roles||[])]
+    .some(y=>String(y||'').toLowerCase().includes(term))));
+  const list=byId('accounts');list.replaceChildren();
+  if(!selected.length)list.append(make('p','No hay cuentas que coincidan en esta página.','muted'));
+  for(const u of selected){
+   const card=make('article',undefined,'account'),heading=make('div',undefined,'account-head');
+   const principal=make('div');
+   principal.append(make('h3',u.email||'Sin correo'));
+   principal.append(make('small',u.username?'Usuario: '+u.username:'Sin nombre de usuario registrado'));
+   heading.append(principal,make('span',u.review_status||'Sin clasificar','status'));
+   const info=make('div',undefined,'info');
+   for(const value of [
+    'Alta: '+pretty(u.created_at),
+    'Correo: '+(u.verified_at?'Verificado':'Sin verificar'),
+    'Último ingreso: '+pretty(u.last_sign_in_at),
+    'Comunidad: '+(u.community_member?'Sí':'No'),
+    'Perfil completo: '+(u.profile_completed?'Sí':'No'),
+    'Roles institucionales: '+((u.institutional_roles||[]).join(', ')||'Ninguno'),
+    'Instituciones: '+((u.institutions||[]).join(', ')||'Ninguna'),
+    'Invitaciones vigentes: '+(u.pending_invitations||0)
+   ]) info.append(make('span',value));
+   card.append(heading,info);list.append(card);
+  }
+  byId('count').textContent=selected.length+' cuentas mostradas de '+all.length+' obtenidas en esta página (máximo 200).';
+  byId('pagination').textContent='Página '+(page+1);
+  byId('previous').disabled=loading||page===0;
+  byId('next').disabled=loading||all.length<pageSize;
+ };
+ async function load(){
+  if(loading)return;loading=true;
+  byId('previous').disabled=true;byId('next').disabled=true;byId('refresh').disabled=true;
+  status.textContent='Consultando cuentas en Supabase…';
+  try{
+   const {data,error}=await db.rpc('gdv_superadmin_global_accounts',{p_limit:pageSize,p_offset:page*pageSize});
+   if(error)throw error;
+   if(!Array.isArray(data))throw Error('El listado no devolvió registros válidos.');
+   all=data;show();status.textContent='Consulta completada. Solo Superadministración puede acceder a este padrón.';
+  }catch(err){
+   all=[];show();
+   status.textContent='El padrón global todavía no está disponible en Supabase: '+(err?.message||'Error de consulta')+'. Debe validarse y habilitarse primero la función segura del servidor.';
+  }finally{loading=false;byId('refresh').disabled=false;show();}
+ }
+ byId('search').addEventListener('input',show);
+ byId('kind').addEventListener('change',show);
+ byId('refresh').addEventListener('click',load);
+ byId('previous').addEventListener('click',()=>{if(page>0){page--;load();}});
+ byId('next').addEventListener('click',()=>{if(all.length===pageSize){page++;load();}});
+ try{
+  await window.GDV_AUTH.ready;db=window.GDV_AUTH?.client;
+  if(!db)throw Error('No hay conexión de autenticación.');
+  const auth=await db.auth.getUser();
+  if(auth.error||!auth.data?.user){status.textContent='Iniciá sesión en Gente de Vuelo.';return;}
+  const permission=await db.from('aerosuite_superadmins').select('user_id').eq('user_id',auth.data.user.id).maybeSingle();
+  if(permission.error)throw permission.error;
+  if(!permission.data){status.textContent='Acceso denegado. Esta cuenta no tiene permisos de Superadministración.';return;}
+  content.hidden=false;await load();
+ }catch(err){status.textContent='No fue posible validar la sesión: '+(err?.message||'Error de autenticación');}
+})();
+</script>
+</body></html>
