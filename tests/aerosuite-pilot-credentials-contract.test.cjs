@@ -49,7 +49,9 @@ test('Avisos de 30 días, incompletos y vencidos no equivalen a autorización in
  assert.match(profile,/Todavía no se declararon vencimientos/);
  assert.match(portal,/Licencia pendiente de verificación institucional/);
  assert.match(portal,/Verificación institucional registrada/);
- assert.match(portal,/pilot\.verified/);
+ assert.match(portal,/pilot\.school_verified/);
+ assert.match(portal,/pilot\.documentation_current/);
+ assert.match(portal,/aerosuite_pilot_verify/);
 });
 test('Sin despliegue de la tabla, la ficha principal sigue disponible sin pérdida silenciosa',()=>{
  assert.match(profile,/\['PGRST205','42P01'\]\.includes\(error\.code\)/);
