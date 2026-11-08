@@ -40,5 +40,5 @@ test('El panel no guarda permisos en URL ni ejecuta acciones destructivas',()=>{
  assert.doesNotMatch(panel,/\.delete\(|auth\.admin\.deleteUser\(|\.update\(|\.insert\(/);
  assert.match(panel,/createElement\(tag\)/);
  assert.match(panel,/x\.textContent=text/);
- assert.match(panel,/Este panel es de consulta/);
+ assert.match(panel,/este panel es de consulta/i);
 });
