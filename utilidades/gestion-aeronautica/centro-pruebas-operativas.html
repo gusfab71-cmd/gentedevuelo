@@ -229,7 +229,9 @@ function renderRun(){
  const editing=active&&active.status==='in_progress';
  $('steps').hidden=!editing;$('runEditor').hidden=!editing;
  $('start').disabled=Boolean(editing);
- setText('runStatus',editing?'Prueba iniciada '+time(active.started_at)+' · '+summary(active):'No hay prueba en curso. Seleccioná «Iniciar nueva prueba» para documentar una verificación.');
+ setText('runStatus',editing?'Prueba iniciada '+time(active.started_at)+' · '+summary(active):
+  active?.status==='finished'?'Prueba cerrada '+time(active.finished_at)+' · '+summary(active):
+  'No hay prueba en curso. Seleccioná «Iniciar nueva prueba» para documentar una verificación.');
  if(!editing)return;
  $('steps').replaceChildren();
  for(const [key,title,description] of names){
@@ -302,8 +304,22 @@ try{
  $('showTestPassword').onchange=()=>{const type=$('showTestPassword').checked?'text':'password';$('testPassword').type=type;$('testPasswordConfirm').type=type;};
  $('save').onclick=()=>save(false);$('finish').onclick=()=>save(true);
  $('start').onclick=async()=>{
-  $('start').disabled=true;setText('runStatus','Creando sesión de pruebas…');
+  $('start').disabled=true;setText('runStatus','Comprobando sesiones de prueba abiertas…');
   try{
+   // Antes de insertar, recuperar la sesión abierta más reciente de este laboratorio.
+   // Evita crear otra desde la interfaz cuando quedó una verificación sin terminar.
+   const previous=await db.from('aerosuite_test_runs').select('id')
+    .eq('institution_id',testId).eq('status','in_progress')
+    .order('started_at',{ascending:false}).limit(1);
+   if(previous.error)throw previous.error;
+   if(previous.data?.length){
+    const found=await db.from('aerosuite_test_runs').select('*')
+     .eq('institution_id',testId).eq('id',previous.data[0].id).single();
+    if(found.error)throw found.error;
+    active=found.data;renderRun();
+    setText('runStatus','Se recuperó una prueba abierta '+time(active.started_at)+' · '+summary(active)+'. Cerrala antes de iniciar otra.');
+    await reloadHistory();return;
+   }
    if(!await reloadHealth())throw Error('No se pudo obtener el diagnóstico inicial vigente y completo.');
    const r=await db.from('aerosuite_test_runs').insert({institution_id:testId,started_by:user.id,baseline:health}).select().single();
    if(r.error)throw r.error;active=r.data;renderRun();await reloadHistory();
