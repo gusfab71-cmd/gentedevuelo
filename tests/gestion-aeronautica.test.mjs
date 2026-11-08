@@ -707,10 +707,12 @@ console.log('PASS: Flight Operations unificado en Alumno e Instructor sin IA y c
 
 // Pistas No Oficiales: una única fuente compartida entre Gente de Vuelo y AeroSuite.
 const airstripsOriginal=fs.readFileSync(new URL('../utilidades/pistas-no-oficiales.html',import.meta.url),'utf8');
-assert.match(airstripsOriginal,/<title>AeroLocator · Mapa de pistas y aeródromos/,'El nombre visible de la aplicación debe ser AeroLocator');
-assert.match(airstripsOriginal,/<h1>AeroLocator<\/h1>/,'AeroLocator en el centro de control');
-assert.match(airstripsOriginal,/<strong>AeroLocator · Mapa interactivo<\/strong>/,'AeroLocator en el mapa');
-assert.match(airstripsOriginal,/<small>AEROLOCATOR · MAPA AERONÁUTICO<\/small>/,'AeroLocator en la barra superior');
+assert.match(airstripsOriginal,/<title>AeroLocator · Developed by Gente de Vuelo<\/title>/,'El título identifica a AeroLocator');
+assert.match(airstripsOriginal,/aria-label="AeroLocator · Developed by Gente de Vuelo"/,'La cabecera conserva el nombre accesible');
+assert.match(airstripsOriginal,/alt="AeroLocator · Developed by Gente de Vuelo"/,'El logo 3D conserva texto alternativo identificable');
+assert.match(airstripsOriginal,/class="aerolocator-brand-lockup"/,'El logo actual se muestra en la cabecera');
+assert.match(airstripsOriginal,/<h1>Centro de control<\/h1>/,'El área de control mantiene un encabezado claro');
+assert.match(airstripsOriginal,/class="aerolocator-back-to-aerosuite" href="gestion-aeronautica\//,'El retorno a AeroSuite sigue disponible');
 
 for(const category of ['controlled_public','uncontrolled_public','private_aerodrome','lad','heliport','unverified']){
  assert.ok(airstripsOriginal.includes(category+':'),'Debe existir categoría GdV '+category);
@@ -797,7 +799,7 @@ assert.match(html,/no confirma aptitud operacional/);
 assert.match(html,/AIP, NOTAM/);
 assert.match(landing,/AeroLocator/);
 assert.match(landing,/href="\.\.\/pistas-no-oficiales\.html"/);
-assert.match(landing,/ninguna referencia garantiza aptitud/);
+assert.match(landing,/Verificá las fuentes oficiales\./,'La portada recuerda la verificación documental obligatoria');
 assert.match(airstripsOriginal,/\.from\('community_airstrips'\)/);
 assert.match(airstripsOriginal,/\.eq\('status','approved'\)/,'Solo pistas aprobadas deben aparecer en el mapa comunitario');
 assert.match(airstripsOriginal,/status:'pending'/,'Las pistas nuevas requieren moderación');
