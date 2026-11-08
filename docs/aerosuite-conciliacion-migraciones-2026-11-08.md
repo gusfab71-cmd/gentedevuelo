@@ -102,3 +102,14 @@ está aplicado en el backend principal**; su prueba actual es estática, no E2E.
 Mantener suspendidos el alta de escuela real, la fusión, la publicación
 y los empujes masivos de migraciones hasta reconciliar las diferencias y
 validar la protección con identidades técnicas en un entorno segregado.
+
+### Contraste adicional de objetos del grupo sin versión
+
+Se verificaron 20 referencias representativas tomadas de esos 12 archivos:
+tablas de contacto, web push, video y turnera; funciones de bajas,
+onboarding, piloto y reservas; y políticas de registro completo.
+**Las 20 referencias existen en el catálogo remoto** (las dos etiquetas de
+registro completo corresponden a políticas RLS, no a triggers).
+Esto confirma que la ausencia de versión **no equivale** a ausencia de los
+objetos seleccionados; no demuestra que todo el SQL histórico sea idéntico,
+ni que sus grants o reglas sean equivalentes. No se ejecutaron escrituras.
