@@ -44,3 +44,18 @@ El laboratorio tiene siete tablas simplificadas y funciones de simulación. **No
 6. Autorización explícita del responsable para el alta de la primera escuela y para la publicación final; ningún dato sintético debe copiarse a esa institución.
 
 **No se publicaron cambios en Vercel ni se fusionó el PR #77.** La migración de serialización sí fue aplicada al backend y está documentada.
+
+## Conciliación y mantenimiento — hallazgos observados en el CTP (solo lectura)
+
+La RPC `aerosuite_reconciliation_open_items` devolvió **8 incidencias históricas únicamente en la institución de test**:
+- 1 informe aprobado (60 minutos, 02/11) sin liquidación registrada.
+- 1 checkout histórico (96 minutos, 31/10) sin matrícula conciliada.
+- 6 reservas pasadas sin informe entre el 31/10 y el 02/11.
+
+**Acción segura:** conservar trazabilidad y no inventar vuelos, matrículas, cobros ni RAV. Estas incidencias son del CTP y no se trasladan a la primera escuela real, que inicia con historial vacío. Se mantienen identificadas para conciliación documental o cierre administrativo de test, no se silencian por borrado de evidencias.
+
+`aerosuite_maintenance_alerts` devolvió **3 aeronaves ficticias con 6 avisos**: falta cargar horas iniciales y controles técnicos en las tres. Ninguna tenía un vencimiento `due` respaldado por datos cargados. La guarda efectiva de publicación **sí filtra por la matrícula específica del turno**, y bloquea si sus alertas contienen `level='due'`; no bloquea otras aeronaves por un vencimiento ajeno. La ausencia de documentación no permite declarar aeronavegabilidad ni completar contadores por cálculo; se exige carga verificada antes del alta de escuela real.
+
+## Control Vercel — discrepancia corregida
+
+Se comprobó que `vercel.json` tenía `git.deploymentEnabled['feat/aerometeo-hourly-visual-20261107']=true` aunque el seguimiento lo suponía apagado. Se cambió a `false` en la rama, manteniendo `main=true`. GitHub reportó `Vercel: success` para un commit anterior, pero no se obtuvo una URL Preview pública ni validación visual auténtica; la existencia de un estado exitoso no equivale a revisión E2E. El HEAD posterior al apagado mantiene todas las pruebas CI aprobadas y sin estado de despliegue Vercel.
