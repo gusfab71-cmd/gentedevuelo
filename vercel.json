@@ -148,7 +148,7 @@
     "deploymentEnabled": {
       "**": false,
       "main": true,
-      "feat/aerometeo-hourly-visual-20261107": true
+      "feat/aerometeo-hourly-visual-20261107": false
     }
   }
 }
