@@ -9,7 +9,7 @@ const revoke=fs.readFileSync(path.join(root,'supabase/migrations/20261108071500_
 test('Eliminar institución requiere confirmación y cuenta superadmin',()=>{
  assert.match(fix,/public\.aerosuite_superadmins/);
  assert.match(fix,/p_confirm_name<>v_row\.name/);
- assert.match(fix,/El Laboratorio AeroSuite permanente/);
+ assert.match(fix,/Laboratorio AeroSuite permanente/);
  assert.match(fix,/aerosuite_permanent_test_lab/);
 });
 test('Eliminar institución limpia sus verificaciones de piloto, pero no las de otras escuelas',()=>{
