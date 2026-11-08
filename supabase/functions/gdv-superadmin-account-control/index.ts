@@ -72,8 +72,21 @@ Deno.serve(async(req:Request)=>{
  ]);
  if(site.error||superUser.error||special.error)
    return fail(503,"No fue posible verificar si la cuenta está protegida.",origin);
+ // Cuentas del Centro de Testeo: comprobar contra la institución real,
+ // incluso si una identidad técnica antigua no tiene metadata de laboratorio.
+ const memberships=await db.from("aerosuite_institution_members")
+  .select("institution_id").eq("user_id",targetId);
+ if(memberships.error)return fail(503,"No se pudo verificar la pertenencia institucional.",origin);
+ const institutionIds=[...new Set((memberships.data||[]).map(v=>v.institution_id))];
+ let labMember=false;
+ if(institutionIds.length){
+  const tests=await db.from("aerosuite_institutions").select("id")
+   .in("id",institutionIds).eq("is_test",true).limit(1);
+  if(tests.error)return fail(503,"No se pudo comprobar si la cuenta pertenece al laboratorio.",origin);
+  labMember=Boolean(tests.data?.length);
+ }
  const isProtected=targetId===user.id||Boolean(site.data)||Boolean(superUser.data)||
-  Boolean(special.data)||target.app_metadata?.aerosuite_lab===true;
+  Boolean(special.data)||target.app_metadata?.aerosuite_lab===true||labMember;
  const banned=wasBanned((target as {banned_until?:string|null}).banned_until);
  if(action==="inspect"){
   const history=await db.from("gdv_superadmin_account_control_audit")
