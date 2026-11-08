@@ -350,13 +350,47 @@ try{
       const suffix=String(pilot.license_number||'').slice(-4);
       for(const line of [
        'Licencia: '+(suffix?'terminación '+suffix:'número no informado'),
-       pilot.verified?'Verificación institucional registrada':'Licencia pendiente de verificación institucional',
+       pilot.school_verified?'Verificación institucional registrada':'Pendiente de verificación institucional',
+       pilot.documentation_current?'CMA y vencimientos declarados vigentes hoy':'Sin CMA vigente comprobable o con vencimientos declarados: no autorizar vuelo solo',
        pilotExpiry('Certificado médico',pilot.medical_expires_on),
        pilotExpiry('Licencia',pilot.license_expires_on),
        pilotExpiry('Habilitaciones',pilot.ratings_expires_on),
        'Habilitaciones declaradas: '+(pilot.ratings_declared||'No informadas')
       ]){
        const detail=document.createElement('small');detail.textContent=line;meta.append(detail);
+      }
+      if(school.can_write){
+       const controls=document.createElement('div');controls.className='actions';
+       const action=document.createElement('button');action.type='button';
+       const approve=!pilot.school_verified;
+       action.textContent=approve?'Verificar documentos originales':'Revocar verificación';
+       action.addEventListener('click',async()=>{
+        if(approve && !pilot.documentation_current){
+         pilotRosterFeedback.textContent='No se puede verificar: completá la CMA vigente y corregí vencimientos en la ficha personal del piloto.';
+         return;
+        }
+        if(approve && !confirm('Confirmá únicamente si cotejaste los documentos originales. Esta verificación institucional NO certifica licencia ni reemplaza controles previos al vuelo. ¿Continuar?'))return;
+        const reference=prompt(approve?'Referencia del control documental efectuado por la escuela (mínimo 8 caracteres):':'Motivo o referencia de revocación (mínimo 8 caracteres):');
+        if(reference===null)return;
+        if(reference.trim().length<8||reference.trim().length>250){
+         pilotRosterFeedback.textContent='Indicá una referencia documental de 8 a 250 caracteres.';
+         return;
+        }
+        action.disabled=true;
+        try{
+         const {error}=await client.rpc('aerosuite_pilot_verify',{
+          p_institution_id:school.institution_id,p_user_id:pilot.user_id,
+          p_approved:approve,p_reference:reference.trim()
+         });
+         if(error)throw error;
+         await loadPilotRoster();
+         pilotRosterFeedback.textContent=approve?'Documentación cotejada y verificación institucional registrada.':'Verificación institucional revocada.';
+        }catch(error){
+         pilotRosterFeedback.textContent='No se pudo '+(approve?'verificar':'revocar')+': '+(error?.message||'Error del servidor');
+         action.disabled=false;
+        }
+       });
+       controls.append(action);card.append(controls);
       }
       card.append(meta);pilotRosterList.append(card);
      }
