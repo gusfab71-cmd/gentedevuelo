@@ -1,8 +1,12 @@
--- PROPUESTA NO APLICADA: legajo documental del Piloto PPA/PCA.
--- Implementar solo después de revisar las pantallas en Preview.
--- La información es DECLARADA por el piloto, no verifica licencia,
--- no modifica aerosuite_pilot_authorizations ni autoriza vuelos.
+-- MIGRACIÓN APLICADA EN SUPABASE PRINCIPAL EL 2026-11-08.
+-- Nombre: aerosuite_pilot_credentials_private_expiry_20261108.
+-- Aplicación confirmada en el historial de migraciones (versión 20261108042545).
+-- Legajo documental declarado por el Piloto PPA/PCA: la información no
+-- verifica licencia, no modifica aerosuite_pilot_authorizations ni autoriza vuelos.
 -- No se almacenan escaneos médicos, diagnósticos ni archivos de identidad.
+-- Verificado: RLS habilitado con políticas para el titular, acceso anónimo
+-- denegado, RPC institucional restringida por pertenencia al rol gestor,
+-- y sin modificación de cuentas o suspensiones existentes.
 CREATE TABLE IF NOT EXISTS public.aerosuite_pilot_credentials (
  user_id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
  medical_certificate_type text CHECK (
