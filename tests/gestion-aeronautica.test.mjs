@@ -823,9 +823,11 @@ assert.match(airstripsOriginal,/runwayPin\('reference'\)/);
 assert.match(airstripsOriginal,/runwayPin\('draft'\)/);
 assert.match(airstripsOriginal,/function communityPopup\(record,nm=null\)/);
 assert.match(airstripsOriginal,/function referencePopup\(record,nm=null\)/);
-for(const field of ['Coordenadas','Pista / rumbo','Dimensiones','Superficie','Elevación','Acceso','Obstáculos','Frecuencia','Observaciones']){
- assert.ok(airstripsOriginal.includes("'"+field+"'"),'El pin debe mostrar '+field);
+for(const field of ['Coordenadas','Dimensiones','Superficie','Elevación','Acceso','Obstáculos','Frecuencia','Observaciones']){
+ assert.ok(airstripsOriginal.includes("item('"+field+"'"),'La ficha debe incluir '+field);
 }
+assert.match(airstripsOriginal,/item\(details\.facility_kind==='heliport'\?'FATO publicada':'Pistas publicadas',details\.runway/,
+ 'La ficha informa pista o FATO según tipo de instalación');
 assert.match(airstripsOriginal,/document\.createElement\('dt'\)/);
 assert.match(airstripsOriginal,/document\.createElement\('dd'\)/);
 assert.match(airstripsOriginal,/warning.classList.add\('critical'\)/);
@@ -957,7 +959,8 @@ assert.match(airstripsOriginal,/\.filter\(x=>layerSelected\(airfieldClass\(x\)\)
 assert.match(airstripsOriginal,/documentedMatches=documentedAirstrips/);
 assert.match(airstripsOriginal,/Fuente documental/);
 assert.match(airstripsOriginal,/no equivale a aeródromo habilitado|No son aeródromos habilitados|no son aeródromos habilitados/i);
-assert.match(airstripsOriginal,/Cobertura parcial, no inventario nacional/);
+assert.match(airstripsOriginal,/Catálogo oficial parcial: muestra inicial con fuentes ANAC y fecha documental/,
+ 'La cobertura documental advierte que no sustituye a las fuentes vigentes');
 assert.match(airstripsOriginal,/Privado no significa no oficial/);
 assert.match(html,/AeroLocator/);
 
@@ -982,7 +985,8 @@ assert.match(airstripsOriginal,/id="filter-ats"/);
 assert.match(airstripsOriginal,/id="filter-access"/);
 assert.match(airstripsOriginal,/id="filter-rules"/);
 assert.match(airstripsOriginal,/function meetsServiceFilters\(record\)/);
-assert.match(airstripsOriginal,/Solo referencia para análisis de contingencias/);
+assert.match(airstripsOriginal,/Solo referencias geográficas para análisis de contingencias\. NO utilizar como destino o alternativo confirmado/,
+ 'Los puntos no verificados no deben usarse como destino o alternativo');
 assert.match(airstripsOriginal,/kind==='heliport'/);
 assert.match(airstripsOriginal,/kind==='unverified'/);
 
