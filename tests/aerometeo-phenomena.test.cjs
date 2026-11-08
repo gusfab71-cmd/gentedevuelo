@@ -47,6 +47,31 @@ test('No presenta como SIGMET vigente un aviso vencido, futuro, sin fecha o sin 
  assert.ok(out.stats.unsupportedGeometry>=1);
  assert.throws(()=>server.normalizeAwcGeojson({type:'FeatureCollection',features:undefined},now));
 });
+test('SIGMET: fenómeno declarado domina menciones incidentales en el texto',()=>{
+ const report=feature('NONE');
+ report.properties.hazard='TURB';
+ report.properties.rawSigmet='SIGMET TURB AFFECTING AREA; TS NEARBY';
+ report.properties.validTimeFrom='2026-11-07T23:00:00Z';
+ report.properties.validTimeTo='2026-11-08T03:00:00Z';
+ const parsed=server.normalizeAwcGeojson({type:'FeatureCollection',features:[report]},now);
+ assert.equal(parsed.features.length,1);
+ assert.equal(parsed.features[0].properties.kind,'turbulence');
+ const unrelated=feature('NONE');
+ unrelated.properties.hazard='MTW';
+ unrelated.properties.rawSigmet='TS MENTIONED AS BACKGROUND';
+ assert.equal(server.normalizeAwcGeojson({type:'FeatureCollection',features:[unrelated]},now).features.length,0);
+});
+test('SIGMET: admite nomenclatura alternativa y grandes polígonos que cruzan Argentina',()=>{
+ const crossing={type:'Polygon',coordinates:[[[-79,-18],[-48,-18],[-48,-60],[-79,-60],[-79,-18]]]};
+ const report=feature('TS','2026-11-07T23:00:00Z','2026-11-08T03:00:00Z',crossing);
+ report.properties={hazard:'TS',valid_from:'2026-11-07T23:00:00Z',valid_to:'2026-11-08T03:00:00Z',
+  fir_id:'SUEO',raw_sigmet:'SUEO SIGMET TEST'};
+ const parsed=server.normalizeAwcGeojson({type:'FeatureCollection',features:[report]},now);
+ assert.equal(parsed.features.length,1);
+ assert.equal(parsed.features[0].properties.fir,'SUEO');
+ assert.equal(parsed.features[0].properties.raw,'SUEO SIGMET TEST');
+ assert.equal(parsed.features[0].geometry.type,'Polygon');
+});
 test('Fenómenos puntuales: solo estimación WMO, sin crear zonas de niebla',()=>{
  const raw=(code,vis)=>({utc_offset_seconds:0,hourly:{
    time:['2026-11-08T00:00'],weather_code:[code],visibility:[vis]
