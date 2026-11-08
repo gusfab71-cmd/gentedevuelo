@@ -1141,6 +1141,26 @@
   padding:5px;
   background:#1f262e;
 }
+.account-menu-panel .account-admin-section-title{
+  display:block;
+  margin:8px 4px 4px;
+  padding:9px 7px 6px;
+  border-top:1px solid #405667;
+  color:#e9c48c;
+  font-size:10px;
+  font-weight:850;
+  line-height:1.4;
+  letter-spacing:.075em;
+  text-transform:uppercase;
+}
+.account-menu-panel .account-admin-section-title:first-child{
+  border-top:0;
+  margin-top:1px;
+  padding-top:5px;
+}
+.account-menu-panel .account-submenu-links>a:hover{
+  background:#324b5d;
+}
 .account-menu-panel .account-submenu-links>a{
   display:block;
   text-decoration:none;
