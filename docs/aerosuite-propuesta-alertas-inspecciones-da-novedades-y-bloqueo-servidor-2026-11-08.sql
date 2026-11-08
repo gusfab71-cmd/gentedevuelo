@@ -24,6 +24,7 @@ declare
  v_plan jsonb;v_record jsonb;v_rule jsonb;v_ad jsonb;v_dx jsonb;
  v_plan_id text;v_kind text;v_applies text;v_plan_title text;v_code text;
  v_examined int;v_annual record;v_due_hours numeric;v_date_text text;
+ v_today date:=(now() at time zone 'America/Argentina/Buenos_Aires')::date;
 begin
  select m.role,private.aerosuite_access_mode(i.status,i.trial_ends_at,i.license_ends_at,now())
  into v_role,v_mode from public.aerosuite_institutions i
@@ -90,9 +91,9 @@ begin
    v_months:=case when coalesce(v_c->>'ivM','')~'^[0-9]{1,4}$' then (v_c->>'ivM')::int else 0 end;
    if v_months>0 and v_last_date~'^\d{4}-\d{2}-\d{2}$' then
     v_date_due:=(v_last_date::date+make_interval(months=>v_months))::date;
-    if v_date_due<=current_date+45 then
+    if v_date_due<=v_today+45 then
      v_alerts:=v_alerts||jsonb_build_array(jsonb_build_object(
-      'level',case when v_date_due<=current_date then 'due' else 'soon' end,
+      'level',case when v_date_due<=v_today then 'due' else 'soon' end,
       'code','calendar','component',v_cp,'name',v_name,
       'due_date',v_date_due,'message',v_name||': fecha configurada '||v_date_due||'.'));
     end if;
@@ -205,9 +206,9 @@ begin
       least(extract(day from v_date_text::date)::int,
        extract(day from ((date_trunc('month',v_date_text::date)::date+
         make_interval(months=>v_months+1))::date-1))::int)-1;
-    if v_date_due<=current_date+45 then
+    if v_date_due<=v_today+45 then
      v_alerts:=v_alerts||jsonb_build_array(jsonb_build_object(
-      'level',case when v_date_due<=current_date then 'due' else 'soon' end,
+      'level',case when v_date_due<=v_today then 'due' else 'soon' end,
       'code','inspection_calendar','name',v_plan_title,'due_date',v_date_due,
       'message','Inspección '||v_plan_title||': vencimiento por calendario '||v_date_due||'.'));
     end if;
@@ -252,9 +253,9 @@ begin
    v_date_text:=coalesce(v_ad->>'nextDate','');
    if v_date_text~'^\d{4}-\d{2}-\d{2}$' then
     v_date_due:=v_date_text::date;
-    if v_date_due<=current_date+45 then
+    if v_date_due<=v_today+45 then
      v_alerts:=v_alerts||jsonb_build_array(jsonb_build_object(
-      'level',case when v_date_due<=current_date then 'due' else 'soon' end,
+      'level',case when v_date_due<=v_today then 'due' else 'soon' end,
       'code','ad_calendar','name',v_name,'due_date',v_date_due,
       'message','DA '||v_name||': próximo vencimiento por fecha '||v_date_due||'.'));
     end if;
@@ -333,7 +334,9 @@ declare
  v_actor uuid:=auth.uid();v_all jsonb;v_aircraft jsonb;v_error text;
 begin
  if new.activity<>'flight' or new.published_at is null then return new;end if;
- if tg_op='UPDATE' and old.published_at is not null then return new;end if;
+ if tg_op='UPDATE' then
+  if old.published_at is not null then return new;end if;
+ end if;
  if v_actor is null then
   raise exception 'No se puede publicar un vuelo sin identidad institucional válida.'
    using errcode='42501';
