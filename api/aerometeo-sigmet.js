@@ -23,9 +23,14 @@ function parseTime(input){
  return Number.isFinite(m)?new Date(m).toISOString():null;
 }
 function hazardOf(props){
- const name=[props.hazard,props.hazardType,props.phenom,props.phenomenon,props.rawSigmet,
-  props.rawText,props.raw].filter(x=>typeof x==='string').join(' ').slice(0,4000);
- return Object.keys(HAZARDS).find(key=>HAZARDS[key].test(name))||null;
+ // El fenómeno estructurado tiene prioridad. El texto libre puede mencionar
+ // otros peligros sin que formen parte de este SIGMET.
+ const explicit=[props.hazard,props.hazardType,props.phenom,props.phenomenon,props.hazard_code]
+  .find(x=>typeof x==='string'&&x.trim());
+ const raw=[props.rawSigmet,props.rawText,props.raw,props.text]
+  .find(x=>typeof x==='string'&&x.trim());
+ const hazard=(explicit||raw||'').slice(0,4000);
+ return Object.keys(HAZARDS).find(key=>HAZARDS[key].test(hazard))||null;
 }
 function inRegion([lon,lat]){
  return lon>=BOUNDS.minLon&&lon<=BOUNDS.maxLon&&lat>=BOUNDS.minLat&&lat<=BOUNDS.maxLat;
@@ -34,7 +39,8 @@ function normalizeGeometry(geom){
  if(!geom||!['Polygon','MultiPolygon'].includes(geom.type))return null;
  const parts=geom.type==='Polygon'?[geom.coordinates]:geom.coordinates;
  if(!Array.isArray(parts)||parts.length>30)return null;
- let hasPoint=false,total=0,regional=false;
+ let hasPoint=false,total=0;
+ let minLat=90,maxLat=-90,minLon=180,maxLon=-180;
  const clean=[];
  for(const polygon of parts){
   if(!Array.isArray(polygon)||!polygon.length||polygon.length>12)return null;
@@ -46,7 +52,8 @@ function normalizeGeometry(geom){
     if(!Array.isArray(pair)||pair.length<2)return null;
     const lon=pair[0],lat=pair[1];
     if(!Number.isFinite(lon)||!Number.isFinite(lat)||Math.abs(lon)>180||Math.abs(lat)>90)return null;
-    if(inRegion([lon,lat]))regional=true;
+    minLon=Math.min(minLon,lon);maxLon=Math.max(maxLon,lon);
+    minLat=Math.min(minLat,lat);maxLat=Math.max(maxLat,lat);
     coords.push([lon,lat]);hasPoint=true;if(++total>3500)return null;
    }
    // Ensure GeoJSON closed ring; source may omit closure.
@@ -55,7 +62,11 @@ function normalizeGeometry(geom){
   }
   clean.push(rings);
  }
- if(!hasPoint||!regional)return null;
+ // Un polígono puede cruzar Argentina sin tener vértices dentro del país.
+ // La intersección de cajas evita descartarlo; Leaflet conserva el contorno real.
+ const intersectsRegion=minLon<=BOUNDS.maxLon&&maxLon>=BOUNDS.minLon&&
+  minLat<=BOUNDS.maxLat&&maxLat>=BOUNDS.minLat;
+ if(!hasPoint||!intersectsRegion)return null;
  return geom.type==='Polygon'?{type:'Polygon',coordinates:clean[0]}:
   {type:'MultiPolygon',coordinates:clean};
 }
@@ -67,18 +78,18 @@ function normalizeAwcGeojson(input,now=Date.now()){
   const p=feature?.properties||{};
   const kind=hazardOf(p);
   if(!kind)continue;
-  const validFrom=parseTime(p.validTimeFrom||p.validFrom||p.validStart||p.startTime);
-  const validTo=parseTime(p.validTimeTo||p.validTo||p.validEnd||p.endTime);
+  const validFrom=parseTime(p.validTimeFrom||p.validFrom||p.validStart||p.startTime||p.valid_from);
+  const validTo=parseTime(p.validTimeTo||p.validTo||p.validEnd||p.endTime||p.valid_to);
   if(!validFrom||!validTo){stats.missingValidity++;continue;}
   if(Date.parse(validFrom)>now||Date.parse(validTo)<=now)continue;
   const geometry=normalizeGeometry(feature.geometry);
   if(!geometry){stats.unsupportedGeometry++;continue;}
-  const raw=[p.rawSigmet,p.rawText,p.raw,p.text].find(x=>typeof x==='string'&&x.trim())||'';
+  const raw=[p.rawSigmet,p.raw_sigmet,p.rawText,p.raw,p.text].find(x=>typeof x==='string'&&x.trim())||'';
   const label={storms:'Tormentas',turbulence:'Turbulencia',icing:'Engelamiento',ash:'Ceniza volcánica'}[kind];
   features.push({
    type:'Feature',geometry,properties:{
     kind,label,validFrom,validTo,
-    fir:String(p.firId||p.fir||p.icaoId||'').slice(0,32),
+    fir:String(p.firId||p.fir_id||p.fir||p.icaoId||'').slice(0,32),
     raw:raw.trim().slice(0,1500)
    }
   });
