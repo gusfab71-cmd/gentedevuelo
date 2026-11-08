@@ -62,3 +62,17 @@ La prueba `pg_restore --list` solo comprueba que el archivo contiene un índice 
 La documentación oficial confirma que el plan Free no ofrece backups diarios automáticos restaurables directamente desde el panel: https://supabase.com/docs/guides/platform/backups. La copia de Storage debe efectuarse separadamente: https://supabase.com/docs/guides/storage/management/download-objects.
 
 Esta tarea sigue **bloqueante para la primera escuela real**.
+
+## Auditoría de consistencia del script (8/11/2026, revisión posterior)
+Se encontró que `pg_dump --no-privileges` omitía ACL/GRANT/REVOKE,
+dejando una restauración potencialmente distinta en accesos y permisos.
+El script fue corregido para **conservar privilegios de PostgreSQL**
+(manteniendo `--no-owner` para separar la propiedad). También rechaza
+la subida si el índice de `pg_restore --list` no incluye entradas
+`TABLE DATA` para AeroSuite y elimina el inventario temporal al salir.
+
+Esta medida **NO certifica** que los grants puedan restaurarse en un
+proyecto vacío ni que estén configurados los roles externos: hace falta
+restaurar en una instancia Supabase segregada, comprobar las políticas RLS
+y repetir auditorías de acceso con JWT. El backup sigue manual, sin
+credenciales ni destino validados y no cubre por sí solo Storage o R2.
