@@ -228,3 +228,41 @@ end $function$;
 
 -- Seguridad: las verificaciones anteriores son por fecha de la operación y se ejecutan en el servidor.
 -- Los vuelos con instructor no se bloquean de manera automática por esta regla de vuelos sin instructor.
+
+-- La lista de Secretaría informa vigencia efectiva, no solo verificación histórica.
+CREATE OR REPLACE FUNCTION public.aerosuite_pilot_candidates(p_institution_id uuid)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ STABLE SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+DECLARE v_actor uuid:=auth.uid();v_allowed boolean;v_result jsonb;
+BEGIN
+ SELECT EXISTS(SELECT 1 FROM public.aerosuite_institution_members m
+ WHERE m.institution_id=p_institution_id AND m.user_id=v_actor
+ AND m.role IN('administrador','secretaria')) INTO v_allowed;
+ IF NOT v_allowed THEN RAISE EXCEPTION 'Solo Dirección o Secretaría puede ver esta lista.'
+  USING ERRCODE='42501';END IF;
+ SELECT coalesce(jsonb_agg(jsonb_build_object(
+  'user_id',m.user_id,'email',u.email,'name',concat_ws(' ',mp.given_names,mp.family_names),
+  'license_type',d.license_type,'license_number',d.license_number,
+  'verified',coalesce(pa.status='verified',false) AND
+     aerosuite_internal.aerosuite_pilot_documents_valid(m.user_id,(now() at time zone 'America/Argentina/Buenos_Aires')::date),
+  'school_verified',coalesce(pa.status='verified',false),
+  'documentation_current',aerosuite_internal.aerosuite_pilot_documents_valid(m.user_id,(now() at time zone 'America/Argentina/Buenos_Aires')::date),
+  'verified_at',pa.verified_at,
+  'medical_certificate_type',pc.medical_certificate_type,
+  'medical_expires_on',pc.medical_expires_on,
+  'license_expires_on',pc.license_expires_on,
+  'ratings_declared',pc.ratings_declared,
+  'ratings_expires_on',pc.ratings_expires_on
+ ) ORDER BY u.email),'[]'::jsonb) INTO v_result
+ FROM public.aerosuite_institution_members m
+ JOIN auth.users u ON u.id=m.user_id
+ LEFT JOIN public.aerosuite_role_declarations d ON d.user_id=m.user_id AND d.role='pilot'
+ LEFT JOIN public.aerosuite_member_profiles mp ON mp.user_id=m.user_id
+ LEFT JOIN public.aerosuite_pilot_authorizations pa ON pa.institution_id=m.institution_id AND pa.user_id=m.user_id
+ LEFT JOIN public.aerosuite_pilot_credentials pc ON pc.user_id=m.user_id
+ WHERE m.institution_id=p_institution_id AND m.role='piloto';
+ RETURN v_result;
+END $function$;
