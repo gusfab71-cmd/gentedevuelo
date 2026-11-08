@@ -37,3 +37,13 @@ test('Mantiene el core no expuesto, sin cambios destructivos ni privilegios abie
  assert.match(sql,/SECURITY DEFINER SET search_path TO ''/);
  assert.doesNotMatch(sql,/\bDELETE FROM\b|\bTRUNCATE\b|\bDROP TABLE\b|\bGRANT EXECUTE\b/i);
 });
+
+test('Protege registros históricos usando todas las FK actuales y futuras a auth.users',()=>{
+ assert.match(sql,/pg_catalog\.pg_constraint fk/);
+ assert.match(sql,/fk\.confrelid='auth\.users'::regclass/);
+ assert.match(sql,/t\.relname LIKE 'aerosuite_%'/);
+ assert.match(sql,/EXECUTE format\(/);
+ assert.match(sql,/%I\.%I WHERE %I=\$1/);
+ assert.match(sql,/INTO v_has_link USING p_user/);
+ assert.match(sql,/registros históricos de AeroSuite/);
+});
