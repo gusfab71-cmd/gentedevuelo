@@ -1027,9 +1027,10 @@ for(const key of ['asfalto','tierra','cesped','otros']){
  assert.match(splitMap,new RegExp('data-pista-surface="'+key+'"'),'Filtro de superficie '+key);
 }
 assert.match(splitMap,/function meetsSurfaceFilter\(record\)/);
-for(const target of ['meteorologia-aeronautica.html','gestion-aeronautica/']){
- assert.ok(splitMap.includes('href="'+target+'"'),'Falta atajo de navegación a '+target);
-}
+assert.match(splitMap,/<nav aria-label="Volver a AeroSuite"><a class="aerolocator-back-to-aerosuite" href="gestion-aeronautica\/">Volver a AeroSuite<\/a><\/nav>/,
+ 'La cabecera simplificada de AeroLocator conserva solo el retorno a AeroSuite');
+assert.match(landing,/href="\.\.\/meteorologia-aeronautica\.html\?aerosuite=formacion"/,
+ 'Flight Operations sigue disponible en AeroSuite sin recargar el encabezado de AeroLocator');
 const bearingSource=splitMap.slice(splitMap.indexOf('function trueBearing('),splitMap.indexOf('function clearRuler('));
 const bearingCalc=vm.runInNewContext(bearingSource+';trueBearing');
 assert.equal(bearingCalc(0,0,0,90),90);
