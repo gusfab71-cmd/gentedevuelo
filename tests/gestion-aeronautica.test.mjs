@@ -973,9 +973,12 @@ const taxonomySource=fs.readFileSync(new URL('../utilidades/gestion-aeronautica/
 const typeEnvironment={window:{}};
 vm.runInNewContext(taxonomySource,typeEnvironment,{timeout:1000});
 const aircraftTypes=typeEnvironment.window.GDV_AIRFIELD_TYPES;
-const six=['controlled_public','uncontrolled_public','private_aerodrome','lad','heliport','unverified'];
-assert.equal(Object.keys(aircraftTypes.CATEGORIES).length,6);
-for(const code of six){
+const classes=['controlled_public','uncontrolled_public','private_aerodrome','lad','heliport','anac_documental','unverified'];
+assert.deepEqual(Object.keys(aircraftTypes.CATEGORIES).sort(),[...classes].sort(),
+ 'Cada categoría del mapa debe corresponder a una clasificación declarada');
+assert.match(aircraftTypes.warning('anac_documental'),/NO se han confirmado/,
+ 'El padrón ANAC documental no debe confundirse con habilitación operativa');
+for(const code of classes){
  assert.ok(aircraftTypes.CATEGORIES[code].label);
  assert.match(airstripsOriginal,new RegExp('data-pista-layer="'+code+'"'));
 }
