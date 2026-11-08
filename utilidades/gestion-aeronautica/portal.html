@@ -346,7 +346,7 @@ body[data-aerosuite-area="administracion"] nav button.active{background:#344b63;
 <script src="../../assets/aerosuite-registration.js"></script>
 <script src="../../assets/auth-guard.js"></script>
 </head><body>
-<header><a class="brand" href="index.html">AEROSUITE<small>BY GENTE DE VUELO</small></a><span>PORTAL DE GESTIÓN AERONÁUTICA · DEMO</span><div class="portal-head-links"><a class="portal-home" href="../../index.html" aria-label="Volver al inicio de Gente de Vuelo">⌂ Inicio Gente de Vuelo</a><a href="index.html">Volver a la presentación</a></div></header>
+<header><a class="brand" href="index.html">FLYPRO<small>BY GENTE DE VUELO</small></a><span>PORTAL DE GESTIÓN AERONÁUTICA · DEMO</span><div class="portal-head-links"><a class="portal-home" href="../../index.html" aria-label="Volver al inicio de Gente de Vuelo">⌂ Inicio Gente de Vuelo</a><a href="index.html">Volver a la presentación</a></div></header>
 <main id="app" hidden>
 <div class="hero"><div><div class="eyebrow">FlyPro · By Gente de Vuelo</div><h1 id="areaTitle">Portal de FlyPro</h1><p class="sub" id="areaSubtitle">Tres áreas independientes · Una sola información compartida.</p></div><span class="tag">Prototipo privado · Administrador</span></div>
 <div class="notice"><strong>Entorno de demostración.</strong> Los datos que cargues aquí son ficticios y se pierden al recargar. No hay reservas multiusuario reales, validación directa con ANAC, facturación ni RAV oficial. La confirmación de una reserva NO autoriza un vuelo. Utilizá solamente datos de prueba.</div>
@@ -737,7 +737,7 @@ function render(){
   $('areaPortal').querySelectorAll('[data-area]').forEach(button=>button.addEventListener('click',()=>switchArea(button.dataset.area)));
   $('sidebar').replaceChildren();$('screen').replaceChildren();return;
  }
- $('areaCrumb').textContent='AEROSUITE / '+area.title.toUpperCase()+' · DEMO';
+ $('areaCrumb').textContent='FLYPRO / '+area.title.toUpperCase()+' · DEMO';
  $('sidebar').innerHTML=area.tabs.map(([key,label])=>'<button type="button" data-tab="'+key+'" class="'+(key===tab?'active':'')+'">'+label+'</button>').join('');
  $('sidebar').querySelectorAll('button').forEach(button=>button.addEventListener('click',()=>switchTab(button.dataset.tab)));
  $('areaBack').onclick=backToAreaPortal;
@@ -1549,7 +1549,7 @@ function academyStudentTools(){
  const active=academyActiveTool&&ACADEMY_STUDENT_TOOLS[academyActiveTool];
  const viewer=active?
   '<section class="academy-tool-viewer" id="academyToolViewer" aria-label="Herramienta '+safe(active.title)+'">'+
-   '<div class="academy-tool-viewer-head"><div><span class="academy-tool-type">ACADEMIA · AEROSUITE</span>'+
+   '<div class="academy-tool-viewer-head"><div><span class="academy-tool-type">ACADEMIA · FLYPRO</span>'+
    '<h3>'+safe(active.title)+'</h3></div>'+
    '<div class="academy-tool-actions"><a class="secondary" href="'+active.url+'" target="_blank" rel="noopener noreferrer">Abrir a pantalla completa ↗</a>'+
    '<button type="button" class="secondary" data-academy-tool-close>Ocultar herramienta</button></div></div>'+
