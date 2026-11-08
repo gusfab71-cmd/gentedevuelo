@@ -137,3 +137,8 @@ test('la tarjeta es responsive y no aparece en la barra superior',()=>{
  assert.match(aero,/aria-describedby="terrain-aerolocator-card"/);
  assert.doesNotMatch(aero,/terrain-aerolocator-readout/);
 });
+
+test('El perfil SVG comienza con MoveTo para evitar un trazado inválido',()=>{
+ assert.match(js,/validPoints\.map\(\(p,validIndex\)=>/);
+ assert.match(js,/validIndex===0\?\s*'M':'L'/);
+});
