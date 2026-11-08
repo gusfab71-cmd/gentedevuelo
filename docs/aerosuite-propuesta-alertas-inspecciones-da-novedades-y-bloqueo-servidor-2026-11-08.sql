@@ -1,4 +1,10 @@
--- PROPUESTA: alertas integrales y bloqueo transaccional de publicación.
+-- APLICADA EN SUPABASE PRINCIPAL: 2026-11-08, versión 20261108044447.
+-- Migración: aerosuite_maintenance_integrated_alerts_publication_guard_20261108.
+-- DDL validado previamente mediante BEGIN/ROLLBACK, seis suites GitHub aprobadas.
+-- Prueba adicional con tabla temporal + rollback verificó que un borrador no se
+-- publica sin identidad válida, y que las publicaciones anteriores no se bloquean.
+-- Revisión posterior: 3 aeronaves activas, 96 turnos futuros publicados intactos,
+-- 25 cuentas existentes y 0 medidas administrativas sobre cuentas.
 -- No altera aeronaves, cuentas ni turnos publicados anteriormente.
 -- Exige constancias y límites registrados; no deduce aptitud de vuelo.
 -- Inspecciones: sin constancia/aplicabilidad => aviso, rechazadas/vencidas => bloqueo.
