@@ -104,6 +104,7 @@ input[type=email]{width:100%;background:#122737;border:1px solid #7394aa;border-
    <a class="tile operational-link" data-visible-role="administrador secretaria" data-module="informes" href="#"><h3>Informes de instrucción</h3><p>Revisar devoluciones, horas, combustible y aceite.</p><span class="pill ready">Operativa</span></a>
    <a class="tile" id="ravInstitutionLink" data-visible-role="administrador secretaria" href="#" style="text-decoration:none;color:inherit"><h3>RAV institucional</h3><p>Preparar borradores desde informes aprobados, enviarlos a Dirección y conservar la revisión documental.</p><span class="pill ready">Revisión interna · No certificado</span></a>
    <a class="tile" id="aerosuiteInboxLink" data-visible-role="administrador secretaria instructor alumno piloto" href="#" style="text-decoration:none;color:inherit"><h3>Avisos internos</h3><p>Reservas, cambios de turnos e informes. Avisos privados para tu cuenta institucional.</p><span class="pill ready">Campana interna · Sin correos ni WhatsApp</span></a>
+   <a class="tile" id="aerosuiteReconcileLink" data-visible-role="administrador secretaria" href="#" style="text-decoration:none;color:inherit"><h3>Conciliación de vuelos</h3><p>Controlar informes, caja, matrículas y turnos pendientes de revisión, sin alterar registros.</p><span class="pill ready">Auditoría · Solo consulta</span></a>
    <a class="tile operational-link" data-visible-role="administrador secretaria" data-module="cobros" href="#"><h3>Cobro de vuelos</h3><p>Registrar efectivo o descontar horas del pack al finalizar cada vuelo.</p><span class="pill ready">Operativa</span></a>
     <a class="tile operational-link" data-visible-role="administrador secretaria" data-module="contaduria" href="#"><h3>Contaduría</h3><p>Compra y anulación de packs, ingresos, egresos, caja chica e historial económico.</p><span class="pill ready">Operativa</span></a>
    <a class="tile" data-visible-role="administrador" id="directorDailyCloseLink" href="#" style="text-decoration:none;color:inherit;border-color:#d7b66f">
@@ -263,6 +264,10 @@ try{
    encodeURIComponent(school.institution_id)+'&rol='+encodeURIComponent(school.my_role)+(labLogin?'&prueba=1':'');
  if(el('aerosuiteInboxLink')){
   el('aerosuiteInboxLink').href='avisos-institucionales.html?institucion='+
+   encodeURIComponent(school.institution_id)+'&rol='+encodeURIComponent(school.my_role)+(labLogin?'&prueba=1':'');
+ }
+ if(el('aerosuiteReconcileLink')){
+  el('aerosuiteReconcileLink').href='conciliacion-institucional.html?institucion='+
    encodeURIComponent(school.institution_id)+'&rol='+encodeURIComponent(school.my_role)+(labLogin?'&prueba=1':'');
  }
  for(const link of document.querySelectorAll('.operational-link[data-module]')){
