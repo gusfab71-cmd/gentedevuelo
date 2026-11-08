@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import vm from 'node:vm';
 import {spawnSync} from 'node:child_process';
 import {
  MODULES,PENDING,WORKFLOW_PATH,ACTION_URL,isMainAuditRun,statusOfRun,moduleStatuses,githubRunLink,listAuditRuns,readAuditJobs
@@ -82,4 +83,51 @@ test('Archivos ES module sintácticamente válidos',()=>{
   const r=spawnSync(process.execPath,['--experimental-default-type=module','--check',file],{encoding:'utf8'});
   assert.equal(r.status,0,file+': '+r.stderr);
  }
+});
+
+test('Centro de Testeo: rechazar diagnósticos incompletos y no reutilizar resultados anteriores',()=>{
+ const page=read('utilidades/gestion-aeronautica/centro-pruebas-operativas.html');
+ const begin=page.indexOf('const INTEGRITY_RULES=Object.freeze(');
+ const end=page.indexOf('function renderLabAccounts(){',begin);
+ assert.ok(begin>0&&end>begin,'La validación debe ejecutarse antes de mostrar resultados');
+ const validator=vm.runInNewContext(page.slice(begin,end)+';({validateHealthSnapshot,safeNumber})');
+ const now=Date.parse('2026-11-08T12:00:00Z'),id='LAB-FICTICIO';
+ const rules=[
+  'stale_pending','confirmed_without_instructor','completed_without_approved_report',
+  'negative_pack_balance','double_settlement','overlapping_institution_slots',
+  'instructor_cross_institution_overlap'
+ ];
+ const snapshot={institution_id:id,checked_at:new Date(now).toISOString()};
+ for(const rule of rules)snapshot[rule]=0;
+ assert.equal(validator.validateHealthSnapshot(snapshot,id,now),0);
+ assert.equal(validator.validateHealthSnapshot({...snapshot,double_settlement:2},id,now),2);
+ assert.throws(()=>validator.validateHealthSnapshot(snapshot,'OTRA-INSTITUCION',now),/otra institución/);
+ assert.throws(()=>validator.validateHealthSnapshot({...snapshot,checked_at:null},id,now),/vencido/);
+ assert.throws(()=>validator.validateHealthSnapshot({...snapshot,checked_at:new Date(now-360000).toISOString()},id,now),/vencido/);
+ assert.throws(()=>validator.validateHealthSnapshot({...snapshot,checked_at:new Date(now+120000).toISOString()},id,now),/vencido/);
+ for(const invalid of [null,undefined,-1,0.5,'0',true,NaN]){
+  assert.throws(()=>validator.validateHealthSnapshot({...snapshot,stale_pending:invalid},id,now),/incompleto/);
+ }
+ assert.equal(validator.safeNumber(null),'—');
+ assert.equal(validator.safeNumber(0),'0');
+ assert.match(page,/health=\{\}; \/\/ Nunca reutilizar el diagnóstico de una consulta anterior/);
+ assert.match(page,/if\(!await reloadHealth\(\)\)throw Error\('No hay diagnóstico final vigente y completo/);
+ assert.match(page,/if\(!await reloadHealth\(\)\)throw Error\('No se pudo obtener el diagnóstico inicial vigente y completo/);
+ assert.match(page,/\.eq\('status','in_progress'\)/,'No abrir dos sesiones por descuido');
+ assert.match(page,/Se recuperó una prueba abierta/);
+ assert.match(page,/Prueba cerrada/);
+});
+test('Laboratorio: identidad y permisos separados para cada rol',()=>{
+ const lab=read('utilidades/gestion-aeronautica/centro-pruebas-operativas.html');
+ const login=read('utilidades/gestion-aeronautica/ingreso-escuela.html');
+ assert.match(lab,/<div id="content" hidden>/,'No mostrar datos antes de autorizar superadministración');
+ assert.match(lab,/from\('aerosuite_superadmins'\)\.select\('user_id'\)/);
+ assert.match(lab,/org\.data\?\.is_test!==true\|\|org\.data\?\.status!=='active'/);
+ assert.match(login,/storageKey:labLogin\?'aerosuite-laboratorio-'\+selectedRole\+'-v1-auth'/,
+  'Las sesiones de roles deben utilizar almacenamiento Supabase separado');
+ for(const role of ['administrador','secretaria','instructor','alumno','piloto']){
+  assert.match(lab,new RegExp("'"+role+"'"),'Rol del laboratorio ausente: '+role);
+ }
+ assert.match(lab,/sin acceso a Contaduría/,'No atribuir contaduría ni packs al alumno');
+ assert.match(lab,/PPA puede requerir instructor; PCA opera sin instructor por defecto/);
 });
