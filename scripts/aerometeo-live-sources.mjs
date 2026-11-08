@@ -3,6 +3,9 @@
  * No llama a Vercel, Supabase ni usa secretos.
  */
 import assert from 'node:assert/strict';
+import {createRequire} from 'node:module';
+const require=createRequire(import.meta.url);
+const {normalizeAwcGeojson}=require('../api/aerometeo-sigmet.js')._test;
 
 const urls={
  openMeteo:'https://api.open-meteo.com/v1/forecast?latitude=-34.82&longitude=-58.53&hourly=weather_code%2Cvisibility&forecast_hours=8&timezone=UTC',
@@ -51,6 +54,12 @@ try{
    const p=sigmets.features[0]?.properties||{};
    console.log('AWC: campos del primer aviso: '+Object.keys(p).sort().slice(0,36).join(', '));
    console.log('AWC: geometría: '+(sigmets.features[0].geometry?.type||'sin geometría'));
+   const normalized=normalizeAwcGeojson(sigmets);
+   assert.equal(normalized.type,'FeatureCollection','El normalizador debe conservar GeoJSON');
+   console.log('AeroMeteo: SIGMET vigentes representables en la región: '+normalized.features.length);
+   console.log('AeroMeteo: descartados sin fecha='+normalized.stats.missingValidity+
+    ', sin polígono regional compatible='+normalized.stats.unsupportedGeometry);
+   console.log('AeroMeteo: 0 zonas puede ser normal si no hay avisos vigentes en Argentina.');
   }else console.log('AWC: no hubo polígonos; no se valida la representación visual.');
  }
  console.log('CONTRATO PROVEEDORES: OK. No es una validación operativa aeronáutica.');
