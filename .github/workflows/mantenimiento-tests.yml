@@ -8,6 +8,8 @@ on:
       - 'utilidades/gestion-aeronautica/flota-institucional.html'
       - 'utilidades/gestion-aeronautica/cierre-diario-director.html'
       - 'tests/aerosuite-maintenance-integration.test.cjs'
+      - 'tests/aerosuite-maintenance-server-guards.test.cjs'
+      - 'docs/aerosuite-propuesta-alertas-inspecciones-da-novedades-y-bloqueo-servidor-2026-11-08.sql'
       - 'utilidades/gestion-aeronautica/operaciones-institucionales.html'
       - 'utilidades/gestion-aeronautica/portal.html'
       - 'utilidades/gestor-reservas/index.html'
@@ -24,6 +26,8 @@ on:
       - 'utilidades/gestion-aeronautica/flota-institucional.html'
       - 'utilidades/gestion-aeronautica/cierre-diario-director.html'
       - 'tests/aerosuite-maintenance-integration.test.cjs'
+      - 'tests/aerosuite-maintenance-server-guards.test.cjs'
+      - 'docs/aerosuite-propuesta-alertas-inspecciones-da-novedades-y-bloqueo-servidor-2026-11-08.sql'
       - 'utilidades/gestion-aeronautica/operaciones-institucionales.html'
       - 'utilidades/gestion-aeronautica/portal.html'
       - 'utilidades/gestor-reservas/index.html'
@@ -49,6 +53,9 @@ jobs:
 
       - name: Verificar integración del mantenimiento institucional
         run: node tests/aerosuite-maintenance-integration.test.cjs
+
+      - name: Controlar alertas y publicación segura del servidor
+        run: node --test tests/aerosuite-maintenance-server-guards.test.cjs
 
       - name: Verificar formato automático de matrículas en AeroSuite
         run: node tests/aerosuite-registration.test.cjs
