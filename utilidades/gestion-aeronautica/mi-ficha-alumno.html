@@ -115,8 +115,8 @@ button:disabled{cursor:wait;opacity:.56}
      <h3>Documentación aeronáutica y vencimientos</h3>
      <p class="panel-subtitle">Datos declarados por el piloto. No acreditan vigencia ni permiten volar sin instructor. Secretaría o Dirección deben verificar la documentación original.</p>
      <div class="field-grid">
-      <label class="field">Certificado médico aeronáutico (tipo, opcional)<input name="pilot_medical_certificate_type" maxlength="80" placeholder="Ej.: CMA"></label>
-      <label class="field">Vencimiento del certificado médico (si corresponde)<input name="pilot_medical_expires_on" type="date"></label>
+      <label class="field">Certificado médico aeronáutico (tipo; necesario para vuelo sin instructor)<input name="pilot_medical_certificate_type" maxlength="80" placeholder="Ej.: CMA"></label>
+      <label class="field">Vencimiento de la CMA (necesario para vuelo sin instructor)<input name="pilot_medical_expires_on" type="date"></label>
       <label class="field">Vencimiento de licencia (si corresponde)<input name="pilot_license_expires_on" type="date"></label>
       <label class="field">Habilitaciones declaradas (opcional)<input name="pilot_ratings_declared" maxlength="400" placeholder="Ej.: Monomotor terrestre"></label>
       <label class="field">Vencimiento de habilitaciones (si corresponde)<input name="pilot_ratings_expires_on" type="date"></label>
@@ -247,6 +247,11 @@ button:disabled{cursor:wait;opacity:.56}
  function showPilotExpiry(){
   const notice=$('pilotExpiryNotice');
   if(!get('role_pilot').checked||!pilotCredentialsEnabled){notice.hidden=true;return;}
+  if(!get('pilot_medical_certificate_type').value.trim()||!get('pilot_medical_expires_on').value){
+   notice.hidden=false;
+   notice.textContent='Para volar sin instructor necesitás declarar el tipo y la fecha de vencimiento de la CMA, y Secretaría debe verificar el documento original.';
+   return;
+  }
   const today=new Date();today.setHours(0,0,0,0);
   let expired=false,soon=false,known=0;
   for(const name of ['pilot_medical_expires_on','pilot_license_expires_on','pilot_ratings_expires_on']){
@@ -328,7 +333,7 @@ button:disabled{cursor:wait;opacity:.56}
   }
   pilotCredentialsEnabled=true;
   for(let i=0;i<pilotDocFields.length;i++)get(pilotDocFields[i]).value=data?.[pilotCredentialColumns[i]]??'';
-  $('pilotCredentialsAvailability').textContent='Fechas declaradas. La autorización para volar se controla independientemente en la institución.';
+  $('pilotCredentialsAvailability').textContent='Documentación declarada, no certificada. La CMA vigente es necesaria para vuelos sin instructor. Si modificás los datos, la escuela deberá volver a verificarlos.';
   syncRoleFields();
  }
  async function savePilotCredentials(){
@@ -337,6 +342,7 @@ button:disabled{cursor:wait;opacity:.56}
   for(let i=0;i<pilotDocFields.length;i++)payload[pilotCredentialColumns[i]]=get(pilotDocFields[i]).value.trim()||null;
   const {error}=await client.from('aerosuite_pilot_credentials').upsert(payload,{onConflict:'user_id'});
   if(error)throw Error('La ficha principal se guardó, pero los vencimientos aeronáuticos no: '+error.message);
+  $('pilotCredentialsAvailability').textContent='Datos guardados. Si la escuela los había verificado, cualquier modificación obliga a una nueva comprobación de Secretaría.';
  }
  function rolePayload(def){
   const payload={user_id:user.id,role:def.key,updated_at:new Date().toISOString()};
