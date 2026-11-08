@@ -72,6 +72,32 @@ test('SIGMET: admite nomenclatura alternativa y grandes polígonos que cruzan Ar
  assert.equal(parsed.features[0].properties.raw,'SUEO SIGMET TEST');
  assert.equal(parsed.features[0].geometry.type,'Polygon');
 });
+test('Vigencia local: nunca dibujar SIGMET futuros, vencidos o sin fechas',()=>{
+ const make=(from,to)=>({properties:{kind:'storms',validFrom:from,validTo:to}});
+ const sample=make('2026-11-07T23:00:00Z','2026-11-08T03:00:00Z');
+ assert.equal(ui.isCurrentSigmet(sample,now),true);
+ assert.equal(ui.isCurrentSigmet(sample,Date.parse('2026-11-07T22:59:59Z')),false);
+ assert.equal(ui.isCurrentSigmet(sample,Date.parse('2026-11-08T03:00:00Z')),false);
+ assert.equal(ui.isCurrentSigmet(make('fecha inválida','2026-11-08T03:00:00Z'),now),false);
+ assert.equal(ui.isCurrentSigmet({properties:{}},now),false);
+});
+test('Las consultas demasiado antiguas se rechazan antes de mostrar capas o estimaciones',()=>{
+ assert.equal(ui.checkedAtIsFresh('2026-11-07T23:50:00Z',now),true);
+ assert.equal(ui.checkedAtIsFresh('2026-11-07T23:44:00Z',now),false);
+ assert.equal(ui.checkedAtIsFresh('2026-11-08T00:02:00Z',now),false);
+ assert.equal(ui.checkedAtIsFresh('sin fecha',now),false);
+ assert.equal(ui.checkedAtIsFresh(null,now),false);
+ assert.equal(server.parseTime(1e20),null);
+ assert.equal(server.parseTime(Number.MAX_VALUE),null);
+});
+test('El mapa retira automáticamente avisos y estimaciones caducadas sin llamar a proveedores',()=>{
+ const source=fs.readFileSync(path.join(base,'assets/aerometeo-phenomena.js'),'utf8');
+ assert.match(source,/if\(needSIGMET\(\)&&Date\.now\(\)>=nextExpiry\)redraw\(\)/);
+ assert.match(source,/Date\.now\(\)-pointCheckedAt>=20\*60000/);
+ assert.match(source,/if\(pointLayer\)\{map\.removeLayer\(pointLayer\);pointLayer=null\}/);
+ assert.match(source,/clearInterval\(clock\)/);
+ assert.match(html,/aerometeo-phenomena\.js\?v=20261108phenomena2/);
+});
 test('Fenómenos puntuales: solo estimación WMO, sin crear zonas de niebla',()=>{
  const raw=(code,vis)=>({utc_offset_seconds:0,hourly:{
    time:['2026-11-08T00:00'],weather_code:[code],visibility:[vis]
