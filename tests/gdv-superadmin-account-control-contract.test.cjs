@@ -60,4 +60,7 @@ test('Interfaz permite inspección, confirmación explícita y no anuncia borrad
  assert.match(page,/window\.confirm\(confirmation/);
  assert.match(page,/controlApi\(action,account,\{reason:text,confirmation\}\)/);
  assert.match(page,/El borrado global con historiales de AeroSuite no está habilitado/);
+ assert.match(page,/className=cls/);
+ assert.match(page,/account-action-error/);
+ assert.match(page,/No se hicieron cambios\./);
 });
