@@ -91,7 +91,7 @@ try{
       (labLogin?'&prueba=1':'')+'#'+(n.source_type==='report'?'informes':'turnera');
     link.textContent='Ver en operaciones';
     actions.append(link);
-    if(!n.read_at){
+    if(!n.read_at&&school.can_write){
      const button=document.createElement('button');button.type='button';button.textContent='Marcar como leído';
      button.addEventListener('click',async()=>{
       button.disabled=true;
