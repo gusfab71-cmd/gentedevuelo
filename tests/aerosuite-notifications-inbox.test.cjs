@@ -35,6 +35,8 @@ test('El destinatario tiene que ser miembro de la escuela y ser rol permitido',(
  assert.match(sql,/auth\.uid\(\)/);
  assert.match(sql,/private\.aerosuite_access_mode/);
  assert.match(sql,/n\.id=ANY\(v_ids\) AND n\.read_at IS NULL/);
+ assert.match(sql,/IN \('trial','active'\)/);
+ assert.match(page,/!n\.read_at&&school\.can_write/);
 });
 test('RPC no accesibles a anon y marcado de lectura limitado',()=>{
  assert.match(sql,/REVOKE ALL ON FUNCTION public\.aerosuite_notification_inbox_list\(uuid,integer\) FROM PUBLIC,anon/);
