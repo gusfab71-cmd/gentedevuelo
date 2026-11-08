@@ -190,7 +190,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
  <div class="registration-filters">
   <label>Buscar correo o institución <input id="registrationSearch" type="search" placeholder="Buscar registro" autocomplete="off"></label>
   <label>Institución <select id="registrationInstitution"><option value="">Todas</option></select></label>
-  <label>Rol <select id="registrationRole"><option value="">Todos los roles</option><option value="administrador">Director</option><option value="secretaria">Secretaría</option><option value="instructor">Instructor</option><option value="alumno">Alumno</option><option value="operaciones">Operaciones</option><option value="tesoreria">Tesorería</option></select></label>
+  <label>Rol <select id="registrationRole"><option value="">Todos los roles</option><option value="administrador">Director</option><option value="secretaria">Secretaría</option><option value="instructor">Instructor</option><option value="alumno">Alumno</option><option value="piloto">Piloto</option><option value="operaciones">Operaciones</option><option value="tesoreria">Tesorería</option></select></label>
   <label>Estado <select id="registrationStatus"><option value="">Todos los estados</option><option value="habilitada">Habilitados</option><option value="cuenta_verificada">Cuenta verificada</option><option value="cuenta_creada">Cuenta creada</option><option value="invitacion_enviada">Correo enviado</option><option value="invitacion_creada">Invitación preparada</option><option value="vencida">Vencidas</option><option value="revocada">Revocadas</option><option value="desvinculada">Desvinculadas</option></select></label>
  </div>
  <div class="actions registration-actions"><button id="refreshRegistrations" type="button">Actualizar registros</button></div>
@@ -237,7 +237,7 @@ const registrationState={
   invitacion_enviada:'Invitación enviada',invitacion_creada:'Invitación preparada',
   vencida:'Invitación vencida',revocada:'Invitación cancelada',desvinculada:'Acceso desvinculado'
 };
-const personRole={administrador:'Director',secretaria:'Secretaría',instructor:'Instructor',alumno:'Alumno',operaciones:'Operaciones',tesoreria:'Tesorería'};
+const personRole={administrador:'Director',secretaria:'Secretaría',instructor:'Instructor',alumno:'Alumno',piloto:'Piloto',operaciones:'Operaciones',tesoreria:'Tesorería'};
 const registrationSearch=byId('registrationSearch'),registrationInstitution=byId('registrationInstitution');
 const registrationRole=byId('registrationRole'),registrationStatus=byId('registrationStatus');
 const registrationFeedback=byId('registrationFeedback'),registrationList=byId('registrationList');
