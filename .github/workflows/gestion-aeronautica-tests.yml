@@ -16,6 +16,8 @@ on:
       - 'tests/aerosuite-parallel-aircraft-booking.test.cjs'
       - 'tests/aerosuite-license-readonly.test.cjs'
       - 'tests/aerosuite-security-institution-cleanup.test.cjs'
+      - 'tests/aerosuite-published-slot-maintenance-edit.test.cjs'
+      - 'docs/aerosuite-fix-mantenimiento-turnos-publicados-2026-11-08.sql'
       - 'tests/aerosuite-notifications-inbox.test.cjs'
       - 'tests/aerosuite-external-email-optin.test.cjs'
       - 'tests/aerosuite-reconciliation-readonly.test.cjs'
@@ -45,6 +47,8 @@ on:
       - 'tests/aerosuite-parallel-aircraft-booking.test.cjs'
       - 'tests/aerosuite-license-readonly.test.cjs'
       - 'tests/aerosuite-security-institution-cleanup.test.cjs'
+      - 'tests/aerosuite-published-slot-maintenance-edit.test.cjs'
+      - 'docs/aerosuite-fix-mantenimiento-turnos-publicados-2026-11-08.sql'
       - 'tests/aerosuite-notifications-inbox.test.cjs'
       - 'tests/aerosuite-external-email-optin.test.cjs'
       - 'tests/aerosuite-reconciliation-readonly.test.cjs'
@@ -74,6 +78,7 @@ jobs:
       - run: node --test tests/aerosuite-parallel-aircraft-booking.test.cjs
       - run: node --test tests/aerosuite-license-readonly.test.cjs
       - run: node --test tests/aerosuite-security-institution-cleanup.test.cjs
+      - run: node --test tests/aerosuite-published-slot-maintenance-edit.test.cjs
       - run: node --test tests/aerosuite-notifications-inbox.test.cjs
       - run: node --test tests/aerosuite-external-email-optin.test.cjs
       - run: node --test tests/aerosuite-reconciliation-readonly.test.cjs
