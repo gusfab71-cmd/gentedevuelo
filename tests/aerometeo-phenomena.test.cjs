@@ -56,12 +56,7 @@ test('Fenómenos puntuales: solo estimación WMO, sin crear zonas de niebla',()=
  assert.equal(storm.storm,true);assert.equal(storm.fog,false);
  const fog=point.normalize(raw(45,700),location,now);
  assert.equal(fog.fog,true);assert.equal(fog.lowVisibility,true);
- const unknown=point.normalize(raw(null,null),location,now);
- assert.equal(unknown.weatherCode,null);
- assert.equal(unknown.visibilityM,null);
- assert.equal(unknown.storm,null);
- assert.equal(unknown.fog,null);
- assert.equal(unknown.lowVisibility,null);
+ assert.throws(()=>point.normalize(raw(null,null),location,now),/No hay pronóstico puntual cercano/);
  assert.equal(point.coordinate('-34.800000',-56,-21),-34.8);
  assert.equal(point.coordinate('-99.99',-56,-21),null);
  assert.match(point.urlFor(-34.8,-58.5),/weather_code%2Cvisibility/);
