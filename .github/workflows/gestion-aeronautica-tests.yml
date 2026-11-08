@@ -12,6 +12,8 @@ on:
       - 'tests/gestion-aeronautica.test.mjs'
       - 'tests/aerosuite-rav-institutional.test.cjs'
       - 'tests/aerosuite-pilot-documentation.test.cjs'
+      - 'tests/aerosuite-pilot-dispatch.test.cjs'
+      - 'supabase/migrations/20261108062000_aerosuite_pilot_preflight_documentary_gate.sql'
       - 'supabase/migrations/20261108054000_aerosuite_pilot_documents_solo_flight_authorization.sql'
       - 'supabase/migrations/20261108053000_aerosuite_rav_institutional_drafts.sql'
       - '.github/workflows/gestion-aeronautica-tests.yml'
@@ -28,6 +30,8 @@ on:
       - 'tests/gestion-aeronautica.test.mjs'
       - 'tests/aerosuite-rav-institutional.test.cjs'
       - 'tests/aerosuite-pilot-documentation.test.cjs'
+      - 'tests/aerosuite-pilot-dispatch.test.cjs'
+      - 'supabase/migrations/20261108062000_aerosuite_pilot_preflight_documentary_gate.sql'
       - 'supabase/migrations/20261108054000_aerosuite_pilot_documents_solo_flight_authorization.sql'
       - 'supabase/migrations/20261108053000_aerosuite_rav_institutional_drafts.sql'
       - '.github/workflows/gestion-aeronautica-tests.yml'
@@ -44,4 +48,5 @@ jobs:
       - run: node --experimental-default-type=module tests/gestion-aeronautica.test.mjs
       - run: node --test tests/aerosuite-rav-institutional.test.cjs
       - run: node --test tests/aerosuite-pilot-documentation.test.cjs
+      - run: node --test tests/aerosuite-pilot-dispatch.test.cjs
       - run: node tests/airstrip-metar.test.cjs
