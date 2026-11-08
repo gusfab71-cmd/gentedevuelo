@@ -925,7 +925,10 @@ const anacCatalog=anacEnvironment.window.AEROSUITE_OFFICIAL_AIRSTRIPS;
 assert.ok(anacCatalog,'Debe estar disponible el catálogo inicial con fuentes oficiales');
 assert.equal(anacCatalog.catalogStatus,'parcial','No se puede presentar una muestra como inventario completo');
 assert.equal(anacCatalog.ladEdition,'2026-09-28');
-assert.equal(anacCatalog.official.length,2);
+assert.ok(anacCatalog.official.length>=2,
+ 'El catálogo conserva las referencias AIP y puede incluir otras referencias documentales históricas');
+assert.ok(anacCatalog.official.some(x=>x.sourceType==='registro_anac_historico'),
+ 'Las referencias de ANAC 2021 se conservan explícitamente como históricas, sin atribuirles vigencia');
 assert.equal(anacCatalog.lad.length,16);
 const allDocumented=[...anacCatalog.official,...anacCatalog.lad];
 assert.equal(new Set(allDocumented.map(x=>x.id)).size,allDocumented.length,'No duplicar identificadores documentales');
