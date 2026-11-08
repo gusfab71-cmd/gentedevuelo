@@ -1,11 +1,7 @@
--- Canonical aircraft registration e.g. lvert => LV-ERT for all institutional writes.
--- Preserve existing rows. Do not rewrite financial or flight history.
-CREATE OR REPLACE FUNCTION aerosuite_internal.aerosuite_normalize_registration(p_raw text)
- RETURNS text
- LANGUAGE plpgsql
- IMMUTABLE
- SET search_path TO ''
-AS $function$
+
+-- Matrícula canónica: LV-ERT en toda la operación, sin reescribir históricos.
+create or replace function aerosuite_internal.aerosuite_normalize_registration(p_raw text)
+returns text language plpgsql immutable set search_path='' as $fn$
 declare v text;
 begin
  v:=translate(regexp_replace(upper(btrim(coalesce(p_raw,''))),'[[:space:]]+','','g'),'‐‑‒–—−_','-------');
@@ -14,25 +10,17 @@ begin
   return substr(v,1,2)||'-'||substr(v,3);
  end if;
  return v;
-end $function$
-;
+end $fn$;
 
-CREATE OR REPLACE FUNCTION aerosuite_internal.aerosuite_registration_valid(p_raw text)
- RETURNS boolean
- LANGUAGE sql
- IMMUTABLE
- SET search_path TO ''
-AS $function$
+create or replace function aerosuite_internal.aerosuite_registration_valid(p_raw text)
+returns boolean language sql immutable set search_path='' as $fn$
  select aerosuite_internal.aerosuite_normalize_registration(p_raw) ~
   '^(?:[A-Z]{2}-[A-Z0-9]{3,5}|[A-Z0-9]{1,3}-[A-Z0-9]{2,6}|[A-Z][A-Z0-9]{2,6})$'
-$function$
-;
+$fn$;
 
-CREATE OR REPLACE FUNCTION aerosuite_internal.aerosuite_normalize_registration_before_write()
- RETURNS trigger
- LANGUAGE plpgsql
- SET search_path TO ''
-AS $function$
+-- El backend normaliza también cuando un cliente antiguo envía datos sin formato.
+create or replace function aerosuite_internal.aerosuite_normalize_registration_before_write()
+returns trigger language plpgsql set search_path='' as $fn$
 declare v text;
 begin
  if tg_table_name='aerosuite_aircraft_registry' then
@@ -68,12 +56,20 @@ begin
   end if;
  end if;
  return new;
-end $function$
-;
-CREATE TRIGGER aerosuite_booking_registration_format BEFORE INSERT OR UPDATE OF aircraft ON public.aerosuite_flight_bookings FOR EACH ROW EXECUTE FUNCTION aerosuite_internal.aerosuite_normalize_registration_before_write();
-CREATE TRIGGER aerosuite_checkout_registration_format BEFORE INSERT OR UPDATE OF aircraft_registration ON public.aerosuite_flight_checkouts FOR EACH ROW EXECUTE FUNCTION aerosuite_internal.aerosuite_normalize_registration_before_write();
-CREATE TRIGGER aerosuite_logbook_registration_format BEFORE INSERT OR UPDATE OF logbook_entry ON public.aerosuite_flight_reports FOR EACH ROW EXECUTE FUNCTION aerosuite_internal.aerosuite_normalize_registration_before_write();
-CREATE TRIGGER aerosuite_registry_registration_format BEFORE INSERT OR UPDATE OF registration ON public.aerosuite_aircraft_registry FOR EACH ROW EXECUTE FUNCTION aerosuite_internal.aerosuite_normalize_registration_before_write();
+end $fn$;
+create trigger aerosuite_registry_registration_format before insert or update of registration
+ on public.aerosuite_aircraft_registry for each row execute function aerosuite_internal.aerosuite_normalize_registration_before_write();
+create trigger aerosuite_booking_registration_format before insert or update of aircraft
+ on public.aerosuite_flight_bookings for each row execute function aerosuite_internal.aerosuite_normalize_registration_before_write();
+create trigger aerosuite_checkout_registration_format before insert or update of aircraft_registration
+ on public.aerosuite_flight_checkouts for each row execute function aerosuite_internal.aerosuite_normalize_registration_before_write();
+create trigger aerosuite_logbook_registration_format before insert or update of logbook_entry
+ on public.aerosuite_flight_reports for each row execute function aerosuite_internal.aerosuite_normalize_registration_before_write();
+revoke all on function aerosuite_internal.aerosuite_normalize_registration(text),
+ aerosuite_internal.aerosuite_registration_valid(text),
+ aerosuite_internal.aerosuite_normalize_registration_before_write()
+ from public,anon,authenticated;
+
 CREATE OR REPLACE FUNCTION public.aerosuite_aircraft_action(p_institution_id uuid, p_operation text, p_aircraft_id uuid DEFAULT NULL::uuid, p_registration text DEFAULT NULL::text, p_model text DEFAULT NULL::text, p_availability text DEFAULT NULL::text, p_remarks text DEFAULT NULL::text)
  RETURNS jsonb
  LANGUAGE plpgsql
@@ -248,7 +244,3 @@ BEGIN
 END;
 $function$
 ;
-revoke all on function aerosuite_internal.aerosuite_normalize_registration(text),
- aerosuite_internal.aerosuite_registration_valid(text),
- aerosuite_internal.aerosuite_normalize_registration_before_write()
- from public,anon,authenticated;
