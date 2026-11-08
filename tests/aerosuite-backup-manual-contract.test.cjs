@@ -32,3 +32,12 @@ test('No se sube archivo sin cifrar, ni se imprime contenido ni se realizan rest
  assert.match(shell,/trap cleanup EXIT INT TERM/);
  assert.match(shell,/head-object/);
 });
+test('Respaldo conserva ACL de PostgreSQL y comprueba tablas AeroSuite en el índice',()=>{
+ assert.match(shell,/pg_dump --dbname=/);
+ assert.match(shell,/--format=custom/);
+ assert.doesNotMatch(shell,/--no-privileges|--no-acl/i);
+ assert.match(shell,/pg_restore --list "\\$archive" > "\\$tmp_dir\\/database\.toc"/);
+ assert.match(shell,/TABLE DATA\[\[:space:\]\]\+public\[\[:space:\]\]\+aerosuite_/);
+ assert.match(shell,/Faltan entradas de datos AeroSuite/);
+ assert.match(shell,/rm -f[^\n]*database\.toc/);
+});
