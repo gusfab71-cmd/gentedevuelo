@@ -106,10 +106,10 @@ try{
   $('student').innerHTML=students.map(s=>'<option value="'+esc(s.id)+'">'+esc(s.name)+'</option>').join('');
   if(selected)$('student').value=selected;
   $('student').disabled=Boolean(edit);
-  const today=new Date().toLocaleDateString('en-CA',{timeZone:'America/Argentina/Buenos_Aires'});
+  const today=new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Argentina/Buenos_Aires',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
   $('to').max=today;
-  const start=edit?.period_from||$('from').value||today.slice(0,7)+'-01';
-  const end=edit?.period_to||$('to').value||today;
+  const start=$('from').value||edit?.period_from||today.slice(0,7)+'-01';
+  const end=$('to').value||edit?.period_to||today;
   $('from').value=start;$('to').value=end;
   $('formTitle').textContent=edit?'Corregir borrador devuelto · revisión '+edit.revision:'Nuevo borrador RAV';
   $('saveDraft').textContent=edit?'Guardar correcciones':'Guardar borrador institucional';
@@ -166,7 +166,7 @@ try{
  async function perform(action,id){
   const doc=(overview.documents||[]).find(d=>d.id===id);if(!doc)return;
   if(action==='edit'){
-   edit=doc;$('formCard').hidden=false;renderForm();window.scrollTo({top:$('formCard').offsetTop-20,behavior:'smooth'});return;
+   edit=doc;$('from').value=doc.period_from;$('to').value=doc.period_to;$('formCard').hidden=false;renderForm();window.scrollTo({top:$('formCard').offsetTop-20,behavior:'smooth'});return;
   }
   if(action==='print'){
    const minutes=(doc.flights||[]).reduce((v,f)=>v+Number(f.minutes||0),0);
