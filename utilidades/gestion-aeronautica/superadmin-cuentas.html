@@ -32,6 +32,19 @@ input:focus-visible,select:focus-visible,button:focus-visible,a:focus-visible{ou
 .account .status{font-size:11px;border:1px solid #809cab;border-radius:20px;padding:5px 9px;color:#e9f4fc}
 .account .test-flag{display:inline-block;color:#f1d5a1;border:1px solid #b6945f;border-radius:20px;padding:5px 9px;font-size:11px;font-weight:750}
 .account-flags{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.account-actions{display:flex;gap:8px;margin-top:12px}
+.account-actions button{padding:8px 12px}
+dialog{background:#173348;color:#eef7ff;border:1px solid #7e9eaf;border-radius:14px;max-width:min(610px,calc(100vw - 32px));width:100%;padding:20px;box-shadow:0 22px 60px #000b}
+dialog::backdrop{background:#06121bbd}
+dialog .dialog-head{display:flex;gap:12px;justify-content:space-between;align-items:flex-start}
+dialog .dialog-head h2{margin:0 0 7px;font-size:22px}
+dialog textarea{width:100%;min-height:95px;resize:vertical}
+dialog .dialog-actions{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-top:12px}
+dialog .danger{border-color:#b88583;background:#743c3e}
+dialog .muted-action{background:#2c5067}
+dialog .audit-line{font-size:12px;margin:6px 0;padding:7px 0;border-bottom:1px solid #345065}
+dialog .feedback{margin:12px 0;color:#f0d7a3;font-weight:650}
+dialog .action-summary{margin:11px 0;padding:11px;background:#234458;border-radius:8px}
 .info{margin-top:8px;display:flex;gap:8px 22px;flex-wrap:wrap;font-size:12px;line-height:1.55;color:#c3d7e4}
 .page-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:18px}
 .page-actions .buttons{display:flex;gap:9px}
@@ -88,8 +101,15 @@ input:focus-visible,select:focus-visible,button:focus-visible,a:focus-visible{ou
    </div>
   </section>
   <div class="notice">
-   <strong>Eliminación de cuentas:</strong> este panel es de consulta. La baja institucional se gestiona en el Padrón de AeroSuite; la moderación comunitaria dispone de herramientas propias. La eliminación global definitiva requiere un procedimiento adicional que preserve los libros de vuelo, informes, contabilidad y auditorías.
+   <strong>Protección de datos:</strong> la suspensión de una cuenta puede bloquear nuevos ingresos, pero los accesos ya iniciados pueden continuar hasta que venza su token. No elimina vuelos ni cobros. La eliminación definitiva desde este padrón sigue pendiente; las cuentas exclusivamente comunitarias se gestionan desde Integrantes.
   </div>
+  <dialog id="accountControlDialog" aria-labelledby="accountControlTitle">
+   <div class="dialog-head">
+    <div><div class="eyebrow">Solo Superadministración</div><h2 id="accountControlTitle">Revisar cuenta</h2></div>
+    <button id="closeAccountControl" type="button" class="muted-action">Cerrar</button>
+   </div>
+   <div id="accountControlBody"></div>
+  </dialog>
  </div>
 </main>
 <script>
@@ -97,7 +117,7 @@ input:focus-visible,select:focus-visible,button:focus-visible,a:focus-visible{ou
 (async()=>{
  const byId=id=>document.getElementById(id);
  const status=byId('status'),content=byId('adminContent');
- const pageSize=200;let page=0,all=[],db,loading=false;
+ const pageSize=200;let page=0,all=[],db,loading=false,managing=false;
  const make=(tag,text,cls)=>{
   const x=document.createElement(tag);if(text!==undefined)x.textContent=text;
   if(cls)x.className=cls;return x;
@@ -134,7 +154,11 @@ input:focus-visible,select:focus-visible,button:focus-visible,a:focus-visible{ou
     'Instituciones: '+((u.institutions||[]).join(', ')||'Ninguna'),
     'Invitaciones vigentes: '+(u.pending_invitations||0)
    ]) info.append(make('span',value));
-   card.append(heading,info);list.append(card);
+   const actions=make('div',undefined,'account-actions');
+   const inspect=make('button','Revisar y gestionar');
+   inspect.type='button';inspect.dataset.accountInspect=u.user_id;
+   actions.append(inspect);
+   card.append(heading,info,actions);list.append(card);
   }
   const testCount=all.filter(x=>x.is_test_account===true).length;
   byId('count').textContent=selected.length+' cuentas mostradas de '+all.length+' obtenidas en esta página; '+testCount+' de prueba (máximo 200 por página).';
@@ -156,6 +180,89 @@ input:focus-visible,select:focus-visible,button:focus-visible,a:focus-visible{ou
    status.textContent='El padrón global todavía no está disponible en Supabase: '+(err?.message||'Error de consulta')+'. Debe validarse y habilitarse primero la función segura del servidor.';
   }finally{loading=false;byId('refresh').disabled=false;show();}
  }
+ async function controlApi(action,account,more={}){
+  const auth=await db.auth.getSession();
+  const token=auth.data?.session?.access_token;
+  if(auth.error||!token)throw Error('Tu sesión venció. Volvé a iniciar sesión.');
+  const res=await fetch(window.GDV_CONFIG.url+'/functions/v1/gdv-superadmin-account-control',{
+   method:'POST',cache:'no-store',
+   headers:{'Content-Type':'application/json',apikey:window.GDV_CONFIG.key,
+    Authorization:'Bearer '+token},
+   body:JSON.stringify({action,target_id:account.user_id,expected_email:account.email,...more})
+  });
+  const result=await res.json().catch(()=>({}));
+  if(!res.ok||!result.ok)throw Error(result.error||'La operación no pudo completarse.');
+  return result;
+ }
+ const controlDialog=byId('accountControlDialog');
+ const controlBody=byId('accountControlBody');
+ async function inspectAccount(account,button){
+  if(managing)return;
+  managing=true;button.disabled=true;
+  const previous=button.textContent;button.textContent='Consultando…';
+  try{
+   const state=await controlApi('inspect',account);
+   controlBody.replaceChildren();
+   controlBody.append(make('p','Correo: '+account.email));
+   const stateText=state.protected?'Cuenta protegida (administración, especial o laboratorio).':
+      state.banned?'Ingreso suspendido.':'Ingreso habilitado.';
+   controlBody.append(make('p',stateText,'action-summary'));
+   controlBody.append(make('p',state.note||'','muted'));
+   if(!state.protected){
+    const motiveLabel=make('label','Motivo de la decisión (obligatorio)');
+    const reason=make('textarea');
+    reason.maxLength=1000;reason.minLength=8;reason.placeholder='Explicá la causa administrativa de la medida.';
+    motiveLabel.append(reason);controlBody.append(motiveLabel);
+    const actions=make('div',undefined,'dialog-actions');
+    const action=state.banned?'restore':'suspend';
+    const actionButton=make('button',state.banned?'Rehabilitar ingreso':'Suspender nuevos ingresos',
+       state.banned?'muted-action':'danger');
+    actionButton.type='button';
+    const feedback=make('p','', 'feedback');feedback.setAttribute('role','status');
+    actionButton.onclick=async()=>{
+     const text=reason.value.trim();
+     if(text.length<8){feedback.textContent='Indicá un motivo de al menos 8 caracteres.';return}
+     const typed=window.prompt('Para confirmar, escribí el correo completo de la cuenta: '+account.email);
+     if(typed===null)return;
+     if(typed.trim().toLowerCase()!==account.email.trim().toLowerCase()){
+      feedback.textContent='El correo no coincide. No se hizo ningún cambio.';return;
+     }
+     const confirmation=action==='suspend'?'SUSPENDER CUENTA':'REHABILITAR CUENTA';
+     if(!window.confirm(confirmation+' de '+account.email+'? Esta decisión quedará auditada.'))return;
+     actionButton.disabled=true;feedback.textContent='Aplicando la medida…';
+     try{
+      const result=await controlApi(action,account,{reason:text,confirmation});
+      feedback.textContent=result.warning||'Operación aplicada y registrada en Supabase.';
+      reason.value='';actionButton.hidden=true;
+      const newState=make('p',result.banned?'Ingreso suspendido.':'Ingreso rehabilitado.','action-summary');
+      controlBody.prepend(newState);
+     }catch(err){feedback.textContent='No se aplicó la medida: '+(err?.message||'Error de servidor');actionButton.disabled=false;}
+    };
+    actions.append(actionButton);controlBody.append(actions,feedback);
+   }
+   const history=Array.isArray(state.history)?state.history:[];
+   controlBody.append(make('h3','Últimas decisiones administrativas'));
+   if(!history.length)controlBody.append(make('p','Sin medidas registradas.','muted'));
+   for(const h of history){
+    const detail=(h.action==='suspend'?'Suspensión':'Rehabilitación')+' · '+(h.outcome||'')+' · '+
+      pretty(h.created_at)+' · '+(h.reason||'');
+    controlBody.append(make('p',detail,'audit-line'));
+   }
+   const remove=make('p','Para eliminar definitivamente una cuenta exclusivamente comunitaria, ingresá a Integrantes desde Gente de Vuelo. El borrado global con historiales de AeroSuite no está habilitado.','muted');
+   const link=make('a','Ir a Integrantes');link.href='../../comunidad.html#integrantes';
+   controlBody.append(remove,link);
+   controlDialog.showModal();
+  }catch(err){
+   status.textContent='No se pudo inspeccionar la cuenta: '+(err?.message||'Error de conexión')+'. No se realizaron modificaciones.';
+  }finally{managing=false;button.disabled=false;button.textContent=previous;}
+ }
+ byId('accounts').addEventListener('click',event=>{
+  const btn=event.target.closest('button[data-account-inspect]');
+  if(!btn||managing)return;
+  const account=all.find(x=>x.user_id===btn.dataset.accountInspect);
+  if(account)inspectAccount(account,btn);
+ });
+ byId('closeAccountControl').addEventListener('click',()=>controlDialog.close());
  byId('search').addEventListener('input',show);
  byId('kind').addEventListener('change',show);
  byId('accountType').addEventListener('change',show);
