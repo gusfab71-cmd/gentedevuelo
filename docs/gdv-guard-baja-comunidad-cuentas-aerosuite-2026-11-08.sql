@@ -17,6 +17,8 @@ LANGUAGE plpgsql SECURITY DEFINER SET search_path TO ''
 AS $function$
 DECLARE
   v_target_email text;
+  v_fk record;
+  v_has_link boolean;
 BEGIN
   -- Autorizar antes de inspeccionar ninguna pertenencia o identidad.
   IF auth.uid() IS NULL OR NOT EXISTS (
@@ -54,6 +56,34 @@ BEGIN
       'Esta cuenta está vinculada a AeroSuite. No se puede eliminar desde el panel de comunidad.'
       USING ERRCODE='42501';
   END IF;
+
+  -- Cubrir tambien referencias indirectas en auditoría, RAV, cobros,
+  -- vuelos, mantenimiento y nuevas tablas futuras de AeroSuite.
+  -- DELETE auth.users con FK ON DELETE SET NULL borraría la atribución
+  -- histórica del actor; con CASCADE podría eliminar filas institucionales.
+  -- La condición se genera a partir de FK declaradas en PostgreSQL.
+  FOR v_fk IN
+    SELECT n.nspname AS schema_name, t.relname AS table_name,
+           a.attname AS column_name
+    FROM pg_catalog.pg_constraint fk
+    JOIN pg_catalog.pg_class t ON t.oid=fk.conrelid
+    JOIN pg_catalog.pg_namespace n ON n.oid=t.relnamespace
+    JOIN pg_catalog.unnest(fk.conkey) AS col(attnum) ON true
+    JOIN pg_catalog.pg_attribute a ON a.attrelid=t.oid AND a.attnum=col.attnum
+    WHERE fk.contype='f'
+      AND fk.confrelid='auth.users'::regclass
+      AND t.relname LIKE 'aerosuite_%'
+  LOOP
+    EXECUTE format(
+      'SELECT EXISTS(SELECT 1 FROM %I.%I WHERE %I=$1)',
+      v_fk.schema_name,v_fk.table_name,v_fk.column_name
+    ) INTO v_has_link USING p_user;
+    IF v_has_link THEN
+      RAISE EXCEPTION
+        'Esta cuenta está vinculada a registros históricos de AeroSuite. No se puede eliminar desde el panel de comunidad.'
+        USING ERRCODE='42501';
+    END IF;
+  END LOOP;
 
   -- La rutina heredada conserva sus protecciones contra borrar
   -- la propia cuenta administradora, otros administradores y cuentas especiales.
