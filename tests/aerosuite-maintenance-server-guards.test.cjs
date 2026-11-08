@@ -48,7 +48,7 @@ test('Publicación: barrera transaccional de servidor sin alterar turnos ya publ
  assert.match(sql,/CREATE OR REPLACE FUNCTION aerosuite_internal\.aerosuite_guard_published_flight_maintenance\(\)/);
  assert.match(sql,/BEFORE INSERT OR UPDATE OF published_at ON public\.aerosuite_availability_slots/);
  assert.match(sql,/new\.activity<>'flight' or new\.published_at is null then return new/);
- assert.match(sql,/if tg_op='UPDATE' and old\.published_at is not null then return new/);
+ assert.match(sql,/if tg_op='UPDATE' then\s*if old\.published_at is not null then return new/);
  assert.match(sql,/v_actor uuid:=auth\.uid\(\)/);
  assert.match(sql,/if v_actor is null then/);
  assert.match(sql,/v_all:=public\.aerosuite_maintenance_alerts\(new\.institution_id\)/);
