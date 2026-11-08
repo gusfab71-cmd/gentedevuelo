@@ -45,6 +45,8 @@ jobs:
             command: 'node --test tests/gdv-superadmin-global-accounts-contract.test.cjs'
           - title: 'Suspensión de cuentas y auditoría'
             command: 'node --test tests/gdv-superadmin-account-control-contract.test.cjs'
+          - title: 'Legajos Pilotos PPA y PCA'
+            command: 'node --test tests/aerosuite-pilot-credentials-contract.test.cjs'
           - title: 'Menu de Administracion'
             command: 'node --test tests/gdv-account-admin-menu-contract.test.cjs'
           - title: 'Dirección y permisos'
