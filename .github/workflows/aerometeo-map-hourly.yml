@@ -8,6 +8,9 @@ on:
       - 'tests/aerometeo-automatic-metar-taf.test.cjs'
       - 'tests/aerometeo-radar.test.cjs'
       - 'tests/aerometeo-report-interpretation.test.cjs'
+      - 'tests/aerometeo-phenomena.test.cjs'
+      - 'api/aerometeo-sigmet.js'
+      - 'api/aerometeo-phenomena-point.js'
       - 'assets/aerolocator-open-meteo-ui.js'
       - 'api/aerometeo-aviation-weather.js'
       - '.github/workflows/aerometeo-map-hourly.yml'
@@ -20,6 +23,9 @@ on:
       - 'tests/aerometeo-automatic-metar-taf.test.cjs'
       - 'tests/aerometeo-radar.test.cjs'
       - 'tests/aerometeo-report-interpretation.test.cjs'
+      - 'tests/aerometeo-phenomena.test.cjs'
+      - 'api/aerometeo-sigmet.js'
+      - 'api/aerometeo-phenomena-point.js'
       - 'assets/aerolocator-open-meteo-ui.js'
       - 'api/aerometeo-aviation-weather.js'
       - '.github/workflows/aerometeo-map-hourly.yml'
@@ -39,6 +45,9 @@ jobs:
           node --check assets/aerometeo-hourly-chart.js
           node --check assets/aerometeo-radar.js
           node --check assets/aerometeo-messages-es.js
+          node --check assets/aerometeo-phenomena.js
+          node --check api/aerometeo-sigmet.js
+          node --check api/aerometeo-phenomena-point.js
           node --check assets/aerolocator-open-meteo-ui.js
       - name: Probar mapa, pronóstico horario y aeropuertos provinciales
         run: |
@@ -47,3 +56,4 @@ jobs:
           node --test tests/aerometeo-automatic-metar-taf.test.cjs
           node --test tests/aerometeo-radar.test.cjs
           node --test tests/aerometeo-report-interpretation.test.cjs
+          node --test tests/aerometeo-phenomena.test.cjs
