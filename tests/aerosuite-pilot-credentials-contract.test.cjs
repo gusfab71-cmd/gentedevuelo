@@ -11,7 +11,7 @@ const profile=read('utilidades/gestion-aeronautica/mi-ficha-alumno.html');
 const portal=read('utilidades/gestion-aeronautica/portal-escuela.html');
 
 test('Legajo PPA/PCA: licencia declarada con selección explícita y conserva datos antiguos',()=>{
- assert.match(profile,/name="pilot_license_type"[^>]*<option value=""/);
+ assert.match(profile,/name="pilot_license_type"><option value=""/);
  assert.match(profile,/PPA · Piloto Privado de Avión/);
  assert.match(profile,/PCA · Piloto Comercial de Avión/);
  assert.match(profile,/Licencia anterior declarada:/);
