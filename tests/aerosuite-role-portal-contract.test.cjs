@@ -28,8 +28,10 @@ test('La prueba usa sesiones distintas de la institucional normal y separadas po
   assert.match(source,/aerosuite-laboratorio-/);
   assert.match(source,/aerosuite-institucional-v2-auth/);
   assert.match(source,/prueba/);
-  assert.match(source,/\['administrador','secretaria','instructor','alumno','piloto'\]/);
  }
+ assert.match(login,/selectedRole==='instructor'\|\|selectedRole==='alumno'/);
+ assert.match(login,/selectedRole==='piloto'/);
+ assert.match(portal,/\['administrador','secretaria','instructor','alumno','piloto'\]/);
 });
 test('La URL de rol no autoriza por sí sola: usuario, pertenencia y licencia son obligatorios',()=>{
  assert.match(portal,/client\.auth\.getUser\(\)/);
