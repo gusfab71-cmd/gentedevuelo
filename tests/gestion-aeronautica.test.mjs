@@ -817,7 +817,8 @@ assert.match(airstripsOriginal,/function runwayPin\(kind='unverified'\)/);
 assert.match(airstripsOriginal,/const PIN_PALETTE=/);
 assert.match(airstripsOriginal,/PIN_PALETTE\[kind\]/);
 assert.match(airstripsOriginal,/<svg xmlns="http:\/\/www\.w3\.org\/2000\/svg"/);
-assert.match(airstripsOriginal,/runwayPin\(airfieldClass\(p\)\)/);
+assert.match(airstripsOriginal,/runwayPin\(airfieldClass\(p\)==='unverified'\?'community_reviewed':airfieldClass\(p\)\)/,
+ 'Los aportes comunitarios verificados conservan su pin propio, sin apariencia de pendiente');
 assert.match(airstripsOriginal,/runwayPin\('reference'\)/);
 assert.match(airstripsOriginal,/runwayPin\('draft'\)/);
 assert.match(airstripsOriginal,/function communityPopup\(record,nm=null\)/);
