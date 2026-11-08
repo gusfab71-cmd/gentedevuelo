@@ -14,8 +14,9 @@ test('Firma y seguridad del RPC heredado permanecen intactas',()=>{
  assert.match(clean,/v_mode not in \('trial','grace','active'\)/i);
 });
 test('Todos los caminos de liquidación adquieren FOR UPDATE del vuelo primero',()=>{
- const pivot=clean.indexOf("if p_operation IN ('pack_use','hour_payment') THEN");
- const branch=clean.indexOf("if p_operation='pack_sale' then");
+ const lc=clean.toLowerCase();
+ const pivot=lc.indexOf("if p_operation in ('pack_use','hour_payment') then");
+ const branch=lc.indexOf("if p_operation='pack_sale' then");
  assert.ok(pivot>=0 && branch>pivot,'el bloqueo precede al primer asiento o pack');
  const snippet=clean.slice(pivot,branch);
  assert.match(snippet,/SELECT \* INTO v_booking FROM public\.aerosuite_flight_bookings b[\s\S]*?WHERE b\.id=p_booking_id AND b\.institution_id=p_institution_id FOR UPDATE/i);
