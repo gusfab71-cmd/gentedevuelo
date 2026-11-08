@@ -177,6 +177,16 @@ BEGIN
     RAISE EXCEPTION 'Solo Dirección puede devolver o revisar un RAV enviado.' USING errcode='42501';END IF;
    IF p_action='return' AND length(btrim(coalesce(p_observations,'')))<8 THEN
     RAISE EXCEPTION 'Indicá observaciones concretas para devolver el borrador.' USING errcode='22023';END IF;
+   IF p_action='review' AND EXISTS(
+     SELECT 1 FROM public.aerosuite_rav_flights f
+     LEFT JOIN public.aerosuite_flight_reports r ON r.id=f.report_id AND r.institution_id=f.institution_id
+     LEFT JOIN public.aerosuite_flight_bookings b ON b.id=f.booking_id AND b.institution_id=f.institution_id
+     WHERE f.rav_id=v_id AND (r.id IS NULL OR r.status<>'approved' OR r.revision<>f.report_revision
+      OR r.flight_minutes<>f.flight_minutes OR r.logbook_entry IS DISTINCT FROM f.flight_snapshot->'logbook_entry'
+      OR b.status<>'completed')
+   ) THEN
+    RAISE EXCEPTION 'El informe de origen cambió después del envío. Devolvé para corregir el RAV.' USING errcode='22023';
+   END IF;
    -- Nunca declarar certificado: reviewed = REVISIÓN DOCUMENTAL INTERNA.
    UPDATE public.aerosuite_rav_documents
      SET status=CASE WHEN p_action='review' THEN 'reviewed' ELSE 'returned' END,
