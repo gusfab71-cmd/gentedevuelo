@@ -8,7 +8,7 @@
 <title>AeroMeteo · Developed by Gente de Vuelo</title>
 <link rel="icon" type="image/svg+xml" href="../assets/aerometeo-logo.svg">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="../assets/aerometeo.css?v=20261107compactcard1">
+<link rel="stylesheet" href="../assets/aerometeo.css?v=20261108phenomena1">
 </head>
 <body>
 <header class="am-header">
@@ -99,6 +99,28 @@
    </div>
    <p class="am-radar-disclaimer">Fuente: <a href="https://www.rainviewer.com/" target="_blank" rel="noopener noreferrer">RainViewer</a> (datos radar, uso educativo en prueba). Solo pasado, no pronóstico ni alerta. Cobertura variable: la ausencia de ecos no prueba ausencia de precipitación. Verificá <a href="https://www.argentina.gob.ar/smn" target="_blank" rel="noopener noreferrer">SMN</a>, SIGMET y NOTAM.</p>
   </section>
+   <button type="button" id="am-phenomena-toggle" class="am-source-card" aria-controls="am-phenomena-panel" aria-expanded="false" aria-pressed="false">
+    <span class="am-source-icon" aria-hidden="true">⚡</span>
+    <span class="am-source-copy"><strong>Fenómenos meteorológicos</strong><small>SIGMET y estimaciones puntuales.</small></span>
+    <span class="am-source-chevron" aria-hidden="true">›</span>
+   </button>
+   <section id="am-phenomena-panel" class="am-phenomena-panel" aria-label="Capas de fenómenos meteorológicos" hidden>
+    <p class="am-phenomena-intro">Activá una o varias capas. Los SIGMET son avisos aeronáuticos; niebla y tormentas del modelo son estimaciones puntuales.</p>
+    <div class="am-phenomena-options" role="group" aria-label="Seleccionar fenómenos">
+     <label><input type="checkbox" data-phenomenon="storms"> Tormentas <small>SIGMET + punto estimado</small></label>
+     <label><input type="checkbox" data-phenomenon="fog"> Niebla <small>Estimación por punto</small></label>
+     <label><input type="checkbox" data-phenomenon="turbulence"> Turbulencia <small>SIGMET</small></label>
+     <label><input type="checkbox" data-phenomenon="icing"> Engelamiento <small>SIGMET</small></label>
+     <label><input type="checkbox" data-phenomenon="ash"> Ceniza volcánica <small>SIGMET</small></label>
+    </div>
+    <div class="am-phenomena-buttons">
+     <button type="button" id="am-phenomena-refresh">Actualizar SIGMET</button>
+     <button type="button" id="am-phenomena-pick" aria-pressed="false">Elegir punto del mapa</button>
+    </div>
+    <p id="am-phenomena-status" class="am-phenomena-status" role="status" aria-live="polite">Seleccioná fenómenos para consultar los avisos vigentes.</p>
+    <div id="am-phenomena-point-result" class="am-phenomena-point-result" aria-live="polite" hidden></div>
+    <p class="am-phenomena-disclaimer">Fuente SIGMET: <a href="https://aviationweather.gov/data/api/" target="_blank" rel="noopener noreferrer">NOAA/AWC</a>. Modelo puntual: <a href="https://open-meteo.com/en/docs" target="_blank" rel="noopener noreferrer">Open-Meteo</a>. Ausencia de zonas o señales no implica tiempo seguro. Confirmá SMN, PRONAREA y SIGMET oficiales antes del vuelo.</p>
+   </section>
    <p class="am-sidebar-footnote">Uso informativo y educativo. Las observaciones y los pronósticos son fuentes diferentes. Referencias oficiales: <a href="https://www.argentina.gob.ar/smn" target="_blank" rel="noopener noreferrer">SMN</a> · <a href="https://ws2.smn.gob.ar/pronarea" target="_blank" rel="noopener noreferrer">PRONAREA</a> (enlaces externos sujetos a disponibilidad).</p>
   </div>
  </aside>
@@ -218,6 +240,7 @@
 <script src="../assets/aerometeo-metar-summary.js?v=20261107obs1"></script>
 <script src="../assets/aerometeo-hourly-chart.js?v=20261107hourly1"></script>
 <script src="../assets/aerometeo-radar.js?v=20261107radar1"></script>
-<script src="../assets/aerometeo-app.js?v=20261107explain1"></script>
+<script src="../assets/aerometeo-phenomena.js?v=20261108phenomena1"></script>
+<script src="../assets/aerometeo-app.js?v=20261108phenomena1"></script>
 </body>
 </html>
