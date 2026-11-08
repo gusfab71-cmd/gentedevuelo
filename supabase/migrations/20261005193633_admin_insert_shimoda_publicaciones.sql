@@ -1,3 +1,4 @@
+
 drop policy if exists "Administradores crean shimoda_publicaciones" on public.shimoda_publicaciones;
 create policy "Administradores crean shimoda_publicaciones"
 on public.shimoda_publicaciones

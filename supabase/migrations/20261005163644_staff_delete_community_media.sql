@@ -1,3 +1,4 @@
+
 create policy "community_media_staff_delete"
 on storage.objects
 for delete

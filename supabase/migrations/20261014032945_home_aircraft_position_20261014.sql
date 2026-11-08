@@ -1,5 +1,6 @@
--- Posicion manual del avion de fondo en la portada de escritorio.
--- La version movil conserva sus posiciones actuales.
+-- Control manual de la posición de la fotografía del avión en portada de escritorio.
+-- Su lectura es pública; solo las cuentas en site_admins pueden guardar cambios.
+-- La portada móvil mantiene las reglas anteriores.
 create table if not exists public.gdv_home_aircraft_position (
   id smallint primary key check (id = 1),
   pos_x_pct numeric(5,2) not null default 50 check (pos_x_pct between 0 and 100),

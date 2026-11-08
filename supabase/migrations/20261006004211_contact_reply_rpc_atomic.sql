@@ -1,4 +1,3 @@
--- Respuesta atómica a consultas privadas y entrega por Notificaciones.
 create or replace function public.gdv_reply_contact(p_contact_id uuid, p_reply text)
 returns void
 language plpgsql

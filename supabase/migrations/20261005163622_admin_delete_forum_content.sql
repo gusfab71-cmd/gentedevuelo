@@ -1,3 +1,4 @@
+
 create or replace function public.gdv_admin_delete_content(p_kind text, p_id uuid)
 returns text[]
 language plpgsql

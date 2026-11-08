@@ -1,3 +1,4 @@
+
 create or replace function public.toggle_clasificado_pausa(p_id bigint)
 returns text
 language plpgsql

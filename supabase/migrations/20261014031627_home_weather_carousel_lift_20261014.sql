@@ -1,5 +1,5 @@
--- Ubicación vertical configurable del carrusel meteorológico de escritorio.
--- La versión móvil no usa este desplazamiento.
+-- Posición vertical del carrusel meteorológico en portada de escritorio.
+-- No afecta la disposición en celulares.
 create table if not exists public.gdv_home_weather_position (
   id smallint primary key check (id = 1),
   lift_px smallint not null default 0 check (lift_px between 0 and 280),
