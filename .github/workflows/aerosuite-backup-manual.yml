@@ -14,19 +14,22 @@ concurrency:
 jobs:
   backup:
     if: ${{ inputs.confirmation == 'COPIA-CIFRADA-MANUAL' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - name: Instalar herramientas de backup
         run: |
           sudo apt-get update -qq
-          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y postgresql-client age awscli
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y postgresql-common age awscli
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y postgresql-client-17
       - name: Comprobar herramientas sin imprimir secretos
         run: |
           set -euo pipefail
           command -v pg_dump
           command -v pg_restore
+          pg_dump --version | grep -E '17\.'
           command -v age
           command -v aws
       - name: Exportar y subir solo el respaldo cifrado
