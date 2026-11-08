@@ -359,6 +359,7 @@ try{
       ]){
        const detail=document.createElement('small');detail.textContent=line;meta.append(detail);
       }
+      card.append(meta);
       if(school.can_write){
        const controls=document.createElement('div');controls.className='actions';
        const action=document.createElement('button');action.type='button';
@@ -392,7 +393,7 @@ try{
        });
        controls.append(action);card.append(controls);
       }
-      card.append(meta);pilotRosterList.append(card);
+      pilotRosterList.append(card);
      }
      if(!data.length){const empty=document.createElement('p');empty.className='caption';empty.textContent='Todavía no hay pilotos vinculados a esta institución.';pilotRosterList.append(empty);}
      pilotRosterFeedback.textContent='Se muestran '+data.length+' pilotos vinculados. Los vencimientos no son verificaciones oficiales.';
