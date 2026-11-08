@@ -153,6 +153,12 @@ input[type=email]{width:100%;background:#122737;border:1px solid #7394aa;border-
     <p>Podés desvincular integrantes autorizados o cancelar invitaciones pendientes. En instituciones de prueba se limpia además la cuenta técnica exclusiva, para poder registrar nuevamente el mismo correo. <strong>Las cuentas de Gente de Vuelo y los accesos a otras instituciones se conservan.</strong></p>
     <div id="peopleFeedback" class="people-feedback" role="status" aria-live="polite"></div>
     <div id="peopleList" class="people-list"></div>
+    <details id="pilotRosterPanel" class="panel" style="margin-top:16px">
+     <summary style="cursor:pointer;font-weight:800">Pilotos PPA/PCA · Estado documental</summary>
+     <p class="caption">Fechas declaradas por cada piloto; las verificaciones institucionales se muestran separadas. Ningún dato declarado habilita vuelos automáticamente.</p>
+     <div id="pilotRosterFeedback" class="people-feedback" role="status" aria-live="polite"></div>
+     <div id="pilotRosterList" class="people-list"></div>
+    </details>
     <div class="actions" style="margin-top:15px"><button id="reloadPeople" type="button">Actualizar integrantes</button></div>
   </section>
 <div class="status" id="portalFooter">Turnera, informes de instrucción y Contaduría cuentan con funciones institucionales. El seguimiento técnico de mantenimiento y la Academia Aeronáutica todavía requieren integración específica.</div>
@@ -316,6 +322,46 @@ try{
    const roles={secretaria:'Secretaría',instructor:'Instructor',alumno:'Alumno',piloto:'Piloto PPA / Comercial'};
    el('secretaryInviteOption').hidden=!isDirector;
    el('inviteHeading').textContent=isDirector?'Invitar Secretaría, instructores, alumnos y pilotos':'Invitar instructores, alumnos y pilotos';
+   const pilotRosterList=el('pilotRosterList'),pilotRosterFeedback=el('pilotRosterFeedback');
+   function pilotExpiry(label,date){
+    if(!date)return label+': sin fecha declarada';
+    const today=new Date();today.setHours(0,0,0,0);
+    const deadline=new Date(String(date).slice(0,10)+'T00:00:00');
+    if(!Number.isFinite(deadline.getTime()))return label+': fecha no válida';
+    const days=Math.ceil((deadline.getTime()-today.getTime())/86400000);
+    return label+': '+String(date).slice(0,10)+(days<0?' · Vencido':days<=30?' · Vence dentro de 30 días':' · Declarado');
+   }
+   async function loadPilotRoster(){
+    pilotRosterList.replaceChildren();
+    pilotRosterFeedback.textContent='Consultando legajos de pilotos…';
+    try{
+     const {data,error}=await client.rpc('aerosuite_pilot_candidates',{p_institution_id:school.institution_id});
+     if(error)throw error;
+     if(!Array.isArray(data))throw Error('Respuesta de legajos inválida.');
+     for(const pilot of data){
+      const card=document.createElement('div');card.className='person-card';
+      const meta=document.createElement('div');meta.className='person-meta';
+      const heading=document.createElement('strong');
+      heading.textContent=(pilot.name||pilot.email||'Piloto')+' · '+(pilot.license_type||'Licencia no declarada');
+      meta.append(heading);
+      const suffix=String(pilot.license_number||'').slice(-4);
+      for(const line of [
+       'Licencia: '+(suffix?'terminación '+suffix:'número no informado'),
+       pilot.verified?'Verificación institucional registrada':'Licencia pendiente de verificación institucional',
+       pilotExpiry('Certificado médico',pilot.medical_expires_on),
+       pilotExpiry('Licencia',pilot.license_expires_on),
+       pilotExpiry('Habilitaciones',pilot.ratings_expires_on),
+       'Habilitaciones declaradas: '+(pilot.ratings_declared||'No informadas')
+      ]){
+       const detail=document.createElement('small');detail.textContent=line;meta.append(detail);
+      }
+      card.append(meta);pilotRosterList.append(card);
+     }
+     if(!data.length){const empty=document.createElement('p');empty.className='caption';empty.textContent='Todavía no hay pilotos vinculados a esta institución.';pilotRosterList.append(empty);}
+     pilotRosterFeedback.textContent='Se muestran '+data.length+' pilotos vinculados. Los vencimientos no son verificaciones oficiales.';
+    }catch(err){pilotRosterFeedback.textContent='No fue posible consultar los legajos de pilotos: '+(err?.message||'Error de servidor');}
+   }
+   el('pilotRosterPanel').addEventListener('toggle',()=>{if(el('pilotRosterPanel').open)loadPilotRoster();});
    async function loadPeople(){
      listFeedback.textContent='Consultando integrantes de tu institución…';
      list.replaceChildren();
@@ -370,7 +416,7 @@ try{
        listFeedback.textContent='Se muestran '+entries.length+' integrantes o invitaciones de esta escuela.';
      }catch(err){listFeedback.textContent='No se pudo consultar el personal: '+(err?.message||'Error desconocido');}
    }
-   el('reloadPeople').addEventListener('click',loadPeople);
+   el('reloadPeople').addEventListener('click',async()=>{await loadPeople();if(el('pilotRosterPanel').open)await loadPilotRoster();});
    await loadPeople();
  }
  if(isManager&&school.can_write){
