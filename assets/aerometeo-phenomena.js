@@ -129,6 +129,9 @@ function boot({map,L}){
  async function inspectPoint(point){
   if(!open||!needPoint()||!validPoint(point))return false;
   const id=++pointId;
+  // El resultado anterior deja de representar el punto consultado.
+  pointCheckedAt=0;
+  if(pointLayer){map.removeLayer(pointLayer);pointLayer=null}
   pointBox.hidden=false;pointBox.replaceChildren();
   const initial=document.createElement('p');
   initial.textContent='Consultando estimación de tormentas y niebla para '+(point.name||'el punto')+'…';
@@ -195,7 +198,8 @@ function boot({map,L}){
  toggle.addEventListener('click',()=>setOpen(!open));
  checks.forEach(check=>check.addEventListener('change',()=>{
   if(!TYPES.includes(check.dataset.phenomenon))return;
-  if(!needPoint()){clearPoint();setPicking(false)}
+  if(check.dataset.phenomenon==='storms'||check.dataset.phenomenon==='fog')clearPoint();
+  if(!needPoint())setPicking(false);
   if(needSIGMET()){
    if(!stamp||Date.now()-stamp>10*60000||!catalogue.length)void loadSigmet();
    else redraw();
