@@ -10,6 +10,8 @@ CREATE TABLE IF NOT EXISTS public.aerosuite_pilot_dispatch_reviews(
  reference text NOT NULL CHECK(length(btrim(reference)) BETWEEN 8 AND 250),
  reason_codes jsonb NOT NULL DEFAULT '[]'::jsonb,
  aircraft_registration text NOT NULL,
+ booking_updated_at timestamptz,
+ booking_starts_at timestamptz NOT NULL,
  credential_updated_at timestamptz,
  authorization_updated_at timestamptz,
  aircraft_updated_at timestamptz,
@@ -77,13 +79,15 @@ BEGIN
  ORDER BY r.checked_at DESC,r.id DESC LIMIT 1;
  v_review_ok:=v_r.id IS NOT NULL AND v_r.outcome='checked' AND
    v_r.valid_until>=now() AND v_r.aircraft_registration IS NOT DISTINCT FROM v_b.aircraft AND
+   v_r.booking_updated_at IS NOT DISTINCT FROM v_b.updated_at AND
+   v_r.booking_starts_at IS NOT DISTINCT FROM v_b.starts_at AND
    v_r.credential_updated_at IS NOT DISTINCT FROM v_pc.updated_at AND
    v_r.authorization_updated_at IS NOT DISTINCT FROM v_pa.updated_at AND
    v_r.aircraft_updated_at IS NOT DISTINCT FROM v_ac.updated_at AND
    v_r.maintenance_revision IS NOT DISTINCT FROM v_revision;
  RETURN jsonb_build_object('booking_id',v_b.id,'solo',true,'status',v_b.status,
   'reasons',v_reasons,'documentation_current',v_doc_ok,
-  'school_authorization_current',v_pa.status='verified','review_current',v_review_ok,
+  'school_authorization_current',coalesce(v_pa.status='verified',false),'review_current',v_review_ok,
   'ready',jsonb_array_length(v_reasons)=0 AND v_review_ok,
   'reviewed_at',v_r.checked_at,'review_valid_until',v_r.valid_until,
   'dispatched',false,
@@ -141,9 +145,9 @@ BEGIN
  END IF;
  v_ok:=jsonb_array_length(v_reasons)=0;
  INSERT INTO public.aerosuite_pilot_dispatch_reviews(institution_id,booking_id,pilot_id,reviewer_id,outcome,
-   reference,reason_codes,aircraft_registration,credential_updated_at,authorization_updated_at,aircraft_updated_at,maintenance_revision,valid_until)
+   reference,reason_codes,aircraft_registration,booking_updated_at,booking_starts_at,credential_updated_at,authorization_updated_at,aircraft_updated_at,maintenance_revision,valid_until)
  VALUES(p_institution_id,v_b.id,v_b.student_id,v_actor,CASE WHEN v_ok THEN 'checked' ELSE 'blocked' END,
-  v_reference,v_reasons,v_b.aircraft,v_pc.updated_at,v_pa.updated_at,v_ac.updated_at,v_rev,
+  v_reference,v_reasons,v_b.aircraft,v_b.updated_at,v_b.starts_at,v_pc.updated_at,v_pa.updated_at,v_ac.updated_at,v_rev,
   CASE WHEN v_ok THEN least(now()+interval '15 minutes',v_b.starts_at+interval '15 minutes') ELSE NULL END);
  RETURN jsonb_build_object('ok',v_ok,'checked',v_ok,'reasons',v_reasons,
   'valid_for_minutes',CASE WHEN v_ok THEN 15 ELSE 0 END,'dispatched',false,
