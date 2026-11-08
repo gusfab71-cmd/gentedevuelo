@@ -563,6 +563,8 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
 @media(max-width:870px){#flight-legs-list .flight-leg-row{grid-template-columns:repeat(2,minmax(0,1fr))}#flight-legs-list .flight-leg-route{grid-column:1/-1;padding-top:0}}
 @media(max-width:620px){#flight-legs-list .flight-leg-row{grid-template-columns:1fr}}
 </style>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="../assets/terrain-relief.css?v=20261108restore1">
 </head>
 <body>
 <header class="top"><div class="top-inner"><a class="brand" href="../index.html"><span class="mark">GDV</span><span class="brand-name">GENTE DE VUELO<span>Centro de consulta aeronáutica</span></span></a><nav class="toplinks"><a href="index.html">Utilidades</a><a href="../index.html">Portada</a></nav></div></header>
@@ -712,6 +714,19 @@ body{background:radial-gradient(90% 400px at 50% -260px,#31485a 0%,transparent 1
  </section>
  <div id="flight-waypoints"></div>
  <div id="flight-legs-list" aria-live="polite"></div>
+ <details class="flight-terrain" id="flight-terrain-panel"><summary>Relieve y elevaciones · capa independiente (IGN 30 m)</summary>
+ <div class="flight-terrain-panel">
+  <p class="flight-terrain-note">Visualizá la ruta sobre un mapa base. Podés activar la cartografía topográfica oficial del IGN por separado. El perfil se calcula por muestreo de SRTM 30 m y no debe utilizarse para establecer alturas mínimas de vuelo.</p>
+  <div class="flight-terrain-controls">
+   <label class="terrain-layer-control"><input type="checkbox" id="flight-terrain-toggle" aria-controls="flight-terrain-map"> Mostrar relieve IGN · 30 m</label>
+   <button type="button" id="flight-terrain-refresh">Actualizar mapa de la ruta</button>
+   <button type="button" id="flight-terrain-calculate">Calcular perfil de elevaciones</button>
+  </div>
+  <div id="flight-terrain-map" aria-label="Mapa topográfico opcional y ruta prevista"></div>
+  <p id="flight-terrain-status" role="status" aria-live="polite">Abrí esta sección para ver la ruta. La capa IGN permanece desactivada.</p>
+  <div id="flight-terrain-profile" aria-live="polite"></div>
+  <p class="flight-terrain-note">Fuente cartográfica: IGN, Argenmap topográfico derivado de MDE-Ar v2.1. Fuente numérica: NASA/USGS SRTM mediante OpenTopoData. No incluye obstáculos artificiales ni garantiza separación sobre el terreno. Verificá la documentación aeronáutica vigente.</p>
+ </div></details>
  <p id="flight-vfr-overview" class="flight-vfr-screenreader" role="status" aria-live="polite">Calculando compatibilidad de las altitudes VFR.</p>
 </div>
 </form>
@@ -2207,5 +2222,8 @@ if(stage){
 <script src="../assets/flight-fir-autoselect.js?v=20261015b"></script>
 <script src="../assets/flight-route-suggestions.js?v=20261015b"></script>
 <script defer src="../assets/flight-operations-wizard.js?v=20261017a"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="../assets/terrain-relief.js?v=20261108restore1"></script>
+<script>window.GDV_TERRAIN?.bootFlightOperations();</script>
 </body>
 </html>
