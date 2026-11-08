@@ -1,9 +1,11 @@
--- PROPUESTA DE CORRECCIÓN / NO DESPLEGAR EN PRODUCCIÓN AUTOMÁTICAMENTE
--- Incluir 'piloto' en las operaciones de revocación y desvinculación del
--- Padrón Global de Superadministración.
--- No elimina la cuenta global de Supabase Auth en usuarios reales.
+-- APLICADA EN SUPABASE PRINCIPAL EL 2026-11-08
+-- Migración: aerosuite_superadmin_pilot_registration_management_20261108.
+-- Incluye 'piloto' en las operaciones de revocación y desvinculación del
+-- Padrón institucional de Superadministración.
+-- No elimina cuentas globales de Supabase Auth en instituciones reales.
 -- Mantiene intactos los controles actuales de Superadministración.
--- Antes de aplicar: ensayar con JWT en laboratorio, obtener aprobación y migración formal.
+-- Se comprobó mediante consulta de solo lectura: función, permisos y 25 cuentas
+-- activas sin cambios. No se ejecutaron desvinculaciones ni cancelaciones.
 
 CREATE OR REPLACE FUNCTION public.aerosuite_superadmin_manage_registration(p_institution_id uuid, p_person_id uuid, p_kind text, p_role text)
  RETURNS jsonb
