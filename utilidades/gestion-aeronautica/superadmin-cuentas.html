@@ -18,7 +18,7 @@ p{line-height:1.55;color:#bfd1dc}
 .eyebrow{color:#f0ce99;letter-spacing:.12em;font-size:11px;font-weight:850;text-transform:uppercase}
 .panel{background:#1a3446;border:1px solid #4f768c;border-radius:15px;padding:20px;margin:17px 0}
 .notice{border-left:3px solid #f0c984;padding:12px 16px;background:#203748;color:#e0eef6;font-size:13px;line-height:1.6}
-.controls{display:grid;grid-template-columns:minmax(200px,2fr) minmax(170px,1fr);gap:12px;margin:18px 0}
+.controls{display:grid;grid-template-columns:minmax(200px,2fr) minmax(170px,1fr) minmax(170px,1fr);gap:12px;margin:18px 0}
 label{display:grid;gap:6px;color:#e0eff8;font-size:13px}
 input,select,button{font:inherit;font-size:13px;padding:11px;border-radius:9px;background:#10293b;color:white;border:1px solid #658ca3}
 button{cursor:pointer;background:#325973;font-weight:800}
@@ -30,11 +30,13 @@ input:focus-visible,select:focus-visible,button:focus-visible,a:focus-visible{ou
 .account h3{font-size:15px;word-break:break-all;margin:0}
 .account small{color:#b5cbd8;line-height:1.6}
 .account .status{font-size:11px;border:1px solid #809cab;border-radius:20px;padding:5px 9px;color:#e9f4fc}
+.account .test-flag{display:inline-block;color:#f1d5a1;border:1px solid #b6945f;border-radius:20px;padding:5px 9px;font-size:11px;font-weight:750}
+.account-flags{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .info{margin-top:8px;display:flex;gap:8px 22px;flex-wrap:wrap;font-size:12px;line-height:1.55;color:#c3d7e4}
 .page-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:18px}
 .page-actions .buttons{display:flex;gap:9px}
 .muted{font-size:12px;color:#b6cbda}
-@media(max-width:620px){.controls{grid-template-columns:1fr}}
+@media(max-width:850px){.controls{grid-template-columns:1fr}}
 </style>
 <script src="../../assets/supabase-2.117.2.min.js"></script>
 <script src="../../assets/community-config.js"></script>
@@ -53,7 +55,7 @@ input:focus-visible,select:focus-visible,button:focus-visible,a:focus-visible{ou
  <div id="adminContent" hidden>
   <section class="panel">
    <h2>Revisión de cuentas</h2>
-   <p class="muted">Una cuenta sin invitación a AeroSuite puede ser perfectamente legítima en Gente de Vuelo. «Sin vínculo detectado» exige revisión manual; nunca implica eliminación automática.</p>
+   <p class="muted">Una cuenta sin invitación a AeroSuite puede ser perfectamente legítima en Gente de Vuelo. «Sin vínculo detectado» exige revisión manual; nunca implica eliminación automática. Las cuentas técnicas de prueba se identifican por su pertenencia exclusiva a instituciones marcadas como laboratorio en Supabase.</p>
    <div class="controls">
     <label>Buscar en esta página
      <input id="search" type="search" placeholder="Correo, usuario o institución" autocomplete="off">
@@ -68,6 +70,13 @@ input:focus-visible,select:focus-visible,button:focus-visible,a:focus-visible{ou
       <option value="Comunidad + institución">Comunidad y AeroSuite</option>
       <option value="Invitación pendiente">Invitación pendiente</option>
       <option value="Administración protegida">Administración protegida</option>
+     </select>
+    </label>
+    <label>Tipo de cuenta
+     <select id="accountType">
+      <option value="">Todas las cuentas</option>
+      <option value="test">Cuentas técnicas de prueba</option>
+      <option value="other">Otras cuentas</option>
      </select>
     </label>
    </div>
@@ -99,8 +108,8 @@ input:focus-visible,select:focus-visible,button:focus-visible,a:focus-visible{ou
   return Number.isNaN(d.getTime())?'—':new Intl.DateTimeFormat('es-AR',{dateStyle:'medium',timeStyle:'short'}).format(d);
  };
  const show=()=>{
-  const term=byId('search').value.trim().toLowerCase(),kind=byId('kind').value;
-  const selected=all.filter(x=>(!kind||x.review_status===kind)&&(!term||
+  const term=byId('search').value.trim().toLowerCase(),kind=byId('kind').value,type=byId('accountType').value;
+  const selected=all.filter(x=>(!kind||x.review_status===kind)&&(!type||(type==='test'?x.is_test_account===true:x.is_test_account!==true))&&(!term||
    [x.email,x.username,...(x.institutions||[]),...(x.institutional_roles||[])]
     .some(y=>String(y||'').toLowerCase().includes(term))));
   const list=byId('accounts');list.replaceChildren();
@@ -110,7 +119,10 @@ input:focus-visible,select:focus-visible,button:focus-visible,a:focus-visible{ou
    const principal=make('div');
    principal.append(make('h3',u.email||'Sin correo'));
    principal.append(make('small',u.username?'Usuario: '+u.username:'Sin nombre de usuario registrado'));
-   heading.append(principal,make('span',u.review_status||'Sin clasificar','status'));
+   const flags=make('div',undefined,'account-flags');
+   if(u.is_test_account===true)flags.append(make('span','Cuenta técnica de prueba','test-flag'));
+   flags.append(make('span',u.review_status||'Sin clasificar','status'));
+   heading.append(principal,flags);
    const info=make('div',undefined,'info');
    for(const value of [
     'Alta: '+pretty(u.created_at),
@@ -124,7 +136,8 @@ input:focus-visible,select:focus-visible,button:focus-visible,a:focus-visible{ou
    ]) info.append(make('span',value));
    card.append(heading,info);list.append(card);
   }
-  byId('count').textContent=selected.length+' cuentas mostradas de '+all.length+' obtenidas en esta página (máximo 200).';
+  const testCount=all.filter(x=>x.is_test_account===true).length;
+  byId('count').textContent=selected.length+' cuentas mostradas de '+all.length+' obtenidas en esta página; '+testCount+' de prueba (máximo 200 por página).';
   byId('pagination').textContent='Página '+(page+1);
   byId('previous').disabled=loading||page===0;
   byId('next').disabled=loading||all.length<pageSize;
@@ -134,7 +147,7 @@ input:focus-visible,select:focus-visible,button:focus-visible,a:focus-visible{ou
   byId('previous').disabled=true;byId('next').disabled=true;byId('refresh').disabled=true;
   status.textContent='Consultando cuentas en Supabase…';
   try{
-   const {data,error}=await db.rpc('gdv_superadmin_global_accounts',{p_limit:pageSize,p_offset:page*pageSize});
+   const {data,error}=await db.rpc('gdv_superadmin_global_accounts_v2',{p_limit:pageSize,p_offset:page*pageSize});
    if(error)throw error;
    if(!Array.isArray(data))throw Error('El listado no devolvió registros válidos.');
    all=data;show();status.textContent='Consulta completada. Solo Superadministración puede acceder a este padrón.';
@@ -145,6 +158,7 @@ input:focus-visible,select:focus-visible,button:focus-visible,a:focus-visible{ou
  }
  byId('search').addEventListener('input',show);
  byId('kind').addEventListener('change',show);
+ byId('accountType').addEventListener('change',show);
  byId('refresh').addEventListener('click',load);
  byId('previous').addEventListener('click',()=>{if(page>0){page--;load();}});
  byId('next').addEventListener('click',()=>{if(all.length===pageSize){page++;load();}});
