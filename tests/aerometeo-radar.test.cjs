@@ -71,7 +71,7 @@ test('Radar es una capa independiente, fuera del visor de pronósticos y sin com
  assert.ok(html.indexOf('id="aerometeo-radar-toggle"')<sidebarEnd);
  assert.match(css,/\.am-sidebar \.am-radar-panel\s*\{/);
  assert.match(css,/\.am-sidebar \.am-radar-player\{/);
- assert.match(html,/aerometeo\.css\?v=20261107compactcard1/);
+ assert.match(html,/aerometeo\.css\?v=20261108phenomena1/);
  assert.match(html,/solo pasado, no pronóstico ni alerta/i);
  assert.match(html,/RainViewer/);
  assert.match(html,/SMN/);
