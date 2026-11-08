@@ -350,7 +350,7 @@ try{
       const suffix=String(pilot.license_number||'').slice(-4);
       for(const line of [
        'Licencia: '+(suffix?'terminación '+suffix:'número no informado'),
-       pilot.school_verified?'Verificación institucional registrada':'Pendiente de verificación institucional',
+       pilot.school_verified?'Verificación institucional registrada':'Licencia pendiente de verificación institucional',
        pilot.documentation_current?'CMA y vencimientos declarados vigentes hoy':'Sin CMA vigente comprobable o con vencimientos declarados: no autorizar vuelo solo',
        pilotExpiry('Certificado médico',pilot.medical_expires_on),
        pilotExpiry('Licencia',pilot.license_expires_on),
