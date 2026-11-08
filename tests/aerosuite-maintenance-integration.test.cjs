@@ -8,6 +8,7 @@ const standalone=read("utilidades/mantenimiento-aeronaves.html");
 const institutional=read("utilidades/gestion-aeronautica/mantenimiento-institucional.html");
 const fleet=read("utilidades/gestion-aeronautica/flota-institucional.html");
 const director=read("utilidades/gestion-aeronautica/cierre-diario-director.html");
+const agenda=read("utilidades/gestion-aeronautica/aerosuite-agenda-publicada.js");
 
 assert.match(standalone,/gdv_aircraft_maintenance/,"La app privada original sigue intacta");
 assert.doesNotMatch(institutional,/gdv_aircraft_maintenance|GDV_AUTH/,"No mezclar datos privados");
@@ -26,6 +27,17 @@ assert.match(fleet,/id="maintenanceLink"/);
 assert.match(fleet,/mantenimiento-institucional\.html/);
 assert.match(fleet,/aerosuite_institution_maintenance_get/);
 assert.match(fleet,/Mantenimiento de Aeronaves/);
+assert.match(fleet,/aerosuite_maintenance_alerts/,"El listado de flota consulta avisos por matrícula");
+assert.match(fleet,/maintenanceAlertMap/,"Las alertas se vinculan a la matrícula de Flota");
+assert.match(fleet,/MANTENIMIENTO · REVISAR VENCIMIENTO/,"Vencimientos visibles");
+assert.match(fleet,/MANTENIMIENTO · DATOS PENDIENTES/,"Datos incompletos visibles");
+assert.match(fleet,/MANTENIMIENTO · SIN CONSULTA DE ALERTAS/,"Falla de red no se convierte en estado correcto");
+assert.match(fleet,/a\.availability==="available"/,"El estado operativo de Flota permanece independiente");
+assert.match(fleet,/\&matricula=/,"Acceso directo a la ficha técnica");
+assert.match(institutional,/requestedAircraftRegistration=AeroSuiteRegistration\.normalize/);
+assert.match(institutional,/requestedAircraft=S\.ac\.find\(a=>!a\.archived/);
+assert.match(agenda,/aerosuite_maintenance_alerts/,"La Turnera sigue consultando avisos técnicos");
+
 
 assert.match(director,/aerosuite_director_period_summary/);
 assert.match(director,/aerosuite_institution_maintenance_get/);
