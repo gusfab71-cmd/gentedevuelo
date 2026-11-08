@@ -16,7 +16,8 @@ const HAZARDS={
 function parseTime(input){
  if(typeof input==='number'&&Number.isFinite(input)){
   const millis=input<20000000000?input*1000:input;
-  return Number.isFinite(millis)?new Date(millis).toISOString():null;
+  return Number.isFinite(millis)&&Math.abs(millis)<=8.64e15?
+   new Date(millis).toISOString():null;
  }
  if(typeof input!=='string'||!input.trim())return null;
  const m=Date.parse(input);
