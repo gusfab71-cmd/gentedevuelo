@@ -37,6 +37,8 @@ assert.match(fleet,/\&matricula=/,"Acceso directo a la ficha técnica");
 assert.match(institutional,/requestedAircraftRegistration=AeroSuiteRegistration\.normalize/);
 assert.match(institutional,/requestedAircraft=S\.ac\.find\(a=>!a\.archived/);
 assert.match(agenda,/aerosuite_maintenance_alerts/,"La Turnera sigue consultando avisos técnicos");
+assert.match(agenda,/const due=warnings\.filter\(w=>w\.level==="due"\)/,"Detectar vencimientos antes de publicar");
+assert.match(agenda,/if\(due\.length\)\{[\s\S]*?return false;/,"Bloqueo visual sin opción de continuar con límite vencido");
 
 
 assert.match(director,/aerosuite_director_period_summary/);
