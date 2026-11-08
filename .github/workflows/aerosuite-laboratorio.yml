@@ -41,6 +41,8 @@ jobs:
             command: 'node --test tests/aerosuite-pilot-booking-hardening.test.cjs'
           - title: 'Padron global Superadministracion'
             command: 'node --test tests/aerosuite-superadmin-global-roster-contract.test.cjs'
+          - title: 'Control global de cuentas'
+            command: 'node --test tests/gdv-superadmin-global-accounts-contract.test.cjs'
           - title: 'Dirección y permisos'
             command: 'node tests/aerosuite-director-institucional.test.mjs'
           - title: 'Aislamiento de demos'
