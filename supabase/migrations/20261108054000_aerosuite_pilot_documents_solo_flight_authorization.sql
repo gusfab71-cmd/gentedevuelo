@@ -73,7 +73,7 @@ begin
  status=excluded.status,verification_reference=excluded.verification_reference,verified_by=excluded.verified_by,
  verified_at=excluded.verified_at,updated_at=now();
  return jsonb_build_object('ok',true,'pilot_verified',p_approved,'user_id',p_user_id);
-end $function$
+end $function$;
 
 
 CREATE OR REPLACE FUNCTION public.aerosuite_confirm_without_instructor(p_institution_id uuid, p_booking_id uuid, p_authorization_reference text)
@@ -138,7 +138,7 @@ begin
  from public.aerosuite_flight_bookings b where b.id=v_booking.id;
  return jsonb_build_object('ok',true,'booking_id',v_booking.id,'status','confirmed',
   'with_instructor',false);
-end $function$
+end $function$;
 
 
 CREATE OR REPLACE FUNCTION public.aerosuite_reserve_with_instructor(p_institution_id uuid, p_slot_id uuid, p_student_id uuid, p_with_instructor boolean)
@@ -188,7 +188,7 @@ begin
  end if;
  return v_result||jsonb_build_object('with_instructor',p_with_instructor,
   'requires_school_authorization',v_slot.activity='flight' and not p_with_instructor);
-end $function$
+end $function$;
 
 
 CREATE OR REPLACE FUNCTION public.aerosuite_pilot_profile(p_institution_id uuid)
@@ -224,7 +224,7 @@ begin
   'portal','pilot_ppa', 'license_type',coalesce(v_decl.license_type,''),
   'pilot_portal',true
  );
-end $function$
+end $function$;
 
 -- Seguridad: las verificaciones anteriores son por fecha de la operación y se ejecutan en el servidor.
 -- Los vuelos con instructor no se bloquean de manera automática por esta regla de vuelos sin instructor.
