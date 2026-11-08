@@ -734,8 +734,12 @@ assert.match(airstripsOriginal,/if\(oaMatchesANAC\(record\)\)\{anacMatches\+\+;r
  'Coincidencias ANAC no crean marcadores duplicados');
 assert.match(airstripsOriginal,/<option value="pending" selected>Pendientes<\/option>/,
  'OurAirports debe abrir inicialmente con pendientes');
-assert.match(airstripsOriginal,/const show=false;/,
- 'Aportes externos no revisados no aparecen en el mapa principal');
+assert.match(airstripsOriginal,/const filtered=\(merged\?oaRecords\.filter\(record=>/,
+ 'El mapa principal filtra OurAirports antes de representarlos');
+assert.match(airstripsOriginal,/if\(oaState\(record\)!=='reviewed'\|\|record\.closed\|\|!oaCategoryFor\(record\)\)return false;/,
+ 'El mapa principal excluye puntos pendientes, cerrados y sin categoría');
+assert.match(airstripsOriginal,/const show=kind==='community'&&mapViewMode==='airfields'&&layerVisibility\.unverified;/,
+ 'Las referencias OSM externas no se muestran como pistas comunitarias verificadas');
 
 const anac26=JSON.parse(fs.readFileSync(new URL('../assets/aerolocator-anac-2026-ar.json',import.meta.url),'utf8'));
 assert.equal(anac26.edition,'2026-09','El catálogo corresponde a septiembre de 2026');
