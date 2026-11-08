@@ -6,6 +6,7 @@ const path=require('node:path');
 const root=path.resolve(__dirname,'..');
 const read=p=>fs.readFileSync(path.join(root,p),'utf8');
 const sql=read('docs/gdv-propuesta-padron-global-cuentas-2026-11-08.sql');
+const sqlV2=read('docs/gdv-padron-global-clasificacion-cuentas-prueba-2026-11-08.sql');
 const panel=read('utilidades/gestion-aeronautica/superadmin-cuentas.html');
 const superadmin=read('utilidades/gestion-aeronautica/superadministrador.html');
 
@@ -33,7 +34,7 @@ test('Una cuenta no vinculada se marca para revisión, no se declara no autoriza
 test('Acceso al nuevo panel solo tras comprobación de autenticación y privilegios',()=>{
  assert.match(panel,/db\.auth\.getUser\(\)/);
  assert.match(panel,/db\.from\('aerosuite_superadmins'\)/);
- assert.match(panel,/db\.rpc\('gdv_superadmin_global_accounts'/);
+ assert.match(panel,/db\.rpc\('gdv_superadmin_global_accounts_v2'/);
  assert.match(superadmin,/href="superadmin-cuentas\.html">Control global de cuentas/);
 });
 test('El panel no guarda permisos en URL ni ejecuta acciones destructivas',()=>{
@@ -41,4 +42,19 @@ test('El panel no guarda permisos en URL ni ejecuta acciones destructivas',()=>{
  assert.match(panel,/createElement\(tag\)/);
  assert.match(panel,/x\.textContent=text/);
  assert.match(panel,/este panel es de consulta/i);
+});
+
+test('Cuentas de laboratorio: clasificación desde instituciones de prueba reales, sin inferir por correo',()=>{
+ assert.match(sqlV2,/CREATE OR REPLACE FUNCTION public\.gdv_superadmin_global_accounts_v2/i);
+ assert.match(sqlV2,/org\.is_test/i);
+ assert.match(sqlV2,/count\(\*\) FILTER \(WHERE NOT org\.is_test\) non_test_memberships/i);
+ assert.match(sqlV2,/is_test_account boolean/i);
+ assert.match(sqlV2,/NOT coalesce\(p\.gdv_community_member,false\)/i);
+ assert.match(sqlV2,/WHERE s\.user_id=\(SELECT auth\.uid\(\)\)/i);
+ assert.match(sqlV2,/REVOKE ALL ON FUNCTION public\.gdv_superadmin_global_accounts_v2\(integer,integer\)/i);
+ assert.match(panel,/Cuenta técnica de prueba/);
+ assert.match(panel,/id="accountType"/);
+ assert.match(panel,/x\.is_test_account===true/);
+ assert.match(panel,/type==='test'\?x\.is_test_account===true/);
+ assert.doesNotMatch(sqlV2,/DELETE FROM auth\.users|UPDATE auth\.users/i);
 });
