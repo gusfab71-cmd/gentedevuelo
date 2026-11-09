@@ -174,15 +174,17 @@ footer{margin-top:90px;border-top:1px solid var(--border);background:#071523;pad
 @media(max-width:640px){.hero{padding:36px 0}.hero-copy h1{font-size:clamp(36px,9.8vw,57px)}.intro-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}.intro-item{border-right:0!important;padding:8px 10px!important}.intro-item:first-child{padding-left:0!important}.intro-item:nth-child(odd){padding-left:0!important}.intro-symbol{flex-basis:32px;width:32px;height:32px}.intro-symbol svg{width:30px;height:30px}.intro-item strong{font-size:13px}.intro-item span:not(.intro-symbol){font-size:11px}}
 @media(max-width:440px){.intro-grid{grid-template-columns:1fr}.intro-item{border-bottom:1px solid #52729250;padding:11px 0!important}.intro-item:last-child{border-bottom:0}}
 
-/* Identidad FlyPro definitiva: logotipo ancho, sin duplicar nombre, adaptable a móviles. */
-.nav-inner{min-height:145px;gap:clamp(12px,1.4vw,24px)}
+/* FlyPro: cabecera compacta, logo proporcional y navegación legible. */
+.nav-inner{min-height:118px;gap:clamp(12px,1.4vw,24px)}
 .brand{display:inline-flex;align-items:center;flex-shrink:0;min-width:0}
-.brand-final-logo{display:block;width:clamp(340px,29vw,440px);max-width:100%;height:auto;object-fit:contain;filter:drop-shadow(0 3px 9px #00132688)}
-.nav-links{gap:clamp(12px,1.15vw,22px)}
-@media(max-width:1190px){.nav-inner{min-height:124px;gap:12px}.brand-final-logo{width:clamp(310px,30vw,375px)}.nav-links{gap:12px}}
-@media(max-width:1040px){.nav-inner{flex-wrap:wrap;min-height:0;padding:10px 0}.brand-final-logo{width:min(380px,43vw)}.nav-links{order:3;width:100%;overflow-x:auto;gap:19px;padding:5px 0}.nav-cta{margin-left:auto}}
-@media(max-width:640px){.brand-final-logo{width:min(320px,calc(100vw - 54px))}.nav-inner{gap:10px}.nav-links{font-size:11px}}
-@media(max-width:470px){.brand-final-logo{width:min(320px,100%)}.nav-cta{order:2;width:100%;margin-left:0}.nav-links{order:3}}
+.brand-final-logo{display:block;width:clamp(320px,27vw,400px);max-width:100%;height:auto;object-fit:contain;filter:drop-shadow(0 3px 9px #00132688)}
+.nav-links{gap:clamp(11px,1.1vw,19px);font-size:clamp(14px,1.02vw,16px);font-weight:760}
+.nav-links a{white-space:nowrap}
+@media(max-width:1190px){.nav-inner{min-height:105px;gap:12px}.brand-final-logo{width:clamp(290px,28vw,344px)}.nav-links{gap:12px}}
+@media(max-width:1080px){.nav-links a:nth-child(4){display:inline}}
+@media(max-width:1040px){.nav-inner{flex-wrap:wrap;min-height:0;padding:10px 0}.brand-final-logo{width:min(340px,38vw)}.nav-links{order:3;width:100%;overflow-x:auto;gap:19px;padding:5px 0}.nav-cta{margin-left:auto}}
+@media(max-width:640px){.brand-final-logo{width:min(300px,calc(100vw - 54px))}.nav-inner{gap:10px}.nav-links{font-size:13px;gap:17px}}
+@media(max-width:470px){.brand-final-logo{width:min(300px,100%)}.nav-cta{order:2;width:100%;margin-left:0}.nav-links{order:3}}
 </style>
 </head>
 <body>
@@ -193,7 +195,7 @@ footer{margin-top:90px;border-top:1px solid var(--border);background:#071523;pad
       <img class="brand-final-logo" src="../../assets/flypro-logo-final.webp" width="720" height="240" alt="FlyPro · Gestión Aeronáutica Integral · By Gente de Vuelo" decoding="async" fetchpriority="high">
     </a>
     <nav class="nav-links" aria-label="Navegación de la presentación">
-      <a href="#solucion">La solución</a><a href="#modulos">Módulos</a><a href="#areas">Áreas de trabajo</a><a href="#nosotros">Quiénes somos</a><a href="#preguntas">Preguntas frecuentes</a>
+      <a href="#solucion">La solución</a><a href="#modulos">Módulos</a><a href="#areas">Áreas de trabajo</a><a href="#nosotros">Quiénes somos</a><a href="#preguntas" aria-label="Preguntas frecuentes">FAQ</a>
     </nav>
     <div class="nav-cta"><a class="btn btn-small nav-home" href="../../index.html" aria-label="Volver al inicio de Gente de Vuelo">⌂ Inicio Gente de Vuelo</a></div>
   </div>
