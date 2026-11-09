@@ -94,7 +94,7 @@ assert.throws(()=>stockMove({qty:20},25,'salida'),/stock/);
 const landing=fs.readFileSync(new URL('../utilidades/gestion-aeronautica/index.html',import.meta.url),'utf8');
 const html=fs.readFileSync(new URL('../utilidades/gestion-aeronautica/portal.html',import.meta.url),'utf8');
 // La portada institucional es pública; el portal real conserva la barrera administrativa.
-assert.match(landing,/<title>AeroSuite .* Gente de Vuelo<\/title>/);
+assert.match(landing,/<title>FlyPro .* Gente de Vuelo<\/title>/);
 const privateAdmin=fs.readFileSync(new URL('../utilidades/gestion-aeronautica/superadministrador.html',import.meta.url),'utf8');
 assert.doesNotMatch(landing,/id="aerosuite-superadmin-link"|href="superadministrador\.html"/,'La presentación no debe mostrar enlaces administrativos');
 assert.match(privateAdmin,/id="adminContent" hidden/,'El panel privado debe permanecer oculto hasta autorizar al propietario');
@@ -103,17 +103,17 @@ assert.match(privateAdmin,/href="portal\.html">Abrir demostración privada/,'La 
 assert.match(privateAdmin,/href="centro-pruebas-operativas\.html">Centro de Testeo Permanente/,'El laboratorio se abre desde el panel privado');
 assert.match(privateAdmin,/href="centro-monitoreo-aerosuite\.html">Auditorías automáticas/,'Las auditorías automáticas deben estar en el panel privado');
 
-// Utilidades: AeroSuite operativo solo para el administrador, no para usuarios públicos.
+// Utilidades: FlyPro operativo solo para el administrador, no para usuarios públicos.
 const utilitiesPage=fs.readFileSync(new URL('../utilidades/index.html',import.meta.url),'utf8');
-assert.match(utilitiesPage,/id="gdv-gestion-aeronautica-link"[^>]*href="gestion-aeronautica\/"[^>]*hidden/,'AeroSuite debe iniciar oculto y abrir presentación');
-assert.match(utilitiesPage,/<h2>AeroSuite<\/h2>/,'La tarjeta debe decir AeroSuite');
+assert.match(utilitiesPage,/id="gdv-gestion-aeronautica-link"[^>]*href="gestion-aeronautica\/"[^>]*hidden/,'FlyPro debe iniciar oculto y abrir presentación');
+assert.match(utilitiesPage,/<h2>FlyPro<\/h2>/,'La tarjeta debe decir FlyPro');
 assert.doesNotMatch(utilitiesPage,/href="gestion-aeronautica\/portal\.html"/,'Utilidades debe abrir primero la presentación');
 assert.match(utilitiesPage,/from\("site_admins"\)|from\('site_admins'\)|from\("site_admins"\)/,'Verificación institucional del usuario');
 assert.match(utilitiesPage,/gdv-gestion-aeronautica-link"\)\.hidden=false/,'El administrador habilita el acceso visible');
 assert.match(utilitiesPage,/\[hidden\]\{display:none!important\}/,'CSS impide que la tarjeta aparezca sin permiso');
 assert.match(html,/from\('site_admins'\)\.select\('user_id'\)\.eq\('user_id',user\.id\)\.maybeSingle\(\)/,'El portal también verifica permisos al abrirlo');
 assert.match(html,/if\(roleError\|\|!data\)throw Error\('Acceso exclusivo del administrador\.'\)/,'El portal debe denegar usuarios no administradores');
-console.log('PASS: acceso a AeroSuite en Utilidades exclusivo de administracion con verificación al abrir');
+console.log('PASS: acceso a FlyPro en Utilidades exclusivo de administracion con verificación al abrir');
 
 // FlightPrep NAV deja de ser una herramienta independiente: el motor antiguo se conserva
 // temporalmente para compatibilidad de enlaces pero no se ofrece desde navegación pública.
@@ -125,15 +125,15 @@ assert.doesNotMatch(aeroLocatorNav,/href="flightprep-nav\.html">FlightPrep NAV<\
 const homepageWithoutFlightPrep=fs.readFileSync(new URL('../index.html',import.meta.url),'utf8');
 assert.doesNotMatch(homepageWithoutFlightPrep,/FlightPrep Nav/i,
  'La portada no debe anunciar el módulo retirado');
-assert.match(homepageWithoutFlightPrep,/Flight Operations para planificación, meteorología y navegación en AeroSuite/,
- 'La descripción pública debe orientar la planificación a AeroSuite');
+assert.match(homepageWithoutFlightPrep,/Flight Operations para planificación, meteorología y navegación en FlyPro/,
+ 'La descripción pública debe orientar la planificación a FlyPro');
 assert.match(html,/flightops:flightOperationsScreen/,
- 'Flight Operations debe continuar integrado en AeroSuite');
+ 'Flight Operations debe continuar integrado en FlyPro');
 assert.match(html,/src="'\+url\+'" loading="lazy"/,
  'El iframe de Flight Operations debe permanecer accesible');
 assert.ok(fs.existsSync(new URL('../utilidades/flightprep-nav.html',import.meta.url)),
  'Conservar el archivo antiguo para evitar enlaces rotos hasta completar la migración');
-console.log('PASS: FlightPrep NAV retirado de accesos independientes; integración AeroSuite conservada');
+console.log('PASS: FlightPrep NAV retirado de accesos independientes; integración FlyPro conservada');
 
 // Consolidación de herramientas de Gente de Vuelo en Academia del Alumno.
 for(const [file,title] of [
@@ -169,14 +169,14 @@ assert.doesNotMatch(html,/href="fichas\/fuerzas-del-vuelo\.html"/,'La ficha obso
 console.log('PASS: Academia del Alumno contiene mantenimiento, rodaje y sustentación, conserva biblioteca y registros');
 
 
-// Portada Gente de Vuelo: un mismo espacio de menú, AeroSuite exclusivo del administrador.
+// Portada Gente de Vuelo: un mismo espacio de menú, FlyPro exclusivo del administrador.
 const gdvHomepage=fs.readFileSync(new URL('../index.html',import.meta.url),'utf8');
-assert.match(gdvHomepage,/id="gdv-aerosuite-menu-link" href="utilidades\/gestion-aeronautica\/" hidden/,'AeroSuite debe abrir la presentación y permanecer oculto para no administradores');
+assert.match(gdvHomepage,/id="gdv-aerosuite-menu-link" href="utilidades\/gestion-aeronautica\/" hidden/,'FlyPro debe abrir la presentación y permanecer oculto para no administradores');
 assert.match(gdvHomepage,/href="utilidades\/gestion-aeronautica\/superadministrador\.html" id="gdvAeroSuitePrivateAdminLink" hidden/,'El acceso a Superadministración permanece oculto por defecto en Mi cuenta');
 assert.match(gdvHomepage,/\.from\("aerosuite_superadmins"\)\.select\("user_id"\)\.eq\("user_id", user\.id\)\.maybeSingle\(\)/,'El menú verifica el rol de Superadministrador');
 assert.match(gdvHomepage,/aeroSuitePrivateAdminLink\.hidden = !!aeroSuiteOwnerError \|\| aeroSuiteOwner\?\.user_id !== user\.id/,'El acceso solo se muestra tras verificar al propietario');
 assert.match(gdvHomepage,/id="gdv-tools-menu-link" href="utilidades\/">Herramientas<\/a>/,'Las herramientas públicas deben conservar acceso');
-assert.match(gdvHomepage,/aeroSuiteNav\.hidden = !window\.gdvLegacyAdmin/,'Solo el administrador ve AeroSuite');
+assert.match(gdvHomepage,/aeroSuiteNav\.hidden = !window\.gdvLegacyAdmin/,'Solo el administrador ve FlyPro');
 assert.match(gdvHomepage,/toolsNav\.hidden = !!window\.gdvLegacyAdmin/,'Ocultar el enlace anterior al administrador');
 assert.match(gdvHomepage,/#menuDesplegable \[hidden\]\{display:none!important\}/,'Respetar visibilidad del acceso');
 assert.match(gdvHomepage,/\.from\("site_admins"\)\.select\("user_id"\)\.eq\("user_id", user\.id\)\.maybeSingle\(\)/,'El menú comprueba administrador en Supabase');
@@ -184,15 +184,15 @@ assert.doesNotMatch(gdvHomepage,/<a href="utilidades\/">Utilidades<\/a>/,'No man
 assert.doesNotMatch(landing,/href="portal\.html"|Ingresar a la demo/,'La demo no aparece en la presentación pública');
 assert.match(html,/if\(roleError\|\|!data\)throw Error\('Acceso exclusivo del administrador\.'\)/,'El portal privado no debe perder la protección administrativa');
 assert.doesNotMatch(gdvHomepage,/id="gdv-aerosuite-menu-link" href="utilidades\/gestion-aeronautica\/portal\.html"/,'La portada no debe saltar la presentación');
-console.log('PASS: portada Gente de Vuelo muestra AeroSuite solamente al administrador, preserva herramientas públicas');
+console.log('PASS: portada Gente de Vuelo muestra FlyPro solamente al administrador, preserva herramientas públicas');
 
-// La portada y el portal de AeroSuite deben permitir volver a Gente de Vuelo.
+// La portada y el portal de FlyPro deben permitir volver a Gente de Vuelo.
 assert.match(landing,/<a class="btn btn-small nav-home" href="\.\.\/\.\.\/index\.html" aria-label="Volver al inicio de Gente de Vuelo">/,'Falta botón de inicio en portada');
-assert.match(landing,/\.nav-cta\{flex-shrink:0;display:flex;align-items:center;gap:9px\}/,'Diseño de navegación de AeroSuite');
+assert.match(landing,/\.nav-cta\{flex-shrink:0;display:flex;align-items:center;gap:9px\}/,'Diseño de navegación de FlyPro');
 assert.match(landing,/@media\(max-width:470px\)\{\.nav-cta\{order:2;width:100%/,'Acceso de regreso en pantallas pequeñas');
 assert.match(html,/<a class="portal-home" href="\.\.\/\.\.\/index\.html" aria-label="Volver al inicio de Gente de Vuelo">/,'Falta botón en el portal privado');
-assert.match(html,/href="index\.html">Volver a la presentación/,'Se conserva navegación interna de AeroSuite');
-console.log('PASS: botón Inicio Gente de Vuelo desde portada y portal AeroSuite');
+assert.match(html,/href="index\.html">Volver a la presentación/,'Se conserva navegación interna de FlyPro');
+console.log('PASS: botón Inicio Gente de Vuelo desde portada y portal FlyPro');
 
 // Portada: conserva el avión sobre la pista y mueve el texto principal a la zona alta.
 assert.match(landing,/<img class="hero-photo" src="\.\.\/\.\.\/portada-manana-tres-palas\.webp"/,'Conservar la foto aeronáutica de la portada');
@@ -200,10 +200,10 @@ assert.match(landing,/\.photo-bottom\{z-index:1;position:absolute;top:84px/,'Tí
 assert.match(landing,/<p class="photo-caption">Diseñado para crecer/,'Pie separado del título');
 assert.match(landing,/\.hero-visual:after\{[^}]*linear-gradient\(180deg,#061827c4/,'Oscurecimiento superior para legibilidad');
 assert.doesNotMatch(landing,/\.photo-bottom\{z-index:1;position:relative;padding:30px\}/,'El título no debe tapar el avión en la zona baja');
-console.log('PASS: portada AeroSuite avión en pista y texto elevado');
+console.log('PASS: portada FlyPro avión en pista y texto elevado');
 
 for(const name of ['Bienven','Quiénes somos','Un solo sistema','Área del Alumno','Instructor','Gestión Administrativa','Preguntas frecuentes']){
- assert.ok(landing.includes(name),'Falta sección pública de AeroSuite: '+name);
+ assert.ok(landing.includes(name),'Falta sección pública de FlyPro: '+name);
 }
 for(const section of ['solucion','areas','modulos','nosotros','preguntas']){
  assert.ok(landing.includes('id="'+section+'"'),'Falta sección de presentación: '+section);
@@ -623,11 +623,11 @@ assert.match(html,/site_admins/,'El acceso admin de la demo debe mantenerse');
 
 // Registro unificado de la comunidad: Alumno, Instructor, Piloto y foto voluntaria.
 const studentFormHtml=fs.readFileSync(new URL('../utilidades/gestion-aeronautica/mi-ficha-alumno.html',import.meta.url),'utf8');
-assert.match(html,/\['ficha_alumno','Mi perfil AeroSuite'\]/);
+assert.match(html,/\['ficha_alumno','Mi perfil FlyPro'\]/);
 assert.match(html,/ficha_alumno:studentProfileScreen/);
 assert.match(html,/function studentProfileScreen\(\)/);
-assert.match(html,/\['instructor','Panel del instructor'\],\['ficha_alumno','Mi perfil AeroSuite'\]/);
-assert.match(html,/\['inicio','Panel administrativo'\],\['ficha_alumno','Mi perfil AeroSuite'\]/);
+assert.match(html,/\['instructor','Panel del instructor'\],\['ficha_alumno','Mi perfil FlyPro'\]/);
+assert.match(html,/\['inicio','Panel administrativo'\],\['ficha_alumno','Mi perfil FlyPro'\]/);
 assert.doesNotMatch(html,/href="mi-ficha-alumno\.html"/,'El perfil se integra en el visor del portal, sin abrir una ruta paralela');
 assert.match(html,/src="mi-ficha-alumno\.html"/);
 assert.doesNotMatch(studentFormHtml,/getPublicUrl\(/,'La foto personal NO debe tener URL pública');
@@ -670,7 +670,7 @@ console.log('PASS: un solo usuario GdV, roles declarativos Alumno Instructor Pil
 // Flight Operations: una sola aplicación para Formación e Instrucción, sin privilegios IA en el modo demo.
 const flightOperationsOriginal=fs.readFileSync(new URL('../utilidades/meteorologia-aeronautica.html',import.meta.url),'utf8');
 const flightAreaDefinition=html.match(/const AREA_DEFS=Object\.freeze\(\{([\s\S]*?)\}\);/);
-assert.ok(flightAreaDefinition,'No existe definición de áreas de AeroSuite');
+assert.ok(flightAreaDefinition,'No existe definición de áreas de FlyPro');
 for(const [area,caption] of [['alumno','Planificación'],['instructor','Instrucción']]){
  const row=flightAreaDefinition[1].split('\n').find(line=>line.trim().startsWith(area+':'));
  assert.ok(row&&row.includes("['flightops','Flight Operations · "+caption+"']"),'Falta Flight Operations en '+area);
@@ -705,14 +705,14 @@ assert.match(landing,/Flight Operations · Planificador de vuelo/);
 assert.match(landing,/href="\.\.\/meteorologia-aeronautica\.html\?aerosuite=formacion"/);
 console.log('PASS: Flight Operations unificado en Alumno e Instructor sin IA y con permisos originales intactos');
 
-// Pistas No Oficiales: una única fuente compartida entre Gente de Vuelo y AeroSuite.
+// Pistas No Oficiales: una única fuente compartida entre Gente de Vuelo y FlyPro.
 const airstripsOriginal=fs.readFileSync(new URL('../utilidades/pistas-no-oficiales.html',import.meta.url),'utf8');
 assert.match(airstripsOriginal,/<title>AeroLocator · Developed by Gente de Vuelo<\/title>/,'El título identifica a AeroLocator');
 assert.match(airstripsOriginal,/aria-label="AeroLocator · Developed by Gente de Vuelo"/,'La cabecera conserva el nombre accesible');
 assert.match(airstripsOriginal,/alt="AeroLocator · Developed by Gente de Vuelo"/,'El logo 3D conserva texto alternativo identificable');
 assert.match(airstripsOriginal,/class="aerolocator-brand-lockup"/,'El logo actual se muestra en la cabecera');
 assert.match(airstripsOriginal,/<h1>Centro de control<\/h1>/,'El área de control mantiene un encabezado claro');
-assert.match(airstripsOriginal,/class="aerolocator-back-to-aerosuite" href="gestion-aeronautica\//,'El retorno a AeroSuite sigue disponible');
+assert.match(airstripsOriginal,/class="aerolocator-back-to-aerosuite" href="gestion-aeronautica\//,'El retorno a FlyPro sigue disponible');
 
 for(const category of ['controlled_public','uncontrolled_public','private_aerodrome','lad','heliport','unverified']){
  assert.ok(airstripsOriginal.includes(category+':'),'Debe existir categoría GdV '+category);
@@ -781,14 +781,14 @@ assert.match(officialHelpers,/runwaySummary/,'Desglose de dimensiones ANAC');
 
 
 
-assert.match(html,/AeroLocator en AeroSuite/,'Nombre en el portal de AeroSuite');
-assert.match(landing,/<h3>AeroLocator<\/h3>/,'Nombre en presentación pública de AeroSuite');
+assert.match(html,/AeroLocator en FlyPro/,'Nombre en el portal de FlyPro');
+assert.match(landing,/<h3>AeroLocator<\/h3>/,'Nombre en presentación pública de FlyPro');
 assert.match(fs.readFileSync(new URL('../utilidades/index.html',import.meta.url),'utf8'),/<h2>AeroLocator<\/h2>/,'Nombre en Utilidades Gente de Vuelo');
 assert.match(html,/src="\.\.\/pistas-no-oficiales\.html"/,'No cambiar URL funcional del mapa');
 console.log('PASS: AeroLocator como identidad visible, sin alterar rutas ni funcionalidad del mapa');
 
 const areaDefinition=html.match(/const AREA_DEFS=Object\.freeze\(\{([\s\S]*?)\}\);/);
-assert.ok(areaDefinition,'Falta definición de áreas de AeroSuite');
+assert.ok(areaDefinition,'Falta definición de áreas de FlyPro');
 for(const area of ['alumno','instructor','administracion']){
  const row=areaDefinition[1].split('\n').find(line=>line.trim().startsWith(area+':'));
  assert.ok(row&&row.includes("['pistas','AeroLocator']"),'Falta acceso a pistas para '+area);
@@ -837,7 +837,7 @@ assert.match(airstripsOriginal,/\/functions\/v1\/airstrip-geocode\?q=/);
 assert.match(airstripsOriginal,/zoneCache\.set\(key,options\)/);
 assert.match(airstripsOriginal,/document\.getElementById\('zone-search-form'\)\.addEventListener\('submit'/);
 assert.doesNotMatch(airstripsOriginal,/zoneInput\.addEventListener\('input',[\s\S]{0,100}fetch/,'Nominatim prohíbe autocompletado');
-assert.match(html,/allow="geolocation"/,'AeroSuite debe permitir la solicitud explícita de permiso en el iframe');
+assert.match(html,/allow="geolocation"/,'FlyPro debe permitir la solicitud explícita de permiso en el iframe');
 const geocodeServerSource=fs.readFileSync(new URL('../supabase/functions/airstrip-geocode/index.ts',import.meta.url),'utf8');
 assert.match(geocodeServerSource,/SUPABASE_PUBLISHABLE_KEYS/,'La función valida la clave pública en servidor');
 assert.match(geocodeServerSource,/req\.headers\.get\("apikey"\)/,'El cliente usa apikey en lugar de Bearer');
@@ -914,7 +914,7 @@ console.log('PASS: buscador geográfico manual, coordenadas, iconos aeronáutico
 assert.match(airstripsOriginal, /href="https:\/\/ais\.anac\.gob\.ar\/aip" target="_blank" rel="noopener noreferrer"/, 'El mapa debe enlazar al AIP oficial de ANAC');
 assert.match(airstripsOriginal, /aip\.href='https:\/\/ais\.anac\.gob\.ar\/aip'/, 'Cada ficha debe incluir acceso al AIP oficial');
 assert.match(airstripsOriginal, /no acredita que esté publicada, habilitada ni autorizada/, 'Evitar presentar pistas comunitarias como aeródromos habilitados');
-assert.match(html, /Consultar AIP oficial · ANAC/, 'El módulo de AeroSuite debe enlazar al AIP oficial');
+assert.match(html, /Consultar AIP oficial · ANAC/, 'El módulo de FlyPro debe enlazar al AIP oficial');
 assert.doesNotMatch(airstripsOriginal, /aip.*status:'approved'/i, 'La AIP no debe confundirse con moderación comunitaria');
 
 
@@ -1027,10 +1027,10 @@ for(const key of ['asfalto','tierra','cesped','otros']){
  assert.match(splitMap,new RegExp('data-pista-surface="'+key+'"'),'Filtro de superficie '+key);
 }
 assert.match(splitMap,/function meetsSurfaceFilter\(record\)/);
-assert.match(splitMap,/<nav aria-label="Volver a AeroSuite"><a class="aerolocator-back-to-aerosuite" href="gestion-aeronautica\/">Volver a AeroSuite<\/a><\/nav>/,
- 'La cabecera simplificada de AeroLocator conserva solo el retorno a AeroSuite');
+assert.match(splitMap,/<nav aria-label="Volver a FlyPro"><a class="aerolocator-back-to-aerosuite" href="gestion-aeronautica\/">Volver a FlyPro<\/a><\/nav>/,
+ 'La cabecera simplificada de AeroLocator conserva solo el retorno a FlyPro');
 assert.match(landing,/href="\.\.\/meteorologia-aeronautica\.html\?aerosuite=formacion"/,
- 'Flight Operations sigue disponible en AeroSuite sin recargar el encabezado de AeroLocator');
+ 'Flight Operations sigue disponible en FlyPro sin recargar el encabezado de AeroLocator');
 const bearingSource=splitMap.slice(splitMap.indexOf('function trueBearing('),splitMap.indexOf('function clearRuler('));
 const bearingCalc=vm.runInNewContext(bearingSource+';trueBearing');
 assert.equal(bearingCalc(0,0,0,90),90);
@@ -1061,7 +1061,7 @@ console.log('PASS: categorías oficiales AIP, LAD, comunitarias y OSM con respal
 
 console.log('PASS: Pistas No Oficiales compartidas en las tres áreas, mapa interactivo y precauciones');
 
-console.log('PASS: AeroSuite con portal de tres áreas, navegación aislada y acceso restringido');
+console.log('PASS: FlyPro con portal de tres áreas, navegación aislada y acceso restringido');
 
 console.log('PASS: alumno con instructor y piloto privado solo, horas separadas, filtros e historial individual');
 
@@ -1242,7 +1242,7 @@ assert.doesNotMatch(html,/store\.upload\(path,file,\{upsert:true/,'Los materiale
 console.log('PASS: Academia Aeronáutica con cargador múltiple y tarjetas individuales en R2');
 
 
-/* AeroSuite: balances separados de escuela/aeródromo, cuentas y caja chica. */
+/* FlyPro: balances separados de escuela/aeródromo, cuentas y caja chica. */
 assert.equal(cents('101.23'),10123);
 assert.equal(cents('10,50'),1050);
 assert.throws(()=>cents('0'),/mayor a cero/);
@@ -1274,6 +1274,6 @@ assert.equal(Object.values(financeBalances(finLedger)).reduce((sum,n)=>sum+n,0),
 for(const text of ['function financeScreen(){','function wireFinance(){','fin-funds','finCategory','finTarget','finExport','Corte de pasto','Caja chica','financeReport(financeEntries']){
  assert.ok(html.toLowerCase().includes(text.toLowerCase()),'Falta interfaz de finanzas: '+text);
 }
-console.log('PASS: finanzas AeroSuite con gastos por area, balance, caja chica, fondos iniciales y transferencias');
+console.log('PASS: finanzas FlyPro con gastos por area, balance, caja chica, fondos iniciales y transferencias');
 
 console.log('PASS: gestión integrada, fechas, conflictos, cierre idempotente, stock, UX y acceso admin');
