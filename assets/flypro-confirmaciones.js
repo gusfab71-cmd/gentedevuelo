@@ -49,8 +49,8 @@
     button.classList.toggle("is-enabled", enabled);
     const span = button.querySelector(".flypro-sound-label");
     if (span) span.textContent = enabled ? "Sonido: sí" : "Sonido: no";
-    const off = button.querySelector(".flypro-sound-off");
-    if (off) off.hidden = enabled;
+    /* SVGPathElement no refleja correctamente .hidden en todos los navegadores. */
+    button.dataset.soundEnabled = enabled ? "true" : "false";
   }
   function mountToggle() {
     if (button || !document.body) return;
@@ -63,14 +63,15 @@
       ".flypro-sound-toggle:hover,.flypro-sound-toggle:focus-visible{border-color:#f2cb83;color:#fff;background:rgba(31,55,72,.95)}",
       ".flypro-sound-toggle.is-enabled{color:#f0cc89;border-color:#cba75d}",
       ".flypro-sound-toggle svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}",
-      ".flypro-sound-toggle .flypro-sound-off[hidden]{display:none!important}"
+      ".flypro-sound-toggle[data-sound-enabled=\"true\"] .flypro-sound-off{display:none!important}",
+      ".flypro-sound-toggle[data-sound-enabled=\"false\"] .flypro-sound-wave{display:none!important}"
     ].join("\n");
     document.head.appendChild(style);
     button = document.createElement("button");
     button.type = "button";
     button.id = "flyproSoundToggle";
     button.className = "flypro-sound-toggle";
-    button.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5Z"></path><path d="M15.5 8.5c1.6 1.6 1.6 5.4 0 7"></path><path d="M18.5 5.5c3.3 3.3 3.3 9.7 0 13"></path><path class="flypro-sound-off" d="M3 3l18 18"></path></svg><span class="flypro-sound-label">Sonido: no</span>';
+    button.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5Z"></path><path class="flypro-sound-wave" d="M15.5 8.5c1.6 1.6 1.6 5.4 0 7"></path><path class="flypro-sound-wave" d="M18.5 5.5c3.3 3.3 3.3 9.7 0 13"></path><path class="flypro-sound-off" d="M3 3l18 18"></path></svg><span class="flypro-sound-label">Sonido: no</span>';
     button.addEventListener("click", () => api.setEnabled(!enabled));
     host.appendChild(button);
     updateToggle();
