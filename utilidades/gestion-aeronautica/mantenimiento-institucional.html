@@ -166,7 +166,7 @@ body:not(.maint-focus-mode) .maint-section-title{display:none}
 .maint-guide-item .btn{font-size:11px;padding:7px 10px;flex-shrink:0}
 @media(max-width:620px){.maint-guide-item{align-items:stretch;flex-direction:column}.maint-guide-item .btn{align-self:flex-end}}
 </style>
-</head>
+<script defer src="../../assets/flypro-confirmaciones.js?v=20261109"></script></head>
 
 <body class="min-h-screen">
 <header class="maint-header">
@@ -514,7 +514,7 @@ async function addAc(){
   showAircraftForm=false;
   await save();R();
   if(maintConflict)throw Error('La aeronave se registró en Flota, pero su ficha técnica requiere recarga antes de continuar.');
-  showStatus('Aeronave '+registration+' incorporada. Configurá motor, hélice, inspecciones y controles según documentación.');
+  window.FlyProSound?.confirm();showStatus('Aeronave '+registration+' incorporada. Configurá motor, hélice, inspecciones y controles según documentación.');
  }catch(e){showStatus('No se pudo completar la incorporación: '+(e.message||e));}
 }
 

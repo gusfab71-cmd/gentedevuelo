@@ -71,7 +71,7 @@ button:disabled{cursor:wait;opacity:.56}
 <script src="../../assets/supabase-2.117.2.min.js"></script>
 <script src="../../assets/community-config.js"></script>
 <script src="../../assets/auth-guard.js"></script>
-</head>
+<script defer src="../../assets/flypro-confirmaciones.js?v=20261109"></script></head>
 <body>
 <header>
 <a class="brand" href="index.html">FLYPRO<small>BY GENTE DE VUELO · PERFIL AERONÁUTICO</small></a>
@@ -342,7 +342,7 @@ button:disabled{cursor:wait;opacity:.56}
   for(let i=0;i<pilotDocFields.length;i++)payload[pilotCredentialColumns[i]]=get(pilotDocFields[i]).value.trim()||null;
   const {error}=await client.from('aerosuite_pilot_credentials').upsert(payload,{onConflict:'user_id'});
   if(error)throw Error('La ficha principal se guardó, pero los vencimientos aeronáuticos no: '+error.message);
-  $('pilotCredentialsAvailability').textContent='Datos guardados. Si la escuela los había verificado, cualquier modificación obliga a una nueva comprobación de Secretaría.';
+  window.FlyProSound?.confirm();$('pilotCredentialsAvailability').textContent='Datos guardados. Si la escuela los había verificado, cualquier modificación obliga a una nueva comprobación de Secretaría.';
  }
  function rolePayload(def){
   const payload={user_id:user.id,role:def.key,updated_at:new Date().toISOString()};

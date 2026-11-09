@@ -391,7 +391,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
 </style>
 <script src="../../assets/supabase-2.117.2.min.js"></script><script src="../../assets/community-config.js"></script>
 <script src="../../assets/aerosuite-registration.js"></script><script src="aerosuite-agenda-publicada.js"></script>
-</head><body>
+<script defer src="../../assets/flypro-confirmaciones.js?v=20261109"></script></head><body>
 <header><a class="brand" href="index.html">Fly<span>Pro</span><small>BY GENTE DE VUELO</small></a><nav><a id="backPortal" href="portal-escuela.html">Volver al portal</a><a href="../../index.html">Gente de Vuelo</a></nav></header>
 <main>
  <span class="eyebrow">Gestión institucional segura · Primera etapa</span>
@@ -1372,7 +1372,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     if(instructorId&&saved.instructor_id!==instructorId){
      stat.textContent="El turno cambió de horario, pero no se verificó el Instructor preasignado. Revisá el detalle y preasignalo antes de confirmar.";return;
     }
-    stat.textContent="Turno reprogramado para "+stamp(start.toISOString())+". "+(instructorId?"Instructor preasignado correctamente; falta confirmar el turno.":"Falta asignar y confirmar Instructor.");
+    window.FlyProSound?.confirm();stat.textContent="Turno reprogramado para "+stamp(start.toISOString())+". "+(instructorId?"Instructor preasignado correctamente; falta confirmar el turno.":"Falta asignar y confirmar Instructor.");
    }catch(e){
     $("rescheduleFeedback").textContent="No se pudo reprogramar: "+safeError(e);
     $("reschedulePanel").scrollIntoView({behavior:"smooth",block:"center"});
@@ -1677,7 +1677,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
         await rpc("aerosuite_confirm_without_instructor",{
          p_institution_id:inst,p_booking_id:b.booking_id,p_authorization_reference:ref.trim()
         });
-        stat.textContent="Vuelo sin instructor autorizado y confirmado con referencia auditada.";
+        window.FlyProSound?.confirm();stat.textContent="Vuelo sin instructor autorizado y confirmado con referencia auditada.";
         await loadWeek();
        }catch(e){stat.textContent="No se pudo autorizar el vuelo: "+safeError(e);}
       },"primary");
@@ -2691,7 +2691,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
         await rpc("aerosuite_report_action",{
          p_institution_id:inst,p_booking_id:r.booking_id,p_action:"approve"
         });
-        stat.textContent="Informe aprobado por Administración.";
+        window.FlyProSound?.confirm();stat.textContent="Informe aprobado por Administración.";
         await Promise.all([loadWeek(),loadReports()]);
        }catch(e){stat.textContent="No se pudo aprobar: "+safeError(e);}
        finally{approve.disabled=false;}
@@ -2758,7 +2758,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
      p_flight_minutes:durationMinutes,p_fuel_liters:Number(fd.get("fuel")),p_oil_liters:Number(fd.get("oil")),
      p_teaching_notes:teachingNotes.join("\n\n"),p_aircraft_notes:fd.get("aircraft"),p_logbook_entry:logbook});
     f.reset();syncReportDuration();
-    showReportSubmitStatus("Informe presentado correctamente. Quedó registrado y pendiente de revisión por Administración.");
+    window.FlyProSound?.confirm();showReportSubmitStatus("Informe presentado correctamente. Quedó registrado y pendiente de revisión por Administración.");
     try{await loadReports();}catch(refreshError){
      showReportSubmitStatus("Informe presentado correctamente, pero no se pudo actualizar la lista: "+safeError(refreshError)+". Actualizá el portal.");
     }
@@ -2938,7 +2938,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     if(!result?.ok)throw Error("No se confirmó la tarifa.");
     hourlyTariff={configured:true,amount,currency:$("settleCurrency").value};
     $("settleHourlyRate").value=displayMoney(amount);
-    note.textContent="Tarifa guardada para esta institución.";updateCheckoutTotal();
+    window.FlyProSound?.confirm();note.textContent="Tarifa guardada para esta institución.";updateCheckoutTotal();
    }catch(err){note.textContent="No se pudo guardar: "+safeError(err);}
    finally{button.disabled=!school.can_write;}
   });
@@ -3232,7 +3232,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
       try{
        await rpc("aerosuite_review_frontdesk_hours",{p_institution_id:inst,
         p_checkout_id:item.checkout_id,p_report_revision:Number(item.report_revision)});
-       await loadFinance();stat.textContent="Control de horas finalizado.";
+       await loadFinance();window.FlyProSound?.confirm();stat.textContent="Control de horas finalizado.";
       }catch(e){stat.textContent="No se pudo confirmar: "+safeError(e);btn.disabled=false;}
      };content.append(btn);
     }else if(item.status==="awaiting_approval"||item.status==="difference"){
@@ -3348,7 +3348,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
          p_method:method.value,p_reference:reference.value.trim()||null
         });
         await loadFinance();
-        $("studentDebtCreateStatus").textContent="Cobro registrado. Se actualizó la deuda y la caja.";
+        window.FlyProSound?.confirm();$("studentDebtCreateStatus").textContent="Cobro registrado. Se actualizó la deuda y la caja.";
        }catch(error){result.textContent="No se pudo cobrar: "+safeError(error);submit.disabled=false;}
       };
       card.append(form);
@@ -3449,7 +3449,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     });
     $("studentDebtForm").reset();$("studentDebtCreatePanel").open=false;
     await loadFinance();
-    $("studentDebtCreateStatus").textContent="Deuda registrada correctamente. No se sumó dinero a caja.";
+    window.FlyProSound?.confirm();$("studentDebtCreateStatus").textContent="Deuda registrada correctamente. No se sumó dinero a caja.";
    }catch(error){
     $("studentDebtCreateStatus").textContent="No se pudo registrar: "+safeError(error);
    }finally{button.disabled=false;}
@@ -3564,7 +3564,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
       try{
        await rpc("aerosuite_instructor_fee_terms_set",{p_institution_id:inst,
         p_instructor_id:instructor.instructor_id,p_percentage:n});
-       await loadInstructorFees();$("instructorFeeStatus").textContent="Porcentaje acordado registrado.";
+       await loadInstructorFees();window.FlyProSound?.confirm();$("instructorFeeStatus").textContent="Porcentaje acordado registrado.";
       }catch(e){status.textContent="No se guardó el acuerdo: "+safeError(e);save.disabled=false;}
      };
      card.append(form);
@@ -3967,7 +3967,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
      p_request_id:pendingPackRequest
     });
     if(!result?.ok)throw Error("No se confirmó la operación.");
-    const wasDuplicate=!!result.already_registered;
+    const wasDuplicate=!!result.already_registered;if(!wasDuplicate)window.FlyProSound?.confirm();
     pendingPackRequest=null;pendingPackSignature="";
     form.reset();syncPackPayment();syncPackSummary();
     await loadFinance();
@@ -4116,7 +4116,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     cashierStudent=null;cashierSearchOptions=[];previousSettleBookingId=null;
     $("settleSearchResults").length=1;$("settleSearchResultsRow").hidden=true;
     $("settleStudentSearch").value="";
-    $("settleSearchStatus").textContent="Cobro registrado. Buscá al siguiente alumno para continuar.";
+    window.FlyProSound?.confirm();$("settleSearchStatus").textContent="Cobro registrado. Buscá al siguiente alumno para continuar.";
     $("settleBookHours").value="";
     $("settleBookConfirmed").checked=false;
     $("settleLogbookVerified").checked=false;
@@ -4218,7 +4218,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
     const result=await rpc("aerosuite_fixed_expense_create",{p_inst:inst,p_description:description,
      p_category:String(fd.get("category")),p_amount:amount,p_currency:String(fd.get("currency"))});
     if(!result?.ok)throw Error("No se confirmó el alta.");
-    form.reset();await loadFixedExpenses();status.textContent="Gasto fijo guardado. Registrá el pago de cada mes cuando corresponda.";
+    form.reset();await loadFixedExpenses();window.FlyProSound?.confirm();status.textContent="Gasto fijo guardado. Registrá el pago de cada mes cuando corresponda.";
    }catch(err){status.textContent="No se pudo guardar: "+safeError(err);}
    finally{btn.disabled=!school.can_write;}
   });
@@ -4243,7 +4243,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
    btn.disabled=true;status.textContent="Registrando cierre diario…";
    try{
     await rpc("aerosuite_petty_day_review",{p_inst:inst,p_day:day});
-    await loadPettyDay();status.textContent="Control de caja chica registrado para "+day+".";
+    await loadPettyDay();window.FlyProSound?.confirm();status.textContent="Control de caja chica registrado para "+day+".";
    }catch(err){status.textContent="No se pudo cerrar el día: "+safeError(err);}
    finally{btn.disabled=!school.can_write;}
   });
@@ -4308,7 +4308,7 @@ th.today-head{background:#355269;color:#ffdd9d;border-radius:8px}
      p_student_id:fd.get("student")||null,p_booking_id:fd.get("booking")||null,p_pack_id:fd.get("pack")||null,
      p_minutes:Number.isFinite(hours)&&hours>0?Math.round(hours*60):null,
      p_amount:Number.isFinite(amount)&&amount>0?amount:null,p_currency:fd.get("currency"),p_description:fd.get("description")});
-    f.reset();stat.textContent="Movimiento registrado en Contaduría y en el historial institucional.";await loadFinance();
+    f.reset();window.FlyProSound?.confirm();stat.textContent="Movimiento registrado en Contaduría y en el historial institucional.";await loadFinance();
    }catch(e){stat.textContent="No se pudo registrar el movimiento: "+safeError(e);}finally{button.disabled=false;}
   });
 

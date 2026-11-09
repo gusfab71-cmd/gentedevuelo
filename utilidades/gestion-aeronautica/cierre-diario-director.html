@@ -60,7 +60,7 @@ th{color:#d9e8f2;background:#274358}
 </style>
 <script src="../../assets/supabase-2.117.2.min.js"></script>
 <script src="../../assets/community-config.js"></script>
-</head><body>
+<script defer src="../../assets/flypro-confirmaciones.js?v=20261109"></script></head><body>
 <header class="no-print"><a class="brand" href="index.html">Fly<span>Pro</span> · Dirección</a><a id="goBack" href="portal-escuela.html">Volver a mi portal</a></header>
 <main>
 <div class="eyebrow">Solo Dirección / Administrador · Reporte institucional</div>
@@ -295,7 +295,7 @@ th{color:#d9e8f2;background:#274358}
        p_institution_id:inst,p_aircraft_id:a.id,p_availability:select.value,
        p_from_date:date.value,p_reason:why.value.trim(),p_location:where.value.trim()});
       if(!result?.ok)throw Error("No se confirmó el cambio.");
-      await loadReport();notice.textContent="Novedad de "+a.registration+" registrada.";
+      await loadReport();window.FlyProSound?.confirm();notice.textContent="Novedad de "+a.registration+" registrada.";
      }catch(err){notice.textContent="No se pudo guardar la novedad: "+(err.message||err);button.disabled=false;}
     };
     box.append(form);
