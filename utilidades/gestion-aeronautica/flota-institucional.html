@@ -1,5 +1,5 @@
 <!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="robots" content="noindex,nofollow"><title>AeroSuite · Disponibilidad de flotas y mantenimiento</title>
+<meta name="robots" content="noindex,nofollow"><title>FlyPro · Disponibilidad de flotas y mantenimiento</title>
 <style>
 :root{font-family:Inter,system-ui,Arial,sans-serif;color:#edf7fc;background:#102130;color-scheme:dark}*{box-sizing:border-box}[hidden]{display:none!important}
 body{margin:0;background:linear-gradient(135deg,#0d1d2c,#1b3a4b);min-height:100vh}header{background:#152c41;border-bottom:1px solid #597f98;padding:18px max(18px,calc((100vw - 1120px)/2));display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
@@ -25,12 +25,12 @@ button{background:#e9c993;color:#193041;border:1px solid #e9c993;border-radius:9
 .maintenance-flag a{display:inline-block;margin-top:5px;font-weight:750}
 @media(max-width:550px){main{padding:14px 12px 36px}.panel{padding:14px}.action-row button{width:100%}.change-form{grid-template-columns:1fr}}
 </style><script src="../../assets/supabase-2.117.2.min.js"></script><script src="../../assets/community-config.js"></script><script src="../../assets/aerosuite-registration.js"></script></head>
-<body><header><a class="brand" href="index.html">Aero<span>Suite</span></a><nav><a id="back" href="portal-escuela.html">Volver al portal</a></nav></header>
+<body><header><a class="brand" href="index.html">Fly<span>Pro</span></a><nav><a id="back" href="portal-escuela.html">Volver al portal</a></nav></header>
 <main><span class="eyebrow">Área de flota · Control institucional</span><h1>Disponibilidad de flotas y mantenimiento</h1>
 <div id="status" class="status" role="status" aria-live="polite">Verificando acceso…</div>
 <div id="area" hidden>
 <section class="panel"><h2 id="school">Mi escuela</h2>
-<p>Esta sección administra la disponibilidad para reservas. Si una aeronave necesita reparación, el Director se informa directamente por el procedimiento habitual. <strong>El estado de AeroSuite no certifica aeronavegabilidad ni sustituye registros de mantenimiento.</strong></p>
+<p>Esta sección administra la disponibilidad para reservas. Si una aeronave necesita reparación, el Director se informa directamente por el procedimiento habitual. <strong>El estado de FlyPro no certifica aeronavegabilidad ni sustituye registros de mantenimiento.</strong></p>
 </section>
 <section class="panel" id="createPanel" hidden><h2>Registrar aeronave</h2>
 <form id="createForm"><label>Matrícula<input name="registration" data-aerosuite-registration required maxlength="18" placeholder="LV-ERT" autocapitalize="characters" autocomplete="off"></label>
@@ -54,7 +54,7 @@ button{background:#e9c993;color:#193041;border:1px solid #e9c993;border-radius:9
  <span class="eyebrow">Módulo aeronáutico integrado</span>
  <h2>Mantenimiento de Aeronaves</h2>
  <p>Recuperamos la herramienta que ya se había desarrollado: inspecciones, componentes, controles, novedades, bitácora, consumibles, intervenciones, directivas de aeronavegabilidad y proyecciones. Las fichas comparten las matrículas de esta flota y se guardan en la institución, no en las cuentas privadas.</p>
- <p>Las horas de mantenimiento transcritas de las libretas se mantienen separadas de las horas de vuelo verificadas por AeroSuite; no se suman automáticamente para evitar duplicaciones.</p>
+ <p>Las horas de mantenimiento transcritas de las libretas se mantienen separadas de las horas de vuelo verificadas por FlyPro; no se suman automáticamente para evitar duplicaciones.</p>
  <p id="maintenanceSummary" class="status" role="status">Comprobando seguimiento técnico institucional…</p>
  <p id="maintenanceManagerActions" hidden><a id="maintenanceLink" href="#" style="display:inline-block;background:#d5b673;color:#192e3c;padding:11px 15px;border-radius:9px;font-weight:800;text-decoration:none">Abrir Mantenimiento de Aeronaves</a></p>
 </section>
@@ -67,7 +67,7 @@ button{background:#e9c993;color:#193041;border:1px solid #e9c993;border-radius:9
  const db=supabase.createClient(GDV_CONFIG.url,GDV_CONFIG.key,{auth:{storageKey:labLogin?"aerosuite-laboratorio-"+testRole+"-v1-auth":"aerosuite-institucional-v2-auth",persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});let school;
  try{
   if(!inst)throw Error("Ingresá desde el portal de tu institución.");
-  const u=await db.auth.getUser();if(!u.data?.user||u.error)throw Error("La sesión de AeroSuite no está activa.");
+  const u=await db.auth.getUser();if(!u.data?.user||u.error)throw Error("La sesión de FlyPro no está activa.");
   const access=await db.rpc("aerosuite_my_institution_access_v2");if(access.error)throw access.error;
   school=(access.data||[]).find(x=>x.institution_id===inst&&x.can_access&&["administrador","secretaria","instructor"].includes(x.my_role));
   if(!school)throw Error("No tenés acceso a la flota de esta institución.");

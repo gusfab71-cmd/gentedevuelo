@@ -2,7 +2,7 @@
 <html lang="es"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
-<title>AeroSuite · Centro de Testeo Permanente</title>
+<title>FlyPro · Centro de Testeo Permanente</title>
 <style>
 :root{font-family:Inter,system-ui,Arial,sans-serif;color:#ecf5fb;background:#101e2d;color-scheme:dark}
 *{box-sizing:border-box}[hidden]{display:none!important}
@@ -42,7 +42,7 @@ textarea{font:inherit;color:#fff;background:#102738;border:1px solid #63879b;bor
 <script src="../../assets/community-config.js"></script>
 <script src="../../assets/auth-guard.js?v=20261013registro2"></script>
 </head><body>
-<header><a class="brand" href="index.html">AeroSuite <small>BY GENTE DE VUELO · CONTROL DE CALIDAD</small></a><nav><a href="superadministrador.html">Superadministración</a><a href="../../index.html">Gente de Vuelo</a></nav></header>
+<header><a class="brand" href="index.html">FlyPro <small>BY GENTE DE VUELO · CONTROL DE CALIDAD</small></a><nav><a href="superadministrador.html">Superadministración</a><a href="../../index.html">Gente de Vuelo</a></nav></header>
 <main>
 <div class="eyebrow">Exclusivo Superadministración · Institución aislada de prueba</div>
 <h1>Centro de Testeo Permanente</h1>
@@ -52,11 +52,11 @@ textarea{font:inherit;color:#fff;background:#102738;border:1px solid #63879b;bor
 <section class="panel"><h2 id="institutionTitle">Institución de prueba</h2>
 <p id="institutionInfo" class="muted">Se consulta la institución existente: no se crea una nueva.</p>
 <div class="grid">
-<div class="tile"><strong>Director de AeroSuite</strong><span>Administrar turnera, asignaciones, aeronaves, informes y contaduría.</span><br><a id="director" target="_blank" rel="noopener">Abrir Director de AeroSuite</a></div>
-<div class="tile"><strong>Secretaría de AeroSuite</strong><span>Gestionar turnos, cobros, packs y caja diaria, según los permisos de Secretaría. Identidad independiente del Director.</span><br><a id="secretaria" target="_blank" rel="noopener">Abrir Secretaría de AeroSuite</a></div>
-<div class="tile"><strong>Instructor de AeroSuite</strong><span>Ver turnos asignados, confirmar solicitudes y cargar informes.</span><br><a id="instructor" target="_blank" rel="noopener">Abrir Instructor de AeroSuite</a></div>
-<div class="tile"><strong>Alumno de AeroSuite</strong><span>Solicitar turnos, consultar sus horas de vuelo y revisar los informes y devoluciones de instrucción, sin acceso a Contaduría.</span><br><a id="alumno" target="_blank" rel="noopener">Abrir Alumno de AeroSuite</a></div>
-<div class="tile"><strong>Piloto PPA / PCA de AeroSuite</strong><span>Probar ficha personal, RAV, horas de vuelo y navegación. PPA puede requerir instructor; PCA opera sin instructor por defecto, según habilitaciones.</span><br><a id="piloto" target="_blank" rel="noopener">Abrir Piloto PPA / PCA</a></div>
+<div class="tile"><strong>Director de FlyPro</strong><span>Administrar turnera, asignaciones, aeronaves, informes y contaduría.</span><br><a id="director" target="_blank" rel="noopener">Abrir Director de FlyPro</a></div>
+<div class="tile"><strong>Secretaría de FlyPro</strong><span>Gestionar turnos, cobros, packs y caja diaria, según los permisos de Secretaría. Identidad independiente del Director.</span><br><a id="secretaria" target="_blank" rel="noopener">Abrir Secretaría de FlyPro</a></div>
+<div class="tile"><strong>Instructor de FlyPro</strong><span>Ver turnos asignados, confirmar solicitudes y cargar informes.</span><br><a id="instructor" target="_blank" rel="noopener">Abrir Instructor de FlyPro</a></div>
+<div class="tile"><strong>Alumno de FlyPro</strong><span>Solicitar turnos, consultar sus horas de vuelo y revisar los informes y devoluciones de instrucción, sin acceso a Contaduría.</span><br><a id="alumno" target="_blank" rel="noopener">Abrir Alumno de FlyPro</a></div>
+<div class="tile"><strong>Piloto PPA / PCA de FlyPro</strong><span>Probar ficha personal, RAV, horas de vuelo y navegación. PPA puede requerir instructor; PCA opera sin instructor por defecto, según habilitaciones.</span><br><a id="piloto" target="_blank" rel="noopener">Abrir Piloto PPA / PCA</a></div>
 </div>
 <div class="notice warn" id="roleReadiness" role="status">Comprobando las cuentas disponibles para el laboratorio...</div>
 <p class="muted">Cada enlace abre el ingreso institucional real. Cada rol tiene su identidad técnica, sesión y permisos propios, sin invitación; los cinco alias llegan a la misma casilla Gmail.</p>
@@ -98,14 +98,14 @@ textarea{font:inherit;color:#fff;background:#102738;border:1px solid #63879b;bor
 (async()=>{
 // El identificador del laboratorio se obtiene de Supabase; nunca depende de instituciones eliminadas.
 const names=[
- ['director','Acceso Director de AeroSuite','Ingresar con Director de AeroSuite y comprobar su turnera y módulos.'],
- ['alumno','Reserva del Alumno de AeroSuite','Solicitar un turno futuro de 90 minutos desde el portal del alumno.'],
+ ['director','Acceso Director de FlyPro','Ingresar con Director de FlyPro y comprobar su turnera y módulos.'],
+ ['alumno','Reserva del Alumno de FlyPro','Solicitar un turno futuro de 90 minutos desde el portal del alumno.'],
  ['asignacion','Confirmación institucional','Director confirma el turno con instructor habilitado y aeronave disponible.'],
- ['instructor','Vista del Instructor de AeroSuite','Instructor comprueba que el turno asignado figura correctamente.'],
+ ['instructor','Vista del Instructor de FlyPro','Instructor comprueba que el turno asignado figura correctamente.'],
  ['informe','Informe de vuelo','Tras una reserva válida, Instructor carga el informe con horas y observaciones.'],
  ['aprobacion','Aprobación de Dirección','Director verifica, aprueba y consulta el informe.'],
  ['contaduria','Cobro o pack','Director o Secretaría registra una operación ficticia de cobro o pack y comprueba su reflejo en Contaduría.'],
- ['alumno_resultado','Resultado para Alumno de AeroSuite','Alumno comprueba informe aprobado y horas registradas, sin acceder a Contaduría.'],
+ ['alumno_resultado','Resultado para Alumno de FlyPro','Alumno comprueba informe aprobado y horas registradas, sin acceder a Contaduría.'],
  ['piloto','Portal PPA / PCA','Ingresar con piloto técnico, comprobar PPA con instructor cuando corresponda, PCA sin instructor por defecto, RAV, horas y herramientas aeronáuticas.'],
  ['integridad','Diagnóstico sin anomalías','Actualizar indicadores y revisar que no haya inconsistencias.']
 ];

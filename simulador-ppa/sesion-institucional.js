@@ -1,7 +1,7 @@
 'use strict';
 /*
  * Sesión exclusiva del Simulador PPA.
- * AeroSuite y Gente de Vuelo comparten Supabase Auth, pero NO el storageKey.
+ * FlyPro y Gente de Vuelo comparten Supabase Auth, pero NO el storageKey.
  * El acceso final se valida siempre por RPC/RLS; esta elección evita cargar
  * inadvertidamente las credenciales de la Comunidad cuando entra un alumno.
  */

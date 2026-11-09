@@ -130,10 +130,10 @@ assert.equal(audit.numericId(sequence[0]),1);
 assert.equal(audit.numericId(sequence[383]),384);
 assert.equal(sequence.filter(audit.hasKey).length,fullBank.filter(audit.hasKey).length);
 
-// El mismo efecto de explosión y la misma duración sonoros para cualquier resultado.
+// Sonido homogéneo en práctica calificada; no se reproduce en el simulacro de 50 preguntas.
 assert.match(html,/const ANSWER_EXPLOSION_DURATION_SECONDS=2\.60;/);
 assert.match(html,/function playAnswerSound\(\)\{/);
-assert.match(html,/if\(graded\)\{gradedCount\+\+;playAnswerSound\(\)\}/);
+assert.match(html,/if\(graded\)\{gradedCount\+\+;if\(!exam50Mode\)playAnswerSound\(\)\}/);
 assert.doesNotMatch(html,/playAnswerSound\(ok\)/);
 const audioFunction=html.slice(html.indexOf('function playAnswerSound(){'),html.indexOf('function figureNumber(q){'));
 assert.match(audioFunction,/blast\.stop\(t\+ANSWER_EXPLOSION_DURATION_SECONDS\)/);
@@ -148,7 +148,7 @@ for(const id of ['result-percentage','result-status','result-correct','result-ev
 assert.match(html,/Math\.round\(100\*points\/gradedCount\)/);
 assert.match(html,/function finishSession\(\)/);
 assert.match(html,/function playAnswerSound\(\)/);
-assert.match(html,/gradedCount\+\+;playAnswerSound\(\)/);
+assert.match(html,/gradedCount\+\+;if\(!exam50Mode\)playAnswerSound\(\)/);
 assert.doesNotMatch(html,/function playResultSound\(/);
 assert.doesNotMatch(html,/result-face|perfect-bonus|faceHappy|faceSad|Piloto feliz|Piloto triste|😄|😞|🎉/);
 assert.match(uiCss,/\.ppa-result-grid/);

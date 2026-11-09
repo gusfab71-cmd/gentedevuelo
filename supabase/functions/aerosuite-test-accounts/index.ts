@@ -76,7 +76,7 @@ Deno.serve(async req => {
     const {data:created,error:createError}=await admin.auth.admin.createUser({
       email,password,email_confirm:true,
       app_metadata:{aerosuite_lab:true,aerosuite_lab_role:role,aerosuite_lab_institution:lab.institution_id},
-      user_metadata:{display_name:(role==="administrador"?"Administrador":role==="secretaria"?"Secretaría":role==="instructor"?"Instructor":role==="piloto"?"Piloto PPA / PCA":"Alumno")+" · Laboratorio AeroSuite"}
+      user_metadata:{display_name:(role==="administrador"?"Administrador":role==="secretaria"?"Secretaría":role==="instructor"?"Instructor":role==="piloto"?"Piloto PPA / PCA":"Alumno")+" · Laboratorio FlyPro"}
     });
     if(createError||!created?.user?.id){
       const duplicate=/already|registered|exists|duplicate/i.test(String(createError?.message||""));

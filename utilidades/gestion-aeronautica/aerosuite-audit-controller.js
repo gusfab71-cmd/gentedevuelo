@@ -148,11 +148,11 @@ async function start(){
   if(!db)throw Error('Autenticación no disponible.');
   const session=await db.auth.getUser();
   const user=session.data?.user;
-  if(session.error||!user){notice.textContent='Ingresá a AeroSuite con tu cuenta para consultar el monitoreo.';return;}
+  if(session.error||!user){notice.textContent='Ingresá a FlyPro con tu cuenta para consultar el monitoreo.';return;}
   const role=await db.from('aerosuite_superadmins').select('user_id').eq('user_id',user.id).maybeSingle();
   if(role.error)throw role.error;
   if(!role.data||role.data.user_id!==user.id){
-    notice.textContent='Acceso denegado. Solo el Superadministrador de AeroSuite puede consultar este centro.';return;
+    notice.textContent='Acceso denegado. Solo el Superadministrador de FlyPro puede consultar este centro.';return;
   }
   $('adminContent').hidden=false;
   notice.textContent='Identidad y permisos de Superadministración verificados.';

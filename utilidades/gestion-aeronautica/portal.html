@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>AeroSuite | Acceso privado a gestión · Gente de Vuelo</title>
+<title>FlyPro | Acceso privado a gestión · Gente de Vuelo</title>
 <style>
 :root{font-family:Inter,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;color:#e8f0f4;background:#111b22;color-scheme:dark}
 *{box-sizing:border-box}body{margin:0;background:linear-gradient(130deg,#141f29 0%,#101922 70%);min-height:100vh}
@@ -249,7 +249,7 @@ a.library-item:hover,a.library-item:focus-visible{border-color:#e0bd83;backgroun
 @media(max-width:380px){.library-list{grid-template-columns:1fr}}
 @media print{#screen>section:not(#training-ledger){display:none!important}body{background:#fff;color:#000}header,nav,.hero,.notice,.training-actions,form,#alert,button{display:none!important}.layout{display:block}.panel,.card,.training-record{break-inside:avoid;background:#fff!important;color:#111!important;border:1px solid #999!important}p,h1,h2,h3,span{color:#111!important}}
 
-/* AeroSuite: portales visuales independientes sobre datos de demostración compartidos. */
+/* FlyPro: portales visuales independientes sobre datos de demostración compartidos. */
 header .brand{display:flex;flex-direction:column;gap:2px;font-size:18px;color:#eaf4ff;letter-spacing:.5px}
 header .brand small{font-size:9px;letter-spacing:1.7px;color:#9dbedc}
 .area-intro{padding:23px;background:linear-gradient(125deg,#203956,#182833);border:1px solid #466680;border-radius:18px;margin-bottom:17px}
@@ -287,7 +287,7 @@ body[data-aerosuite-area="administracion"] nav button.active{background:#344b63;
 .fin-explainer{background:#213845;border-left:3px solid #d4b57d;padding:12px;font-size:12px;color:#cfdee6;margin:14px 0}
 @media(max-width:690px){.fin-metrics,.fin-funds{grid-template-columns:1fr}.fin-controls label{width:100%}}
 
-/* Pistas comunitarias: una única aplicación de Gente de Vuelo reutilizada en AeroSuite. */
+/* Pistas comunitarias: una única aplicación de Gente de Vuelo reutilizada en FlyPro. */
 .airstrips-shell{border:1px solid #456579;background:linear-gradient(130deg,#193143,#142733);border-radius:17px;padding:20px;margin-bottom:16px}
 .airstrips-tools{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-top:15px}
 .airstrips-tools .action{display:inline-flex;text-decoration:none;justify-content:center;align-items:center;gap:9px}
@@ -346,11 +346,11 @@ body[data-aerosuite-area="administracion"] nav button.active{background:#344b63;
 <script src="../../assets/aerosuite-registration.js"></script>
 <script src="../../assets/auth-guard.js"></script>
 </head><body>
-<header><a class="brand" href="index.html">AEROSUITE<small>BY GENTE DE VUELO</small></a><span>PORTAL DE GESTIÓN AERONÁUTICA · DEMO</span><div class="portal-head-links"><a class="portal-home" href="../../index.html" aria-label="Volver al inicio de Gente de Vuelo">⌂ Inicio Gente de Vuelo</a><a href="index.html">Volver a la presentación</a></div></header>
+<header><a class="brand" href="index.html">FLYPRO<small>BY GENTE DE VUELO</small></a><span>PORTAL DE GESTIÓN AERONÁUTICA · DEMO</span><div class="portal-head-links"><a class="portal-home" href="../../index.html" aria-label="Volver al inicio de Gente de Vuelo">⌂ Inicio Gente de Vuelo</a><a href="index.html">Volver a la presentación</a></div></header>
 <main id="app" hidden>
-<div class="hero"><div><div class="eyebrow">AeroSuite · By Gente de Vuelo</div><h1 id="areaTitle">Portal de AeroSuite</h1><p class="sub" id="areaSubtitle">Tres áreas independientes · Una sola información compartida.</p></div><span class="tag">Prototipo privado · Administrador</span></div>
+<div class="hero"><div><div class="eyebrow">FlyPro · By Gente de Vuelo</div><h1 id="areaTitle">Portal de FlyPro</h1><p class="sub" id="areaSubtitle">Tres áreas independientes · Una sola información compartida.</p></div><span class="tag">Prototipo privado · Administrador</span></div>
 <div class="notice"><strong>Entorno de demostración.</strong> Los datos que cargues aquí son ficticios y se pierden al recargar. No hay reservas multiusuario reales, validación directa con ANAC, facturación ni RAV oficial. La confirmación de una reserva NO autoriza un vuelo. Utilizá solamente datos de prueba.</div>
-<section id="areaPortal" class="area-portal" aria-label="Seleccionar área de AeroSuite"></section><div id="workspace" hidden><div class="workspace-head"><button type="button" id="areaBack" class="area-return">← Volver al panel principal</button><span id="areaCrumb" class="area-crumb"></span></div><div class="layout"><nav id="sidebar" aria-label="Menú exclusivo del área activa"></nav><div class="content"><p id="alert" role="status" aria-live="polite"></p><section id="screen" aria-live="polite"></section></div></div></div>
+<section id="areaPortal" class="area-portal" aria-label="Seleccionar área de FlyPro"></section><div id="workspace" hidden><div class="workspace-head"><button type="button" id="areaBack" class="area-return">← Volver al panel principal</button><span id="areaCrumb" class="area-crumb"></span></div><div class="layout"><nav id="sidebar" aria-label="Menú exclusivo del área activa"></nav><div class="content"><p id="alert" role="status" aria-live="polite"></p><section id="screen" aria-live="polite"></section></div></div></div>
 </main>
 <script type="module">
 import {createReservation,closeFlight,flightTotals,stockMove,validDate,minutes,reservationMinimumMinutes,reservationSuggestedMinutes,STUDENT_RESERVATION_MINUTES,DEFAULT_RESERVATION_POLICY,validateReservationPolicy} from './src/operacion.js';
@@ -662,13 +662,13 @@ const trainingInstitution={institutionType:'non_ciac',reviewMode:'chief'};
 // Tres areas visual y funcionalmente aisladas dentro de la demostracion.
 const AREA_DEFS=Object.freeze({
  alumno:{title:'Área del Alumno',subtitle:'Formación, progreso, reservas y biblioteca aeronáutica.',home:'ficha_alumno',tabs:[['alumno','Mis Reservas y Formación'],['academia','Mi Academia Aeronáutica'],['piloto','Mi actividad personal · Demo'],['flightops','Flight Operations · Planificación'],['aerometeo','AeroMeteo'],['pistas','AeroLocator'],['ficha_alumno','Mi perfil y datos personales']]},
- instructor:{title:'Instructor y Jefe de Instructores',subtitle:'Evaluaciones, clases, seguimiento de alumnos y supervisión pedagógica.',home:'instructor',tabs:[['instructor','Panel del instructor'],['ficha_alumno','Mi perfil AeroSuite'],['direccion','Jefatura de instructores'],['personas','Seguimiento, fichas y RAV'],['flightops','Flight Operations · Instrucción'],['aerometeo','AeroMeteo'],['pistas','AeroLocator']]},
- administracion:{title:'Gestión Administrativa de Escuela',subtitle:'Agenda, operaciones, flota, personal, recursos y contabilidad.',home:'inicio',tabs:[['inicio','Panel administrativo'],['ficha_alumno','Mi perfil AeroSuite'],['reservas','Agenda y reservas'],['vuelos','Registro de vuelos'],['flota','Aeronaves y mantenimiento'],['aerometeo','AeroMeteo'],['pistas','AeroLocator'],['admin_personas','Personal y usuarios'],['admin_academia','Gestionar biblioteca'],['finanzas','Contabilidad y Finanzas'],['stock','Combustible y aceite'],['documentos','Documentos y avisos']]}
+ instructor:{title:'Instructor y Jefe de Instructores',subtitle:'Evaluaciones, clases, seguimiento de alumnos y supervisión pedagógica.',home:'instructor',tabs:[['instructor','Panel del instructor'],['ficha_alumno','Mi perfil FlyPro'],['direccion','Jefatura de instructores'],['personas','Seguimiento, fichas y RAV'],['flightops','Flight Operations · Instrucción'],['aerometeo','AeroMeteo'],['pistas','AeroLocator']]},
+ administracion:{title:'Gestión Administrativa de Escuela',subtitle:'Agenda, operaciones, flota, personal, recursos y contabilidad.',home:'inicio',tabs:[['inicio','Panel administrativo'],['ficha_alumno','Mi perfil FlyPro'],['reservas','Agenda y reservas'],['vuelos','Registro de vuelos'],['flota','Aeronaves y mantenimiento'],['aerometeo','AeroMeteo'],['pistas','AeroLocator'],['admin_personas','Personal y usuarios'],['admin_academia','Gestionar biblioteca'],['finanzas','Contabilidad y Finanzas'],['stock','Combustible y aceite'],['documentos','Documentos y avisos']]}
 });
 let currentArea=null;
 function areaPortalMarkup(){
  const cards=[
-  ['alumno','01 · FORMACIÓN','Área del Alumno','Mi formación, clases, turnos, horas y Mi biblioteca de teoría y práctica. El espacio protagonista de AeroSuite.','Entrar al Área del Alumno'],
+  ['alumno','01 · FORMACIÓN','Área del Alumno','Mi formación, clases, turnos, horas y Mi biblioteca de teoría y práctica. El espacio protagonista de FlyPro.','Entrar al Área del Alumno'],
   ['instructor','02 · INSTRUCCIÓN','Instructor y Jefatura','Alumnos asignados, evaluaciones, legajos y supervisión del jefe de instructores.','Entrar a instrucción'],
   ['administracion','03 · ESCUELA','Gestión Administrativa','Agenda, vuelos, flota, mantenimiento, personal, recursos y administración institucional.','Entrar a gestión']
  ];
@@ -685,7 +685,7 @@ const options=(rows,value='id',label='name')=>rows.map(row=>'<option value="'+sa
 // los alumnos ficticios ni el registro comunitario como prueba de inscripción.
 async function aerosuiteProfileCompleted(){
  const client=window.GDV_AUTH?.client;
- if(!client)throw Error('No se pudo verificar la ficha AeroSuite.');
+ if(!client)throw Error('No se pudo verificar la ficha FlyPro.');
  const {data:{user},error:authError}=await client.auth.getUser();
  if(authError||!user)throw Error('Sesión no válida para comprobar el registro.');
  const [profile,documents,roles]=await Promise.all([
@@ -710,7 +710,7 @@ async function switchArea(key){
    try{
     firstTab=(await aerosuiteProfileCompleted())?'alumno':'ficha_alumno';
    }catch(error){
-    console.warn('No se pudo verificar el registro AeroSuite:',error?.message||error);
+    console.warn('No se pudo verificar el registro FlyPro:',error?.message||error);
     firstTab='ficha_alumno';
    }
   }
@@ -730,14 +730,14 @@ function render(){
  const area=AREA_DEFS[currentArea];
  document.body.dataset.aerosuiteArea=currentArea||'portal';
  $('areaPortal').hidden=!!area;$('workspace').hidden=!area;
- $('areaTitle').textContent=area?area.title:'Portal de AeroSuite';
+ $('areaTitle').textContent=area?area.title:'Portal de FlyPro';
  $('areaSubtitle').textContent=area?area.subtitle:'Tres áreas independientes · Una sola información compartida.';
  if(!area){
   $('areaPortal').innerHTML=areaPortalMarkup();
   $('areaPortal').querySelectorAll('[data-area]').forEach(button=>button.addEventListener('click',()=>switchArea(button.dataset.area)));
   $('sidebar').replaceChildren();$('screen').replaceChildren();return;
  }
- $('areaCrumb').textContent='AEROSUITE / '+area.title.toUpperCase()+' · DEMO';
+ $('areaCrumb').textContent='FLYPRO / '+area.title.toUpperCase()+' · DEMO';
  $('sidebar').innerHTML=area.tabs.map(([key,label])=>'<button type="button" data-tab="'+key+'" class="'+(key===tab?'active':'')+'">'+label+'</button>').join('');
  $('sidebar').querySelectorAll('button').forEach(button=>button.addEventListener('click',()=>switchTab(button.dataset.tab)));
  $('areaBack').onclick=backToAreaPortal;
@@ -1549,11 +1549,11 @@ function academyStudentTools(){
  const active=academyActiveTool&&ACADEMY_STUDENT_TOOLS[academyActiveTool];
  const viewer=active?
   '<section class="academy-tool-viewer" id="academyToolViewer" aria-label="Herramienta '+safe(active.title)+'">'+
-   '<div class="academy-tool-viewer-head"><div><span class="academy-tool-type">ACADEMIA · AEROSUITE</span>'+
+   '<div class="academy-tool-viewer-head"><div><span class="academy-tool-type">ACADEMIA · FLYPRO</span>'+
    '<h3>'+safe(active.title)+'</h3></div>'+
    '<div class="academy-tool-actions"><a class="secondary" href="'+active.url+'" target="_blank" rel="noopener noreferrer">Abrir a pantalla completa ↗</a>'+
    '<button type="button" class="secondary" data-academy-tool-close>Ocultar herramienta</button></div></div>'+
-   '<iframe class="academy-tool-frame" src="'+active.url+'" title="'+safe(active.title)+' · Aula AeroSuite" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" style="height:'+active.height+'"></iframe>'+
+   '<iframe class="academy-tool-frame" src="'+active.url+'" title="'+safe(active.title)+' · Aula FlyPro" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" style="height:'+active.height+'"></iframe>'+
 
    '</section>':'';
  return '<section class="panel" id="academyStudentApplications"><h2>Herramientas prácticas de formación</h2>'+
@@ -1570,7 +1570,7 @@ function adminAcademyScreen(){
   academyLibrary(true);
 }
 function studentProfileScreen(){
- return '<section class="aerosuite-flightops-framebox"><iframe class="aerosuite-flightops-frame" src="mi-ficha-alumno.html" title="Perfil privado AeroSuite para Alumno Instructor o Piloto" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe></section>';
+ return '<section class="aerosuite-flightops-framebox"><iframe class="aerosuite-flightops-frame" src="mi-ficha-alumno.html" title="Perfil privado FlyPro para Alumno Instructor o Piloto" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe></section>';
 }
 function flightOperationsShortcut(area){
  const isStudent=area==='alumno';
@@ -1593,7 +1593,7 @@ function flightOperationsScreen(){
   'Utilizá el planificador original de Gente de Vuelo para ejercitar datos del vuelo, rutas por piernas, METAR, TAF, SIGMET, PRONAREA, NOTAM y cálculos de navegación, tiempos y combustible.':
   'Trabajá con la misma herramienta utilizada por el alumno para preparar clases, comparar rutas, revisar boletines aeronáuticos y enseñar los cálculos del prevuelo.';
  return '<section class="aerosuite-flightops-head" aria-label="Flight Operations para '+safe(label)+'">'+
-  '<span class="aerosuite-flightops-tag">AeroSuite · '+safe(label)+' · Herramienta compartida</span>'+
+  '<span class="aerosuite-flightops-tag">FlyPro · '+safe(label)+' · Herramienta compartida</span>'+
   '<h2>Flight Operations · Planificación y meteorología</h2>'+
   '<p>'+description+'</p>'+
   '<div class="aerosuite-flightops-links"><a class="action" href="'+url+'" target="_blank" rel="noopener noreferrer">Abrir Flight Operations a pantalla completa ↗</a>'+
@@ -1614,8 +1614,8 @@ function aeroMeteoScreen(){
 }
 function airstripsScreen(){
  const roleLabel=currentArea==='alumno'?'Área del Alumno':currentArea==='instructor'?'Área del Instructor y Jefatura':'Gestión Administrativa';
- return '<section class="airstrips-shell" aria-label="AeroLocator en AeroSuite">'+
-  '<span class="eyebrow">AeroSuite · '+safe(roleLabel)+'</span><h2>AeroLocator</h2>'+
+ return '<section class="airstrips-shell" aria-label="AeroLocator en FlyPro">'+
+  '<span class="eyebrow">FlyPro · '+safe(roleLabel)+'</span><h2>AeroLocator</h2>'+
   '<p>Consultá una muestra documental de aeródromos publicados en AIP, LAD del listado ANAC, pistas comunitarias y referencias de OpenStreetMap. Filtrá cada categoría y consultá su fuente. El mapa es el mismo de Gente de Vuelo: no se duplican archivos ni registros.</p>'+
   '<div class="airstrips-warning" role="note"><strong>Información cartográfica y documental: no confirma aptitud operacional.</strong> Una referencia cartográfica no acredita que una pista esté habilitada, sea utilizable o constituya una alternativa segura. Antes de cualquier vuelo verificá AIP, NOTAM, datos oficiales, estado real, obstáculos y autorización del propietario o responsable. Las distancias en NM son aproximadas y en línea recta.</div>'+
   '<div class="airstrips-tools"><a class="action" href="../pistas-no-oficiales.html" target="_blank" rel="noopener noreferrer">Abrir mapa completo en otra pestaña ↗</a>'+ 
@@ -1850,7 +1850,7 @@ function wireTraining(){
   const f=flights.find(x=>x.id===e.target.value);
   if(!f)return;
   if($('lessonDate'))$('lessonDate').value=f.date;
-  if($('lessonAircraft'))$('lessonAircraft').value=AeroSuiteRegistration.normalize(f.aircraft);
+  if($('lessonAircraft'))$('lessonAircraft').value=FlyProRegistration.normalize(f.aircraft);
   if($('lessonInstructor'))$('lessonInstructor').value=f.instructor;
  });
  const form=$('training-form');
@@ -1861,13 +1861,13 @@ function wireTraining(){
    const draft={
     studentId:editing?.studentId||$('lessonStudent').value,
     instructorId:editing?.instructorId||$('lessonInstructor').value,
-    date:$('lessonDate').value,minutes:$('lessonMinutes').value,aircraft:AeroSuiteRegistration.normalize($('lessonAircraft').value),
+    date:$('lessonDate').value,minutes:$('lessonMinutes').value,aircraft:FlyProRegistration.normalize($('lessonAircraft').value),
     flightId:editing?.flightId||$('lessonFlight').value,
     topics:$('lessonTopics').value,evolution:$('lessonEvolution').value,
     difficulties:$('lessonDifficulties').value,nextGoal:$('lessonGoal').value,
     assessment:$('lessonAssessment').value
    };
-   if(draft.aircraft&&!AeroSuiteRegistration.isValid(draft.aircraft)){
+   if(draft.aircraft&&!FlyProRegistration.isValid(draft.aircraft)){
     notice('Matrícula inválida: escribí por ejemplo lvert y se mostrará LV-ERT.');return;
    }
    if(editing){

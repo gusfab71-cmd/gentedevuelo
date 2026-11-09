@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
-<title>AeroSuite · Control global de cuentas</title>
+<title>FlyPro · Control global de cuentas</title>
 <style>
 :root{font-family:Inter,system-ui,Arial,sans-serif;color:#eff7fc;background:#0f202e;color-scheme:dark}
 *{box-sizing:border-box}body{margin:0;min-height:100vh;background:linear-gradient(155deg,#122b3d,#0e1b29)}
@@ -58,18 +58,18 @@ dialog .action-summary{margin:11px 0;padding:11px;background:#234458;border-radi
 </head>
 <body>
 <header>
- <a class="brand" href="superadministrador.html">AeroSuite · Superadministración</a>
+ <a class="brand" href="superadministrador.html">FlyPro · Superadministración</a>
  <nav><a href="superadministrador.html#registros-aerosuite">Padrón institucional</a><a href="../../moderacion.html">Moderación Gente de Vuelo</a></nav>
 </header>
 <main>
  <div class="eyebrow">Acceso privado del Superadministrador</div>
  <h1>Control global de cuentas</h1>
- <p>Registro único de cuentas de Gente de Vuelo y AeroSuite. Permite revisar altas, verificación del correo, pertenencia a la comunidad y accesos institucionales.</p>
+ <p>Registro único de cuentas de Gente de Vuelo y FlyPro. Permite revisar altas, verificación del correo, pertenencia a la comunidad y accesos institucionales.</p>
  <div id="status" class="notice" role="status" aria-live="polite">Verificando acceso de Superadministración…</div>
  <div id="adminContent" hidden>
   <section class="panel">
    <h2>Revisión de cuentas</h2>
-   <p class="muted">Una cuenta sin invitación a AeroSuite puede ser perfectamente legítima en Gente de Vuelo. «Sin vínculo detectado» exige revisión manual; nunca implica eliminación automática. Las cuentas técnicas de prueba se identifican por su pertenencia exclusiva a instituciones marcadas como laboratorio en Supabase.</p>
+   <p class="muted">Una cuenta sin invitación a FlyPro puede ser perfectamente legítima en Gente de Vuelo. «Sin vínculo detectado» exige revisión manual; nunca implica eliminación automática. Las cuentas técnicas de prueba se identifican por su pertenencia exclusiva a instituciones marcadas como laboratorio en Supabase.</p>
    <div class="controls">
     <label>Buscar en esta página
      <input id="search" type="search" placeholder="Correo, usuario o institución" autocomplete="off">
@@ -80,8 +80,8 @@ dialog .action-summary{margin:11px 0;padding:11px;background:#234458;border-radi
       <option value="Sin vínculo detectado · revisar">Sin vínculo detectado</option>
       <option value="Correo sin verificar">Correo sin verificar</option>
       <option value="Comunidad Gente de Vuelo">Comunidad</option>
-      <option value="Acceso institucional">AeroSuite</option>
-      <option value="Comunidad + institución">Comunidad y AeroSuite</option>
+      <option value="Acceso institucional">FlyPro</option>
+      <option value="Comunidad + institución">Comunidad y FlyPro</option>
       <option value="Invitación pendiente">Invitación pendiente</option>
       <option value="Administración protegida">Administración protegida</option>
      </select>
@@ -251,7 +251,7 @@ dialog .action-summary{margin:11px 0;padding:11px;background:#234458;border-radi
       pretty(h.created_at)+' · '+(h.reason||'');
     controlBody.append(make('p',detail,'audit-line'));
    }
-   const remove=make('p','Para eliminar definitivamente una cuenta exclusivamente comunitaria, ingresá a Integrantes desde Gente de Vuelo. El borrado global con historiales de AeroSuite no está habilitado.','muted');
+   const remove=make('p','Para eliminar definitivamente una cuenta exclusivamente comunitaria, ingresá a Integrantes desde Gente de Vuelo. El borrado global con historiales de FlyPro no está habilitado.','muted');
    const link=make('a','Ir a Integrantes');link.href='../../comunidad.html#integrantes';
    controlBody.append(remove,link);
    controlDialog.showModal();

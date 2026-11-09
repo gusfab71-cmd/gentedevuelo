@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <meta name="theme-color" content="#122437">
-<title>Perfil AeroSuite · Alumno, Instructor o Piloto</title>
+<title>Perfil FlyPro · Alumno, Instructor o Piloto</title>
 <style>
 :root{font-family:Inter,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;color:#eff6fc;background:#111c28;color-scheme:dark}
 *{box-sizing:border-box}body{margin:0;background:linear-gradient(150deg,#101c29 0%,#1d3042 95%);min-height:100vh}
@@ -74,12 +74,12 @@ button:disabled{cursor:wait;opacity:.56}
 </head>
 <body>
 <header>
-<a class="brand" href="index.html">AEROSUITE<small>BY GENTE DE VUELO · PERFIL AERONÁUTICO</small></a>
-<nav aria-label="Navegación"><a href="portal.html">Portal AeroSuite</a><a href="../index.html">Utilidades</a><a href="../../index.html">Gente de Vuelo</a></nav>
+<a class="brand" href="index.html">FLYPRO<small>BY GENTE DE VUELO · PERFIL AERONÁUTICO</small></a>
+<nav aria-label="Navegación"><a href="portal.html">Portal FlyPro</a><a href="../index.html">Utilidades</a><a href="../../index.html">Gente de Vuelo</a></nav>
 </header>
 <main>
 <div class="hero"><span class="kicker">COMUNIDAD AERONÁUTICA · REGISTRO INTEGRADO</span>
-<h1>Perfil personal AeroSuite</h1>
+<h1>Perfil personal FlyPro</h1>
 <p>Con la misma cuenta y contraseña de Gente de Vuelo, elegí si querés participar como Alumno, Instructor o Piloto (podés seleccionar varios). Completá solamente los datos adicionales; no necesitás registrarte de nuevo en la comunidad.</p>
 <div class="notice"><b>Privacidad:</b> tus datos no aparecen en Mi Hangar, el foro ni el perfil público de Gente de Vuelo. La <b>fotografía es opcional</b> y, si decidís cargarla, se guarda de forma privada. <b>Los campos con * son obligatorios.</b> El teléfono fijo es opcional para no excluir a estudiantes que solo usan celular.</div>
 </div>
@@ -91,7 +91,7 @@ button:disabled{cursor:wait;opacity:.56}
     <h2>1 · Perfiles aeronáuticos</h2>
     <p class="panel-subtitle">Seleccioná uno o varios perfiles. Declarar «Instructor» o «Piloto» no acredita licencias ni permite ver datos de terceros.</p>
     <fieldset class="aerosuite-role-options">
-      <legend>¿Cómo participarás en AeroSuite? <span class="required">*</span></legend>
+      <legend>¿Cómo participarás en FlyPro? <span class="required">*</span></legend>
       <label><input type="checkbox" name="role_student"><span><b>Alumno</b><small>Formación, cursos y prácticas</small></span></label>
       <label><input type="checkbox" name="role_instructor"><span><b>Instructor</b><small>Enseñanza y seguimiento, sujeto a verificación</small></span></label>
       <label><input type="checkbox" name="role_pilot"><span><b>Piloto</b><small>Actividad y planificación personal</small></span></label>
@@ -136,7 +136,7 @@ button:disabled{cursor:wait;opacity:.56}
      <div class="field full email-change">
       <button type="button" id="toggleEmailChange" aria-controls="emailChangePanel" aria-expanded="false">Cambiar correo de acceso</button>
       <div id="emailChangePanel" class="email-change-panel" hidden>
-       <p>Este correo pertenece a tu cuenta compartida de Gente de Vuelo y AeroSuite. Para cambiarlo debés confirmar la solicitud mediante los mensajes enviados por el sistema. El correo actual seguirá vigente hasta completar la verificación.</p>
+       <p>Este correo pertenece a tu cuenta compartida de Gente de Vuelo y FlyPro. Para cambiarlo debés confirmar la solicitud mediante los mensajes enviados por el sistema. El correo actual seguirá vigente hasta completar la verificación.</p>
        <label class="field" for="newAccountEmail">Nuevo correo electrónico
         <input id="newAccountEmail" type="email" autocomplete="off" inputmode="email" maxlength="254" placeholder="nuevo@ejemplo.com">
        </label>
@@ -177,7 +177,7 @@ button:disabled{cursor:wait;opacity:.56}
    </section>
    <section class="panel">
     <h2>5 · Confirmación y guardado</h2>
-    <label class="check"><input id="privacyConsent" type="checkbox" required> Confirmo que los datos ingresados son correctos. Entiendo que se utilizarán para mi perfil personal de AeroSuite, separada de mi perfil comunitario, y que puedo solicitar su rectificación o eliminación.</label>
+    <label class="check"><input id="privacyConsent" type="checkbox" required> Confirmo que los datos ingresados son correctos. Entiendo que se utilizarán para mi perfil personal de FlyPro, separada de mi perfil comunitario, y que puedo solicitar su rectificación o eliminación.</label>
     <p class="privacy">Responsable de la ficha de prueba: Gente de Vuelo (<a href="mailto:gentedevuelo@gmail.com">gentedevuelo@gmail.com</a>). Finalidad: identificación, contacto y futura vinculación voluntaria a una escuela; destinatarios: el propio alumno y, solo cuando existan permisos institucionales comprobados, personal autorizado de la escuela. Podés consultar, corregir o solicitar la eliminación de tu información. Versión del aviso: 2026-10. La vinculación a escuelas, las licencias verificadas y los permisos de Instructor se gestionarán independientemente y solo con autorización.</p>
     <div class="actions"><button class="primary" type="submit" id="saveStudent">Guardar perfil</button>
      <button type="button" id="clearForm">Restaurar datos guardados</button></div>
@@ -212,20 +212,20 @@ button:disabled{cursor:wait;opacity:.56}
   if(back){back.href='portal-escuela.html?institucion='+encodeURIComponent(institutionalId)+'&rol='+encodeURIComponent(institutionalRole||'alumno')+'&elegida=1'+(institutionalParams.get('prueba')==='1'?'&prueba=1':'');back.textContent='Volver al portal institucional';}
   const intro=document.querySelector('.hero p');
   if(intro)intro.textContent=institutionalRole==='piloto'?
-   'Completá tu ficha como Piloto PPA o Comercial. Estos datos personales se comparten con los demás módulos AeroSuite. Secretaría deberá verificar tu licencia y documentación antes de habilitar vuelos sin instructor.':
+   'Completá tu ficha como Piloto PPA o Comercial. Estos datos personales se comparten con los demás módulos FlyPro. Secretaría deberá verificar tu licencia y documentación antes de habilitar vuelos sin instructor.':
    'Completá tus datos y documentos en una sola ficha. La escuela utilizará la misma información en tus turnos y registros institucionales.';
  }
  if(institutionalProfile){
   const headings={student:'Ficha del Alumno',instructor:'Ficha del Instructor',pilot:'Ficha del Piloto PPA / PCA'};
-  document.title=headings[institutionalProfile]+' · AeroSuite';
+  document.title=headings[institutionalProfile]+' · FlyPro';
   document.querySelector('.hero h1').textContent=headings[institutionalProfile];
   const selector=document.querySelector('.aerosuite-role-options');
   const section=selector.closest('section');
   section.querySelector('h2').textContent='1 · '+headings[institutionalProfile];
-  section.querySelector('.panel-subtitle').textContent='Completá los datos correspondientes a tu rol. Los datos personales se comparten entre los módulos autorizados de AeroSuite.';
+  section.querySelector('.panel-subtitle').textContent='Completá los datos correspondientes a tu rol. Los datos personales se comparten entre los módulos autorizados de FlyPro.';
   selector.hidden=true;
   const emailLabel=document.querySelector('#accountEmail').closest('label');
-  if(emailLabel)emailLabel.firstChild.textContent='Correo de acceso a AeroSuite';
+  if(emailLabel)emailLabel.firstChild.textContent='Correo de acceso a FlyPro';
  }
  let user=null,profile=null,documentIds=[],portraitBlobUrl='',newPortrait=null,busy=false;
  let pilotCredentialsEnabled=false;

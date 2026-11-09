@@ -2,7 +2,7 @@
 <html lang="es"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
-<title>AeroSuite · Ingreso de institución</title>
+<title>FlyPro · Ingreso de institución</title>
 <style>
 :root{font-family:Inter,system-ui,Arial,sans-serif;color:#edf4f9;background:#0d1b28;color-scheme:dark}
 *{box-sizing:border-box}[hidden]{display:none!important}
@@ -47,18 +47,18 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
 </head>
 <body>
 <header>
- <a class="brand" href="index.html">Aero<span>Suite</span><small>BY GENTE DE VUELO · ACCESO INSTITUCIONAL</small></a>
+ <a class="brand" href="index.html">Fly<span>Pro</span><small>BY GENTE DE VUELO · ACCESO INSTITUCIONAL</small></a>
  <a href="../../index.html">Inicio de Gente de Vuelo</a>
 </header>
 <main>
  <span class="eyebrow">Acceso a una institución autorizada</span>
- <h1 id="inviteTitle">Crear cuenta o ingresar a AeroSuite</h1>
+ <h1 id="inviteTitle">Crear cuenta o ingresar a FlyPro</h1>
  <div class="grid">
  <div>
-  <p id="loginIntroduction">Fuiste invitado a utilizar <strong>AeroSuite de Gente de Vuelo</strong>. Abrí el enlace personal recibido por correo, elegí tu contraseña y entrá directamente al portal correspondiente a tu rol.</p>
+  <p id="loginIntroduction">Fuiste invitado a utilizar <strong>FlyPro de Gente de Vuelo</strong>. Abrí el enlace personal recibido por correo, elegí tu contraseña y entrá directamente al portal correspondiente a tu rol.</p>
   <div class="notice" id="loginNotice">El correo de invitación nuevo verifica tu identidad con un enlace de un solo uso. No se envía una segunda verificación y nunca utilizamos tu DNI como contraseña.</div>
   <section class="panel" id="welcomePanel" hidden>
-    <h2>Creá tu contraseña para AeroSuite</h2>
+    <h2>Creá tu contraseña para FlyPro</h2>
     <p>Ya confirmamos que este enlace pertenece al correo <strong id="inviteEmail">—</strong>. Elegí tu contraseña para completar el ingreso; no necesitás otro correo ni volver a ingresar tus datos.</p>
     <form id="welcomeForm" autocomplete="off">
       <label>Nueva contraseña
@@ -79,12 +79,12 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
     <form id="loginForm" autocomplete="off">
       <label>Correo electrónico<input id="email" type="email" name="as-invite-user" autocomplete="off" readonly required maxlength="254"></label>
       <label>Contraseña<span class="password-wrap"><input id="password" type="password" name="as-invite-pass" autocomplete="off" readonly required minlength="1"><button type="button" class="password-eye" data-password-target="password" aria-label="Mostrar contraseña" aria-pressed="false" title="Mostrar contraseña"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.7-7 10-7 10 7 10 7-3.7 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/><path class="eye-slash" d="M3 3l18 18"/></svg></button></span></label>
-      <div class="actions"><button type="submit" class="primary" id="loginButton">Ingresar a AeroSuite</button><button type="button" id="showRegister">Necesito una invitación nueva</button><button type="button" id="forgotButton">Olvidé mi contraseña</button><button type="button" id="showConfirmationFromLogin">Verificar correo</button></div>
+      <div class="actions"><button type="submit" class="primary" id="loginButton">Ingresar a FlyPro</button><button type="button" id="showRegister">Necesito una invitación nueva</button><button type="button" id="forgotButton">Olvidé mi contraseña</button><button type="button" id="showConfirmationFromLogin">Verificar correo</button></div>
     </form>
     <p class="caption">¿Ya tenés cuenta con este correo? Ingresá con tu contraseña habitual. Para crear una cuenta nueva sin segunda verificación, utilizá una invitación reciente con enlace personal y seguro.</p>
   </section>
   <section class="panel" id="registerPanel" hidden>
-  <h2>Crear tu cuenta AeroSuite</h2>
+  <h2>Crear tu cuenta FlyPro</h2>
   <p class="caption">Elegí una clave nueva, segura y privada. No uses tu DNI ni la misma contraseña de otra cuenta. Tu correo deberá verificarse antes de habilitar la institución.</p>
   <form id="signupForm" autocomplete="off">
    <label>Correo que recibió la invitación<input id="signupEmail" type="email" name="as-register-identity" autocomplete="off" readonly maxlength="254" required></label>
@@ -98,12 +98,12 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
  <h2>Un último paso: verificá tu correo</h2>
  <p>La contraseña ya quedó registrada. <strong>No hace falta volver a crearla ni ingresarla de nuevo.</strong> Por seguridad, Supabase envía un segundo correo para confirmar que la dirección es tuya.</p>
  <p><strong>1.</strong> Abrí tu Gmail y buscá el mensaje de confirmación de correo de Gente de Vuelo / Supabase. Revisá Spam si no aparece.</p>
- <p><strong>2.</strong> Pulsá el enlace de confirmación. Al regresar a AeroSuite, se activará tu invitación y se abrirá directamente el portal de tu escuela.</p>
+ <p><strong>2.</strong> Pulsá el enlace de confirmación. Al regresar a FlyPro, se activará tu invitación y se abrirá directamente el portal de tu escuela.</p>
  <form id="resendForm">
   <label>Correo que recibió la invitación<input id="confirmationEmail" type="email" autocomplete="email" maxlength="254" required></label>
   <div class="actions"><button type="submit" class="confirm-action" id="resendButton">Reenviar confirmación</button><button type="button" id="confirmationCheck">Ya confirmé mi correo</button><button type="button" id="confirmationToLogin">Ya tenía cuenta · Ingresar</button></div>
  </form>
- <p class="caption">La invitación a AeroSuite y la confirmación de cuenta son correos diferentes. Nunca compartas la contraseña ni códigos de verificación.</p>
+ <p class="caption">La invitación a FlyPro y la confirmación de cuenta son correos diferentes. Nunca compartas la contraseña ni códigos de verificación.</p>
 </section>
 <section class="panel" id="recoveryPanel" hidden>
  <h2>Recuperar acceso</h2>
@@ -137,7 +137,7 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
      <p>El correo de la invitación determina a qué institución y rol podrás vincularte.</p>
    </div>
    <p class="caption">Durante esta fase podrás consultar la portada institucional de tu rol. Los módulos operativos permanecerán bloqueados hasta que se complete su separación de datos.</p>
-   <p class="caption">AeroSuite mantiene su sesión institucional separada de la sesión de Superadministrador, incluso en el mismo navegador.</p>
+   <p class="caption">FlyPro mantiene su sesión institucional separada de la sesión de Superadministrador, incluso en el mismo navegador.</p>
  </aside>
  </div>
 </main>
@@ -156,7 +156,7 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
  const labLogin=query.get('prueba')==='1'&&(selectedRole==='instructor'||selectedRole==='alumno'||selectedRole==='administrador'||selectedRole==='secretaria'||selectedRole==='piloto');
  const roles={administrador:'administrador',secretaria:'secretaria',instructor:'instructor',alumno:'alumno',piloto:'piloto'};
  if(!schoolId||!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(schoolId)){
-  setStatus('Este enlace no identifica una institución válida. Pedí una nueva invitación a AeroSuite.');return;
+  setStatus('Este enlace no identifica una institución válida. Pedí una nueva invitación a FlyPro.');return;
  }
  if(selectedRole&&!roles[selectedRole]){setStatus('El rol indicado en la invitación no es válido. Solicitá un enlace actualizado.');return}
  if(!window.supabase||!window.GDV_CONFIG){setStatus('No se pudo cargar el servicio de ingreso.');return}
@@ -173,7 +173,7 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
  const validPassword=value=>value.length===9&&/[A-Z]/.test(value)&&/[a-z]/.test(value)&&/[0-9]/.test(value)&&/[^A-Za-z0-9]/.test(value);
  const humanRole=selectedRole==='administrador'?'administrador':selectedRole==='secretaria'?'secretaría':selectedRole==='instructor'?'instructor':selectedRole==='alumno'?'alumno':selectedRole==='piloto'?'piloto PPA o comercial':'integrante';
  byId('inviteTitle').textContent=labLogin?'Ingreso de pruebas · '+humanRole:'Invitación para crear cuenta como '+humanRole;
- byId('roleHeading').textContent=labLogin?'AeroSuite · laboratorio permanente · '+humanRole:'AeroSuite · acceso de '+humanRole;
+ byId('roleHeading').textContent=labLogin?'FlyPro · laboratorio permanente · '+humanRole:'FlyPro · acceso de '+humanRole;
  if(labLogin){
   byId('loginIntroduction').textContent='Estás ingresando a la institución permanente de pruebas con una identidad técnica separada. Usarás el mismo portal y los mismos permisos operativos que una cuenta real, sin necesidad de invitación.';
   byId('loginNotice').textContent='Los accesos técnicos se habilitan exclusivamente desde Superadministración. No se envían correos de invitación ni de activación. El Director mantiene su cuenta; Instructor y Alumno tienen identidades independientes.';
@@ -248,7 +248,7 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
    showPanel('verifiedPanel');
    byId('accountEmail').textContent=user.email||'(correo no disponible)';
    if(!user.email_confirmed_at){setStatus('Tu correo todavía debe verificarse. Revisá el mensaje de confirmación.');return}
-   // Registrar el ingreso efectivo a AeroSuite; generar una invitación magiclink no es un alta real.
+   // Registrar el ingreso efectivo a FlyPro; generar una invitación magiclink no es un alta real.
    if(selectedRole){
     const registration=await db.rpc('aerosuite_record_my_registration',{
      p_institution_id:schoolId,p_role:selectedRole
@@ -340,7 +340,7 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
    const {error}=await db.auth.resend({type:'signup',email,options:{emailRedirectTo:activationUrl}});
    if(error)throw error;
    lastSignupEmail=email;
-   setStatus('Si tu cuenta está pendiente de confirmación, recibirás otro mensaje. Abrí su enlace y AeroSuite te llevará al portal automáticamente. Revisá también Spam.');
+   setStatus('Si tu cuenta está pendiente de confirmación, recibirás otro mensaje. Abrí su enlace y FlyPro te llevará al portal automáticamente. Revisá también Spam.');
   }catch(error){setStatus('No se pudo reenviar la confirmación: '+normalizeError(error)+'. Si lo intentaste hace poco, revisá el primer correo antes de repetir.')}
   finally{button.disabled=false}
  });
@@ -375,7 +375,7 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
    lastSignupEmail=email;
    byId('confirmationEmail').value=email;
    showPanel('confirmationPanel');
-   setStatus('¡Contraseña creada! Solo falta confirmar tu correo con el segundo mensaje. Cuando hagas clic en su enlace, AeroSuite activará tu invitación y te llevará al portal sin volver a pedirte usuario y clave.');
+   setStatus('¡Contraseña creada! Solo falta confirmar tu correo con el segundo mensaje. Cuando hagas clic en su enlace, FlyPro activará tu invitación y te llevará al portal sin volver a pedirte usuario y clave.');
   }catch(error){setStatus('No se pudo crear la cuenta: '+normalizeError(error))}
   finally{button.disabled=false}
  });
@@ -440,7 +440,7 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
  if(recoveryFlow){
   // El flujo de recuperación se trata antes de cualquier ingreso automático.
   recovering=true;holdMagicFlow=true;
-  byId('inviteTitle').textContent='Restablecer contraseña de AeroSuite';
+  byId('inviteTitle').textContent='Restablecer contraseña de FlyPro';
   byId('roleHeading').textContent='Recuperación segura de cuenta';
   showPanel('recoveryPanel');
   byId('forgotForm').hidden=true;
@@ -484,7 +484,7 @@ code{color:#f4d8a5;overflow-wrap:anywhere}
   if(!['magiclink','signup','invite'].includes(oneTimeType)){
    holdMagicFlow=false;
    showPanel('signInPanel');
-   setStatus('El formato del enlace de invitación es inválido. Pedí una nueva invitación desde AeroSuite.');
+   setStatus('El formato del enlace de invitación es inválido. Pedí una nueva invitación desde FlyPro.');
   }else{
    // El fragmento se retira de la barra del navegador, nunca de datos persistentes o registros.
    history.replaceState(null,'',location.pathname+location.search);
