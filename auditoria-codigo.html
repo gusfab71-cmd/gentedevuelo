@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Auditoría de código · Gente de Vuelo</title>
+  <style>
+    :root {color-scheme:dark;font-family:system-ui,Arial,sans-serif;color:#f2f7fa;background:#11171d}
+    * {box-sizing:border-box}
+    body {margin:0;min-height:100vh;background:radial-gradient(circle at top left,#263948,#11171d 60%)}
+    header {padding:20px max(20px,calc((100% - 940px)/2));border-bottom:1px solid #536675;background:#1a2631}
+    header a {color:#d1e1eb;text-decoration:none}
+    main {max-width:940px;margin:auto;padding:35px 20px 70px}
+    h1 {font-size:clamp(26px,4vw,38px);margin:0 0 12px}
+    h2 {font-size:20px;margin:0 0 12px}
+    p {color:#c6d3da;line-height:1.55}
+    .panel {border:1px solid #587083;border-radius:18px;background:linear-gradient(155deg,#263746,#1a252e);padding:26px;margin:22px 0;box-shadow:0 14px 40px #0004}
+    .hint {font-size:14px;color:#b4c6d0}
+    .status {color:#dae8ec;min-height:25px;white-space:pre-wrap}
+    label {display:block;margin:18px 0 8px;font-weight:650}
+    input[type=text],textarea {width:100%;padding:12px;border-radius:10px;border:1px solid #7d99a9;background:#111b23;color:white;font:inherit}
+    textarea {min-height:240px;resize:vertical;font:14px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace}
+    input:focus-visible,textarea:focus-visible,button:focus-visible {outline:3px solid #a0d5ef;outline-offset:2px}
+    .check {display:flex;gap:12px;align-items:flex-start;font-size:14px;font-weight:400;line-height:1.6}
+    .check input {flex-shrink:0;width:20px;height:20px;margin:2px 0}
+    button {padding:12px 20px;border:1px solid #adcfdd;border-radius:11px;background:#bed8e7;color:#132631;font:inherit;font-weight:750;cursor:pointer}
+    button:disabled {opacity:.5;cursor:wait}
+    [hidden] {display:none!important}
+    pre {white-space:pre-wrap;overflow-wrap:anywhere;font:14px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace;color:#e7f4f7}
+    .danger {color:#ffc3b7}
+    .counter {text-align:right;color:#b4c6d0;font-size:12px}
+  </style>
+  <script src="assets/supabase-2.117.2.min.js"></script>
+  <script src="assets/community-config.js"></script>
+  <script src="assets/auth-guard.js"></script>
+  <script src="assets/gemini-code-review.js" defer></script>
+</head>
+<body>
+  <header><a href="moderacion.html">← Volver a administración</a></header>
+  <main>
+    <h1>Auditoría técnica con Gemini</h1>
+    <p>Segunda revisión independiente para <strong>nuevas aplicaciones</strong> de Gente de Vuelo. No se utiliza para Flight Operations ni publica cambios.</p>
+    <section class="panel" aria-live="polite"><p id="access-state" class="status">Comprobando permisos de administrador…</p></section>
+    <section id="audit-panel" class="panel" hidden>
+      <h2>Solicitar revisión</h2>
+      <p class="hint">Pegá únicamente código o diferencias de código que hayas revisado. El material se envía a Google Gemini. Nunca incluyas claves, contraseñas, información de usuarios ni planes de vuelo.</p>
+      <form id="audit-form">
+        <label for="audit-title">Nueva aplicación o cambio a revisar</label>
+        <input type="text" id="audit-title" maxlength="120" minlength="3" placeholder="Ej.: Mejoras en Galería" required>
+        <label for="audit-diff">Código o diff</label>
+        <textarea id="audit-diff" maxlength="12000" minlength="30" spellcheck="false" placeholder="Pegá el fragmento de código o el diff de GitHub" required></textarea>
+        <div id="audit-count" class="counter">0 / 12.000 caracteres</div>
+        <label class="check"><input type="checkbox" id="audit-consent" required>Confirmo que revisé el contenido, que no contiene información confidencial y que autorizo esta consulta a Gemini. Puede estar sujeta a cuota de API.</label>
+        <p id="audit-state" class="status" role="status"></p>
+        <button id="audit-submit" type="submit">Solicitar segunda revisión</button>
+      </form>
+    </section>
+    <section id="audit-result" class="panel" hidden>
+      <h2>Observaciones de Gemini</h2>
+      <p class="hint">Son sugerencias que ChatGPT y el administrador deben comprobar. No se aplican automáticamente.</p>
+      <pre id="audit-answer"></pre>
+    </section>
+  </main>
+</body>
+</html>
